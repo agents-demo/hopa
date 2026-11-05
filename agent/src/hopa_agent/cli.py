@@ -113,6 +113,8 @@ def _cmd_observe(args: argparse.Namespace) -> int:
     else:
         print(observation.summary())
         print(f"hash: {observation.hash}")
+        if observation.text:
+            print(observation.text[:500])
         for node in observation.clickable()[:40]:
             label = node.text or node.description or node.type
             print(f"  {node.ref} {label!r} {node.bounds}")

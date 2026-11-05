@@ -16,6 +16,8 @@ from hopa_pc_agent.errors import HopaError
 from .actions import Action
 from .capture import capture
 from .errors import ActionError, AgentError, CapabilityError
+from .logging import JsonlLogger
+from .net import UrlPolicy
 from .observation import Observation
 from .policy import ApprovalPolicy, ApprovalRequest, Decision, RiskLevel
 from .records import RunRecord, RunStore
@@ -71,6 +73,8 @@ class DeviceExecutor:
         observer: Observer | None = None,
         screenshot: bool = False,
         out_dir: str | None = None,
+        url_policy: UrlPolicy | None = None,
+        logger: JsonlLogger | None = None,
         sleep: Callable[[float], None] = time.sleep,
     ) -> None:
         self.device = device
@@ -81,6 +85,8 @@ class DeviceExecutor:
         self.sleep = sleep
         self.screenshot = screenshot
         self.out_dir = out_dir
+        self.url_policy = url_policy or UrlPolicy()
+        self.logger = logger
         self.observer = observer or (
             lambda: capture(device, screenshot=screenshot, out_dir=out_dir)
         )
@@ -156,6 +162,18 @@ class DeviceExecutor:
         )
         if self.store is not None:
             self.store.append(record)
+        if self.logger is not None:
+            self.logger.log(
+                "step",
+                runId=run_id,
+                step=step,
+                kind=action.kind,
+                classification=classification.value,
+                approved=approved,
+                executed=executed,
+                verified=verified,
+                error=error,
+            )
 
         return Outcome(
             action=action,
@@ -236,6 +254,14 @@ class DeviceExecutor:
         if kind == "ui.stop":
             self.device.stop(action.app)
             return
+
+        if kind == "web.navigate":
+            self.url_policy.check(action.url)
+            raise CapabilityError(f"{kind} is not implemented in the PC harness")
+
+        if kind == "system.openLink":
+            self.url_policy.check(action.url or action.text)
+            raise CapabilityError(f"{kind} is not implemented in the PC harness")
 
         raise CapabilityError(f"{kind} is not implemented in the PC harness")
 

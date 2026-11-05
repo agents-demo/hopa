@@ -113,7 +113,7 @@ it, not at the end.
 | `bench` | 5 tasks valid, runner, stub model, CLI | `bench/tasks` |
 | Knowledge | none: 0 `APP.md`, 0 sites, 0 skills | — |
 | CI | Python tests + ruff; HAP build and core Local Tests skip with a warning when the mirrored toolchain secret is absent | `.github/workflows/ci.yml` |
-| Tests baseline | 172 Python tests pass (pc-agent, bench, agent, plan tooling), 5 bench tasks validate; ArkTS tests not run here | local run 2026-11-05 |
+| Tests baseline | 216 Python tests pass (pc-agent, bench, agent, plan tooling), agent coverage 89%, 5 bench tasks validate; ArkTS tests not run here | local run 2026-11-05 |
 
 Known gaps to close first:
 
@@ -197,7 +197,7 @@ Module responsibilities:
 - [ ] ArkTS unit tests run on a macOS runner
 - [ ] HAP build runs on Linux with a mirrored CLT archive
 - [ ] CI fails (not skips) when `HARMONY_CLI_TOOLS_URL` is missing on `main`
-- [ ] Coverage report for Python; threshold set
+- [x] Coverage report for Python; threshold set (evidence: CI: pytest agent --cov --cov-fail-under=80 (89%))
 - [ ] Coverage report for ArkTS; threshold set
 - [ ] `pip-audit` / Dependabot enabled
 - [ ] License check: Apache-2.0, NOTICE current, no GPL
@@ -375,7 +375,7 @@ Module responsibilities:
 - [x] Schema-evolution rules: additive fields only within a major version (evidence: docs/versioning.md)
 - [ ] Golden contract fixtures shared by JVM, ArkTS and `pc-agent`
 - [ ] Contract tests run in CI for all three implementations
-- [ ] Local structured log with rotation and redaction
+- [x] Local structured log with rotation and redaction (evidence: agent/src/hopa_agent/logging.py + tests)
 - [ ] Optional opt-in diagnostic bundle export
 
 ---
@@ -423,7 +423,7 @@ Module responsibilities:
 - [ ] Port `ChannelAdvisor` (app vs web vs signed-in)
 - [ ] Port `GuideCatalog` and the skills index
 - [ ] Port `packageFor`
-- [ ] Add installed-app listing: `pc-agent apps` → `{bundle, label}`
+- [x] Add installed-app listing: `pc-agent apps` → `{bundle, label}` (evidence: pc-agent/src/hopa_pc_agent/apps.py + tests)
 - [ ] Unknown app: list → label → launch → generic operation
 - [ ] Ambiguous match → ask the user once, remember the answer
 - [ ] Routing tests: known app, alias, domain, unknown, two plausible
@@ -809,7 +809,7 @@ Module responsibilities:
 - [ ] Jailbreak test suite (20 prompts) green
 - [ ] Indirect prompt injection from web pages and documents tested
 - [ ] Data-exfiltration test: model tries to send screen text to an unapproved URL
-- [ ] URL allow-list enforced inside `ActionExecutor`, not only in the prompt
+- [x] URL allow-list enforced inside `ActionExecutor`, not only in the prompt (evidence: agent/src/hopa_agent/net.py + DeviceExecutor)
 - [ ] No user data in URLs, query strings or referrers
 - [ ] MCP server trust model and authentication documented
 - [ ] API keys stored in HUKS, never in preferences or logs

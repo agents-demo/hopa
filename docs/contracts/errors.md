@@ -12,6 +12,8 @@ never parses English text.
 | `E_POLICY` | Policy refused the action | no | `error.policy` |
 | `E_DEVICE` | Device or `hdc` operation failed | yes | `error.device` |
 | `E_BUDGET` | Step, time or token budget exhausted | no | `error.budget` |
+| `E_TIMEOUT` | A `wait_for` condition did not become true | yes | `error.timeout` |
+| `E_SCROLL` | `scroll_to` hit its attempt limit | no | `error.scroll` |
 | `E_STAGNATION` | Same action on the same screen | no | `error.stagnation` |
 | `E_HANDOVER` | The user must take over | no | `error.handover` |
 | `E_AGENT` | Unclassified agent error | no | `error.agent` |

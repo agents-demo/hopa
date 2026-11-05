@@ -80,3 +80,64 @@ def test_emergency_call_is_blocked(settings_device):
     assert outcome.executed is False
     assert "Emergency" in (outcome.error or "")
     assert settings_device.calls == []
+
+
+def test_type_by_ref(settings_device):
+    outcome = _executor(settings_device).execute(
+        Action.from_dict({"kind": "ui.type", "ref": "e3", "text": "hello"})
+    )
+    assert outcome.executed is True
+    assert ("type", "hello", 540, 360) in settings_device.calls
+
+
+def test_swipe_coordinates(settings_device):
+    action = Action.from_dict({"kind": "ui.swipe", "x": 1, "y": 2, "toX": 3, "toY": 4})
+    assert _executor(settings_device).execute(action).executed is True
+    assert ("swipe", 1, 2, 3, 4) in settings_device.calls
+
+
+def test_scroll_uses_a_direction(settings_device):
+    action = Action.from_dict({"kind": "ui.scroll", "direction": "down"})
+    assert _executor(settings_device).execute(action).executed is True
+    assert any(call[0] == "swipe" for call in settings_device.calls)
+
+
+def test_back_and_home(settings_device):
+    executor = _executor(settings_device)
+    executor.execute(Action.from_dict({"kind": "ui.back"}))
+    executor.execute(Action.from_dict({"kind": "ui.home"}))
+    assert ("key", "Back") in settings_device.calls
+    assert ("key", "Home") in settings_device.calls
+
+
+def test_launch_and_stop(settings_device):
+    executor = _executor(settings_device)
+    executor.execute(Action.from_dict({"kind": "ui.launch", "app": "com.huawei.hmos.clock"}))
+    executor.execute(Action.from_dict({"kind": "ui.stop", "app": "com.huawei.hmos.clock"}))
+    assert ("launch", "com.huawei.hmos.clock", "EntryAbility") in settings_device.calls
+    assert ("stop", "com.huawei.hmos.clock") in settings_device.calls
+
+
+def test_wait_uses_injected_sleep(settings_device):
+    slept: list[float] = []
+    executor = DeviceExecutor(settings_device, sleep=slept.append)
+    outcome = executor.execute(Action.from_dict({"kind": "ui.wait", "text": "0.25"}))
+    assert outcome.executed is True
+    assert slept == [0.25]
+
+
+def test_web_navigate_reaches_the_capability(settings_device):
+    outcome = _executor(settings_device).execute(
+        Action.from_dict({"kind": "web.navigate", "url": "https://example.com"})
+    )
+    assert outcome.executed is False
+    assert "not implemented" in (outcome.error or "")
+
+
+def test_open_link_with_a_dangerous_url(settings_device):
+    executor = _executor(settings_device, approver=lambda request: True)
+    outcome = executor.execute(
+        Action.from_dict({"kind": "system.openLink", "url": "javascript:alert(1)"})
+    )
+    assert outcome.executed is False
+    assert "scheme" in (outcome.error or "")

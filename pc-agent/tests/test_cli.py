@@ -27,6 +27,12 @@ def test_parser_swipe_defaults() -> None:
     assert args.velocity == 600
 
 
+def test_parser_apps_query() -> None:
+    args = build_parser().parse_args(["apps", "--query", "huawei"])
+    assert args.command == "apps"
+    assert args.query == "huawei"
+
+
 def test_main_returns_error_for_missing_hdc(monkeypatch, capsys) -> None:
     monkeypatch.setenv("HOPA_HDC", "C:/definitely/not/here/hdc.exe")
     code = main(["--hdc", "C:/definitely/not/here/hdc.exe", "devices"])

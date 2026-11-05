@@ -119,7 +119,7 @@ class FakeDevice:
         self._advance()
 
     def swipe(self, *args, **kwargs) -> None:
-        self.calls.append(("swipe", *args, kwargs))
+        self.calls.append(("swipe", *args))
         self._advance()
 
     def type_text(self, text: str, *, x=None, y=None) -> None:

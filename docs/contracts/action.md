@@ -29,6 +29,15 @@ it.
 
 Unknown kinds are rejected with `E_ACTION`. They are never forwarded.
 
+## URLs and deep links
+
+`web.navigate` and `system.openLink` pass `UrlPolicy` **before** any capability:
+
+- `https` only (unless the deployment explicitly allows `http`);
+- no `javascript:`, `data:`, `file:`, `about:` or `blob:`;
+- no `user:pass@` userinfo;
+- an optional host allow-list; a subdomain of an allowed host is allowed.
+
 ## `isPayment` is not a model field
 
 The model may send `isPayment`. The parser **drops it** and records it in

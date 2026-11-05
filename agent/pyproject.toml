@@ -13,7 +13,7 @@ authors = [{ name = "The HOPA Authors" }]
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "ruff>=0.6", "jsonschema>=4.20"]
+dev = ["pytest>=8.0", "ruff>=0.6", "jsonschema>=4.20", "pytest-cov>=5.0"]
 
 [project.scripts]
 hopa-agent = "hopa_agent.cli:main"

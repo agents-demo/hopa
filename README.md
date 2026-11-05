@@ -101,6 +101,7 @@ Full, reproducible instructions: [docs/setup.md](docs/setup.md).
 
 ```bash
 pc-agent devices
+pc-agent apps
 pc-agent dump --out layout.json
 pc-agent tap 540 1200
 pc-agent type 540 900 "hello"

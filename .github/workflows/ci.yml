@@ -44,7 +44,7 @@ jobs:
       - name: pytest (bench)
         run: pytest bench
       - name: pytest (agent)
-        run: pytest agent
+        run: pytest agent --cov=hopa_agent --cov-report=term --cov-fail-under=80
       - name: pytest (plan tooling)
         run: pytest scripts
       - name: Plan lint

@@ -39,6 +39,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("devices", help="list connected hdc targets")
 
+    apps = sub.add_parser("apps", help="list installed app bundles")
+    apps.add_argument("--query", help="filter bundles by substring")
+
     dump = sub.add_parser("dump", help="dump the current UI layout")
     dump.add_argument("--out", type=Path, help="write the raw layout JSON here")
     dump.add_argument("--find", metavar="TEXT", help="show nodes whose text contains TEXT")
@@ -174,6 +177,18 @@ def _dispatch(args: argparse.Namespace, device: Device) -> int:
 
     if command == "dump":
         return _cmd_dump(args, device)
+
+    if command == "apps":
+        installed = device.apps()
+        if args.query:
+            needle = args.query.lower()
+            installed = [app for app in installed if needle in app["bundle"].lower()]
+        _emit(
+            args,
+            installed,
+            "\n".join(app["bundle"] for app in installed) or "no apps",
+        )
+        return 0 if installed else 1
 
     if command == "tap":
         device.tap(args.x, args.y)

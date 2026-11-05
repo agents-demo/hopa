@@ -37,6 +37,12 @@ class Device:
     def devices(self) -> list[str]:
         return self.hdc.list_targets()
 
+    def apps(self) -> list[dict[str, str]]:
+        """List installed bundles as ``[{bundle, label}]``."""
+        from .apps import parse_installed_apps
+
+        return parse_installed_apps(self.hdc.shell("bm dump -a"))
+
     # -- observation ---------------------------------------------------------
 
     def dump_layout(self, *, include_attrs: bool = False, timeout: float | None = None) -> Layout:
