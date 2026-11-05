@@ -162,3 +162,20 @@ def test_stagnation_is_detected(tmp_path: Path):
 
     assert result.success is False
     assert result.reason == "stagnation"
+
+
+def test_need_user_options_are_returned(settings_device, tmp_path: Path):
+    class NeedsUser:
+        def decide(self, goal, observation, history, step):
+            return ModelDecision(
+                None,
+                say="Which account?",
+                need_user=True,
+                options=["Work", "Personal"],
+            )
+
+    loop, _ = _loop(settings_device, NeedsUser(), tmp_path)
+    result = loop.run("Pick an account")
+
+    assert result.reason == "need_user"
+    assert result.options == ["Work", "Personal"]

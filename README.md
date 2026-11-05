@@ -133,6 +133,9 @@ packaged into the app.
   payment classification.
 - [docs/contracts/errors.md](docs/contracts/errors.md) — error codes and retry
   rules.
+- [docs/bench-v0.md](docs/bench-v0.md) — the first five tasks, predicates and
+  failure taxonomy.
+- [docs/status.md](docs/status.md) — honest current state.
 - [docs/roadmap.md](docs/roadmap.md) — milestones G1–G4.
 - [docs/rebuild-plan.md](docs/rebuild-plan.md) — the delivery plan: phases,
   checkboxes, evidence rules and the definition of finished.

@@ -52,7 +52,7 @@ KNOWN_ACTIONS = {
     "finish",
 }
 
-SUCCESS_TYPES = {"text_visible", "app_foreground", "always"}
+SUCCESS_TYPES = {"text_visible", "node_exists", "app_foreground", "screen_hash", "always"}
 
 
 class TaskError(ValueError):
@@ -71,6 +71,8 @@ class SuccessCheck:
     any: list[str] = field(default_factory=list)
     all: list[str] = field(default_factory=list)
     bundle: str | None = None
+    node_id: str | None = None
+    hash: str | None = None
 
 
 @dataclass
@@ -108,11 +110,17 @@ class Task:
             any=[str(item) for item in (success_raw.get("any") or [])],
             all=[str(item) for item in (success_raw.get("all") or [])],
             bundle=success_raw.get("bundle"),
+            node_id=success_raw.get("id"),
+            hash=success_raw.get("hash"),
         )
         if success.type not in SUCCESS_TYPES:
             raise TaskError(f"unknown success.type: {success.type}")
         if success.type == "text_visible" and not (success.any or success.all):
             raise TaskError("text_visible success check needs `any` or `all`")
+        if success.type == "node_exists" and not (success.node_id or success.any or success.all):
+            raise TaskError("node_exists success check needs `id`, `any` or `all`")
+        if success.type == "screen_hash" and not success.hash:
+            raise TaskError("screen_hash success check needs `hash`")
 
         steps: list[Action] = []
         for raw in data.get("steps") or []:

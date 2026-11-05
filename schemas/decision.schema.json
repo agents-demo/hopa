@@ -14,7 +14,11 @@
     },
     "say": { "type": "string" },
     "done": { "type": "boolean" },
-    "needUser": { "type": "boolean" }
+    "needUser": { "type": "boolean" },
+    "options": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
   },
   "additionalProperties": false
 }

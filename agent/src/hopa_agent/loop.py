@@ -22,6 +22,7 @@ class RunResult:
     reason: str
     steps: int
     say: str = ""
+    options: list[str] = field(default_factory=list)
     error: str | None = None
     records: list[RunRecord] = field(default_factory=list)
     started_at: str = ""
@@ -35,6 +36,7 @@ class RunResult:
             "reason": self.reason,
             "steps": self.steps,
             "say": self.say,
+            "options": list(self.options),
             "error": self.error,
             "startedAt": self.started_at,
             "finishedAt": self.finished_at,
@@ -75,6 +77,7 @@ class AgentLoop:
         reason = "max_steps"
         success = False
         say = ""
+        options: list[str] = []
         error: str | None = None
         steps = 0
 
@@ -91,6 +94,8 @@ class AgentLoop:
                 break
             tokens += decision.tokens
             say = decision.say or say
+            if decision.options:
+                options = decision.options
 
             if decision.need_user:
                 reason = "need_user"
@@ -151,6 +156,7 @@ class AgentLoop:
             reason=reason,
             steps=steps,
             say=say,
+            options=options,
             error=error,
             records=records,
             started_at=started_at,

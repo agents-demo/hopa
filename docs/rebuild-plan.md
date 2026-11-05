@@ -113,7 +113,7 @@ it, not at the end.
 | `bench` | 5 tasks valid, runner, stub model, CLI | `bench/tasks` |
 | Knowledge | none: 0 `APP.md`, 0 sites, 0 skills | — |
 | CI | Python tests + ruff; HAP build and core Local Tests skip with a warning when the mirrored toolchain secret is absent | `.github/workflows/ci.yml` |
-| Tests baseline | 161 Python tests pass (pc-agent, bench, agent, plan tooling), 5 bench tasks validate; ArkTS tests not run here | local run 2026-11-05 |
+| Tests baseline | 172 Python tests pass (pc-agent, bench, agent, plan tooling), 5 bench tasks validate; ArkTS tests not run here | local run 2026-11-05 |
 
 Known gaps to close first:
 
@@ -321,23 +321,23 @@ Module responsibilities:
 
 ### 6.5 Bench v0
 
-- [ ] Runner supports `text_visible`, `node_exists`, `app_foreground`, `screen_hash`
-- [ ] Runner records steps, latency, model tokens
+- [x] Runner supports `text_visible`, `node_exists`, `app_foreground`, `screen_hash` (evidence: bench/src/hopa_bench/runner.py)
+- [x] Runner records steps, latency, model tokens (evidence: StepResult.latency_ms, TaskResult.tokens)
 - [ ] Existing 5 tasks pass with the stub model
 - [ ] Existing 5 tasks pass with a real model on the emulator
-- [ ] Failure taxonomy defined and emitted
-- [ ] `docs/bench-v0.md` with results
+- [x] Failure taxonomy defined and emitted (evidence: bench/src/hopa_bench/runner.py classify_failure)
+- [x] `docs/bench-v0.md` with results (evidence: docs/bench-v0.md)
 - [ ] 30-second demo recording
 
 ### 6.6 Runtime behaviour
 
 - [x] Loop and stagnation detection: same action + same observation hash twice → replan or stop (evidence: AgentLoop.run)
 - [ ] Wrong-screen recovery: back / home / re-observe policy
-- [ ] `wait_for` condition on text, ref or state, with timeout
-- [ ] `scroll_to` with bounded attempts
+- [x] `wait_for` condition on text, ref or state, with timeout (evidence: agent/src/hopa_agent/runtime.py)
+- [x] `scroll_to` with bounded attempts (evidence: agent/src/hopa_agent/runtime.py)
 - [x] `find_by_text` and `find_by_ref` helpers (evidence: Observation.find_text/find_ref)
-- [ ] `ask_user` tool with structured options
-- [ ] `say` final-answer tool
+- [x] `ask_user` tool with structured options (evidence: ModelDecision.options + agent/tests/test_loop.py)
+- [x] `say` final-answer tool (evidence: ModelDecision.say + RunResult.say)
 - [ ] `stop` tool with a reason
 - [ ] `handover` tool for login, 2FA, CAPTCHA and payment
 - [ ] Cancel mid-step leaves the app in a safe state

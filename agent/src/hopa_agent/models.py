@@ -13,7 +13,7 @@ import time
 import urllib.error
 import urllib.request
 from collections.abc import Callable, Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Protocol
 
 from .actions import ALL_KINDS, Action
@@ -47,16 +47,20 @@ class ModelDecision:
     say: str = ""
     done: bool = False
     need_user: bool = False
+    options: list[str] = field(default_factory=list)
     tokens: int = 0
     raw: str = ""
 
     def to_dict(self) -> dict:
-        return {
+        payload = {
             "action": self.action.to_dict() if self.action else None,
             "say": self.say,
             "done": self.done,
             "needUser": self.need_user,
         }
+        if self.options:
+            payload["options"] = list(self.options)
+        return payload
 
 
 class ModelClient(Protocol):
@@ -253,6 +257,7 @@ class OpenAIClient:
             say=say,
             done=done,
             need_user=need_user,
+            options=[str(item) for item in (payload.get("options") or [])],
             tokens=getattr(self, "_tokens", 0),
             raw=content,
         )

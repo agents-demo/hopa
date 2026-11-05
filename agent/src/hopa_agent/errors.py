@@ -82,6 +82,17 @@ class StagnationError(AgentError):
     message_key = "error.stagnation"
 
 
+class TimeoutFailure(AgentError):
+    code = "E_TIMEOUT"
+    retryable = True
+    message_key = "error.timeout"
+
+
+class ScrollLimit(AgentError):
+    code = "E_SCROLL"
+    message_key = "error.scroll"
+
+
 class HandoverRequired(AgentError):
     code = "E_HANDOVER"
     message_key = "error.handover"

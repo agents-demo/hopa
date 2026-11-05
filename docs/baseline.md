@@ -21,8 +21,8 @@ no phone**.
 |---|---|
 | `pytest pc-agent bench` | 56 passed |
 | `pytest scripts` (plan tooling) | 8 passed |
-| `pytest agent` | 97 passed |
-| Full harness | 161 passed |
+| `pytest agent` | 108 passed |
+| Full harness | 172 passed |
 | `hopa-bench validate --tasks bench/tasks` | 5 tasks valid |
 | `pc-agent devices` | fails with `hdc not found` (expected) |
 | ArkTS Local Tests | not run (no SDK) |

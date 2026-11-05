@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -19,6 +20,7 @@ class StepResult:
     action: str
     ok: bool
     detail: str = ""
+    latency_ms: float = 0.0
 
 
 @dataclass
@@ -29,6 +31,8 @@ class TaskResult:
     success: bool | None
     steps: list[StepResult] = field(default_factory=list)
     error: str | None = None
+    failure: str | None = None
+    tokens: int = 0
     duration_s: float = 0.0
 
     def as_dict(self) -> dict:
@@ -38,9 +42,17 @@ class TaskResult:
             "app": self.app,
             "success": self.success,
             "error": self.error,
+            "failure": self.failure,
+            "tokens": self.tokens,
             "duration_s": round(self.duration_s, 3),
             "steps": [
-                {"action": step.action, "ok": step.ok, "detail": step.detail} for step in self.steps
+                {
+                    "action": step.action,
+                    "ok": step.ok,
+                    "detail": step.detail,
+                    "latency_ms": round(step.latency_ms, 1),
+                }
+                for step in self.steps
             ],
         }
 
@@ -62,6 +74,8 @@ class Runner:
         model = self.model_factory(task)
         history: list[StepResult] = []
         error: str | None = None
+        failure: str | None = None
+        tokens = 0
 
         try:
             for _ in range(task.max_steps):
@@ -70,15 +84,22 @@ class Runner:
                     break
                 result = self.execute(action, task)
                 history.append(result)
+                tokens += int(getattr(model, "last_tokens", 0) or 0)
                 if not result.ok:
+                    failure = classify_failure(result.detail)
                     break
             success = self.check(task)
         except HopaError as exc:
             error = str(exc)
+            failure = "device"
             success = False
         except Exception as exc:  # noqa: BLE001 - a task failure must not stop the run
             error = f"{type(exc).__name__}: {exc}"
+            failure = "exception"
             success = False
+
+        if success is False and failure is None:
+            failure = "predicate_not_met"
 
         return TaskResult(
             task_id=task.id,
@@ -87,12 +108,20 @@ class Runner:
             success=success,
             steps=history,
             error=error,
+            failure=failure,
+            tokens=tokens,
             duration_s=time.monotonic() - started,
         )
 
     # -- action execution ----------------------------------------------------
 
     def execute(self, action: Action, task: Task) -> StepResult:
+        started = time.monotonic()
+        result = self._execute(action, task)
+        result.latency_ms = (time.monotonic() - started) * 1000.0
+        return result
+
+    def _execute(self, action: Action, task: Task) -> StepResult:
         name = action.action
         params = action.params
         try:
@@ -174,6 +203,21 @@ class Runner:
             return any(present(item) for item in spec.any)
         if spec.type == "app_foreground":
             return self._app_foreground(spec.bundle or task.resolved_bundle)
+        if spec.type == "node_exists":
+            layout = self.device.dump_layout()
+            if spec.node_id:
+                return bool(layout.find_by_id(spec.node_id))
+            haystack = [text.lower() for text in layout.texts()]
+            haystack.extend(node.description.lower() for node in layout.walk() if node.description)
+
+            def present(needle: str) -> bool:
+                return any(needle.lower() in text for text in haystack)
+
+            if spec.all:
+                return all(present(item) for item in spec.all)
+            return any(present(item) for item in spec.any)
+        if spec.type == "screen_hash":
+            return layout_hash(self.device.dump_layout()) == spec.hash
         return None
 
     def _app_foreground(self, bundle: str) -> bool | None:
@@ -199,3 +243,23 @@ def _best_node(nodes: list[Node]) -> Node | None:
 def layout_texts(layout: Layout) -> list[str]:
     """Small helper used by tests and debugging output."""
     return [text for text in layout.texts() if text.strip()]
+
+
+def layout_hash(layout: Layout) -> str:
+    """Stable hash of the visible text, used by ``screen_hash`` tasks."""
+    payload = "\n".join(layout_texts(layout))
+    return "sha256:" + hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def classify_failure(detail: str) -> str:
+    """Map a step failure to a small, stable taxonomy."""
+    lowered = (detail or "").lower()
+    if "not found" in lowered:
+        return "target_not_found"
+    if "unsupported" in lowered:
+        return "unsupported_action"
+    if "bad parameters" in lowered:
+        return "schema"
+    if "no device" in lowered or "hdc" in lowered or "cannot observe" in lowered:
+        return "device"
+    return "step_failed"
