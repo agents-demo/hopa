@@ -27,7 +27,7 @@ no phone**.
 | Kotlin router + server (`RouterTest`, `ServerTest`) | 34 assertions passed |
 | Brain contract (`/decide` vs schema) | pass |
 | Kotlin / JDK | 2.1.0 / 17 |
-| `hopa-bench validate --tasks bench/tasks` | 5 tasks valid |
+| `hopa-bench validate --tasks bench/tasks` | 20 tasks valid |
 | `pc-agent devices` | fails with `hdc not found` (expected) |
 | ArkTS Local Tests | not run (no SDK) |
 | HAP build | not run (no SDK) |

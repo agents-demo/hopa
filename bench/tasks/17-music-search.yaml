@@ -1,0 +1,20 @@
+# Defined in Appendix B. Confirm the bundle on a device before relying on it.
+schema_version: 1
+id: music-search
+goal: Search for a track and open it
+app: Music
+bundle: com.huawei.hmos.music
+success:
+  type: text_visible
+  any:
+  - Search
+  - 搜索
+steps:
+- action: launch
+- action: wait
+  seconds: 2
+- action: tap_text
+  text: Search
+- action: type
+  text: HOPA
+max_steps: 12

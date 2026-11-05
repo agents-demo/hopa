@@ -25,7 +25,7 @@ See [docs/roadmap.md](docs/roadmap.md).
 | `pc-agent/` hdc + uitest CLI & MCP server | implemented |
 | `agent/` PC reference loop (observe → decide → act → verify → record) | implemented + tests |
 | `schemas/` JSON contracts (observation, action, decision, record) | v1 |
-| `bench/` HOPA-Bench + 5 tasks | implemented |
+| `bench/` HOPA-Bench 20 task definitions | implemented |
 
 ## Safety model (non-negotiable)
 

@@ -1,0 +1,19 @@
+# Defined in Appendix B. Confirm the bundle on a device before relying on it.
+schema_version: 1
+id: music-play-pause
+goal: Play or pause the current track
+app: Music
+bundle: com.huawei.hmos.music
+success:
+  type: text_visible
+  any:
+  - Pause
+  - Play
+  - 暂停
+steps:
+- action: launch
+- action: wait
+  seconds: 2
+- action: tap_text
+  text: Play
+max_steps: 12

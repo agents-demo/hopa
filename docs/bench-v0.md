@@ -1,6 +1,6 @@
 # HOPA-Bench v0
 
-The first benchmark slice: five tasks, four success predicates and a stable
+The first benchmark slice: twenty task definitions, four success predicates and a stable
 failure taxonomy. It validates the task format and the runner. **No device run
 has been recorded yet**; the numbers below are from the local test harness.
 
@@ -56,24 +56,44 @@ Every `TaskResult` carries `success`, `failure`, `steps`, `latency_ms` per step,
 
 ## Current tasks
 
+The directory now holds **20 task definitions**:
+
 1. `settings-bluetooth` — reach Bluetooth
 2. `clock-open-alarm` — open the Alarm tab
 3. `calendar-new-event` — create an event
 4. `browser-search-harmonyos` — search in the browser
 5. `notes-create-note` — create a note
+6. `clock-alarm-tab`
+7. `clock-create-alarm-0730`
+8. `calendar-event-tomorrow`
+9. `notes-search`
+10. `contacts-find`
+11. `browser-first-result`
+12. `browser-read-price`
+13. `browser-fill-form-no-submit`
+14. `messages-draft-no-send`
+15. `messages-attach-file`
+16. `music-play-pause`
+17. `music-search`
+18. `files-locate`
+19. `settings-wifi-toggle`
+20. `settings-brightness`
 
-All five validate:
+Only the first five were exercised on a device. The rest are defined but their
+bundles and selectors must be confirmed on a real HarmonyOS build.
+
+All twenty validate:
 
 ```bash
 python -m hopa_bench validate --tasks bench/tasks
-# ok ... 5 task(s) valid
+# ok ... 20 task(s) valid
 ```
 
 ## Local results
 
 | Check | Result |
 |---|---|
-| Task files valid | 5/5 |
+| Task files valid | 20/20 |
 | Runner unit tests | pass |
 | Predicate tests | pass |
 | Device run | not run |
@@ -91,7 +111,7 @@ With no device, only `list`, `validate` and the unit tests are meaningful.
 ## What v0 does not prove
 
 - It does not prove that a real model can complete the tasks.
-- It does not prove that the 5 tasks are stable across runs.
-- It does not include the 20-task v1 set or safety tasks.
+- It does not prove that the 20 tasks are stable across runs on a device.
+- It does not include safety tasks; those need an approval predicate.
 
 The next slice is [Bench v1](../docs/rebuild-plan.md#77-bench-v1-20-tasks).

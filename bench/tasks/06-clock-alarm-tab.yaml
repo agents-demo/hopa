@@ -1,0 +1,18 @@
+# Defined in Appendix B. Confirm the bundle on a device before relying on it.
+schema_version: 1
+id: clock-alarm-tab
+goal: Open Clock and reach the Alarm tab
+app: Clock
+bundle: com.huawei.hmos.clock
+success:
+  type: text_visible
+  any:
+  - Alarm
+  - 闹钟
+steps:
+- action: launch
+- action: wait
+  seconds: 2
+- action: tap_text
+  text: Alarm
+max_steps: 12

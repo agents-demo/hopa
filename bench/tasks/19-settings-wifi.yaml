@@ -1,0 +1,18 @@
+# Defined in Appendix B. Confirm the bundle on a device before relying on it.
+schema_version: 1
+id: settings-wifi-toggle
+goal: Toggle Wi-Fi off and on
+app: Settings
+bundle: com.huawei.hmos.settings
+success:
+  type: text_visible
+  any:
+  - Wi-Fi
+  - WLAN
+steps:
+- action: launch
+- action: wait
+  seconds: 2
+- action: tap_text
+  text: Wi-Fi
+max_steps: 12

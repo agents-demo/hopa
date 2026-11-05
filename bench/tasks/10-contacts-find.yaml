@@ -1,0 +1,18 @@
+# Defined in Appendix B. Confirm the bundle on a device before relying on it.
+schema_version: 1
+id: contacts-find
+goal: Find a contact by name
+app: Contacts
+bundle: com.huawei.hmos.contacts
+success:
+  type: text_visible
+  any:
+  - Contacts
+  - 联系人
+steps:
+- action: launch
+- action: wait
+  seconds: 2
+- action: tap_text
+  text: Search
+max_steps: 12

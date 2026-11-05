@@ -1,0 +1,21 @@
+# Defined in Appendix B. Confirm the bundle on a device before relying on it.
+schema_version: 1
+id: browser-read-price
+goal: Read a price from a page
+app: Browser
+bundle: com.huawei.hmos.browser
+success:
+  type: text_visible
+  any:
+  - Price
+  - 价格
+  - ¥
+steps:
+- action: launch
+- action: wait
+  seconds: 2
+- action: tap_text
+  text: Search
+- action: type
+  text: price
+max_steps: 12

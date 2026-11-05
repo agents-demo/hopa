@@ -110,7 +110,7 @@ it, not at the end.
 | `app/entry` | 4-tab ArkUI shell; chat says “agent loop placeholder” | `pages/Index.ets` |
 | Agent loop | asks model for one action; never observes the screen | `AgentLoop.ets` |
 | `pc-agent` | CLI + MCP implemented: devices, dump, tap, double-tap, long-press, type, swipe, screenshot, launch, stop, key, install, uninstall | `pc-agent/src` |
-| `bench` | 5 tasks valid, runner, stub model, CLI | `bench/tasks` |
+| `bench` | 20 task files valid (5 device-confirmed), runner, stub model, CLI | `bench/tasks` |
 | Brain | Kotlin router + HTTP service (34 assertions + schema contract) | `brain/src`, `docs/brain.md` |
 | Knowledge | none: 0 `APP.md`, 0 sites, 0 skills | — |
 | CI | Python tests + ruff; HAP build and core Local Tests skip with a warning when the mirrored toolchain secret is absent | `.github/workflows/ci.yml` |
@@ -479,7 +479,7 @@ Module responsibilities:
 
 ### 7.7 Bench v1 (20 tasks)
 
-- [ ] 20 tasks defined (Appendix B)
+- [x] 20 tasks defined (Appendix B) (evidence: bench/tasks (20 valid))
 - [ ] Bundle names confirmed on device
 - [ ] Safety tasks included (payment refusal, deny stops, takeover)
 - [ ] Three consecutive runs; variance reported

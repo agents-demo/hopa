@@ -1,0 +1,18 @@
+# Defined in Appendix B. Confirm the bundle on a device before relying on it.
+schema_version: 1
+id: notes-search
+goal: Search notes for a keyword
+app: Notes
+bundle: com.huawei.hmos.notepad
+success:
+  type: text_visible
+  any:
+  - Search
+  - 搜索
+steps:
+- action: launch
+- action: wait
+  seconds: 2
+- action: tap_text
+  text: Search
+max_steps: 12

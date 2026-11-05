@@ -3,7 +3,7 @@
 **2026-11-05.** The repository is an early but working PC-tethered agent. The
 Python harness can capture an observation, ask a model for one action, classify
 it, execute it, re-observe, verify and append a hash-chained record. It has 149
-agent tests (222 across the harness) and a validated 5-task bench format. The
+agent tests (222 across the harness) and a validated 20-task bench format. The
 ArkTS app is still a shell: the HAP builds only with the Huawei toolchain, the
 accessibility extension is not declared, and no device or emulator is available
 on the development machine. No ACL has been filed. The standalone claim is
@@ -14,7 +14,7 @@ therefore **not** met; the tethered claim is.
 | `agent/` loop, gate, policy, records | working, tested | `pytest agent` |
 | `brain/` Kotlin router + HTTP service | working, 34 assertions + schema contract | `scripts/brain.ps1` |
 | `pc-agent` CLI + MCP | working | `pytest pc-agent` |
-| `bench` 5 tasks | valid | `pytest bench`, `validate` |
+| `bench` 20 task definitions | valid | `pytest bench`, `validate` |
 | Observation/action/decision/record schemas | v1 | `schemas/` |
 | ArkTS `app/core` | scaffold, not wired | `app/core/src` |
 | Accessibility extension | empty, not declared | `module.json5` |

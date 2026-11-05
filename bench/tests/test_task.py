@@ -11,14 +11,18 @@ TASKS_DIR = Path(__file__).resolve().parents[1] / "tasks"
 
 def test_loads_all_example_tasks() -> None:
     tasks = load_tasks(TASKS_DIR)
-    assert len(tasks) == 5
-    assert {task.id for task in tasks} == {
+    assert len(tasks) == 20
+    ids = {task.id for task in tasks}
+    assert len(ids) == 20
+    assert {
         "settings-bluetooth",
         "clock-open-alarm",
         "calendar-new-event",
         "browser-search-harmonyos",
         "notes-create-note",
-    }
+    } <= ids
+    assert "settings-wifi-toggle" in ids
+    assert "settings-brightness" in ids
 
 
 def test_loads_yaml_task() -> None:

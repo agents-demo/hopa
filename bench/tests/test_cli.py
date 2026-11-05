@@ -22,7 +22,7 @@ def test_parser_json_flag() -> None:
 def test_validate_example_tasks(capsys) -> None:
     code = main(["validate", "--tasks", str(TASKS_DIR)])
     assert code == 0
-    assert "5 task(s) valid" in capsys.readouterr().out
+    assert "20 task(s) valid" in capsys.readouterr().out
 
 
 def test_list_example_tasks(capsys) -> None:
