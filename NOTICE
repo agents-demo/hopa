@@ -18,6 +18,9 @@ Third-party and design references
    required by its Apache-2.0 license. Any future code reuse from Mika must keep
    this notice, and any modified files must carry a prominent change notice.
 
+   The routing rules in `brain/` are a clean-room reimplementation of Mika's
+   documented lexical matching behaviour; no source file is copied.
+
 2. proot / GPL sandbox components
    HOPA does NOT use Mika's GPL-licensed sandbox components, including proot.
    The on-device sandbox is a WebAssembly runtime (Pyodide and QuickJS loaded

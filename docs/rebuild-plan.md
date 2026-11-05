@@ -111,6 +111,7 @@ it, not at the end.
 | Agent loop | asks model for one action; never observes the screen | `AgentLoop.ets` |
 | `pc-agent` | CLI + MCP implemented: devices, dump, tap, double-tap, long-press, type, swipe, screenshot, launch, stop, key, install, uninstall | `pc-agent/src` |
 | `bench` | 5 tasks valid, runner, stub model, CLI | `bench/tasks` |
+| Brain | Kotlin router (17 assertions); JVM service not started | `brain/src` |
 | Knowledge | none: 0 `APP.md`, 0 sites, 0 skills | — |
 | CI | Python tests + ruff; HAP build and core Local Tests skip with a warning when the mirrored toolchain secret is absent | `.github/workflows/ci.yml` |
 | Tests baseline | 216 Python tests pass (pc-agent, bench, agent, plan tooling), agent coverage 89%, 5 bench tasks validate; ArkTS tests not run here | local run 2026-11-05 |
@@ -388,8 +389,8 @@ Module responsibilities:
 ### 7.1 Brain service
 
 - [ ] Extract the ported Mika subset (Appendix A.2 and A.2b) into a standalone JVM module with zero `android.*` imports
-- [ ] Verify with `grep -r "android\."` returning nothing in the ported module
-- [ ] Build with JDK 17; pin the toolchain
+- [x] Verify with `grep -r "android\."` returning nothing in the ported module (evidence: grep -r "android\." brain/src returns nothing)
+- [x] Build with JDK 17; pin the toolchain (evidence: scripts/brain.ps1 / brain.sh (Kotlin 2.1.0, JDK 17))
 - [ ] HTTP API `POST /decide`: `{goal, observation, history, settings}` → `{action, say, done}`
 - [ ] Sticky session id for multi-step tasks
 - [ ] Health and version endpoints
@@ -398,7 +399,7 @@ Module responsibilities:
 - [ ] No network except the model endpoint
 - [ ] Dockerfile for repeatable local runs
 - [ ] `NOTICE` lists every Mika file reused
-- [ ] `docs/port-log.md` started
+- [x] `docs/port-log.md` started (evidence: docs/port-log.md)
 
 ### 7.2 Knowledge port
 
@@ -419,18 +420,18 @@ Module responsibilities:
 
 ### 7.3 Routing
 
-- [ ] Port `KnowledgeStore.matchTask` (lexical, installed-first, word boundaries)
-- [ ] Port `ChannelAdvisor` (app vs web vs signed-in)
+- [x] Port `KnowledgeStore.matchTask` (lexical, installed-first, word boundaries) (evidence: brain/src/main/kotlin/hopa/brain/Router.kt + RouterTest)
+- [x] Port `ChannelAdvisor` (app vs web vs signed-in) (evidence: brain/src/main/kotlin/hopa/brain/Router.kt + RouterTest)
 - [ ] Port `GuideCatalog` and the skills index
-- [ ] Port `packageFor`
+- [x] Port `packageFor` (evidence: brain/src/main/kotlin/hopa/brain/Router.kt + RouterTest)
 - [x] Add installed-app listing: `pc-agent apps` → `{bundle, label}` (evidence: pc-agent/src/hopa_pc_agent/apps.py + tests)
 - [ ] Unknown app: list → label → launch → generic operation
 - [ ] Ambiguous match → ask the user once, remember the answer
-- [ ] Routing tests: known app, alias, domain, unknown, two plausible
-- [ ] Routing tests: generic words never match (`app`, `web`, `site`)
+- [x] Routing tests: known app, alias, domain, unknown, two plausible (evidence: brain/src/test/kotlin/hopa/brain/RouterTest.kt (17 assertions))
+- [x] Routing tests: generic words never match (`app`, `web`, `site`) (evidence: brain/src/test/kotlin/hopa/brain/RouterTest.kt)
 - [ ] Bench: open 5 apps by name
 - [ ] Bench: operate a freshly installed unknown app
-- [ ] Document the honest limit: lexical, not embeddings; no auto-learning for unknown apps
+- [x] Document the honest limit: lexical, not embeddings; no auto-learning for unknown apps (evidence: docs/port-log.md (honest limits))
 - [ ] Pinyin and English aliases for Chinese app names
 - [ ] Locale-aware matching for zh-CN and en-US
 - [ ] App-not-installed detection in routing, with an install option

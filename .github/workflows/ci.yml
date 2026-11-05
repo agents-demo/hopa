@@ -108,6 +108,23 @@ jobs:
           path: app/entry/build/default/outputs/default/*.hap
           if-no-files-found: error
 
+  brain:
+    name: brain (JDK 17 + Kotlin 2.1.0)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Cache Kotlin compiler
+        uses: actions/cache@v4
+        with:
+          path: .tools/kotlinc
+          key: kotlin-2.1.0-linux
+      - name: Compile and test
+        run: bash scripts/brain.sh
+
   core-tests:
     name: core unit tests (macOS, Local Test)
     # hvigorw Local Test is unsupported on Linux; run it on macOS.

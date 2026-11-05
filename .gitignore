@@ -76,3 +76,6 @@ desktop.ini
 *.log
 *.swp
 *~
+
+# Local toolchains (Kotlin compiler, SDKs)
+.tools/
