@@ -107,6 +107,10 @@ jobs:
   core-tests:
     name: core unit tests (macOS, Local Test)
     # hvigorw Local Test is unsupported on Linux; run it on macOS.
+    # Off by default: without the macOS CLT secret the job would only skip, but
+    # it still queues a macOS runner and makes the whole run look stuck.
+    # Enable with the repository variable ENABLE_ARKTS_TESTS=true.
+    if: vars.ENABLE_ARKTS_TESTS == 'true'
     runs-on: macos-latest
     env:
       CLT_URL: ${{ secrets.HARMONY_CLI_TOOLS_URL_MACOS }}
