@@ -137,6 +137,10 @@ packaged into the app.
 - [docs/bench-v0.md](docs/bench-v0.md) — the first five tasks, predicates and
   failure taxonomy.
 - [docs/brain.md](docs/brain.md) — JVM brain endpoints and decision contract.
+- [docs/safety.md](docs/safety.md) — payment, irreversible actions, limits.
+- [docs/threat-model.md](docs/threat-model.md) — assets, actors, threats.
+- [docs/privacy.md](docs/privacy.md) — data inventory, retention, consent.
+- [SECURITY.md](SECURITY.md) — reporting and key handling.
 - [docs/status.md](docs/status.md) — honest current state.
 - [docs/roadmap.md](docs/roadmap.md) — milestones G1–G4.
 - [docs/rebuild-plan.md](docs/rebuild-plan.md) — the delivery plan: phases,

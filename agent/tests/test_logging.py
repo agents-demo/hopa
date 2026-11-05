@@ -5,6 +5,7 @@ from pathlib import Path
 from hopa_agent.actions import Action
 from hopa_agent.executor import DeviceExecutor
 from hopa_agent.logging import JsonlLogger
+from hopa_agent.records import RunStore
 
 
 def test_logs_jsonl_and_reads_back(tmp_path: Path):
@@ -50,3 +51,12 @@ def test_executor_writes_a_step_event(settings_device, tmp_path: Path):
     assert events[0]["event"] == "step"
     assert events[0]["runId"] == "r1"
     assert events[0]["executed"] is True
+
+
+def test_record_redacts_action_text(settings_device, tmp_path: Path):
+    store = RunStore(tmp_path / "runs.jsonl")
+    executor = DeviceExecutor(settings_device, store=store)
+    executor.execute(
+        Action.from_dict({"kind": "ui.type", "ref": "e3", "text": "mail a.b@example.com"})
+    )
+    assert "a.b@example.com" not in (tmp_path / "runs.jsonl").read_text(encoding="utf-8")

@@ -114,7 +114,7 @@ it, not at the end.
 | Brain | Kotlin router + HTTP service (34 assertions + schema contract) | `brain/src`, `docs/brain.md` |
 | Knowledge | none: 0 `APP.md`, 0 sites, 0 skills | — |
 | CI | Python tests + ruff; HAP build and core Local Tests skip with a warning when the mirrored toolchain secret is absent | `.github/workflows/ci.yml` |
-| Tests baseline | 216 Python tests pass (pc-agent, bench, agent, plan tooling), agent coverage 89%, 5 bench tasks validate; ArkTS tests not run here | local run 2026-11-05 |
+| Tests baseline | 222 Python tests pass (pc-agent, bench, agent, plan tooling), agent coverage 90%, 5 bench tasks validate; ArkTS tests not run here | local run 2026-11-05 |
 
 Known gaps to close first:
 
@@ -727,65 +727,65 @@ Module responsibilities:
 
 ### 10.1 Payment
 
-- [ ] Classify payment from screen semantics, not action kind
-- [ ] Detect pay, checkout, confirm order, amount, merchant, currency
-- [ ] Any tap on a payment-classified screen asks
+- [x] Classify payment from screen semantics, not action kind (evidence: ApprovalPolicy.classify (screen semantics))
+- [x] Detect pay, checkout, confirm order, amount, merchant, currency (evidence: PAYMENT_SCREEN_WORDS + extract_payment_context)
+- [x] Any tap on a payment-classified screen asks (evidence: agent/tests/test_policy.py)
 - [ ] Approval sheet shows amount, merchant and consequence
-- [ ] Deny stops the branch and cannot be retried elsewhere
-- [ ] Approval is never remembered
-- [ ] Model cannot clear or set payment classification
-- [ ] Test: model claims “already approved” → still asks
-- [ ] Test: model sets `isPayment:false` → ignored
-- [ ] Test: hidden payment step inside a long flow → asks
+- [x] Deny stops the branch and cannot be retried elsewhere (evidence: DeviceExecutor deny path + AgentLoop stop)
+- [x] Approval is never remembered (evidence: ApprovalPolicy has no remember state)
+- [x] Model cannot clear or set payment classification (evidence: Action.from_dict drops isPayment)
+- [x] Test: model claims “already approved” → still asks (evidence: agent/tests/test_adversarial.py)
+- [x] Test: model sets `isPayment:false` → ignored (evidence: agent/tests/test_adversarial.py)
+- [x] Test: hidden payment step inside a long flow → asks (evidence: agent/tests/test_adversarial.py)
 - [ ] 100% refusal on the payment bench
 - [ ] Tested on 3 checkout flows with a test merchant and no real charge
 
 ### 10.2 Irreversible actions
 
-- [ ] Send message, call, delete, uninstall, reset → ask
+- [x] Send message, call, delete, uninstall, reset → ask (evidence: SENSITIVE_KINDS + test_policy)
 - [ ] Bulk actions capped
 - [ ] Undo offered where the platform allows
-- [ ] Plain-language confirmation text
-- [ ] Tests for each action class
+- [x] Plain-language confirmation text (evidence: ApprovalRequest.consequence + docs/safety.md)
+- [x] Tests for each action class (evidence: agent/tests/test_policy.py (sensitive kinds))
 
 ### 10.3 Security
 
-- [ ] Prompt injection: screen text never becomes instructions
-- [ ] Tool allow-list per task
+- [x] Prompt injection: screen text never becomes instructions (evidence: agent/tests/test_safety.py + SYSTEM_PROMPT)
+- [x] Tool allow-list per task (evidence: DeviceExecutor.allowed_kinds + test_safety)
 - [ ] Optional app allow-list
 - [ ] Sandbox escape suite green
 - [ ] Secrets absent from logs and traces
-- [ ] Redaction suite green
+- [x] Redaction suite green (evidence: agent/tests/test_observation.py (20 cases))
 - [ ] TLS and certificate handling decided and documented
 - [ ] Dependency audit clean
-- [ ] Threat model document
+- [x] Threat model document (evidence: docs/threat-model.md)
 - [ ] External pen-test checklist
-- [ ] `SECURITY.md`
+- [x] `SECURITY.md` (evidence: SECURITY.md)
 - [ ] Emergency stop: one visible control cancels the run
-- [ ] Audit log tamper-evidence (hash chain)
+- [x] Audit log tamper-evidence (hash chain) (evidence: RunStore.verify_chain + test_records)
 - [ ] Accessibility scope transparency: what is read, when, and why
 - [ ] Overlay and tapjacking added to the threat model
 - [ ] Remote/MCP server binds to localhost and requires auth
 - [ ] Kill switch for the model provider
-- [ ] API-key rotation and revocation procedure
-- [ ] Provider-compromise playbook: revoke key, purge logs, notify users
+- [x] API-key rotation and revocation procedure (evidence: SECURITY.md (key rotation))
+- [x] Provider-compromise playbook: revoke key, purge logs, notify users (evidence: SECURITY.md (provider playbook))
 - [ ] Consent revocation mid-task stops actions immediately
-- [ ] Sensitive-screen detection (banking, passwords) documented
+- [x] Sensitive-screen detection (banking, passwords) documented (evidence: docs/safety.md + PASSWORD_WORDS)
 - [ ] Screenshot minimization: capture only what the step needs
 - [ ] Screenshot retention and deletion policy implemented
-- [ ] Never store card numbers, CVV or full bank details
-- [ ] Subscription and recurring-charge text detected in checkout
-- [ ] Rate limits and caps for messaging, posting and purchasing
+- [x] Never store card numbers, CVV or full bank details (evidence: observation.redact + record action redaction)
+- [x] Subscription and recurring-charge text detected in checkout (evidence: SUBSCRIPTION_WORDS + test_safety)
+- [x] Rate limits and caps for messaging, posting and purchasing (evidence: ActionLimiter + test_safety)
 - [ ] Coexistence with the system screen reader
 
 ### 10.4 Privacy
 
-- [ ] Data inventory: what is read, stored, sent
-- [ ] Privacy retention policy covers every stored data class
+- [x] Data inventory: what is read, stored, sent (evidence: docs/privacy.md)
+- [x] Privacy retention policy covers every stored data class (evidence: docs/privacy.md)
 - [ ] Consent flows for screen capture and model calls
 - [ ] Export and delete all data
 - [ ] Encryption at rest
-- [ ] No analytics by default
+- [x] No analytics by default (evidence: docs/privacy.md (no analytics code))
 - [ ] DPIA draft
 - [ ] Privacy policy
 - [ ] Schema versioning and migrations for records, memory and knowledge
@@ -794,7 +794,7 @@ Module responsibilities:
 - [ ] Corruption detection and recovery
 - [ ] Device and cloud backup excludes secrets, is encrypted, and restore is tested
 - [ ] Encryption key rotation
-- [ ] Statement that user data is not used for model training
+- [x] Statement that user data is not used for model training (evidence: docs/privacy.md (no training))
 
 ### 10.5 Exit criteria (M5)
 

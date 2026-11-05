@@ -15,10 +15,11 @@ from hopa_pc_agent.errors import HopaError
 
 from .actions import Action
 from .capture import capture
-from .errors import ActionError, AgentError, CapabilityError
+from .errors import ActionError, AgentError, CapabilityError, PolicyError
+from .limits import ActionLimiter
 from .logging import JsonlLogger
 from .net import UrlPolicy
-from .observation import Observation
+from .observation import Observation, redact
 from .policy import ApprovalPolicy, ApprovalRequest, Decision, RiskLevel
 from .records import RunRecord, RunStore
 
@@ -75,6 +76,8 @@ class DeviceExecutor:
         out_dir: str | None = None,
         url_policy: UrlPolicy | None = None,
         logger: JsonlLogger | None = None,
+        limiter: ActionLimiter | None = None,
+        allowed_kinds: set[str] | None = None,
         sleep: Callable[[float], None] = time.sleep,
     ) -> None:
         self.device = device
@@ -87,6 +90,8 @@ class DeviceExecutor:
         self.out_dir = out_dir
         self.url_policy = url_policy or UrlPolicy()
         self.logger = logger
+        self.limiter = limiter
+        self.allowed_kinds = allowed_kinds
         self.observer = observer or (
             lambda: capture(device, screenshot=screenshot, out_dir=out_dir)
         )
@@ -126,6 +131,12 @@ class DeviceExecutor:
             approved = True
 
         if approved:
+            guard_error = self._guard(action)
+            if guard_error is not None:
+                approved = False
+                error = guard_error
+
+        if approved:
             key = (action.hash(), before.hash)
             if self._last_key == key and action.kind not in NOOP_KINDS:
                 error = "duplicate action on the same observation"
@@ -135,6 +146,8 @@ class DeviceExecutor:
                     self._dispatch(action, before)
                     executed = True
                     self._last_key = key
+                    if self.limiter is not None:
+                        self.limiter.record(action.kind)
                 except AgentError as exc:
                     error = str(exc)
                 except HopaError as exc:
@@ -146,11 +159,14 @@ class DeviceExecutor:
                     after = self.observe()
                     verified = self._verify(action, before, after)
 
+        action_payload = action.to_dict()
+        if action_payload.get("text"):
+            action_payload["text"] = redact(str(action_payload["text"]))
         record = RunRecord(
             run_id=run_id,
             step=step,
             trace_id=self.trace_id,
-            action=action.to_dict(),
+            action=action_payload,
             classification=classification.value,
             approved=approved,
             observation_hash=before.hash,
@@ -190,6 +206,16 @@ class DeviceExecutor:
         )
 
     # -- dispatch ------------------------------------------------------------
+
+    def _guard(self, action: Action) -> str | None:
+        if self.allowed_kinds is not None and action.kind not in self.allowed_kinds:
+            return f"{action.kind} is not allowed for this task"
+        if self.limiter is not None:
+            try:
+                self.limiter.check(action.kind)
+            except PolicyError as exc:
+                return str(exc)
+        return None
 
     def _dispatch(self, action: Action, observation: Observation) -> None:
         kind = action.kind

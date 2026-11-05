@@ -103,7 +103,11 @@ class Action:
             app=str(data.get("app") or ""),
             url=str(data.get("url") or ""),
             timeout_ms=_int_or_none(data.get("timeoutMs", data.get("timeout_ms"))) or 10_000,
-            direction=str(data.get("direction") or data.get("text") or ""),
+            direction=str(
+                data.get("direction")
+                or (data.get("text") if kind in {"ui.scroll", "ui.swipe"} else "")
+                or ""
+            ),
             ignored_fields=ignored,
         )
         action.validate()

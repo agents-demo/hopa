@@ -48,6 +48,40 @@ PAYMENT_SCREEN_WORDS = {
     "银行卡",
 }
 
+SUBSCRIPTION_WORDS = {
+    "subscription",
+    "recurring",
+    "auto-renew",
+    "auto renew",
+    "per month",
+    "per year",
+    "monthly",
+    "annual",
+    "订阅",
+    "自动续费",
+    "包月",
+    "包年",
+}
+
+PASSWORD_WORDS = {
+    "password",
+    "passcode",
+    "otp",
+    "one-time code",
+    "cvv",
+    "验证码",
+    "密码",
+    "支付密码",
+}
+
+SENSITIVE_SCREEN_WORDS = PASSWORD_WORDS | {
+    "bank",
+    "banking",
+    "card number",
+    "银行",
+    "银行卡",
+}
+
 SENSITIVE_KINDS = {
     "system.openLink",
     "system.share",
@@ -108,6 +142,7 @@ class ApprovalRequest:
     merchant: str = ""
     consequence: str = ""
     excerpt: str = ""
+    subscription: bool = False
 
     def to_dict(self) -> dict:
         return {
@@ -117,6 +152,7 @@ class ApprovalRequest:
             "merchant": self.merchant,
             "consequence": self.consequence,
             "excerpt": self.excerpt,
+            "subscription": self.subscription,
         }
 
 
@@ -128,6 +164,15 @@ class ApprovalPolicy:
 
     def is_payment_screen(self, observation: Observation) -> bool:
         return observation.contains_any(self.payment_words)
+
+    def is_password_screen(self, observation: Observation) -> bool:
+        return observation.contains_any(PASSWORD_WORDS)
+
+    def is_sensitive_screen(self, observation: Observation) -> bool:
+        return observation.contains_any(SENSITIVE_SCREEN_WORDS)
+
+    def is_subscription(self, observation: Observation) -> bool:
+        return observation.contains_any(SUBSCRIPTION_WORDS)
 
     def classify(self, action: Action, observation: Observation) -> RiskLevel:
         if action.kind in PAYMENT_KINDS:
@@ -155,6 +200,8 @@ class ApprovalPolicy:
     def decide(self, action: Action, observation: Observation) -> Decision:
         if self.is_emergency_call(action):
             return Decision.BLOCK
+        if action.kind == "ui.type" and self.is_password_screen(observation):
+            return Decision.BLOCK
         level = self.classify(action, observation)
         if level == RiskLevel.READ:
             return Decision.ALLOW
@@ -163,19 +210,33 @@ class ApprovalPolicy:
     def approval_request(self, action: Action, observation: Observation) -> ApprovalRequest:
         level = self.classify(action, observation)
         amount, merchant = extract_payment_context(observation)
+        subscription = self.is_subscription(observation)
         if self.is_emergency_call(action):
             return ApprovalRequest(
                 classification=level.value,
                 reason="Emergency numbers are never dialled by HOPA.",
                 consequence="The user must place the call.",
                 excerpt=observation.text[:200],
+                subscription=subscription,
+            )
+        if action.kind == "ui.type" and self.is_password_screen(observation):
+            return ApprovalRequest(
+                classification=RiskLevel.SENSITIVE.value,
+                reason="HOPA never types into a password or one-time-code field.",
+                consequence="The user must type it.",
+                excerpt=observation.text[:200],
+                subscription=subscription,
             )
         if level == RiskLevel.PAYMENT:
             reason = "This screen looks like a checkout or payment screen."
             consequence = "Money may leave the account. HOPA never repeats a payment."
+            if subscription:
+                consequence += " This is a recurring charge."
         elif level == RiskLevel.SENSITIVE:
             reason = f"{action.kind} is irreversible or leaves the app."
             consequence = "The action may not be undoable."
+            if subscription:
+                consequence += " This may create a recurring charge."
         else:
             reason = "No approval needed."
             consequence = ""
@@ -186,6 +247,7 @@ class ApprovalPolicy:
             merchant=merchant,
             consequence=consequence,
             excerpt=observation.text[:200],
+            subscription=subscription,
         )
 
 
