@@ -82,9 +82,7 @@ def test_missing_text_marks_step_failed() -> None:
 def test_wait_is_executed_without_sleeping_for_real() -> None:
     slept: list[float] = []
     device = FakeDevice()
-    Runner(device, sleep=slept.append).run_task(
-        _task([Action("wait", {"seconds": 1.5})])
-    )
+    Runner(device, sleep=slept.append).run_task(_task([Action("wait", {"seconds": 1.5})]))
     assert slept == [1.5]
 
 
@@ -119,8 +117,6 @@ def test_observation_error_is_captured() -> None:
 
 
 def test_unknown_action_fails_cleanly() -> None:
-    result = Runner(FakeDevice(), sleep=lambda _: None).run_task(
-        _task([Action("teleport")])
-    )
+    result = Runner(FakeDevice(), sleep=lambda _: None).run_task(_task([Action("teleport")]))
     assert result.steps[0].ok is False
     assert "unsupported" in result.steps[0].detail

@@ -138,18 +138,20 @@ def _cmd_dump(args: argparse.Namespace, device: Device) -> int:
             }
             for node in matches
         ]
-        human = "\n".join(
-            f"{item['text'] or item['description'] or item['type']} "
-            f"center={item['center']} bounds={item['bounds']} clickable={item['clickable']}"
-            for item in payload
-        ) or "no matching nodes"
+        human = (
+            "\n".join(
+                f"{item['text'] or item['description'] or item['type']} "
+                f"center={item['center']} bounds={item['bounds']} clickable={item['clickable']}"
+                for item in payload
+            )
+            or "no matching nodes"
+        )
         _emit(args, payload, human)
         return 0 if matches else 1
 
     summary = _layout_summary(layout)
-    human = (
-        f"{summary['nodes']} nodes, {summary['clickable']} clickable\n"
-        + "\n".join(f"- {text}" for text in summary["texts"][:40])
+    human = f"{summary['nodes']} nodes, {summary['clickable']} clickable\n" + "\n".join(
+        f"- {text}" for text in summary["texts"][:40]
     )
     _emit(args, summary, human)
     return 0

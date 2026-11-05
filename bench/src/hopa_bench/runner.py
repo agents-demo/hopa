@@ -40,8 +40,7 @@ class TaskResult:
             "error": self.error,
             "duration_s": round(self.duration_s, 3),
             "steps": [
-                {"action": step.action, "ok": step.ok, "detail": step.detail}
-                for step in self.steps
+                {"action": step.action, "ok": step.ok, "detail": step.detail} for step in self.steps
             ],
         }
 
@@ -165,9 +164,7 @@ class Runner:
         if spec.type == "text_visible":
             layout = self.device.dump_layout()
             haystack = [text.lower() for text in layout.texts()]
-            haystack.extend(
-                node.description.lower() for node in layout.walk() if node.description
-            )
+            haystack.extend(node.description.lower() for node in layout.walk() if node.description)
 
             def present(needle: str) -> bool:
                 return any(needle.lower() in text for text in haystack)
@@ -181,9 +178,7 @@ class Runner:
 
     def _app_foreground(self, bundle: str) -> bool | None:
         try:
-            output = self.device.hdc.shell(
-                "hidumper -s WindowManagerService -a '-a'", check=False
-            )
+            output = self.device.hdc.shell("hidumper -s WindowManagerService -a '-a'", check=False)
         except Exception:  # noqa: BLE001 - best-effort check
             return None
         if not output:

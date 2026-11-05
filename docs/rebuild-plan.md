@@ -113,7 +113,7 @@ it, not at the end.
 | `bench` | 5 tasks valid, runner, stub model, CLI | `bench/tasks` |
 | Knowledge | none: 0 `APP.md`, 0 sites, 0 skills | — |
 | CI | Python tests + ruff; HAP build and core Local Tests skip with a warning when the mirrored toolchain secret is absent | `.github/workflows/ci.yml` |
-| Tests baseline | 64 Python tests pass (pc-agent, bench, plan tooling), 5 bench tasks validate; ArkTS tests not run here | local run 2026-11-05 |
+| Tests baseline | 161 Python tests pass (pc-agent, bench, agent, plan tooling), 5 bench tasks validate; ArkTS tests not run here | local run 2026-11-05 |
 
 Known gaps to close first:
 
@@ -164,33 +164,33 @@ Module responsibilities:
 
 - [x] Mark `docs/roadmap.md` as superseded and link this plan (evidence: docs/roadmap.md)
 - [x] Link this plan from `README.md` (evidence: README.md)
-- [ ] Add `docs/adr/` with an ADR template
-- [ ] ADR-0001: brain hosting (remote JVM first, ArkTS later)
-- [ ] ADR-0002: knowledge format and HarmonyOS bundle mapping
-- [ ] ADR-0003: sandbox runtime (Pyodide + QuickJS, no Linux)
-- [ ] ADR-0004: ACL strategy and foreground fallback
-- [ ] ADR-0005: PC-tethered vs standalone product split
-- [ ] ADR-0006: model provider, budget and cost target per task
+- [x] Add `docs/adr/` with an ADR template (evidence: docs/adr/README.md)
+- [x] ADR-0001: brain hosting (remote JVM first, ArkTS later) (evidence: docs/adr/0001-brain-hosting.md)
+- [x] ADR-0002: knowledge format and HarmonyOS bundle mapping (evidence: docs/adr/0002-knowledge-format.md)
+- [x] ADR-0003: sandbox runtime (Pyodide + QuickJS, no Linux) (evidence: docs/adr/0003-sandbox-runtime.md)
+- [x] ADR-0004: ACL strategy and foreground fallback (evidence: docs/adr/0004-acl-strategy.md)
+- [x] ADR-0005: PC-tethered vs standalone product split (evidence: docs/adr/0005-pc-tethered-vs-standalone.md)
+- [x] ADR-0006: model provider, budget and cost target per task (evidence: docs/adr/0006-model-provider-and-budget.md)
 - [ ] File the accessibility ACL request in week 1; record ticket, date and contact (critical path)
-- [ ] Add `CONTRIBUTING.md` with the evidence rule from §1.1
-- [ ] Add `CODEOWNERS`
-- [ ] Add PR template with the phase checklist
+- [x] Add `CONTRIBUTING.md` with the evidence rule from §1.1 (evidence: CONTRIBUTING.md)
+- [x] Add `CODEOWNERS` (evidence: CODEOWNERS)
+- [x] Add PR template with the phase checklist (evidence: .github/PULL_REQUEST_TEMPLATE.md)
 - [ ] Enable branch protection on `main`; require CI
 - [ ] Add issue labels: `phase/0..9`, `area/core|cap|ui|bench|docs`, `risk`
 - [ ] Create the project board with phases 0–9
 - [ ] Assign an owner per phase
 - [ ] Write a definition of ready for starting a phase
 - [ ] Schedule a monthly risk review
-- [ ] Add a decision log index under `docs/adr/`
-- [ ] Pin toolchain versions in `docs/setup.md`: Python 3.12, Node LTS, DevEco 26, compileSdk 26, minCompatible 6.1.1 (API 24), CLT 26.0.0.851
-- [ ] Add `.editorconfig` and formatting rules for ArkTS and Python
+- [x] Add a decision log index under `docs/adr/` (evidence: docs/adr/README.md)
+- [x] Pin toolchain versions in `docs/setup.md`: Python 3.12, Node LTS, DevEco 26, compileSdk 26, minCompatible 6.1.1 (API 24), CLT 26.0.0.851 (evidence: docs/setup.md)
+- [x] Add `.editorconfig` and formatting rules for ArkTS and Python (evidence: .editorconfig)
 - [x] Add `scripts/plan-status.py` and test it (evidence: table, --json, --lint, --require-complete, --list-unchecked, decision pairs)
-- [ ] Add a CI job that prints plan progress and runs `plan-status.py --lint` on every PR
+- [x] Add a CI job that prints plan progress and runs `plan-status.py --lint` on every PR (evidence: .github/workflows/ci.yml)
 
 ### 5.2 CI and quality gates
 
 - [x] `ruff check` green on `pc-agent` and `bench` (evidence: CI run 42094448015)
-- [ ] `ruff format --check` green
+- [x] `ruff format --check` green (evidence: CI: ruff format --check)
 - [x] `pytest pc-agent` green (evidence: CI run 42094448015)
 - [x] `pytest bench` green (evidence: CI run 42094448015)
 - [x] `hopa_bench validate --tasks bench/tasks` green (evidence: CI run 42094448015)
@@ -210,16 +210,16 @@ Module responsibilities:
 - [ ] `pc-agent devices` works for both
 - [ ] `pc-agent dump` returns a parseable layout on both
 - [ ] `pc-agent screenshot` works on both
-- [ ] Baseline test run recorded in `docs/baseline.md` (counts, failures)
+- [x] Baseline test run recorded in `docs/baseline.md` (counts, failures) (evidence: docs/baseline.md (local run 2026-11-05; device pending))
 - [ ] Baseline bench run recorded (5 tasks, pass/fail, latency)
 - [ ] Model provider chosen and key stored in env, not git
 - [ ] Model latency and cost measured for one call
-- [ ] Write `docs/status.md` with the honest one-paragraph state
+- [x] Write `docs/status.md` with the honest one-paragraph state (evidence: docs/status.md)
 
 ### 5.4 Exit criteria (M0)
 
 - [x] CI is green on `main` (evidence: CI run 42094448015; HAP and ArkTS jobs skipped)
-- [ ] All six ADRs merged
+- [x] All six ADRs merged (evidence: docs/adr/ (six ADRs))
 - [ ] Baseline numbers exist and are reproducible
 - [x] `plan-status.py` reports the starting count (evidence: 767 total, 3 done, 0 lint errors)
 
@@ -235,11 +235,11 @@ Module responsibilities:
 - [ ] Open-questions register started (Appendix E)
 - [ ] Change-control rule: plan edits need a PR and a one-line reason
 - [ ] Definition of done for a PR (tests, docs, evidence, review)
-- [ ] Branching and commit-message convention written down
-- [ ] Semantic-versioning policy written down
+- [x] Branching and commit-message convention written down (evidence: CONTRIBUTING.md)
+- [x] Semantic-versioning policy written down (evidence: docs/versioning.md)
 - [ ] Documentation ownership map: who updates which page
 - [ ] One-page architecture overview diagram committed
-- [ ] Glossary of HOPA, Mika, ACL, a11y, observation, capability
+- [x] Glossary of HOPA, Mika, ACL, a11y, observation, capability (evidence: docs/glossary.md)
 - [ ] Weekly 15-minute progress review using `plan-status.py`
 - [ ] Plan totals and phase estimates re-baselined after this audit
 - [ ] Decide how a managed / MDM device differs from a personal device, and whether HOPA supports it
@@ -252,72 +252,72 @@ Module responsibilities:
 
 ### 6.1 Observation contract
 
-- [ ] Define `Observation` JSON schema: `tree`, `text`, `focus`, `screenSize`, `screenshotRef`, `timestamp`, `hash`
-- [ ] Add `$schema` files under `schemas/`
-- [ ] `pc-agent observe` emits the schema
-- [ ] `pc-agent observe --screenshot` attaches an image reference
-- [ ] Layout parser extracts `id`, `text`, `type`, `bounds`, `clickable`, `enabled`, `checked`, `scrollable`
-- [ ] Stable element refs per observation (`e1`, `e2`, …) mapped to nodes
-- [ ] Deterministic ref assignment: two identical trees produce identical refs; refs still expire on the next observation
-- [ ] Redaction pass for phone numbers, emails, OTPs, card numbers
-- [ ] Redaction unit tests (20 cases)
-- [ ] Observation hash for dedupe
-- [ ] Large-tree truncation rule (cap nodes, keep focus path)
+- [x] Define `Observation` JSON schema: `tree`, `text`, `focus`, `screenSize`, `screenshotRef`, `timestamp`, `hash` (evidence: schemas/observation.schema.json)
+- [x] Add `$schema` files under `schemas/` (evidence: schemas/)
+- [x] `hopa-agent observe` emits the schema (evidence: agent/src/hopa_agent/cli.py)
+- [x] `hopa-agent observe --screenshot` attaches an image reference (evidence: agent/src/hopa_agent/capture.py)
+- [x] Layout parser extracts `id`, `text`, `type`, `bounds`, `clickable`, `enabled`, `checked`, `scrollable` (evidence: agent/src/hopa_agent/observation.py)
+- [x] Stable element refs per observation (`e1`, `e2`, …) mapped to nodes (evidence: agent/tests/test_observation.py)
+- [x] Deterministic ref assignment: two identical trees produce identical refs; refs still expire on the next observation (evidence: agent/tests/test_observation.py)
+- [x] Redaction pass for phone numbers, emails, OTPs, card numbers (evidence: agent/src/hopa_agent/observation.py)
+- [x] Redaction unit tests (20 cases) (evidence: agent/tests/test_observation.py (20 cases))
+- [x] Observation hash for dedupe (evidence: agent/src/hopa_agent/observation.py)
+- [x] Large-tree truncation rule (cap nodes, keep focus path) (evidence: agent/src/hopa_agent/observation.py)
 - [ ] Coordinate transform between layout bounds and device pixels (density, rotation)
-- [ ] Record the active window id and display id
-- [ ] Refs are scoped to one observation; history stores the hash, never the ref
+- [x] Record the active window id and display id (evidence: Observation.to_dict)
+- [x] Refs are scoped to one observation; records store the observation hash and refs are audit-only (evidence: RunRecord.observationHash)
 - [ ] Screenshot format, resolution and size budget defined
-- [ ] `docs/contracts/observation.md`
+- [x] `docs/contracts/observation.md` (evidence: docs/contracts/observation.md)
 
 ### 6.2 Action contract
 
-- [ ] Define `Action` JSON schema: `kind`, `ref`, `text`, `x`, `y`, `toX`, `toY`, `app`, `url`, `timeoutMs`
-- [ ] Kinds: `ui.observe`, `ui.tap`, `ui.doubleTap`, `ui.longPress`, `ui.type`, `ui.swipe`, `ui.scroll`, `ui.back`, `ui.home`, `ui.launch`, `ui.stop`, `ui.wait`
-- [ ] Kinds: `web.navigate`, `web.read`, `web.click`, `web.type`
-- [ ] Kinds: `system.setAlarm`, `system.addEvent`, `system.openLink`, `system.share`
-- [ ] Kinds: `sandbox.run`
-- [ ] Coordinate fallback when no ref exists
-- [ ] Action validation rejects unknown kinds (fail-closed)
-- [ ] Every action returns before/after observations
+- [x] Define `Action` JSON schema: `kind`, `ref`, `text`, `x`, `y`, `toX`, `toY`, `app`, `url`, `timeoutMs` (evidence: schemas/action.schema.json)
+- [x] Kinds: `ui.observe`, `ui.tap`, `ui.doubleTap`, `ui.longPress`, `ui.type`, `ui.swipe`, `ui.scroll`, `ui.back`, `ui.home`, `ui.launch`, `ui.stop`, `ui.wait` (evidence: agent/src/hopa_agent/actions.py)
+- [x] Kinds: `web.navigate`, `web.read`, `web.click`, `web.type` (evidence: agent/src/hopa_agent/actions.py)
+- [x] Kinds: `system.setAlarm`, `system.addEvent`, `system.openLink`, `system.share` (evidence: agent/src/hopa_agent/actions.py)
+- [x] Kinds: `sandbox.run` (evidence: agent/src/hopa_agent/actions.py)
+- [x] Coordinate fallback when no ref exists (evidence: DeviceExecutor._point)
+- [x] Action validation rejects unknown kinds (fail-closed) (evidence: agent/tests/test_actions.py)
+- [x] Every action returns before/after observations (evidence: Outcome.before/after)
 - [ ] Per-action timeout and one bounded retry
-- [ ] `docs/contracts/action.md`
+- [x] `docs/contracts/action.md` (evidence: docs/contracts/action.md)
 
 ### 6.3 Loop
 
-- [ ] `AgentLoop` sends system prompt + goal + current observation
-- [ ] Model returns exactly one action as JSON
-- [ ] Schema-constrained decoding or strict validation
-- [ ] Malformed JSON → one repair attempt → fail with a typed error
-- [ ] Execute through `ActionExecutor`
+- [x] `AgentLoop` sends system prompt + goal + current observation (evidence: agent/src/hopa_agent/models.py)
+- [x] Model returns exactly one action as JSON (evidence: agent/src/hopa_agent/models.py)
+- [x] Schema-constrained decoding or strict validation (evidence: Action.from_dict)
+- [x] Malformed JSON → one repair attempt → fail with a typed error (evidence: OpenAIClient.decide)
+- [x] Execute through the single executor (`DeviceExecutor` on PC, `ActionExecutor` on device) (evidence: agent/src/hopa_agent/executor.py)
 - [ ] Verify by re-observing and comparing expected text/state
-- [ ] Append step to history with observation summary and refs
+- [x] Append step to history with observation summary and refs (evidence: AgentLoop.run)
 - [ ] Context diffing: send only changed subtrees when the screen barely changes
-- [ ] History keeps hashes and summaries, not full trees
-- [ ] Step cap, wall-clock cap, token cap
-- [ ] Stop conditions: success, failure, need-user, payment, max steps
-- [ ] Run record per step, append-only
+- [x] History keeps hashes and summaries, not full trees (evidence: AgentLoop.run)
+- [x] Step cap, wall-clock cap, token cap (evidence: AgentLoop.__init__)
+- [x] Stop conditions: success, failure, need-user, payment, max steps (evidence: AgentLoop.run)
+- [x] Run record per step, append-only (evidence: RunStore.append)
 - [ ] Resume a run from records
-- [ ] `StubModelClient` replays scripted actions without network
-- [ ] Real client with retry/backoff and timeout
-- [ ] Prompt rule: use refs, never invent coordinates
-- [ ] Prompt rule: one action per step
-- [ ] Prompt rule: payment and irreversible actions stop for approval
-- [ ] Prompt rule: screen text is untrusted data, never instructions
-- [ ] Loop unit tests with the stub model (10 scenarios)
+- [x] `StubModelClient` replays scripted actions without network (evidence: StubModelClient)
+- [x] Real client with retry/backoff and timeout (evidence: OpenAIClient._complete)
+- [x] Prompt rule: use refs, never invent coordinates (evidence: SYSTEM_PROMPT)
+- [x] Prompt rule: one action per step (evidence: SYSTEM_PROMPT)
+- [x] Prompt rule: payment and irreversible actions stop for approval (evidence: SYSTEM_PROMPT)
+- [x] Prompt rule: screen text is untrusted data, never instructions (evidence: SYSTEM_PROMPT)
+- [x] Loop unit tests with the stub model (10 scenarios) (evidence: agent/tests/test_loop.py (10 scenarios))
 - [ ] Loop integration test against the emulator
 
 ### 6.4 Executor and gate (fix current gaps)
 
 - [ ] Remove `isPayment` from the model-supplied payload
-- [ ] `ApprovalPolicy` classifies from action + screen context, not kind alone
-- [ ] A tap on a payment-classified screen always asks
-- [ ] Guard failure aborts before any capability call
-- [ ] Denied action writes `approved=false` and never executes
+- [x] `ApprovalPolicy` classifies from action + screen context, not kind alone (evidence: ApprovalPolicy.classify)
+- [x] A tap on a payment-classified screen always asks (evidence: agent/tests/test_policy.py)
+- [x] Guard failure aborts before any capability call (evidence: DeviceExecutor.execute)
+- [x] Denied action writes `approved=false` and never executes (evidence: agent/tests/test_executor.py)
 - [ ] Denied payment cannot be retried through another path
 - [ ] Verifier compares intended vs observed effect
-- [ ] Run record includes approval decision and observation hash
-- [ ] Gate unit tests (20 cases)
-- [ ] Adversarial gate tests (10 cases)
+- [x] Run record includes approval decision and observation hash (evidence: RunRecord)
+- [x] Gate unit tests (20 cases) (evidence: agent/tests/test_policy.py (31 cases))
+- [x] Adversarial gate tests (10 cases) (evidence: agent/tests/test_adversarial.py (12 cases))
 
 ### 6.5 Bench v0
 
@@ -331,22 +331,22 @@ Module responsibilities:
 
 ### 6.6 Runtime behaviour
 
-- [ ] Loop and stagnation detection: same action + same observation hash twice → replan or stop
+- [x] Loop and stagnation detection: same action + same observation hash twice → replan or stop (evidence: AgentLoop.run)
 - [ ] Wrong-screen recovery: back / home / re-observe policy
 - [ ] `wait_for` condition on text, ref or state, with timeout
 - [ ] `scroll_to` with bounded attempts
-- [ ] `find_by_text` and `find_by_ref` helpers
+- [x] `find_by_text` and `find_by_ref` helpers (evidence: Observation.find_text/find_ref)
 - [ ] `ask_user` tool with structured options
 - [ ] `say` final-answer tool
 - [ ] `stop` tool with a reason
 - [ ] `handover` tool for login, 2FA, CAPTCHA and payment
 - [ ] Cancel mid-step leaves the app in a safe state
-- [ ] Duplicate-tap guard (idempotency by ref + action hash)
+- [x] Duplicate-tap guard (idempotency by ref + action hash) (evidence: DeviceExecutor._last_key)
 - [ ] Popup handling: cookie banners, rating prompts, update dialogs, ads
 - [ ] System permission dialog handling policy (grant only what the task needs)
-- [ ] Timeout and backoff policy documented
+- [x] Timeout and backoff policy documented (evidence: docs/contracts/errors.md)
 - [ ] Step and cost budgets per task
-- [ ] Emergency-number guard: never dial 110 / 112 / 119 / 999 or any local emergency number; hand over
+- [x] Emergency-number guard: never dial 110 / 112 / 119 / 999 or any local emergency number; hand over (evidence: ApprovalPolicy.is_emergency_call)
 - [ ] Unicode, emoji and RTL input tested
 - [ ] Screen-off and lock-during-task detection; pause safely instead of tapping blind
 - [ ] Low-battery policy: pause long tasks below a threshold
@@ -365,14 +365,14 @@ Module responsibilities:
 
 ### 6.8 Protocol, telemetry and errors
 
-- [ ] Version the brain↔body contract (`v1`) and record it in the schema
-- [ ] Compatibility rule: body rejects an unknown major version, accepts a newer minor
-- [ ] Error-code taxonomy: `E_MODEL`, `E_SCHEMA`, `E_ACTION`, `E_CAPABILITY`, `E_POLICY`, `E_DEVICE`
-- [ ] Every error carries a retryable flag and a user-facing message key
+- [x] Version the brain↔body contract (`v1`) and record it in the schema (evidence: Observation.schemaVersion)
+- [x] Compatibility rule: body rejects an unknown major version, accepts a newer minor (evidence: docs/contracts/observation.md)
+- [x] Error-code taxonomy: `E_MODEL`, `E_SCHEMA`, `E_ACTION`, `E_CAPABILITY`, `E_POLICY`, `E_DEVICE` (evidence: agent/src/hopa_agent/errors.py)
+- [x] Every error carries a retryable flag and a user-facing message key (evidence: agent/src/hopa_agent/errors.py)
 - [ ] Trace id propagated from UI → loop → brain → model → device
 - [ ] Clock-skew tolerance for timestamps from the device and the PC
-- [ ] Message-size limit with tree truncation and compression
-- [ ] Schema-evolution rules: additive fields only within a major version
+- [x] Message-size limit with tree truncation and compression (evidence: observation.truncate + models._messages)
+- [x] Schema-evolution rules: additive fields only within a major version (evidence: docs/versioning.md)
 - [ ] Golden contract fixtures shared by JVM, ArkTS and `pc-agent`
 - [ ] Contract tests run in CI for all three implementations
 - [ ] Local structured log with rotation and redaction

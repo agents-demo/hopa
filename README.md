@@ -23,6 +23,8 @@ See [docs/roadmap.md](docs/roadmap.md).
 | `app/core/` agent loop, tool registry, action gate | scaffold + unit tests |
 | `app/capabilities/` web / sandbox / a11y / system | scaffold |
 | `pc-agent/` hdc + uitest CLI & MCP server | implemented |
+| `agent/` PC reference loop (observe → decide → act → verify → record) | implemented + tests |
+| `schemas/` JSON contracts (observation, action, decision, record) | v1 |
 | `bench/` HOPA-Bench + 5 tasks | implemented |
 
 ## Safety model (non-negotiable)
@@ -57,8 +59,10 @@ hopa/
 │       ├── a11y/             # AccessibilityExtensionAbility skeleton (ACL)
 │       └── system/           # system intents (alarm, calendar, deep links)
 ├── pc-agent/                 # Python: hdc + uitest control, CLI and MCP server
+├── agent/                    # Python: reference loop, gate, policy, records
+├── schemas/                  # v1 JSON contracts shared with the ArkTS core
 ├── bench/                    # HOPA-Bench tasks + runner
-├── docs/                     # setup, architecture, roadmap
+├── docs/                     # setup, architecture, contracts, plan
 ├── scripts/                  # build / install / test / bench (bash + PowerShell)
 ├── .github/workflows/        # CI
 ├── CLAUDE.md                 # conventions for future coding sessions
@@ -105,11 +109,30 @@ pc-agent launch com.huawei.hmos.settings
 pc-agent mcp          # run as an MCP stdio server
 ```
 
+The reference loop runs on the PC for M1:
+
+```bash
+hopa-agent observe --json
+hopa-agent observe --screenshot --out .hopa/screens
+hopa-agent run "Open Settings and reach Bluetooth" --steps steps.json
+hopa-agent records --path .hopa/runs.jsonl
+hopa-agent verify-chain --path .hopa/runs.jsonl
+```
+
+The shipped HAP is **ArkTS only**. Python is the development harness; it is not
+packaged into the app.
+
 ## Documentation
 
 - [docs/setup.md](docs/setup.md) — toolchain, SDK paths, emulator, device, env vars.
 - [docs/architecture.md](docs/architecture.md) — layers, the action gate,
   capability boundaries, ACL/permission dependency list.
+- [docs/contracts/observation.md](docs/contracts/observation.md) — refs,
+  redaction, hashing, truncation.
+- [docs/contracts/action.md](docs/contracts/action.md) — kinds, validation,
+  payment classification.
+- [docs/contracts/errors.md](docs/contracts/errors.md) — error codes and retry
+  rules.
 - [docs/roadmap.md](docs/roadmap.md) — milestones G1–G4.
 - [docs/rebuild-plan.md](docs/rebuild-plan.md) — the delivery plan: phases,
   checkboxes, evidence rules and the definition of finished.

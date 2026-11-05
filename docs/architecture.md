@@ -69,6 +69,25 @@ bench (HOPA-Bench) ── uses pc-agent ──► scored tasks (5 now; 20 at M2;
 `capabilities/a11y` (once the ACL is granted), `capabilities/web`, and
 `capabilities/system`.
 
+### 2.1 PC reference loop (`agent/`)
+
+M1 runs the whole loop on the PC. `agent/` is the executable twin of `core/`:
+same observation, action, policy, executor and record contracts, in Python.
+
+| Module | Owns |
+|---|---|
+| `hopa_agent.observation` | redaction, refs, truncation, hashing, schema |
+| `hopa_agent.actions` | action kinds and validation |
+| `hopa_agent.policy` | payment/sensitive/read classification |
+| `hopa_agent.executor` | the single execution path |
+| `hopa_agent.loop` | observe → decide → act → verify → record |
+| `hopa_agent.models` | stub and OpenAI-compatible clients |
+| `hopa_agent.records` | append-only hash-chained JSONL |
+
+`hopa-agent observe` is the reference observation producer. `pc-agent dump`
+stays the raw `uitest` command. The ArkTS port follows the same contracts and
+uses the same golden files (`schemas/`, `agent/tests/test_schemas.py`).
+
 ## 3. Perception: tree + OCR + vision
 
 - Primary: accessibility tree / `uitest dumpLayout` (text, ids, bounds, roles).
@@ -118,12 +137,12 @@ class Action {
   text: string;
   url: string;
   x: number; y: number; toX: number; toY: number;
-  isPayment: boolean;    // set by classification, never by the model alone
+  // no isPayment field: the model may send one, the gate ignores it
 }
 ```
 
-The model may *propose* an action, but the executor owns `isPayment`
-classification. A model cannot clear a payment class.
+The model may *propose* an action, but the executor owns payment
+classification. A model cannot set or clear a payment class.
 
 ### Approval policy
 

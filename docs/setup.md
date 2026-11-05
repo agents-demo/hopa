@@ -24,7 +24,7 @@ included where they differ.
 | hdc | 3.2.0f | |
 | HarmonyOS Emulator | 26.0.0.402 | |
 | Bundled Node.js | 24.14.1 (LTS line) | do not replace the bundled copy |
-| Python | 3.12.x (>= 3.11) | for `pc-agent/` and `bench/` |
+| Python | 3.12.x (>= 3.11) | for `pc-agent/`, `bench/` and `agent/` |
 
 Official version overview:
 <https://developer.huawei.com/consumer/en/doc/doccenter-release-notes/overview-2600>
@@ -200,6 +200,9 @@ hdc file recv /data/local/tmp/screen.jpeg .\screen.jpeg
 cd app
 hvigorw assembleHap --no-daemon
 
+# reference observation (device required)
+hopa-agent observe --json
+
 # core unit tests (Windows/macOS only; NOT supported on Linux)
 hvigorw test -p module=core@default --no-daemon -p coverage=false
 ```
@@ -222,12 +225,17 @@ pip install -e ".[dev]"
 cd ..\bench
 pip install -e ".[dev]"
 
+cd ..\agent
+pip install -e ".[dev]"
+
 cd ..
 pc-agent devices
 pc-agent dump --out layout.json
+hopa-agent observe --json
 pytest pc-agent
 pytest bench
-ruff check pc-agent bench
+pytest agent
+ruff check pc-agent bench agent
 ```
 
 ## 10. Troubleshooting
@@ -240,7 +248,7 @@ ruff check pc-agent bench
 | `SDK component missing` | Do not mix IDE hvigor with CLI SDK (or vice versa). Use the Command Line Tools `hvigorw` + its SDK. |
 | `hvigorw test` hangs / fails | Unset `DEVECO_SDK_HOME` and `HOS_SDK_HOME`; Local Test is not supported on Linux. |
 | `spawn java ENOENT` | Use the JBR bundled with DevEco Studio, or install JDK 17+. |
-| Build uses wrong API level | Check `compileSdkVersion`/`compatibleSdkVersion` in `app/build-profile.json5` (should be `26.0.0`). |
+| Build uses wrong API level | Check `compileSdkVersion` (26.0.0) and `compatibleSdkVersion` (6.1.1 / API 24) in `app/build-profile.json5`. |
 | `ohpm install` can't reach registry | Corporate proxy? Configure `ohpm config set registry` per official docs. |
 
 ## 11. What still needs a human

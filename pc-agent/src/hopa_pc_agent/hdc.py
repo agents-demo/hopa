@@ -148,9 +148,7 @@ class Hdc:
         except FileNotFoundError as exc:
             raise HdcError(f"hdc executable not found: {self._resolve()}") from exc
         except subprocess.TimeoutExpired as exc:
-            raise HdcError(
-                f"hdc timed out after {effective_timeout}s: {' '.join(cmd)}"
-            ) from exc
+            raise HdcError(f"hdc timed out after {effective_timeout}s: {' '.join(cmd)}") from exc
 
         result = HdcResult(proc.stdout or "", proc.stderr or "", proc.returncode)
         if check and result.returncode != 0:
