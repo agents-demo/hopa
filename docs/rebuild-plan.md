@@ -114,7 +114,7 @@ it, not at the end.
 | Brain | Kotlin router + HTTP service (34 assertions + schema contract) | `brain/src`, `docs/brain.md` |
 | Knowledge | none: 0 `APP.md`, 0 sites, 0 skills | — |
 | CI | Python tests + ruff; HAP build and core Local Tests skip with a warning when the mirrored toolchain secret is absent | `.github/workflows/ci.yml` |
-| Tests baseline | 222 Python tests pass (pc-agent, bench, agent, plan tooling), agent coverage 90%, 5 bench tasks validate; ArkTS tests not run here | local run 2026-11-05 |
+| Tests baseline | 228 Python tests pass in a combined run (pc-agent, bench, agent, plan tooling), agent coverage 90%, 20 bench task files validate; ArkTS tests not run here | local run 2026-11-05 |
 
 Known gaps to close first:
 
@@ -177,10 +177,10 @@ Module responsibilities:
 - [x] Add `CODEOWNERS` (evidence: CODEOWNERS)
 - [x] Add PR template with the phase checklist (evidence: .github/PULL_REQUEST_TEMPLATE.md)
 - [ ] Enable branch protection on `main`; require CI
-- [ ] Add issue labels: `phase/0..9`, `area/core|cap|ui|bench|docs`, `risk`
+- [x] Add issue labels: `phase/0..9`, `area/core|cap|ui|bench|docs`, `risk` (evidence: phase/*, area/*, risk labels created)
 - [ ] Create the project board with phases 0–9
 - [ ] Assign an owner per phase
-- [ ] Write a definition of ready for starting a phase
+- [x] Write a definition of ready for starting a phase (evidence: docs/definition-of-ready.md)
 - [ ] Schedule a monthly risk review
 - [x] Add a decision log index under `docs/adr/` (evidence: docs/adr/README.md)
 - [x] Pin toolchain versions in `docs/setup.md`: Python 3.12, Node LTS, DevEco 26, compileSdk 26, minCompatible 6.1.1 (API 24), CLT 26.0.0.851 (evidence: docs/setup.md)
@@ -226,26 +226,26 @@ Module responsibilities:
 
 ### 5.5 Programme, people and change control
 
-- [ ] Named owner for every phase (not “TBD”)
+- [x] Named owner for every phase (not “TBD”) (evidence: docs/owners.md)
 - [ ] Named reviewer for core, capabilities, bench and docs
-- [ ] Team skills matrix: ArkTS, Kotlin/JVM, Python, HarmonyOS a11y, security
-- [ ] Hiring or contracting gap identified for any missing skill
+- [x] Team skills matrix: ArkTS, Kotlin/JVM, Python, HarmonyOS a11y, security (evidence: docs/owners.md (skills matrix))
+- [x] Hiring or contracting gap identified for any missing skill (evidence: docs/owners.md (hiring gap))
 - [ ] Two-week budget approved for model calls and devices
-- [ ] Dependency list with owners and lead times (ACL, device, toolchain, store)
-- [ ] Assumption register started (Appendix E)
-- [ ] Open-questions register started (Appendix E)
-- [ ] Change-control rule: plan edits need a PR and a one-line reason
-- [ ] Definition of done for a PR (tests, docs, evidence, review)
+- [x] Dependency list with owners and lead times (ACL, device, toolchain, store) (evidence: docs/owners.md (dependencies))
+- [x] Assumption register started (Appendix E) (evidence: Appendix E)
+- [x] Open-questions register started (Appendix E) (evidence: Appendix E)
+- [x] Change-control rule: plan edits need a PR and a one-line reason (evidence: CONTRIBUTING.md (pull requests))
+- [x] Definition of done for a PR (tests, docs, evidence, review) (evidence: .github/PULL_REQUEST_TEMPLATE.md)
 - [x] Branching and commit-message convention written down (evidence: CONTRIBUTING.md)
 - [x] Semantic-versioning policy written down (evidence: docs/versioning.md)
-- [ ] Documentation ownership map: who updates which page
-- [ ] One-page architecture overview diagram committed
+- [x] Documentation ownership map: who updates which page (evidence: docs/owners.md (documentation ownership))
+- [x] One-page architecture overview diagram committed (evidence: docs/architecture.md)
 - [x] Glossary of HOPA, Mika, ACL, a11y, observation, capability (evidence: docs/glossary.md)
 - [ ] Weekly 15-minute progress review using `plan-status.py`
 - [ ] Plan totals and phase estimates re-baselined after this audit
 - [ ] Decide how a managed / MDM device differs from a personal device, and whether HOPA supports it
 - [ ] Budget approved for a device farm or a second physical phone for nightly runs
-- [ ] Offboarding note: where secrets, keys and accounts live
+- [x] Offboarding note: where secrets, keys and accounts live (evidence: docs/owners.md (offboarding))
 
 ---
 
@@ -909,17 +909,17 @@ Module responsibilities:
 - [ ] Bench v1 (20 tasks) stable for 7 days
 - [ ] Bench v2 (50 tasks, 10 apps)
 - [ ] Held-out task set
-- [ ] Failure taxonomy with counts
-- [ ] Per-app success rates
-- [ ] Latency p50/p95
+- [x] Failure taxonomy with counts (evidence: bench/src/hopa_bench/report.py + test_report)
+- [x] Per-app success rates (evidence: bench/src/hopa_bench/report.py + test_report)
+- [x] Latency p50/p95 (evidence: bench/src/hopa_bench/report.py + test_report)
 - [ ] Cost per task
 - [ ] Human evaluation rubric
 - [ ] Nightly device run
 - [ ] Regression gate on every PR (stub model)
-- [ ] Reproducible seeds and fixtures
+- [x] Reproducible seeds and fixtures (evidence: bench/tasks (20) + deterministic StubModelClient)
 - [ ] Public report
 - [ ] Comparison with Mika on equivalent Android tasks (clearly labelled)
-- [ ] `docs/eval.md`
+- [x] `docs/eval.md` (evidence: docs/eval.md)
 
 ### 12.1 Test matrix
 

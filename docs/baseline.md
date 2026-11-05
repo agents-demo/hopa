@@ -19,11 +19,11 @@ no phone**.
 
 | Check | Result |
 |---|---|
-| `pytest pc-agent bench` | 56 passed |
+| `pytest pc-agent bench` | 75 passed |
 | `pytest scripts` (plan tooling) | 8 passed |
 | `pytest agent` | 149 passed |
 | Agent coverage | 90% (`--cov-fail-under=80`) |
-| Full harness | 222 passed |
+| Combined run | 228 passed |
 | Kotlin router + server (`RouterTest`, `ServerTest`) | 34 assertions passed |
 | Brain contract (`/decide` vs schema) | pass |
 | Kotlin / JDK | 2.1.0 / 17 |

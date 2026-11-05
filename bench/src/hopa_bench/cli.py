@@ -12,6 +12,7 @@ from hopa_pc_agent.device import Device
 from hopa_pc_agent.errors import HopaError
 
 from . import __version__
+from .report import aggregate, render_markdown
 from .runner import Runner, TaskResult
 from .task import TaskError, load_tasks
 
@@ -46,6 +47,11 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("list", parents=[common], help="list tasks")
     sub.add_parser("validate", parents=[common], help="validate task files")
 
+    report = sub.add_parser("report", help="summarize a results JSON file")
+    report.add_argument("--input", type=Path, required=True, help="bench run output")
+    report.add_argument("--out", type=Path, help="write the markdown report here")
+    report.add_argument("--json", action="store_true", help="emit JSON")
+
     return parser
 
 
@@ -66,6 +72,21 @@ def _cmd_validate(tasks) -> int:
     for task in tasks:
         print(f"ok {task.id} ({task.success.type})")
     print(f"{len(tasks)} task(s) valid")
+    return 0
+
+
+def _cmd_report(args) -> int:
+    payload = json.loads(args.input.read_text(encoding="utf-8"))
+    results = payload.get("results", payload)
+    report = aggregate(results)
+    text = render_markdown(report)
+    if args.out:
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        args.out.write_text(text, encoding="utf-8")
+    if args.json:
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+    else:
+        print(text, end="")
     return 0
 
 
@@ -123,6 +144,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
+        if args.command == "report":
+            return _cmd_report(args)
         tasks = _load(args)
         if args.command == "list":
             return _cmd_list(tasks)

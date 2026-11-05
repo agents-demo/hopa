@@ -35,3 +35,34 @@ def test_unknown_task_id_returns_2(capsys) -> None:
     code = main(["run", "--tasks", str(TASKS_DIR), "--task", "does-not-exist"])
     assert code == 2
     assert "unknown task" in capsys.readouterr().err
+
+
+def test_parser_report() -> None:
+    args = build_parser().parse_args(["report", "--input", "results.json"])
+    assert args.command == "report"
+    assert str(args.input) == "results.json"
+
+
+def test_report_command(tmp_path, capsys) -> None:
+    import json
+
+    path = tmp_path / "results.json"
+    path.write_text(
+        json.dumps(
+            {
+                "results": [
+                    {
+                        "app": "Settings",
+                        "success": True,
+                        "steps": [{"latency_ms": 10}],
+                        "tokens": 3,
+                        "duration_s": 1.0,
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    code = main(["report", "--input", str(path)])
+    assert code == 0
+    assert "HOPA-Bench report" in capsys.readouterr().out

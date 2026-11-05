@@ -95,6 +95,9 @@ Full, reproducible instructions: [docs/setup.md](docs/setup.md).
 
 # 4. Run the benchmark against the stub model
 ./scripts/run-bench.sh          # or .\scripts\run-bench.ps1
+
+# 5. Summarize a results file
+bench report --input .hopa/bench-v0.json --out docs/bench-v0.md
 ```
 
 `pc-agent` can also be used directly:
@@ -136,6 +139,7 @@ packaged into the app.
   rules.
 - [docs/bench-v0.md](docs/bench-v0.md) — the first five tasks, predicates and
   failure taxonomy.
+- [docs/eval.md](docs/eval.md) — metrics, targets and reproducibility.
 - [docs/brain.md](docs/brain.md) — JVM brain endpoints and decision contract.
 - [docs/safety.md](docs/safety.md) — payment, irreversible actions, limits.
 - [docs/threat-model.md](docs/threat-model.md) — assets, actors, threats.
