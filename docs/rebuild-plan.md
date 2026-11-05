@@ -19,13 +19,23 @@ Reference product: Mika (Apache-2.0). HOPA keeps its own name, UI and NOTICE.
 - A box is not done because code was written. It is done when the stated
   verification passes on the stated target (emulator, phone, CI).
 - Blocked work stays unchecked and gets a `[BLOCKED: reason]` prefix.
-- Decision boxes come in pairs. Exactly one of the pair must be checked.
+- Decision boxes come in pairs. Exactly one of the pair must be checked. The
+  unchecked sibling counts as **decided**, not as remaining work, and
+  `plan-status.py` excludes it from the finish gate.
+- Conditional work ("if approved…", "if needed…") is prose, not a checkbox.
+  Once a branch is approved it becomes its own gated plan with its own boxes.
 - Do not add checkboxes casually. Every box must be verifiable by a third party.
+- Box size is not uniform: one box may be an hour or a two-week epic. The
+  percentage is a count, not a schedule. Exit criteria, not the count, decide a
+  milestone.
+- `python scripts/plan-status.py --lint` must pass: no duplicate boxes, every
+  `[x]` carries `(evidence: …)`, and no decision pair is double-checked.
 
 ### 1.2 Progress
 
 ```bash
 python scripts/plan-status.py                 # per-phase table
+python scripts/plan-status.py --lint          # check evidence, duplicates, decision pairs
 python scripts/plan-status.py --require-complete   # exit 1 until finished
 ```
 
@@ -46,6 +56,10 @@ python scripts/plan-status.py --require-complete   # exit 1 until finished
 4–6 people, 4–6 months to MVP; 9–12 months to near-parity. Phase 4 and Phase 7
 run in parallel with Phase 3. The critical path is **ACL approval → on-device
 a11y → M4**. Everything before M4 must not depend on the ACL.
+
+M3 proves the on-device loop on **ArkWeb surfaces** (no ACL needed). Driving
+other apps on-device still needs the accessibility ACL, so M3 alone does not
+satisfy M4. Do not let M3's "runs with no PC" claim hide that dependency.
 
 Cross-cutting work in §5.5, §6.8, §7.9, §8.6, §9.7, §10.6, §11.3, §12.3 and
 §13.3 is not a separate phase. It lands inside the phase that owns it and is
@@ -82,6 +96,7 @@ it, not at the end.
 - Append-only run records.
 - No secrets in logs or git.
 - The README states plainly that there is no background screen.
+- No Python runtime in the HAP. Pyodide, if ever enabled, is WASM inside a web page, not the app runtime.
 
 ---
 
@@ -89,16 +104,16 @@ it, not at the end.
 
 | Area | State | Evidence |
 |---|---|---|
-| Repo | 1 commit, public, Apache-2.0 | `git log` |
+| Repo | 2 commits, public, Apache-2.0 | `git log` |
 | `app/core` | action gate, approval policy, tool registry, types, model interface; unit tests | `app/core/src` |
 | `app/capabilities` | interfaces + stubs; a11y extension empty and not declared | `module.json5`, `AccessibilityExtension.ets` |
 | `app/entry` | 4-tab ArkUI shell; chat says “agent loop placeholder” | `pages/Index.ets` |
 | Agent loop | asks model for one action; never observes the screen | `AgentLoop.ets` |
-| `pc-agent` | CLI + MCP implemented: devices, dump, tap, type, swipe, screenshot, launch, key, install | `pc-agent/src` |
-| `bench` | 5 tasks, runner, stub model, CLI | `bench/tasks` |
+| `pc-agent` | CLI + MCP implemented: devices, dump, tap, double-tap, long-press, type, swipe, screenshot, launch, stop, key, install, uninstall | `pc-agent/src` |
+| `bench` | 5 tasks valid, runner, stub model, CLI | `bench/tasks` |
 | Knowledge | none: 0 `APP.md`, 0 sites, 0 skills | — |
-| CI | Python tests + ruff; HAP build only with mirrored toolchain secret | `.github/workflows/ci.yml` |
-| Tests baseline | not yet run on this machine | — |
+| CI | Python tests + ruff; HAP build and core Local Tests skip with a warning when the mirrored toolchain secret is absent | `.github/workflows/ci.yml` |
+| Tests baseline | 64 Python tests pass (pc-agent, bench, plan tooling), 5 bench tasks validate; ArkTS tests not run here | local run 2026-11-05 |
 
 Known gaps to close first:
 
@@ -155,6 +170,8 @@ Module responsibilities:
 - [ ] ADR-0003: sandbox runtime (Pyodide + QuickJS, no Linux)
 - [ ] ADR-0004: ACL strategy and foreground fallback
 - [ ] ADR-0005: PC-tethered vs standalone product split
+- [ ] ADR-0006: model provider, budget and cost target per task
+- [ ] File the accessibility ACL request in week 1; record ticket, date and contact (critical path)
 - [ ] Add `CONTRIBUTING.md` with the evidence rule from §1.1
 - [ ] Add `CODEOWNERS`
 - [ ] Add PR template with the phase checklist
@@ -165,10 +182,10 @@ Module responsibilities:
 - [ ] Write a definition of ready for starting a phase
 - [ ] Schedule a monthly risk review
 - [ ] Add a decision log index under `docs/adr/`
-- [ ] Pin toolchain versions in `docs/setup.md`: Python 3.12, Node LTS, DevEco 26, SDK 26, CLT 26.0.0.851
+- [ ] Pin toolchain versions in `docs/setup.md`: Python 3.12, Node LTS, DevEco 26, compileSdk 26, minCompatible 6.1.1 (API 24), CLT 26.0.0.851
 - [ ] Add `.editorconfig` and formatting rules for ArkTS and Python
-- [x] Add `scripts/plan-status.py` and test it (evidence: table, --json, --require-complete, --list-unchecked)
-- [ ] Add a CI job that prints plan progress on every PR
+- [x] Add `scripts/plan-status.py` and test it (evidence: table, --json, --lint, --require-complete, --list-unchecked, decision pairs)
+- [ ] Add a CI job that prints plan progress and runs `plan-status.py --lint` on every PR
 
 ### 5.2 CI and quality gates
 
@@ -225,6 +242,8 @@ Module responsibilities:
 - [ ] Glossary of HOPA, Mika, ACL, a11y, observation, capability
 - [ ] Weekly 15-minute progress review using `plan-status.py`
 - [ ] Plan totals and phase estimates re-baselined after this audit
+- [ ] Decide how a managed / MDM device differs from a personal device, and whether HOPA supports it
+- [ ] Budget approved for a device farm or a second physical phone for nightly runs
 - [ ] Offboarding note: where secrets, keys and accounts live
 
 ---
@@ -239,7 +258,7 @@ Module responsibilities:
 - [ ] `pc-agent observe --screenshot` attaches an image reference
 - [ ] Layout parser extracts `id`, `text`, `type`, `bounds`, `clickable`, `enabled`, `checked`, `scrollable`
 - [ ] Stable element refs per observation (`e1`, `e2`, …) mapped to nodes
-- [ ] Ref stability test across two identical observations
+- [ ] Deterministic ref assignment: two identical trees produce identical refs; refs still expire on the next observation
 - [ ] Redaction pass for phone numbers, emails, OTPs, card numbers
 - [ ] Redaction unit tests (20 cases)
 - [ ] Observation hash for dedupe
@@ -253,7 +272,7 @@ Module responsibilities:
 ### 6.2 Action contract
 
 - [ ] Define `Action` JSON schema: `kind`, `ref`, `text`, `x`, `y`, `toX`, `toY`, `app`, `url`, `timeoutMs`
-- [ ] Kinds: `ui.observe`, `ui.tap`, `ui.longPress`, `ui.type`, `ui.swipe`, `ui.scroll`, `ui.back`, `ui.home`, `ui.launch`, `ui.stop`, `ui.wait`
+- [ ] Kinds: `ui.observe`, `ui.tap`, `ui.doubleTap`, `ui.longPress`, `ui.type`, `ui.swipe`, `ui.scroll`, `ui.back`, `ui.home`, `ui.launch`, `ui.stop`, `ui.wait`
 - [ ] Kinds: `web.navigate`, `web.read`, `web.click`, `web.type`
 - [ ] Kinds: `system.setAlarm`, `system.addEvent`, `system.openLink`, `system.share`
 - [ ] Kinds: `sandbox.run`
@@ -327,6 +346,13 @@ Module responsibilities:
 - [ ] System permission dialog handling policy (grant only what the task needs)
 - [ ] Timeout and backoff policy documented
 - [ ] Step and cost budgets per task
+- [ ] Emergency-number guard: never dial 110 / 112 / 119 / 999 or any local emergency number; hand over
+- [ ] Unicode, emoji and RTL input tested
+- [ ] Screen-off and lock-during-task detection; pause safely instead of tapping blind
+- [ ] Low-battery policy: pause long tasks below a threshold
+- [ ] Thermal-throttling detection with a graceful slowdown
+- [ ] Do Not Disturb and driving-mode detection
+- [ ] Coexistence with other accessibility or automation services: never two drivers at once
 - [ ] Tests for every runtime behaviour above
 
 ### 6.7 Exit criteria (M1)
@@ -361,8 +387,8 @@ Module responsibilities:
 
 ### 7.1 Brain service
 
-- [ ] Extract Mika `core/` into a standalone JVM module with zero `android.*` imports
-- [ ] Verify with `grep -r "android\."` returning nothing
+- [ ] Extract the ported Mika subset (Appendix A.2 and A.2b) into a standalone JVM module with zero `android.*` imports
+- [ ] Verify with `grep -r "android\."` returning nothing in the ported module
 - [ ] Build with JDK 17; pin the toolchain
 - [ ] HTTP API `POST /decide`: `{goal, observation, history, settings}` → `{action, say, done}`
 - [ ] Sticky session id for multi-step tasks
@@ -378,11 +404,12 @@ Module responsibilities:
 
 - [ ] Copy the knowledge schema and loader
 - [ ] Inventory Mika's 23 apps and 18 sites; mark Android-only fields
+- [ ] Triage the 23 apps: available on HarmonyOS, web-only, or absent; record the evidence
 - [ ] Build the HarmonyOS bundle map from `hdc shell bm dump -a`
-- [ ] Rewrite `APP.md` for 10 apps against HarmonyOS screens
-- [ ] Rewrite `APP.md` for the remaining 13 apps
+- [ ] Rewrite `APP.md` for the 10 highest-value apps that exist on HarmonyOS
+- [ ] Rewrite `APP.md` for the remaining HarmonyOS-available apps; drop absent apps with a written note
 - [ ] Rewrite `SITE.md` for 18 sites (domains mostly reusable)
-- [ ] Add HarmonyOS system apps: Settings, Clock, Calendar, Contacts, Notepad, Files, Camera, Gallery, Browser, AppGallery, Petal Maps, Music
+- [ ] Add 12 HarmonyOS system apps: Settings, Clock, Calendar, Contacts, Notepad, Files, Camera, Gallery, Browser, AppGallery, Petal Maps, Music
 - [ ] Add `pace: careful` to every irreversible app path
 - [ ] Add `packageAliases` for HarmonyOS bundles
 - [ ] Front-matter parser validates all files
@@ -414,7 +441,7 @@ Module responsibilities:
 - [ ] Port `intent_gate` (DISCUSS / READ / ACT)
 - [ ] Port `channels.md` decision order
 - [ ] Port `roles/app_knowledge*.md`
-- [ ] Port 6 skills and validate manifests
+- [ ] Port 6 skills (9 files: manifests, references and the PDF script) and validate manifests
 - [ ] Port personal skill creation
 - [ ] Port the app-notes draft → trial → verified flow
 - [ ] Prompt size budget and truncation rules
@@ -435,9 +462,10 @@ Module responsibilities:
 
 ### 7.6 Knowledge validation and maintenance
 
-- [ ] Per-app smoke test: launch and reach one known screen for all 23 apps
+- [ ] Per-app smoke test: launch and reach one known screen for every app in the launch set (ported + system)
 - [ ] `validated` version and date in every `APP.md`
 - [ ] Detect app version change via `bm dump` and mark its knowledge stale
+- [ ] Knowledge rollback: pin the knowledge version per release and restore the previous one
 - [ ] Selectors survive text and locale changes (ids first, text second)
 - [ ] Fallback when a known screen is missing
 - [ ] Contribution guide: add an app in one file
@@ -457,6 +485,7 @@ Module responsibilities:
 - [ ] Success, steps, p50/p95 latency, tokens, cost
 - [ ] Per-app breakdown
 - [ ] `docs/bench-v1.md` published
+- [ ] Benchmark task, fixture and screenshot licences recorded; no third-party content copied without permission
 - [ ] Regression gate with the stub model in CI
 
 ### 7.8 Exit criteria (M2)
@@ -499,6 +528,7 @@ Module responsibilities:
 - [ ] `observation`, `verify`, `record`
 - [ ] `knowledge` (routing, channel, catalog)
 - [ ] `agent` loop and context builder
+- [ ] Decide per remaining Mika module (action, run, gate, context, prompt, settings, trigger, usage, trace, net, remote, mcp, oauth, workspace, general, assembly, selfcheck): port, rewrite or drop; record in Appendix A.2b
 - [ ] `memory`, `skills`
 - [ ] `model` client over `@ohos.net.http`
 - [ ] Serialization without kotlinx (`@ohos.util.json` or generated codecs)
@@ -534,6 +564,7 @@ Module responsibilities:
 - [ ] Model data-residency note for the chosen provider
 - [ ] Provider safety-filter behaviour documented
 - [ ] Prompt and response logging redacted
+- [ ] Prompt/context caching and reuse measured and enabled where the provider supports it
 - [ ] Local/offline model option evaluated and decided
 
 ### 8.5 Exit criteria (M3)
@@ -568,7 +599,7 @@ Module responsibilities:
 
 - [ ] Verify the exact import and signature against the API 26 SDK
 - [ ] Declare the extension in `module.json5` behind a build flag
-- [ ] Submit the ACL request; record date, ticket and contact
+- [ ] Confirm the week-1 ACL ticket is still open and escalate before Phase 4 starts
 - [ ] `onConnect` marks availability
 - [ ] `onAccessibilityEvent` converts the active window into `Observation`
 - [ ] Read node `id`, `text`, `type`, `bounds`, `clickable`, `enabled`
@@ -620,9 +651,11 @@ Module responsibilities:
 
 - [ ] Bundle Pyodide and QuickJS in `rawfile`
 - [ ] Pyodide and QuickJS artifacts are checksum-pinned on download and load
+- [ ] Verify arm64 support, WASM memory limits and required features on the target devices
 - [ ] Hidden ArkWeb page bridge
 - [ ] Offline by default
 - [ ] No device APIs exposed to scripts
+- [ ] Document that the HAP ships no Python runtime; Pyodide is an optional WASM page
 - [ ] CPU, memory and wall-clock limits
 - [ ] Network grant per run, logged
 - [ ] Python package allow-list (pure wheels only)
@@ -644,12 +677,15 @@ Module responsibilities:
 - [ ] Notification shade interaction, if the API allows it
 - [ ] Clipboard read and write with consent
 - [ ] App cloning, private space and multi-user profiles
+- [ ] Managed-device (MDM) policy detection and refusal when automation is not allowed
 - [ ] Overlay and tapjacking detection
 - [ ] App update mid-run: re-read version and refresh knowledge
 - [ ] Locale, time zone and date/number formats
 - [ ] Dark-mode OCR check
 - [ ] Low battery and power-saving behaviour
 - [ ] Network loss mid-task
+- [ ] VPN, captive portal and corporate Wi-Fi behaviour
+- [ ] SIM roaming and metered-network warning before a data-heavy task
 - [ ] Device reboot and service reconnect
 - [ ] `hdc` disconnect and reconnect (tethered mode)
 - [ ] Multi-device selection (tethered mode)
@@ -662,8 +698,8 @@ Module responsibilities:
 
 ### 9.6 Exit criteria (M4)
 
-- [ ] 20 bench tasks run on a phone with no `hdc`
-- [ ] A11y ACL approved and verified, **or** fallback release signed
+- [ ] M4 path: **standalone — ACL approved and verified, 20 tasks pass on a phone with no `hdc`**
+- [ ] M4 path: **tethered fallback — release signed, 20 tasks pass over `hdc`** (one of the two must be checked)
 - [ ] Every capability fails closed when unavailable
 - [ ] No capability imports another capability
 
@@ -701,7 +737,7 @@ Module responsibilities:
 - [ ] Test: model sets `isPayment:false` → ignored
 - [ ] Test: hidden payment step inside a long flow → asks
 - [ ] 100% refusal on the payment bench
-- [ ] Tested on 3 real checkout flows
+- [ ] Tested on 3 checkout flows with a test merchant and no real charge
 
 ### 10.2 Irreversible actions
 
@@ -755,6 +791,7 @@ Module responsibilities:
 - [ ] Migration test from the previous release
 - [ ] Storage quota with cleanup of old runs and screenshots
 - [ ] Corruption detection and recovery
+- [ ] Device and cloud backup excludes secrets, is encrypted, and restore is tested
 - [ ] Encryption key rotation
 - [ ] Statement that user data is not used for model training
 
@@ -776,6 +813,8 @@ Module responsibilities:
 - [ ] No user data in URLs, query strings or referrers
 - [ ] MCP server trust model and authentication documented
 - [ ] API keys stored in HUKS, never in preferences or logs
+- [ ] Brain-service model key stored in the OS keychain or env, never in the repo or logs
+- [ ] Emergency-number dial blocked and tested (110 / 112 / 119 / 999)
 - [ ] Per-user and per-day rate limits for messaging, posting and buying
 - [ ] CAPTCHA is always handed over, never solved automatically
 - [ ] Account-ban and terms-of-service risk disclosed in onboarding
@@ -894,6 +933,8 @@ Module responsibilities:
 - [ ] App update mid-run
 - [ ] Kill and restart; resume from records
 - [ ] Soak test: two-hour session
+- [ ] Thermal soak and low-battery run
+- [ ] Captive portal and VPN run
 - [ ] Monkey test: 1,000 random actions
 - [ ] Golden screenshots per supported app
 - [ ] Brain-service load test
@@ -918,7 +959,7 @@ Module responsibilities:
 - [ ] Payment refusal 100%
 - [ ] p95 step latency ≤ 8 s with model
 - [ ] Crash-free sessions ≥ 99%
-- [ ] Cost per task ≤ target set in ADR-0001
+- [ ] Cost per task ≤ target set in ADR-0006
 
 ### 12.3 Statistical rigour and SLOs
 
@@ -953,7 +994,7 @@ Module responsibilities:
 - [ ] FAQ and troubleshooting
 - [ ] Install and upgrade guide
 - [ ] Signed HAP and upgrade path
-- [ ] AppGallery submission (if allowed)
+- [ ] AppGallery submission, or a recorded decision to distribute by sideload
 - [ ] Rollback plan
 - [ ] Monitoring and alerting
 - [ ] Support channel
@@ -994,7 +1035,7 @@ Module responsibilities:
 - [ ] Review third-party app terms for automated access
 - [ ] Trademark and name check for HOPA
 
-### 13.2 Exit criteria
+### 13.2 Exit criteria (M6 part 2)
 
 - [ ] Signed build installs on a clean phone
 - [ ] Upgrade from 0.0.x works
@@ -1016,6 +1057,7 @@ Module responsibilities:
 - [ ] MPL source-offer page for Pyodide
 - [ ] Release-train calendar
 - [ ] Support SLA and escalation path
+- [ ] Public status page or in-app notice for provider and service outages
 - [ ] Postmortem template
 - [ ] Data-breach notification procedure
 - [ ] Security contact and disclosure policy
@@ -1026,20 +1068,31 @@ Module responsibilities:
 
 ## 14. Phase 9 — Optional and explicitly gated
 
-- [ ] Decision record: pursue a background mode? (default: no)
-- [ ] Decision record: pursue a companion Linux sandbox? (default: no)
-- [ ] If background is pursued: `ACCESS_VIRTUAL_SCREEN` ACL request filed
-- [ ] If approved: virtual-screen prototype
-- [ ] If approved: background lifecycle and user indicator
-- [ ] If approved: safety review for hidden operation
-- [ ] If denied: close with a written rationale and update the README
-- [ ] If the WASM sandbox proves insufficient: companion-service design doc
-- [ ] If the companion is built: separate release track, not the MVP
+Both optional branches default to **no**. Each branch is a decision pair; exactly
+one side of each pair must be checked. Detailed work for an approved branch is
+prose below and is **not** counted until the branch is approved, at which point
+it becomes its own gated plan with its own boxes.
 
-Decision boxes:
+Background mode:
 
+- [ ] Decision: pursue a background / virtual-screen mode? (default: no)
 - [ ] Background mode: **approved and shipped**
 - [ ] Background mode: **denied and documented** (one of the two must be checked)
+
+If approved: file the `ACCESS_VIRTUAL_SCREEN` ACL request, build a
+virtual-screen prototype, define the background lifecycle and the user-facing
+indicator, and complete a separate safety review for hidden operation. If
+denied: close with a written rationale and update the README and Appendix D.
+
+Companion Linux sandbox:
+
+- [ ] Decision: pursue a companion Linux sandbox? (default: no)
+- [ ] Companion sandbox: **approved and shipped**
+- [ ] Companion sandbox: **denied and documented** (one of the two must be checked)
+
+If approved, it ships as a separate release track, never as part of the MVP. If
+the WASM sandbox proves insufficient, write the companion-service design doc
+first and treat it as a new project.
 
 ---
 
@@ -1048,7 +1101,7 @@ Decision boxes:
 Development is finished only when **all** of the following are true:
 
 - [ ] Every checkbox in §5–§15 and Appendix E is checked or covered by a checked decision pair
-- [ ] `python scripts/plan-status.py --require-complete` exits `0`
+- [ ] `python scripts/plan-status.py --require-complete --lint` exits `0`
 - [ ] Bench v1 and v2 meet their targets on a physical device
 - [ ] Payment refusal is 100% on the safety bench
 - [ ] No open P0 or P1 bugs
@@ -1121,6 +1174,38 @@ Critical path: ACL → a11y → M4. Everything before M4 must ship without it.
 | `core/eval/` | 8 | `core/eval/` | evaluation |
 | `core/model/` | 16 | `core/model/` | interface; replace transport |
 
+### A.2b Remaining modules — decision required
+
+These modules exist in Mika's `core/` but are not in the port matrix above. They
+must be classified before Phase 3 ends; every "drop" needs a one-line reason.
+
+| Mika source | Files | Likely action | Reason |
+|---|---|---|---|
+| `core/action/` | 10 | port | action model shared by loop and gate |
+| `core/run/` | 11 | port | run lifecycle |
+| `core/gate/` | 2 | port | approval gate |
+| `core/context/` | 1 | port | context builder |
+| `core/prompt/` | 3 | port | prompt assembly |
+| `core/settings/` | 1 | port | settings model |
+| `core/trigger/` | 3 | rewrite | HarmonyOS triggers differ |
+| `core/usage/` | 5 | port | token and cost accounting |
+| `core/trace/` | 5 | port | tracing |
+| `core/selfcheck/` | 3 | port | startup self-check |
+| `core/net/` | 4 | rewrite | ArkTS HTTP replaces the transport |
+| `core/oauth/` | 6 | rewrite | platform sign-in |
+| `core/workspace/` | 6 | rewrite | HarmonyOS file sandbox |
+| `core/mcp/` | 5 | rewrite | MCP client over ArkTS |
+| `core/remote/` | 9 | drop or rewrite | PC/remote assumptions |
+| `core/general/` | 15 | triage | utilities; keep only the pure ones |
+| `core/assembly/` | 3 | triage | wiring may not port |
+| `core/adb/` | 11 | drop | no ADB on HarmonyOS |
+| `core/shell/` | 14 | drop | no shell, no uid 2000 helper |
+| `core/wechat/` | 1 | drop | Android helper |
+| `core/child/` | 1 | drop | Android process model |
+| `core/capability/` | 1 | rewrite | platform capability model |
+
+`core/cap/` (73 files) is already listed in A.3 and is not repeated here.
+
 ### A.3 Rewrite
 
 | Mika source | Files | HOPA target |
@@ -1178,6 +1263,10 @@ decision. Every safety task must pass 100%.
 {
   "id": "obs_01",
   "timestamp": 0,
+  "displayId": 0,
+  "windowId": "active",
+  "rotation": 0,
+  "density": 0,
   "screenSize": { "width": 0, "height": 0 },
   "focus": "e12",
   "text": "flattened visible text",
@@ -1226,7 +1315,8 @@ This plan does not promise:
 - a Linux sandbox;
 - background operation while the user uses the phone;
 - Mika's exact UX or assets;
-- parity with Mika's app coverage on day one.
+- parity with Mika's app coverage on day one;
+- Python as the app runtime. Pyodide, if enabled, is a WASM sandbox inside a web page.
 
 Saying this up front is cheaper than discovering it at M4.
 
@@ -1253,7 +1343,7 @@ project.
 
 ### E.2 Open questions
 
-- [ ] Decide: default model provider and fallback order
+- [ ] Decide: default model provider and fallback order (recorded in ADR-0006 during Phase 0)
 - [ ] Decide: free, paid or internal-only distribution
 - [ ] Decide: China-first or global launch
 - [ ] Decide: open-source the HOPA core or keep it closed
@@ -1280,6 +1370,12 @@ project.
   licensing and provenance, ArkTS runtime, permissions and packaging, abuse and
   exfiltration, trust UX, statistical rigour, versioning and support, assumptions
   and open questions. Duplicate boxes made specific. 745 boxes.
+- 2026-11-05 — audit 3: fixed the finish gate (the unchecked half of a decision
+  pair no longer blocks completion), removed five conditional boxes that could
+  never be checked, corrected the app and skill counts, the M3/M4 ACL dependency
+  and the M4 exit contradiction, moved ACL filing to week 1, added the
+  remaining-module matrix, and added 27 missing runtime, platform, security and
+  evaluation checks. Net +22. 767 boxes.
 
 The count is expected to move while the plan is alive. What must not move is the
 finish line: every box checked, with evidence, and both sign-offs recorded.

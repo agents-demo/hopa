@@ -62,7 +62,7 @@ pc-agent (Python) ── hdc ──► emulator / phone
    │  dump layout, tap, type, swipe, screenshot, launch
    └─ CLI + MCP stdio server
 
-bench (HOPA-Bench) ── uses pc-agent ──► scored tasks (5 examples; 50 at G1)
+bench (HOPA-Bench) ── uses pc-agent ──► scored tasks (5 now; 20 at M2; 50 at v2)
 ```
 
 `pc-agent` is the **G1 PoC** control path. The shipping agent uses

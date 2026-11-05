@@ -40,6 +40,10 @@ jobs:
         run: pytest pc-agent
       - name: pytest (bench)
         run: pytest bench
+      - name: pytest (plan tooling)
+        run: pytest scripts
+      - name: Plan lint
+        run: python scripts/plan-status.py --lint
       - name: Validate benchmark tasks
         run: python -m hopa_bench validate --tasks bench/tasks
 
