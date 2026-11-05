@@ -24,11 +24,14 @@ Linux/macOS:
 ```
 
 The script downloads the pinned Kotlin compiler into `.tools/` (gitignored),
-compiles `brain/src`, and runs `RouterTest`:
+compiles `brain/src`, and runs `RouterTest` and `ServerTest`:
 
 ```text
 RouterTest: 17 assertions passed
+ServerTest: 17 assertions passed
 ```
+
+The HTTP contract is documented in [`docs/brain.md`](../docs/brain.md).
 
 ## Scope
 
@@ -36,10 +39,11 @@ RouterTest: 17 assertions passed
 - `KnowledgeStore.packageFor`
 - `KnowledgeStore.byPackage` / `byDomain`
 - `ChannelAdvisor.line` — app vs web vs signed-in
+- `GET /health`, `GET /version`, `POST /decide`, `GET /session/{id}`
 
 ## Not in this slice
 
-- the HTTP `/decide` service
+- model calls
 - the Mika knowledge files
 - skills and the guide catalog
 - ArkTS parity

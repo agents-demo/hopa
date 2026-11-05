@@ -18,7 +18,9 @@
     "options": {
       "type": "array",
       "items": { "type": "string" }
-    }
+    },
+    "sessionId": { "type": "string" },
+    "version": { "type": "string" }
   },
   "additionalProperties": false
 }

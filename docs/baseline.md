@@ -24,7 +24,8 @@ no phone**.
 | `pytest agent` | 143 passed |
 | Agent coverage | 89% (`--cov-fail-under=80`) |
 | Full harness | 216 passed |
-| Kotlin router (`RouterTest`) | 17 assertions passed |
+| Kotlin router + server (`RouterTest`, `ServerTest`) | 34 assertions passed |
+| Brain contract (`/decide` vs schema) | pass |
 | Kotlin / JDK | 2.1.0 / 17 |
 | `hopa-bench validate --tasks bench/tasks` | 5 tasks valid |
 | `pc-agent devices` | fails with `hdc not found` (expected) |

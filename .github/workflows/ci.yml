@@ -117,13 +117,20 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
       - name: Cache Kotlin compiler
         uses: actions/cache@v4
         with:
           path: .tools/kotlinc
           key: kotlin-2.1.0-linux
+      - name: Install contract-test dependencies
+        run: python -m pip install jsonschema
       - name: Compile and test
         run: bash scripts/brain.sh
+      - name: Cross-language contract
+        run: python scripts/brain-contract.py
 
   core-tests:
     name: core unit tests (macOS, Local Test)

@@ -12,7 +12,7 @@ therefore **not** met; the tethered claim is.
 | Area | State | Evidence |
 |---|---|---|
 | `agent/` loop, gate, policy, records | working, tested | `pytest agent` |
-| `brain/` Kotlin router | working, 17 assertions | `scripts/brain.ps1` |
+| `brain/` Kotlin router + HTTP service | working, 34 assertions + schema contract | `scripts/brain.ps1` |
 | `pc-agent` CLI + MCP | working | `pytest pc-agent` |
 | `bench` 5 tasks | valid | `pytest bench`, `validate` |
 | Observation/action/decision/record schemas | v1 | `schemas/` |

@@ -111,7 +111,7 @@ it, not at the end.
 | Agent loop | asks model for one action; never observes the screen | `AgentLoop.ets` |
 | `pc-agent` | CLI + MCP implemented: devices, dump, tap, double-tap, long-press, type, swipe, screenshot, launch, stop, key, install, uninstall | `pc-agent/src` |
 | `bench` | 5 tasks valid, runner, stub model, CLI | `bench/tasks` |
-| Brain | Kotlin router (17 assertions); JVM service not started | `brain/src` |
+| Brain | Kotlin router + HTTP service (34 assertions + schema contract) | `brain/src`, `docs/brain.md` |
 | Knowledge | none: 0 `APP.md`, 0 sites, 0 skills | — |
 | CI | Python tests + ruff; HAP build and core Local Tests skip with a warning when the mirrored toolchain secret is absent | `.github/workflows/ci.yml` |
 | Tests baseline | 216 Python tests pass (pc-agent, bench, agent, plan tooling), agent coverage 89%, 5 bench tasks validate; ArkTS tests not run here | local run 2026-11-05 |
@@ -391,12 +391,12 @@ Module responsibilities:
 - [ ] Extract the ported Mika subset (Appendix A.2 and A.2b) into a standalone JVM module with zero `android.*` imports
 - [x] Verify with `grep -r "android\."` returning nothing in the ported module (evidence: grep -r "android\." brain/src returns nothing)
 - [x] Build with JDK 17; pin the toolchain (evidence: scripts/brain.ps1 / brain.sh (Kotlin 2.1.0, JDK 17))
-- [ ] HTTP API `POST /decide`: `{goal, observation, history, settings}` → `{action, say, done}`
-- [ ] Sticky session id for multi-step tasks
-- [ ] Health and version endpoints
-- [ ] Structured logs with trace id
-- [ ] Contract tests against the JSON schema
-- [ ] No network except the model endpoint
+- [x] HTTP API `POST /decide`: `{goal, observation, history, settings}` → `{action, say, done}` (evidence: brain/src/main/kotlin/hopa/brain/Server.kt + ServerTest)
+- [x] Sticky session id for multi-step tasks (evidence: BrainService.sessions + GET /session/{id})
+- [x] Health and version endpoints (evidence: ServerTest health/version)
+- [x] Structured logs with trace id (evidence: X-Trace-Id + JSON stderr log)
+- [x] Contract tests against the JSON schema (evidence: scripts/brain-contract.py validates decision.schema.json)
+- [x] No network except the model endpoint (evidence: brain/src has no outbound HTTP client)
 - [ ] Dockerfile for repeatable local runs
 - [ ] `NOTICE` lists every Mika file reused
 - [x] `docs/port-log.md` started (evidence: docs/port-log.md)

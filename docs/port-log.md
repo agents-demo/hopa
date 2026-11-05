@@ -9,6 +9,7 @@ and never copies Android-only code.
 | 2026-11-05 | `core/knowledge/ChannelAdvisor.kt` | `brain/src/main/kotlin/hopa/brain/Router.kt` | clean-room reimplementation | app vs web vs signed-in |
 | 2026-11-05 | `KnowledgeStore.packageFor` | `brain/src/main/kotlin/hopa/brain/Router.kt` | clean-room reimplementation | alias and package map |
 | 2026-11-05 | — | `pc-agent apps` | new code | installed bundle listing from `bm dump -a` |
+| 2026-11-05 | — | `brain/src/main/kotlin/hopa/brain/Server.kt` | new code | `/health`, `/version`, `/decide`, `/session/{id}`; JDK HTTP server + Gson |
 
 No Mika source file is copied. The routing rules are reimplemented from the
 documented behaviour; Mika is credited in `NOTICE`.
