@@ -189,11 +189,11 @@ Module responsibilities:
 
 ### 5.2 CI and quality gates
 
-- [ ] `ruff check` green on `pc-agent` and `bench`
+- [x] `ruff check` green on `pc-agent` and `bench` (evidence: CI run 42094448015)
 - [ ] `ruff format --check` green
-- [ ] `pytest pc-agent` green
-- [ ] `pytest bench` green
-- [ ] `hopa_bench validate --tasks bench/tasks` green
+- [x] `pytest pc-agent` green (evidence: CI run 42094448015)
+- [x] `pytest bench` green (evidence: CI run 42094448015)
+- [x] `hopa_bench validate --tasks bench/tasks` green (evidence: CI run 42094448015)
 - [ ] ArkTS unit tests run on a macOS runner
 - [ ] HAP build runs on Linux with a mirrored CLT archive
 - [ ] CI fails (not skips) when `HARMONY_CLI_TOOLS_URL` is missing on `main`
@@ -218,10 +218,10 @@ Module responsibilities:
 
 ### 5.4 Exit criteria (M0)
 
-- [ ] CI is green on `main`
-- [ ] All five ADRs merged
+- [x] CI is green on `main` (evidence: CI run 42094448015; HAP and ArkTS jobs skipped)
+- [ ] All six ADRs merged
 - [ ] Baseline numbers exist and are reproducible
-- [ ] `plan-status.py` reports the starting count
+- [x] `plan-status.py` reports the starting count (evidence: 767 total, 3 done, 0 lint errors)
 
 ### 5.5 Programme, people and change control
 
