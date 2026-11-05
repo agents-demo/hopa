@@ -1,5 +1,9 @@
 # HOPA roadmap (G1–G4)
 
+> **Superseded for delivery tracking.**
+> [docs/rebuild-plan.md](rebuild-plan.md) is the working plan with checkboxes and
+> the definition of finished. This page keeps the original public G1–G4 scope.
+
 HOPA is delivered in four milestones. The committed schedule and numeric targets
 live in the private project plan; this document describes the public scope.
 

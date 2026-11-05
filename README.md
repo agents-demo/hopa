@@ -111,6 +111,8 @@ pc-agent mcp          # run as an MCP stdio server
 - [docs/architecture.md](docs/architecture.md) — layers, the action gate,
   capability boundaries, ACL/permission dependency list.
 - [docs/roadmap.md](docs/roadmap.md) — milestones G1–G4.
+- [docs/rebuild-plan.md](docs/rebuild-plan.md) — the delivery plan: phases,
+  checkboxes, evidence rules and the definition of finished.
 
 ## License
 
