@@ -1,0 +1,6 @@
+{
+  "modelVersion": "26.0.0",
+  "description": "HOPA - HarmonyOS On-device Phone Agent",
+  "dependencies": {},
+  "devDependencies": {}
+}

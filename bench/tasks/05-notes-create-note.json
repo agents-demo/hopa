@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "id": "notes-create-note",
+  "goal": "Open Notes and create a note containing 'HOPA bench note'",
+  "app": "Notes",
+  "bundle": "com.huawei.hmos.notepad",
+  "success": {
+    "type": "text_visible",
+    "any": ["HOPA bench note"]
+  },
+  "steps": [
+    { "action": "launch" },
+    { "action": "wait", "seconds": 2 },
+    { "action": "tap_text", "text": "Add" },
+    { "action": "wait", "seconds": 1 },
+    { "action": "type", "text": "HOPA bench note" }
+  ],
+  "max_steps": 12
+}

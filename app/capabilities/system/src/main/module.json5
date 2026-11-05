@@ -1,0 +1,10 @@
+{
+  "module": {
+    "name": "capability_system",
+    "type": "har",
+    "deviceTypes": [
+      "phone",
+      "tablet"
+    ]
+  }
+}

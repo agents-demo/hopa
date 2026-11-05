@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "HOPA entry module"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "HOPA phone agent"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "HOPA"
+    }
+  ]
+}

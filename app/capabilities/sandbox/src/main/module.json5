@@ -1,0 +1,10 @@
+{
+  "module": {
+    "name": "capability_sandbox",
+    "type": "har",
+    "deviceTypes": [
+      "phone",
+      "tablet"
+    ]
+  }
+}

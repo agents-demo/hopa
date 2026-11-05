@@ -1,0 +1,78 @@
+# ---------------------------------------------------------------------------
+# HOPA .gitignore
+# Never commit credentials, signing material, or device-specific config.
+# ---------------------------------------------------------------------------
+
+# HarmonyOS / DevEco build output
+**/build/
+**/.hvigor/
+**/.cxx/
+**/.preview/
+**/.test/
+**/oh_modules/
+**/node_modules/
+**/oh-package-lock.json5
+**/local.properties
+**/.idea/
+**/.deveco/
+*.hap
+*.hsp
+*.har
+*.app
+*.hpf
+
+# Signing material and secrets -- MUST NEVER BE COMMITTED
+*.p12
+*.pfx
+*.cer
+*.crt
+*.p7b
+*.p7s
+*.csr
+*.key
+*.pem
+*.jks
+*.keystore
+*.keystore.*
+signing/
+signingConfigs.json
+build-profile.signing.json5
+secrets/
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+dist/
+*.whl
+*.tar.gz
+
+# Node
+.npm/
+.npx/
+node_modules/
+package-lock.json
+
+# Benchmark artifacts
+bench/results/
+bench/artifacts/
+artifacts/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+*.swp
+*~

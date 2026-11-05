@@ -1,0 +1,18 @@
+{
+  "name": "entry",
+  "version": "0.1.0",
+  "description": "HOPA ArkUI shell",
+  "main": "",
+  "author": "The HOPA Authors",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@hopa/core": "file:../core",
+    "@hopa/capability-web": "file:../capabilities/web",
+    "@hopa/capability-sandbox": "file:../capabilities/sandbox",
+    "@hopa/capability-a11y": "file:../capabilities/a11y",
+    "@hopa/capability-system": "file:../capabilities/system"
+  },
+  "devDependencies": {
+    "@ohos/hypium": "1.0.28"
+  }
+}

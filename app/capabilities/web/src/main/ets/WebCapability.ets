@@ -1,0 +1,71 @@
+import { Action, ActionCapability, Observation } from '@hopa/core';
+
+/**
+ * The ArkWeb surface. The entry app owns the `Web` component and implements this
+ * interface with its `WebviewController`; the capability stays UI-free.
+ */
+export interface WebController {
+  navigate(url: string): Promise<void>;
+  readText(): Promise<string>;
+  click(target: string): Promise<boolean>;
+  type(target: string, text: string): Promise<boolean>;
+}
+
+/**
+ * Browser capability. It never renders UI; it turns gated actions into controller
+ * calls. Network use is gated by the user setting in the entry app.
+ */
+export class WebCapability implements ActionCapability {
+  private controller: WebController | undefined = undefined;
+  private lastUrl: string = '';
+  private lastText: string = '';
+
+  setController(controller: WebController): void {
+    this.controller = controller;
+  }
+
+  canHandle(kind: string): boolean {
+    return kind.startsWith('web.');
+  }
+
+  async execute(action: Action): Promise<Observation> {
+    if (action.kind === 'web.navigate') {
+      if (this.controller !== undefined) {
+        await this.controller.navigate(action.url);
+      }
+      this.lastUrl = action.url;
+      return Observation.ok(`navigated to ${action.url}`);
+    }
+
+    if (action.kind === 'web.read') {
+      if (this.controller !== undefined) {
+        this.lastText = await this.controller.readText();
+      }
+      return Observation.ok(this.lastText);
+    }
+
+    if (action.kind === 'web.click') {
+      const clicked: boolean =
+        this.controller === undefined ? false : await this.controller.click(action.target);
+      return clicked
+        ? Observation.ok(`clicked ${action.target}`)
+        : Observation.fail(`click failed: ${action.target}`);
+    }
+
+    if (action.kind === 'web.type') {
+      const typed: boolean =
+        this.controller === undefined
+          ? false
+          : await this.controller.type(action.target, action.text);
+      return typed
+        ? Observation.ok(`typed into ${action.target}`)
+        : Observation.fail(`type failed: ${action.target}`);
+    }
+
+    return Observation.fail(`unsupported web action: ${action.kind}`);
+  }
+
+  getUrl(): string {
+    return this.lastUrl;
+  }
+}

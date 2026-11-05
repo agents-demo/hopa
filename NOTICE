@@ -1,0 +1,45 @@
+HOPA — HarmonyOS On-device Phone Agent
+Copyright 2026 The HOPA Authors
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+--------------------------------------------------------------------------------
+Third-party and design references
+--------------------------------------------------------------------------------
+
+1. Mika — open-source Android GUI agent
+   Source: https://github.com/wangzan101/Mika
+   License: Apache License 2.0
+   Copyright: the Mika contributors.
+
+   Mika is used as a DESIGN REFERENCE ONLY. No Mika source code has been copied
+   into this repository. Ideas about agent-loop structure, prompt style, and
+   benchmark task authoring may be inspired by Mika and are credited here as
+   required by its Apache-2.0 license. Any future code reuse from Mika must keep
+   this notice, and any modified files must carry a prominent change notice.
+
+2. proot / GPL sandbox components
+   HOPA does NOT use Mika's GPL-licensed sandbox components, including proot.
+   The on-device sandbox is a WebAssembly runtime (Pyodide and QuickJS loaded
+   from bundled assets) and is independent of that code.
+
+3. Pyodide
+   Project: https://pyodide.org/
+   License: Mozilla Public License 2.0 (MPL-2.0).
+   Used as the Python-in-WebAssembly runtime inside the on-device sandbox, if and
+   when the sandbox assets are bundled. Source files remain under MPL-2.0.
+
+4. QuickJS
+   Project: https://bellard.org/quickjs/
+   License: MIT.
+   Used as the JavaScript-in-WebAssembly runtime inside the sandbox, if and when
+   bundled.
+
+5. HarmonyOS, ArkTS, ArkUI, ArkWeb, DevEco Studio and related marks are
+   trademarks of Huawei Technologies Co., Ltd. This project is not affiliated
+   with or endorsed by Huawei.
+
+6. Python packages and JavaScript libraries used at build/runtime are listed in
+   their respective package manifests (pyproject.toml, oh-package.json5) and are
+   distributed under their own licenses. Keep an SBOM current for the project's
+   configuration-management deliverables.

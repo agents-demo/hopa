@@ -1,0 +1,148 @@
+name: CI
+
+# Honest constraints of this workflow:
+#
+# 1. The official HarmonyOS Command Line Tools are behind a Huawei developer
+#    login, so they cannot be downloaded anonymously. Mirror the official
+#    commandline-tools-*-26.0.0.851.zip somewhere your CI can read and set the
+#    repository secrets HARMONY_CLI_TOOLS_URL (and optionally
+#    HARMONY_CLI_TOOLS_SHA256). Without them the HAP job skips with a warning
+#    instead of pretending to build.
+# 2. `hvigorw test` (Local Test) is NOT supported on Linux. The core unit tests
+#    therefore run on a macOS runner; the HAP build runs on Linux as requested.
+# 3. pc-agent and bench are pure Python and run on Linux with no toolchain.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    name: pc-agent + bench (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install packages
+        run: |
+          python -m pip install -U pip
+          python -m pip install -e "./pc-agent" -e "./bench[dev]" "ruff>=0.6" "pytest>=8"
+      - name: Ruff
+        run: ruff check pc-agent bench
+      - name: pytest (pc-agent)
+        run: pytest pc-agent
+      - name: pytest (bench)
+        run: pytest bench
+      - name: Validate benchmark tasks
+        run: python -m hopa_bench validate --tasks bench/tasks
+
+  build-hap:
+    name: Build HAP (Linux)
+    runs-on: ubuntu-latest
+    env:
+      CLT_URL: ${{ secrets.HARMONY_CLI_TOOLS_URL }}
+      CLT_SHA256: ${{ secrets.HARMONY_CLI_TOOLS_SHA256 }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain availability
+        run: |
+          if [ -z "$CLT_URL" ]; then
+            echo "::warning title=HarmonyOS toolchain not configured::The official Command Line Tools require a Huawei developer login. Mirror commandline-tools-*-26.0.0.851.zip and set HARMONY_CLI_TOOLS_URL (and HARMONY_CLI_TOOLS_SHA256). Skipping the HAP build."
+          else
+            echo "Using a mirrored Command Line Tools archive."
+          fi
+
+      - name: Restore toolchain cache
+        if: env.CLT_URL != ''
+        id: clt-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/command-line-tools
+          key: harmony-clt-26.0.0.851-${{ runner.os }}
+
+      - name: Download toolchain
+        if: env.CLT_URL != '' && steps.clt-cache.outputs.cache-hit != 'true'
+        run: |
+          curl -fL "$CLT_URL" -o "$RUNNER_TEMP/clt.zip"
+          if [ -n "$CLT_SHA256" ]; then
+            echo "$CLT_SHA256  $RUNNER_TEMP/clt.zip" | sha256sum -c -
+          fi
+          mkdir -p "$RUNNER_TEMP/clt"
+          unzip -q "$RUNNER_TEMP/clt.zip" -d "$RUNNER_TEMP/clt"
+          if [ -d "$RUNNER_TEMP/clt/command-line-tools" ]; then
+            mv "$RUNNER_TEMP/clt/command-line-tools" "$RUNNER_TEMP/command-line-tools"
+          else
+            mv "$RUNNER_TEMP/clt" "$RUNNER_TEMP/command-line-tools"
+          fi
+
+      - name: Build
+        if: env.CLT_URL != ''
+        run: |
+          export PATH="$RUNNER_TEMP/command-line-tools/bin:$RUNNER_TEMP/command-line-tools/sdk/default/openharmony/toolchains:$PATH"
+          cd app
+          ohpm install
+          hvigorw assembleHap --no-daemon
+
+      - name: Upload HAP
+        if: env.CLT_URL != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: hopa-hap
+          path: app/entry/build/default/outputs/default/*.hap
+          if-no-files-found: error
+
+  core-tests:
+    name: core unit tests (macOS, Local Test)
+    # hvigorw Local Test is unsupported on Linux; run it on macOS.
+    runs-on: macos-latest
+    env:
+      CLT_URL: ${{ secrets.HARMONY_CLI_TOOLS_URL_MACOS }}
+      CLT_SHA256: ${{ secrets.HARMONY_CLI_TOOLS_SHA256_MACOS }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain availability
+        run: |
+          if [ -z "$CLT_URL" ]; then
+            echo "::warning title=HarmonyOS macOS toolchain not configured::Set HARMONY_CLI_TOOLS_URL_MACOS (and HARMONY_CLI_TOOLS_SHA256_MACOS) to a mirrored commandline-tools-mac-*-26.0.0.851.zip. Skipping core Local Tests."
+          fi
+
+      - name: Restore toolchain cache
+        if: env.CLT_URL != ''
+        id: clt-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/command-line-tools
+          key: harmony-clt-macos-26.0.0.851
+
+      - name: Download toolchain
+        if: env.CLT_URL != '' && steps.clt-cache.outputs.cache-hit != 'true'
+        run: |
+          curl -fL "$CLT_URL" -o "$RUNNER_TEMP/clt.zip"
+          if [ -n "$CLT_SHA256" ]; then
+            echo "$CLT_SHA256  $RUNNER_TEMP/clt.zip" | shasum -a 256 -c -
+          fi
+          mkdir -p "$RUNNER_TEMP/clt"
+          unzip -q "$RUNNER_TEMP/clt.zip" -d "$RUNNER_TEMP/clt"
+          if [ -d "$RUNNER_TEMP/clt/command-line-tools" ]; then
+            mv "$RUNNER_TEMP/clt/command-line-tools" "$RUNNER_TEMP/command-line-tools"
+          else
+            mv "$RUNNER_TEMP/clt" "$RUNNER_TEMP/command-line-tools"
+          fi
+
+      - name: Run core Local Tests
+        if: env.CLT_URL != ''
+        run: |
+          export PATH="$RUNNER_TEMP/command-line-tools/bin:$RUNNER_TEMP/command-line-tools/sdk/default/openharmony/toolchains:$PATH"
+          cd app
+          ohpm install
+          # Do not set DEVECO_SDK_HOME here: a mismatch makes the CLI SDK unavailable.
+          hvigorw test -p module=core@default --no-daemon -p coverage=false

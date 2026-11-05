@@ -1,0 +1,15 @@
+{
+  // NOTE: the accessibility extension is intentionally NOT declared here yet.
+  // Enabling it requires a restricted permission and an approved ACL request.
+  // After approval, add an `extensionAbilities` entry of type "accessibility"
+  // pointing at ./ets/extension/AccessibilityExtension.ets, and enable the
+  // service in Settings -> Accessibility. See docs/architecture.md.
+  "module": {
+    "name": "capability_a11y",
+    "type": "har",
+    "deviceTypes": [
+      "phone",
+      "tablet"
+    ]
+  }
+}
