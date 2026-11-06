@@ -22,6 +22,7 @@ export class AgentLoop {
   private maxSteps: number;
   private source?: ScreenSource;
   private memory: string = '';
+  private skill: string = '';
 
   constructor(
     executor: ActionExecutor,
@@ -39,6 +40,10 @@ export class AgentLoop {
     this.memory = memory;
   }
 
+  setSkill(skill: string): void {
+    this.skill = skill;
+  }
+
   async run(goal: string): Promise<ActionOutcome[]> {
     const outcomes: ActionOutcome[] = [];
     let screen: Screen = await this.capture();
@@ -51,6 +56,9 @@ export class AgentLoop {
       'Payments and irreversible actions stop for user approval.';
     if (this.memory.length > 0) {
       systemText = `${systemText}\n\n${this.memory}`;
+    }
+    if (this.skill.length > 0) {
+      systemText = `${systemText}\n\n${this.skill}`;
     }
     const messages: ModelMessage[] = [
       new ModelMessage('system', systemText),

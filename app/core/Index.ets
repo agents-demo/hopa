@@ -35,4 +35,5 @@ export { AnthropicClient } from './src/main/ets/AnthropicClient';
 export { GeminiClient } from './src/main/ets/GeminiClient';
 export { RunStore } from './src/main/ets/RunStore';
 export { AgentLoop } from './src/main/ets/AgentLoop';
+export { Skill, SkillBook } from './src/main/ets/Skills';
 export { Screen, ScreenNode, ScreenSource } from './src/main/ets/Screen';

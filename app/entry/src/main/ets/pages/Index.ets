@@ -5,6 +5,7 @@ import { Action, PaymentContext, Screen } from '@hopa/core';
 import { AgentService } from '../service/AgentService';
 import { SettingsStore, StoredSettings } from '../service/SettingsStore';
 import { MemoryItem } from '../service/MemoryStore';
+import { Skill } from '@hopa/core';
 
 @Entry
 @Component
@@ -30,6 +31,11 @@ struct Index {
   @State pageUrl: string = '';
   @State memoryDraft: string = '';
   @State memoryItems: MemoryItem[] = [];
+  @State memorySection: number = 0;
+  @State skillName: string = '';
+  @State skillTrigger: string = '';
+  @State skillGuidance: string = '';
+  @State skills: Skill[] = [];
 
   private webController: webview.WebviewController = new webview.WebviewController();
 
@@ -40,6 +46,7 @@ struct Index {
     this.modelLabel = service.getModelLabel();
     this.loadSettings();
     this.loadMemory();
+    this.loadSkills();
 
     // Fail-closed by default; the sheet is the only way to allow an action.
     service.approvals.setHandler(async (action: Action, screen: Screen | undefined): Promise<boolean> => {
@@ -182,6 +189,49 @@ struct Index {
   private saveMemory(): void {
     AgentService.get().memory.save(getContext(this) as Context).catch(() => {
       // Persistence is best effort; memory still works in this session.
+    });
+  }
+
+  private addSkill(): void {
+    const skill: Skill | undefined = AgentService.get().skills.add(
+      this.skillName,
+      this.skillTrigger,
+      this.skillGuidance
+    );
+    if (skill === undefined) {
+      return;
+    }
+    this.skillName = '';
+    this.skillTrigger = '';
+    this.skillGuidance = '';
+    this.refreshSkills();
+    this.saveSkills();
+    this.messages = this.messages.concat([`HOPA: saved skill "${skill.name}".`]);
+  }
+
+  private removeSkill(id: string): void {
+    if (AgentService.get().skills.remove(id)) {
+      this.refreshSkills();
+      this.saveSkills();
+    }
+  }
+
+  private refreshSkills(): void {
+    this.skills = AgentService.get().skills.all().slice();
+  }
+
+  private async loadSkills(): Promise<void> {
+    try {
+      await AgentService.get().skills.load(getContext(this) as Context);
+      this.refreshSkills();
+    } catch (error) {
+      // First run: no skills yet.
+    }
+  }
+
+  private saveSkills(): void {
+    AgentService.get().skills.save(getContext(this) as Context).catch(() => {
+      // Persistence is best effort.
     });
   }
 
@@ -415,11 +465,8 @@ struct Index {
   }
 
   @Builder
-  MemoryPage() {
+  FactsSection() {
     Column({ space: 12 }) {
-      Text('Memory')
-        .fontSize(22)
-        .fontWeight(FontWeight.Bold)
       Text('Only what you type here is stored. It is added to HOPA\'s prompt; delete anything you do not want kept.')
         .fontSize(13)
         .fontColor('#666666')
@@ -462,6 +509,103 @@ struct Index {
       }
       .layoutWeight(1)
       .width('100%')
+    }
+    .width('100%')
+    .layoutWeight(1)
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  @Builder
+  SkillsSection() {
+    Column({ space: 10 }) {
+      Text('A skill is a procedure HOPA follows when your request contains the trigger words.')
+        .fontSize(13)
+        .fontColor('#666666')
+      TextInput({ placeholder: 'Skill name, e.g. Book a table', text: this.skillName })
+        .onChange((value: string) => {
+          this.skillName = value;
+        })
+      TextInput({ placeholder: 'Trigger words, e.g. book a table', text: this.skillTrigger })
+        .onChange((value: string) => {
+          this.skillTrigger = value;
+        })
+      TextArea({ placeholder: 'Steps to follow', text: this.skillGuidance })
+        .height(90)
+        .onChange((value: string) => {
+          this.skillGuidance = value;
+        })
+      Button('Save skill')
+        .onClick(() => {
+          this.addSkill();
+        })
+
+      List({ space: 8 }) {
+        ForEach(this.skills, (item: Skill, index: number) => {
+          ListItem() {
+            Column({ space: 4 }) {
+              Row({ space: 8 }) {
+                Text(item.name)
+                  .fontWeight(FontWeight.Bold)
+                  .fontSize(14)
+                  .layoutWeight(1)
+                Button('Delete')
+                  .fontSize(12)
+                  .onClick(() => {
+                    this.removeSkill(item.id);
+                  })
+              }
+              .width('100%')
+              Text(`when: ${item.trigger}`)
+                .fontSize(12)
+                .fontColor('#666666')
+              Text(item.guidance)
+                .fontSize(13)
+                .maxLines(4)
+            }
+            .width('100%')
+            .padding(12)
+            .backgroundColor('#F7F8FA')
+            .borderRadius(8)
+            .alignItems(HorizontalAlign.Start)
+          }
+        }, (item: Skill) => item.id)
+      }
+      .layoutWeight(1)
+      .width('100%')
+    }
+    .width('100%')
+    .layoutWeight(1)
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  @Builder
+  MemoryPage() {
+    Column({ space: 12 }) {
+      Text('Memory & skills')
+        .fontSize(22)
+        .fontWeight(FontWeight.Bold)
+
+      Row({ space: 8 }) {
+        Button('Facts')
+          .backgroundColor(this.memorySection === 0 ? '#0A59F7' : '#E5E6E8')
+          .fontColor(this.memorySection === 0 ? '#FFFFFF' : '#333333')
+          .onClick(() => {
+            this.memorySection = 0;
+          })
+        Button('Skills')
+          .backgroundColor(this.memorySection === 1 ? '#0A59F7' : '#E5E6E8')
+          .fontColor(this.memorySection === 1 ? '#FFFFFF' : '#333333')
+          .onClick(() => {
+            this.memorySection = 1;
+          })
+      }
+      .width('100%')
+
+      if (this.memorySection === 0) {
+        this.FactsSection()
+      } else {
+        this.SkillsSection()
+      }
 
       Text(`Runs recorded: ${this.runCount}`)
         .fontSize(12)

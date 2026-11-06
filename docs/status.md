@@ -29,7 +29,7 @@ the device/ACL, UI, release and sign-off phases.
 | ArkTS `app/core` | screen-aware gate + observation loop; OpenAI, Anthropic and Gemini clients; hypium pass | `hvigorw test` |
 | HAP | builds and signed with the local debug kit | `scripts/sign-app.ps1` |
 | Installed on the emulator | yes: launch, first frame, four tabs | `hdc install -r` |
-| Entry UI | chat wired to `AgentLoop`; fail-closed approval dialog; provider settings; memory; built-in Web tab | `pages/Index.ets` |
+| Entry UI | chat wired to `AgentLoop`; fail-closed approval dialog; provider settings; memory and skills; built-in Web tab | `pages/Index.ets` |
 | Accessibility extension | bridge compiled; not declared; no ACL | `docs/a11y.md` |
 | Emulator | Pura 90, API 24, locked screen | `hdc` |
 | ACL | not filed | Phase 0 box open |

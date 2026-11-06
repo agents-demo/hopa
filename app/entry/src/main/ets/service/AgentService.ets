@@ -22,6 +22,7 @@ import { A11yBridge, A11yCapability, UiCapability } from '@hopa/capability-a11y'
 import { SystemCapability } from '@hopa/capability-system';
 import { BrowserController } from './BrowserController';
 import { MemoryStore } from './MemoryStore';
+import { SkillStore } from './SkillStore';
 
 /** Called when an action needs the user's decision. Must be fail-closed. */
 export type ApprovalPrompt = (action: Action, screen: Screen | undefined) => Promise<boolean>;
@@ -75,6 +76,7 @@ export class AgentService {
   readonly runs: RunStore;
   readonly tools: ToolRegistry;
   readonly memory: MemoryStore = new MemoryStore();
+  readonly skills: SkillStore = new SkillStore();
   readonly web: WebCapability;
   readonly browser: BrowserController;
   readonly sandbox: SandboxCapability;
@@ -182,6 +184,7 @@ export class AgentService {
 
     let outcomes: ActionOutcome[] = [];
     this.loop.setMemory(this.memory.toPrompt());
+    this.loop.setSkill(this.skills.toPrompt(goal));
     try {
       outcomes = await this.loop.run(goal);
     } catch (error) {
