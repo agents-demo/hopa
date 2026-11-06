@@ -1,4 +1,4 @@
-# HOPA-Bench v0
+﻿# HOPA-Bench v0
 
 The first benchmark slice: twenty task definitions, four success predicates and a stable
 failure taxonomy. It validates the task format and the runner. **No device run
@@ -10,7 +10,7 @@ A task is YAML or JSON:
 
 ```yaml
 schema_version: 1
-id: settings-bluetooth
+id: settings-wlan
 goal: "Open Settings and reach the Bluetooth screen"
 app: Settings
 bundle: com.huawei.hmos.settings
@@ -34,7 +34,7 @@ max_steps: 10
 | `node_exists` | A node with the id or text exists | `id`, `any` or `all` |
 | `app_foreground` | The bundle is the foreground app | `bundle` (or task bundle) |
 | `screen_hash` | The visible-text hash matches | `hash` |
-| `always` | Unconditional (used to test the runner) | — |
+| `always` | Unconditional (used to test the runner) | â€” |
 
 `screen_hash` is `sha256` of the visible text joined by newlines. It is stable
 across refs and timestamps, so it is safe for fixtures.
@@ -58,11 +58,11 @@ Every `TaskResult` carries `success`, `failure`, `steps`, `latency_ms` per step,
 
 The directory now holds **20 task definitions**:
 
-1. `settings-bluetooth` — reach Bluetooth
-2. `clock-open-alarm` — open the Alarm tab
-3. `calendar-new-event` — create an event
-4. `browser-search-harmonyos` — search in the browser
-5. `notes-create-note` — create a note
+1. `settings-wlan` â€” reach Bluetooth
+2. `clock-open-alarm` â€” open the Alarm tab
+3. `calendar-new-event` â€” create an event
+4. `browser-search-harmonyos` â€” search in the browser
+5. `notes-create-note` â€” create a note
 6. `clock-alarm-tab`
 7. `clock-create-alarm-0730`
 8. `calendar-event-tomorrow`
@@ -107,6 +107,36 @@ bench run --tasks bench/tasks --json --out .hopa/bench-v0.json
 ```
 
 With no device, only `list`, `validate` and the unit tests are meaningful.
+
+## Device baseline — 2026-11-06
+
+Device: **Pura 90 emulator**, HarmonyOS 6.1.1(24), 1320×2856, API 24.
+
+```bash
+bench run --tasks bench/tasks \
+  --task settings-wlan --task clock-open-alarm --task calendar-new-event \
+  --task browser-search-harmonyos --task notes-create-note \
+  --target 127.0.0.1:5555 --timeout 180 \
+  --json --out .hopa/bench-device-final2.json
+bench report --input .hopa/bench-device-final2.json
+```
+
+| Task | Result | Reason |
+|---|---|---|
+| `settings-wlan` | **PASS** | reached WLAN |
+| `calendar-new-event` | **PASS** | opened the new-event sheet |
+| `browser-search-harmonyos` | **PASS** | typed and submitted the query |
+| `clock-open-alarm` | FAIL | Clock is not installed on this image |
+| `notes-create-note` | FAIL | Notes is not installed on this image |
+
+Totals: **3/5 (60%)**, p50 1.9 s, p95 4.8 s, wall clock 136 s.
+
+The emulator has **no Bluetooth** and no Clock/Notes apps, so the Settings task
+uses WLAN and the two missing-app tasks cannot pass on this image. The app is
+force-stopped before every task so a previous screen cannot fake a pass.
+
+The emulator also froze once (`SceneBoard` panic); after the restart the same
+tasks ran. See `docs/emulator-crash-2026-11-06.md`.
 
 ## What v0 does not prove
 

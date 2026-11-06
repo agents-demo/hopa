@@ -5,13 +5,13 @@ app: Browser
 bundle: com.huawei.hmos.browser
 success:
   type: text_visible
-  any: ["HarmonyOS", "Search"]
+  any: ["HarmonyOS"]
 steps:
   - action: launch
   - action: wait
-    seconds: 3
+    seconds: 6
   - action: tap_text
-    text: "Search"
+    text: "Search or type a URL"
   - action: type
     text: "HarmonyOS"
   - action: key

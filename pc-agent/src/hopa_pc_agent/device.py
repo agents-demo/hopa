@@ -46,21 +46,32 @@ class Device:
     # -- observation ---------------------------------------------------------
 
     def dump_layout(self, *, include_attrs: bool = False, timeout: float | None = None) -> Layout:
-        remote = self._remote("layout", ".json")
-        command = f"uitest dumpLayout -p {shlex.quote(remote)}"
-        if include_attrs:
-            command += " -a"
-        self.hdc.shell(command, timeout=timeout)
-        try:
-            with tempfile.TemporaryDirectory(prefix="hopa-layout-") as tmp:
-                local = Path(tmp) / "layout.json"
-                self.hdc.file_recv(remote, local, timeout=timeout)
-                data = json.loads(local.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as exc:
-            raise DeviceError(f"layout dump is not valid JSON: {exc}") from exc
-        finally:
-            self.hdc.shell(f"rm -f {shlex.quote(remote)}", check=False)
-        return parse_layout(data)
+        last_error: Exception | None = None
+        for attempt in range(2):
+            remote = self._remote("layout", ".json")
+            command = f"uitest dumpLayout -p {shlex.quote(remote)}"
+            if include_attrs:
+                command += " -a"
+            try:
+                output = self.hdc.shell(command, timeout=timeout)
+                if "failed" in output.lower():
+                    raise DeviceError(f"uitest dumpLayout failed: {output.strip()}")
+                with tempfile.TemporaryDirectory(prefix="hopa-layout-") as tmp:
+                    local = Path(tmp) / "layout.json"
+                    self.hdc.file_recv(remote, local, timeout=timeout)
+                    if not local.exists() or local.stat().st_size == 0:
+                        raise DeviceError("layout dump produced no file")
+                    data = json.loads(local.read_text(encoding="utf-8"))
+                return parse_layout(data)
+            except json.JSONDecodeError as exc:
+                last_error = DeviceError(f"layout dump is not valid JSON: {exc}")
+            except DeviceError as exc:
+                last_error = exc
+            finally:
+                self.hdc.shell(f"rm -f {shlex.quote(remote)}", check=False)
+            if attempt == 0:
+                time.sleep(0.7)
+        raise last_error or DeviceError("layout dump failed")
 
     def screenshot(self, local_path: str | Path | None = None) -> Path:
         remote = self._remote("screen", ".jpeg")
@@ -112,8 +123,32 @@ class Device:
 
     # -- app lifecycle -------------------------------------------------------
 
-    def launch(self, bundle: str, ability: str = "EntryAbility") -> None:
-        self.hdc.shell(f"aa start -a {shlex.quote(ability)} -b {shlex.quote(bundle)}")
+    def launch(self, bundle: str, ability: str = "") -> None:
+        candidates = (
+            [ability]
+            if ability
+            else [
+                "MainAbility",
+                "EntryAbility",
+                f"{bundle}.MainAbility",
+                f"{bundle}.EntryAbility",
+            ]
+        )
+        errors: list[str] = []
+        for attempt in range(2):
+            for name in candidates:
+                result = self.hdc.run(
+                    "shell",
+                    f"aa start -a {shlex.quote(name)} -b {shlex.quote(bundle)}",
+                    check=False,
+                )
+                output = f"{result.stdout}\n{result.stderr}".strip()
+                if "successfully" in output.lower():
+                    return
+                errors.append(f"{name}: {output}")
+            if attempt == 0:
+                time.sleep(0.7)
+        raise DeviceError(f"failed to launch {bundle}: " + " | ".join(errors[-4:]))
 
     def stop(self, bundle: str) -> None:
         self.hdc.shell(f"aa force-stop {shlex.quote(bundle)}")

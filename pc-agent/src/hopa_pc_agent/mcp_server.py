@@ -99,7 +99,7 @@ TOOLS: list[dict[str, Any]] = [
             "type": "object",
             "properties": {
                 "bundle": {"type": "string"},
-                "ability": {"type": "string", "default": "EntryAbility"},
+                "ability": {"type": "string", "default": ""},
             },
             "required": ["bundle"],
             "additionalProperties": False,
@@ -251,7 +251,7 @@ class McpServer:
         if name == "hopa_launch_app":
             raw = str(arguments["bundle"])
             bundle = _ALIASES.get(raw.lower(), raw)
-            self.device.launch(bundle, ability=str(arguments.get("ability", "EntryAbility")))
+            self.device.launch(bundle, ability=str(arguments.get("ability", "")))
             return _text_result(f"launched {bundle}")
 
         if name == "hopa_press_key":

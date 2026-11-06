@@ -62,7 +62,7 @@ def test_launch_and_tap_text() -> None:
         _task([Action("launch"), Action("tap_text", {"text": "Bluetooth"})])
     )
     assert result.success is True
-    assert ("launch", "com.huawei.hmos.settings", "EntryAbility") in device.calls
+    assert ("launch", "com.huawei.hmos.settings", "") in device.calls
     assert ("tap", 50, 50) in device.calls
 
 

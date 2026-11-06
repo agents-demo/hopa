@@ -15,7 +15,7 @@ def test_loads_all_example_tasks() -> None:
     ids = {task.id for task in tasks}
     assert len(ids) == 20
     assert {
-        "settings-bluetooth",
+        "settings-wlan",
         "clock-open-alarm",
         "calendar-new-event",
         "browser-search-harmonyos",
@@ -26,11 +26,11 @@ def test_loads_all_example_tasks() -> None:
 
 
 def test_loads_yaml_task() -> None:
-    task = load_task(TASKS_DIR / "01-settings-bluetooth.yaml")
+    task = load_task(TASKS_DIR / "01-settings-wlan.yaml")
     assert task.app == "Settings"
     assert task.resolved_bundle == "com.huawei.hmos.settings"
     assert task.success.type == "text_visible"
-    assert task.success.any == ["Bluetooth", "Bluetooth settings"]
+    assert task.success.any == ["WLAN", "Wi-Fi"]
     assert task.steps[0].action == "launch"
 
 

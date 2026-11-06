@@ -110,12 +110,12 @@ it, not at the end.
 | `app/entry` | 4-tab ArkUI shell; chat says “agent loop placeholder” | `pages/Index.ets` |
 | Agent loop | captures the screen, asks for one action, gates, records | `AgentLoop.ets` |
 | `pc-agent` | CLI + MCP implemented: devices, dump, tap, double-tap, long-press, type, swipe, screenshot, launch, stop, key, install, uninstall, apps | `pc-agent/src` |
-| `bench` | 20 task files valid (5 device-confirmed), runner, stub model, CLI | `bench/tasks` |
+| `bench` | 20 task files; 3/5 v0 tasks pass on the emulator | `bench/tasks`, `docs/bench-v0.md` |
 | Brain | Kotlin router + HTTP service + knowledge loader + prompts (67 assertions + schema contract) | `brain/src`, `docs/brain.md` |
 | HAP | builds with DevEco 6.1.1 / API 24; unsigned | `hvigorw assembleHap` |
 | Knowledge | 12 HarmonyOS system apps; 0 sites, 0 skills | `brain/knowledge/apps` |
 | CI | Python tests + ruff; HAP build and core Local Tests skip with a warning when the mirrored toolchain secret is absent | `.github/workflows/ci.yml` |
-| Tests baseline | 254 Python tests, 67 Kotlin assertions, ArkTS Local Tests pass; 20 bench task files validate | local run 2026-11-06 |
+| Tests baseline | 254 Python tests, 67 Kotlin assertions, ArkTS Local Tests pass; 20 bench tasks validate; device bench 3/5 | local run 2026-11-06 |
 
 Known gaps to close first:
 
@@ -213,7 +213,7 @@ Module responsibilities:
 - [ ] `pc-agent dump` returns a parseable layout on both
 - [ ] `pc-agent screenshot` works on both
 - [x] Baseline test run recorded in `docs/baseline.md` (counts, failures) (evidence: docs/baseline.md (local run 2026-11-05; device pending))
-- [ ] Baseline bench run recorded (5 tasks, pass/fail, latency)
+- [x] Baseline bench run recorded (5 tasks, pass/fail, latency) (evidence: docs/bench-v0.md (3/5, p95 4.8s))
 - [ ] Model provider chosen and key stored in env, not git
 - [ ] Model latency and cost measured for one call
 - [x] Write `docs/status.md` with the honest one-paragraph state (evidence: docs/status.md)

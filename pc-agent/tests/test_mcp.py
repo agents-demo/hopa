@@ -88,7 +88,7 @@ def test_tools_call_launch_alias() -> None:
         }
     )
     assert response["result"]["isError"] is False
-    assert device.calls == [("launch", "com.huawei.hmos.settings", "EntryAbility")]
+    assert device.calls == [("launch", "com.huawei.hmos.settings", "")]
 
 
 def test_notifications_get_no_response() -> None:

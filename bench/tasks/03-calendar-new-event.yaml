@@ -5,13 +5,13 @@ app: Calendar
 bundle: com.huawei.hmos.calendar
 success:
   type: text_visible
-  any: ["New event", "Create event", "Event title", "Add"]
+  any: ["New event", "Create event", "Event title"]
 steps:
   - action: launch
   - action: wait
     seconds: 2
-  - action: tap_text
-    text: "Add"
+  - action: tap_id
+    id: "phone_add_agenda"
   - action: wait
     seconds: 1
 max_steps: 10

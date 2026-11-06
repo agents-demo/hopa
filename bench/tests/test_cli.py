@@ -28,7 +28,7 @@ def test_validate_example_tasks(capsys) -> None:
 def test_list_example_tasks(capsys) -> None:
     code = main(["list", "--tasks", str(TASKS_DIR)])
     assert code == 0
-    assert "settings-bluetooth" in capsys.readouterr().out
+    assert "settings-wlan" in capsys.readouterr().out
 
 
 def test_unknown_task_id_returns_2(capsys) -> None:

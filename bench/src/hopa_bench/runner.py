@@ -77,6 +77,12 @@ class Runner:
         failure: str | None = None
         tokens = 0
 
+        # Reset the app so a previous task cannot leave it on a success screen.
+        try:
+            self.device.stop(task.resolved_bundle)
+        except Exception:  # noqa: BLE001 - best effort on fake devices
+            pass
+
         try:
             for _ in range(task.max_steps):
                 action = model.propose(task, history, None)
@@ -127,7 +133,7 @@ class Runner:
         try:
             if name == "launch":
                 bundle = str(params.get("bundle") or task.resolved_bundle)
-                ability = str(params.get("ability", "EntryAbility"))
+                ability = str(params.get("ability", ""))
                 self.device.launch(bundle, ability=ability)
                 return StepResult(name, True, f"launched {bundle}")
 

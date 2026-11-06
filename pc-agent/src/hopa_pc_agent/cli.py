@@ -77,7 +77,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     launch = sub.add_parser("launch", help="launch an app")
     launch.add_argument("bundle", help="bundle name or a known alias (settings, clock, ...)")
-    launch.add_argument("--ability", default="EntryAbility")
+    launch.add_argument(
+        "--ability", default="", help="ability name; default tries MainAbility then EntryAbility"
+    )
 
     stop = sub.add_parser("stop", help="force-stop an app")
     stop.add_argument("bundle")
@@ -263,6 +265,11 @@ def _dispatch(args: argparse.Namespace, device: Device) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
     parser = build_parser()
     args = parser.parse_args(argv)
     try:

@@ -26,7 +26,8 @@ the device/ACL, UI, release and sign-off phases.
 | Accessibility extension | bridge compiled; not declared; no ACL | `docs/a11y.md` |
 | Emulator | Pura 90, API 24, locked screen | `hdc` |
 | ACL | not filed | Phase 0 box open |
-| Bench on a real model | not run | needs an unlocked device |
+| Bench on a device (stub model) | 3/5 on the Pura 90 emulator | `docs/bench-v0.md` |
+| Bench on a real model | not run | needs a real key |
 | Payment refusal on a real checkout | not run | needs an unlocked device |
 
 ## What works now

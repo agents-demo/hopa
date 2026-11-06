@@ -7,6 +7,15 @@ class FakeHdc:
     def __init__(self) -> None:
         self.calls: list[str] = []
 
+    class Result:
+        stdout = "start ability successfully."
+        stderr = ""
+
+    def run(self, *args: str, **kwargs: object) -> FakeHdc.Result:
+        if args and args[0] == "shell" and len(args) > 1:
+            self.calls.append(str(args[1]))
+        return FakeHdc.Result()
+
     def shell(self, command: str, *, check: bool = True, timeout: float | None = None) -> str:
         self.calls.append(command)
         return ""

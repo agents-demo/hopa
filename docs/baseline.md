@@ -39,7 +39,7 @@ and a Pura 90 phone emulator**.
 | `pc-agent dump` | **blocked by the emulator lock screen** (`Get window nodes failed`) |
 | ArkTS Local Tests | **pass** (`hvigorw test -p module=core@default`) |
 | HAP build | **pass**, unsigned (`entry-default-unsigned.hap`) |
-| Bench on a device | not run (lock screen) |
+| Bench on a device | **3/5** on the Pura 90 emulator; Clock and Notes are not installed |
 | Bench with a real model | not run |
 
 ## Reproduce
