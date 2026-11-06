@@ -59,3 +59,44 @@ def scroll_to(
     if predicate(observation):
         return observation
     raise ScrollLimit(f"target not found after {max_attempts} scrolls")
+
+
+def recover(
+    observe: Observer,
+    press_back: Callable[[], None],
+    press_home: Callable[[], None],
+    expected_text: str,
+    *,
+    attempts: int = 3,
+    sleep: Callable[[float], None] = time.sleep,
+) -> Observation:
+    """Return to a screen containing ``expected_text``: back, then home."""
+    needle = expected_text.lower()
+    for _ in range(attempts):
+        observation = observe()
+        if needle in observation.text.lower():
+            return observation
+        press_back()
+        sleep(0.3)
+    press_home()
+    sleep(0.3)
+    return observe()
+
+
+POPUP_LABELS = ("Not now", "Later", "No thanks", "稍后", "以后再说")
+
+
+def dismiss_popup(
+    observe: Observer,
+    tap_text: Callable[[str], None],
+    *,
+    attempts: int = 2,
+) -> bool:
+    """Dismiss only known low-risk popups (never Cancel, Close or Deny)."""
+    for _ in range(attempts):
+        observation = observe()
+        for label in POPUP_LABELS:
+            if observation.find_text(label):
+                tap_text(label)
+                return True
+    return False

@@ -115,7 +115,7 @@ it, not at the end.
 | HAP | builds with DevEco 6.1.1 / API 24; unsigned | `hvigorw assembleHap` |
 | Knowledge | 12 HarmonyOS system apps; 0 sites, 0 skills | `brain/knowledge/apps` |
 | CI | Python tests + ruff; HAP build and core Local Tests skip with a warning when the mirrored toolchain secret is absent | `.github/workflows/ci.yml` |
-| Tests baseline | 254 Python tests, 67 Kotlin assertions, ArkTS Local Tests pass; 20 bench tasks validate; device bench 3/5 | local run 2026-11-06 |
+| Tests baseline | 257 Python tests, 78 Kotlin assertions, ArkTS Local Tests pass; 20 bench tasks validate; device bench 3/5 | local run 2026-11-06 |
 
 Known gaps to close first:
 
@@ -298,7 +298,7 @@ Module responsibilities:
 - [x] Step cap, wall-clock cap, token cap (evidence: AgentLoop.__init__)
 - [x] Stop conditions: success, failure, need-user, payment, max steps (evidence: AgentLoop.run)
 - [x] Run record per step, append-only (evidence: RunStore.append)
-- [ ] Resume a run from records
+- [x] Resume a run from records (evidence: AgentLoop.resume + test_loop)
 - [x] `StubModelClient` replays scripted actions without network (evidence: StubModelClient)
 - [x] Real client with retry/backoff and timeout (evidence: OpenAIClient._complete)
 - [x] Prompt rule: use refs, never invent coordinates (evidence: SYSTEM_PROMPT)
@@ -334,7 +334,7 @@ Module responsibilities:
 ### 6.6 Runtime behaviour
 
 - [x] Loop and stagnation detection: same action + same observation hash twice → replan or stop (evidence: AgentLoop.run)
-- [ ] Wrong-screen recovery: back / home / re-observe policy
+- [x] Wrong-screen recovery: back / home / re-observe policy (evidence: runtime.recover + test_runtime)
 - [x] `wait_for` condition on text, ref or state, with timeout (evidence: agent/src/hopa_agent/runtime.py)
 - [x] `scroll_to` with bounded attempts (evidence: agent/src/hopa_agent/runtime.py)
 - [x] `find_by_text` and `find_by_ref` helpers (evidence: Observation.find_text/find_ref)
@@ -344,7 +344,7 @@ Module responsibilities:
 - [ ] `handover` tool for login, 2FA, CAPTCHA and payment
 - [ ] Cancel mid-step leaves the app in a safe state
 - [x] Duplicate-tap guard (idempotency by ref + action hash) (evidence: DeviceExecutor._last_key)
-- [ ] Popup handling: cookie banners, rating prompts, update dialogs, ads
+- [x] Popup handling: cookie banners, rating prompts, update dialogs, ads (evidence: runtime.dismiss_popup + test_runtime)
 - [ ] System permission dialog handling policy (grant only what the task needs)
 - [x] Timeout and backoff policy documented (evidence: docs/contracts/errors.md)
 - [ ] Step and cost budgets per task

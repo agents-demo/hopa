@@ -69,7 +69,7 @@ class AgentLoop:
         self.refusal = refusal or RefusalPolicy()
         self.clock = clock
 
-    def run(self, goal: str, *, run_id: str | None = None) -> RunResult:
+    def run(self, goal: str, *, run_id: str | None = None, start_step: int = 0) -> RunResult:
         run_id = run_id or f"run_{uuid.uuid4().hex[:12]}"
         started_at = datetime.now(UTC).isoformat()
         started = self.clock()
@@ -96,8 +96,9 @@ class AgentLoop:
         error: str | None = None
         steps = 0
 
-        for step in range(self.max_steps):
-            steps = step + 1
+        for offset in range(self.max_steps):
+            step = start_step + offset
+            steps = offset + 1
             if self.clock() - started > self.max_seconds:
                 reason = "timeout"
                 break
@@ -177,3 +178,12 @@ class AgentLoop:
             started_at=started_at,
             finished_at=datetime.now(UTC).isoformat(),
         )
+
+    def resume(self, goal: str, run_id: str) -> RunResult:
+        """Continue a run from its records, keeping the step numbers."""
+        if self.store is None:
+            raise AgentError("resume needs a run store")
+        errors = self.store.verify_chain()
+        if errors:
+            raise AgentError(f"record chain is broken: {errors[0]}")
+        return self.run(goal, run_id=run_id, start_step=self.store.resume_step(run_id))

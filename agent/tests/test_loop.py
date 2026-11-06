@@ -9,7 +9,7 @@ from hopa_agent.loop import AgentLoop
 from hopa_agent.models import ModelDecision, StubModelClient
 from hopa_agent.records import RunStore
 
-from .conftest import BLUETOOTH, SETTINGS, FakeDevice
+from .conftest import BLUETOOTH, BLUETOOTH_ON, SETTINGS, FakeDevice
 
 
 def _loop(device, model, tmp_path: Path, **kwargs):
@@ -193,3 +193,26 @@ def test_refusal_stops_before_the_model(settings_device, tmp_path: Path):
     assert result.reason == "refused"
     assert result.steps == 0
     assert "can't help" in result.say
+
+
+def test_resume_continues_step_numbers(tmp_path: Path):
+    device = FakeDevice([SETTINGS, BLUETOOTH, BLUETOOTH_ON])
+    store = RunStore(tmp_path / "runs.jsonl")
+    executor = DeviceExecutor(device, store=store)
+    first = AgentLoop(
+        executor,
+        StubModelClient([{"kind": "ui.tap", "ref": "e3"}]),
+        store=store,
+        max_steps=1,
+    ).run("turn on", run_id="r1")
+
+    second = AgentLoop(
+        DeviceExecutor(device, store=store),
+        StubModelClient([{"kind": "ui.tap", "ref": "e3"}]),
+        store=store,
+        max_steps=1,
+    ).resume("turn on", "r1")
+
+    assert first.steps == 1
+    assert second.steps == 1
+    assert [record.step for record in store.for_run("r1")] == [0, 1]
