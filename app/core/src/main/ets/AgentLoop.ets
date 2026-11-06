@@ -27,6 +27,7 @@ export class AgentLoop {
   private budget: ContextBudget = new ContextBudget();
   private tokensUsed: number = 0;
   private cancelled: boolean = false;
+  private answer: string = '';
 
   constructor(
     executor: ActionExecutor,
@@ -66,10 +67,16 @@ export class AgentLoop {
     return this.cancelled;
   }
 
+  /** A plain-text reply when the model answers instead of proposing an action. */
+  getAnswer(): string {
+    return this.answer;
+  }
+
   async run(goal: string): Promise<ActionOutcome[]> {
     const outcomes: ActionOutcome[] = [];
     this.tokensUsed = 0;
     this.cancelled = false;
+    this.answer = '';
     let screen: Screen = await this.capture();
     let systemText: string =
       'You are HOPA, a phone agent. Propose exactly one JSON action at a time. ' +
@@ -109,6 +116,11 @@ export class AgentLoop {
 
       const action: Action | undefined = this.parseAction(response.text);
       if (action === undefined) {
+        // Not an action: treat it as the final answer when it is real text.
+        const text: string = response.text.trim();
+        if (text.length > 0) {
+          this.answer = text;
+        }
         break;
       }
 
@@ -145,7 +157,11 @@ export class AgentLoop {
 
   private parseAction(text: string): Action | undefined {
     try {
-      const payload = JSON.parse(text) as ActionPayload;
+      let raw: string = text.trim();
+      if (raw.startsWith('```')) {
+        raw = raw.replace(/^```[a-zA-Z]*\s*/, '').replace(/```\s*$/, '').trim();
+      }
+      const payload = JSON.parse(raw) as ActionPayload;
       if (payload.kind === undefined || payload.kind.length === 0) {
         return undefined;
       }

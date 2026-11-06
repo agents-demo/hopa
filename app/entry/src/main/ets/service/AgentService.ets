@@ -325,6 +325,12 @@ export class AgentService {
     }
 
     if (outcomes.length === 0) {
+      const answer: string = this.loop.getAnswer();
+      if (answer.length > 0) {
+        this.lastTranscript = answer;
+        this.lastSuccess = !this.loop.wasCancelled();
+        return answer;
+      }
       return 'The model proposed no executable action.';
     }
 
