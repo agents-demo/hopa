@@ -91,6 +91,7 @@ lexical matcher used by `/decide`.
 - `ServerTest` — 20 HTTP assertions
 - `KnowledgeLoaderTest` — 14 format assertions
 - `PromptBookTest` — 16 prompt/intent assertions
+- `SkillLoaderTest` — 11 skill assertions
 
 `scripts/brain-contract.py` starts the server, calls `/decide`, and validates the
 reply against `schemas/decision.schema.json`.

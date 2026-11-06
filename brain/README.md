@@ -41,6 +41,7 @@ The HTTP contract is documented in [`docs/brain.md`](../docs/brain.md).
 - `ChannelAdvisor.line` — app vs web vs signed-in
 - `KnowledgeLoader` — Markdown + front matter for 12 HarmonyOS apps
 - `PromptBook` — system rules, intent gate, channel order, truncation
+- `SkillLoader` — 6 `SKILL.md` manifests with trigger terms
 - `GET /health`, `GET /version`, `POST /decide`, `GET /session/{id}`
 
 ## Not in this slice

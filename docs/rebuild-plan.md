@@ -111,7 +111,7 @@ it, not at the end.
 | Agent loop | captures the screen, asks for one action, gates, records | `AgentLoop.ets` |
 | `pc-agent` | CLI + MCP implemented: devices, dump, tap, double-tap, long-press, type, swipe, screenshot, launch, stop, key, install, uninstall, apps | `pc-agent/src` |
 | `bench` | 20 task files; 3/5 v0 tasks pass on the emulator | `bench/tasks`, `docs/bench-v0.md` |
-| Brain | Kotlin router + HTTP service + knowledge loader + prompts (67 assertions + schema contract) | `brain/src`, `docs/brain.md` |
+| Brain | Kotlin router + HTTP service + knowledge + prompts + skills (78 assertions + schema contract) | `brain/src`, `docs/brain.md` |
 | HAP | builds with DevEco 6.1.1 / API 24; unsigned | `hvigorw assembleHap` |
 | Knowledge | 12 HarmonyOS system apps; 0 sites, 0 skills | `brain/knowledge/apps` |
 | CI | Python tests + ruff; HAP build and core Local Tests skip with a warning when the mirrored toolchain secret is absent | `.github/workflows/ci.yml` |
@@ -443,7 +443,7 @@ Module responsibilities:
 - [x] Port `intent_gate` (DISCUSS / READ / ACT) (evidence: brain/src/main/kotlin/hopa/brain/Prompts.kt + PromptBookTest)
 - [x] Port `channels.md` decision order (evidence: brain/src/main/kotlin/hopa/brain/Prompts.kt + PromptBookTest)
 - [ ] Port `roles/app_knowledge*.md`
-- [ ] Port 6 skills (9 files: manifests, references and the PDF script) and validate manifests
+- [x] Port 6 skills (9 files: manifests, references and the PDF script) and validate manifests (evidence: 6 clean-room manifests in brain/knowledge/skills + SkillLoaderTest)
 - [ ] Port personal skill creation
 - [ ] Port the app-notes draft → trial → verified flow
 - [x] Prompt size budget and truncation rules (evidence: PromptBook.MAX_SCREEN_CHARS + PromptBookTest)
