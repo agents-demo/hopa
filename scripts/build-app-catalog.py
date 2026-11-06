@@ -61,7 +61,13 @@ def collect() -> list[dict]:
                 "ability": fields.get("ability", "").strip(),
             }
         )
-    entries.sort(key=lambda item: (not item["verified"], not item["confirmed"], item["display"].lower()))
+    entries.sort(
+        key=lambda item: (
+            not item["verified"],
+            not item["confirmed"],
+            item["display"].lower(),
+        )
+    )
     return entries
 
 
@@ -137,7 +143,9 @@ def main() -> int:
     output = render(entries, sites)
     if "--check" in sys.argv:
         if not TARGET.exists() or TARGET.read_text(encoding="utf-8") != output:
-            print(f"{TARGET} is stale; run scripts/build-app-catalog.py", file=sys.stderr)
+            print(
+                f"{TARGET} is stale; run scripts/build-app-catalog.py", file=sys.stderr
+            )
             return 1
         print(f"{len(entries)} apps and {len(sites)} sites are current")
         return 0
