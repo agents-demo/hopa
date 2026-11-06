@@ -20,7 +20,7 @@ met; the toolchain and tethered claims are.
 | Observation/action/decision/record schemas | v1 | `schemas/` |
 | ArkTS `app/core` | screen-aware gate + observation loop; hypium pass | `hvigorw test` |
 | HAP | builds, unsigned | `hvigorw assembleHap` |
-| Accessibility extension | empty, not declared | `module.json5` |
+| Accessibility extension | bridge compiled; not declared; no ACL | `docs/a11y.md` |
 | Emulator | Pura 90, API 24, locked screen | `hdc` |
 | ACL | not filed | Phase 0 box open |
 | Bench on a real model | not run | needs an unlocked device |

@@ -33,3 +33,4 @@ export {
 export { OpenAiCompatibleClient } from './src/main/ets/OpenAiClient';
 export { RunStore } from './src/main/ets/RunStore';
 export { AgentLoop } from './src/main/ets/AgentLoop';
+export { Screen, ScreenNode, ScreenSource } from './src/main/ets/Screen';

@@ -12,6 +12,8 @@ export class ScreenNode {
   nodeId: string = '';
   bounds: number[] = [];
   clickable: boolean = false;
+  enabled: boolean = true;
+  checked: boolean = false;
   children: ScreenNode[] = [];
 }
 

@@ -106,7 +106,7 @@ it, not at the end.
 |---|---|---|
 | Repo | public, Apache-2.0 | `git log` |
 | `app/core` | screen-aware gate, observation loop, tool registry, types, model interface; hypium tests pass | `app/core/src` |
-| `app/capabilities` | interfaces + stubs; a11y extension empty and not declared | `module.json5`, `AccessibilityExtension.ets` |
+| `app/capabilities` | interfaces + stubs; a11y bridge compiled, extension not declared, no ACL | `module.json5`, `A11yBridge.ets` |
 | `app/entry` | 4-tab ArkUI shell; chat says “agent loop placeholder” | `pages/Index.ets` |
 | Agent loop | captures the screen, asks for one action, gates, records | `AgentLoop.ets` |
 | `pc-agent` | CLI + MCP implemented: devices, dump, tap, double-tap, long-press, type, swipe, screenshot, launch, stop, key, install, uninstall, apps | `pc-agent/src` |
@@ -622,7 +622,7 @@ Module responsibilities:
 - [ ] Accessibility-event throttling and debounce (no event flood)
 - [ ] Stale-ref invalidation on window or tree change; never tap a stale ref
 - [ ] Gesture-conflict policy with the user and with system gestures
-- [ ] `docs/a11y.md` with what works and what does not
+- [x] `docs/a11y.md` with what works and what does not (evidence: docs/a11y.md)
 
 ### 9.2 Web
 

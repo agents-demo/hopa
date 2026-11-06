@@ -1,27 +1,25 @@
 import AccessibilityExtensionAbility from '@ohos.application.AccessibilityExtensionAbility';
 import { AccessibilityEvent } from '@ohos.accessibility';
+import { A11yBridge } from '../A11yBridge';
 
 /**
- * AccessibilityExtensionAbility skeleton.
+ * AccessibilityExtensionAbility.
  *
  * REQUIRES: a restricted permission + an approved ACL request, an
  * `extensionAbilities` declaration in this module's module.json5, and the user
- * enabling the service in Settings -> Accessibility. Do not claim it works until
- * all three are verified on a real device.
- *
- * The exact import path/signature is validated against the installed API 26 SDK
- * at build time (see docs/architecture.md).
+ * enabling the service in Settings -> Accessibility. Until then this class is
+ * compiled but never connected.
  */
 export default class HopaAccessibilityExtension extends AccessibilityExtensionAbility {
   onConnect(): void {
-    // Mark the capability available only after the system connects the service.
+    A11yBridge.get().attach(this.context);
   }
 
   onAccessibilityEvent(event: AccessibilityEvent): void {
-    // Observe the active window and forward a redacted event to the agent.
+    // Capture is pull-based; the event only tells us the screen changed.
   }
 
   onDisconnect(): void {
-    // Mark the capability unavailable.
+    A11yBridge.get().detach();
   }
 }
