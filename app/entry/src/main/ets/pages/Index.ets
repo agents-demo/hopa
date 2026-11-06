@@ -54,12 +54,7 @@ struct Index {
     this.runCount = service.runs.all().length;
     this.a11yAvailable = service.isA11yAvailable();
     this.modelLabel = service.getModelLabel();
-    this.loadSettings();
-    this.loadBundledKey();
-    this.loadMemory();
-    this.loadSkills();
-    this.loadRuns();
-    this.loadA11yList();
+    this.initialize();
 
     // Fail-closed by default; the sheet is the only way to allow an action.
     service.approvals.setHandler(async (action: Action, screen: Screen | undefined): Promise<boolean> => {
@@ -177,6 +172,19 @@ struct Index {
       return 3;
     }
     return 0;
+  }
+
+  /**
+   * Serial startup so several preference stores are not opened at once. The
+   * emulator froze when six async loads ran concurrently.
+   */
+  private async initialize(): Promise<void> {
+    await this.loadSettings();
+    await this.loadBundledKey();
+    await this.loadMemory();
+    await this.loadSkills();
+    await this.loadRuns();
+    await this.loadA11yList();
   }
 
   private async loadSettings(): Promise<void> {
@@ -362,7 +370,6 @@ struct Index {
         6
       );
       this.modelLabel = AgentService.get().getModelLabel();
-      this.persistSettings();
     } catch (error) {
       // No bundled key: a normal first run.
     }

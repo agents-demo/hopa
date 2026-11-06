@@ -301,9 +301,10 @@ export class AgentService {
       return 'No model configured. Open Settings, enter an endpoint, a model and a key, then press Save.';
     }
     if (!this.a11y.isAvailable() && !this.browser.isReady()) {
-      return 'HOPA has no screen to look at. Access is unavailable (the extension is not declared ' +
-        'and no ACL is filed), and the built-in browser has not loaded a page yet. ' +
-        'Open the Web tab and load a page, or enable accessibility. The model was not called.';
+      // Chat still works without a screen; actions will fail closed in the executor.
+      this.loop.setSurfaceAvailable(false);
+    } else {
+      this.loop.setSurfaceAvailable(true);
     }
 
     let outcomes: ActionOutcome[] = [];
