@@ -24,7 +24,7 @@ needs the accessibility ACL, which is not filed.
 | Area | State |
 | --- | --- |
 | Dev environment (DevEco Studio 26 / API 26) | see [docs/setup.md](docs/setup.md) |
-| `app/` ArkUI app | chat, Web, Apps, Tasks, Settings, Memory; signed debug HAP installed on the emulator |
+| `app/` ArkUI app | chat, Web, Apps, Tasks, Settings, Memory, reminders; signed debug HAP installed on the emulator |
 | `app/core/` agent loop, tool registry, action gate | implemented + hypium tests; OpenAI, Anthropic and Gemini clients |
 | `app/capabilities/` web / sandbox / a11y / system | web works via ArkWeb; a11y compiled but not declared; sandbox is a stub |
 | `pc-agent/` hdc + uitest CLI & MCP server | implemented |
@@ -180,4 +180,5 @@ packaged into the app.
 ## License
 
 Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
+
 
