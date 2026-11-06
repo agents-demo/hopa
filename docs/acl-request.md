@@ -102,6 +102,30 @@ change.
    Expected: refusal (OTP/password policy).
 6. Check Settings → Apps → HOPA → data: no plaintext password/card in logs.
 
+## What we learned on the emulator
+
+The local debug profile **is** enough to install a HAP that requests the
+restricted permission, and the permission is granted:
+
+```bash
+atm dump -t -b com.hopa.agent
+# "permissionName": "ohos.permission.ACCESSIBILITY_EXTENSION_ABILITY",
+# "grantStatus": 0
+```
+
+The framework also lists the service:
+
+```ts
+accessibility.getAccessibilityExtensionList('all', 'install')
+// com.huawei.hmos.screenreader/AccessibilityExtAbility
+// com.hopa.agent/HopaAccessibilityExtension
+```
+
+The remaining blocker on the emulator is the UI: Settings → Accessibility has no
+"Downloaded services" page, so the user cannot turn the service on. A retail
+device may have that page; AppGallery ACL approval is still required there
+because retail trusts Huawei-issued profiles, not the OpenHarmony test CA.
+
 ## Filing checklist
 
 - [ ] Huawei developer account with app `com.hopa.agent` created

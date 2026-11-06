@@ -99,6 +99,7 @@ export class RunRecord {
   detail: string = '';
   startedAt: number;
   finishedAt: number;
+  durationMs: number = 0;
 
   constructor(action: Action, status: RunStatus) {
     this.id = `run-${Date.now()}-${Math.floor(Math.random() * 1000000)}`;

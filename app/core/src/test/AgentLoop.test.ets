@@ -49,10 +49,12 @@ class RecordingCapability implements ActionCapability {
 class QueueModel implements ModelClient {
   private replies: string[];
   private index: number = 0;
+  private tokens: number;
   requests: ModelRequest[] = [];
 
-  constructor(replies: string[]) {
+  constructor(replies: string[], tokens: number = 0) {
     this.replies = replies;
+    this.tokens = tokens;
   }
 
   async complete(request: ModelRequest): Promise<ModelResponse> {
@@ -62,6 +64,7 @@ class QueueModel implements ModelClient {
     const position: number = Math.min(this.index, this.replies.length - 1);
     const response = new ModelResponse();
     response.text = this.replies[position];
+    response.tokens = this.tokens;
     this.index++;
     return response;
   }
@@ -98,6 +101,22 @@ export default function agentLoopTest(): void {
       expect(approval.requests).assertEqual(1);
       expect(model.requests[0].messages.length).assertEqual(2);
       expect(model.requests[0].messages[1].content.includes('Checkout')).assertTrue();
+      done();
+    });
+
+    it('accumulates_tokens', 0, async (done: Function) => {
+      const source = new FixedSource(new Screen('Settings'));
+      const model = new QueueModel(['{"kind":"ui.tap"}', '{"kind":"finish"}'], 7);
+      const executor = new ActionExecutor(
+        new ApprovalPolicy(),
+        new FixedApproval(true),
+        new MemoryRecorder()
+      );
+      executor.registerCapability(new RecordingCapability());
+      const loop = new AgentLoop(executor, model, 5, source);
+
+      await loop.run('tap twice');
+      expect(loop.getTokens()).assertEqual(14);
       done();
     });
 

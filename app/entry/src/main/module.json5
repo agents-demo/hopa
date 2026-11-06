@@ -16,6 +16,9 @@
       },
       {
         "name": "ohos.permission.GET_NETWORK_INFO"
+      },
+      {
+        "name": "ohos.permission.ACCESSIBILITY_EXTENSION_ABILITY"
       }
     ],
     "pages": "$profile:main_pages",
@@ -37,6 +40,20 @@
             "actions": [
               "ohos.want.action.home"
             ]
+          }
+        ]
+      }
+    ],
+    "extensionAbilities": [
+      {
+        "name": "HopaAccessibilityExtension",
+        "srcEntry": "./ets/extension/HopaAccessibilityExtension.ets",
+        "type": "accessibility",
+        "exported": false,
+        "metadata": [
+          {
+            "name": "ohos.accessibleability",
+            "resource": "$profile:accessibility_config"
           }
         ]
       }

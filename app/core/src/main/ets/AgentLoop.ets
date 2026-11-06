@@ -25,6 +25,7 @@ export class AgentLoop {
   private memory: string = '';
   private skill: string = '';
   private budget: ContextBudget = new ContextBudget();
+  private tokensUsed: number = 0;
 
   constructor(
     executor: ActionExecutor,
@@ -46,8 +47,14 @@ export class AgentLoop {
     this.skill = skill;
   }
 
+  /** Total tokens reported by the model during the last run. */
+  getTokens(): number {
+    return this.tokensUsed;
+  }
+
   async run(goal: string): Promise<ActionOutcome[]> {
     const outcomes: ActionOutcome[] = [];
+    this.tokensUsed = 0;
     let screen: Screen = await this.capture();
     let systemText: string =
       'You are HOPA, a phone agent. Propose exactly one JSON action at a time. ' +
@@ -71,6 +78,7 @@ export class AgentLoop {
       const request = new ModelRequest();
       request.messages = this.budget.trim(messages);
       const response: ModelResponse = await this.model.complete(request);
+      this.tokensUsed += response.tokens;
       if (response.error.length > 0) {
         break;
       }

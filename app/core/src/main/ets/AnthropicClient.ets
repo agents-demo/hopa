@@ -21,6 +21,12 @@ class AnthropicBlock {
 
 class AnthropicResponse {
   content: AnthropicBlock[] = [];
+  usage: AnthropicUsage = new AnthropicUsage();
+}
+
+class AnthropicUsage {
+  input_tokens: number = 0;
+  output_tokens: number = 0;
 }
 
 /**
@@ -74,6 +80,7 @@ export class AnthropicClient implements ModelClient {
         return result;
       }
       const parsed = JSON.parse(`${response.result}`) as AnthropicResponse;
+      result.tokens = parsed.usage.input_tokens + parsed.usage.output_tokens;
       const texts: string[] = [];
       for (const block of parsed.content) {
         if (block.type === 'text' && block.text.length > 0) {

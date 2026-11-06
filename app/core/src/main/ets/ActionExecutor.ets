@@ -1,6 +1,6 @@
 import { Action, ActionOutcome, GuardResult, Observation, RunRecord, RunStatus } from './Types';
 import { ApprovalPolicy } from './ApprovalPolicy';
-import { Screen } from './Screen';
+import { Screen, ScreenSource } from './Screen';
 
 /** A capability that can execute one or more action kinds. */
 export interface ActionCapability {
@@ -47,6 +47,14 @@ export class ActionExecutor {
   private approvals: ApprovalGateway;
   private recorder: RunRecorder;
   private verifier: Verifier;
+  private source?: ScreenSource;
+
+  private static readonly NOOP_KINDS: string[] = [
+    'ui.wait',
+    'ui.observe',
+    'a11y.observe',
+    'web.read'
+  ];
 
   constructor(
     policy: ApprovalPolicy,
@@ -68,12 +76,19 @@ export class ActionExecutor {
     this.guards.push(guard);
   }
 
+  /** Enables real verification: re-observe after the action and compare text. */
+  setScreenSource(source: ScreenSource): void {
+    this.source = source;
+  }
+
   async execute(action: Action, screen?: Screen): Promise<ActionOutcome> {
+    const startedAt: number = Date.now();
+
     // 1. Guards.
     for (const guard of this.guards) {
       const result: GuardResult = guard.check(action);
       if (!result.allowed) {
-        return this.deny(action, RunStatus.Denied, `guard: ${result.reason}`);
+        return this.deny(action, RunStatus.Denied, `guard: ${result.reason}`, startedAt);
       }
     }
 
@@ -85,14 +100,14 @@ export class ActionExecutor {
         const reason: string = this.policy.isPayment(action, screen)
           ? 'payment denied by user'
           : 'action denied by user';
-        return this.deny(action, RunStatus.Denied, reason);
+        return this.deny(action, RunStatus.Denied, reason, startedAt);
       }
     }
 
     // 3. Execute through the owning capability.
     const capability = this.findCapability(action.kind);
     if (capability === undefined) {
-      return this.deny(action, RunStatus.Unsupported, `no capability for ${action.kind}`);
+      return this.deny(action, RunStatus.Unsupported, `no capability for ${action.kind}`, startedAt);
     }
 
     let observation: Observation;
@@ -102,15 +117,17 @@ export class ActionExecutor {
       observation = Observation.fail(`${error}`);
     }
 
-    // 4. Verify.
-    const verified: boolean = this.verifier.verify(action, observation);
+    // 4. Verify: re-observe when a screen source is available.
+    const verified: boolean = await this.verifyAfter(action, screen, observation);
 
     // 5. Record (append-only).
     const status: RunStatus = observation.success ? RunStatus.Executed : RunStatus.Failed;
     const record = new RunRecord(action, status);
     record.approved = approved;
     record.detail = observation.success ? observation.summary : observation.detail;
+    record.startedAt = startedAt;
     record.finishedAt = Date.now();
+    record.durationMs = record.finishedAt - record.startedAt;
     this.recorder.record(record);
 
     const outcome = new ActionOutcome(action, observation);
@@ -121,11 +138,33 @@ export class ActionExecutor {
     return outcome;
   }
 
-  private deny(action: Action, status: RunStatus, detail: string): ActionOutcome {
+  private async verifyAfter(
+    action: Action,
+    before: Screen | undefined,
+    observation: Observation
+  ): Promise<boolean> {
+    if (!observation.success) {
+      return false;
+    }
+    if (this.source === undefined || ActionExecutor.NOOP_KINDS.includes(action.kind)) {
+      return this.verifier.verify(action, observation);
+    }
+    const after: Screen = await this.source.capture();
+    if (after.text.length === 0) {
+      // No observation is not a proven change; keep the capability's verdict.
+      return this.verifier.verify(action, observation);
+    }
+    const beforeText: string = before === undefined ? '' : before.text;
+    return after.text !== beforeText;
+  }
+
+  private deny(action: Action, status: RunStatus, detail: string, startedAt: number): ActionOutcome {
     const record = new RunRecord(action, status);
     record.approved = false;
     record.detail = detail;
+    record.startedAt = startedAt;
     record.finishedAt = Date.now();
+    record.durationMs = record.finishedAt - record.startedAt;
     this.recorder.record(record);
 
     const outcome = new ActionOutcome(action, Observation.fail(detail));

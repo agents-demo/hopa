@@ -1,0 +1,7 @@
+{
+  "accessibilityCapabilities": [
+    "retrieve",
+    "gesture"
+  ],
+  "accessibilityCapabilityRationale": "HOPA reads the visible screen and performs taps, typing and swipes only for tasks the user requested. It never runs in the background and always asks before payment."
+}

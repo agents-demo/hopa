@@ -106,20 +106,20 @@ it, not at the end.
 |---|---|---|
 | Repo | public, Apache-2.0 | `git log` |
 | `app/core` | screen-aware gate, observation loop, tool registry, types, model interface; hypium tests pass | `app/core/src` |
-| `app/capabilities` | interfaces + web bridge (ArkWeb), a11y bridge compiled but extension not declared, sandbox stub, system intents | `module.json5`, `BrowserController.ets` |
-| `app/entry` | 4-tab ArkUI shell wired to `AgentLoop`; approval sheet; model settings | `pages/Index.ets` |
+| `app/capabilities` | interfaces + web bridge (ArkWeb), a11y extension declared with the ACL granted on the emulator, sandbox stub, system intents | `module.json5`, `BrowserController.ets` |
+| `app/entry` | 6-tab ArkUI app (Chat, Web, Apps, Tasks, Settings, Memory) wired to `AgentLoop`; approval sheet; providers; memory; skills; run history | `pages/Index.ets` |
 | Agent loop | captures the screen, asks for one action, gates, records | `AgentLoop.ets` |
 | `pc-agent` | CLI + MCP implemented: devices, dump, tap, double-tap, long-press, type, swipe, screenshot, launch, stop, key, install, uninstall, apps | `pc-agent/src` |
 | `bench` | 20 task files; 5/7 tasks pass on the emulator (strict: a failed step cannot pass) | `bench/tasks`, `docs/bench-v0.md` |
 | Brain | Kotlin router + HTTP service + knowledge + prompts + skills + sites (98 assertions + schema contract) | `brain/src`, `docs/brain.md` |
-| HAP | builds with DevEco 6.1.1 / API 24; signed with the SDK local debug kit; installed on the Pura 90 emulator | `scripts/sign-app.ps1` |
+| HAP | builds with DevEco 6.1.1 / API 24; signed with the SDK local debug kit; installed with the ACL permission on the Pura 90 emulator | `scripts/sign-app.ps1` |
 | Knowledge | 27 apps (12 system + 15 Mika catalogued), 21 sites, 6 skills | `brain/knowledge`, `docs/knowledge-triage.md` |
 | CI | Python tests + ruff; HAP build and core Local Tests skip with a warning when the mirrored toolchain secret is absent | `.github/workflows/ci.yml` |
 | Tests baseline | 277 Python tests, 98 Kotlin assertions, ArkTS Local Tests pass; 20 bench tasks validate; device bench 5/7 | local run 2026-11-06 |
 
 Known gaps to close first:
 
-- The accessibility extension is not declared, so the loop cannot read or act on other apps.
+- The accessibility extension is declared and the ACL is granted on the emulator, but this image has no Settings page to enable a third-party service, so the loop cannot read or act on other apps yet.
 - No app routing, no knowledge, no skills, no memory.
 
 ---

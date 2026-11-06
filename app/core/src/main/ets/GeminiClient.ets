@@ -34,6 +34,11 @@ class GeminiCandidate {
 
 class GeminiResponse {
   candidates: GeminiCandidate[] = [];
+  usageMetadata: GeminiUsage = new GeminiUsage();
+}
+
+class GeminiUsage {
+  totalTokenCount: number = 0;
 }
 
 /**
@@ -96,6 +101,7 @@ export class GeminiClient implements ModelClient {
         return result;
       }
       const parsed = JSON.parse(`${response.result}`) as GeminiResponse;
+      result.tokens = parsed.usageMetadata.totalTokenCount;
       if (parsed.candidates.length === 0 || parsed.candidates[0].content.parts.length === 0) {
         result.error = 'model returned no candidate';
         return result;

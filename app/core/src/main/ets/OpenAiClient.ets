@@ -22,6 +22,11 @@ class OpenAiChoice {
 
 class OpenAiResponseBody {
   choices: OpenAiChoice[] = [];
+  usage: OpenAiUsage = new OpenAiUsage();
+}
+
+class OpenAiUsage {
+  total_tokens: number = 0;
 }
 
 /**
@@ -72,6 +77,9 @@ export class OpenAiCompatibleClient implements ModelClient {
       }
 
       const parsed = JSON.parse(`${response.result}`) as OpenAiResponseBody;
+      if (parsed.usage !== undefined) {
+        result.tokens = parsed.usage.total_tokens;
+      }
       if (parsed.choices.length > 0) {
         result.text = parsed.choices[0].message.content;
       } else {

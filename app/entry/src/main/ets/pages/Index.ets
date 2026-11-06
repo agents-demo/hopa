@@ -1,6 +1,7 @@
 import { promptAction } from '@kit.ArkUI';
 import { webview } from '@kit.ArkWeb';
 import { Context, common } from '@kit.AbilityKit';
+import { accessibility } from '@kit.AccessibilityKit';
 import { Action, PaymentContext, Screen, Skill } from '@hopa/core';
 import { AgentService } from '../service/AgentService';
 import { SettingsStore, StoredSettings } from '../service/SettingsStore';
@@ -14,6 +15,7 @@ struct Index {
   @State currentTab: number = 0;
   @State runCount: number = 0;
   @State a11yAvailable: boolean = false;
+  @State a11yInstalled: string = 'checking…';
   @State draft: string = '';
   @State busy: boolean = false;
   @State messages: string[] = [
@@ -51,6 +53,7 @@ struct Index {
     this.loadMemory();
     this.loadSkills();
     this.loadRuns();
+    this.loadA11yList();
 
     // Fail-closed by default; the sheet is the only way to allow an action.
     service.approvals.setHandler(async (action: Action, screen: Screen | undefined): Promise<boolean> => {
@@ -281,6 +284,19 @@ struct Index {
     AgentService.get().runs.clear();
     this.refreshRuns();
     this.messages = this.messages.concat(['HOPA: cleared the run history.']);
+  }
+
+  private async loadA11yList(): Promise<void> {
+    try {
+      const list = await accessibility.getAccessibilityExtensionList('all', 'install');
+      const names: string[] = [];
+      for (const item of list) {
+        names.push(`${item.bundleName}/${item.name}`);
+      }
+      this.a11yInstalled = names.length > 0 ? names.join(', ') : 'none';
+    } catch (error) {
+      this.a11yInstalled = `error: ${error}`;
+    }
   }
 
   private openAddress(): void {
@@ -703,6 +719,10 @@ struct Index {
       Text('Payment: always requires your confirmation. This cannot be changed.')
         .fontSize(13)
         .fontColor('#B42318')
+
+      Text(`Installed accessibility services: ${this.a11yInstalled}`)
+        .fontSize(11)
+        .fontColor('#666666')
 
       Text('Sandbox: not bundled. Pyodide/QuickJS are optional WASM pages; there is no Linux sandbox.')
         .fontSize(12)

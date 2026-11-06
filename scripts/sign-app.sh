@@ -124,7 +124,7 @@ tpl["bundle-info"]["development-certificate"] = leaf
 tpl["bundle-info"]["apl"] = "normal"
 tpl["bundle-info"]["app-feature"] = "hos_normal_app"
 tpl["debug-info"] = {"device-ids": [os.environ["HOPA_UDID"]], "device-id-type": "udid"}
-tpl["acls"] = {"allowed-acls": []}
+tpl["acls"] = {"allowed-acls": ["ohos.permission.ACCESSIBILITY_EXTENSION_ABILITY"]}
 tpl["permissions"] = {"restricted-permissions": []}
 open(os.environ["HOPA_OUT"], "w", encoding="utf-8").write(json.dumps(tpl, indent=2))
 PY

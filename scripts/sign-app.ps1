@@ -205,7 +205,7 @@ $template.'bundle-info'.apl = 'normal'
 $template.'bundle-info'.'app-feature' = 'hos_normal_app'
 $template.'debug-info'.'device-ids' = $Udids
 $template.'debug-info'.'device-id-type' = 'udid'
-$template.acls.'allowed-acls' = @()
+$template.acls.'allowed-acls' = @('ohos.permission.ACCESSIBILITY_EXTENSION_ABILITY')
 $template.permissions.'restricted-permissions' = @()
 
 $template | ConvertTo-Json -Depth 20 | Set-Content -Encoding UTF8 $profileJson

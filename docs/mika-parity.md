@@ -11,9 +11,9 @@ app module supplies device control; HOPA must supply its own HarmonyOS layer.
 
 | # | Mika capability | HOPA today | Gap | Portable? |
 |---|---|---|---|---|
-| 1 | Operates any app **without taking over the screen** | PC-tethered control works; on-device a11y compiled but inactive | no background display; foreground a11y only | **No** (excluded) |
+| 1 | Operates any app **without taking over the screen** | PC-tethered control works; on-device a11y is declared and the ACL is granted, but the emulator has no UI to enable the service | no background display; foreground a11y only | **No** (excluded) |
 | 2 | Built-in desktop-class browser | single-tab ArkWeb browser; read/click/type wired; verified loading a page | tabs, downloads, uploads, sign-in | yes (ArkWeb) |
-| 3 | "Act on the screen I am looking at" | none | needs a11y | partial |
+| 3 | "Act on the screen I am looking at" | extension installed and listed by the framework; not enableable on this emulator | needs the service enabled | partial |
 | 4 | Scheduled and conditional tasks | not shipped; the system reminder API failed on the emulator (1700002) | scheduler + triggers | yes, with HarmonyOS background limits |
 | 5 | Interrupt, stop, report, continue | resume exists in the Python harness; no UI | steering + UI | yes |
 | 6 | Hold to talk (speech) | none | platform ASR or provider | yes |

@@ -18,15 +18,18 @@ QuickJS) is designed but **not bundled yet**.
 
 Working prototype. The PC harness closes the observe â†’ decide â†’ act â†’ verify â†’
 record loop, and the signed HarmonyOS app is installed and usable for chat, web
-pages, memory and model settings. Operating **other apps on the phone** still
-needs the accessibility ACL, which is not filed.
+pages, memory, skills and model settings. The accessibility extension is
+declared and its permission is granted on the emulator, but this emulator image
+has no Settings page to enable a third-party accessibility service, so operating
+**other apps on the phone** is still blocked. A retail device needs the
+AppGallery ACL approval.
 
 | Area | State |
 | --- | --- |
 | Dev environment (DevEco Studio 26 / API 26) | see [docs/setup.md](docs/setup.md) |
 | `app/` ArkUI app | chat, Web, Apps, Tasks, Settings, Memory; signed debug HAP installed on the emulator |
 | `app/core/` agent loop, tool registry, action gate | implemented + hypium tests; OpenAI, Anthropic and Gemini clients |
-| `app/capabilities/` web / sandbox / a11y / system | web works via ArkWeb; a11y compiled but not declared; sandbox is a stub |
+| `app/capabilities/` web / sandbox / a11y / system | web works via ArkWeb; a11y declared + ACL granted on the emulator (no enable UI); sandbox is a stub |
 | `pc-agent/` hdc + uitest CLI & MCP server | implemented |
 | `agent/` PC reference loop (observe â†’ decide â†’ act â†’ verify â†’ record) | implemented + tests |
 | `schemas/` JSON contracts (observation, action, decision, record) | v1 |
