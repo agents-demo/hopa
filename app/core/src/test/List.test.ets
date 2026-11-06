@@ -6,6 +6,7 @@ import skillsTest from './Skills.test';
 import contextBudgetTest from './ContextBudget.test';
 import batchRunnerTest from './BatchRunner.test';
 import skillDrafterTest from './SkillDrafter.test';
+import memoryExtractorTest from './MemoryExtractor.test';
 
 export default function testsuite(): void {
   approvalPolicyTest();
@@ -16,4 +17,5 @@ export default function testsuite(): void {
   contextBudgetTest();
   batchRunnerTest();
   skillDrafterTest();
+  memoryExtractorTest();
 }

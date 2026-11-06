@@ -4,6 +4,7 @@ import { Context, common } from '@kit.AbilityKit';
 import { accessibility } from '@kit.AccessibilityKit';
 import { buffer } from '@kit.ArkTS';
 import { Action, BatchItemResult, PaymentContext, Screen, Skill } from '@hopa/core';
+import { MemoryExtractor } from '@hopa/core';
 import { AgentService } from '../service/AgentService';
 import { SettingsStore, StoredSettings } from '../service/SettingsStore';
 import { MemoryItem } from '../service/MemoryStore';
@@ -26,9 +27,9 @@ struct Index {
   @State lastDurationMs: number = 0;
   @State batchText: string = '';
   @State batchResults: BatchItemResult[] = [];
-  @State messages: string[] = [
-    'Hi - I am HOPA, your on-device phone agent.',
-    'I always ask before any payment.'
+  @State messages: ResourceStr[] = [
+    $r('app.string.greeting_1'),
+    $r('app.string.greeting_2')
   ];
   @State taskStatus: string = 'Idle';
   @State networkEnabled: boolean = false;
@@ -96,11 +97,19 @@ struct Index {
     if (text.length === 0 || this.busy) {
       return;
     }
+    const fact: string | undefined = MemoryExtractor.extract(text);
+    if (fact !== undefined) {
+      const item: MemoryItem | undefined = AgentService.get().memory.add(fact);
+      if (item !== undefined) {
+        this.memoryItems = AgentService.get().memory.all().slice();
+        this.saveMemory();
+      }
+    }
     const service = AgentService.get();
     if (!service.hasModel()) {
       this.messages = this.messages.concat([
         `You: ${text}`,
-        'HOPA: no model configured. Open Settings, fill in the endpoint, model and key, then Save.'
+        $r('app.string.msg_no_model')
       ]);
       this.draft = '';
       return;
@@ -109,12 +118,12 @@ struct Index {
     this.draft = '';
     this.busy = true;
     this.taskStatus = 'Running';
-    this.messages = this.messages.concat([`You: ${text}`, 'HOPA: working...']);
+    this.messages = this.messages.concat([`You: ${text}`, $r('app.string.msg_working')]);
 
     const reply: string = await service.run(text);
 
     // Replace the "working..." line with the real transcript.
-    const next: string[] = this.messages.slice(0, this.messages.length - 1);
+    const next: ResourceStr[] = this.messages.slice(0, this.messages.length - 1);
     next.push(`HOPA: ${reply}`);
     this.messages = next;
 
@@ -431,7 +440,7 @@ struct Index {
   private openAddress(): void {
     const url: string = this.address.trim();
     if (!url.startsWith('https://')) {
-      this.messages = this.messages.concat(['HOPA: only https:// pages are allowed in the browser.']);
+      this.messages = this.messages.concat([$r('app.string.msg_https_only')]);
       return;
     }
     try {
@@ -446,7 +455,7 @@ struct Index {
   ChatPage() {
     Column({ space: 12 }) {
       List({ space: 8 }) {
-        ForEach(this.messages, (item: string, index: number) => {
+        ForEach(this.messages, (item: ResourceStr, index: number) => {
           ListItem() {
             Text(item)
               .width('100%')
@@ -455,7 +464,7 @@ struct Index {
               .borderRadius(10)
               .fontSize(15)
           }
-        }, (item: string, index: number) => `${index}-${item}`)
+        }, (item: ResourceStr, index: number) => `${index}`)
       }
       .layoutWeight(1)
       .width('100%')
