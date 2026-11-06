@@ -122,6 +122,8 @@ struct Index {
     this.lastTokens = service.getLastTokens();
     this.lastDurationMs = service.getLastDurationMs();
     this.refreshRuns();
+    this.refreshSkills();
+    this.saveSkills();
   }
 
   private stopRun(): void {
@@ -1123,6 +1125,9 @@ struct Index {
               Text(`when: ${item.trigger}`)
                 .fontSize(12)
                 .fontColor('#666666')
+              Text(`used ${item.uses}, ok ${item.successes}`)
+                .fontSize(11)
+                .fontColor('#999999')
               Text(item.guidance)
                 .fontSize(13)
                 .maxLines(4)

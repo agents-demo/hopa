@@ -25,6 +25,14 @@ export class SkillStore {
     return this.book.toPrompt(goal);
   }
 
+  match(goal: string): Skill | undefined {
+    return this.book.match(goal);
+  }
+
+  recordOutcome(id: string, success: boolean): void {
+    this.book.recordOutcome(id, success);
+  }
+
   async load(context: Context): Promise<void> {
     const store = await preferences.getPreferences(context, SkillStore.STORE);
     const raw = await store.get(SkillStore.KEY, '');

@@ -111,6 +111,7 @@ export class AgentService {
   private lastGoal: string = '';
   private lastTranscript: string = '';
   private lastSuccess: boolean = false;
+  private matchedSkillId: string = '';
   private static readonly STORE: string = 'hopa_settings';
   private static readonly RUNS_KEY: string = 'runs_v1';
 
@@ -336,6 +337,8 @@ export class AgentService {
     this.lastGoal = goal;
     this.lastSuccess = false;
     this.lastTranscript = '';
+    const matchedSkill: Skill | undefined = this.skills.match(goal);
+    this.matchedSkillId = matchedSkill === undefined ? '' : matchedSkill.id;
     this.loop.setMemory(this.memory.toPrompt());
     this.loop.setSkill(this.skills.toPrompt(goal));
     this.loop.resetCancel();
@@ -373,6 +376,9 @@ export class AgentService {
     this.lastSuccess = !this.loop.wasCancelled() && outcomes.every(
       (outcome: ActionOutcome) => outcome.executed && outcome.observation.success
     );
+    if (this.matchedSkillId.length > 0) {
+      this.skills.recordOutcome(this.matchedSkillId, this.lastSuccess);
+    }
     return transcript;
   }
 }

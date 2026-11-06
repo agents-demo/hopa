@@ -12,6 +12,7 @@ export class Skill {
   guidance: string = '';
   createdAt: number = 0;
   uses: number = 0;
+  successes: number = 0;
 }
 
 export class SkillBook {
@@ -46,6 +47,19 @@ export class SkillBook {
 
   clear(): void {
     this.items = [];
+  }
+
+  /** Records that a matched skill was used and whether the run succeeded. */
+  recordOutcome(id: string, success: boolean): void {
+    for (const skill of this.items) {
+      if (skill.id === id) {
+        skill.uses += 1;
+        if (success) {
+          skill.successes += 1;
+        }
+        return;
+      }
+    }
   }
 
   /** Longest trigger that occurs in the goal wins; no trigger means no match. */

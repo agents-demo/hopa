@@ -53,5 +53,15 @@ export default function skillsTest(): void {
       expect(book.remove(skill?.id ?? '')).assertTrue();
       expect(book.all().length).assertEqual(0);
     });
+
+    it('records_uses_and_successes', 0, () => {
+      const book = new SkillBook();
+      const skill: Skill | undefined = book.add('X', 'x', 'steps');
+      const id: string = skill?.id ?? '';
+      book.recordOutcome(id, true);
+      book.recordOutcome(id, false);
+      expect(book.all()[0].uses).assertEqual(2);
+      expect(book.all()[0].successes).assertEqual(1);
+    });
   });
 }
