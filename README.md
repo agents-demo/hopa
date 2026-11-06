@@ -124,6 +124,7 @@ pc-agent type 540 900 "hello"
 pc-agent screenshot --out screen.jpeg
 pc-agent launch com.huawei.hmos.settings
 pc-agent mcp          # run as an MCP stdio server
+pc-agent bridge       # serve the PC-tethered HTTP bridge (token-authenticated)
 ```
 
 The reference loop runs on the PC for M1:

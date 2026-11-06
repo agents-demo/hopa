@@ -38,3 +38,9 @@ def test_main_returns_error_for_missing_hdc(monkeypatch, capsys) -> None:
     code = main(["--hdc", "C:/definitely/not/here/hdc.exe", "devices"])
     assert code == 2
     assert "pc-agent:" in capsys.readouterr().err
+
+
+def test_parser_bridge_defaults() -> None:
+    args = build_parser().parse_args(["bridge"])
+    assert args.host == "127.0.0.1"
+    assert args.port == 8765

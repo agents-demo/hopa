@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -95,6 +96,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("mcp", help="run as an MCP stdio server")
 
+    bridge = sub.add_parser("bridge", help="serve the PC-tethered HTTP bridge")
+    bridge.add_argument("--host", default="127.0.0.1")
+    bridge.add_argument("--port", type=int, default=8765)
+    bridge.add_argument("--token", default=os.environ.get("HOPA_BRIDGE_TOKEN", ""))
+
     return parser
 
 
@@ -116,6 +122,30 @@ def _emit(args: argparse.Namespace, payload: Any, human: str) -> None:
         print(json.dumps(payload, ensure_ascii=False, indent=2))
     else:
         print(human)
+
+
+def _cmd_bridge(args: argparse.Namespace, device: Device) -> int:
+    import secrets
+    import time
+
+    from .bridge import BridgeError, BridgeServer
+
+    token = args.token or secrets.token_urlsafe(24)
+    try:
+        server = BridgeServer(device, token, host=args.host, port=args.port)
+    except BridgeError as exc:
+        print(f"pc-agent: {exc}", file=sys.stderr)
+        return 2
+    print(f"bridge listening on http://{args.host}:{server.port}", flush=True)
+    print(f"token: {token}", flush=True)
+    try:
+        while True:
+            time.sleep(3600)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        server.stop()
+    return 0
 
 
 def _cmd_dump(args: argparse.Namespace, device: Device) -> int:
@@ -171,6 +201,9 @@ def _cmd_launch(args: argparse.Namespace, device: Device) -> int:
 
 def _dispatch(args: argparse.Namespace, device: Device) -> int:
     command = args.command
+
+    if command == "bridge":
+        return _cmd_bridge(args, device)
 
     if command == "devices":
         targets = device.devices()
