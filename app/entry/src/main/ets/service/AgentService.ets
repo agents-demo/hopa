@@ -27,7 +27,6 @@ import { fileIo } from '@kit.CoreFileKit';
 import { BrowserController } from './BrowserController';
 import { MemoryItem, MemoryStore } from './MemoryStore';
 import { SkillStore } from './SkillStore';
-import { ReminderStore } from './ReminderStore';
 import { Skill } from '@hopa/core';
 
 /** Called when an action needs the user's decision. Must be fail-closed. */
@@ -91,7 +90,6 @@ export class AgentService {
   readonly tools: ToolRegistry;
   readonly memory: MemoryStore = new MemoryStore();
   readonly skills: SkillStore = new SkillStore();
-  readonly reminders: ReminderStore = new ReminderStore();
   readonly web: WebCapability;
   readonly browser: BrowserController;
   readonly sandbox: SandboxCapability;
