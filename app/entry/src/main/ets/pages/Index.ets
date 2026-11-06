@@ -148,6 +148,7 @@ struct Index {
       this.modelEndpoint = stored.endpoint;
       this.modelName = stored.model;
       this.networkEnabled = stored.network;
+      AgentService.get().setNetworkEnabled(stored.network);
     } catch (error) {
       // First run or an unreadable store: keep the defaults.
     }
@@ -592,6 +593,7 @@ struct Index {
         Toggle({ type: ToggleType.Switch, isOn: this.networkEnabled })
           .onChange((on: boolean) => {
             this.networkEnabled = on;
+            AgentService.get().setNetworkEnabled(on);
             this.persistSettings();
           })
       }
@@ -603,6 +605,7 @@ struct Index {
           : 'Accessibility service (requires ACL)')
           .layoutWeight(1)
         Toggle({ type: ToggleType.Switch, isOn: this.accessibilityEnabled })
+          .enabled(this.a11yAvailable)
           .onChange((on: boolean) => {
             this.accessibilityEnabled = on;
           })
@@ -681,6 +684,13 @@ struct Index {
       Text('Payment: always requires your confirmation. This cannot be changed.')
         .fontSize(13)
         .fontColor('#B42318')
+
+      Text('Sandbox: not bundled. Pyodide/QuickJS are optional WASM pages; there is no Linux sandbox.')
+        .fontSize(12)
+        .fontColor('#666666')
+      Text('Retention: last 100 runs and 50 remembered facts. Skills stay until you delete them.')
+        .fontSize(12)
+        .fontColor('#666666')
     }
     .width('100%')
     .height('100%')

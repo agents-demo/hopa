@@ -833,7 +833,7 @@ Module responsibilities:
 - [ ] Takeover: pause, user acts, hand back
 - [ ] Approval sheet with amount, merchant, consequence
 - [ ] Memory view: runs, learned notes, skills, delete
-- [ ] Settings: model, key, network, a11y status, sandbox, retention
+- [x] Settings: model, key, network, a11y status, sandbox, retention (evidence: app Settings tab; verified on the emulator; a11y toggle disabled until ACL; network toggle now gates web.navigate)
 - [ ] Onboarding: what it can and cannot do, permissions, safety
 - [ ] Empty, loading and error states
 - [ ] HOPA's own accessibility: screen reader labels, contrast, font scale

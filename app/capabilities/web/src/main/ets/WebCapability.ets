@@ -19,9 +19,14 @@ export class WebCapability implements ActionCapability {
   private controller: WebController | undefined = undefined;
   private lastUrl: string = '';
   private lastText: string = '';
+  private networkAllowed: boolean = false;
 
   setController(controller: WebController): void {
     this.controller = controller;
+  }
+
+  setNetworkAllowed(allowed: boolean): void {
+    this.networkAllowed = allowed;
   }
 
   canHandle(kind: string): boolean {
@@ -30,6 +35,9 @@ export class WebCapability implements ActionCapability {
 
   async execute(action: Action): Promise<Observation> {
     if (action.kind === 'web.navigate') {
+      if (!this.networkAllowed) {
+        return Observation.fail('network is disabled in Settings');
+      }
       if (this.controller !== undefined) {
         await this.controller.navigate(action.url);
       }

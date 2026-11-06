@@ -100,6 +100,7 @@ export class AgentService {
   private model: ModelClient | undefined = undefined;
   private loop: AgentLoop | undefined = undefined;
   private modelLabel: string = '';
+  private networkEnabled: boolean = false;
   private static readonly STORE: string = 'hopa_settings';
   private static readonly RUNS_KEY: string = 'runs_v1';
 
@@ -181,6 +182,16 @@ export class AgentService {
 
   isA11yAvailable(): boolean {
     return this.a11y.isAvailable();
+  }
+
+  /** Gates agent-driven web navigation. Manual browsing in the Web tab is not gated. */
+  setNetworkEnabled(enabled: boolean): void {
+    this.networkEnabled = enabled;
+    this.web.setNetworkAllowed(enabled);
+  }
+
+  isNetworkEnabled(): boolean {
+    return this.networkEnabled;
   }
 
   /** Restores the last run records shown in the Tasks tab. */
