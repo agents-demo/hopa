@@ -132,6 +132,22 @@ jobs:
       - name: Cross-language contract
         run: python scripts/brain-contract.py
 
+  security:
+    name: secret and license scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: License check
+        run: python scripts/license-check.py
+
   core-tests:
     name: core unit tests (macOS, Local Test)
     # hvigorw Local Test is unsupported on Linux; run it on macOS.

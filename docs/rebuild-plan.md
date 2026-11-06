@@ -201,8 +201,8 @@ Module responsibilities:
 - [ ] CI fails (not skips) when `HARMONY_CLI_TOOLS_URL` is missing on `main`
 - [x] Coverage report for Python; threshold set (evidence: CI: pytest agent --cov --cov-fail-under=80 (89%))
 - [ ] Coverage report for ArkTS; threshold set
-- [ ] `pip-audit` / Dependabot enabled
-- [ ] License check: Apache-2.0, NOTICE current, no GPL
+- [x] `pip-audit` / Dependabot enabled (evidence: `.github/dependabot.yml` (pip + actions))
+- [x] License check: Apache-2.0, NOTICE current, no GPL (evidence: scripts/license-check.py + CI security job)
 - [ ] Secret scan (gitleaks) in CI
 
 ### 5.3 Environment and baseline
@@ -965,18 +965,18 @@ Module responsibilities:
 
 ### 12.3 Statistical rigour and SLOs
 
-- [ ] Sample size per task justified (minimum 3 runs, 30 for headline numbers)
+- [x] Sample size per task justified (minimum 3 runs, 30 for headline numbers) (evidence: docs/eval.md (3 runs, 30 for headline))
 - [ ] Confidence intervals reported for headline success rates
 - [ ] Environment reset between tasks (app state, locale, network, account)
 - [ ] Bench task versioning and changelog
-- [ ] Determinism controls: pinned app versions, locale, time zone, network
+- [x] Determinism controls: pinned app versions, locale, time zone, network (evidence: docs/eval.md (determinism controls))
 - [ ] Flakiness budget defined; flaky tasks quarantined
 - [ ] Human baseline time measured for the same tasks
 - [ ] Energy per task measured
 - [ ] Cost model with current token prices
-- [ ] SLOs defined: success, latency, crash-free, cost
+- [x] SLOs defined: success, latency, crash-free, cost (evidence: docs/eval.md (SLO targets))
 - [ ] Error budget policy written
-- [ ] Failure attribution: brain, body, model or environment
+- [x] Failure attribution: brain, body, model or environment (evidence: docs/eval.md (failure attribution))
 - [ ] Model A/B and prompt A/B harness
 - [ ] Regression detection with a fixed seed set
 - [ ] Public numbers reproducible from a clean checkout

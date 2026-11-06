@@ -1,0 +1,13 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Test fixtures and documentation examples"
+paths = [
+  '''agent/tests/.*''',
+  '''scripts/test_plan_status\.py''',
+  '''docs/.*''',
+  '''README\.md''',
+  '''CHANGELOG\.md''',
+  '''bench/tasks/.*'''
+]
