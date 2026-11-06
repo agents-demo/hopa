@@ -2,6 +2,7 @@ import { promptAction } from '@kit.ArkUI';
 import { webview } from '@kit.ArkWeb';
 import { Context, common } from '@kit.AbilityKit';
 import { accessibility } from '@kit.AccessibilityKit';
+import { buffer } from '@kit.ArkTS';
 import { Action, PaymentContext, Screen, Skill } from '@hopa/core';
 import { AgentService } from '../service/AgentService';
 import { SettingsStore, StoredSettings } from '../service/SettingsStore';
@@ -52,6 +53,7 @@ struct Index {
     this.a11yAvailable = service.isA11yAvailable();
     this.modelLabel = service.getModelLabel();
     this.loadSettings();
+    this.loadBundledKey();
     this.loadMemory();
     this.loadSkills();
     this.loadRuns();
@@ -147,6 +149,9 @@ struct Index {
     }
     if (this.provider === 'gemini') {
       return 2;
+    }
+    if (this.provider === 'deepseek') {
+      return 3;
     }
     return 0;
   }
@@ -295,6 +300,38 @@ struct Index {
     AgentService.get().runs.clear();
     this.refreshRuns();
     this.messages = this.messages.concat(['HOPA: cleared the run history.']);
+  }
+
+  /**
+   * Loads an optional developer key from `rawfile/deepseek.key`.
+   *
+   * The file is gitignored and exists only in local debug builds. It is never
+   * part of a release; production uses Settings and secure storage.
+   */
+  private async loadBundledKey(): Promise<void> {
+    try {
+      const context = getContext(this) as common.UIAbilityContext;
+      const data = await context.resourceManager.getRawFileContent('deepseek.key');
+      const key = buffer.from(data).toString('utf8').trim();
+      if (key.length < 10) {
+        return;
+      }
+      this.provider = 'deepseek';
+      this.modelEndpoint = 'https://api.deepseek.com/v1';
+      this.modelName = 'deepseek-v4-flash';
+      this.apiKey = key;
+      AgentService.get().configureModel(
+        'deepseek',
+        this.modelEndpoint,
+        key,
+        this.modelName,
+        6
+      );
+      this.modelLabel = AgentService.get().getModelLabel();
+      this.persistSettings();
+    } catch (error) {
+      // No bundled key: a normal first run.
+    }
   }
 
   private async loadA11yList(): Promise<void> {
@@ -715,7 +752,8 @@ struct Index {
       Select([
         { value: 'openai' },
         { value: 'anthropic' },
-        { value: 'gemini' }
+        { value: 'gemini' },
+        { value: 'deepseek' }
       ])
         .selected(this.providerIndex())
         .value(this.provider)
@@ -735,6 +773,13 @@ struct Index {
             }
             if (this.modelName === 'gpt-4o-mini' || this.modelName === 'claude-3-5-sonnet-latest') {
               this.modelName = 'gemini-2.0-flash';
+            }
+          } else if (value === 'deepseek') {
+            this.modelEndpoint = 'https://api.deepseek.com/v1';
+            if (this.modelName === 'gpt-4o-mini' ||
+              this.modelName === 'claude-3-5-sonnet-latest' ||
+              this.modelName === 'gemini-2.0-flash') {
+              this.modelName = 'deepseek-v4-flash';
             }
           } else {
             if (this.modelEndpoint === 'https://api.anthropic.com' ||
