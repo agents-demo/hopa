@@ -11,3 +11,6 @@ paths = [
   '''CHANGELOG\.md''',
   '''bench/tasks/.*'''
 ]
+regexes = [
+  '''harmony-clt-[0-9A-Za-z.\-]+'''
+]
