@@ -53,9 +53,7 @@ class BrainClient:
         payload = {
             "goal": goal,
             "settings": {
-                "installed": [
-                    {"bundle": bundle, "label": bundle} for bundle in (installed or [])
-                ]
+                "installed": [{"bundle": bundle, "label": bundle} for bundle in (installed or [])]
             },
         }
         try:
