@@ -8,12 +8,15 @@ and a validated 20-task bench format. The ArkTS `app/core` has a screen-aware
 payment gate and a loop that captures observations; the HAP builds with DevEco
 6.1.1 / API 24, the Local Tests pass, and the HAP is signed with the SDK's local
 OpenHarmony debug kit and installed on the Pura 90 emulator (`bm install` ok,
-`EntryAbility` starts, first frame drawn, all four tabs render). The entry UI is
-still a shell: the chat reply is a placeholder, not the `AgentLoop`. No ACL has
-been filed. The standalone claim is still **not** met; the toolchain, tethered
-and install claims are.
+`EntryAbility` starts, first frame drawn, all four tabs render). The chat page is
+wired to `AgentLoop`: with a model configured it captures the screen, asks for
+an action, gates it, executes it and records it. The approval gateway is
+fail-closed and opens an ArkUI dialog. The loop still cannot see other apps
+because the accessibility extension is not declared and no ACL is filed. The
+standalone claim is still **not** met; the toolchain, tethered, install and
+UI-wiring claims are.
 
-Plan progress: **216 / 767 boxes (28.2%)**. The open boxes are concentrated in
+Plan progress: **217 / 767 boxes (28.3%)**. The open boxes are concentrated in
 the device/ACL, UI, release and sign-off phases.
 
 | Area | State | Evidence |
@@ -26,7 +29,7 @@ the device/ACL, UI, release and sign-off phases.
 | ArkTS `app/core` | screen-aware gate + observation loop; hypium pass | `hvigorw test` |
 | HAP | builds and signed with the local debug kit | `scripts/sign-app.ps1` |
 | Installed on the emulator | yes: launch, first frame, four tabs | `hdc install -r` |
-| Entry UI | shell: chat reply is a placeholder | `app/entry/src/main/ets/pages/Index.ets` |
+| Entry UI | chat wired to `AgentLoop`; fail-closed approval dialog; model settings | `pages/Index.ets` |
 | Accessibility extension | bridge compiled; not declared; no ACL | `docs/a11y.md` |
 | Emulator | Pura 90, API 24, locked screen | `hdc` |
 | ACL | not filed | Phase 0 box open |

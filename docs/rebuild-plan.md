@@ -107,7 +107,7 @@ it, not at the end.
 | Repo | public, Apache-2.0 | `git log` |
 | `app/core` | screen-aware gate, observation loop, tool registry, types, model interface; hypium tests pass | `app/core/src` |
 | `app/capabilities` | interfaces + stubs; a11y bridge compiled, extension not declared, no ACL | `module.json5`, `A11yBridge.ets` |
-| `app/entry` | 4-tab ArkUI shell; chat says “agent loop placeholder” | `pages/Index.ets` |
+| `app/entry` | 4-tab ArkUI shell wired to `AgentLoop`; approval sheet; model settings | `pages/Index.ets` |
 | Agent loop | captures the screen, asks for one action, gates, records | `AgentLoop.ets` |
 | `pc-agent` | CLI + MCP implemented: devices, dump, tap, double-tap, long-press, type, swipe, screenshot, launch, stop, key, install, uninstall, apps | `pc-agent/src` |
 | `bench` | 20 task files; 3/5 v0 tasks pass on the emulator | `bench/tasks`, `docs/bench-v0.md` |
@@ -119,8 +119,7 @@ it, not at the end.
 
 Known gaps to close first:
 
-- The entry UI is still a placeholder; it does not drive `AgentLoop` yet.
-- The accessibility extension is not declared, so on-device control is unavailable.
+- The accessibility extension is not declared, so the loop cannot read or act on other apps.
 - No app routing, no knowledge, no skills, no memory.
 
 ---
@@ -841,7 +840,7 @@ Module responsibilities:
 - [ ] i18n: English + Chinese minimum
 - [ ] Dark mode
 - [ ] App icon and splash
-- [ ] Signing configuration
+- [x] Signing configuration (evidence: scripts/sign-app.ps1 + docs/signing.md; debug profile only, release profile pending)
 - [ ] Opt-in crash reporting
 - [ ] E2E UI tests
 - [ ] Cold start < 2 s
