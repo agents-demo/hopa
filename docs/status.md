@@ -16,7 +16,7 @@ because the accessibility extension is not declared and no ACL is filed. The
 standalone claim is still **not** met; the toolchain, tethered, install and
 UI-wiring claims are.
 
-Plan progress: **227 / 767 boxes (29.6%)**. The open boxes are concentrated in
+Plan progress: **228 / 767 boxes (29.7%)**. The open boxes are concentrated in
 the device/ACL, UI, release and sign-off phases.
 
 | Area | State | Evidence |
@@ -75,5 +75,6 @@ signed HAP on any machine that has the SDK.
 - The HAP contains no Python runtime.
 - The phone app cannot control other apps until the ACL is approved.
 - Numbers in this repository are local until a device run says otherwise.
+
 
 
