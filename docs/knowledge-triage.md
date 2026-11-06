@@ -12,35 +12,35 @@ confirmed with `hdc shell bm dump -a` or AppGallery.
 | # | Mika id | Android package | Status | Web site | Action |
 |---|---|---|---|---|---|
 | 1 | android-settings | `com.android.settings` | replaced | — | HOPA `settings` |
-| 2 | baijiahao | `com.baidu.baijia` | app? | — | confirm bundle |
-| 3 | bilibili | `tv.danmaku.bili` | app? | bilibili.com | confirm bundle; site ported |
-| 4 | boss-zhipin | `com.hpbr.bosszhipin` | app? | zhipin.com | confirm bundle; site ported |
+| 2 | baijiahao | `com.baidu.baijia` | app? | — | confirm bundle; APP.md with UNCONFIRMED |
+| 3 | bilibili | `tv.danmaku.bili` | app? | bilibili.com | confirm bundle; site ported; APP.md with UNCONFIRMED |
+| 4 | boss-zhipin | `com.hpbr.bosszhipin` | app? | zhipin.com | confirm bundle; site ported; APP.md with UNCONFIRMED |
 | 5 | chrome | `com.android.chrome` | web-only | — | use the built-in browser (no site file) |
-| 6 | dedao | `com.luojilab.player` | app? | — | confirm bundle |
-| 7 | douyin | `com.ss.android.ugc.aweme` | app? | douyin.com | confirm bundle; site ported |
-| 8 | feishu | `com.ss.android.lark` | app? | — | confirm bundle |
+| 6 | dedao | `com.luojilab.player` | app? | — | confirm bundle; APP.md with UNCONFIRMED |
+| 7 | douyin | `com.ss.android.ugc.aweme` | app? | douyin.com | confirm bundle; site ported; APP.md with UNCONFIRMED |
+| 8 | feishu | `com.ss.android.lark` | app? | — | confirm bundle; APP.md with UNCONFIRMED |
 | 9 | gmail | `com.google.android.gm` | web-only | mail.google.com | site ported |
-| 10 | jike | `com.ruguoapp.jike` | app? | — | confirm bundle |
-| 11 | kuaishou | `com.smile.gifmaker` | app? | — | confirm bundle |
+| 10 | jike | `com.ruguoapp.jike` | app? | — | confirm bundle; APP.md with UNCONFIRMED |
+| 11 | kuaishou | `com.smile.gifmaker` | app? | — | confirm bundle; APP.md with UNCONFIRMED |
 | 12 | linkedin | `com.linkedin.android` | web-only | linkedin.com | site ported |
-| 13 | qqmail | `com.tencent.androidqqmail` | app? | — | confirm bundle |
+| 13 | qqmail | `com.tencent.androidqqmail` | app? | — | confirm bundle; APP.md with UNCONFIRMED |
 | 14 | telegram | `org.telegram.messenger` | web-only | telegram.org | site ported |
-| 15 | toutiao | `com.ss.android.article.news` | app? | — | confirm bundle |
+| 15 | toutiao | `com.ss.android.article.news` | app? | — | confirm bundle; APP.md with UNCONFIRMED |
 | 16 | uber | `com.ubercab` | web-only | uber.com | site ported |
 | 17 | uber-eats | `com.ubercab.eats` | web-only | ubereats.com | site ported |
-| 18 | wechat | `com.tencent.mm` | app? | weixin.sogou.com | confirm bundle; search site ported |
-| 19 | weibo | `com.sina.weibo` | app? | weibo.com | confirm bundle; site ported |
+| 18 | wechat | `com.tencent.mm` | app? | weixin.sogou.com | confirm bundle; search site ported; APP.md with UNCONFIRMED |
+| 19 | weibo | `com.sina.weibo` | app? | weibo.com | confirm bundle; site ported; APP.md with UNCONFIRMED |
 | 20 | whatsapp | `com.whatsapp` | web-only | whatsapp.com | site ported |
-| 21 | xianyu | `com.taobao.idlefish` | app? | — | confirm bundle |
-| 22 | xiaohongshu | `com.xingin.xhs` | app? | xiaohongshu.com | confirm bundle; site ported |
-| 23 | zhihu | `com.zhihu.android` | app? | zhihu.com | confirm bundle; site ported |
+| 21 | xianyu | `com.taobao.idlefish` | app? | — | confirm bundle; APP.md with UNCONFIRMED |
+| 22 | xiaohongshu | `com.xingin.xhs` | app? | xiaohongshu.com | confirm bundle; site ported; APP.md with UNCONFIRMED |
+| 23 | zhihu | `com.zhihu.android` | app? | zhihu.com | confirm bundle; site ported; APP.md with UNCONFIRMED |
 
 ## Summary
 
 | Status | Count |
 |---|---|
 | replaced | 1 |
-| app? | 15 |
+| app? | 15 (all catalogued with `bundle: UNCONFIRMED`) |
 | web-only | 7 |
 
 ## Sites
@@ -53,6 +53,7 @@ Chrome has no site file: a "open Chrome" request uses the built-in browser
 
 ## Next
 
-1. For each `app?`, search AppGallery and record the HarmonyOS bundle.
-2. Add `APP.md` only for confirmed bundles.
-3. Smoke-test each site and change `validated: pending` to a date.
+1. For each `app?`, search AppGallery and record the HarmonyOS bundle, then
+   replace `UNCONFIRMED` and set `validated` to the test date.
+2. Smoke-test each site and change `validated: pending` to a date.
+3. Add a per-app screen note after the first real run.

@@ -77,11 +77,20 @@ object KnowledgeLoader {
         }
 
         val bundle = required("bundle")
+        // UNCONFIRMED means the app is catalogued but no HarmonyOS bundle has
+        // been verified on a device. It must never be used to launch anything.
+        val packages = if (bundle.equals("UNCONFIRMED", ignoreCase = true) ||
+            bundle.equals("unknown", ignoreCase = true)
+        ) {
+            emptyList()
+        } else {
+            listOf(bundle)
+        }
         val entry = KnowledgeEntry(
             name = required("name"),
             display = required("display"),
             aliases = parseList(fields["aliases"]),
-            packages = listOf(bundle),
+            packages = packages,
             service = fields["service"] ?: required("name"),
         )
         return KnowledgeDocument(

@@ -151,7 +151,7 @@ packaged into the app.
   failure taxonomy.
 - [docs/eval.md](docs/eval.md) — metrics, targets and reproducibility.
 - [docs/brain.md](docs/brain.md) — JVM brain endpoints and decision contract.
-- [docs/knowledge.md](docs/knowledge.md) — app knowledge format and the 12 app files.
+- [docs/knowledge.md](docs/knowledge.md) - app knowledge format and the 27 app files.
 - [docs/knowledge-triage.md](docs/knowledge-triage.md) - the 23 Mika apps classified.
 - [docs/bundles.md](docs/bundles.md) - bundle names verified on a device.
 - [docs/skills.md](docs/skills.md) — the six reusable skill manifests.

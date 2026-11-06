@@ -66,11 +66,23 @@ non-HarmonyOS platform.
 
 - 12 HarmonyOS system apps: Settings, Clock, Calendar, Contacts, Notepad,
   Files, Camera, Gallery, Browser, AppGallery, Petal Maps, Music.
-- 18 web sites under `brain/knowledge/sites/`.
+- 15 Mika apps catalogued with `bundle: UNCONFIRMED`: Baijiahao, Bilibili, BOSS
+  Zhipin, Dedao, Douyin, Feishu, Jike, Kuaishou, QQ Mail, Toutiao, WeChat,
+  Weibo, Xianyu, Xiaohongshu, Zhihu. They match by name/alias but never launch
+  by an unverified bundle.
+- 21 web sites under `brain/knowledge/sites/`.
 - 6 skill manifests under `brain/knowledge/skills/`.
 - All are `validated: pending`.
-- The 23 Mika Android apps are triaged in `docs/knowledge-triage.md`; 15 still
-  need a HarmonyOS bundle check, 7 are web-only, 1 is replaced.
+- The 23 Mika Android apps are triaged in `docs/knowledge-triage.md`; 1 is
+  replaced, 15 are catalogued with unconfirmed bundles, 7 are web-only.
+
+## The `UNCONFIRMED` bundle
+
+`bundle: UNCONFIRMED` (or `unknown`) means the app is known by name but no
+HarmonyOS bundle has been checked on a device. The loader turns it into an empty
+package list, so the router can still match the name and answer questions about
+the app, but nothing can launch a made-up package. Replace it only after
+`bm dump -n` confirms the name.
 
 ## Sites
 

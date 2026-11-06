@@ -43,7 +43,7 @@ object DemoEntries {
             name = "contacts",
             display = "Contacts",
             aliases = listOf("联系人", "通讯录"),
-            packages = listOf("com.huawei.hmos.contacts"),
+            packages = listOf("com.ohos.contacts"),
         ),
         KnowledgeEntry(
             name = "files",
@@ -61,7 +61,7 @@ object DemoEntries {
             name = "gallery",
             display = "Gallery",
             aliases = listOf("图库", "相册"),
-            packages = listOf("com.huawei.hmos.gallery"),
+            packages = listOf("com.huawei.hmos.photos"),
         ),
         KnowledgeEntry(
             name = "browser",
@@ -75,7 +75,7 @@ object DemoEntries {
             name = "appgallery",
             display = "AppGallery",
             aliases = listOf("应用市场", "app store"),
-            packages = listOf("com.huawei.hmos.appgallery"),
+            packages = listOf("com.huawei.hmsapp.appgallery"),
         ),
         KnowledgeEntry(
             name = "petal-maps",

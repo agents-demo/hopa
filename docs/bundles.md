@@ -36,6 +36,30 @@ Three names in the first draft were wrong and are now corrected:
 `com.huawei.hmos.gallery` -> `com.huawei.hmos.photos`,
 `com.huawei.hmos.appgallery` -> `com.huawei.hmsapp.appgallery`.
 
+## Catalogued but unconfirmed (15 Mika apps)
+
+These have an `APP.md` with `bundle: UNCONFIRMED`, so they match by name/alias
+but never launch by a guessed package. Replace `UNCONFIRMED` only after
+`bm dump -n` or AppGallery confirms the HarmonyOS bundle.
+
+| App | Mika Android package | HarmonyOS bundle |
+|---|---|---|
+| Baijiahao | `com.baidu.baijia` | to confirm |
+| Bilibili | `tv.danmaku.bili` | to confirm |
+| BOSS Zhipin | `com.hpbr.bosszhipin` | to confirm |
+| Dedao | `com.luojilab.player` | to confirm |
+| Douyin | `com.ss.android.ugc.aweme` | to confirm |
+| Feishu | `com.ss.android.lark` | to confirm |
+| Jike | `com.ruguoapp.jike` | to confirm |
+| Kuaishou | `com.smile.gifmaker` | to confirm |
+| QQ Mail | `com.tencent.androidqqmail` | to confirm |
+| Toutiao | `com.ss.android.article.news` | to confirm |
+| WeChat | `com.tencent.mm` | to confirm |
+| Weibo | `com.sina.weibo` | to confirm |
+| Xianyu | `com.taobao.idlefish` | to confirm |
+| Xiaohongshu | `com.xingin.xhs` | to confirm |
+| Zhihu | `com.zhihu.android` | to confirm |
+
 ## Bench tasks (`bench/tasks`)
 
 | Task | Bundle | Status |

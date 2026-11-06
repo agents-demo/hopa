@@ -48,8 +48,14 @@ fun main() {
         aliases = listOf("notes"),
         packages = listOf("com.huawei.hmos.notepad2"),
     )
+    val wechat = KnowledgeEntry(
+        name = "wechat",
+        display = "WeChat",
+        aliases = listOf("微信"),
+        packages = emptyList(),
+    )
 
-    val store = KnowledgeStore(listOf(settings, clock, xiaohongshu, amazon, notes, notepad))
+    val store = KnowledgeStore(listOf(settings, clock, xiaohongshu, amazon, notes, notepad, wechat))
 
     check(store.matchTask("打开设置").firstOrNull()?.name == "settings", "Chinese alias")
     check(store.matchTask("open clock").firstOrNull()?.name == "clock", "English display")
@@ -67,6 +73,8 @@ fun main() {
     check(store.matchTask("zzz").isEmpty(), "unknown task")
     check(store.matchTask("xsettingsx").isEmpty(), "word boundary")
     check(store.matchTask("notes", limit = 2).size == 2, "two plausible matches")
+    check(store.matchTask("wechat").firstOrNull()?.name == "wechat", "unconfirmed app matches")
+    check(store.packageFor("wechat") == null, "unconfirmed app has no package")
 
     check(store.packageFor("设置") == "com.huawei.hmos.settings", "packageFor alias")
     check(store.packageFor("settings") == "com.huawei.hmos.settings", "packageFor map")

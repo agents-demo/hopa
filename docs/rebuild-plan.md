@@ -1,8 +1,8 @@
-# HOPA rebuild plan and roadmap
+﻿# HOPA rebuild plan and roadmap
 
 **This document is the contract.** Development is finished when every checkbox in
-§5–§15 is checked, `python scripts/plan-status.py --require-complete` exits `0`,
-and the two sign-offs in §15 are recorded.
+Â§5â€“Â§15 is checked, `python scripts/plan-status.py --require-complete` exits `0`,
+and the two sign-offs in Â§15 are recorded.
 
 Reference product: Mika (Apache-2.0). HOPA keeps its own name, UI and NOTICE.
 
@@ -22,14 +22,14 @@ Reference product: Mika (Apache-2.0). HOPA keeps its own name, UI and NOTICE.
 - Decision boxes come in pairs. Exactly one of the pair must be checked. The
   unchecked sibling counts as **decided**, not as remaining work, and
   `plan-status.py` excludes it from the finish gate.
-- Conditional work ("if approved…", "if needed…") is prose, not a checkbox.
+- Conditional work ("if approvedâ€¦", "if neededâ€¦") is prose, not a checkbox.
   Once a branch is approved it becomes its own gated plan with its own boxes.
 - Do not add checkboxes casually. Every box must be verifiable by a third party.
 - Box size is not uniform: one box may be an hour or a two-week epic. The
   percentage is a count, not a schedule. Exit criteria, not the count, decide a
   milestone.
 - `python scripts/plan-status.py --lint` must pass: no duplicate boxes, every
-  `[x]` carries `(evidence: …)`, and no decision pair is double-checked.
+  `[x]` carries `(evidence: â€¦)`, and no decision pair is double-checked.
 
 ### 1.2 Progress
 
@@ -44,25 +44,25 @@ python scripts/plan-status.py --require-complete   # exit 1 until finished
 | Milestone | Phases | Meaning |
 |---|---|---|
 | M0 | 0 | Foundations: CI green, decisions recorded, baseline measured |
-| M1 | 1 | PC harness closes the observe→act→verify loop on 5 tasks |
+| M1 | 1 | PC harness closes the observeâ†’actâ†’verify loop on 5 tasks |
 | M2 | 2 | Mika brain runs HOPA's body; 20-task bench published |
 | M3 | 3 | ArkTS core reaches parity with the JVM brain |
 | M4 | 4 | On-device control works without a PC (or fallback signed) |
 | M5 | 5 | Safety and privacy suites pass; payment gate is unbypassable |
-| M6 | 6–8 | Usable app, evaluated, signed, released |
+| M6 | 6â€“8 | Usable app, evaluated, signed, released |
 
 ### 1.4 Estimates
 
-4–6 people, 4–6 months to MVP; 9–12 months to near-parity. Phase 4 and Phase 7
-run in parallel with Phase 3. The critical path is **ACL approval → on-device
-a11y → M4**. Everything before M4 must not depend on the ACL.
+4â€“6 people, 4â€“6 months to MVP; 9â€“12 months to near-parity. Phase 4 and Phase 7
+run in parallel with Phase 3. The critical path is **ACL approval â†’ on-device
+a11y â†’ M4**. Everything before M4 must not depend on the ACL.
 
 M3 proves the on-device loop on **ArkWeb surfaces** (no ACL needed). Driving
 other apps on-device still needs the accessibility ACL, so M3 alone does not
 satisfy M4. Do not let M3's "runs with no PC" claim hide that dependency.
 
-Cross-cutting work in §5.5, §6.8, §7.9, §8.6, §9.7, §10.6, §11.3, §12.3 and
-§13.3 is not a separate phase. It lands inside the phase that owns it and is
+Cross-cutting work in Â§5.5, Â§6.8, Â§7.9, Â§8.6, Â§9.7, Â§10.6, Â§11.3, Â§12.3 and
+Â§13.3 is not a separate phase. It lands inside the phase that owns it and is
 counted there. Appendix E must be resolved before the milestone that depends on
 it, not at the end.
 
@@ -74,7 +74,7 @@ it, not at the end.
 
 - A GUI agent that operates HarmonyOS apps and websites: read screen, tap, type,
   scroll, navigate, verify.
-- App routing: name / alias / domain → app; unknown installed app still operable.
+- App routing: name / alias / domain â†’ app; unknown installed app still operable.
 - Skills, memory, learned app notes.
 - WASM sandbox for user scripts (Pyodide + QuickJS), offline by default.
 - Payment and irreversible actions gated, fail-closed.
@@ -111,11 +111,11 @@ it, not at the end.
 | Agent loop | captures the screen, asks for one action, gates, records | `AgentLoop.ets` |
 | `pc-agent` | CLI + MCP implemented: devices, dump, tap, double-tap, long-press, type, swipe, screenshot, launch, stop, key, install, uninstall, apps | `pc-agent/src` |
 | `bench` | 20 task files; 5/7 tasks pass on the emulator (strict: a failed step cannot pass) | `bench/tasks`, `docs/bench-v0.md` |
-| Brain | Kotlin router + HTTP service + knowledge + prompts + skills + sites (92 assertions + schema contract) | `brain/src`, `docs/brain.md` |
+| Brain | Kotlin router + HTTP service + knowledge + prompts + skills + sites (98 assertions + schema contract) | `brain/src`, `docs/brain.md` |
 | HAP | builds with DevEco 6.1.1 / API 24; signed with the SDK local debug kit; installed on the Pura 90 emulator | `scripts/sign-app.ps1` |
-| Knowledge | 12 HarmonyOS system apps, 21 sites, 6 skills; 23 Mika apps triaged | `brain/knowledge`, `docs/knowledge-triage.md` |
+| Knowledge | 27 apps (12 system + 15 Mika catalogued), 21 sites, 6 skills | `brain/knowledge`, `docs/knowledge-triage.md` |
 | CI | Python tests + ruff; HAP build and core Local Tests skip with a warning when the mirrored toolchain secret is absent | `.github/workflows/ci.yml` |
-| Tests baseline | 254 Python tests, 92 Kotlin assertions, ArkTS Local Tests pass; 20 bench tasks validate; device bench 5/7 | local run 2026-11-06 |
+| Tests baseline | 254 Python tests, 98 Kotlin assertions, ArkTS Local Tests pass; 20 bench tasks validate; device bench 5/7 | local run 2026-11-06 |
 
 Known gaps to close first:
 
@@ -128,18 +128,18 @@ Known gaps to close first:
 
 ```
 ArkUI entry (chat / tasks / settings / memory / takeover / approval)
-        │
-core/  AgentLoop ── ModelClient (OpenAI-compatible)
-        │
-        └── ActionExecutor        ← the only execution path
-              guards → approval → execute → verify → record
-                       │
+        â”‚
+core/  AgentLoop â”€â”€ ModelClient (OpenAI-compatible)
+        â”‚
+        â””â”€â”€ ActionExecutor        â† the only execution path
+              guards â†’ approval â†’ execute â†’ verify â†’ record
+                       â”‚
         capabilities/  a11y | web | sandbox | system
-                       │
+                       â”‚
               HarmonyOS device
 
 Brain host:
-  M1–M2: local JVM service (Mika core), HTTP / MCP
+  M1â€“M2: local JVM service (Mika core), HTTP / MCP
   M3+:   ArkTS core on device, same contract, golden-file parity
 
 Harness: pc-agent (hdc + uitest) + HOPA-Bench
@@ -157,7 +157,7 @@ Module responsibilities:
 
 ---
 
-## 5. Phase 0 — Foundations (1–2 weeks)
+## 5. Phase 0 â€” Foundations (1â€“2 weeks)
 
 ### 5.1 Repository and process
 
@@ -171,12 +171,12 @@ Module responsibilities:
 - [x] ADR-0005: PC-tethered vs standalone product split (evidence: docs/adr/0005-pc-tethered-vs-standalone.md)
 - [x] ADR-0006: model provider, budget and cost target per task (evidence: docs/adr/0006-model-provider-and-budget.md)
 - [ ] [BLOCKED: no Huawei developer account or ACL channel] File the accessibility ACL request in week 1; record ticket, date and contact (critical path); package ready in docs/acl-request.md
-- [x] Add `CONTRIBUTING.md` with the evidence rule from §1.1 (evidence: CONTRIBUTING.md)
+- [x] Add `CONTRIBUTING.md` with the evidence rule from Â§1.1 (evidence: CONTRIBUTING.md)
 - [x] Add `CODEOWNERS` (evidence: CODEOWNERS)
 - [x] Add PR template with the phase checklist (evidence: .github/PULL_REQUEST_TEMPLATE.md)
 - [ ] Enable branch protection on `main`; require CI
 - [x] Add issue labels: `phase/0..9`, `area/core|cap|ui|bench|docs`, `risk` (evidence: phase/*, area/*, risk labels created)
-- [ ] Create the project board with phases 0–9
+- [ ] Create the project board with phases 0â€“9
 - [ ] Assign an owner per phase
 - [x] Write a definition of ready for starting a phase (evidence: docs/definition-of-ready.md)
 - [ ] Schedule a monthly risk review
@@ -224,7 +224,7 @@ Module responsibilities:
 
 ### 5.5 Programme, people and change control
 
-- [x] Named owner for every phase (not “TBD”) (evidence: docs/owners.md)
+- [x] Named owner for every phase (not â€œTBDâ€) (evidence: docs/owners.md)
 - [ ] Named reviewer for core, capabilities, bench and docs
 - [x] Team skills matrix: ArkTS, Kotlin/JVM, Python, HarmonyOS a11y, security (evidence: docs/owners.md (skills matrix))
 - [x] Hiring or contracting gap identified for any missing skill (evidence: docs/owners.md (hiring gap))
@@ -247,7 +247,7 @@ Module responsibilities:
 
 ---
 
-## 6. Phase 1 — Harness and closed loop (2–3 weeks)
+## 6. Phase 1 â€” Harness and closed loop (2â€“3 weeks)
 
 ### 6.1 Observation contract
 
@@ -256,7 +256,7 @@ Module responsibilities:
 - [x] `hopa-agent observe` emits the schema (evidence: agent/src/hopa_agent/cli.py)
 - [x] `hopa-agent observe --screenshot` attaches an image reference (evidence: agent/src/hopa_agent/capture.py)
 - [x] Layout parser extracts `id`, `text`, `type`, `bounds`, `clickable`, `enabled`, `checked`, `scrollable` (evidence: agent/src/hopa_agent/observation.py)
-- [x] Stable element refs per observation (`e1`, `e2`, …) mapped to nodes (evidence: agent/tests/test_observation.py)
+- [x] Stable element refs per observation (`e1`, `e2`, â€¦) mapped to nodes (evidence: agent/tests/test_observation.py)
 - [x] Deterministic ref assignment: two identical trees produce identical refs; refs still expire on the next observation (evidence: agent/tests/test_observation.py)
 - [x] Redaction pass for phone numbers, emails, OTPs, card numbers (evidence: agent/src/hopa_agent/observation.py)
 - [x] Redaction unit tests (20 cases) (evidence: agent/tests/test_observation.py (20 cases))
@@ -286,7 +286,7 @@ Module responsibilities:
 - [x] `AgentLoop` sends system prompt + goal + current observation (evidence: agent/src/hopa_agent/models.py)
 - [x] Model returns exactly one action as JSON (evidence: agent/src/hopa_agent/models.py)
 - [x] Schema-constrained decoding or strict validation (evidence: Action.from_dict)
-- [x] Malformed JSON → one repair attempt → fail with a typed error (evidence: OpenAIClient.decide)
+- [x] Malformed JSON â†’ one repair attempt â†’ fail with a typed error (evidence: OpenAIClient.decide)
 - [x] Execute through the single executor (`DeviceExecutor` on PC, `ActionExecutor` on device) (evidence: agent/src/hopa_agent/executor.py)
 - [ ] Verify by re-observing and comparing expected text/state
 - [x] Append step to history with observation summary and refs (evidence: AgentLoop.run)
@@ -330,7 +330,7 @@ Module responsibilities:
 
 ### 6.6 Runtime behaviour
 
-- [x] Loop and stagnation detection: same action + same observation hash twice → replan or stop (evidence: AgentLoop.run)
+- [x] Loop and stagnation detection: same action + same observation hash twice â†’ replan or stop (evidence: AgentLoop.run)
 - [x] Wrong-screen recovery: back / home / re-observe policy (evidence: runtime.recover + test_runtime)
 - [x] `wait_for` condition on text, ref or state, with timeout (evidence: agent/src/hopa_agent/runtime.py)
 - [x] `scroll_to` with bounded attempts (evidence: agent/src/hopa_agent/runtime.py)
@@ -364,11 +364,11 @@ Module responsibilities:
 
 ### 6.8 Protocol, telemetry and errors
 
-- [x] Version the brain↔body contract (`v1`) and record it in the schema (evidence: Observation.schemaVersion)
+- [x] Version the brainâ†”body contract (`v1`) and record it in the schema (evidence: Observation.schemaVersion)
 - [x] Compatibility rule: body rejects an unknown major version, accepts a newer minor (evidence: docs/contracts/observation.md)
 - [x] Error-code taxonomy: `E_MODEL`, `E_SCHEMA`, `E_ACTION`, `E_CAPABILITY`, `E_POLICY`, `E_DEVICE` (evidence: agent/src/hopa_agent/errors.py)
 - [x] Every error carries a retryable flag and a user-facing message key (evidence: agent/src/hopa_agent/errors.py)
-- [ ] Trace id propagated from UI → loop → brain → model → device
+- [ ] Trace id propagated from UI â†’ loop â†’ brain â†’ model â†’ device
 - [ ] Clock-skew tolerance for timestamps from the device and the PC
 - [x] Message-size limit with tree truncation and compression (evidence: observation.truncate + models._messages)
 - [x] Schema-evolution rules: additive fields only within a major version (evidence: docs/versioning.md)
@@ -379,7 +379,7 @@ Module responsibilities:
 
 ---
 
-## 7. Phase 2 — Mika brain on HOPA body (4–6 weeks)
+## 7. Phase 2 â€” Mika brain on HOPA body (4â€“6 weeks)
 
 > Target: reuse Mika's pure-Kotlin core as the brain, for speed and fidelity.
 > The body stays HOPA. Nothing Android-specific is copied.
@@ -389,7 +389,7 @@ Module responsibilities:
 - [ ] Extract the ported Mika subset (Appendix A.2 and A.2b) into a standalone JVM module with zero `android.*` imports
 - [x] Verify with `grep -r "android\."` returning nothing in the ported module (evidence: grep -r "android\." brain/src returns nothing)
 - [x] Build with JDK 17; pin the toolchain (evidence: scripts/brain.ps1 / brain.sh (Kotlin 2.1.0, JDK 17))
-- [x] HTTP API `POST /decide`: `{goal, observation, history, settings}` → `{action, say, done}` (evidence: brain/src/main/kotlin/hopa/brain/Server.kt + ServerTest)
+- [x] HTTP API `POST /decide`: `{goal, observation, history, settings}` â†’ `{action, say, done}` (evidence: brain/src/main/kotlin/hopa/brain/Server.kt + ServerTest)
 - [x] Sticky session id for multi-step tasks (evidence: BrainService.sessions + GET /session/{id})
 - [x] Health and version endpoints (evidence: ServerTest health/version)
 - [x] Structured logs with trace id (evidence: X-Trace-Id + JSON stderr log)
@@ -422,9 +422,9 @@ Module responsibilities:
 - [x] Port `ChannelAdvisor` (app vs web vs signed-in) (evidence: brain/src/main/kotlin/hopa/brain/Router.kt + RouterTest)
 - [ ] Port `GuideCatalog` and the skills index
 - [x] Port `packageFor` (evidence: brain/src/main/kotlin/hopa/brain/Router.kt + RouterTest)
-- [x] Add installed-app listing: `pc-agent apps` → `{bundle, label}` (evidence: pc-agent/src/hopa_pc_agent/apps.py + tests)
-- [ ] Unknown app: list → label → launch → generic operation
-- [ ] Ambiguous match → ask the user once, remember the answer
+- [x] Add installed-app listing: `pc-agent apps` â†’ `{bundle, label}` (evidence: pc-agent/src/hopa_pc_agent/apps.py + tests)
+- [ ] Unknown app: list â†’ label â†’ launch â†’ generic operation
+- [ ] Ambiguous match â†’ ask the user once, remember the answer
 - [x] Routing tests: known app, alias, domain, unknown, two plausible (evidence: brain/src/test/kotlin/hopa/brain/RouterTest.kt (17 assertions))
 - [x] Routing tests: generic words never match (`app`, `web`, `site`) (evidence: brain/src/test/kotlin/hopa/brain/RouterTest.kt)
 - [ ] Bench: open 5 apps by name
@@ -442,7 +442,7 @@ Module responsibilities:
 - [ ] Port `roles/app_knowledge*.md`
 - [x] Port 6 skills (9 files: manifests, references and the PDF script) and validate manifests (evidence: 6 clean-room manifests in brain/knowledge/skills + SkillLoaderTest)
 - [ ] Port personal skill creation
-- [ ] Port the app-notes draft → trial → verified flow
+- [ ] Port the app-notes draft â†’ trial â†’ verified flow
 - [x] Prompt size budget and truncation rules (evidence: PromptBook.MAX_SCREEN_CHARS + PromptBookTest)
 - [ ] Token accounting per step
 - [x] Prompt-injection tests: screen text cannot issue instructions (evidence: PromptBookTest (screen text only in user message) + agent/tests/test_safety.py)
@@ -472,7 +472,7 @@ Module responsibilities:
 - [x] Track HarmonyOS vs Android divergence per app (evidence: docs/knowledge-triage.md (status/action table))
 - [ ] Record regional and locale variants
 - [ ] Verify the documents skill (PDF extraction) on HarmonyOS
-- [ ] Verify the transcription skill (audio → text) on HarmonyOS
+- [ ] Verify the transcription skill (audio â†’ text) on HarmonyOS
 - [ ] Verify the info-research skill on HarmonyOS
 
 ### 7.7 Bench v1 (20 tasks)
@@ -489,7 +489,7 @@ Module responsibilities:
 
 ### 7.8 Exit criteria (M2)
 
-- [ ] 20-task success rate ≥ 70%
+- [ ] 20-task success rate â‰¥ 70%
 - [ ] Payment refusal 100% on the Bench v1 safety tasks
 - [ ] Unknown app operable from `list_apps`
 - [ ] No Android-only dependency in the brain
@@ -510,7 +510,7 @@ Module responsibilities:
 
 ---
 
-## 8. Phase 3 — ArkTS core on device (6–10 weeks)
+## 8. Phase 3 â€” ArkTS core on device (6â€“10 weeks)
 
 ### 8.1 Port scope and skeleton
 
@@ -523,7 +523,7 @@ Module responsibilities:
 ### 8.2 Port modules
 
 - [x] `Types`, `ToolRegistry`, `ActionExecutor`, `ApprovalPolicy` (evidence: app/core/src/main/ets + hypium tests in app/core/src/test)
-- [ ] `uistate` (46 files) — screen model
+- [ ] `uistate` (46 files) â€” screen model
 - [ ] `observation`, `verify`, `record`
 - [ ] `knowledge` (routing, channel, catalog)
 - [x] `agent` loop and context builder (evidence: app/core/src/main/ets/AgentLoop.ets + AgentLoop.test.ets)
@@ -592,7 +592,7 @@ Module responsibilities:
 
 ---
 
-## 9. Phase 4 — Capabilities (6–10 weeks, parallel with Phase 3)
+## 9. Phase 4 â€” Capabilities (6â€“10 weeks, parallel with Phase 3)
 
 ### 9.1 Accessibility (the product)
 
@@ -697,8 +697,8 @@ Module responsibilities:
 
 ### 9.6 Exit criteria (M4)
 
-- [ ] M4 path: **standalone — ACL approved and verified, 20 tasks pass on a phone with no `hdc`**
-- [ ] M4 path: **tethered fallback — release signed, 20 tasks pass over `hdc`** (one of the two must be checked)
+- [ ] M4 path: **standalone â€” ACL approved and verified, 20 tasks pass on a phone with no `hdc`**
+- [ ] M4 path: **tethered fallback â€” release signed, 20 tasks pass over `hdc`** (one of the two must be checked)
 - [ ] Every capability fails closed when unavailable
 - [ ] No capability imports another capability
 
@@ -721,7 +721,7 @@ Module responsibilities:
 
 ---
 
-## 10. Phase 5 — Safety and trust (continuous, must be M5)
+## 10. Phase 5 â€” Safety and trust (continuous, must be M5)
 
 ### 10.1 Payment
 
@@ -732,15 +732,15 @@ Module responsibilities:
 - [x] Deny stops the branch and cannot be retried elsewhere (evidence: DeviceExecutor deny path + AgentLoop stop)
 - [x] Approval is never remembered (evidence: ApprovalPolicy has no remember state)
 - [x] Model cannot clear or set payment classification (evidence: Action.from_dict drops isPayment)
-- [x] Test: model claims “already approved” → still asks (evidence: agent/tests/test_adversarial.py)
-- [x] Test: model sets `isPayment:false` → ignored (evidence: agent/tests/test_adversarial.py)
-- [x] Test: hidden payment step inside a long flow → asks (evidence: agent/tests/test_adversarial.py)
+- [x] Test: model claims â€œalready approvedâ€ â†’ still asks (evidence: agent/tests/test_adversarial.py)
+- [x] Test: model sets `isPayment:false` â†’ ignored (evidence: agent/tests/test_adversarial.py)
+- [x] Test: hidden payment step inside a long flow â†’ asks (evidence: agent/tests/test_adversarial.py)
 - [ ] 100% refusal on the payment bench
 - [ ] Tested on 3 checkout flows with a test merchant and no real charge
 
 ### 10.2 Irreversible actions
 
-- [x] Send message, call, delete, uninstall, reset → ask (evidence: SENSITIVE_KINDS + test_policy)
+- [x] Send message, call, delete, uninstall, reset â†’ ask (evidence: SENSITIVE_KINDS + test_policy)
 - [ ] Bulk actions capped
 - [ ] Undo offered where the platform allows
 - [x] Plain-language confirmation text (evidence: ApprovalRequest.consequence + docs/safety.md)
@@ -825,7 +825,7 @@ Module responsibilities:
 
 ---
 
-## 11. Phase 6 — Product and UI (4–6 weeks)
+## 11. Phase 6 â€” Product and UI (4â€“6 weeks)
 
 - [ ] Chat with streaming and cancel
 - [ ] Task progress: steps, current action, live screen thumbnail
@@ -865,7 +865,7 @@ Module responsibilities:
 - [ ] Completion notification
 - [ ] Cost and latency display per run
 - [ ] Undo where the platform allows it
-- [ ] Feedback and “report a problem” with redacted logs
+- [ ] Feedback and â€œreport a problemâ€ with redacted logs
 - [ ] Export run history
 - [ ] Multi-device and PC companion view
 - [ ] Task queue and concurrency policy (one active task by default)
@@ -885,7 +885,7 @@ Module responsibilities:
 
 ### 11.3 Trust UX
 
-- [ ] “Why did HOPA do that?” explanation for every step
+- [ ] â€œWhy did HOPA do that?â€ explanation for every step
 - [ ] Timeline with step, action, result and screenshot
 - [ ] Pause and stop always reachable in one tap
 - [ ] Approval sheet is screen-reader accessible and respects font scale
@@ -896,13 +896,13 @@ Module responsibilities:
 - [ ] Notification actions: stop and open
 - [ ] Lock-screen notification hides task details
 - [ ] Quick Settings tile or shortcut for stop
-- [ ] “What HOPA cannot do” page in the app
+- [ ] â€œWhat HOPA cannot doâ€ page in the app
 - [ ] Feedback entry with a redacted diagnostic bundle
 - [ ] First-run safety walkthrough skippable and replayable
 
 ---
 
-## 12. Phase 7 — Evaluation (continuous)
+## 12. Phase 7 â€” Evaluation (continuous)
 
 - [ ] Bench v1 (20 tasks) stable for 7 days
 - [ ] Bench v2 (50 tasks, 10 apps)
@@ -944,7 +944,7 @@ Module responsibilities:
 - [ ] Multi-user and private space
 - [ ] Flaky-test detection and quarantine
 - [ ] Bench authoring guide
-- [ ] User corrections (“that was wrong”) feed the eval set
+- [ ] User corrections (â€œthat was wrongâ€) feed the eval set
 - [ ] Generated API reference for the contracts
 - [ ] Adversarial: prompt injection, fake UI, malicious overlay
 - [ ] Adversarial: model claims payment is already approved
@@ -953,12 +953,12 @@ Module responsibilities:
 
 ### 12.2 Targets (confirm at M1)
 
-- [ ] Bench v1 success ≥ 70%
-- [ ] Bench v2 success ≥ 85%
+- [ ] Bench v1 success â‰¥ 70%
+- [ ] Bench v2 success â‰¥ 85%
 - [ ] Payment refusal 100%
-- [ ] p95 step latency ≤ 8 s with model
-- [ ] Crash-free sessions ≥ 99%
-- [ ] Cost per task ≤ target set in ADR-0006
+- [ ] p95 step latency â‰¤ 8 s with model
+- [ ] Crash-free sessions â‰¥ 99%
+- [ ] Cost per task â‰¤ target set in ADR-0006
 
 ### 12.3 Statistical rigour and SLOs
 
@@ -980,7 +980,7 @@ Module responsibilities:
 
 ---
 
-## 13. Phase 8 — Release readiness (3–4 weeks)
+## 13. Phase 8 â€” Release readiness (3â€“4 weeks)
 
 - [x] Version 0.1.0 (evidence: app/AppScope/app.json5 versionName 0.1.0)
 - [x] CHANGELOG (evidence: CHANGELOG.md)
@@ -1005,7 +1005,7 @@ Module responsibilities:
 ### 13.1 Operations and compliance
 
 - [ ] Remote config and feature flags
-- [ ] Staged rollout: 1% → 10% → 100%
+- [ ] Staged rollout: 1% â†’ 10% â†’ 100%
 - [ ] Kill switch tested
 - [ ] Incident response runbook
 - [ ] On-call rotation
@@ -1061,11 +1061,11 @@ Module responsibilities:
 - [ ] Data-breach notification procedure
 - [ ] Security contact and disclosure policy
 - [ ] User-visible version and build number
-- [ ] In-app “what’s new” for upgrades
+- [ ] In-app â€œwhatâ€™s newâ€ for upgrades
 
 ---
 
-## 14. Phase 9 — Optional and explicitly gated
+## 14. Phase 9 â€” Optional and explicitly gated
 
 Both optional branches default to **no**. Each branch is a decision pair; exactly
 one side of each pair must be checked. Detailed work for an approved branch is
@@ -1099,7 +1099,7 @@ first and treat it as a new project.
 
 Development is finished only when **all** of the following are true:
 
-- [ ] Every checkbox in §5–§15 and Appendix E is checked or covered by a checked decision pair
+- [ ] Every checkbox in Â§5â€“Â§15 and Appendix E is checked or covered by a checked decision pair
 - [ ] `python scripts/plan-status.py --require-complete --lint` exits `0`
 - [ ] Bench v1 and v2 meet their targets on a physical device
 - [ ] Payment refusal is 100% on the safety bench
@@ -1138,13 +1138,13 @@ hidden background screen is the ceiling, and this document says so on purpose.
 | WASM limits | scripts break | pure Python/JS only, companion fallback | TBD |
 | Model outage | unusable | clear error, fallback list, no infinite retry | TBD |
 | Cost/latency | poor UX | caps, small routing model, caching | TBD |
-| Scope creep toward “Mika clone” | never ships | this document’s out-of-scope list | TBD |
+| Scope creep toward â€œMika cloneâ€ | never ships | this documentâ€™s out-of-scope list | TBD |
 
-Critical path: ACL → a11y → M4. Everything before M4 must ship without it.
+Critical path: ACL â†’ a11y â†’ M4. Everything before M4 must ship without it.
 
 ---
 
-## Appendix A — Port matrix
+## Appendix A â€” Port matrix
 
 ### A.1 Port as data
 
@@ -1173,7 +1173,7 @@ Critical path: ACL → a11y → M4. Everything before M4 must ship without it.
 | `core/eval/` | 8 | `core/eval/` | evaluation |
 | `core/model/` | 16 | `core/model/` | interface; replace transport |
 
-### A.2b Remaining modules — decision required
+### A.2b Remaining modules â€” decision required
 
 These modules exist in Mika's `core/` but are not in the port matrix above. They
 must be classified before Phase 3 ends; every "drop" needs a one-line reason.
@@ -1211,7 +1211,7 @@ must be classified before Phase 3 ends; every "drop" needs a one-line reason.
 |---|---|---|
 | `core/cap/` | 73 | `app/capabilities/*` |
 | `core/userscreen/`, `vision/`, `visual/` | 12 | a11y + OCR + vision |
-| `app/a11y`, `browser`, `sandbox`, `capsule`, `takeover`, `wechat` | — | ArkUI + extension |
+| `app/a11y`, `browser`, `sandbox`, `capsule`, `takeover`, `wechat` | â€” | ArkUI + extension |
 
 ### A.4 Drop
 
@@ -1221,9 +1221,9 @@ components.
 
 ---
 
-## Appendix B — HOPA-Bench v1 (20 tasks)
+## Appendix B â€” HOPA-Bench v1 (20 tasks)
 
-Keep the 5 existing. Add 15. Bundle names marked “confirm” must be filled from
+Keep the 5 existing. Add 15. Bundle names marked â€œconfirmâ€ must be filled from
 `hdc shell bm dump -a` before the task is enabled.
 
 | # | Group | Task | Success predicate | Bundle |
@@ -1246,7 +1246,7 @@ Keep the 5 existing. Add 15. Bundle names marked “confirm” must be filled fr
 | 16 | Media | play/pause | state check | confirm |
 | 17 | Media | search and open an item | text visible | confirm |
 | 18 | Files | locate a file | text visible | confirm |
-| 19 | Safety | tap “Pay” must ask | approval recorded | any checkout |
+| 19 | Safety | tap â€œPayâ€ must ask | approval recorded | any checkout |
 | 20 | Safety | deny payment stops the run | no execution, `approved=false` | any checkout |
 
 Scoring: success (binary), steps, wall-clock, permission prompts, payment
@@ -1254,7 +1254,7 @@ decision. Every safety task must pass 100%.
 
 ---
 
-## Appendix C — Contracts
+## Appendix C â€” Contracts
 
 ### C.1 Observation
 
@@ -1270,8 +1270,8 @@ decision. Every safety task must pass 100%.
   "focus": "e12",
   "text": "flattened visible text",
   "tree": { "ref": "e1", "type": "", "text": "", "bounds": [0, 0, 0, 0], "children": [] },
-  "screenshotRef": "file://…",
-  "hash": "sha256:…"
+  "screenshotRef": "file://â€¦",
+  "hash": "sha256:â€¦"
 }
 ```
 
@@ -1305,7 +1305,7 @@ decision. Every safety task must pass 100%.
 
 ---
 
-## Appendix D — What is deliberately missing
+## Appendix D â€” What is deliberately missing
 
 This plan does not promise:
 
@@ -1321,7 +1321,7 @@ Saying this up front is cheaper than discovering it at M4.
 
 ---
 
-## Appendix E — Assumptions and open questions
+## Appendix E â€” Assumptions and open questions
 
 Each assumption must be confirmed or replaced by a decision record before the
 phase that depends on it. Unresolved rows block the milestone, not the whole
@@ -1359,17 +1359,17 @@ project.
 
 ---
 
-## Appendix F — Plan audit log
+## Appendix F â€” Plan audit log
 
-- 2026-11-05 — first version: 397 boxes across 11 phases.
-- 2026-11-05 — audit 1: added runtime behaviour, knowledge validation, model
+- 2026-11-05 â€” first version: 397 boxes across 11 phases.
+- 2026-11-05 â€” audit 1: added runtime behaviour, knowledge validation, model
   quality, platform edge cases, security, product features, test matrix,
   operations, data lifecycle, legal, performance and scheduling. 569 boxes.
-- 2026-11-05 — audit 2: added programme and change control, protocol and errors,
+- 2026-11-05 â€” audit 2: added programme and change control, protocol and errors,
   licensing and provenance, ArkTS runtime, permissions and packaging, abuse and
   exfiltration, trust UX, statistical rigour, versioning and support, assumptions
   and open questions. Duplicate boxes made specific. 745 boxes.
-- 2026-11-05 — audit 3: fixed the finish gate (the unchecked half of a decision
+- 2026-11-05 â€” audit 3: fixed the finish gate (the unchecked half of a decision
   pair no longer blocks completion), removed five conditional boxes that could
   never be checked, corrected the app and skill counts, the M3/M4 ACL dependency
   and the M4 exit contradiction, moved ACL filing to week 1, added the
@@ -1381,5 +1381,6 @@ finish line: every box checked, with evidence, and both sign-offs recorded.
 
 Known deliberate omissions from the checkbox list: marketing, sales, pricing
 experiments and hiring plans. They are tracked outside this engineering plan, so
-that “all boxes checked” still means “the product is built and safe”, not “the
-company is profitable”.
+that â€œall boxes checkedâ€ still means â€œthe product is built and safeâ€, not â€œthe
+company is profitableâ€.
+

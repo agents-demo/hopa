@@ -1,4 +1,4 @@
-# Status
+﻿# Status
 
 **2026-11-06.** The repository is a working PC-tethered agent plus a signed,
 installed HarmonyOS app. The Python harness captures an observation, asks a
@@ -22,7 +22,7 @@ the device/ACL, UI, release and sign-off phases.
 | Area | State | Evidence |
 |---|---|---|
 | `agent/` loop, gate, policy, records | working, tested | `pytest agent` |
-| `brain/` Kotlin router + HTTP service + knowledge + prompts + skills + sites | working, 92 assertions + schema contract | `scripts/brain.ps1` |
+| `brain/` Kotlin router + HTTP service + knowledge + prompts + skills + sites | working, 98 assertions + schema contract | `scripts/brain.ps1` |
 | `pc-agent` CLI + MCP | working; live device commands work | `pc-agent devices` |
 | `bench` 20 task definitions | valid | `pytest bench`, `validate` |
 | Observation/action/decision/record schemas | v1 | `schemas/` |
@@ -75,3 +75,4 @@ signed HAP on any machine that has the SDK.
 - The HAP contains no Python runtime.
 - The phone app cannot control other apps until the ACL is approved.
 - Numbers in this repository are local until a device run says otherwise.
+

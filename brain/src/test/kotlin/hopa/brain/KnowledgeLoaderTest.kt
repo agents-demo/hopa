@@ -42,6 +42,12 @@ fun main(args: Array<String>) {
     }
     check(missing, "missing bundle is rejected")
 
+    val unconfirmed = KnowledgeLoader.parse(
+        "---\nname: x\ndisplay: X\nbundle: UNCONFIRMED\naliases: [x]\n" +
+            "pace: careful\nvalidated: pending\nplatform: harmonyos\n---\n# X\n",
+    )
+    check(unconfirmed.entry.packages.isEmpty(), "UNCONFIRMED has no launchable package")
+
     var wrongPlatform = false
     try {
         KnowledgeLoader.parse(
@@ -58,11 +64,17 @@ fun main(args: Array<String>) {
         Path.of("brain/knowledge/apps")
     }
     val loaded = KnowledgeLoader.load(directory)
-    check(loaded.size == 12, "12 app files")
+    check(loaded.size == 27, "27 app files (12 system + 15 Mika)")
     check(loaded.all { it.platform == "harmonyos" }, "all harmonyos")
     check(loaded.all { it.pace.isNotEmpty() }, "all have a pace")
     check(loaded.any { it.entry.name == "clock" }, "clock present")
     check(loaded.any { it.entry.name == "browser" }, "browser present")
+    check(loaded.any { it.entry.name == "wechat" }, "wechat present")
+    check(
+        loaded.first { it.entry.name == "wechat" }.entry.packages.isEmpty(),
+        "wechat has no unverified bundle",
+    )
+    check(loaded.count { it.entry.packages.isEmpty() } == 15, "15 unconfirmed bundles")
 
     println("KnowledgeLoaderTest: $passed assertions passed")
 }

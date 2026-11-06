@@ -19,7 +19,7 @@ app module supplies device control; HOPA must supply its own HarmonyOS layer.
 | 6 | Hold to talk (speech) | none | platform ASR or provider | yes |
 | 7 | Ask / Autonomous modes | Ask only, fail-closed | autonomous mode | yes, by decision |
 | 8 | Memory and preferences | explicit user memory, persisted, visible and deletable | learned memory + profile | yes |
-| 9 | Learns skills and app knowledge | explicit personal skills + 12 apps, 21 sites, 6 static skills; no auto-drafting | drafter/import/outcomes | yes |
+| 9 | Learns skills and app knowledge | explicit personal skills + 27 apps, 21 sites, 6 static skills; no auto-drafting | drafter/import/outcomes | yes |
 | 10 | Batch jobs | none | batch runner | yes |
 | 11 | Traceable runs | `RunStore` records only | trace, usage, cost, eval | yes |
 | 12 | Linux sandbox | WASM stub, nothing bundled | Linux is out of scope; WASM only | no (Linux) |
