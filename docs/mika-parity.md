@@ -19,7 +19,7 @@ app module supplies device control; HOPA must supply its own HarmonyOS layer.
 | 6 | Hold to talk (speech) | none | platform ASR or provider | yes |
 | 7 | Ask / Autonomous modes | both modes; autonomous skips non-payment approvals, payment is always fail-closed | — | yes |
 | 8 | Memory and preferences | explicit user memory, persisted, visible and deletable | learned memory + profile | yes |
-| 9 | Learns skills and app knowledge | explicit skills + draft from a successful run + 27-app/21-site catalogue; no automatic trial/scoring | drafter trial+outcomes | yes |
+| 9 | Learns skills and app knowledge | explicit skills, draft from a successful run, uses/successes counters, 27-app/21-site catalogue; no automatic trial | drafter trial+scoring | yes |
 | 10 | Batch jobs | sequential batch runner in Tasks; verified on device (2 s, 409 tokens); stop between goals; no scheduling or parallelism | parallel/scheduled batches | yes |
 | 11 | Traceable runs | history, tokens measured on device, duration, export; no cost/trace UI | trace + cost UI | yes |
 | 12 | Linux sandbox | isolated ArkWeb JavaScript sandbox (`about:blank`, verified: `1+1` -> `2`); Python/WASM not bundled; Linux out of scope | Python/WASM, limits | partial |
@@ -27,7 +27,7 @@ app module supplies device control; HOPA must supply its own HarmonyOS layer.
 | 14 | Many model providers + account sign-in | OpenAI-compatible, Anthropic, Gemini, DeepSeek; verified end-to-end on device, including chat with no screen; no OAuth | OAuth sign-in, more presets | yes |
 | 15 | 10 UI languages | English + Simplified Chinese resources for the app shell (tabs, titles, buttons, settings); chat and system messages are still English | more languages, translate messages | yes |
 
-Usable today: **~10.3 of 15** (~69%).
+Usable today: **~10.4 of 15** (~69%).
 
 ## 2. Core package matrix
 
@@ -77,9 +77,8 @@ extension on device.
 
 | Measure | Value |
 |---|---|
-| User-visible capabilities usable | ~10.3 / 15 (~69%) |
-| Portable core ported | ~20% |
-| Shared product surfaces (CLI/MCP, knowledge, records) | ~50% |
+| User-visible capabilities usable | ~10.4 / 15 (~69%) |
+| Portable core ported | ~20% || Shared product surfaces (CLI/MCP, knowledge, records) | ~50% |
 | Device-control layer | replaced, not ported; on-device part blocked by ACL |
 
 The honest summary: **the skeleton and the safety gate are ahead of Mika; the
@@ -92,6 +91,21 @@ about the page loaded in HOPA's browser, reported **400 tokens**, and the run wa
 saved as a skill. A second run answered with no screen at all, and a batch job
 finished in 2 s with 409 tokens. This proves chat, the browser-text path, usage,
 batch and skill drafting — not app control.
+
+### Ceiling on the Pura 90 emulator
+
+Four capabilities cannot be completed on this image, regardless of code:
+
+| Row | Blocker |
+|---|---|
+| 1, 3 — operate apps / act on the current screen | Settings has no third-party accessibility services page, so the service cannot be enabled. The extension is installed and the ACL is granted. |
+| 4 — schedules | `publishReminder` returns `1700002` even after `cancelAllReminders` and a full reboot. |
+| 6 — speech | No `CoreSpeechKit` in this SDK/toolchain. |
+
+That is **3.4 of 15 credits** unavailable. Even with every other row perfect,
+the ceiling here is **~11.6 / 15 (77%)**. Reaching 80% needs a device image where
+the accessibility service can be enabled (row 1 + part of row 3), or a speech
+SDK. It is a platform/image limit, not a missing implementation.
 
 ## 4. Effort to "a kind of Mika"
 
