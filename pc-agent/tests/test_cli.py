@@ -1,6 +1,13 @@
 from __future__ import annotations
 
-from hopa_pc_agent.cli import build_parser, main
+import time
+
+from hopa_pc_agent.bridge import BridgeServer
+from hopa_pc_agent.cli import _cmd_bridge, build_parser, main
+
+
+class _NoDevice:
+    pass
 
 
 def test_parser_tap() -> None:
@@ -44,3 +51,25 @@ def test_parser_bridge_defaults() -> None:
     args = build_parser().parse_args(["bridge"])
     assert args.host == "127.0.0.1"
     assert args.port == 8765
+
+
+def test_bridge_command_starts_serving(monkeypatch) -> None:
+    events: list[str] = []
+
+    def fake_start(self: BridgeServer) -> None:
+        events.append("start")
+
+    def fake_stop(self: BridgeServer) -> None:
+        events.append("stop")
+
+    monkeypatch.setattr(BridgeServer, "start", fake_start)
+    monkeypatch.setattr(BridgeServer, "stop", fake_stop)
+
+    def no_sleep(_seconds: float) -> None:
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr(time, "sleep", no_sleep)
+
+    args = build_parser().parse_args(["bridge", "--port", "0", "--token", "t"])
+    assert _cmd_bridge(args, _NoDevice()) == 0  # type: ignore[arg-type]
+    assert events == ["start", "stop"]

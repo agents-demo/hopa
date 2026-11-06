@@ -136,6 +136,7 @@ def _cmd_bridge(args: argparse.Namespace, device: Device) -> int:
     except BridgeError as exc:
         print(f"pc-agent: {exc}", file=sys.stderr)
         return 2
+    server.start()
     print(f"bridge listening on http://{args.host}:{server.port}", flush=True)
     print(f"token: {token}", flush=True)
     try:

@@ -104,7 +104,9 @@ class _Handler(BaseHTTPRequestHandler):
         if self.path != "/health":
             self._send(404, {"error": "not found"})
             return
-        self._send(200, {"ok": True, "device": bool(self.bridge.device.devices())})
+        # Do not probe the device here: a slow hdc must not make the bridge
+        # look unreachable.
+        self._send(200, {"ok": True})
 
     def do_POST(self) -> None:  # noqa: N802
         if not self._authorized():
@@ -189,7 +191,8 @@ class BridgeServer:
         self.thread.start()
 
     def stop(self) -> None:
-        self.httpd.shutdown()
+        if self.thread is not None and self.thread.is_alive():
+            self.httpd.shutdown()
         self.httpd.server_close()
         if self.thread is not None:
             self.thread.join(timeout=2)
