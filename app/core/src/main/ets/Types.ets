@@ -28,6 +28,7 @@ export class Action {
   target: string = '';
   text: string = '';
   url: string = '';
+  app: string = '';
   x: number = 0;
   y: number = 0;
   toX: number = 0;

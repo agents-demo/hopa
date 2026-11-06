@@ -21,7 +21,7 @@ import {
 } from '@hopa/core';
 import { WebCapability } from '@hopa/capability-web';
 import { SandboxCapability } from '@hopa/capability-sandbox';
-import { A11yBridge, A11yCapability, UiCapability } from '@hopa/capability-a11y';
+import { A11yBridge, A11yCapability, UiCapability, UiLauncher } from '@hopa/capability-a11y';
 import { SystemCapability } from '@hopa/capability-system';
 import { Context } from '@kit.AbilityKit';
 import { preferences } from '@kit.ArkData';
@@ -203,6 +203,11 @@ export class AgentService {
 
   isNetworkEnabled(): boolean {
     return this.networkEnabled;
+  }
+
+  /** Wires the entry module's app launcher into the ui capability. */
+  setUiLauncher(launcher: UiLauncher): void {
+    this.ui.setLauncher(launcher);
   }
 
   /** Autonomous mode skips non-payment approvals. Payment is still fail-closed. */

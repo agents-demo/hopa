@@ -46,6 +46,19 @@ class RecordingCapability implements ActionCapability {
   }
 }
 
+class CapturingCapability implements ActionCapability {
+  action: Action | undefined = undefined;
+
+  canHandle(kind: string): boolean {
+    return true;
+  }
+
+  async execute(action: Action): Promise<Observation> {
+    this.action = action;
+    return Observation.ok('done');
+  }
+}
+
 class QueueModel implements ModelClient {
   private replies: string[];
   private index: number = 0;
@@ -139,6 +152,49 @@ export default function agentLoopTest(): void {
 
       await loop.run('tap twice');
       expect(loop.getTokens()).assertEqual(14);
+      done();
+    });
+
+    it('defaults_missing_action_fields', 0, async (done: Function) => {
+      const capability = new CapturingCapability();
+      const executor = new ActionExecutor(
+        new ApprovalPolicy(),
+        new FixedApproval(true),
+        new MemoryRecorder()
+      );
+      executor.registerCapability(capability);
+      const model = new QueueModel(['{"kind":"ui.launch"}', '{"kind":"finish"}']);
+      const loop = new AgentLoop(executor, model, 3, new FixedSource(new Screen('x')));
+
+      await loop.run('launch');
+      const parsed: Action | undefined = capability.action;
+      expect(parsed !== undefined).assertTrue();
+      if (parsed !== undefined) {
+        expect(parsed.app).assertEqual('');
+        expect(parsed.target).assertEqual('');
+      }
+      done();
+    });
+
+    it('keeps_the_launch_bundle', 0, async (done: Function) => {
+      const capability = new CapturingCapability();
+      const executor = new ActionExecutor(
+        new ApprovalPolicy(),
+        new FixedApproval(true),
+        new MemoryRecorder()
+      );
+      executor.registerCapability(capability);
+      const model = new QueueModel(
+        ['{"kind":"ui.launch","app":"com.huawei.hmos.settings"}', '{"kind":"finish"}']
+      );
+      const loop = new AgentLoop(executor, model, 3, new FixedSource(new Screen('x')));
+
+      await loop.run('launch');
+      const parsed: Action | undefined = capability.action;
+      expect(parsed !== undefined).assertTrue();
+      if (parsed !== undefined) {
+        expect(parsed.app).assertEqual('com.huawei.hmos.settings');
+      }
       done();
     });
 

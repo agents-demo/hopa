@@ -19,6 +19,8 @@ export class A11yBridge {
   private lastScreen: Screen = new Screen();
   private elements: Map<string, AccessibilityElement> = new Map<string, AccessibilityElement>();
   private nextRef: number = 0;
+  private width: number = 0;
+  private height: number = 0;
 
   static get(): A11yBridge {
     if (A11yBridge.instance === undefined) {
@@ -118,6 +120,44 @@ export class A11yBridge {
     }
   }
 
+  /** System back via the edge-back gesture. */
+  async back(): Promise<boolean> {
+    if (this.width <= 0 || this.height <= 0) {
+      return false;
+    }
+    return this.swipe(2, this.height / 2, this.width * 0.65, this.height / 2);
+  }
+
+  /** Home via the bottom-up gesture. */
+  async home(): Promise<boolean> {
+    if (this.width <= 0 || this.height <= 0) {
+      return false;
+    }
+    return this.swipe(this.width / 2, this.height - 5, this.width / 2, this.height * 0.55);
+  }
+
+  /** Scrolls the content: "down" moves the page down (finger moves up). */
+  async scroll(direction: string): Promise<boolean> {
+    if (this.width <= 0 || this.height <= 0) {
+      return false;
+    }
+    const cx: number = this.width / 2;
+    const cy: number = this.height / 2;
+    const dx: number = this.width * 0.3;
+    const dy: number = this.height * 0.3;
+    const dir: string = direction.toLowerCase();
+    if (dir === 'up') {
+      return this.swipe(cx, cy - dy, cx, cy + dy);
+    }
+    if (dir === 'left') {
+      return this.swipe(cx - dx, cy, cx + dx, cy);
+    }
+    if (dir === 'right') {
+      return this.swipe(cx + dx, cy, cx - dx, cy);
+    }
+    return this.swipe(cx, cy + dy, cx, cy - dy);
+  }
+
   async capture(): Promise<Screen> {
     if (this.context === undefined) {
       return this.lastScreen;
@@ -126,6 +166,11 @@ export class A11yBridge {
       const root = await this.context.getWindowRootElement();
       this.elements.clear();
       this.nextRef = 0;
+      const rootRect = await this.rectAttribute(root);
+      if (rootRect.length === 4) {
+        this.width = rootRect[2];
+        this.height = rootRect[3];
+      }
       const node = await this.convert(root);
       this.lastScreen = new Screen(this.flatten(node), [node]);
       return this.lastScreen;

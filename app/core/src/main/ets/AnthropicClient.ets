@@ -1,4 +1,5 @@
 import { http } from '@kit.NetworkKit';
+import { buffer } from '@kit.ArkTS';
 import { ModelClient, ModelRequest, ModelResponse } from './ModelClient';
 
 class AnthropicMessage {
@@ -71,6 +72,7 @@ export class AnthropicClient implements ModelClient {
           'anthropic-version': '2023-06-01'
         },
         extraData: JSON.stringify(body),
+        expectDataType: http.HttpDataType.ARRAY_BUFFER,
         connectTimeout: 30000,
         readTimeout: 60000
       };
@@ -79,7 +81,8 @@ export class AnthropicClient implements ModelClient {
         result.error = `HTTP ${response.responseCode}`;
         return result;
       }
-      const parsed = JSON.parse(`${response.result}`) as AnthropicResponse;
+      const raw: string = buffer.from(response.result as ArrayBuffer).toString('utf8');
+      const parsed = JSON.parse(raw) as AnthropicResponse;
       result.tokens = parsed.usage.input_tokens + parsed.usage.output_tokens;
       const texts: string[] = [];
       for (const block of parsed.content) {

@@ -102,6 +102,7 @@ export class ApprovalPolicy {
     'ui.scroll',
     'ui.back',
     'ui.home',
+    'ui.launch',
     'ui.wait',
     'ui.observe',
     'a11y.observe',

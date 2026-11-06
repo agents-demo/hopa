@@ -11,7 +11,7 @@ app module supplies device control; HOPA must supply its own HarmonyOS layer.
 
 | # | Mika capability | HOPA today | Gap | Portable? |
 |---|---|---|---|---|
-| 1 | Operates any app **without taking over the screen** | PC-tethered control works; on-device a11y is declared and the ACL is granted, but the emulator has no UI to enable the service | no background display; foreground a11y only | **No** (excluded) |
+| 1 | Operates any app **without taking over the screen** | PC-tethered control works; on-device **launch works without a11y**; capture/tap need the service, which this emulator cannot enable | no background display; foreground a11y only | **No** (excluded) |
 | 2 | Built-in desktop-class browser | single-tab ArkWeb browser; read/click/type wired; verified loading a page | tabs, downloads, uploads, sign-in | yes (ArkWeb) |
 | 3 | "Act on the screen I am looking at" | extension installed and listed by the framework; not enableable on this emulator | needs the service enabled | partial |
 | 4 | Scheduled and conditional tasks | not shipped; the system reminder API failed on the emulator (1700002) | scheduler + triggers | yes, with HarmonyOS background limits |
@@ -27,7 +27,7 @@ app module supplies device control; HOPA must supply its own HarmonyOS layer.
 | 14 | Many model providers + account sign-in | OpenAI-compatible, Anthropic, Gemini, DeepSeek; verified end-to-end on device, including chat with no screen; no OAuth | OAuth sign-in, more presets | yes |
 | 15 | 10 UI languages | English + Simplified Chinese resources for the app shell (tabs, titles, buttons, settings); chat and system messages are still English | more languages, translate messages | yes |
 
-Usable today: **~10.4 of 15** (~69%).
+Usable today: **~10.5 of 15** (~70%).
 
 ## 2. Core package matrix
 
@@ -77,7 +77,7 @@ extension on device.
 
 | Measure | Value |
 |---|---|
-| User-visible capabilities usable | ~10.4 / 15 (~69%) |
+| User-visible capabilities usable | ~10.5 / 15 (~70%) |
 | Portable core ported | ~20% || Shared product surfaces (CLI/MCP, knowledge, records) | ~50% |
 | Device-control layer | replaced, not ported; on-device part blocked by ACL |
 

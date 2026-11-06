@@ -1,4 +1,5 @@
 import { http } from '@kit.NetworkKit';
+import { buffer } from '@kit.ArkTS';
 import { ModelClient, ModelMessage, ModelRequest, ModelResponse } from './ModelClient';
 
 class OpenAiMessage {
@@ -67,6 +68,7 @@ export class OpenAiCompatibleClient implements ModelClient {
           'Authorization': `Bearer ${this.apiKey}`
         },
         extraData: JSON.stringify(body),
+        expectDataType: http.HttpDataType.ARRAY_BUFFER,
         connectTimeout: 30000,
         readTimeout: 60000
       };
@@ -76,7 +78,8 @@ export class OpenAiCompatibleClient implements ModelClient {
         return result;
       }
 
-      const parsed = JSON.parse(`${response.result}`) as OpenAiResponseBody;
+      const raw: string = buffer.from(response.result as ArrayBuffer).toString('utf8');
+      const parsed = JSON.parse(raw) as OpenAiResponseBody;
       if (parsed.usage !== undefined) {
         result.tokens = parsed.usage.total_tokens;
       }

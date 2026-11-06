@@ -66,6 +66,12 @@ export default function approvalPolicyTest(): void {
       expect(policy.requiresApproval(new Action('ui.back'), screen)).assertFalse();
     });
 
+    it('ui_launch_is_allow_listed', 0, () => {
+      const policy = new ApprovalPolicy();
+      expect(policy.requiresApproval(new Action('ui.launch'))).assertFalse();
+      expect(policy.classify(new Action('ui.launch'))).assertEqual(RiskLevel.Read);
+    });
+
     it('autonomous_skips_sensitive_but_never_payment', 0, () => {
       const policy = new ApprovalPolicy();
       policy.setAutonomous(true);

@@ -9,6 +9,7 @@ class ActionPayload {
   target: string = '';
   text: string = '';
   url: string = '';
+  app: string = '';
 }
 
 /**
@@ -85,8 +86,8 @@ export class AgentLoop {
     let screen: Screen = await this.capture();
     let systemText: string =
       'You are HOPA, a phone agent. Propose exactly one JSON action at a time: ' +
-      '{"kind":"web.read","target":"","text":"","url":""}. ' +
-      'The key is "kind", never "action". ' +
+      '{"kind":"web.read","target":"","text":"","url":""}. ' +      'The key is "kind", never "action". ' +
+      'To open another app use {"kind":"ui.launch","app":"<bundle>"}. ' +
       'On a phone screen use element refs from the current screen. Never invent coordinates. ' +
       'On a web page use web.navigate, web.read, web.click or web.type; ' +
       'target is the visible link or button text, or a field placeholder. ' +
@@ -100,8 +101,9 @@ export class AgentLoop {
       systemText = `${systemText}\n\n${this.skill}`;
     }
     if (!this.surfaceAvailable) {
-      systemText = `${systemText}\n\nNo screen is available. Answer with text only; ` +
-        'do not propose any action.';
+      systemText = `${systemText}\n\nNo screen is available. Answer with text only and do not ` +
+        'propose screen actions. You may still propose ' +
+        '{"kind":"ui.launch","app":"<bundle>"} to open an app.';
     }
     const messages: ModelMessage[] = [
       new ModelMessage('system', systemText),
@@ -181,9 +183,10 @@ export class AgentLoop {
         return undefined;
       }
       const action = new Action(payload.kind);
-      action.target = payload.target;
-      action.text = payload.text;
-      action.url = payload.url;
+      action.target = payload.target === undefined ? '' : payload.target;
+      action.text = payload.text === undefined ? '' : payload.text;
+      action.url = payload.url === undefined ? '' : payload.url;
+      action.app = payload.app === undefined ? '' : payload.app;
       // isPayment is never read from the model. The gate classifies it.
       return action;
     } catch (error) {

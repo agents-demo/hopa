@@ -10,6 +10,7 @@ import { MemoryItem } from '../service/MemoryStore';
 import { APP_CATALOG, CatalogApp, SITE_CATALOG, CatalogSite } from '../service/AppCatalog';
 import { RunRecord } from '@hopa/core';
 import { JsSandboxBridge } from '../service/JsSandboxBridge';
+import { AppLauncher } from '../service/AppLauncher';
 
 @Entry
 @Component
@@ -208,6 +209,9 @@ struct Index {
     await this.loadSkills();
     await this.loadRuns();
     await this.loadA11yList();
+    AgentService.get().setUiLauncher(
+      new AppLauncher(getContext(this) as common.UIAbilityContext)
+    );
   }
 
   private async loadSettings(): Promise<void> {

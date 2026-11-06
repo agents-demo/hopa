@@ -1,4 +1,5 @@
 import { http } from '@kit.NetworkKit';
+import { buffer } from '@kit.ArkTS';
 import { ModelClient, ModelRequest, ModelResponse } from './ModelClient';
 
 class GeminiPart {
@@ -90,6 +91,7 @@ export class GeminiClient implements ModelClient {
           'x-goog-api-key': this.apiKey
         },
         extraData: JSON.stringify(body),
+        expectDataType: http.HttpDataType.ARRAY_BUFFER,
         connectTimeout: 30000,
         readTimeout: 60000
       };
@@ -100,7 +102,8 @@ export class GeminiClient implements ModelClient {
         result.error = `HTTP ${response.responseCode}`;
         return result;
       }
-      const parsed = JSON.parse(`${response.result}`) as GeminiResponse;
+      const raw: string = buffer.from(response.result as ArrayBuffer).toString('utf8');
+      const parsed = JSON.parse(raw) as GeminiResponse;
       result.tokens = parsed.usageMetadata.totalTokenCount;
       if (parsed.candidates.length === 0 || parsed.candidates[0].content.parts.length === 0) {
         result.error = 'model returned no candidate';
