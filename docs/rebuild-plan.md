@@ -170,7 +170,7 @@ Module responsibilities:
 - [x] ADR-0004: ACL strategy and foreground fallback (evidence: docs/adr/0004-acl-strategy.md)
 - [x] ADR-0005: PC-tethered vs standalone product split (evidence: docs/adr/0005-pc-tethered-vs-standalone.md)
 - [x] ADR-0006: model provider, budget and cost target per task (evidence: docs/adr/0006-model-provider-and-budget.md)
-- [ ] File the accessibility ACL request in week 1; record ticket, date and contact (critical path)
+- [ ] [BLOCKED: no Huawei developer account or ACL channel] File the accessibility ACL request in week 1; record ticket, date and contact (critical path); package ready in docs/acl-request.md
 - [x] Add `CONTRIBUTING.md` with the evidence rule from §1.1 (evidence: CONTRIBUTING.md)
 - [x] Add `CODEOWNERS` (evidence: CODEOWNERS)
 - [x] Add PR template with the phase checklist (evidence: .github/PULL_REQUEST_TEMPLATE.md)
@@ -708,7 +708,7 @@ Module responsibilities:
 - [ ] Each permission classified `user_grant` or `system_grant`
 - [ ] `requestPermissionsFromUser` flow for every user-grant permission
 - [ ] Denial path: explain, degrade gracefully, never loop on the prompt
-- [ ] ACL request form prepared for each restricted permission
+- [x] ACL request form prepared for each restricted permission (evidence: docs/acl-request.md; only ACCESSIBILITY_EXTENSION_ABILITY is requested)
 - [ ] `module.json5` reviewed by a second person
 - [ ] Privacy manifest / privacy statement matches actual data use
 - [ ] HAR/HSP module boundaries chosen and documented

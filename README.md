@@ -155,7 +155,8 @@ packaged into the app.
 - [docs/knowledge-triage.md](docs/knowledge-triage.md) - the 23 Mika apps classified.
 - [docs/bundles.md](docs/bundles.md) - bundle names verified on a device.
 - [docs/skills.md](docs/skills.md) — the six reusable skill manifests.
-- [docs/a11y.md](docs/a11y.md) — what the accessibility bridge does and does not do.
+- [docs/a11y.md](docs/a11y.md) - what the accessibility bridge does and does not do.
+- [docs/acl-request.md](docs/acl-request.md) - the accessibility ACL request package.
 - [docs/web.md](docs/web.md), [docs/system.md](docs/system.md), [docs/sandbox.md](docs/sandbox.md) — capability designs.
 - [docs/ux.md](docs/ux.md) — screens, states, trust and accessibility.
 - [docs/safety.md](docs/safety.md) — payment, irreversible actions, limits.
