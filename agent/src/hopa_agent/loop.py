@@ -12,6 +12,7 @@ from .executor import DeviceExecutor
 from .models import ModelClient
 from .observation import Observation
 from .records import RunRecord, RunStore
+from .refusal import RefusalPolicy
 
 
 @dataclass
@@ -55,6 +56,7 @@ class AgentLoop:
         max_seconds: float = 300.0,
         max_tokens: int = 50_000,
         trace_id: str | None = None,
+        refusal: RefusalPolicy | None = None,
         clock=time.monotonic,
     ) -> None:
         self.executor = executor
@@ -64,12 +66,25 @@ class AgentLoop:
         self.max_seconds = max_seconds
         self.max_tokens = max_tokens
         self.trace_id = trace_id or uuid.uuid4().hex[:16]
+        self.refusal = refusal or RefusalPolicy()
         self.clock = clock
 
     def run(self, goal: str, *, run_id: str | None = None) -> RunResult:
         run_id = run_id or f"run_{uuid.uuid4().hex[:12]}"
         started_at = datetime.now(UTC).isoformat()
         started = self.clock()
+        refusal = self.refusal.check(goal)
+        if refusal is not None:
+            return RunResult(
+                run_id=run_id,
+                goal=goal,
+                success=False,
+                reason="handover" if refusal.handover else "refused",
+                steps=0,
+                say=refusal.message,
+                started_at=started_at,
+                finished_at=datetime.now(UTC).isoformat(),
+            )
         observation: Observation = self.executor.observe()
         history: list[dict] = []
         seen: set[tuple[str, str]] = set()

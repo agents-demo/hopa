@@ -115,7 +115,7 @@ it, not at the end.
 | HAP | builds with DevEco 6.1.1 / API 24; unsigned | `hvigorw assembleHap` |
 | Knowledge | 12 HarmonyOS system apps; 0 sites, 0 skills | `brain/knowledge/apps` |
 | CI | Python tests + ruff; HAP build and core Local Tests skip with a warning when the mirrored toolchain secret is absent | `.github/workflows/ci.yml` |
-| Tests baseline | 228 Python tests, 34 Kotlin assertions, ArkTS Local Tests pass; 20 bench task files validate | local run 2026-11-06 |
+| Tests baseline | 254 Python tests, 67 Kotlin assertions, ArkTS Local Tests pass; 20 bench task files validate | local run 2026-11-06 |
 
 Known gaps to close first:
 
@@ -806,11 +806,11 @@ Module responsibilities:
 
 ### 10.6 Abuse, content and exfiltration
 
-- [ ] Disallowed-task taxonomy written (illegal, harmful, harassing, fraudulent)
-- [ ] Refusal behaviour implemented with a plain explanation
-- [ ] Jailbreak test suite (20 prompts) green
-- [ ] Indirect prompt injection from web pages and documents tested
-- [ ] Data-exfiltration test: model tries to send screen text to an unapproved URL
+- [x] Disallowed-task taxonomy written (illegal, harmful, harassing, fraudulent) (evidence: docs/abuse.md (taxonomy))
+- [x] Refusal behaviour implemented with a plain explanation (evidence: agent/src/hopa_agent/refusal.py + AgentLoop refusal)
+- [x] Jailbreak test suite (20 prompts) green (evidence: agent/tests/test_refusal.py (20 prompts))
+- [x] Indirect prompt injection from web pages and documents tested (evidence: agent/tests/test_safety.py + PromptBookTest)
+- [x] Data-exfiltration test: model tries to send screen text to an unapproved URL (evidence: agent/tests/test_net.py (unapproved host))
 - [x] URL allow-list enforced inside `ActionExecutor`, not only in the prompt (evidence: agent/src/hopa_agent/net.py + DeviceExecutor)
 - [ ] No user data in URLs, query strings or referrers
 - [ ] MCP server trust model and authentication documented
@@ -818,12 +818,12 @@ Module responsibilities:
 - [ ] Brain-service model key stored in the OS keychain or env, never in the repo or logs
 - [ ] Emergency-number dial blocked and tested (110 / 112 / 119 / 999)
 - [ ] Per-user and per-day rate limits for messaging, posting and buying
-- [ ] CAPTCHA is always handed over, never solved automatically
+- [x] CAPTCHA is always handed over, never solved automatically (evidence: RefusalPolicy CAPTCHA handover + test_refusal)
 - [ ] Account-ban and terms-of-service risk disclosed in onboarding
-- [ ] Scraping limits and robots.txt respect documented
-- [ ] Financial, medical and legal advice refusal policy
-- [ ] Minor-protection policy
-- [ ] Abuse reporting channel and response owner
+- [x] Scraping limits and robots.txt respect documented (evidence: docs/abuse.md (scraping))
+- [x] Financial, medical and legal advice refusal policy (evidence: RefusalPolicy + docs/abuse.md)
+- [x] Minor-protection policy (evidence: docs/abuse.md (minors))
+- [x] Abuse reporting channel and response owner (evidence: docs/abuse.md + SECURITY.md)
 - [ ] Model provider content filter behaviour tested and documented
 
 ---
@@ -985,25 +985,25 @@ Module responsibilities:
 
 ## 13. Phase 8 — Release readiness (3–4 weeks)
 
-- [ ] Version 0.1.0
-- [ ] CHANGELOG
-- [ ] SBOM
+- [x] Version 0.1.0 (evidence: app/AppScope/app.json5 versionName 0.1.0)
+- [x] CHANGELOG (evidence: CHANGELOG.md)
+- [x] SBOM (evidence: docs/sbom.json)
 - [ ] License review: Apache-2.0, MPL-2.0 (Pyodide), MIT (QuickJS), no GPL
 - [ ] Final NOTICE
 - [ ] Export-control review
 - [ ] Privacy policy published
 - [ ] Security policy published
-- [ ] FAQ and troubleshooting
-- [ ] Install and upgrade guide
+- [x] FAQ and troubleshooting (evidence: docs/release.md (FAQ))
+- [x] Install and upgrade guide (evidence: docs/release.md (install/upgrade))
 - [ ] Signed HAP and upgrade path
 - [ ] AppGallery submission, or a recorded decision to distribute by sideload
-- [ ] Rollback plan
+- [x] Rollback plan (evidence: docs/release.md (rollback))
 - [ ] Monitoring and alerting
-- [ ] Support channel
-- [ ] Post-release checklist
+- [x] Support channel (evidence: docs/release.md (support))
+- [x] Post-release checklist (evidence: docs/release.md (post-release))
 - [ ] Tag and release notes
-- [ ] Archive plan for the repo
-- [ ] README states the background-screen limitation
+- [x] Archive plan for the repo (evidence: docs/release.md (archive))
+- [x] README states the background-screen limitation (evidence: README.md (no background screen))
 
 ### 13.1 Operations and compliance
 

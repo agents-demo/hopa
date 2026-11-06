@@ -10,6 +10,9 @@ bundled and offline by default), and **always asks the user before any payment**
 > copied into this repository; see [NOTICE](NOTICE). HOPA does **not** use Mika's
 > GPL sandbox components (e.g. proot).
 
+> **No background screen.** HOPA drives the visible screen only. It does not use
+> a virtual display, and it cannot operate while you are using the phone.
+
 ## Status
 
 Early scaffold / proof of concept. The first milestone is a PC-driven
@@ -143,9 +146,12 @@ packaged into the app.
 - [docs/brain.md](docs/brain.md) — JVM brain endpoints and decision contract.
 - [docs/knowledge.md](docs/knowledge.md) — app knowledge format and the 12 app files.
 - [docs/safety.md](docs/safety.md) — payment, irreversible actions, limits.
+- [docs/abuse.md](docs/abuse.md) — refusal taxonomy, CAPTCHA, scraping.
 - [docs/threat-model.md](docs/threat-model.md) — assets, actors, threats.
 - [docs/privacy.md](docs/privacy.md) — data inventory, retention, consent.
 - [SECURITY.md](SECURITY.md) — reporting and key handling.
+- [CHANGELOG.md](CHANGELOG.md) — version history.
+- [docs/release.md](docs/release.md) — install, upgrade, rollback, support.
 - [docs/status.md](docs/status.md) — honest current state.
 - [docs/roadmap.md](docs/roadmap.md) — milestones G1–G4.
 - [docs/rebuild-plan.md](docs/rebuild-plan.md) — the delivery plan: phases,
