@@ -25,9 +25,9 @@ app module supplies device control; HOPA must supply its own HarmonyOS layer.
 | 12 | Linux sandbox | isolated ArkWeb JavaScript sandbox (`about:blank`, verified: `1+1` -> `2`); Python/WASM not bundled; Linux out of scope | Python/WASM, limits | partial |
 | 13 | CLI + MCP from a computer | `pc-agent` CLI + MCP server | near parity, needs tool breadth | yes |
 | 14 | Many model providers + account sign-in | OpenAI-compatible, Anthropic, Gemini, DeepSeek; verified end-to-end on device, including chat with no screen; no OAuth | OAuth sign-in, more presets | yes |
-| 15 | 10 UI languages | English + Simplified Chinese resources for the app shell (tabs, titles, buttons, settings); chat and system messages are still English | more languages, translate messages | yes |
+| 15 | 10 UI languages | English + Simplified Chinese resources for the shell, greeting and fixed messages; model text follows the model; 2 of 10 languages | more languages, translate all messages | yes |
 
-Usable today: **~10.5 of 15** (~70%).
+Usable today: **~10.6 of 15** (~71%).
 
 ## 2. Core package matrix
 
@@ -77,7 +77,7 @@ extension on device.
 
 | Measure | Value |
 |---|---|
-| User-visible capabilities usable | ~10.5 / 15 (~70%) |
+| User-visible capabilities usable | ~10.6 / 15 (~71%) |
 | Portable core ported | ~20% || Shared product surfaces (CLI/MCP, knowledge, records) | ~50% |
 | Device-control layer | replaced, not ported; on-device part blocked by ACL |
 
