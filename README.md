@@ -150,7 +150,8 @@ packaged into the app.
 - [docs/eval.md](docs/eval.md) — metrics, targets and reproducibility.
 - [docs/brain.md](docs/brain.md) — JVM brain endpoints and decision contract.
 - [docs/knowledge.md](docs/knowledge.md) — app knowledge format and the 12 app files.
-- [docs/knowledge-triage.md](docs/knowledge-triage.md) — the 23 Mika apps classified.
+- [docs/knowledge-triage.md](docs/knowledge-triage.md) - the 23 Mika apps classified.
+- [docs/bundles.md](docs/bundles.md) - bundle names verified on a device.
 - [docs/skills.md](docs/skills.md) — the six reusable skill manifests.
 - [docs/a11y.md](docs/a11y.md) — what the accessibility bridge does and does not do.
 - [docs/web.md](docs/web.md), [docs/system.md](docs/system.md), [docs/sandbox.md](docs/sandbox.md) — capability designs.

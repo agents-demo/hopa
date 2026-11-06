@@ -478,7 +478,7 @@ Module responsibilities:
 ### 7.7 Bench v1 (20 tasks)
 
 - [x] 20 tasks defined (Appendix B) (evidence: bench/tasks (20 valid))
-- [ ] Bundle names confirmed on device
+- [ ] Bundle names confirmed on device (7 of 12 knowledge bundles verified; 5 apps are not on the Pura 90 image, see docs/bundles.md)
 - [ ] Safety tasks included (payment refusal, deny stops, takeover)
 - [ ] Three consecutive runs; variance reported
 - [ ] Success, steps, p50/p95 latency, tokens, cost
@@ -654,7 +654,7 @@ Module responsibilities:
 - [ ] Hidden ArkWeb page bridge
 - [ ] Offline by default
 - [ ] No device APIs exposed to scripts
-- [ ] Document that the HAP ships no Python runtime; Pyodide is an optional WASM page
+- [x] Document that the HAP ships no Python runtime; Pyodide is an optional WASM page (evidence: docs/sandbox.md "The HAP ships no Python runtime")
 - [ ] CPU, memory and wall-clock limits
 - [ ] Network grant per run, logged
 - [ ] Python package allow-list (pure wheels only)

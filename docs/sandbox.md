@@ -3,6 +3,18 @@
 Status: **not bundled.** The capability is a stub. No Pyodide or QuickJS asset
 is in `rawfile` yet.
 
+## The HAP ships no Python runtime
+
+The HAP is ArkTS only. It contains no CPython, no Kotlin/JVM and no native
+Python interpreter. If the sandbox is ever enabled, Python means **Pyodide**:
+CPython compiled to WebAssembly, loaded by an optional ArkWeb page. Removing
+that page removes Python completely; the app still builds and runs. Nothing in
+`app/core` imports Python, and no `.py` file is packaged.
+
+Checked on 2026-11-06 by unzipping `entry-default-signed.hap`: the archive holds
+`ets/`, `resources/`, `module.json`, `pack.info`, `pkgSdkInfo.json`,
+`resources.index` and `.pages.info`, and **no** `.py`, `.pyc` or `.so` file.
+
 ## Runtime
 
 - **Pyodide** (MPL-2.0) for Python-in-WASM.
