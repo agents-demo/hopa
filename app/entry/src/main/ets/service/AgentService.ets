@@ -107,6 +107,7 @@ export class AgentService {
   private networkEnabled: boolean = false;
   private autonomous: boolean = false;
   private lastTokens: number = 0;
+  private lastDurationMs: number = 0;
   private lastGoal: string = '';
   private lastTranscript: string = '';
   private lastSuccess: boolean = false;
@@ -232,6 +233,10 @@ export class AgentService {
     return this.lastTokens;
   }
 
+  getLastDurationMs(): number {
+    return this.lastDurationMs;
+  }
+
   canDraftSkill(): boolean {
     return this.lastSuccess && this.lastGoal.length > 0 && this.lastTranscript.length > 0;
   }
@@ -308,6 +313,7 @@ export class AgentService {
     }
 
     let outcomes: ActionOutcome[] = [];
+    const startedAt: number = Date.now();
     this.lastGoal = goal;
     this.lastSuccess = false;
     this.lastTranscript = '';
@@ -320,6 +326,7 @@ export class AgentService {
       return `Loop error: ${error}`;
     }
     this.lastTokens = this.loop.getTokens();
+    this.lastDurationMs = Date.now() - startedAt;
 
     if (this.loop.wasCancelled() && outcomes.length === 0) {
       return 'Stopped before any action.';

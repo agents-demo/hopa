@@ -21,6 +21,7 @@ struct Index {
   @State busy: boolean = false;
   @State autonomous: boolean = false;
   @State lastTokens: number = 0;
+  @State lastDurationMs: number = 0;
   @State batchText: string = '';
   @State batchResults: BatchItemResult[] = [];
   @State messages: string[] = [
@@ -115,6 +116,7 @@ struct Index {
     this.busy = false;
     this.taskStatus = 'Idle';
     this.lastTokens = service.getLastTokens();
+    this.lastDurationMs = service.getLastDurationMs();
     this.refreshRuns();
   }
 
@@ -753,7 +755,7 @@ struct Index {
         }
       }
       .width('100%')
-      Text(`Last run: ${this.lastTokens} tokens`)
+      Text(`Last run: ${this.lastTokens} tokens · ${(this.lastDurationMs / 1000).toFixed(1)} s`)
         .fontSize(11)
         .fontColor('#999999')
       if (AgentService.get().canDraftSkill()) {
