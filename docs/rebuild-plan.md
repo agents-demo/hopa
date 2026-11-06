@@ -759,7 +759,7 @@ Module responsibilities:
 - [x] Threat model document (evidence: docs/threat-model.md)
 - [ ] External pen-test checklist
 - [x] `SECURITY.md` (evidence: SECURITY.md)
-- [ ] Emergency stop: one visible control cancels the run
+- [x] Emergency stop: one visible control cancels the run (evidence: Chat Send becomes Stop; AgentService.cancel → AgentLoop.cancel; checked before the next model call and after the current action)
 - [x] Audit log tamper-evidence (hash chain) (evidence: RunStore.verify_chain + test_records)
 - [ ] Accessibility scope transparency: what is read, when, and why
 - [ ] Overlay and tapjacking added to the threat model

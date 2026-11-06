@@ -15,9 +15,9 @@ app module supplies device control; HOPA must supply its own HarmonyOS layer.
 | 2 | Built-in desktop-class browser | single-tab ArkWeb browser; read/click/type wired; verified loading a page | tabs, downloads, uploads, sign-in | yes (ArkWeb) |
 | 3 | "Act on the screen I am looking at" | extension installed and listed by the framework; not enableable on this emulator | needs the service enabled | partial |
 | 4 | Scheduled and conditional tasks | not shipped; the system reminder API failed on the emulator (1700002) | scheduler + triggers | yes, with HarmonyOS background limits |
-| 5 | Interrupt, stop, report, continue | resume exists in the Python harness; no UI | steering + UI | yes |
+| 5 | Interrupt, stop, report, continue | Stop button in Chat; loops stops before the next model call; no continue UI | resume + steering UI | yes |
 | 6 | Hold to talk (speech) | none | platform ASR or provider | yes |
-| 7 | Ask / Autonomous modes | Ask only, fail-closed | autonomous mode | yes, by decision |
+| 7 | Ask / Autonomous modes | both modes; autonomous skips non-payment approvals, payment is always fail-closed | — | yes |
 | 8 | Memory and preferences | explicit user memory, persisted, visible and deletable | learned memory + profile | yes |
 | 9 | Learns skills and app knowledge | explicit personal skills + a 27-app catalogue in the app, 21 sites, 6 static skills; no auto-drafting | drafter/import/outcomes | yes |
 | 10 | Batch jobs | none | batch runner | yes |
@@ -27,9 +27,9 @@ app module supplies device control; HOPA must supply its own HarmonyOS layer.
 | 14 | Many model providers + account sign-in | OpenAI-compatible, Anthropic and Gemini | OAuth sign-in, more presets | yes |
 | 15 | 10 UI languages | English only | i18n | yes |
 
-Usable today: **~4 of 15** (browser, memory, CLI/MCP, providers; partial knowledge,
-partial traceability, Ask mode). That is about **a quarter of the user-visible
-surface**.
+Usable today: **~7.5 of 15** (browser, memory, skills, providers, CLI/MCP,
+stop, autonomous mode; partial knowledge, traceability, app control). That is
+about **half of the user-visible surface**.
 
 ## 2. Core package matrix
 
@@ -79,8 +79,8 @@ extension on device.
 
 | Measure | Value |
 |---|---|
-| User-visible capabilities usable | ~2.5 / 15 (~17%) |
-| Portable core ported | ~10-15% |
+| User-visible capabilities usable | ~7.5 / 15 (~50%) |
+| Portable core ported | ~20% |
 | Shared product surfaces (CLI/MCP, knowledge, records) | ~50% |
 | Device-control layer | replaced, not ported; on-device part blocked by ACL |
 

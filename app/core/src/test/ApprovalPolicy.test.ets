@@ -66,6 +66,21 @@ export default function approvalPolicyTest(): void {
       expect(policy.requiresApproval(new Action('ui.back'), screen)).assertFalse();
     });
 
+    it('autonomous_skips_sensitive_but_never_payment', 0, () => {
+      const policy = new ApprovalPolicy();
+      policy.setAutonomous(true);
+      expect(policy.isAutonomous()).assertTrue();
+      expect(policy.requiresApproval(new Action('ui.sendMessage'))).assertFalse();
+      expect(policy.requiresApproval(new Action('payment.confirm'))).assertTrue();
+      const screen = new Screen('Checkout\nTotal ¥9.99\nPay now');
+      expect(policy.requiresApproval(new Action('ui.tap'), screen)).assertTrue();
+    });
+
+    it('ask_mode_still_asks_for_sensitive_actions', 0, () => {
+      const policy = new ApprovalPolicy();
+      expect(policy.requiresApproval(new Action('ui.sendMessage'))).assertTrue();
+    });
+
     it('extracts_amount_and_currency', 0, () => {
       const policy = new ApprovalPolicy();
       const screen = new Screen('Checkout\nTotal ¥1,299.00\nPay now');

@@ -101,6 +101,8 @@ export class AgentService {
   private loop: AgentLoop | undefined = undefined;
   private modelLabel: string = '';
   private networkEnabled: boolean = false;
+  private autonomous: boolean = false;
+  private lastTokens: number = 0;
   private static readonly STORE: string = 'hopa_settings';
   private static readonly RUNS_KEY: string = 'runs_v1';
 
@@ -194,6 +196,27 @@ export class AgentService {
     return this.networkEnabled;
   }
 
+  /** Autonomous mode skips non-payment approvals. Payment is still fail-closed. */
+  setAutonomous(enabled: boolean): void {
+    this.autonomous = enabled;
+    this.policy.setAutonomous(enabled);
+  }
+
+  isAutonomous(): boolean {
+    return this.autonomous;
+  }
+
+  /** Stops the loop before the next model call or after the current action. */
+  cancel(): void {
+    if (this.loop !== undefined) {
+      this.loop.cancel();
+    }
+  }
+
+  getLastTokens(): number {
+    return this.lastTokens;
+  }
+
   /** Restores the last run records shown in the Tasks tab. */
   async loadRuns(context: Context): Promise<void> {
     const store = await preferences.getPreferences(context, AgentService.STORE);
@@ -258,10 +281,16 @@ export class AgentService {
     let outcomes: ActionOutcome[] = [];
     this.loop.setMemory(this.memory.toPrompt());
     this.loop.setSkill(this.skills.toPrompt(goal));
+    this.loop.resetCancel();
     try {
       outcomes = await this.loop.run(goal);
     } catch (error) {
       return `Loop error: ${error}`;
+    }
+    this.lastTokens = this.loop.getTokens();
+
+    if (this.loop.wasCancelled() && outcomes.length === 0) {
+      return 'Stopped before any action.';
     }
 
     if (outcomes.length === 0) {

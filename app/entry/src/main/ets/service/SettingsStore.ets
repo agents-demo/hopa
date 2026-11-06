@@ -7,6 +7,7 @@ export class StoredSettings {
   endpoint: string = 'https://api.openai.com/v1';
   model: string = 'gpt-4o-mini';
   network: boolean = false;
+  autonomous: boolean = false;
 }
 
 /**
@@ -38,6 +39,10 @@ export class SettingsStore {
     if (typeof network === 'boolean') {
       settings.network = network;
     }
+    const autonomous = await store.get('autonomous', settings.autonomous);
+    if (typeof autonomous === 'boolean') {
+      settings.autonomous = autonomous;
+    }
     return settings;
   }
 
@@ -47,6 +52,7 @@ export class SettingsStore {
     await store.put('endpoint', settings.endpoint);
     await store.put('model', settings.model);
     await store.put('network', settings.network);
+    await store.put('autonomous', settings.autonomous);
     await store.flush();
   }
 }

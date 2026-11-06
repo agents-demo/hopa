@@ -51,6 +51,7 @@ class QueueModel implements ModelClient {
   private index: number = 0;
   private tokens: number;
   requests: ModelRequest[] = [];
+  loop: AgentLoop | undefined = undefined;
 
   constructor(replies: string[], tokens: number = 0) {
     this.replies = replies;
@@ -58,6 +59,9 @@ class QueueModel implements ModelClient {
   }
 
   async complete(request: ModelRequest): Promise<ModelResponse> {
+    if (this.index >= 1 && this.loop !== undefined) {
+      this.loop.cancel();
+    }
     const snapshot = new ModelRequest();
     snapshot.messages = request.messages.slice();
     this.requests.push(snapshot);
@@ -101,6 +105,24 @@ export default function agentLoopTest(): void {
       expect(approval.requests).assertEqual(1);
       expect(model.requests[0].messages.length).assertEqual(2);
       expect(model.requests[0].messages[1].content.includes('Checkout')).assertTrue();
+      done();
+    });
+
+    it('cancel_stops_before_the_next_action', 0, async (done: Function) => {
+      const source = new FixedSource(new Screen('Settings'));
+      const model = new QueueModel(['{"kind":"ui.tap"}', '{"kind":"ui.tap"}']);
+      const executor = new ActionExecutor(
+        new ApprovalPolicy(),
+        new FixedApproval(true),
+        new MemoryRecorder()
+      );
+      executor.registerCapability(new RecordingCapability());
+      const loop = new AgentLoop(executor, model, 5, source);
+      model.loop = loop;
+
+      const outcomes = await loop.run('tap twice');
+      expect(outcomes.length).assertEqual(1);
+      expect(loop.wasCancelled()).assertTrue();
       done();
     });
 

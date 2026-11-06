@@ -26,6 +26,7 @@ export class AgentLoop {
   private skill: string = '';
   private budget: ContextBudget = new ContextBudget();
   private tokensUsed: number = 0;
+  private cancelled: boolean = false;
 
   constructor(
     executor: ActionExecutor,
@@ -52,9 +53,23 @@ export class AgentLoop {
     return this.tokensUsed;
   }
 
+  /** Ask the loop to stop before the next model call or after the current action. */
+  cancel(): void {
+    this.cancelled = true;
+  }
+
+  resetCancel(): void {
+    this.cancelled = false;
+  }
+
+  wasCancelled(): boolean {
+    return this.cancelled;
+  }
+
   async run(goal: string): Promise<ActionOutcome[]> {
     const outcomes: ActionOutcome[] = [];
     this.tokensUsed = 0;
+    this.cancelled = false;
     let screen: Screen = await this.capture();
     let systemText: string =
       'You are HOPA, a phone agent. Propose exactly one JSON action at a time. ' +
@@ -75,10 +90,16 @@ export class AgentLoop {
     ];
 
     for (let step = 0; step < this.maxSteps; step++) {
+      if (this.cancelled) {
+        break;
+      }
       const request = new ModelRequest();
       request.messages = this.budget.trim(messages);
       const response: ModelResponse = await this.model.complete(request);
       this.tokensUsed += response.tokens;
+      if (this.cancelled) {
+        break;
+      }
       if (response.error.length > 0) {
         break;
       }
@@ -105,6 +126,9 @@ export class AgentLoop {
       );
 
       if (!outcome.executed || !outcome.observation.success) {
+        break;
+      }
+      if (this.cancelled) {
         break;
       }
     }

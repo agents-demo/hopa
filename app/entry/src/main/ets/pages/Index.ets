@@ -18,6 +18,8 @@ struct Index {
   @State a11yInstalled: string = 'checking…';
   @State draft: string = '';
   @State busy: boolean = false;
+  @State autonomous: boolean = false;
+  @State lastTokens: number = 0;
   @State messages: string[] = [
     'Hi — I am HOPA, your on-device phone agent.',
     'I always ask before any payment.'
@@ -113,7 +115,13 @@ struct Index {
 
     this.busy = false;
     this.taskStatus = 'Idle';
+    this.lastTokens = service.getLastTokens();
     this.refreshRuns();
+  }
+
+  private stopRun(): void {
+    AgentService.get().cancel();
+    this.taskStatus = 'Stopping…';
   }
 
   private saveModel(): void {
@@ -150,7 +158,9 @@ struct Index {
       this.modelEndpoint = stored.endpoint;
       this.modelName = stored.model;
       this.networkEnabled = stored.network;
+      this.autonomous = stored.autonomous;
       AgentService.get().setNetworkEnabled(stored.network);
+      AgentService.get().setAutonomous(stored.autonomous);
     } catch (error) {
       // First run or an unreadable store: keep the defaults.
     }
@@ -162,6 +172,7 @@ struct Index {
     stored.endpoint = this.modelEndpoint;
     stored.model = this.modelName;
     stored.network = this.networkEnabled;
+    stored.autonomous = this.autonomous;
     SettingsStore.save(getContext(this) as Context, stored).catch(() => {
       // Persistence is best effort; the in-memory settings still work.
     });
@@ -340,10 +351,14 @@ struct Index {
           .onSubmit(() => {
             this.send();
           })
-        Button(this.busy ? 'Working…' : 'Send')
-          .enabled(!this.busy)
+        Button(this.busy ? 'Stop' : 'Send')
+          .backgroundColor(this.busy ? '#B42318' : '#0A59F7')
           .onClick(() => {
-            this.send();
+            if (this.busy) {
+              this.stopRun();
+            } else {
+              this.send();
+            }
           })
       }
       .width('100%')
@@ -392,6 +407,38 @@ struct Index {
         .fontColor('#666666')
         .width('100%')
         .maxLines(2)
+
+      Row({ space: 8 }) {
+        Button('Back')
+          .fontSize(12)
+          .height(28)
+          .backgroundColor('#E5E6E8')
+          .fontColor('#333333')
+          .onClick(() => {
+            if (this.webController.accessBackward()) {
+              this.webController.backward();
+            }
+          })
+        Button('Forward')
+          .fontSize(12)
+          .height(28)
+          .backgroundColor('#E5E6E8')
+          .fontColor('#333333')
+          .onClick(() => {
+            if (this.webController.accessForward()) {
+              this.webController.forward();
+            }
+          })
+        Button('Reload')
+          .fontSize(12)
+          .height(28)
+          .backgroundColor('#E5E6E8')
+          .fontColor('#333333')
+          .onClick(() => {
+            this.webController.refresh();
+          })
+      }
+      .width('100%')
 
       Web({ src: 'https://example.com', controller: this.webController })
         .layoutWeight(1)
@@ -578,6 +625,9 @@ struct Index {
         }
       }
       .width('100%')
+      Text(`Last run: ${this.lastTokens} tokens`)
+        .fontSize(11)
+        .fontColor('#999999')
 
       List({ space: 8 }) {
         ForEach(this.runRecords, (run: RunRecord, index: number) => {
@@ -643,6 +693,18 @@ struct Index {
           .enabled(this.a11yAvailable)
           .onChange((on: boolean) => {
             this.accessibilityEnabled = on;
+          })
+      }
+      .width('100%')
+
+      Row() {
+        Text('Autonomous mode (never skips payment)')
+          .layoutWeight(1)
+        Toggle({ type: ToggleType.Switch, isOn: this.autonomous })
+          .onChange((on: boolean) => {
+            this.autonomous = on;
+            AgentService.get().setAutonomous(on);
+            this.persistSettings();
           })
       }
       .width('100%')

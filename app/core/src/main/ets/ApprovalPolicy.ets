@@ -25,6 +25,15 @@ export class PaymentContext {
  * as sensitive (fail-closed).
  */
 export class ApprovalPolicy {
+  private autonomous: boolean = false;
+
+  setAutonomous(autonomous: boolean): void {
+    this.autonomous = autonomous;
+  }
+
+  isAutonomous(): boolean {
+    return this.autonomous;
+  }
   private paymentKinds: Set<string> = new Set<string>([
     'payment.pay',
     'payment.confirm',
@@ -130,6 +139,13 @@ export class ApprovalPolicy {
   }
 
   requiresApproval(action: Action, screen?: Screen): boolean {
+    // Payment is never autonomous. This is the one hard rule.
+    if (this.isPayment(action, screen)) {
+      return true;
+    }
+    if (this.autonomous) {
+      return false;
+    }
     return this.classify(action, screen) !== RiskLevel.Read;
   }
 
