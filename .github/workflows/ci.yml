@@ -49,6 +49,8 @@ jobs:
         run: pytest scripts
       - name: Plan lint
         run: python scripts/plan-status.py --lint
+      - name: Generated app catalogue is current
+        run: python scripts/build-app-catalog.py --check
       - name: Validate benchmark tasks
         run: python -m hopa_bench validate --tasks bench/tasks
 

@@ -84,6 +84,16 @@ package list, so the router can still match the name and answer questions about
 the app, but nothing can launch a made-up package. Replace it only after
 `bm dump -n` confirms the name.
 
+Add `bundle_verified: YYYY-MM-DD` once the bundle is checked on a device. Without
+it, the app catalogue shows the bundle as "unverified".
+
+## The in-app catalogue
+
+`scripts/build-app-catalog.py` reads every `APP.md` and generates
+`app/entry/src/main/ets/service/AppCatalog.ets`, which the **Apps** tab shows.
+The generated file is committed, and `build-app-catalog.py --check` runs in CI
+and in `scripts/run-tests`, so the app and the knowledge cannot drift.
+
 ## Sites
 
 `SITE.md` uses the same strict front matter:

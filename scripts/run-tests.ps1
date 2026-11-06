@@ -51,6 +51,10 @@ Write-Host '=== plan lint ==='
 & $pythonExe @pythonPrefix (Join-Path $root 'scripts\plan-status.py') --lint
 if ($LASTEXITCODE -ne 0) { throw 'plan lint failed' }
 
+Write-Host '=== app catalogue ==='
+& $pythonExe @pythonPrefix (Join-Path $root 'scripts\build-app-catalog.py') --check
+if ($LASTEXITCODE -ne 0) { throw 'app catalogue is stale' }
+
 Write-Host '=== brain tests ==='
 if (Test-Path (Join-Path $root '.tools\kotlinc\bin\kotlinc.bat')) {
     & (Join-Path $PSScriptRoot 'brain.ps1')

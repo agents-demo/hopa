@@ -2,6 +2,7 @@
 name: appgallery
 display: AppGallery
 bundle: com.huawei.hmsapp.appgallery
+bundle_verified: 2026-11-06
 aliases: [应用市场, app store]
 pace: careful
 validated: pending

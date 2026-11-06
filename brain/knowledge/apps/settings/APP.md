@@ -2,6 +2,7 @@
 name: settings
 display: Settings
 bundle: com.huawei.hmos.settings
+bundle_verified: 2026-11-06
 aliases: [设置, settings]
 pace: careful
 validated: pending

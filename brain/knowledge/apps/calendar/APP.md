@@ -2,6 +2,7 @@
 name: calendar
 display: Calendar
 bundle: com.huawei.hmos.calendar
+bundle_verified: 2026-11-06
 aliases: [日历, 日程]
 pace: careful
 validated: pending

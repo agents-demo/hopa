@@ -2,6 +2,7 @@
 name: gallery
 display: Gallery
 bundle: com.huawei.hmos.photos
+bundle_verified: 2026-11-06
 aliases: [图库, 相册]
 pace: careful
 validated: pending

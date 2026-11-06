@@ -32,6 +32,9 @@ echo "=== ruff ==="
 echo "=== plan lint ==="
 "$PY" "$ROOT/scripts/plan-status.py" --lint
 
+echo "=== app catalogue ==="
+"$PY" "$ROOT/scripts/build-app-catalog.py" --check
+
 echo "=== brain tests ==="
 if [ -x "$ROOT/.tools/kotlinc/bin/kotlinc" ] || command -v java >/dev/null 2>&1; then
   bash "$ROOT/scripts/brain.sh"

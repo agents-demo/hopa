@@ -5,6 +5,7 @@ import { Action, PaymentContext, Screen } from '@hopa/core';
 import { AgentService } from '../service/AgentService';
 import { SettingsStore, StoredSettings } from '../service/SettingsStore';
 import { MemoryItem } from '../service/MemoryStore';
+import { APP_CATALOG, CatalogApp } from '../service/AppCatalog';
 import { Skill } from '@hopa/core';
 import { RunRecord } from '@hopa/core';
 
@@ -355,6 +356,59 @@ struct Index {
   }
 
   @Builder
+  AppsPage() {
+    Column({ space: 10 }) {
+      Text(`Apps (${APP_CATALOG.length})`)
+        .fontSize(22)
+        .fontWeight(FontWeight.Bold)
+      Text('Bundles verified on a device can be launched. Unverified bundles are declared but unchecked; unconfirmed apps are known by name only. HOPA never launches a guessed bundle.')
+        .fontSize(13)
+        .fontColor('#666666')
+
+      List({ space: 8 }) {
+        ForEach(APP_CATALOG, (app: CatalogApp, index: number) => {
+          ListItem() {
+            Column({ space: 2 }) {
+              Row({ space: 8 }) {
+                Text(app.display)
+                  .fontSize(15)
+                  .fontWeight(FontWeight.Bold)
+                  .layoutWeight(1)
+                Text(app.verified
+                  ? 'bundle verified'
+                  : (app.confirmed ? 'bundle unverified' : 'no bundle yet'))
+                  .fontSize(11)
+                  .fontColor(app.verified ? '#0A7F3F' : (app.confirmed ? '#B26A00' : '#8A8A8A'))
+              }
+              .width('100%')
+              Text(app.bundle.length > 0 ? app.bundle : 'no HarmonyOS bundle yet')
+                .fontSize(12)
+                .fontColor('#666666')
+              if (app.aliases.length > 0) {
+                Text(app.aliases.slice(0, 3).join(', '))
+                  .fontSize(11)
+                  .fontColor('#999999')
+                  .maxLines(1)
+              }
+            }
+            .width('100%')
+            .padding(10)
+            .backgroundColor('#F7F8FA')
+            .borderRadius(8)
+            .alignItems(HorizontalAlign.Start)
+          }
+        }, (app: CatalogApp) => app.name)
+      }
+      .layoutWeight(1)
+      .width('100%')
+    }
+    .width('100%')
+    .height('100%')
+    .padding(16)
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  @Builder
   TasksPage() {
     Column({ space: 12 }) {
       Text('Task progress')
@@ -685,6 +739,11 @@ struct Index {
         this.WebPage()
       }
       .tabBar('Web')
+
+      TabContent() {
+        this.AppsPage()
+      }
+      .tabBar('Apps')
 
       TabContent() {
         this.TasksPage()

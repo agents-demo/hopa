@@ -2,6 +2,7 @@
 name: contacts
 display: Contacts
 bundle: com.ohos.contacts
+bundle_verified: 2026-11-06
 aliases: [联系人, 通讯录]
 pace: careful
 validated: pending
