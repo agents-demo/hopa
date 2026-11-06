@@ -37,5 +37,6 @@ export { RunStore } from './src/main/ets/RunStore';
 export { AgentLoop } from './src/main/ets/AgentLoop';
 export { ContextBudget } from './src/main/ets/ContextBudget';
 export { Skill, SkillBook } from './src/main/ets/Skills';
+export { SkillDraft, SkillDrafter } from './src/main/ets/SkillDrafter';
 export { BatchItemResult, BatchRunner } from './src/main/ets/BatchRunner';
 export { Screen, ScreenNode, ScreenSource } from './src/main/ets/Screen';

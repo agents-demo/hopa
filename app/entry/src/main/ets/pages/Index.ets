@@ -286,6 +286,17 @@ struct Index {
     this.skills = AgentService.get().skills.all().slice();
   }
 
+  private draftLastSkill(): void {
+    const skill: Skill | undefined = AgentService.get().saveLastRunAsSkill();
+    if (skill !== undefined) {
+      this.refreshSkills();
+      this.saveSkills();
+      this.messages = this.messages.concat([
+        `HOPA: saved "${skill.name}" as a skill. Edit it in Memory & skills.`
+      ]);
+    }
+  }
+
   private async loadSkills(): Promise<void> {
     try {
       await AgentService.get().skills.load(getContext(this) as Context);
@@ -738,6 +749,14 @@ struct Index {
       Text(`Last run: ${this.lastTokens} tokens`)
         .fontSize(11)
         .fontColor('#999999')
+      if (AgentService.get().canDraftSkill()) {
+        Button('Save last run as skill')
+          .fontSize(12)
+          .height(30)
+          .onClick(() => {
+            this.draftLastSkill();
+          })
+      }
 
       List({ space: 8 }) {
         ForEach(this.runRecords, (run: RunRecord, index: number) => {

@@ -5,6 +5,7 @@ import toolRegistryTest from './ToolRegistry.test';
 import skillsTest from './Skills.test';
 import contextBudgetTest from './ContextBudget.test';
 import batchRunnerTest from './BatchRunner.test';
+import skillDrafterTest from './SkillDrafter.test';
 
 export default function testsuite(): void {
   approvalPolicyTest();
@@ -14,4 +15,5 @@ export default function testsuite(): void {
   skillsTest();
   contextBudgetTest();
   batchRunnerTest();
+  skillDrafterTest();
 }

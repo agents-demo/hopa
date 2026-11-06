@@ -19,7 +19,7 @@ app module supplies device control; HOPA must supply its own HarmonyOS layer.
 | 6 | Hold to talk (speech) | none | platform ASR or provider | yes |
 | 7 | Ask / Autonomous modes | both modes; autonomous skips non-payment approvals, payment is always fail-closed | — | yes |
 | 8 | Memory and preferences | explicit user memory, persisted, visible and deletable | learned memory + profile | yes |
-| 9 | Learns skills and app knowledge | explicit personal skills + a 27-app catalogue in the app, 21 sites, 6 static skills; no auto-drafting | drafter/import/outcomes | yes |
+| 9 | Learns skills and app knowledge | explicit skills + draft from a successful run + 27-app/21-site catalogue; no automatic trial/scoring | drafter trial+outcomes | yes |
 | 10 | Batch jobs | sequential batch runner in Tasks (one goal per line), stop between goals; no scheduling or parallelism | parallel/scheduled batches | yes |
 | 11 | Traceable runs | `RunStore` records only | trace, usage, cost, eval | yes |
 | 12 | Linux sandbox | WASM stub, nothing bundled | Linux is out of scope; WASM only | no (Linux) |
@@ -27,9 +27,7 @@ app module supplies device control; HOPA must supply its own HarmonyOS layer.
 | 14 | Many model providers + account sign-in | OpenAI-compatible, Anthropic and Gemini | OAuth sign-in, more presets | yes |
 | 15 | 10 UI languages | English only | i18n | yes |
 
-Usable today: **~8.6 of 15** (browser, memory, skills, providers, CLI/MCP,
-stop, autonomous mode, batch; partial knowledge, traceability, app control).
-That is about **57% of the user-visible surface**.
+Usable today: **~8.7 of 15** (~58%).
 
 ## 2. Core package matrix
 
@@ -79,7 +77,7 @@ extension on device.
 
 | Measure | Value |
 |---|---|
-| User-visible capabilities usable | ~8.6 / 15 (~57%) |
+| User-visible capabilities usable | ~8.7 / 15 (~58%) |
 | Portable core ported | ~20% |
 | Shared product surfaces (CLI/MCP, knowledge, records) | ~50% |
 | Device-control layer | replaced, not ported; on-device part blocked by ACL |

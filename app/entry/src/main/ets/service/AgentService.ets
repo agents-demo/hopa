@@ -30,6 +30,7 @@ import { BrowserController } from './BrowserController';
 import { MemoryItem, MemoryStore } from './MemoryStore';
 import { SkillStore } from './SkillStore';
 import { Skill } from '@hopa/core';
+import { SkillDraft, SkillDrafter } from '@hopa/core';
 
 /** Called when an action needs the user's decision. Must be fail-closed. */
 export type ApprovalPrompt = (action: Action, screen: Screen | undefined) => Promise<boolean>;
@@ -106,6 +107,9 @@ export class AgentService {
   private networkEnabled: boolean = false;
   private autonomous: boolean = false;
   private lastTokens: number = 0;
+  private lastGoal: string = '';
+  private lastTranscript: string = '';
+  private lastSuccess: boolean = false;
   private static readonly STORE: string = 'hopa_settings';
   private static readonly RUNS_KEY: string = 'runs_v1';
 
@@ -228,6 +232,19 @@ export class AgentService {
     return this.lastTokens;
   }
 
+  canDraftSkill(): boolean {
+    return this.lastSuccess && this.lastGoal.length > 0 && this.lastTranscript.length > 0;
+  }
+
+  /** Saves the last successful run as a skill the user can edit or delete. */
+  saveLastRunAsSkill(): Skill | undefined {
+    const draft: SkillDraft | undefined = SkillDrafter.draft(this.lastGoal, this.lastTranscript);
+    if (draft === undefined) {
+      return undefined;
+    }
+    return this.skills.add(draft.name, draft.trigger, draft.guidance);
+  }
+
   /** Restores the last run records shown in the Tasks tab. */
   async loadRuns(context: Context): Promise<void> {
     const store = await preferences.getPreferences(context, AgentService.STORE);
@@ -290,6 +307,9 @@ export class AgentService {
     }
 
     let outcomes: ActionOutcome[] = [];
+    this.lastGoal = goal;
+    this.lastSuccess = false;
+    this.lastTranscript = '';
     this.loop.setMemory(this.memory.toPrompt());
     this.loop.setSkill(this.skills.toPrompt(goal));
     this.loop.resetCancel();
@@ -315,6 +335,11 @@ export class AgentService {
         outcome.observation.summary.length > 0 ? outcome.observation.summary : outcome.observation.detail;
       lines.push(`${outcome.action.kind} -> ${state}: ${detail}`);
     }
-    return lines.join('\n');
+    const transcript: string = lines.join('\n');
+    this.lastTranscript = transcript;
+    this.lastSuccess = !this.loop.wasCancelled() && outcomes.every(
+      (outcome: ActionOutcome) => outcome.executed && outcome.observation.success
+    );
+    return transcript;
   }
 }
