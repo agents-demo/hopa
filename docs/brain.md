@@ -74,12 +74,21 @@ Response (a `schemaVersion: 1` decision):
 
 Returns the decisions recorded for that session, in order.
 
+### `GET /knowledge?q=...`
+
+Returns the loaded HarmonyOS knowledge entries, optionally filtered by the same
+lexical matcher used by `/decide`.
+
+```json
+{ "entries": [ { "name": "settings", "display": "Settings", "bundle": "com.huawei.hmos.settings" } ] }
+```
+
 ## Tests
 
 `scripts/brain.sh` runs:
 
 - `RouterTest` — 17 routing assertions
-- `ServerTest` — 17 HTTP assertions
+- `ServerTest` — 20 HTTP assertions
 - `KnowledgeLoaderTest` — 14 format assertions
 - `PromptBookTest` — 16 prompt/intent assertions
 

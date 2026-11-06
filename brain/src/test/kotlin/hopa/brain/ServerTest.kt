@@ -72,6 +72,12 @@ fun main() {
             .getAsJsonArray("decisions")
         check(decisions.size() == 2, "session has two decisions")
 
+        val knowledge = get("/knowledge?q=settings")
+        check(knowledge.first == 200, "knowledge status")
+        check(knowledge.second.contains("com.huawei.hmos.settings"), "knowledge bundle")
+        val all = get("/knowledge")
+        check(all.first == 200 && all.second.contains("entries"), "knowledge list")
+
         val invalid = post("{")
         check(invalid.first == 400, "invalid JSON is rejected")
 

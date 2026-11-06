@@ -14,7 +14,7 @@ met; the toolchain and tethered claims are.
 | Area | State | Evidence |
 |---|---|---|
 | `agent/` loop, gate, policy, records | working, tested | `pytest agent` |
-| `brain/` Kotlin router + HTTP service + knowledge loader + prompts | working, 64 assertions + schema contract | `scripts/brain.ps1` |
+| `brain/` Kotlin router + HTTP service + knowledge loader + prompts | working, 67 assertions + schema contract | `scripts/brain.ps1` |
 | `pc-agent` CLI + MCP | working; live device commands work | `pc-agent devices` |
 | `bench` 20 task definitions | valid | `pytest bench`, `validate` |
 | Observation/action/decision/record schemas | v1 | `schemas/` |

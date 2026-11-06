@@ -28,7 +28,7 @@ and a Pura 90 phone emulator**.
 | `pytest agent` | 149 passed |
 | Agent coverage | 90% (`--cov-fail-under=80`) |
 | Combined run | 228 passed |
-| Kotlin router + server (`RouterTest`, `ServerTest`) | 34 assertions passed |
+| Kotlin router + server (`RouterTest`, `ServerTest`) | 37 assertions passed |
 | Kotlin knowledge loader (`KnowledgeLoaderTest`) | 14 assertions passed |
 | Kotlin prompt contract (`PromptBookTest`) | 16 assertions passed |
 | Brain contract (`/decide` vs schema) | pass |

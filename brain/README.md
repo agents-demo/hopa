@@ -28,7 +28,7 @@ compiles `brain/src`, and runs `RouterTest` and `ServerTest`:
 
 ```text
 RouterTest: 17 assertions passed
-ServerTest: 17 assertions passed
+ServerTest: 20 assertions passed
 ```
 
 The HTTP contract is documented in [`docs/brain.md`](../docs/brain.md).

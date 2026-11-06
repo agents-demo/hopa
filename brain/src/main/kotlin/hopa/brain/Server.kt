@@ -6,6 +6,9 @@ import com.google.gson.JsonParser
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpServer
 import java.net.InetSocketAddress
+import java.net.URLDecoder
+import java.nio.file.Files
+import java.nio.file.Path
 import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.ExecutorService
@@ -89,6 +92,10 @@ class BrainService(
 
     fun session(id: String): List<Map<String, Any?>>? = sessions[id]
 
+    fun entries(): List<KnowledgeEntry> = entries
+
+    fun search(query: String): List<KnowledgeEntry> = store.matchTask(query, limit = 10)
+
     private fun isPayment(text: String): Boolean {
         val lowered = text.lowercase()
         return listOf("pay", "payment", "checkout", "支付", "付款", "结算").any {
@@ -115,6 +122,7 @@ class BrainServer(
             respond(exchange, 200, mapOf("version" to "0.1.0", "contract" to "1"))
         }
         server.createContext("/decide") { exchange -> handleDecide(exchange) }
+        server.createContext("/knowledge") { exchange -> handleKnowledge(exchange) }
         server.createContext("/session/") { exchange -> handleSession(exchange) }
         val pool = Executors.newFixedThreadPool(4) { runnable ->
             Thread(runnable).apply { isDaemon = true }
@@ -151,6 +159,28 @@ class BrainServer(
             log(traceId, "error", mapOf("message" to (exc.message ?: exc.javaClass.simpleName)))
             respond(exchange, 400, mapOf("error" to "invalid request"))
         }
+    }
+
+    private fun handleKnowledge(exchange: HttpExchange) {
+        if (exchange.requestMethod != "GET") {
+            respond(exchange, 405, mapOf("error" to "GET required"))
+            return
+        }
+        val query = exchange.requestURI.query ?: ""
+        val raw = query.split("&")
+            .firstOrNull { it.startsWith("q=") }
+            ?.substring(2)
+            ?: ""
+        val text = URLDecoder.decode(raw, "UTF-8")
+        val matches = if (text.isBlank()) service.entries() else service.search(text)
+        val payload = matches.map { entry ->
+            mapOf(
+                "name" to entry.name,
+                "display" to entry.display,
+                "bundle" to (entry.packages.firstOrNull() ?: ""),
+            )
+        }
+        respond(exchange, 200, mapOf("entries" to payload))
     }
 
     private fun handleSession(exchange: HttpExchange) {
@@ -203,7 +233,12 @@ class BrainServer(
 
 fun main(args: Array<String>) {
     val port = args.firstOrNull()?.toIntOrNull() ?: 8731
-    val entries = DemoEntries.all
+    val knowledgeDir = Path.of(args.getOrNull(1) ?: "brain/knowledge/apps")
+    val entries = if (Files.exists(knowledgeDir)) {
+        KnowledgeLoader.load(knowledgeDir).map { it.entry }
+    } else {
+        DemoEntries.all
+    }
     val service = BrainService(KnowledgeStore(entries), entries)
     val server = BrainServer(service, port)
     val actual = server.start()

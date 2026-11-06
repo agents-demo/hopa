@@ -111,7 +111,7 @@ it, not at the end.
 | Agent loop | captures the screen, asks for one action, gates, records | `AgentLoop.ets` |
 | `pc-agent` | CLI + MCP implemented: devices, dump, tap, double-tap, long-press, type, swipe, screenshot, launch, stop, key, install, uninstall, apps | `pc-agent/src` |
 | `bench` | 20 task files valid (5 device-confirmed), runner, stub model, CLI | `bench/tasks` |
-| Brain | Kotlin router + HTTP service + knowledge loader + prompts (64 assertions + schema contract) | `brain/src`, `docs/brain.md` |
+| Brain | Kotlin router + HTTP service + knowledge loader + prompts (67 assertions + schema contract) | `brain/src`, `docs/brain.md` |
 | HAP | builds with DevEco 6.1.1 / API 24; unsigned | `hvigorw assembleHap` |
 | Knowledge | 12 HarmonyOS system apps; 0 sites, 0 skills | `brain/knowledge/apps` |
 | CI | Python tests + ruff; HAP build and core Local Tests skip with a warning when the mirrored toolchain secret is absent | `.github/workflows/ci.yml` |
@@ -416,7 +416,7 @@ Module responsibilities:
 - [ ] Add `packageAliases` for HarmonyOS bundles
 - [x] Front-matter parser validates all files (evidence: KnowledgeLoaderTest (front-matter parser))
 - [x] Loader unit tests (evidence: KnowledgeLoaderTest (14 assertions))
-- [ ] `knowledge_search` returns HarmonyOS entries only
+- [x] `knowledge_search` returns HarmonyOS entries only (evidence: GET /knowledge + KnowledgeLoader platform check + ServerTest)
 - [x] `docs/knowledge.md` explains the format and how to add an app (evidence: docs/knowledge.md)
 
 ### 7.3 Routing
