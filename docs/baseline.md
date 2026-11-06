@@ -29,6 +29,8 @@ and a Pura 90 phone emulator**.
 | Agent coverage | 90% (`--cov-fail-under=80`) |
 | Combined run | 228 passed |
 | Kotlin router + server (`RouterTest`, `ServerTest`) | 34 assertions passed |
+| Kotlin knowledge loader (`KnowledgeLoaderTest`) | 14 assertions passed |
+| Kotlin prompt contract (`PromptBookTest`) | 16 assertions passed |
 | Brain contract (`/decide` vs schema) | pass |
 | Kotlin / JDK | 2.1.0 / 17 |
 | `hopa-bench validate --tasks bench/tasks` | 20 tasks valid |

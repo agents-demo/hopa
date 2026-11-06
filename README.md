@@ -141,6 +141,7 @@ packaged into the app.
   failure taxonomy.
 - [docs/eval.md](docs/eval.md) — metrics, targets and reproducibility.
 - [docs/brain.md](docs/brain.md) — JVM brain endpoints and decision contract.
+- [docs/knowledge.md](docs/knowledge.md) — app knowledge format and the 12 app files.
 - [docs/safety.md](docs/safety.md) — payment, irreversible actions, limits.
 - [docs/threat-model.md](docs/threat-model.md) — assets, actors, threats.
 - [docs/privacy.md](docs/privacy.md) — data inventory, retention, consent.

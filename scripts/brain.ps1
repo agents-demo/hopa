@@ -34,4 +34,10 @@ $classpath = "$out;$gson"
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 & java -cp $classpath hopa.brain.ServerTestKt
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+& java -cp $classpath hopa.brain.KnowledgeLoaderTestKt (Join-Path $root "brain/knowledge/apps")
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+& java -cp $classpath hopa.brain.PromptBookTestKt
 exit $LASTEXITCODE

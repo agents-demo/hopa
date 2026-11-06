@@ -80,6 +80,8 @@ Returns the decisions recorded for that session, in order.
 
 - `RouterTest` — 17 routing assertions
 - `ServerTest` — 17 HTTP assertions
+- `KnowledgeLoaderTest` — 14 format assertions
+- `PromptBookTest` — 16 prompt/intent assertions
 
 `scripts/brain-contract.py` starts the server, calls `/decide`, and validates the
 reply against `schemas/decision.schema.json`.
@@ -87,6 +89,6 @@ reply against `schemas/decision.schema.json`.
 ## Not in this slice
 
 - model calls
-- the Mika knowledge corpus
+- the Mika 23-app and 18-site corpus
 - skills and the guide catalog
 - ArkTS parity

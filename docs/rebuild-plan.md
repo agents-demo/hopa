@@ -111,9 +111,9 @@ it, not at the end.
 | Agent loop | captures the screen, asks for one action, gates, records | `AgentLoop.ets` |
 | `pc-agent` | CLI + MCP implemented: devices, dump, tap, double-tap, long-press, type, swipe, screenshot, launch, stop, key, install, uninstall, apps | `pc-agent/src` |
 | `bench` | 20 task files valid (5 device-confirmed), runner, stub model, CLI | `bench/tasks` |
-| Brain | Kotlin router + HTTP service (34 assertions + schema contract) | `brain/src`, `docs/brain.md` |
+| Brain | Kotlin router + HTTP service + knowledge loader + prompts (64 assertions + schema contract) | `brain/src`, `docs/brain.md` |
 | HAP | builds with DevEco 6.1.1 / API 24; unsigned | `hvigorw assembleHap` |
-| Knowledge | none: 0 `APP.md`, 0 sites, 0 skills | — |
+| Knowledge | 12 HarmonyOS system apps; 0 sites, 0 skills | `brain/knowledge/apps` |
 | CI | Python tests + ruff; HAP build and core Local Tests skip with a warning when the mirrored toolchain secret is absent | `.github/workflows/ci.yml` |
 | Tests baseline | 228 Python tests, 34 Kotlin assertions, ArkTS Local Tests pass; 20 bench task files validate | local run 2026-11-06 |
 
@@ -404,20 +404,20 @@ Module responsibilities:
 
 ### 7.2 Knowledge port
 
-- [ ] Copy the knowledge schema and loader
+- [x] Copy the knowledge schema and loader (evidence: brain/src/main/kotlin/hopa/brain/KnowledgeLoader.kt (clean-room))
 - [ ] Inventory Mika's 23 apps and 18 sites; mark Android-only fields
 - [ ] Triage the 23 apps: available on HarmonyOS, web-only, or absent; record the evidence
 - [ ] Build the HarmonyOS bundle map from `hdc shell bm dump -a`
 - [ ] Rewrite `APP.md` for the 10 highest-value apps that exist on HarmonyOS
 - [ ] Rewrite `APP.md` for the remaining HarmonyOS-available apps; drop absent apps with a written note
 - [ ] Rewrite `SITE.md` for 18 sites (domains mostly reusable)
-- [ ] Add 12 HarmonyOS system apps: Settings, Clock, Calendar, Contacts, Notepad, Files, Camera, Gallery, Browser, AppGallery, Petal Maps, Music
-- [ ] Add `pace: careful` to every irreversible app path
+- [x] Add 12 HarmonyOS system apps: Settings, Clock, Calendar, Contacts, Notepad, Files, Camera, Gallery, Browser, AppGallery, Petal Maps, Music (evidence: brain/knowledge/apps (12 files))
+- [x] Add `pace: careful` to every irreversible app path (evidence: 12 APP.md files + KnowledgeLoaderTest)
 - [ ] Add `packageAliases` for HarmonyOS bundles
-- [ ] Front-matter parser validates all files
-- [ ] Loader unit tests
+- [x] Front-matter parser validates all files (evidence: KnowledgeLoaderTest (front-matter parser))
+- [x] Loader unit tests (evidence: KnowledgeLoaderTest (14 assertions))
 - [ ] `knowledge_search` returns HarmonyOS entries only
-- [ ] `docs/knowledge.md` explains the format and how to add an app
+- [x] `docs/knowledge.md` explains the format and how to add an app (evidence: docs/knowledge.md)
 
 ### 7.3 Routing
 
@@ -440,15 +440,15 @@ Module responsibilities:
 ### 7.4 Prompts and skills
 
 - [ ] Port 118 prompts; strip Android-only tool names
-- [ ] Port `intent_gate` (DISCUSS / READ / ACT)
-- [ ] Port `channels.md` decision order
+- [x] Port `intent_gate` (DISCUSS / READ / ACT) (evidence: brain/src/main/kotlin/hopa/brain/Prompts.kt + PromptBookTest)
+- [x] Port `channels.md` decision order (evidence: brain/src/main/kotlin/hopa/brain/Prompts.kt + PromptBookTest)
 - [ ] Port `roles/app_knowledge*.md`
 - [ ] Port 6 skills (9 files: manifests, references and the PDF script) and validate manifests
 - [ ] Port personal skill creation
 - [ ] Port the app-notes draft → trial → verified flow
-- [ ] Prompt size budget and truncation rules
+- [x] Prompt size budget and truncation rules (evidence: PromptBook.MAX_SCREEN_CHARS + PromptBookTest)
 - [ ] Token accounting per step
-- [ ] Prompt-injection tests: screen text cannot issue instructions
+- [x] Prompt-injection tests: screen text cannot issue instructions (evidence: PromptBookTest (screen text only in user message) + agent/tests/test_safety.py)
 - [ ] Prompt snapshot tests (golden files)
 
 ### 7.5 Memory and records
@@ -471,7 +471,7 @@ Module responsibilities:
 - [ ] Selectors survive text and locale changes (ids first, text second)
 - [ ] Fallback when a known screen is missing
 - [ ] Contribution guide: add an app in one file
-- [ ] Knowledge schema and front matter validated in CI
+- [x] Knowledge schema and front matter validated in CI (evidence: CI brain job runs KnowledgeLoaderTest)
 - [ ] Track HarmonyOS vs Android divergence per app
 - [ ] Record regional and locale variants
 - [ ] Verify the documents skill (PDF extraction) on HarmonyOS

@@ -10,6 +10,8 @@ and never copies Android-only code.
 | 2026-11-05 | `KnowledgeStore.packageFor` | `brain/src/main/kotlin/hopa/brain/Router.kt` | clean-room reimplementation | alias and package map |
 | 2026-11-05 | — | `pc-agent apps` | new code | installed bundle listing from `bm dump -a` |
 | 2026-11-05 | — | `brain/src/main/kotlin/hopa/brain/Server.kt` | new code | `/health`, `/version`, `/decide`, `/session/{id}`; JDK HTTP server + Gson |
+| 2026-11-06 | `core/knowledge/` format | `brain/src/main/kotlin/hopa/brain/KnowledgeLoader.kt` | clean-room | Markdown + front matter; 12 HarmonyOS system app files |
+| 2026-11-06 | `core/prompt/` rules | `brain/src/main/kotlin/hopa/brain/Prompts.kt` | clean-room | system rules, intent gate, channel order, truncation |
 
 No Mika source file is copied. The routing rules are reimplemented from the
 documented behaviour; Mika is credited in `NOTICE`.

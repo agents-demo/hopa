@@ -39,6 +39,8 @@ The HTTP contract is documented in [`docs/brain.md`](../docs/brain.md).
 - `KnowledgeStore.packageFor`
 - `KnowledgeStore.byPackage` / `byDomain`
 - `ChannelAdvisor.line` — app vs web vs signed-in
+- `KnowledgeLoader` — Markdown + front matter for 12 HarmonyOS apps
+- `PromptBook` — system rules, intent gate, channel order, truncation
 - `GET /health`, `GET /version`, `POST /decide`, `GET /session/{id}`
 
 ## Not in this slice
