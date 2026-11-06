@@ -115,7 +115,7 @@ it, not at the end.
 | HAP | builds with DevEco 6.1.1 / API 24; signed with the SDK local debug kit; installed on the Pura 90 emulator | `scripts/sign-app.ps1` |
 | Knowledge | 27 apps (12 system + 15 Mika catalogued), 21 sites, 6 skills | `brain/knowledge`, `docs/knowledge-triage.md` |
 | CI | Python tests + ruff; HAP build and core Local Tests skip with a warning when the mirrored toolchain secret is absent | `.github/workflows/ci.yml` |
-| Tests baseline | 254 Python tests, 98 Kotlin assertions, ArkTS Local Tests pass; 20 bench tasks validate; device bench 5/7 | local run 2026-11-06 |
+| Tests baseline | 268 Python tests, 98 Kotlin assertions, ArkTS Local Tests pass; 20 bench tasks validate; device bench 5/7 | local run 2026-11-06 |
 
 Known gaps to close first:
 

@@ -129,9 +129,14 @@ The reference loop runs on the PC for M1:
 hopa-agent observe --json
 hopa-agent observe --screenshot --out .hopa/screens
 hopa-agent run "Open Settings and reach Bluetooth" --steps steps.json
+hopa-agent run "open settings" --model openai --brain http://127.0.0.1:8731
 hopa-agent records --path .hopa/runs.jsonl
 hopa-agent verify-chain --path .hopa/runs.jsonl
 ```
+
+With `--brain` (or `HOPA_BRAIN_URL`), the JVM brain picks the first action from
+the app knowledge base, then the model drives the rest. See
+[docs/brain.md](docs/brain.md).
 
 The shipped HAP is **ArkTS only**. Python is the development harness; it is not
 packaged into the app.

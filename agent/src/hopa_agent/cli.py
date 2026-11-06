@@ -10,6 +10,7 @@ from hopa_pc_agent.device import Device
 from hopa_pc_agent.errors import HopaError
 
 from . import __version__
+from .brain import BrainClient, BrainFirstModel, installed_bundles
 from .capture import capture
 from .errors import AgentError, SchemaError
 from .executor import DeviceExecutor
@@ -42,6 +43,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--base-url", default=os.environ.get("HOPA_BASE_URL", "https://api.openai.com/v1")
     )
     run.add_argument("--model-name", default=os.environ.get("HOPA_MODEL", "gpt-4o-mini"))
+    run.add_argument(
+        "--brain",
+        default=os.environ.get("HOPA_BRAIN_URL", ""),
+        help="JVM brain base URL, e.g. http://127.0.0.1:8080 (optional)",
+    )
     run.add_argument("--api-key-env", default="HOPA_API_KEY")
     run.add_argument("--record", type=Path, default=Path(".hopa/runs.jsonl"))
     run.add_argument("--max-steps", type=int, default=12)
@@ -142,6 +148,12 @@ def _cmd_run(args: argparse.Namespace) -> int:
         )
 
     device = _make_device(args)
+    if args.brain:
+        model = BrainFirstModel(
+            BrainClient(args.brain),
+            installed_bundles(device),
+            model,
+        )
     store = RunStore(args.record)
     executor = DeviceExecutor(
         device,

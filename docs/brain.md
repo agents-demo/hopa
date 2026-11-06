@@ -83,16 +83,48 @@ lexical matcher used by `/decide`.
 { "entries": [ { "name": "settings", "display": "Settings", "bundle": "com.huawei.hmos.settings" } ] }
 ```
 
+## PC harness integration
+
+The harness asks the brain for the **first** action, then delegates later steps to the model:
+
+```bash
+# terminal 1: the brain
+java -cp "brain/build/brain.jar;.tools/gson-2.11.0.jar" hopa.brain.ServerKt 8731
+
+# terminal 2: the loop, with the brain in front of the model
+hopa-agent run "open settings" --model openai --brain http://127.0.0.1:8731
+```
+
+Or set `HOPA_BRAIN_URL`. `BrainFirstModel` behaves as follows:
+
+- step 0: call `/decide` with the goal and the installed bundles;
+- a `ui.launch` action is executed first;
+- `needUser` stops before the model and surfaces `say` + `options`;
+- an app with `bundle: UNCONFIRMED` produces `needUser` ("No app bundle ... the
+  web channel is next") instead of a guessed launch;
+- if the brain is down, the wrapper records the error and falls back to the
+  model, so a missing brain never blocks a run.
+
+The brain is optional in the PC loop and not used by the phone app yet.
+
+Verified against the running service on 2026-11-06:
+
+| Goal | Result |
+|---|---|
+| `open settings` | `ui.launch com.huawei.hmos.settings` |
+| `open calendar` | `ui.launch com.huawei.hmos.calendar` |
+| `open wechat` | `needUser`: no bundle, web channel next |
+
 ## Tests
 
 `scripts/brain.sh` runs:
 
-- `RouterTest` — 17 routing assertions
+- `RouterTest` — 19 routing assertions
 - `ServerTest` — 20 HTTP assertions
-- `KnowledgeLoaderTest` — 14 format assertions
+- `KnowledgeLoaderTest` — 18 format assertions
 - `PromptBookTest` — 16 prompt/intent assertions
 - `SkillLoaderTest` — 11 skill assertions
-- `SiteLoaderTest` — 11 site assertions
+- `SiteLoaderTest` — 14 site assertions
 
 `scripts/brain-contract.py` starts the server, calls `/decide`, and validates the
 reply against `schemas/decision.schema.json`.
