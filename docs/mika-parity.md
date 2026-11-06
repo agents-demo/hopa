@@ -136,14 +136,17 @@ Needs a product decision before porting:
 Order chosen so every step works without the ACL and without a background
 screen:
 
-1. **ArkWeb browser + web tools** — closes the largest portable gap and proves
-   the on-device loop on a real surface.
-2. **Model providers + persistent settings** — makes the app usable with the
-   provider the user already pays for.
-3. **Memory + profile** — the smallest "it knows me" feature.
-4. **Personal skills + drafter** — the "gets better with use" feature.
-5. **Context builder + compaction** — needed before long tasks.
-6. **Schedules/triggers** — after the loop is stable.
+1. ~~**ArkWeb browser + web tools**~~ — done: single-tab browser, read/click/type,
+   page text feeds the gate.
+2. ~~**Model providers + persistent settings**~~ — done: OpenAI-compatible,
+   Anthropic, Gemini; endpoint/model/provider persist.
+3. ~~**Memory + profile**~~ — memory done (explicit facts, persisted, deletable);
+   profile extraction not started.
+4. ~~**Personal skills**~~ — done: user-authored skills with trigger matching and
+   prompt injection; auto-drafting not started.
+5. **Context builder + compaction** — a bounded char budget is done; semantic
+   summarization is not.
+6. **Schedules/triggers** — next.
 7. **Verify/evidence, trace, usage, eval** — trust surface.
 8. **OAuth, MCP server, speech, i18n** — reach.
 
