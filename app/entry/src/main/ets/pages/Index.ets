@@ -1,12 +1,12 @@
 import { promptAction } from '@kit.ArkUI';
 import { webview } from '@kit.ArkWeb';
 import { Context, common } from '@kit.AbilityKit';
-import { Action, PaymentContext, Screen } from '@hopa/core';
+import { Action, PaymentContext, Screen, Skill } from '@hopa/core';
 import { AgentService } from '../service/AgentService';
 import { SettingsStore, StoredSettings } from '../service/SettingsStore';
 import { MemoryItem } from '../service/MemoryStore';
 import { APP_CATALOG, CatalogApp, SITE_CATALOG, CatalogSite } from '../service/AppCatalog';
-import { Skill } from '@hopa/core';
+import { ReminderItem } from '../service/ReminderStore';
 import { RunRecord } from '@hopa/core';
 
 @Entry
@@ -39,6 +39,9 @@ struct Index {
   @State skillGuidance: string = '';
   @State skills: Skill[] = [];
   @State runRecords: RunRecord[] = [];
+  @State reminders: ReminderItem[] = [];
+  @State reminderTime: string = '';
+  @State reminderPrompt: string = '';
   @State catalogSection: number = 0;
 
   private webController: webview.WebviewController = new webview.WebviewController();
@@ -52,6 +55,8 @@ struct Index {
     this.loadMemory();
     this.loadSkills();
     this.loadRuns();
+    this.loadReminders();
+    this.reminderTime = this.defaultReminderTime();
 
     // Fail-closed by default; the sheet is the only way to allow an action.
     service.approvals.setHandler(async (action: Action, screen: Screen | undefined): Promise<boolean> => {
@@ -276,6 +281,58 @@ struct Index {
     AgentService.get().saveRuns(getContext(this) as Context).catch(() => {
       // Persistence is best effort.
     });
+  }
+
+  private async loadReminders(): Promise<void> {
+    try {
+      await AgentService.get().reminders.load(getContext(this) as common.UIAbilityContext);
+      this.reminders = AgentService.get().reminders.all().slice();
+    } catch (error) {
+      // First run or an empty store.
+    }
+  }
+
+  /** Five minutes from now, rounded down to the minute. */
+  private defaultReminderTime(): string {
+    const at = new Date(Date.now() + 5 * 60 * 1000);
+    const hour: number = at.getHours();
+    const minute: number = at.getMinutes();
+    const hh: string = hour < 10 ? `0${hour}` : `${hour}`;
+    const mm: string = minute < 10 ? `0${minute}` : `${minute}`;
+    return `${hh}:${mm}`;
+  }
+
+  private async scheduleReminder(): Promise<void> {
+    const parts: string[] = this.reminderTime.split(':');
+    const hour: number = Number(parts[0]);
+    const minute: number = Number(parts.length > 1 ? parts[1] : '0');
+    const prompt: string = this.reminderPrompt.trim();
+    const validTime: boolean = hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59;
+    if (!validTime || prompt.length === 0) {
+      this.messages = this.messages.concat(['HOPA: a reminder needs HH:MM and some text.']);
+      return;
+    }
+    try {
+      const item: ReminderItem = await AgentService.get().reminders.schedule(
+        getContext(this) as common.UIAbilityContext,
+        hour,
+        minute,
+        prompt
+      );
+      this.reminders = AgentService.get().reminders.all().slice();
+      this.reminderPrompt = '';
+      this.messages = this.messages.concat([`HOPA: reminder set for ${this.reminderTime}.`]);
+    } catch (error) {
+      this.messages = this.messages.concat([`HOPA: could not schedule the reminder: ${error}`]);
+    }
+  }
+
+  private async cancelReminder(id: number): Promise<void> {
+    await AgentService.get().reminders.cancel(
+      getContext(this) as common.UIAbilityContext,
+      id
+    );
+    this.reminders = AgentService.get().reminders.all().slice();
   }
 
   private openAddress(): void {
@@ -539,6 +596,55 @@ struct Index {
         : 'Accessibility is unavailable, so the loop can read only the built-in browser.')
         .fontSize(13)
         .fontColor('#666666')
+
+      Text('Reminders')
+        .fontSize(16)
+        .fontWeight(FontWeight.Bold)
+      Row({ space: 8 }) {
+        TextInput({ text: this.reminderTime, placeholder: '09:00' })
+          .width(110)
+          .onChange((value: string) => {
+            this.reminderTime = value;
+          })
+        TextInput({ placeholder: 'Remind me to…', text: this.reminderPrompt })
+          .layoutWeight(1)
+          .onChange((value: string) => {
+            this.reminderPrompt = value;
+          })
+          .onSubmit(() => {
+            this.scheduleReminder();
+          })
+        Button('Set')
+          .onClick(() => {
+            this.scheduleReminder();
+          })
+      }
+      .width('100%')
+
+      List({ space: 6 }) {
+        ForEach(this.reminders, (item: ReminderItem, index: number) => {
+          ListItem() {
+            Row({ space: 8 }) {
+              Text(`${item.hour}:${item.minute < 10 ? '0' + item.minute : item.minute}  ${item.prompt}`)
+                .fontSize(13)
+                .layoutWeight(1)
+                .maxLines(1)
+              Button('Cancel')
+                .fontSize(11)
+                .height(26)
+                .onClick(() => {
+                  this.cancelReminder(item.id);
+                })
+            }
+            .width('100%')
+            .padding(8)
+            .backgroundColor('#F7F8FA')
+            .borderRadius(6)
+          }
+        }, (item: ReminderItem) => `${item.id}`)
+      }
+      .height(110)
+      .width('100%')
 
       Text(`Recent actions (${this.runRecords.length})`)
         .fontSize(14)

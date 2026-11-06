@@ -29,7 +29,7 @@ the device/ACL, UI, release and sign-off phases.
 | ArkTS `app/core` | screen-aware gate + observation loop; OpenAI, Anthropic and Gemini clients; hypium pass | `hvigorw test` |
 | HAP | builds and signed with the local debug kit | `scripts/sign-app.ps1` |
 | Installed on the emulator | yes: launch, first frame, four tabs | `hdc install -r` |
-| Entry UI | chat wired to `AgentLoop`; fail-closed approval dialog; provider settings; memory and skills; Web, Apps and run-history tabs | `pages/Index.ets` |
+| Entry UI | chat wired to `AgentLoop`; fail-closed approval dialog; provider settings; memory, skills and reminders; Web, Apps and run-history tabs | `pages/Index.ets` |
 | Accessibility extension | bridge compiled; not declared; no ACL | `docs/a11y.md` |
 | Emulator | Pura 90, API 24, locked screen | `hdc` |
 | ACL | not filed | Phase 0 box open |
@@ -75,6 +75,7 @@ signed HAP on any machine that has the SDK.
 - The HAP contains no Python runtime.
 - The phone app cannot control other apps until the ACL is approved.
 - Numbers in this repository are local until a device run says otherwise.
+
 
 
 
