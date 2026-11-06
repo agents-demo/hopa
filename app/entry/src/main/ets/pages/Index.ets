@@ -16,7 +16,7 @@ struct Index {
   @State currentTab: number = 0;
   @State runCount: number = 0;
   @State a11yAvailable: boolean = false;
-  @State a11yInstalled: string = 'checking…';
+  @State a11yInstalled: string = 'checking...';
   @State draft: string = '';
   @State busy: boolean = false;
   @State autonomous: boolean = false;
@@ -25,7 +25,7 @@ struct Index {
   @State batchText: string = '';
   @State batchResults: BatchItemResult[] = [];
   @State messages: string[] = [
-    'Hi — I am HOPA, your on-device phone agent.',
+    'Hi - I am HOPA, your on-device phone agent.',
     'I always ask before any payment.'
   ];
   @State taskStatus: string = 'Idle';
@@ -104,11 +104,11 @@ struct Index {
     this.draft = '';
     this.busy = true;
     this.taskStatus = 'Running';
-    this.messages = this.messages.concat([`You: ${text}`, 'HOPA: working…']);
+    this.messages = this.messages.concat([`You: ${text}`, 'HOPA: working...']);
 
     const reply: string = await service.run(text);
 
-    // Replace the "working…" line with the real transcript.
+    // Replace the "working..." line with the real transcript.
     const next: string[] = this.messages.slice(0, this.messages.length - 1);
     next.push(`HOPA: ${reply}`);
     this.messages = next;
@@ -122,7 +122,7 @@ struct Index {
 
   private stopRun(): void {
     AgentService.get().cancel();
-    this.taskStatus = 'Stopping…';
+    this.taskStatus = 'Stopping...';
   }
 
   private async runBatch(): Promise<void> {
@@ -423,7 +423,7 @@ struct Index {
       .width('100%')
 
       Row({ space: 8 }) {
-        TextInput({ placeholder: 'Ask HOPA…', text: this.draft })
+        TextInput({ placeholder: 'Ask HOPA...', text: this.draft })
           .layoutWeight(1)
           .onChange((value: string) => {
             this.draft = value;
@@ -431,7 +431,7 @@ struct Index {
           .onSubmit(() => {
             this.send();
           })
-        Button(this.busy ? 'Stop' : 'Send')
+        Button(this.busy ? $r('app.string.btn_stop') : $r('app.string.btn_send'))
           .backgroundColor(this.busy ? '#B42318' : '#0A59F7')
           .onClick(() => {
             if (this.busy) {
@@ -465,7 +465,7 @@ struct Index {
   WebPage() {
     Column({ space: 8 }) {
       Row({ space: 8 }) {
-        TextInput({ text: this.address, placeholder: 'https://…' })
+        TextInput({ text: this.address, placeholder: 'https://...' })
           .layoutWeight(1)
           .onChange((value: string) => {
             this.address = value;
@@ -481,7 +481,7 @@ struct Index {
       .width('100%')
 
       Text(this.pageUrl.length > 0
-        ? `${this.pageUrl} — ask in Chat, HOPA can read and click this page`
+        ? `${this.pageUrl} - ask in Chat, HOPA can read and click this page`
         : 'Load an https page, then ask HOPA in Chat.')
         .fontSize(12)
         .fontColor('#666666')
@@ -489,7 +489,7 @@ struct Index {
         .maxLines(2)
 
       Row({ space: 8 }) {
-        Button('Back')
+        Button($r('app.string.btn_back'))
           .fontSize(12)
           .height(28)
           .backgroundColor('#E5E6E8')
@@ -499,7 +499,7 @@ struct Index {
               this.webController.backward();
             }
           })
-        Button('Forward')
+        Button($r('app.string.btn_forward'))
           .fontSize(12)
           .height(28)
           .backgroundColor('#E5E6E8')
@@ -509,7 +509,7 @@ struct Index {
               this.webController.forward();
             }
           })
-        Button('Reload')
+        Button($r('app.string.btn_reload'))
           .fontSize(12)
           .height(28)
           .backgroundColor('#E5E6E8')
@@ -549,7 +549,7 @@ struct Index {
                 .fontWeight(FontWeight.Bold)
                 .layoutWeight(1)
               if (app.verified && app.ability.length > 0) {
-                Button('Open')
+                Button($r('app.string.btn_open'))
                   .fontSize(12)
                   .height(28)
                   .onClick(() => {
@@ -597,7 +597,7 @@ struct Index {
                 .fontWeight(FontWeight.Bold)
                 .layoutWeight(1)
               if (site.domains.length > 0) {
-                Button('Open')
+                Button($r('app.string.btn_open'))
                   .fontSize(12)
                   .height(28)
                   .onClick(() => {
@@ -673,7 +673,7 @@ struct Index {
   @Builder
   TasksPage() {
     Column({ space: 12 }) {
-      Text('Task progress')
+      Text($r('app.string.title_tasks'))
         .fontSize(22)
         .fontWeight(FontWeight.Bold)
       Text(this.taskStatus)
@@ -688,16 +688,16 @@ struct Index {
         .fontSize(13)
         .fontColor('#666666')
 
-      Text('Batch')
+      Text($r('app.string.label_batch'))
         .fontSize(16)
         .fontWeight(FontWeight.Bold)
-      TextArea({ placeholder: 'One goal per line', text: this.batchText })
+      TextArea({ placeholder: $r('app.string.placeholder_batch'), text: this.batchText })
         .height(80)
         .onChange((value: string) => {
           this.batchText = value;
         })
       Row({ space: 8 }) {
-        Button('Run batch')
+        Button($r('app.string.btn_run_batch'))
           .fontSize(12)
           .onClick(() => {
             this.runBatch();
@@ -744,7 +744,7 @@ struct Index {
           .fontColor('#666666')
           .layoutWeight(1)
         if (this.runRecords.length > 0) {
-          Button('Clear')
+          Button($r('app.string.btn_clear'))
             .fontSize(11)
             .height(26)
             .backgroundColor('#E5E6E8')
@@ -755,11 +755,11 @@ struct Index {
         }
       }
       .width('100%')
-      Text(`Last run: ${this.lastTokens} tokens · ${(this.lastDurationMs / 1000).toFixed(1)} s`)
+      Text(`Last run: ${this.lastTokens} tokens | ${(this.lastDurationMs / 1000).toFixed(1)} s`)
         .fontSize(11)
         .fontColor('#999999')
       if (AgentService.get().canDraftSkill()) {
-        Button('Save last run as skill')
+        Button($r('app.string.btn_draft_skill'))
           .fontSize(12)
           .height(30)
           .onClick(() => {
@@ -806,12 +806,12 @@ struct Index {
   @Builder
   SettingsPage() {
     Column({ space: 16 }) {
-      Text('Settings')
+      Text($r('app.string.title_settings'))
         .fontSize(22)
         .fontWeight(FontWeight.Bold)
 
       Row() {
-        Text('Allow network for web tasks')
+        Text($r('app.string.label_network'))
           .layoutWeight(1)
         Toggle({ type: ToggleType.Switch, isOn: this.networkEnabled })
           .onChange((on: boolean) => {
@@ -836,7 +836,7 @@ struct Index {
       .width('100%')
 
       Row() {
-        Text('Autonomous mode (never skips payment)')
+        Text($r('app.string.label_autonomous'))
           .layoutWeight(1)
         Toggle({ type: ToggleType.Switch, isOn: this.autonomous })
           .onChange((on: boolean) => {
@@ -847,7 +847,7 @@ struct Index {
       }
       .width('100%')
 
-      Text('Model provider')
+      Text($r('app.string.label_provider'))
         .fontSize(14)
         .fontColor('#666666')
       Select([
@@ -894,7 +894,7 @@ struct Index {
           this.persistSettings();
         })
 
-      Text('Model endpoint')
+      Text($r('app.string.label_endpoint'))
         .fontSize(14)
         .fontColor('#666666')
       TextInput({ text: this.modelEndpoint })
@@ -902,7 +902,7 @@ struct Index {
           this.modelEndpoint = value;
         })
 
-      Text('Model name')
+      Text($r('app.string.label_model'))
         .fontSize(14)
         .fontColor('#666666')
       TextInput({ text: this.modelName })
@@ -910,10 +910,10 @@ struct Index {
           this.modelName = value;
         })
 
-      Text('API key (kept in memory only, never saved)')
+      Text($r('app.string.label_api_key'))
         .fontSize(14)
         .fontColor('#666666')
-      TextInput({ text: this.apiKey, placeholder: 'sk-…' })
+      TextInput({ text: this.apiKey, placeholder: 'sk-...' })
         .type(InputType.Password)
         .onChange((value: string) => {
           this.apiKey = value;
@@ -924,7 +924,7 @@ struct Index {
           this.saveModel();
         })
 
-      Text('Payment: always requires your confirmation. This cannot be changed.')
+      Text($r('app.string.label_payment'))
         .fontSize(13)
         .fontColor('#B42318')
 
@@ -932,10 +932,10 @@ struct Index {
         .fontSize(11)
         .fontColor('#666666')
 
-      Text('Sandbox: not bundled. Pyodide/QuickJS are optional WASM pages; there is no Linux sandbox.')
+      Text($r('app.string.label_sandbox'))
         .fontSize(12)
         .fontColor('#666666')
-      Text('Retention: last 100 runs and 50 remembered facts. Skills stay until you delete them.')
+      Text($r('app.string.label_retention'))
         .fontSize(12)
         .fontColor('#666666')
     }
@@ -953,7 +953,7 @@ struct Index {
         .fontColor('#666666')
 
       Row({ space: 8 }) {
-        TextInput({ placeholder: 'e.g. I prefer aisle seats', text: this.memoryDraft })
+        TextInput({ placeholder: $r('app.string.placeholder_memory'), text: this.memoryDraft })
           .layoutWeight(1)
           .onChange((value: string) => {
             this.memoryDraft = value;
@@ -961,7 +961,7 @@ struct Index {
           .onSubmit(() => {
             this.addMemory();
           })
-        Button('Add')
+        Button($r('app.string.btn_add'))
           .onClick(() => {
             this.addMemory();
           })
@@ -969,12 +969,12 @@ struct Index {
       .width('100%')
 
       Row({ space: 8 }) {
-        Button('Export data')
+        Button($r('app.string.btn_export'))
           .fontSize(12)
           .onClick(() => {
             this.exportData();
           })
-        Button('Clear facts')
+        Button($r('app.string.btn_clear_facts'))
           .fontSize(12)
           .backgroundColor('#E5E6E8')
           .fontColor('#B42318')
@@ -991,7 +991,7 @@ struct Index {
               Text(item.text)
                 .layoutWeight(1)
                 .fontSize(14)
-              Button('Delete')
+              Button($r('app.string.btn_delete'))
                 .fontSize(12)
                 .onClick(() => {
                   this.removeMemory(item.id);
@@ -1018,20 +1018,20 @@ struct Index {
       Text('A skill is a procedure HOPA follows when your request contains the trigger words.')
         .fontSize(13)
         .fontColor('#666666')
-      TextInput({ placeholder: 'Skill name, e.g. Book a table', text: this.skillName })
+      TextInput({ placeholder: $r('app.string.placeholder_skill_name'), text: this.skillName })
         .onChange((value: string) => {
           this.skillName = value;
         })
-      TextInput({ placeholder: 'Trigger words, e.g. book a table', text: this.skillTrigger })
+      TextInput({ placeholder: $r('app.string.placeholder_trigger'), text: this.skillTrigger })
         .onChange((value: string) => {
           this.skillTrigger = value;
         })
-      TextArea({ placeholder: 'Steps to follow', text: this.skillGuidance })
+      TextArea({ placeholder: $r('app.string.placeholder_steps'), text: this.skillGuidance })
         .height(90)
         .onChange((value: string) => {
           this.skillGuidance = value;
         })
-      Button('Save skill')
+      Button($r('app.string.btn_save_skill'))
         .onClick(() => {
           this.addSkill();
         })
@@ -1045,7 +1045,7 @@ struct Index {
                   .fontWeight(FontWeight.Bold)
                   .fontSize(14)
                   .layoutWeight(1)
-                Button('Delete')
+                Button($r('app.string.btn_delete'))
                   .fontSize(12)
                   .onClick(() => {
                     this.removeSkill(item.id);
@@ -1078,18 +1078,18 @@ struct Index {
   @Builder
   MemoryPage() {
     Column({ space: 12 }) {
-      Text('Memory & skills')
+      Text($r('app.string.title_memory'))
         .fontSize(22)
         .fontWeight(FontWeight.Bold)
 
       Row({ space: 8 }) {
-        Button('Facts')
+        Button($r('app.string.label_facts'))
           .backgroundColor(this.memorySection === 0 ? '#0A59F7' : '#E5E6E8')
           .fontColor(this.memorySection === 0 ? '#FFFFFF' : '#333333')
           .onClick(() => {
             this.memorySection = 0;
           })
-        Button('Skills')
+        Button($r('app.string.label_skills'))
           .backgroundColor(this.memorySection === 1 ? '#0A59F7' : '#E5E6E8')
           .fontColor(this.memorySection === 1 ? '#FFFFFF' : '#333333')
           .onClick(() => {
@@ -1119,32 +1119,32 @@ struct Index {
       TabContent() {
         this.ChatPage()
       }
-      .tabBar('Chat')
+      .tabBar($r('app.string.tab_chat'))
 
       TabContent() {
         this.WebPage()
       }
-      .tabBar('Web')
+      .tabBar($r('app.string.tab_web'))
 
       TabContent() {
         this.AppsPage()
       }
-      .tabBar('Apps')
+      .tabBar($r('app.string.tab_apps'))
 
       TabContent() {
         this.TasksPage()
       }
-      .tabBar('Tasks')
+      .tabBar($r('app.string.tab_tasks'))
 
       TabContent() {
         this.SettingsPage()
       }
-      .tabBar('Settings')
+      .tabBar($r('app.string.tab_settings'))
 
       TabContent() {
         this.MemoryPage()
       }
-      .tabBar('Memory')
+      .tabBar($r('app.string.tab_memory'))
     }
     .onChange((index: number) => {
       this.currentTab = index;
@@ -1154,3 +1154,5 @@ struct Index {
     .height('100%')
   }
 }
+
+
