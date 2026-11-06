@@ -1,17 +1,19 @@
 # Status
 
-**2026-11-06.** The repository is a working PC-tethered agent plus a building
-HarmonyOS app. The Python harness captures an observation, asks a model for one
-action, classifies it, executes it, re-observes, verifies and appends a
-hash-chained record. It has 178 agent tests (257 across the harness) and a
-validated 20-task bench format. The ArkTS `app/core` now has a screen-aware
+**2026-11-06.** The repository is a working PC-tethered agent plus a signed,
+installed HarmonyOS app. The Python harness captures an observation, asks a
+model for one action, classifies it, executes it, re-observes, verifies and
+appends a hash-chained record. It has 178 agent tests (254 across the harness)
+and a validated 20-task bench format. The ArkTS `app/core` has a screen-aware
 payment gate and a loop that captures observations; the HAP builds with DevEco
-6.1.1 / API 24 and the Local Tests pass. The entry UI is still a shell, the HAP
-is unsigned, and the running Pura 90 emulator is on its lock screen, which
-blocks `uitest`. No ACL has been filed. The standalone claim is still **not**
-met; the toolchain and tethered claims are.
+6.1.1 / API 24, the Local Tests pass, and the HAP is signed with the SDK's local
+OpenHarmony debug kit and installed on the Pura 90 emulator (`bm install` ok,
+`EntryAbility` starts, first frame drawn, all four tabs render). The entry UI is
+still a shell: the chat reply is a placeholder, not the `AgentLoop`. No ACL has
+been filed. The standalone claim is still **not** met; the toolchain, tethered
+and install claims are.
 
-Plan progress: **207 / 767 boxes (27.0%)**. The open boxes are concentrated in
+Plan progress: **216 / 767 boxes (28.2%)**. The open boxes are concentrated in
 the device/ACL, UI, release and sign-off phases.
 
 | Area | State | Evidence |
@@ -22,7 +24,9 @@ the device/ACL, UI, release and sign-off phases.
 | `bench` 20 task definitions | valid | `pytest bench`, `validate` |
 | Observation/action/decision/record schemas | v1 | `schemas/` |
 | ArkTS `app/core` | screen-aware gate + observation loop; hypium pass | `hvigorw test` |
-| HAP | builds, unsigned | `hvigorw assembleHap` |
+| HAP | builds and signed with the local debug kit | `scripts/sign-app.ps1` |
+| Installed on the emulator | yes: launch, first frame, four tabs | `hdc install -r` |
+| Entry UI | shell: chat reply is a placeholder | `app/entry/src/main/ets/pages/Index.ets` |
 | Accessibility extension | bridge compiled; not declared; no ACL | `docs/a11y.md` |
 | Emulator | Pura 90, API 24, locked screen | `hdc` |
 | ACL | not filed | Phase 0 box open |
@@ -43,13 +47,24 @@ hvigorw assembleHap --no-daemon
 hvigorw test -p module=core@default --no-daemon -p coverage=false
 ```
 
+Sign and install with the SDK's local OpenHarmony debug kit (no Huawei account):
+
+```powershell
+.\scripts\build.ps1
+.\scripts\sign-app.ps1 -Install
+```
+
+`signing/` is gitignored; `scripts/sign-app.ps1` regenerates the app key, the
+certificate chain, the debug profile (with the connected device's UDID) and the
+signed HAP on any machine that has the SDK.
+
 ## What is next
 
-1. Bench v0: run the 5 tasks through the new loop with the stub model.
-2. Add `node_exists`, `app_foreground` and `screen_hash` predicates.
-3. Fill `docs/baseline.md` on a real device.
-4. File the ACL request.
-5. Start the JVM brain extraction.
+1. Wire `Index.ets` to `AgentLoop` so a chat message runs on-device.
+2. File the accessibility ACL request and declare the extension.
+3. Add `node_exists`, `app_foreground` and `screen_hash` predicates.
+4. Fill `docs/baseline.md` on a real device.
+5. Bench v0 on a real model.
 
 ## Honest limits
 

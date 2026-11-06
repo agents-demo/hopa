@@ -1,63 +1,103 @@
 #!/usr/bin/env pwsh
-# Run core unit tests (host) plus pc-agent/bench pytest and ruff (Windows).
+# Run Python, brain and ArkTS tests, plus lint and plan checks (Windows).
 $ErrorActionPreference = 'Stop'
 
 $root = Split-Path -Parent $PSScriptRoot
+$venv = Join-Path $root '.venv\Scripts\python.exe'
 
-function Resolve-Python {
-    $venv = Join-Path $root '.venv\Scripts\python.exe'
-    if (Test-Path $venv) { return $venv }
-    $cmd = Get-Command python -ErrorAction SilentlyContinue
-    if ($cmd) { return $cmd.Source }
+if (Test-Path $venv) {
+    $pythonExe = $venv
+    $pythonPrefix = @()
+} elseif (Get-Command py -ErrorAction SilentlyContinue) {
+    $pythonExe = 'py'
+    $pythonPrefix = @('-3')
+} elseif (Get-Command python -ErrorAction SilentlyContinue) {
+    $pythonExe = 'python'
+    $pythonPrefix = @()
+} else {
     throw 'Python 3.11+ not found. Install it and/or create .venv at the repo root.'
 }
 
-function Resolve-Hvigorw {
-    if ($env:HOPA_CLT_HOME) {
-        $candidate = Join-Path $env:HOPA_CLT_HOME 'bin\hvigorw.bat'
-        if (Test-Path $candidate) { return $candidate }
+Write-Host '=== installing Python packages (editable) ==='
+& $pythonExe @pythonPrefix -m pip install -U pip | Out-Host
+& $pythonExe @pythonPrefix -m pip install `
+    -e (Join-Path $root 'pc-agent') `
+    -e (Join-Path $root 'bench[dev]') `
+    -e (Join-Path $root 'agent[dev]') | Out-Host
+if ($LASTEXITCODE -ne 0) { throw 'pip install failed' }
+
+Write-Host '=== Python tests ==='
+& $pythonExe @pythonPrefix -m pytest `
+    (Join-Path $root 'pc-agent') `
+    (Join-Path $root 'bench') `
+    (Join-Path $root 'agent') `
+    (Join-Path $root 'scripts') -q
+if ($LASTEXITCODE -ne 0) { throw 'Python tests failed' }
+
+Write-Host '=== agent coverage ==='
+& $pythonExe @pythonPrefix -m pytest (Join-Path $root 'agent') `
+    --cov=hopa_agent --cov-report=term --cov-fail-under=80 -q
+if ($LASTEXITCODE -ne 0) { throw 'agent coverage gate failed' }
+
+Write-Host '=== ruff ==='
+& $pythonExe @pythonPrefix -m ruff check `
+    (Join-Path $root 'pc-agent') (Join-Path $root 'bench') (Join-Path $root 'agent')
+if ($LASTEXITCODE -ne 0) { throw 'ruff check failed' }
+& $pythonExe @pythonPrefix -m ruff format --check `
+    (Join-Path $root 'pc-agent') (Join-Path $root 'bench') (Join-Path $root 'agent')
+if ($LASTEXITCODE -ne 0) { throw 'ruff format check failed' }
+
+Write-Host '=== plan lint ==='
+& $pythonExe @pythonPrefix (Join-Path $root 'scripts\plan-status.py') --lint
+if ($LASTEXITCODE -ne 0) { throw 'plan lint failed' }
+
+Write-Host '=== brain tests ==='
+if (Test-Path (Join-Path $root '.tools\kotlinc\bin\kotlinc.bat')) {
+    & (Join-Path $PSScriptRoot 'brain.ps1')
+    if ($LASTEXITCODE -ne 0) { throw 'brain tests failed' }
+} elseif (Get-Command java -ErrorAction SilentlyContinue) {
+    Write-Host 'Kotlin compiler not downloaded yet; downloading it via brain.ps1.'
+    & (Join-Path $PSScriptRoot 'brain.ps1')
+    if ($LASTEXITCODE -ne 0) { throw 'brain tests failed' }
+} else {
+    Write-Warning 'Java not found; skipping brain tests.'
+}
+
+Write-Host '=== ArkTS tests ==='
+$dev = 'C:\Program Files\Huawei\DevEco Studio'
+$hvigorw = $null
+if ($env:HOPA_CLT_HOME) {
+    $candidate = Join-Path $env:HOPA_CLT_HOME 'bin\hvigorw.bat'
+    if (Test-Path $candidate) {
+        $hvigorw = $candidate
+        $env:DEVECO_SDK_HOME = Join-Path $env:HOPA_CLT_HOME 'sdk'
     }
+}
+if (-not $hvigorw) {
+    $candidate = Join-Path $dev 'tools\hvigor\bin\hvigorw.bat'
+    if (Test-Path $candidate) {
+        $hvigorw = $candidate
+        $env:DEVECO_SDK_HOME = Join-Path $dev 'sdk'
+        $env:JAVA_HOME = Join-Path $dev 'jbr'
+        $env:PATH = "$(Join-Path $dev 'tools\node');$(Join-Path $dev 'tools\ohpm\bin');$(Join-Path $dev 'sdk\default\openharmony\toolchains');$env:PATH"
+    }
+}
+if (-not $hvigorw) {
     $cmd = Get-Command hvigorw -ErrorAction SilentlyContinue
-    if ($cmd) { return $cmd.Source }
-    return $null
+    if ($cmd) { $hvigorw = $cmd.Source }
 }
-
-$py = Resolve-Python
-
-# Ensure the Python packages are installed in editable mode.
-& $py -c "import hopa_pc_agent, hopa_bench" 2>$null
-if ($LASTEXITCODE -ne 0) {
-    Write-Host '--- installing pc-agent and bench (editable) ---'
-    & $py -m pip install -e (Join-Path $root 'pc-agent') -e (Join-Path $root 'bench')
-    if ($LASTEXITCODE -ne 0) { throw 'pip install failed' }
-}
-
-$hvigorw = Resolve-Hvigorw
 if ($hvigorw) {
-    Write-Host '--- core local unit tests ---'
     Push-Location (Join-Path $root 'app')
     try {
+        $ohpm = Get-Command ohpm -ErrorAction SilentlyContinue
+        if ($ohpm) { & $ohpm.Source install }
         & $hvigorw test -p module=core@default --no-daemon -p coverage=false
-        if ($LASTEXITCODE -ne 0) { throw "core tests failed with exit code $LASTEXITCODE" }
-    }
-    finally {
+        if ($LASTEXITCODE -ne 0) { throw 'ArkTS tests failed' }
+    } finally {
         Pop-Location
     }
+} else {
+    Write-Warning 'hvigorw not found; skipping ArkTS tests.'
 }
-else {
-    Write-Warning 'hvigorw not found; skipping core local unit tests.'
-}
-
-Write-Host '--- pc-agent pytest ---'
-& $py -m pytest (Join-Path $root 'pc-agent')
-if ($LASTEXITCODE -ne 0) { throw 'pc-agent tests failed' }
-
-Write-Host '--- bench pytest ---'
-& $py -m pytest (Join-Path $root 'bench')
-if ($LASTEXITCODE -ne 0) { throw 'bench tests failed' }
-
-Write-Host '--- ruff ---'
-& $py -m ruff check (Join-Path $root 'pc-agent') (Join-Path $root 'bench')
-if ($LASTEXITCODE -ne 0) { throw 'ruff failed' }
 
 Write-Host 'All tests passed.'

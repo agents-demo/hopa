@@ -112,17 +112,15 @@ it, not at the end.
 | `pc-agent` | CLI + MCP implemented: devices, dump, tap, double-tap, long-press, type, swipe, screenshot, launch, stop, key, install, uninstall, apps | `pc-agent/src` |
 | `bench` | 20 task files; 3/5 v0 tasks pass on the emulator | `bench/tasks`, `docs/bench-v0.md` |
 | Brain | Kotlin router + HTTP service + knowledge + prompts + skills + sites (89 assertions + schema contract) | `brain/src`, `docs/brain.md` |
-| HAP | builds with DevEco 6.1.1 / API 24; unsigned | `hvigorw assembleHap` |
+| HAP | builds with DevEco 6.1.1 / API 24; signed with the SDK local debug kit; installed on the Pura 90 emulator | `scripts/sign-app.ps1` |
 | Knowledge | 12 HarmonyOS system apps, 18 sites, 6 skills; 23 Mika apps triaged | `brain/knowledge`, `docs/knowledge-triage.md` |
 | CI | Python tests + ruff; HAP build and core Local Tests skip with a warning when the mirrored toolchain secret is absent | `.github/workflows/ci.yml` |
-| Tests baseline | 257 Python tests, 78 Kotlin assertions, ArkTS Local Tests pass; 20 bench tasks validate; device bench 3/5 | local run 2026-11-06 |
+| Tests baseline | 254 Python tests, 89 Kotlin assertions, ArkTS Local Tests pass; 20 bench tasks validate; device bench 3/5 | local run 2026-11-06 |
 
 Known gaps to close first:
 
 - The entry UI is still a placeholder; it does not drive `AgentLoop` yet.
 - The accessibility extension is not declared, so on-device control is unavailable.
-- The phone emulator is on its lock screen, so `uitest` cannot read the screen.
-- The HAP is unsigned, so it has not been installed.
 - No app routing, no knowledge, no skills, no memory.
 
 ---

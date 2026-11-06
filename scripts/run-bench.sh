@@ -1,23 +1,23 @@
 #!/usr/bin/env bash
-# Run HOPA-Bench against the connected device with the stub model (macOS/Linux).
+# Run HOPA-Bench against the connected device with the stub model.
 set -euo pipefail
 
-root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT=$(cd "$(dirname "$0")/.." && pwd)
+RESULTS="$ROOT/bench/results/latest.json"
 
-py="${PYTHON:-}"
-if [[ -z "$py" && -x "$root/.venv/bin/python" ]]; then py="$root/.venv/bin/python"; fi
-if [[ -z "$py" ]]; then py="$(command -v python3 || command -v python || true)"; fi
-if [[ -z "$py" ]]; then
+if [ -x "$ROOT/.venv/bin/python" ]; then
+  PY="$ROOT/.venv/bin/python"
+elif command -v python3 >/dev/null 2>&1; then
+  PY=python3
+elif command -v python >/dev/null 2>&1; then
+  PY=python
+else
   echo "Python 3.11+ not found." >&2
-  exit 1
+  exit 2
 fi
 
-if ! "$py" -c "import hopa_pc_agent, hopa_bench" >/dev/null 2>&1; then
-  "$py" -m pip install -e "$root/pc-agent" -e "$root/bench"
-fi
+"$PY" -c "import hopa_pc_agent, hopa_bench" 2>/dev/null || {
+  "$PY" -m pip install -e "$ROOT/pc-agent" -e "$ROOT/bench"
+}
 
-mkdir -p "$root/bench/results"
-exec "$py" -m hopa_bench run \
-  --tasks "$root/bench/tasks" \
-  --out "$root/bench/results/latest.json" \
-  "$@"
+"$PY" -m hopa_bench run --tasks "$ROOT/bench/tasks" --out "$RESULTS" "$@"

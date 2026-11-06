@@ -90,8 +90,8 @@ Full, reproducible instructions: [docs/setup.md](docs/setup.md).
 # 1. Build the HAP from the command line
 ./scripts/build.sh              # or .\scripts\build.ps1 on Windows
 
-# 2. Install on a running emulator/device
-./scripts/install-to-device.sh  # or .\scripts\install-to-device.ps1
+# 2. Sign with the SDK's local debug kit and install
+./scripts/sign-app.sh --install   # or .\scripts\sign-app.ps1 -Install on Windows
 
 # 3. Run core unit tests + python checks
 ./scripts/run-tests.sh          # or .\scripts\run-tests.ps1
@@ -102,6 +102,11 @@ Full, reproducible instructions: [docs/setup.md](docs/setup.md).
 # 5. Summarize a results file
 bench report --input .hopa/bench-v0.json --out docs/bench-v0.md
 ```
+
+No Huawei account is needed: `scripts/sign-app` uses the OpenHarmony debug
+certificates shipped with the SDK, embeds the connected device's UDID, and
+regenerates everything under `signing/` (gitignored). See
+[docs/signing.md](docs/signing.md).
 
 `pc-agent` can also be used directly:
 
