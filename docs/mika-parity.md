@@ -14,7 +14,7 @@ app module supplies device control; HOPA must supply its own HarmonyOS layer.
 | 1 | Operates any app **without taking over the screen** | PC-tethered control works; on-device a11y compiled but inactive | no background display; foreground a11y only | **No** (excluded) |
 | 2 | Built-in desktop-class browser | single-tab ArkWeb browser; read/click/type wired; verified loading a page | tabs, downloads, uploads, sign-in | yes (ArkWeb) |
 | 3 | "Act on the screen I am looking at" | none | needs a11y | partial |
-| 4 | Scheduled and conditional tasks | none | scheduler + triggers | yes, with HarmonyOS background limits |
+| 4 | Scheduled and conditional tasks | not shipped; the system reminder API failed on the emulator (1700002) | scheduler + triggers | yes, with HarmonyOS background limits |
 | 5 | Interrupt, stop, report, continue | resume exists in the Python harness; no UI | steering + UI | yes |
 | 6 | Hold to talk (speech) | none | platform ASR or provider | yes |
 | 7 | Ask / Autonomous modes | Ask only, fail-closed | autonomous mode | yes, by decision |
@@ -144,9 +144,12 @@ screen:
    profile extraction not started.
 4. ~~**Personal skills**~~ — done: user-authored skills with trigger matching and
    prompt injection; auto-drafting not started.
-5. **Context builder + compaction** — a bounded char budget is done; semantic
+5. ~~**Context builder + compaction**~~ — a bounded char budget is done; semantic
    summarization is not.
-6. **Schedules/triggers** — next.
+6. **Schedules/triggers** — attempted with the system reminder agent. The
+   emulator rejects `publishReminder` with `1700002` even after
+   `cancelAllReminders`, so the feature was removed rather than shipped broken.
+   Retry on a physical device.
 7. **Verify/evidence, trace, usage, eval** — trust surface.
 8. **OAuth, MCP server, speech, i18n** — reach.
 
