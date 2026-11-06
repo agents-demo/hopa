@@ -3,7 +3,7 @@ import { webview } from '@kit.ArkWeb';
 import { Context, common } from '@kit.AbilityKit';
 import { accessibility } from '@kit.AccessibilityKit';
 import { buffer } from '@kit.ArkTS';
-import { Action, PaymentContext, Screen, Skill } from '@hopa/core';
+import { Action, BatchItemResult, PaymentContext, Screen, Skill } from '@hopa/core';
 import { AgentService } from '../service/AgentService';
 import { SettingsStore, StoredSettings } from '../service/SettingsStore';
 import { MemoryItem } from '../service/MemoryStore';
@@ -21,6 +21,8 @@ struct Index {
   @State busy: boolean = false;
   @State autonomous: boolean = false;
   @State lastTokens: number = 0;
+  @State batchText: string = '';
+  @State batchResults: BatchItemResult[] = [];
   @State messages: string[] = [
     'Hi — I am HOPA, your on-device phone agent.',
     'I always ask before any payment.'
@@ -124,6 +126,27 @@ struct Index {
   private stopRun(): void {
     AgentService.get().cancel();
     this.taskStatus = 'Stopping…';
+  }
+
+  private async runBatch(): Promise<void> {
+    const goals: string[] = [];
+    for (const line of this.batchText.split('\n')) {
+      const goal: string = line.trim();
+      if (goal.length > 0) {
+        goals.push(goal);
+      }
+    }
+    if (goals.length === 0 || this.busy) {
+      return;
+    }
+    this.busy = true;
+    this.taskStatus = `Batch: ${goals.length} goals`;
+    const results: BatchItemResult[] = await AgentService.get().runBatch(goals);
+    this.batchResults = results;
+    this.busy = false;
+    this.taskStatus = 'Idle';
+    this.lastTokens = AgentService.get().getLastTokens();
+    this.refreshRuns();
   }
 
   private saveModel(): void {
@@ -644,6 +667,56 @@ struct Index {
         : 'Accessibility is unavailable, so the loop can read only the built-in browser.')
         .fontSize(13)
         .fontColor('#666666')
+
+      Text('Batch')
+        .fontSize(16)
+        .fontWeight(FontWeight.Bold)
+      TextArea({ placeholder: 'One goal per line', text: this.batchText })
+        .height(80)
+        .onChange((value: string) => {
+          this.batchText = value;
+        })
+      Row({ space: 8 }) {
+        Button('Run batch')
+          .fontSize(12)
+          .onClick(() => {
+            this.runBatch();
+          })
+        if (this.busy) {
+          Button('Stop')
+            .fontSize(12)
+            .backgroundColor('#B42318')
+            .onClick(() => {
+              this.stopRun();
+            })
+        }
+      }
+      .width('100%')
+
+      List({ space: 6 }) {
+        ForEach(this.batchResults, (item: BatchItemResult, index: number) => {
+          ListItem() {
+            Column({ space: 2 }) {
+              Text(item.goal)
+                .fontSize(12)
+                .fontWeight(FontWeight.Bold)
+              Text(item.output)
+                .fontSize(11)
+                .maxLines(3)
+              Text(`${Math.round(item.durationMs / 1000)}s`)
+                .fontSize(10)
+                .fontColor('#999999')
+            }
+            .width('100%')
+            .padding(8)
+            .backgroundColor('#F7F8FA')
+            .borderRadius(6)
+            .alignItems(HorizontalAlign.Start)
+          }
+        }, (item: BatchItemResult, index: number) => `${index}-${item.goal}`)
+      }
+      .height(140)
+      .width('100%')
 
       Row({ space: 8 }) {
         Text(`Recent actions (${this.runRecords.length})`)

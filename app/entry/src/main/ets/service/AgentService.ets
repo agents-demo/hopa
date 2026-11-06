@@ -6,6 +6,8 @@ import {
   AnthropicClient,
   ApprovalGateway,
   ApprovalPolicy,
+  BatchItemResult,
+  BatchRunner,
   GeminiClient,
   ModelClient,
   OpenAiCompatibleClient,
@@ -90,6 +92,7 @@ export class AgentService {
   readonly tools: ToolRegistry;
   readonly memory: MemoryStore = new MemoryStore();
   readonly skills: SkillStore = new SkillStore();
+  readonly batch: BatchRunner = new BatchRunner();
   readonly web: WebCapability;
   readonly browser: BrowserController;
   readonly sandbox: SandboxCapability;
@@ -208,9 +211,17 @@ export class AgentService {
 
   /** Stops the loop before the next model call or after the current action. */
   cancel(): void {
+    this.batch.cancel();
     if (this.loop !== undefined) {
       this.loop.cancel();
     }
+  }
+
+  /** Runs each goal in order; cancellation stops between goals. */
+  async runBatch(goals: string[]): Promise<BatchItemResult[]> {
+    return this.batch.run(goals, async (goal: string): Promise<string> => {
+      return this.run(goal);
+    });
   }
 
   getLastTokens(): number {

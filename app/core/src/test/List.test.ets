@@ -4,6 +4,7 @@ import agentLoopTest from './AgentLoop.test';
 import toolRegistryTest from './ToolRegistry.test';
 import skillsTest from './Skills.test';
 import contextBudgetTest from './ContextBudget.test';
+import batchRunnerTest from './BatchRunner.test';
 
 export default function testsuite(): void {
   approvalPolicyTest();
@@ -12,4 +13,5 @@ export default function testsuite(): void {
   toolRegistryTest();
   skillsTest();
   contextBudgetTest();
+  batchRunnerTest();
 }
