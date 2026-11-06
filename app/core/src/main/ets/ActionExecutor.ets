@@ -1,5 +1,6 @@
 import { Action, ActionOutcome, GuardResult, Observation, RunRecord, RunStatus } from './Types';
 import { ApprovalPolicy } from './ApprovalPolicy';
+import { Screen } from './Screen';
 
 /** A capability that can execute one or more action kinds. */
 export interface ActionCapability {
@@ -67,7 +68,7 @@ export class ActionExecutor {
     this.guards.push(guard);
   }
 
-  async execute(action: Action): Promise<ActionOutcome> {
+  async execute(action: Action, screen?: Screen): Promise<ActionOutcome> {
     // 1. Guards.
     for (const guard of this.guards) {
       const result: GuardResult = guard.check(action);
@@ -78,10 +79,10 @@ export class ActionExecutor {
 
     // 2. Approval. Payment is fail-closed and always asks.
     let approved: boolean = true;
-    if (this.policy.requiresApproval(action)) {
+    if (this.policy.requiresApproval(action, screen)) {
       approved = await this.approvals.requestApproval(action);
       if (!approved) {
-        const reason: string = this.policy.isPayment(action)
+        const reason: string = this.policy.isPayment(action, screen)
           ? 'payment denied by user'
           : 'action denied by user';
         return this.deny(action, RunStatus.Denied, reason);

@@ -20,7 +20,7 @@ export enum RiskLevel {
 
 /**
  * A proposed device/browser/system action. The executor owns risk classification;
- * a model may set `isPayment` but can never clear the payment class.
+ * a model never sets `isPayment`.
  */
 export class Action {
   id: string;

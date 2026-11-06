@@ -16,6 +16,7 @@ export class ModelRequest {
 
 export class ModelResponse {
   text: string = '';
+  error: string = '';
 }
 
 /** The only model abstraction the agent loop depends on. */

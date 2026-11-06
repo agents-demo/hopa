@@ -1,6 +1,7 @@
 import { describe, expect, it } from '@ohos/hypium';
 import { Action, RiskLevel } from '../main/ets/Types';
 import { ApprovalPolicy } from '../main/ets/ApprovalPolicy';
+import { Screen } from '../main/ets/Screen';
 
 export default function approvalPolicyTest(): void {
   describe('ApprovalPolicy', () => {
@@ -39,6 +40,30 @@ export default function approvalPolicyTest(): void {
       expect(policy.isPayment(action)).assertFalse();
       expect(policy.classify(action)).assertEqual(RiskLevel.Sensitive);
       expect(policy.requiresApproval(action)).assertTrue();
+    });
+
+    it('payment_screen_tap_requires_approval', 0, () => {
+      const policy = new ApprovalPolicy();
+      const screen = new Screen('Checkout\nTotal ¥9.99\nPay now');
+      const action = new Action('ui.tap');
+      expect(policy.isPaymentScreen(screen)).assertTrue();
+      expect(policy.isPayment(action, screen)).assertTrue();
+      expect(policy.requiresApproval(action, screen)).assertTrue();
+    });
+
+    it('model_flag_cannot_clear_screen_payment', 0, () => {
+      const policy = new ApprovalPolicy();
+      const screen = new Screen('Checkout Total ¥9.99');
+      const action = new Action('ui.tap');
+      action.isPayment = false;
+      expect(policy.isPayment(action, screen)).assertTrue();
+    });
+
+    it('payment_screen_observe_is_read_only', 0, () => {
+      const policy = new ApprovalPolicy();
+      const screen = new Screen('Checkout Total ¥9.99');
+      expect(policy.requiresApproval(new Action('ui.observe'), screen)).assertFalse();
+      expect(policy.requiresApproval(new Action('ui.back'), screen)).assertFalse();
     });
   });
 }

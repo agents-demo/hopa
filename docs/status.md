@@ -1,27 +1,30 @@
 # Status
 
-**2026-11-05.** The repository is an early but working PC-tethered agent. The
-Python harness can capture an observation, ask a model for one action, classify
-it, execute it, re-observe, verify and append a hash-chained record. It has 149
-agent tests (228 across the harness) and a validated 20-task bench format. The
-ArkTS app is still a shell: the HAP builds only with the Huawei toolchain, the
-accessibility extension is not declared, and no device or emulator is available
-on the development machine. No ACL has been filed. The standalone claim is
-therefore **not** met; the tethered claim is.
+**2026-11-06.** The repository is a working PC-tethered agent plus a building
+HarmonyOS app. The Python harness captures an observation, asks a model for one
+action, classifies it, executes it, re-observes, verifies and appends a
+hash-chained record. It has 149 agent tests (228 across the harness) and a
+validated 20-task bench format. The ArkTS `app/core` now has a screen-aware
+payment gate and a loop that captures observations; the HAP builds with DevEco
+6.1.1 / API 24 and the Local Tests pass. The entry UI is still a shell, the HAP
+is unsigned, and the running Pura 90 emulator is on its lock screen, which
+blocks `uitest`. No ACL has been filed. The standalone claim is still **not**
+met; the toolchain and tethered claims are.
 
 | Area | State | Evidence |
 |---|---|---|
 | `agent/` loop, gate, policy, records | working, tested | `pytest agent` |
 | `brain/` Kotlin router + HTTP service | working, 34 assertions + schema contract | `scripts/brain.ps1` |
-| `pc-agent` CLI + MCP | working | `pytest pc-agent` |
+| `pc-agent` CLI + MCP | working; live device commands work | `pc-agent devices` |
 | `bench` 20 task definitions | valid | `pytest bench`, `validate` |
 | Observation/action/decision/record schemas | v1 | `schemas/` |
-| ArkTS `app/core` | scaffold, not wired | `app/core/src` |
+| ArkTS `app/core` | screen-aware gate + observation loop; hypium pass | `hvigorw test` |
+| HAP | builds, unsigned | `hvigorw assembleHap` |
 | Accessibility extension | empty, not declared | `module.json5` |
-| Device / emulator / DevEco | absent on this machine | `hdc` not found |
+| Emulator | Pura 90, API 24, locked screen | `hdc` |
 | ACL | not filed | Phase 0 box open |
-| Bench on a real model | not run | needs a device |
-| Payment refusal on a real checkout | not run | needs a device |
+| Bench on a real model | not run | needs an unlocked device |
+| Payment refusal on a real checkout | not run | needs an unlocked device |
 
 ## What works now
 
@@ -30,6 +33,10 @@ hopa-agent observe --json
 hopa-agent run "..." --steps steps.json
 hopa-agent records --path .hopa/runs.jsonl
 hopa-agent verify-chain --path .hopa/runs.jsonl
+
+cd app
+hvigorw assembleHap --no-daemon
+hvigorw test -p module=core@default --no-daemon -p coverage=false
 ```
 
 ## What is next

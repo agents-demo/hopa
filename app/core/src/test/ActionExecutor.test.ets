@@ -15,12 +15,13 @@ import {
   ApprovalGateway,
   RunRecorder
 } from '../main/ets/ActionExecutor';
+import { Screen } from '../main/ets/Screen';
 
 class RecordingCapability implements ActionCapability {
   executions: number = 0;
 
   canHandle(kind: string): boolean {
-    return true;
+    return kind.startsWith('ui.') || kind.startsWith('payment.');
   }
 
   async execute(action: Action): Promise<Observation> {
@@ -133,6 +134,33 @@ export default function actionExecutorTest(): void {
 
       expect(outcome.executed).assertFalse();
       expect(harness.recorder.records[0].status).assertEqual(RunStatus.Unsupported);
+      done();
+    });
+
+    it('payment_screen_tap_without_approval_is_denied', 0, async (done: Function) => {
+      const harness = new Harness(false);
+      const screen = new Screen('Checkout\nTotal ¥9.99\nPay now');
+
+      const outcome = await harness.executor.execute(new Action('ui.tap'), screen);
+
+      expect(outcome.executed).assertFalse();
+      expect(outcome.approved).assertFalse();
+      expect(harness.capability.executions).assertEqual(0);
+      expect(harness.approval.requests).assertEqual(1);
+      expect(harness.recorder.records[0].status).assertEqual(RunStatus.Denied);
+      done();
+    });
+
+    it('payment_screen_tap_with_approval_executes', 0, async (done: Function) => {
+      const harness = new Harness(true);
+      const screen = new Screen('Checkout\nTotal ¥9.99');
+
+      const outcome = await harness.executor.execute(new Action('ui.tap'), screen);
+
+      expect(outcome.executed).assertTrue();
+      expect(outcome.approved).assertTrue();
+      expect(harness.approval.requests).assertEqual(1);
+      expect(harness.capability.executions).assertEqual(1);
       done();
     });
   });

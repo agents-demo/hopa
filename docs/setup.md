@@ -9,6 +9,12 @@ included where they differ.
 > form. HOPA targets the current stable **HarmonyOS SDK 26.0.0** (which is
 > "HarmonyOS 6 and later"). Do not assume the old `API 20` numbering.
 
+> **Local build note (2026-11-06):** the current Windows machine has DevEco
+> Studio 6.1.1 and SDK **6.1.1 / API 24**. The project is set to
+> `compileSdkVersion`/`targetSdkVersion` `6.1.1(24)` and `modelVersion` `6.1.1`
+> so it builds here. The release target remains API 26; raise those four fields
+> when SDK 26 is installed.
+
 ## 1. Pinned versions
 
 | Component | Version | Notes |

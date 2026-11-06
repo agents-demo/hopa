@@ -53,6 +53,7 @@ export class OpenAiCompatibleClient implements ModelClient {
     });
 
     const client = http.createHttp();
+    const result = new ModelResponse();
     try {
       const options: http.HttpRequestOptions = {
         method: http.RequestMethod.POST,
@@ -65,12 +66,20 @@ export class OpenAiCompatibleClient implements ModelClient {
         readTimeout: 60000
       };
       const response = await client.request(`${this.endpoint}/chat/completions`, options);
+      if (response.responseCode !== 200) {
+        result.error = `HTTP ${response.responseCode}`;
+        return result;
+      }
 
       const parsed = JSON.parse(`${response.result}`) as OpenAiResponseBody;
-      const result = new ModelResponse();
       if (parsed.choices.length > 0) {
         result.text = parsed.choices[0].message.content;
+      } else {
+        result.error = 'model returned no choices';
       }
+      return result;
+    } catch (error) {
+      result.error = `${error}`;
       return result;
     } finally {
       client.destroy();

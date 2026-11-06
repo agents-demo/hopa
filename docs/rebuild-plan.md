@@ -100,29 +100,30 @@ it, not at the end.
 
 ---
 
-## 3. Current state (audited 2026-11-05)
+## 3. Current state (audited 2026-11-06)
 
 | Area | State | Evidence |
 |---|---|---|
-| Repo | 2 commits, public, Apache-2.0 | `git log` |
-| `app/core` | action gate, approval policy, tool registry, types, model interface; unit tests | `app/core/src` |
+| Repo | public, Apache-2.0 | `git log` |
+| `app/core` | screen-aware gate, observation loop, tool registry, types, model interface; hypium tests pass | `app/core/src` |
 | `app/capabilities` | interfaces + stubs; a11y extension empty and not declared | `module.json5`, `AccessibilityExtension.ets` |
 | `app/entry` | 4-tab ArkUI shell; chat says “agent loop placeholder” | `pages/Index.ets` |
-| Agent loop | asks model for one action; never observes the screen | `AgentLoop.ets` |
-| `pc-agent` | CLI + MCP implemented: devices, dump, tap, double-tap, long-press, type, swipe, screenshot, launch, stop, key, install, uninstall | `pc-agent/src` |
+| Agent loop | captures the screen, asks for one action, gates, records | `AgentLoop.ets` |
+| `pc-agent` | CLI + MCP implemented: devices, dump, tap, double-tap, long-press, type, swipe, screenshot, launch, stop, key, install, uninstall, apps | `pc-agent/src` |
 | `bench` | 20 task files valid (5 device-confirmed), runner, stub model, CLI | `bench/tasks` |
 | Brain | Kotlin router + HTTP service (34 assertions + schema contract) | `brain/src`, `docs/brain.md` |
+| HAP | builds with DevEco 6.1.1 / API 24; unsigned | `hvigorw assembleHap` |
 | Knowledge | none: 0 `APP.md`, 0 sites, 0 skills | — |
 | CI | Python tests + ruff; HAP build and core Local Tests skip with a warning when the mirrored toolchain secret is absent | `.github/workflows/ci.yml` |
-| Tests baseline | 228 Python tests pass in a combined run (pc-agent, bench, agent, plan tooling), agent coverage 90%, 20 bench task files validate; ArkTS tests not run here | local run 2026-11-05 |
+| Tests baseline | 228 Python tests, 34 Kotlin assertions, ArkTS Local Tests pass; 20 bench task files validate | local run 2026-11-06 |
 
 Known gaps to close first:
 
-- `AgentLoop` has no observation input.
-- `ApprovalPolicy` treats `ui.tap` as safe, so a tap on “Pay” is auto-approved.
-- The model payload can set `isPayment`, which contradicts the doc.
+- The entry UI is still a placeholder; it does not drive `AgentLoop` yet.
+- The accessibility extension is not declared, so on-device control is unavailable.
+- The phone emulator is on its lock screen, so `uitest` cannot read the screen.
+- The HAP is unsigned, so it has not been installed.
 - No app routing, no knowledge, no skills, no memory.
-- No device matrix, no baseline numbers, no evidence log.
 
 ---
 
@@ -309,7 +310,7 @@ Module responsibilities:
 
 ### 6.4 Executor and gate (fix current gaps)
 
-- [ ] Remove `isPayment` from the model-supplied payload
+- [x] Remove `isPayment` from the model-supplied payload (evidence: AgentLoop.parseAction ignores it; agent/actions.py drops it)
 - [x] `ApprovalPolicy` classifies from action + screen context, not kind alone (evidence: ApprovalPolicy.classify)
 - [x] A tap on a payment-classified screen always asks (evidence: agent/tests/test_policy.py)
 - [x] Guard failure aborts before any capability call (evidence: DeviceExecutor.execute)

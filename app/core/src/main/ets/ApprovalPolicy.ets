@@ -1,11 +1,12 @@
 import { Action, RiskLevel } from './Types';
+import { Screen } from './Screen';
 
 /**
  * The single source of truth for approval.
  *
- * Payment is always `ask` and is never remembered or auto-approved. Unknown
- * action kinds are treated as sensitive (fail-closed): adding a new capability
- * without classifying it will require user approval rather than silently run.
+ * Payment is detected from the action and the screen, never from a model flag.
+ * It is always `ask` and is never remembered. Unknown action kinds are treated
+ * as sensitive (fail-closed).
  */
 export class ApprovalPolicy {
   private paymentKinds: Set<string> = new Set<string>([
@@ -14,6 +15,42 @@ export class ApprovalPolicy {
     'payment.checkout',
     'payment.enterCard',
     'payment.authorize'
+  ]);
+
+  private paymentWords: string[] = [
+    'pay',
+    'payment',
+    'checkout',
+    'confirm order',
+    'place order',
+    'buy now',
+    'purchase',
+    'subscribe',
+    'amount',
+    'total',
+    'merchant',
+    'currency',
+    'card number',
+    '支付',
+    '付款',
+    '结算',
+    '确认订单',
+    '立即购买',
+    '金额',
+    '商户',
+    '银行卡'
+  ];
+
+  private interactiveKinds: Set<string> = new Set<string>([
+    'ui.tap',
+    'ui.doubleTap',
+    'ui.longPress',
+    'ui.type',
+    'ui.swipe',
+    'ui.scroll',
+    'web.navigate',
+    'web.click',
+    'web.type'
   ]);
 
   private sensitiveKinds: Set<string> = new Set<string>([
@@ -33,8 +70,14 @@ export class ApprovalPolicy {
     'web.click',
     'web.type',
     'ui.tap',
+    'ui.doubleTap',
+    'ui.longPress',
     'ui.type',
     'ui.swipe',
+    'ui.scroll',
+    'ui.back',
+    'ui.home',
+    'ui.wait',
     'ui.observe',
     'a11y.observe',
     'system.setAlarm',
@@ -43,8 +86,18 @@ export class ApprovalPolicy {
     'sandbox.run'
   ]);
 
-  classify(action: Action): RiskLevel {
+  isPaymentScreen(screen?: Screen): boolean {
+    if (screen === undefined) {
+      return false;
+    }
+    return screen.containsAny(this.paymentWords);
+  }
+
+  classify(action: Action, screen?: Screen): RiskLevel {
     if (action.isPayment || this.paymentKinds.has(action.kind)) {
+      return RiskLevel.Payment;
+    }
+    if (this.isPaymentScreen(screen) && this.interactiveKinds.has(action.kind)) {
       return RiskLevel.Payment;
     }
     if (this.sensitiveKinds.has(action.kind)) {
@@ -56,11 +109,11 @@ export class ApprovalPolicy {
     return RiskLevel.Sensitive;
   }
 
-  isPayment(action: Action): boolean {
-    return this.classify(action) === RiskLevel.Payment;
+  isPayment(action: Action, screen?: Screen): boolean {
+    return this.classify(action, screen) === RiskLevel.Payment;
   }
 
-  requiresApproval(action: Action): boolean {
-    return this.classify(action) !== RiskLevel.Read;
+  requiresApproval(action: Action, screen?: Screen): boolean {
+    return this.classify(action, screen) !== RiskLevel.Read;
   }
 }
