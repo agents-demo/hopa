@@ -155,6 +155,7 @@ packaged into the app.
 - [SECURITY.md](SECURITY.md) — reporting and key handling.
 - [CHANGELOG.md](CHANGELOG.md) — version history.
 - [docs/release.md](docs/release.md) — install, upgrade, rollback, support.
+- [docs/emulator-crash-2026-11-06.md](docs/emulator-crash-2026-11-06.md) — emulator freeze analysis.
 - [docs/status.md](docs/status.md) — honest current state.
 - [docs/roadmap.md](docs/roadmap.md) — milestones G1–G4.
 - [docs/rebuild-plan.md](docs/rebuild-plan.md) — the delivery plan: phases,
