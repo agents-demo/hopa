@@ -87,6 +87,10 @@ the app, but nothing can launch a made-up package. Replace it only after
 Add `bundle_verified: YYYY-MM-DD` once the bundle is checked on a device. Without
 it, the app catalogue shows the bundle as "unverified".
 
+Add `ability: <name>` for an app that should be launchable from the Apps tab. The
+name must be the ability whose skills include `entity.system.home`; check it with
+`bm dump -n <bundle>`.
+
 ## The in-app catalogue
 
 `scripts/build-app-catalog.py` reads every `APP.md` and generates

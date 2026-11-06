@@ -1,6 +1,6 @@
 import { promptAction } from '@kit.ArkUI';
 import { webview } from '@kit.ArkWeb';
-import { Context } from '@kit.AbilityKit';
+import { Context, common } from '@kit.AbilityKit';
 import { Action, PaymentContext, Screen } from '@hopa/core';
 import { AgentService } from '../service/AgentService';
 import { SettingsStore, StoredSettings } from '../service/SettingsStore';
@@ -311,6 +311,19 @@ struct Index {
     .padding(16)
   }
 
+  private async launchApp(bundle: string, ability: string): Promise<void> {
+    try {
+      const context = getContext(this) as common.UIAbilityContext;
+      await context.startAbility({ bundleName: bundle, abilityName: ability });
+      this.messages = this.messages.concat([
+        `HOPA: opened ${bundle}. To let HOPA read and drive it, accessibility (ACL) must be enabled.`
+      ]);
+    } catch (error) {
+      this.messages = this.messages.concat([`HOPA: could not open ${bundle}: ${error}`]);
+    }
+    this.currentTab = 0;
+  }
+
   @Builder
   WebPage() {
     Column({ space: 8 }) {
@@ -374,6 +387,14 @@ struct Index {
                   .fontSize(15)
                   .fontWeight(FontWeight.Bold)
                   .layoutWeight(1)
+                if (app.verified && app.ability.length > 0) {
+                  Button('Open')
+                    .fontSize(12)
+                    .height(28)
+                    .onClick(() => {
+                      this.launchApp(app.bundle, app.ability);
+                    })
+                }
                 Text(app.verified
                   ? 'bundle verified'
                   : (app.confirmed ? 'bundle unverified' : 'no bundle yet'))

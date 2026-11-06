@@ -57,6 +57,7 @@ def collect() -> list[dict]:
                 "aliases": parse_list(fields.get("aliases", "[]")),
                 "confirmed": confirmed,
                 "verified": verified,
+                "ability": fields.get("ability", "").strip(),
             }
         )
     entries.sort(key=lambda item: (not item["verified"], not item["confirmed"], item["display"].lower()))
@@ -74,6 +75,7 @@ def render(entries: list[dict]) -> str:
         "  aliases: string[] = [];",
         "  confirmed: boolean = false;",
         "  verified: boolean = false;",
+        "  ability: string = '';",
         "}",
         "",
         "export const APP_CATALOG: CatalogApp[] = [",
@@ -87,6 +89,7 @@ def render(entries: list[dict]) -> str:
         lines.append(f"    aliases: [{aliases}],")
         lines.append(f"    confirmed: {str(entry['confirmed']).lower()},")
         lines.append(f"    verified: {str(entry['verified']).lower()},")
+        lines.append(f"    ability: {escape(entry['ability'])},")
         lines.append("  },")
     lines.append("];")
     lines.append("")

@@ -18,13 +18,13 @@ name cannot be checked here.
 
 | App | Bundle | Status | How it was checked |
 |---|---|---|---|
-| Settings | `com.huawei.hmos.settings` | verified | launched, WLAN screen read |
-| Browser | `com.huawei.hmos.browser` | verified | launched, homepage search field read |
-| Calendar | `com.huawei.hmos.calendar` | verified | launched, `phone_add_agenda` present |
-| Files | `com.huawei.hmos.files` | verified | launched, Browse screen read |
-| Gallery | `com.huawei.hmos.photos` | verified | launched, "Gallery" title read |
-| Contacts / Phone | `com.ohos.contacts` | verified | launched, Phone/Contacts/Favorites tabs read |
-| AppGallery | `com.huawei.hmsapp.appgallery` | verified | present in `pc-agent apps`, bundle dump ok |
+| Settings | `com.huawei.hmos.settings` | verified | launched, WLAN screen read; ability `com.huawei.hmos.settings.MainAbility` |
+| Browser | `com.huawei.hmos.browser` | verified | launched, homepage search field read; ability `MainAbility` |
+| Calendar | `com.huawei.hmos.calendar` | verified | launched, `phone_add_agenda` present; ability `MainAbility` |
+| Files | `com.huawei.hmos.files` | verified | launched, Browse screen read; ability `EntryAbility` |
+| Gallery | `com.huawei.hmos.photos` | verified | launched, "Gallery" title read; ability `com.huawei.hmos.photos.MainAbility` |
+| Contacts / Phone | `com.ohos.contacts` | verified | launched, Phone/Contacts/Favorites tabs read; ability `com.ohos.contacts.EntryAbility` |
+| AppGallery | `com.huawei.hmsapp.appgallery` | verified | present in `pc-agent apps`, bundle dump ok; ability `MainAbility` |
 | Camera | `com.huawei.hmos.camera` | not on this image | absent from `pc-agent apps` |
 | Clock | `com.huawei.hmos.clock` | not on this image | absent from `pc-agent apps` |
 | Music | `com.huawei.hmos.music` | not on this image | absent; only `com.huawei.hms.musicservice` exists |

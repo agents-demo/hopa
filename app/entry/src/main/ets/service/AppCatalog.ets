@@ -7,6 +7,7 @@ export class CatalogApp {
   aliases: string[] = [];
   confirmed: boolean = false;
   verified: boolean = false;
+  ability: string = '';
 }
 
 export const APP_CATALOG: CatalogApp[] = [
@@ -17,6 +18,7 @@ export const APP_CATALOG: CatalogApp[] = [
     aliases: ["应用市场", "app store"],
     confirmed: true,
     verified: true,
+    ability: "MainAbility",
   },
   {
     name: "browser",
@@ -25,6 +27,7 @@ export const APP_CATALOG: CatalogApp[] = [
     aliases: ["浏览器"],
     confirmed: true,
     verified: true,
+    ability: "MainAbility",
   },
   {
     name: "calendar",
@@ -33,6 +36,7 @@ export const APP_CATALOG: CatalogApp[] = [
     aliases: ["日历", "日程"],
     confirmed: true,
     verified: true,
+    ability: "MainAbility",
   },
   {
     name: "contacts",
@@ -41,6 +45,7 @@ export const APP_CATALOG: CatalogApp[] = [
     aliases: ["联系人", "通讯录"],
     confirmed: true,
     verified: true,
+    ability: "com.ohos.contacts.EntryAbility",
   },
   {
     name: "files",
@@ -49,6 +54,7 @@ export const APP_CATALOG: CatalogApp[] = [
     aliases: ["文件", "文件管理"],
     confirmed: true,
     verified: true,
+    ability: "EntryAbility",
   },
   {
     name: "gallery",
@@ -57,6 +63,7 @@ export const APP_CATALOG: CatalogApp[] = [
     aliases: ["图库", "相册"],
     confirmed: true,
     verified: true,
+    ability: "com.huawei.hmos.photos.MainAbility",
   },
   {
     name: "settings",
@@ -65,6 +72,7 @@ export const APP_CATALOG: CatalogApp[] = [
     aliases: ["设置", "settings"],
     confirmed: true,
     verified: true,
+    ability: "com.huawei.hmos.settings.MainAbility",
   },
   {
     name: "camera",
@@ -73,6 +81,7 @@ export const APP_CATALOG: CatalogApp[] = [
     aliases: ["相机", "拍照"],
     confirmed: true,
     verified: false,
+    ability: "",
   },
   {
     name: "clock",
@@ -81,6 +90,7 @@ export const APP_CATALOG: CatalogApp[] = [
     aliases: ["闹钟", "时钟", "alarm"],
     confirmed: true,
     verified: false,
+    ability: "",
   },
   {
     name: "music",
@@ -89,6 +99,7 @@ export const APP_CATALOG: CatalogApp[] = [
     aliases: ["音乐", "播放器"],
     confirmed: true,
     verified: false,
+    ability: "",
   },
   {
     name: "notepad",
@@ -97,6 +108,7 @@ export const APP_CATALOG: CatalogApp[] = [
     aliases: ["备忘录", "笔记", "notes"],
     confirmed: true,
     verified: false,
+    ability: "",
   },
   {
     name: "petal-maps",
@@ -105,6 +117,7 @@ export const APP_CATALOG: CatalogApp[] = [
     aliases: ["地图", "petal maps"],
     confirmed: true,
     verified: false,
+    ability: "",
   },
   {
     name: "baijiahao",
@@ -113,6 +126,7 @@ export const APP_CATALOG: CatalogApp[] = [
     aliases: ["Baijiahao", "Baidu Baijiahao", "百家号"],
     confirmed: false,
     verified: false,
+    ability: "",
   },
   {
     name: "bilibili",
@@ -121,6 +135,7 @@ export const APP_CATALOG: CatalogApp[] = [
     aliases: ["Bilibili", "B站", "哔哩哔哩", "bili"],
     confirmed: false,
     verified: false,
+    ability: "",
   },
   {
     name: "boss-zhipin",
@@ -129,6 +144,7 @@ export const APP_CATALOG: CatalogApp[] = [
     aliases: ["BOSS", "BOSS直聘", "boss zhipin", "zhipin"],
     confirmed: false,
     verified: false,
+    ability: "",
   },
   {
     name: "dedao",
@@ -137,6 +153,7 @@ export const APP_CATALOG: CatalogApp[] = [
     aliases: ["Dedao", "得到", "luojilab"],
     confirmed: false,
     verified: false,
+    ability: "",
   },
   {
     name: "douyin",
@@ -145,6 +162,7 @@ export const APP_CATALOG: CatalogApp[] = [
     aliases: ["Douyin", "抖音", "TikTok China"],
     confirmed: false,
     verified: false,
+    ability: "",
   },
   {
     name: "feishu",
@@ -153,6 +171,7 @@ export const APP_CATALOG: CatalogApp[] = [
     aliases: ["Feishu", "Lark", "飞书"],
     confirmed: false,
     verified: false,
+    ability: "",
   },
   {
     name: "jike",
@@ -161,6 +180,7 @@ export const APP_CATALOG: CatalogApp[] = [
     aliases: ["Jike", "即刻", "ruguo"],
     confirmed: false,
     verified: false,
+    ability: "",
   },
   {
     name: "kuaishou",
@@ -169,6 +189,7 @@ export const APP_CATALOG: CatalogApp[] = [
     aliases: ["Kuaishou", "快手", "Kwai"],
     confirmed: false,
     verified: false,
+    ability: "",
   },
   {
     name: "qqmail",
@@ -177,6 +198,7 @@ export const APP_CATALOG: CatalogApp[] = [
     aliases: ["QQ Mail", "QQ邮箱", "qqmail", "foxmail"],
     confirmed: false,
     verified: false,
+    ability: "",
   },
   {
     name: "toutiao",
@@ -185,6 +207,7 @@ export const APP_CATALOG: CatalogApp[] = [
     aliases: ["Toutiao", "今日头条", "jinri toutiao"],
     confirmed: false,
     verified: false,
+    ability: "",
   },
   {
     name: "wechat",
@@ -193,6 +216,7 @@ export const APP_CATALOG: CatalogApp[] = [
     aliases: ["WeChat", "微信", "weixin", "wechat"],
     confirmed: false,
     verified: false,
+    ability: "",
   },
   {
     name: "weibo",
@@ -201,6 +225,7 @@ export const APP_CATALOG: CatalogApp[] = [
     aliases: ["Weibo", "微博", "sina weibo"],
     confirmed: false,
     verified: false,
+    ability: "",
   },
   {
     name: "xianyu",
@@ -209,6 +234,7 @@ export const APP_CATALOG: CatalogApp[] = [
     aliases: ["Xianyu", "闲鱼", "idlefish"],
     confirmed: false,
     verified: false,
+    ability: "",
   },
   {
     name: "xiaohongshu",
@@ -217,6 +243,7 @@ export const APP_CATALOG: CatalogApp[] = [
     aliases: ["Xiaohongshu", "小红书", "RED", "xhs"],
     confirmed: false,
     verified: false,
+    ability: "",
   },
   {
     name: "zhihu",
@@ -225,5 +252,6 @@ export const APP_CATALOG: CatalogApp[] = [
     aliases: ["Zhihu", "知乎"],
     confirmed: false,
     verified: false,
+    ability: "",
   },
 ];

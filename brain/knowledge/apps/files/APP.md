@@ -3,6 +3,7 @@ name: files
 display: Files
 bundle: com.huawei.hmos.files
 bundle_verified: 2026-11-06
+ability: EntryAbility
 aliases: [文件, 文件管理]
 pace: careful
 validated: pending
