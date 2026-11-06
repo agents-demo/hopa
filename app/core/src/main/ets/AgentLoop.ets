@@ -2,6 +2,7 @@ import { Action, ActionOutcome } from './Types';
 import { ActionExecutor } from './ActionExecutor';
 import { ModelClient, ModelMessage, ModelRequest, ModelResponse } from './ModelClient';
 import { Screen, ScreenSource } from './Screen';
+import { ContextBudget } from './ContextBudget';
 
 class ActionPayload {
   kind: string = '';
@@ -23,6 +24,7 @@ export class AgentLoop {
   private source?: ScreenSource;
   private memory: string = '';
   private skill: string = '';
+  private budget: ContextBudget = new ContextBudget();
 
   constructor(
     executor: ActionExecutor,
@@ -67,7 +69,7 @@ export class AgentLoop {
 
     for (let step = 0; step < this.maxSteps; step++) {
       const request = new ModelRequest();
-      request.messages = messages;
+      request.messages = this.budget.trim(messages);
       const response: ModelResponse = await this.model.complete(request);
       if (response.error.length > 0) {
         break;

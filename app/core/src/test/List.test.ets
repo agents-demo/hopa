@@ -3,6 +3,7 @@ import actionExecutorTest from './ActionExecutor.test';
 import agentLoopTest from './AgentLoop.test';
 import toolRegistryTest from './ToolRegistry.test';
 import skillsTest from './Skills.test';
+import contextBudgetTest from './ContextBudget.test';
 
 export default function testsuite(): void {
   approvalPolicyTest();
@@ -10,4 +11,5 @@ export default function testsuite(): void {
   agentLoopTest();
   toolRegistryTest();
   skillsTest();
+  contextBudgetTest();
 }
