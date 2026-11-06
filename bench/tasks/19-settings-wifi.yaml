@@ -1,7 +1,7 @@
 # Defined in Appendix B. Confirm the bundle on a device before relying on it.
 schema_version: 1
 id: settings-wifi-toggle
-goal: Toggle Wi-Fi off and on
+goal: Open Settings and reach the WLAN screen
 app: Settings
 bundle: com.huawei.hmos.settings
 success:
@@ -14,5 +14,5 @@ steps:
 - action: wait
   seconds: 2
 - action: tap_text
-  text: Wi-Fi
+  text: WLAN
 max_steps: 12

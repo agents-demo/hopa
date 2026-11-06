@@ -13,4 +13,6 @@ platform: harmonyos
 - Set the title, start and end time, then save.
 - Switch between day, week and month views.
 
+Bundle confirmed on the emulator (`com.huawei.hmos.calendar`, 2026-11-06).
+
 Validated on a HarmonyOS 6.1.1 emulator only after a smoke test.

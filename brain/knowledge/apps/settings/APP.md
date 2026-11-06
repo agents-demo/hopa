@@ -14,4 +14,6 @@ platform: harmonyos
 - Bluetooth: Settings > Bluetooth. Toggle the switch.
 - Display: Settings > Display & brightness.
 
+Bundle confirmed on the emulator (`com.huawei.hmos.settings`, 2026-11-06).
+
 Validated on a HarmonyOS 6.1.1 emulator only after a smoke test.

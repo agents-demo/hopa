@@ -13,4 +13,6 @@ platform: harmonyos
 - Use search for a file name.
 - Long-press a file for copy, move, rename or delete.
 
+Bundle confirmed on the emulator (`com.huawei.hmos.files`, 2026-11-06).
+
 Validated on a HarmonyOS 6.1.1 emulator only after a smoke test.

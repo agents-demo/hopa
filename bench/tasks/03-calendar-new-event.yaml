@@ -9,7 +9,7 @@ success:
 steps:
   - action: launch
   - action: wait
-    seconds: 2
+    seconds: 6
   - action: tap_id
     id: "phone_add_agenda"
   - action: wait

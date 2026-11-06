@@ -110,7 +110,7 @@ it, not at the end.
 | `app/entry` | 4-tab ArkUI shell wired to `AgentLoop`; approval sheet; model settings | `pages/Index.ets` |
 | Agent loop | captures the screen, asks for one action, gates, records | `AgentLoop.ets` |
 | `pc-agent` | CLI + MCP implemented: devices, dump, tap, double-tap, long-press, type, swipe, screenshot, launch, stop, key, install, uninstall, apps | `pc-agent/src` |
-| `bench` | 20 task files; 3/5 v0 tasks pass on the emulator | `bench/tasks`, `docs/bench-v0.md` |
+| `bench` | 20 task files; 5/7 tasks pass on the emulator (strict: a failed step cannot pass) | `bench/tasks`, `docs/bench-v0.md` |
 | Brain | Kotlin router + HTTP service + knowledge + prompts + skills + sites (89 assertions + schema contract) | `brain/src`, `docs/brain.md` |
 | HAP | builds with DevEco 6.1.1 / API 24; signed with the SDK local debug kit; installed on the Pura 90 emulator | `scripts/sign-app.ps1` |
 | Knowledge | 12 HarmonyOS system apps, 18 sites, 6 skills; 23 Mika apps triaged | `brain/knowledge`, `docs/knowledge-triage.md` |

@@ -75,6 +75,7 @@ class Runner:
         history: list[StepResult] = []
         error: str | None = None
         failure: str | None = None
+        step_failed = False
         tokens = 0
 
         # Reset the app so a previous task cannot leave it on a success screen.
@@ -93,8 +94,13 @@ class Runner:
                 tokens += int(getattr(model, "last_tokens", 0) or 0)
                 if not result.ok:
                     failure = classify_failure(result.detail)
+                    step_failed = True
                     break
             success = self.check(task)
+            # A scripted step that failed cannot count as a pass, even when the
+            # success text happened to be visible before the step ran.
+            if step_failed and success:
+                success = False
         except HopaError as exc:
             error = str(exc)
             failure = "device"

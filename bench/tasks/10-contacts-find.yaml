@@ -3,7 +3,7 @@ schema_version: 1
 id: contacts-find
 goal: Find a contact by name
 app: Contacts
-bundle: com.huawei.hmos.contacts
+bundle: com.ohos.contacts
 success:
   type: text_visible
   any:

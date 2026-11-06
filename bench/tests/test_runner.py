@@ -79,6 +79,19 @@ def test_missing_text_marks_step_failed() -> None:
     assert "not found" in result.steps[0].detail
 
 
+def test_failed_step_cannot_pass_on_visible_text() -> None:
+    # "Bluetooth" is already visible, but the tap failed; that must not be a pass.
+    device = FakeDevice()
+    result = Runner(device, sleep=lambda _: None).run_task(
+        _task(
+            [Action("tap_text", {"text": "Nope"})],
+            success=SuccessCheck(type="text_visible", any=["Bluetooth"]),
+        )
+    )
+    assert result.success is False
+    assert result.failure == "target_not_found"
+
+
 def test_wait_is_executed_without_sleeping_for_real() -> None:
     slept: list[float] = []
     device = FakeDevice()

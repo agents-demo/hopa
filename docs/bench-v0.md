@@ -1,8 +1,8 @@
 ﻿# HOPA-Bench v0
 
 The first benchmark slice: twenty task definitions, four success predicates and a stable
-failure taxonomy. It validates the task format and the runner. **No device run
-has been recorded yet**; the numbers below are from the local test harness.
+failure taxonomy. It validates the task format and the runner. A device run is
+recorded at the end of this file.
 
 ## Task format
 
@@ -82,6 +82,11 @@ The directory now holds **20 task definitions**:
 Only the first five were exercised on a device. The rest are defined but their
 bundles and selectors must be confirmed on a real HarmonyOS build.
 
+A failed step can never count as a pass: if any scripted step fails, the task is
+failed even when the success text happened to be on screen before the step ran.
+That rule is enforced in `Runner.run_task` and covered by
+`bench/tests/test_runner.py::test_failed_step_cannot_pass_on_visible_text`.
+
 All twenty validate:
 
 ```bash
@@ -124,16 +129,31 @@ bench report --input .hopa/bench-device-final2.json
 | Task | Result | Reason |
 |---|---|---|
 | `settings-wlan` | **PASS** | reached WLAN |
-| `calendar-new-event` | **PASS** | opened the new-event sheet |
-| `browser-search-harmonyos` | **PASS** | typed and submitted the query |
+| `calendar-new-event` | **PASS** | opened the new-event sheet (6 s cold start) |
+| `browser-search-harmonyos` | **PASS** | typed and submitted the query (10 s cold start) |
+| `settings-wifi-toggle` | **PASS** | reached the WLAN screen |
+| `settings-brightness` | **PASS** | opened Display & brightness |
+| `contacts-find` | FAIL | the Phone/Contacts app has no search target until a tab switch that `uitest` does not expose |
+| `files-locate` | FAIL | Files shows only an unlabeled `top_search`; typing does not reach it |
 | `clock-open-alarm` | FAIL | Clock is not installed on this image |
 | `notes-create-note` | FAIL | Notes is not installed on this image |
 
-Totals: **3/5 (60%)**, p50 1.9 s, p95 4.8 s, wall clock 136 s.
+Totals on the seven tasks that were actually run: **5/7 (71%)**.
+On the original five v0 tasks: **3/5 (60%)**.
 
 The emulator has **no Bluetooth** and no Clock/Notes apps, so the Settings task
 uses WLAN and the two missing-app tasks cannot pass on this image. The app is
 force-stopped before every task so a previous screen cannot fake a pass.
+
+### Corrections found by the device run
+
+- `com.huawei.hmos.contacts` does not exist; the Phone/Contacts app is
+  `com.ohos.contacts`.
+- `com.huawei.hmos.gallery` does not exist; Gallery is `com.huawei.hmos.photos`.
+- AppGallery is `com.huawei.hmsapp.appgallery`.
+- Calendar and Browser need 6-10 s cold starts before their controls appear.
+- `settings-wifi-toggle` said "toggle off and on" but only opened the screen; the
+  goal and steps now say what the task actually does.
 
 The emulator also froze once (`SceneBoard` panic); after the restart the same
 tasks ran. See `docs/emulator-crash-2026-11-06.md`.
