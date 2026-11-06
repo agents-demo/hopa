@@ -6,6 +6,7 @@ import { AgentService } from '../service/AgentService';
 import { SettingsStore, StoredSettings } from '../service/SettingsStore';
 import { MemoryItem } from '../service/MemoryStore';
 import { Skill } from '@hopa/core';
+import { RunRecord } from '@hopa/core';
 
 @Entry
 @Component
@@ -36,6 +37,7 @@ struct Index {
   @State skillTrigger: string = '';
   @State skillGuidance: string = '';
   @State skills: Skill[] = [];
+  @State runRecords: RunRecord[] = [];
 
   private webController: webview.WebviewController = new webview.WebviewController();
 
@@ -47,6 +49,7 @@ struct Index {
     this.loadSettings();
     this.loadMemory();
     this.loadSkills();
+    this.loadRuns();
 
     // Fail-closed by default; the sheet is the only way to allow an action.
     service.approvals.setHandler(async (action: Action, screen: Screen | undefined): Promise<boolean> => {
@@ -106,7 +109,7 @@ struct Index {
 
     this.busy = false;
     this.taskStatus = 'Idle';
-    this.runCount = service.runs.all().length;
+    this.refreshRuns();
   }
 
   private saveModel(): void {
@@ -235,6 +238,24 @@ struct Index {
     });
   }
 
+  private async loadRuns(): Promise<void> {
+    try {
+      await AgentService.get().loadRuns(getContext(this) as Context);
+      this.runRecords = AgentService.get().runs.all();
+      this.runCount = this.runRecords.length;
+    } catch (error) {
+      // First run: no history yet.
+    }
+  }
+
+  private refreshRuns(): void {
+    this.runRecords = AgentService.get().runs.all();
+    this.runCount = this.runRecords.length;
+    AgentService.get().saveRuns(getContext(this) as Context).catch(() => {
+      // Persistence is best effort.
+    });
+  }
+
   private openAddress(): void {
     const url: string = this.address.trim();
     if (!url.startsWith('https://')) {
@@ -335,19 +356,55 @@ struct Index {
 
   @Builder
   TasksPage() {
-    Column({ space: 16 }) {
+    Column({ space: 12 }) {
       Text('Task progress')
         .fontSize(22)
         .fontWeight(FontWeight.Bold)
       Text(this.taskStatus)
         .fontSize(16)
-      Progress({ value: this.busy ? 50 : 0, total: 100, type: ProgressType.Linear })
-        .width('100%')
+      if (this.busy) {
+        Progress({ value: 50, total: 100, type: ProgressType.Linear })
+          .width('100%')
+      }
       Text(this.a11yAvailable
-        ? 'Accessibility is available. The loop can read the screen.'
-        : 'Accessibility is unavailable, so the loop cannot read other apps yet.')
+        ? 'Accessibility is available. The loop can read other apps.'
+        : 'Accessibility is unavailable, so the loop can read only the built-in browser.')
+        .fontSize(13)
+        .fontColor('#666666')
+
+      Text(`Recent actions (${this.runRecords.length})`)
         .fontSize(14)
         .fontColor('#666666')
+
+      List({ space: 8 }) {
+        ForEach(this.runRecords, (run: RunRecord, index: number) => {
+          ListItem() {
+            Column({ space: 2 }) {
+              Row({ space: 8 }) {
+                Text(run.kind)
+                  .fontSize(14)
+                  .fontWeight(FontWeight.Bold)
+                  .layoutWeight(1)
+                Text(run.status)
+                  .fontSize(12)
+                  .fontColor(run.status === 'executed' ? '#0A7F3F' : '#B42318')
+              }
+              .width('100%')
+              Text(run.detail.length > 0 ? run.detail : '(no detail)')
+                .fontSize(12)
+                .fontColor('#666666')
+                .maxLines(2)
+            }
+            .width('100%')
+            .padding(10)
+            .backgroundColor('#F7F8FA')
+            .borderRadius(8)
+            .alignItems(HorizontalAlign.Start)
+          }
+        }, (run: RunRecord) => run.id)
+      }
+      .layoutWeight(1)
+      .width('100%')
     }
     .width('100%')
     .height('100%')

@@ -10,6 +10,7 @@ import {
   ModelClient,
   OpenAiCompatibleClient,
   RiskLevel,
+  RunRecord,
   RunStore,
   Screen,
   ScreenSource,
@@ -20,6 +21,8 @@ import { WebCapability } from '@hopa/capability-web';
 import { SandboxCapability } from '@hopa/capability-sandbox';
 import { A11yBridge, A11yCapability, UiCapability } from '@hopa/capability-a11y';
 import { SystemCapability } from '@hopa/capability-system';
+import { Context } from '@kit.AbilityKit';
+import { preferences } from '@kit.ArkData';
 import { BrowserController } from './BrowserController';
 import { MemoryStore } from './MemoryStore';
 import { SkillStore } from './SkillStore';
@@ -87,6 +90,8 @@ export class AgentService {
   private model: ModelClient | undefined = undefined;
   private loop: AgentLoop | undefined = undefined;
   private modelLabel: string = '';
+  private static readonly STORE: string = 'hopa_settings';
+  private static readonly RUNS_KEY: string = 'runs_v1';
 
   private constructor() {
     this.runs = new RunStore();
@@ -166,6 +171,30 @@ export class AgentService {
 
   isA11yAvailable(): boolean {
     return this.a11y.isAvailable();
+  }
+
+  /** Restores the last run records shown in the Tasks tab. */
+  async loadRuns(context: Context): Promise<void> {
+    const store = await preferences.getPreferences(context, AgentService.STORE);
+    const raw = await store.get(AgentService.RUNS_KEY, '');
+    if (typeof raw !== 'string' || raw.length === 0) {
+      return;
+    }
+    try {
+      const parsed = JSON.parse(raw) as RunRecord[];
+      this.runs.replace(parsed);
+    } catch (error) {
+      // Unreadable history: keep the empty store.
+    }
+  }
+
+  /** Persists the most recent records; the history is capped. */
+  async saveRuns(context: Context): Promise<void> {
+    const all: RunRecord[] = this.runs.all();
+    const recent: RunRecord[] = all.length > 100 ? all.slice(all.length - 100) : all;
+    const store = await preferences.getPreferences(context, AgentService.STORE);
+    await store.put(AgentService.RUNS_KEY, JSON.stringify(recent));
+    await store.flush();
   }
 
   /**

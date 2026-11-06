@@ -13,6 +13,11 @@ export class RunStore implements RunRecorder {
     return this.records.slice();
   }
 
+  /** Replaces the store from persisted records (startup restore). */
+  replace(records: RunRecord[]): void {
+    this.records = records.slice();
+  }
+
   clear(): void {
     this.records = [];
   }
