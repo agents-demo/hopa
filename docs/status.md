@@ -11,6 +11,9 @@ is unsigned, and the running Pura 90 emulator is on its lock screen, which
 blocks `uitest`. No ACL has been filed. The standalone claim is still **not**
 met; the toolchain and tethered claims are.
 
+Plan progress: **207 / 767 boxes (27.0%)**. The open boxes are concentrated in
+the device/ACL, UI, release and sign-off phases.
+
 | Area | State | Evidence |
 |---|---|---|
 | `agent/` loop, gate, policy, records | working, tested | `pytest agent` |
