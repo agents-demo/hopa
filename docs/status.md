@@ -3,7 +3,7 @@
 **2026-11-06.** The repository is a working PC-tethered agent plus a signed,
 installed HarmonyOS app. The Python harness captures an observation, asks a
 model for one action, classifies it, executes it, re-observes, verifies and
-appends a hash-chained record. It has 194 agent tests (274 across the harness)
+appends a hash-chained record. It has 188 agent tests (274 across the harness)
 and a validated 20-task bench format. The ArkTS `app/core` has a screen-aware
 payment gate and a loop that captures observations; the HAP builds with DevEco
 6.1.1 / API 24, the Local Tests pass, and the HAP is signed with the SDK's local
@@ -75,6 +75,7 @@ signed HAP on any machine that has the SDK.
 - The HAP contains no Python runtime.
 - The phone app cannot control other apps until the ACL is approved.
 - Numbers in this repository are local until a device run says otherwise.
+
 
 
 
