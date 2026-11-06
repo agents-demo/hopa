@@ -42,6 +42,7 @@ The HTTP contract is documented in [`docs/brain.md`](../docs/brain.md).
 - `KnowledgeLoader` — Markdown + front matter for 12 HarmonyOS apps
 - `PromptBook` — system rules, intent gate, channel order, truncation
 - `SkillLoader` — 6 `SKILL.md` manifests with trigger terms
+- `SiteLoader` — 18 `SITE.md` manifests with domains
 - `GET /health`, `GET /version`, `POST /decide`, `GET /session/{id}`
 
 ## Not in this slice

@@ -32,6 +32,7 @@ and a Pura 90 phone emulator**.
 | Kotlin knowledge loader (`KnowledgeLoaderTest`) | 14 assertions passed |
 | Kotlin prompt contract (`PromptBookTest`) | 16 assertions passed |
 | Kotlin skill loader (`SkillLoaderTest`) | 11 assertions passed |
+| Kotlin site loader (`SiteLoaderTest`) | 11 assertions passed |
 | Brain contract (`/decide` vs schema) | pass |
 | Kotlin / JDK | 2.1.0 / 17 |
 | `hopa-bench validate --tasks bench/tasks` | 20 tasks valid |

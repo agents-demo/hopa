@@ -43,4 +43,7 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 & java -cp $classpath hopa.brain.SkillLoaderTestKt (Join-Path $root "brain/knowledge/skills")
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+& java -cp $classpath hopa.brain.SiteLoaderTestKt (Join-Path $root "brain/knowledge/sites")
 exit $LASTEXITCODE

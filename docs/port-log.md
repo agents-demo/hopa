@@ -13,6 +13,7 @@ and never copies Android-only code.
 | 2026-11-06 | `core/knowledge/` format | `brain/src/main/kotlin/hopa/brain/KnowledgeLoader.kt` | clean-room | Markdown + front matter; 12 HarmonyOS system app files |
 | 2026-11-06 | `core/prompt/` rules | `brain/src/main/kotlin/hopa/brain/Prompts.kt` | clean-room | system rules, intent gate, channel order, truncation |
 | 2026-11-06 | `core/skills/` format | `brain/src/main/kotlin/hopa/brain/SkillLoader.kt` | clean-room | 6 skill manifests with terms/apps/sites |
+| 2026-11-06 | `knowledge/sites/` metadata | `brain/knowledge/sites/` | clean-room | 18 sites; domains/aliases from Mika metadata, bodies rewritten |
 
 No Mika source file is copied. The routing rules are reimplemented from the
 documented behaviour; Mika is credited in `NOTICE`.

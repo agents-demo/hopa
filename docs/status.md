@@ -17,7 +17,7 @@ the device/ACL, UI, release and sign-off phases.
 | Area | State | Evidence |
 |---|---|---|
 | `agent/` loop, gate, policy, records | working, tested | `pytest agent` |
-| `brain/` Kotlin router + HTTP service + knowledge loader + prompts + skills | working, 78 assertions + schema contract | `scripts/brain.ps1` |
+| `brain/` Kotlin router + HTTP service + knowledge + prompts + skills + sites | working, 89 assertions + schema contract | `scripts/brain.ps1` |
 | `pc-agent` CLI + MCP | working; live device commands work | `pc-agent devices` |
 | `bench` 20 task definitions | valid | `pytest bench`, `validate` |
 | Observation/action/decision/record schemas | v1 | `schemas/` |

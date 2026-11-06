@@ -234,11 +234,18 @@ class BrainServer(
 fun main(args: Array<String>) {
     val port = args.firstOrNull()?.toIntOrNull() ?: 8731
     val knowledgeDir = Path.of(args.getOrNull(1) ?: "brain/knowledge/apps")
-    val entries = if (Files.exists(knowledgeDir)) {
+    val appEntries = if (Files.exists(knowledgeDir)) {
         KnowledgeLoader.load(knowledgeDir).map { it.entry }
     } else {
         DemoEntries.all
     }
+    val siteDir = Path.of(args.getOrNull(2) ?: "brain/knowledge/sites")
+    val siteEntries = if (Files.exists(siteDir)) {
+        SiteLoader.load(siteDir).map { it.toEntry() }
+    } else {
+        emptyList()
+    }
+    val entries = appEntries + siteEntries
     val service = BrainService(KnowledgeStore(entries), entries)
     val server = BrainServer(service, port)
     val actual = server.start()

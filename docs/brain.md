@@ -92,6 +92,7 @@ lexical matcher used by `/decide`.
 - `KnowledgeLoaderTest` — 14 format assertions
 - `PromptBookTest` — 16 prompt/intent assertions
 - `SkillLoaderTest` — 11 skill assertions
+- `SiteLoaderTest` — 11 site assertions
 
 `scripts/brain-contract.py` starts the server, calls `/decide`, and validates the
 reply against `schemas/decision.schema.json`.
@@ -99,6 +100,6 @@ reply against `schemas/decision.schema.json`.
 ## Not in this slice
 
 - model calls
-- the Mika 23-app and 18-site corpus
-- skills and the guide catalog
+- the Mika 23-app corpus (triaged; bundles not confirmed)
+- skill execution and the guide catalog
 - ArkTS parity

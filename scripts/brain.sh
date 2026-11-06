@@ -32,3 +32,4 @@ java -cp "$OUT:$GSON" hopa.brain.ServerTestKt
 java -cp "$OUT:$GSON" hopa.brain.KnowledgeLoaderTestKt "$ROOT/brain/knowledge/apps"
 java -cp "$OUT:$GSON" hopa.brain.PromptBookTestKt
 java -cp "$OUT:$GSON" hopa.brain.SkillLoaderTestKt "$ROOT/brain/knowledge/skills"
+java -cp "$OUT:$GSON" hopa.brain.SiteLoaderTestKt "$ROOT/brain/knowledge/sites"

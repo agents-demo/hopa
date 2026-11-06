@@ -8,17 +8,13 @@ No YAML library is required; the parser accepts only `key: value` lines.
 ```
 brain/knowledge/apps/
 ├── settings/APP.md
-├── clock/APP.md
-├── calendar/APP.md
-├── contacts/APP.md
-├── notepad/APP.md
-├── files/APP.md
-├── camera/APP.md
-├── gallery/APP.md
-├── browser/APP.md
-├── appgallery/APP.md
-├── petal-maps/APP.md
+...
 └── music/APP.md
+
+brain/knowledge/sites/
+├── amazon.com/SITE.md
+...
+└── zhipin.com/SITE.md
 ```
 
 ## File format
@@ -70,9 +66,30 @@ non-HarmonyOS platform.
 
 - 12 HarmonyOS system apps: Settings, Clock, Calendar, Contacts, Notepad,
   Files, Camera, Gallery, Browser, AppGallery, Petal Maps, Music.
+- 18 web sites under `brain/knowledge/sites/`.
+- 6 skill manifests under `brain/knowledge/skills/`.
 - All are `validated: pending`.
-- No Mika app/site corpus has been ported yet.
-- No skills or guide catalog yet.
+- The 23 Mika Android apps are triaged in `docs/knowledge-triage.md`; 15 still
+  need a HarmonyOS bundle check, 7 are web-only, 1 is replaced.
+
+## Sites
+
+`SITE.md` uses the same strict front matter:
+
+```markdown
+---
+name: xiaohongshu.com
+display: Xiaohongshu
+domains: [xiaohongshu.com, xhslink.com]
+aliases: [小红书, XHS]
+apps: [xiaohongshu]
+validated: pending
+platform: harmonyos
+---
+```
+
+`SiteLoader` validates every file; `SiteLoaderTest` loads all 18 and checks
+that `byDomain` resolves `www.xiaohongshu.com`.
 
 ## Honest limits
 

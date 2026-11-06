@@ -111,9 +111,9 @@ it, not at the end.
 | Agent loop | captures the screen, asks for one action, gates, records | `AgentLoop.ets` |
 | `pc-agent` | CLI + MCP implemented: devices, dump, tap, double-tap, long-press, type, swipe, screenshot, launch, stop, key, install, uninstall, apps | `pc-agent/src` |
 | `bench` | 20 task files; 3/5 v0 tasks pass on the emulator | `bench/tasks`, `docs/bench-v0.md` |
-| Brain | Kotlin router + HTTP service + knowledge + prompts + skills (78 assertions + schema contract) | `brain/src`, `docs/brain.md` |
+| Brain | Kotlin router + HTTP service + knowledge + prompts + skills + sites (89 assertions + schema contract) | `brain/src`, `docs/brain.md` |
 | HAP | builds with DevEco 6.1.1 / API 24; unsigned | `hvigorw assembleHap` |
-| Knowledge | 12 HarmonyOS system apps; 0 sites, 0 skills | `brain/knowledge/apps` |
+| Knowledge | 12 HarmonyOS system apps, 18 sites, 6 skills; 23 Mika apps triaged | `brain/knowledge`, `docs/knowledge-triage.md` |
 | CI | Python tests + ruff; HAP build and core Local Tests skip with a warning when the mirrored toolchain secret is absent | `.github/workflows/ci.yml` |
 | Tests baseline | 257 Python tests, 78 Kotlin assertions, ArkTS Local Tests pass; 20 bench tasks validate; device bench 3/5 | local run 2026-11-06 |
 
@@ -405,12 +405,12 @@ Module responsibilities:
 ### 7.2 Knowledge port
 
 - [x] Copy the knowledge schema and loader (evidence: brain/src/main/kotlin/hopa/brain/KnowledgeLoader.kt (clean-room))
-- [ ] Inventory Mika's 23 apps and 18 sites; mark Android-only fields
-- [ ] Triage the 23 apps: available on HarmonyOS, web-only, or absent; record the evidence
+- [x] Inventory Mika's 23 apps and 18 sites; mark Android-only fields (evidence: docs/knowledge-triage.md (23 apps + 18 sites))
+- [x] Triage the 23 apps: available on HarmonyOS, web-only, or absent; record the evidence (evidence: docs/knowledge-triage.md (replaced/app?/web-only))
 - [ ] Build the HarmonyOS bundle map from `hdc shell bm dump -a`
 - [ ] Rewrite `APP.md` for the 10 highest-value apps that exist on HarmonyOS
 - [ ] Rewrite `APP.md` for the remaining HarmonyOS-available apps; drop absent apps with a written note
-- [ ] Rewrite `SITE.md` for 18 sites (domains mostly reusable)
+- [x] Rewrite `SITE.md` for 18 sites (domains mostly reusable) (evidence: brain/knowledge/sites (18) + SiteLoaderTest)
 - [x] Add 12 HarmonyOS system apps: Settings, Clock, Calendar, Contacts, Notepad, Files, Camera, Gallery, Browser, AppGallery, Petal Maps, Music (evidence: brain/knowledge/apps (12 files))
 - [x] Add `pace: careful` to every irreversible app path (evidence: 12 APP.md files + KnowledgeLoaderTest)
 - [ ] Add `packageAliases` for HarmonyOS bundles
@@ -472,7 +472,7 @@ Module responsibilities:
 - [ ] Fallback when a known screen is missing
 - [ ] Contribution guide: add an app in one file
 - [x] Knowledge schema and front matter validated in CI (evidence: CI brain job runs KnowledgeLoaderTest)
-- [ ] Track HarmonyOS vs Android divergence per app
+- [x] Track HarmonyOS vs Android divergence per app (evidence: docs/knowledge-triage.md (status/action table))
 - [ ] Record regional and locale variants
 - [ ] Verify the documents skill (PDF extraction) on HarmonyOS
 - [ ] Verify the transcription skill (audio → text) on HarmonyOS
