@@ -10,6 +10,13 @@ export class CatalogApp {
   ability: string = '';
 }
 
+export class CatalogSite {
+  name: string = '';
+  display: string = '';
+  domains: string[] = [];
+  validated: string = '';
+}
+
 export const APP_CATALOG: CatalogApp[] = [
   {
     name: "appgallery",
@@ -253,5 +260,134 @@ export const APP_CATALOG: CatalogApp[] = [
     confirmed: false,
     verified: false,
     ability: "",
+  },
+];
+
+export const SITE_CATALOG: CatalogSite[] = [
+  {
+    name: "amazon.com",
+    display: "Amazon",
+    domains: ["amazon.com", "amazon.sg", "amazon.co.uk", "amazon.de", "amazon.co.jp"],
+    validated: "pending",
+  },
+  {
+    name: "zhipin.com",
+    display: "BOSS直聘",
+    domains: ["zhipin.com"],
+    validated: "pending",
+  },
+  {
+    name: "mail.google.com",
+    display: "Gmail",
+    domains: ["mail.google.com"],
+    validated: "pending",
+  },
+  {
+    name: "calendar.google.com",
+    display: "Google Calendar",
+    domains: ["calendar.google.com"],
+    validated: "pending",
+  },
+  {
+    name: "maps.google.com",
+    display: "Google Maps",
+    domains: ["maps.google.com"],
+    validated: "pending",
+  },
+  {
+    name: "instagram.com",
+    display: "Instagram",
+    domains: ["instagram.com"],
+    validated: "pending",
+  },
+  {
+    name: "linkedin.com",
+    display: "LinkedIn",
+    domains: ["linkedin.com", "www.linkedin.com"],
+    validated: "pending",
+  },
+  {
+    name: "telegram.org",
+    display: "Telegram",
+    domains: ["telegram.org", "web.telegram.org"],
+    validated: "pending",
+  },
+  {
+    name: "uber.com",
+    display: "Uber",
+    domains: ["uber.com", "www.uber.com", "m.uber.com"],
+    validated: "pending",
+  },
+  {
+    name: "ubereats.com",
+    display: "Uber Eats",
+    domains: ["ubereats.com", "www.ubereats.com"],
+    validated: "pending",
+  },
+  {
+    name: "whatsapp.com",
+    display: "WhatsApp",
+    domains: ["whatsapp.com", "web.whatsapp.com"],
+    validated: "pending",
+  },
+  {
+    name: "youtube.com",
+    display: "YouTube",
+    domains: ["youtube.com", "youtu.be"],
+    validated: "pending",
+  },
+  {
+    name: "bilibili.com",
+    display: "哔哩哔哩",
+    domains: ["bilibili.com"],
+    validated: "pending",
+  },
+  {
+    name: "xiaoyuzhoufm.com",
+    display: "小宇宙",
+    domains: ["xiaoyuzhoufm.com"],
+    validated: "pending",
+  },
+  {
+    name: "xiaohongshu.com",
+    display: "小红书",
+    domains: ["xiaohongshu.com", "xhslink.com"],
+    validated: "pending",
+  },
+  {
+    name: "weibo.com",
+    display: "微博",
+    domains: ["weibo.com"],
+    validated: "pending",
+  },
+  {
+    name: "douyin.com",
+    display: "抖音",
+    domains: ["douyin.com", "jinritemai.com"],
+    validated: "pending",
+  },
+  {
+    name: "weixin.sogou.com",
+    display: "搜狗微信",
+    domains: ["weixin.sogou.com"],
+    validated: "pending",
+  },
+  {
+    name: "tieba.baidu.com",
+    display: "百度贴吧",
+    domains: ["tieba.baidu.com"],
+    validated: "pending",
+  },
+  {
+    name: "zhihu.com",
+    display: "知乎",
+    domains: ["zhihu.com"],
+    validated: "pending",
+  },
+  {
+    name: "douban.com",
+    display: "豆瓣",
+    domains: ["douban.com"],
+    validated: "pending",
   },
 ];

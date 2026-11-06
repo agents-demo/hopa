@@ -5,7 +5,7 @@ import { Action, PaymentContext, Screen } from '@hopa/core';
 import { AgentService } from '../service/AgentService';
 import { SettingsStore, StoredSettings } from '../service/SettingsStore';
 import { MemoryItem } from '../service/MemoryStore';
-import { APP_CATALOG, CatalogApp } from '../service/AppCatalog';
+import { APP_CATALOG, CatalogApp, SITE_CATALOG, CatalogSite } from '../service/AppCatalog';
 import { Skill } from '@hopa/core';
 import { RunRecord } from '@hopa/core';
 
@@ -39,6 +39,7 @@ struct Index {
   @State skillGuidance: string = '';
   @State skills: Skill[] = [];
   @State runRecords: RunRecord[] = [];
+  @State catalogSection: number = 0;
 
   private webController: webview.WebviewController = new webview.WebviewController();
 
@@ -369,59 +370,131 @@ struct Index {
   }
 
   @Builder
-  AppsPage() {
-    Column({ space: 10 }) {
-      Text(`Apps (${APP_CATALOG.length})`)
-        .fontSize(22)
-        .fontWeight(FontWeight.Bold)
-      Text('Bundles verified on a device can be launched. Unverified bundles are declared but unchecked; unconfirmed apps are known by name only. HOPA never launches a guessed bundle.')
-        .fontSize(13)
-        .fontColor('#666666')
-
-      List({ space: 8 }) {
-        ForEach(APP_CATALOG, (app: CatalogApp, index: number) => {
-          ListItem() {
-            Column({ space: 2 }) {
-              Row({ space: 8 }) {
-                Text(app.display)
-                  .fontSize(15)
-                  .fontWeight(FontWeight.Bold)
-                  .layoutWeight(1)
-                if (app.verified && app.ability.length > 0) {
-                  Button('Open')
-                    .fontSize(12)
-                    .height(28)
-                    .onClick(() => {
-                      this.launchApp(app.bundle, app.ability);
-                    })
-                }
-                Text(app.verified
-                  ? 'bundle verified'
-                  : (app.confirmed ? 'bundle unverified' : 'no bundle yet'))
-                  .fontSize(11)
-                  .fontColor(app.verified ? '#0A7F3F' : (app.confirmed ? '#B26A00' : '#8A8A8A'))
+  AppsListSection() {
+    List({ space: 8 }) {
+      ForEach(APP_CATALOG, (app: CatalogApp, index: number) => {
+        ListItem() {
+          Column({ space: 2 }) {
+            Row({ space: 8 }) {
+              Text(app.display)
+                .fontSize(15)
+                .fontWeight(FontWeight.Bold)
+                .layoutWeight(1)
+              if (app.verified && app.ability.length > 0) {
+                Button('Open')
+                  .fontSize(12)
+                  .height(28)
+                  .onClick(() => {
+                    this.launchApp(app.bundle, app.ability);
+                  })
               }
-              .width('100%')
-              Text(app.bundle.length > 0 ? app.bundle : 'no HarmonyOS bundle yet')
-                .fontSize(12)
-                .fontColor('#666666')
-              if (app.aliases.length > 0) {
-                Text(app.aliases.slice(0, 3).join(', '))
-                  .fontSize(11)
-                  .fontColor('#999999')
-                  .maxLines(1)
+              Text(app.verified
+                ? 'bundle verified'
+                : (app.confirmed ? 'bundle unverified' : 'no bundle yet'))
+                .fontSize(11)
+                .fontColor(app.verified ? '#0A7F3F' : (app.confirmed ? '#B26A00' : '#8A8A8A'))
+            }
+            .width('100%')
+            Text(app.bundle.length > 0 ? app.bundle : 'no HarmonyOS bundle yet')
+              .fontSize(12)
+              .fontColor('#666666')
+            if (app.aliases.length > 0) {
+              Text(app.aliases.slice(0, 3).join(', '))
+                .fontSize(11)
+                .fontColor('#999999')
+                .maxLines(1)
+            }
+          }
+          .width('100%')
+          .padding(10)
+          .backgroundColor('#F7F8FA')
+          .borderRadius(8)
+          .alignItems(HorizontalAlign.Start)
+        }
+      }, (app: CatalogApp) => app.name)
+    }
+    .layoutWeight(1)
+    .width('100%')
+  }
+
+  @Builder
+  SitesListSection() {
+    List({ space: 8 }) {
+      ForEach(SITE_CATALOG, (site: CatalogSite, index: number) => {
+        ListItem() {
+          Column({ space: 2 }) {
+            Row({ space: 8 }) {
+              Text(site.display)
+                .fontSize(15)
+                .fontWeight(FontWeight.Bold)
+                .layoutWeight(1)
+              if (site.domains.length > 0) {
+                Button('Open')
+                  .fontSize(12)
+                  .height(28)
+                  .onClick(() => {
+                    this.address = `https://${site.domains[0]}`;
+                    this.currentTab = 1;
+                    setTimeout(() => {
+                      this.openAddress();
+                    }, 500);
+                  })
               }
             }
             .width('100%')
-            .padding(10)
-            .backgroundColor('#F7F8FA')
-            .borderRadius(8)
-            .alignItems(HorizontalAlign.Start)
+            Text(site.domains.join(', '))
+              .fontSize(12)
+              .fontColor('#666666')
+            Text(`validated: ${site.validated}`)
+              .fontSize(11)
+              .fontColor('#999999')
           }
-        }, (app: CatalogApp) => app.name)
+          .width('100%')
+          .padding(10)
+          .backgroundColor('#F7F8FA')
+          .borderRadius(8)
+          .alignItems(HorizontalAlign.Start)
+        }
+      }, (site: CatalogSite) => site.name)
+    }
+    .layoutWeight(1)
+    .width('100%')
+  }
+
+  @Builder
+  AppsPage() {
+    Column({ space: 10 }) {
+      Text(`Catalogue (${APP_CATALOG.length} apps, ${SITE_CATALOG.length} sites)`)
+        .fontSize(22)
+        .fontWeight(FontWeight.Bold)
+
+      Row({ space: 8 }) {
+        Button(`Apps ${APP_CATALOG.length}`)
+          .backgroundColor(this.catalogSection === 0 ? '#0A59F7' : '#E5E6E8')
+          .fontColor(this.catalogSection === 0 ? '#FFFFFF' : '#333333')
+          .onClick(() => {
+            this.catalogSection = 0;
+          })
+        Button(`Sites ${SITE_CATALOG.length}`)
+          .backgroundColor(this.catalogSection === 1 ? '#0A59F7' : '#E5E6E8')
+          .fontColor(this.catalogSection === 1 ? '#FFFFFF' : '#333333')
+          .onClick(() => {
+            this.catalogSection = 1;
+          })
       }
-      .layoutWeight(1)
       .width('100%')
+
+      Text(this.catalogSection === 0
+        ? 'Verified bundles can launch. Unverified and unconfirmed names never launch a guessed bundle.'
+        : 'Sites open in the built-in browser. Only https pages are allowed.')
+        .fontSize(12)
+        .fontColor('#666666')
+
+      if (this.catalogSection === 0) {
+        this.AppsListSection()
+      } else {
+        this.SitesListSection()
+      }
     }
     .width('100%')
     .height('100%')
