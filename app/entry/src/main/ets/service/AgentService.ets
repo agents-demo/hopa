@@ -3,8 +3,10 @@ import {
   ActionExecutor,
   ActionOutcome,
   AgentLoop,
+  AnthropicClient,
   ApprovalGateway,
   ApprovalPolicy,
+  GeminiClient,
   ModelClient,
   OpenAiCompatibleClient,
   RiskLevel,
@@ -18,9 +20,11 @@ import { WebCapability } from '@hopa/capability-web';
 import { SandboxCapability } from '@hopa/capability-sandbox';
 import { A11yBridge, A11yCapability, UiCapability } from '@hopa/capability-a11y';
 import { SystemCapability } from '@hopa/capability-system';
+import { BrowserController } from './BrowserController';
+import { MemoryStore } from './MemoryStore';
 
 /** Called when an action needs the user's decision. Must be fail-closed. */
-export type ApprovalPrompt = (action: Action) => Promise<boolean>;
+export type ApprovalPrompt = (action: Action, screen: Screen | undefined) => Promise<boolean>;
 
 /**
  * Approval gateway backed by the ArkUI sheet. Until the page installs a
@@ -33,18 +37,31 @@ export class UiApprovalGateway implements ApprovalGateway {
     this.handler = handler;
   }
 
-  async requestApproval(action: Action): Promise<boolean> {
+  async requestApproval(action: Action, screen?: Screen): Promise<boolean> {
     if (this.handler === undefined) {
       return false;
     }
-    return this.handler(action);
+    return this.handler(action, screen);
   }
 }
 
-/** Screen source backed by the accessibility extension bridge. */
-class A11yScreenSource implements ScreenSource {
+/**
+ * Prefers the accessibility tree; falls back to the text of the built-in
+ * browser page. That keeps web tasks and the payment gate working without the
+ * ACL, while never pretending there is a screen when there is none.
+ */
+class CompositeScreenSource implements ScreenSource {
+  private browser: BrowserController;
+
+  constructor(browser: BrowserController) {
+    this.browser = browser;
+  }
+
   async capture(): Promise<Screen> {
-    return A11yBridge.get().capture();
+    if (A11yBridge.get().isAvailable()) {
+      return A11yBridge.get().capture();
+    }
+    return new Screen(await this.browser.pageText());
   }
 }
 
@@ -54,9 +71,12 @@ export class AgentService {
 
   readonly executor: ActionExecutor;
   readonly approvals: UiApprovalGateway;
+  readonly policy: ApprovalPolicy;
   readonly runs: RunStore;
   readonly tools: ToolRegistry;
+  readonly memory: MemoryStore = new MemoryStore();
   readonly web: WebCapability;
+  readonly browser: BrowserController;
   readonly sandbox: SandboxCapability;
   readonly a11y: A11yCapability;
   readonly ui: UiCapability;
@@ -69,9 +89,12 @@ export class AgentService {
   private constructor() {
     this.runs = new RunStore();
     this.approvals = new UiApprovalGateway();
-    this.executor = new ActionExecutor(new ApprovalPolicy(), this.approvals, this.runs);
+    this.policy = new ApprovalPolicy();
+    this.executor = new ActionExecutor(this.policy, this.approvals, this.runs);
 
     this.web = new WebCapability();
+    this.browser = new BrowserController();
+    this.web.setController(this.browser);
     this.sandbox = new SandboxCapability();
     this.a11y = new A11yCapability();
     this.ui = new UiCapability();
@@ -107,9 +130,27 @@ export class AgentService {
    * Creates the on-device loop. The key stays in memory only: it is never
    * written to disk and never logged.
    */
-  configureModel(endpoint: string, apiKey: string, modelName: string, maxSteps: number = 6): void {
-    this.model = new OpenAiCompatibleClient(endpoint, apiKey, modelName);
-    this.loop = new AgentLoop(this.executor, this.model, maxSteps, new A11yScreenSource());
+  configureModel(
+    provider: string,
+    endpoint: string,
+    apiKey: string,
+    modelName: string,
+    maxSteps: number = 6
+  ): void {
+    if (provider === 'anthropic') {
+      this.model = new AnthropicClient(endpoint, apiKey, modelName);
+    } else if (provider === 'gemini') {
+      this.model = new GeminiClient(endpoint, apiKey, modelName);
+    } else {
+      this.model = new OpenAiCompatibleClient(endpoint, apiKey, modelName);
+    }
+    this.loop = new AgentLoop(
+      this.executor,
+      this.model,
+      maxSteps,
+      new CompositeScreenSource(this.browser)
+    );
+    this.loop.setMemory(this.memory.toPrompt());
     this.modelLabel = modelName;
   }
 
@@ -133,13 +174,14 @@ export class AgentService {
     if (this.loop === undefined) {
       return 'No model configured. Open Settings, enter an endpoint, a model and a key, then press Save.';
     }
-    if (!this.a11y.isAvailable()) {
-      return 'Accessibility is not available, so HOPA cannot see the screen. ' +
-        'The accessibility extension is not declared and no ACL is filed yet. ' +
-        'The model was not called.';
+    if (!this.a11y.isAvailable() && !this.browser.isReady()) {
+      return 'HOPA has no screen to look at. Access is unavailable (the extension is not declared ' +
+        'and no ACL is filed), and the built-in browser has not loaded a page yet. ' +
+        'Open the Web tab and load a page, or enable accessibility. The model was not called.';
     }
 
     let outcomes: ActionOutcome[] = [];
+    this.loop.setMemory(this.memory.toPrompt());
     try {
       outcomes = await this.loop.run(goal);
     } catch (error) {

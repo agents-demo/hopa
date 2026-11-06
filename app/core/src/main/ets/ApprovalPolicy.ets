@@ -2,6 +2,22 @@ import { Action, RiskLevel } from './Types';
 import { Screen } from './Screen';
 
 /**
+ * Amount, currency and merchant read from the screen. Best effort: a missing
+ * field is shown as "not visible" rather than guessed.
+ */
+export class PaymentContext {
+  amount: string = '';
+  currency: string = '';
+  merchant: string = '';
+  readonly consequence: string =
+    'Money may leave your account. HOPA cannot undo a payment.';
+
+  hasDetails(): boolean {
+    return this.amount.length > 0 || this.merchant.length > 0;
+  }
+}
+
+/**
  * The single source of truth for approval.
  *
  * Payment is detected from the action and the screen, never from a model flag.
@@ -115,5 +131,41 @@ export class ApprovalPolicy {
 
   requiresApproval(action: Action, screen?: Screen): boolean {
     return this.classify(action, screen) !== RiskLevel.Read;
+  }
+
+  /**
+   * Reads an amount, a currency and a merchant from the visible text. It never
+   * invents a value: an empty field means the screen did not show it.
+   */
+  extractPaymentContext(screen?: Screen): PaymentContext {
+    const context = new PaymentContext();
+    if (screen === undefined) {
+      return context;
+    }
+    const lines: string[] = screen.text.split('\n');
+    for (const line of lines) {
+      const text: string = line.trim();
+      if (text.length === 0) {
+        continue;
+      }
+      if (context.amount.length === 0) {
+        const match = text.match(/(?:[¥$€£]|CNY|USD|EUR|GBP)\s?\d[\d,]*(?:\.\d{1,2})?/i);
+        if (match !== null) {
+          context.amount = match[0].trim();
+          const currency = context.amount.match(/[¥$€£]|CNY|USD|EUR|GBP/i);
+          if (currency !== null) {
+            context.currency = currency[0];
+          }
+        }
+      }
+      if (context.merchant.length === 0) {
+        const lower: string = text.toLowerCase();
+        if (lower.startsWith('merchant:') || text.startsWith('商户')) {
+          const index: number = text.indexOf(':');
+          context.merchant = index >= 0 ? text.substring(index + 1).trim() : text;
+        }
+      }
+    }
+    return context;
   }
 }

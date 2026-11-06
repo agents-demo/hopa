@@ -65,5 +65,35 @@ export default function approvalPolicyTest(): void {
       expect(policy.requiresApproval(new Action('ui.observe'), screen)).assertFalse();
       expect(policy.requiresApproval(new Action('ui.back'), screen)).assertFalse();
     });
+
+    it('extracts_amount_and_currency', 0, () => {
+      const policy = new ApprovalPolicy();
+      const screen = new Screen('Checkout\nTotal ¥1,299.00\nPay now');
+      const context = policy.extractPaymentContext(screen);
+      expect(context.amount).assertEqual('¥1,299.00');
+      expect(context.currency).assertEqual('¥');
+      expect(context.hasDetails()).assertTrue();
+    });
+
+    it('extracts_merchant_line', 0, () => {
+      const policy = new ApprovalPolicy();
+      const screen = new Screen('Merchant: Blue Cafe\nAmount $4.50');
+      const context = policy.extractPaymentContext(screen);
+      expect(context.merchant).assertEqual('Blue Cafe');
+      expect(context.amount).assertEqual('$4.50');
+    });
+
+    it('does_not_invent_payment_details', 0, () => {
+      const policy = new ApprovalPolicy();
+      const context = policy.extractPaymentContext(new Screen('Chat with a friend'));
+      expect(context.amount).assertEqual('');
+      expect(context.merchant).assertEqual('');
+      expect(context.hasDetails()).assertFalse();
+    });
+
+    it('empty_screen_has_no_details', 0, () => {
+      const policy = new ApprovalPolicy();
+      expect(policy.extractPaymentContext().hasDetails()).assertFalse();
+    });
   });
 }

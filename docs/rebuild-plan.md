@@ -106,16 +106,16 @@ it, not at the end.
 |---|---|---|
 | Repo | public, Apache-2.0 | `git log` |
 | `app/core` | screen-aware gate, observation loop, tool registry, types, model interface; hypium tests pass | `app/core/src` |
-| `app/capabilities` | interfaces + stubs; a11y bridge compiled, extension not declared, no ACL | `module.json5`, `A11yBridge.ets` |
+| `app/capabilities` | interfaces + web bridge (ArkWeb), a11y bridge compiled but extension not declared, sandbox stub, system intents | `module.json5`, `BrowserController.ets` |
 | `app/entry` | 4-tab ArkUI shell wired to `AgentLoop`; approval sheet; model settings | `pages/Index.ets` |
 | Agent loop | captures the screen, asks for one action, gates, records | `AgentLoop.ets` |
 | `pc-agent` | CLI + MCP implemented: devices, dump, tap, double-tap, long-press, type, swipe, screenshot, launch, stop, key, install, uninstall, apps | `pc-agent/src` |
 | `bench` | 20 task files; 5/7 tasks pass on the emulator (strict: a failed step cannot pass) | `bench/tasks`, `docs/bench-v0.md` |
-| Brain | Kotlin router + HTTP service + knowledge + prompts + skills + sites (89 assertions + schema contract) | `brain/src`, `docs/brain.md` |
+| Brain | Kotlin router + HTTP service + knowledge + prompts + skills + sites (92 assertions + schema contract) | `brain/src`, `docs/brain.md` |
 | HAP | builds with DevEco 6.1.1 / API 24; signed with the SDK local debug kit; installed on the Pura 90 emulator | `scripts/sign-app.ps1` |
-| Knowledge | 12 HarmonyOS system apps, 18 sites, 6 skills; 23 Mika apps triaged | `brain/knowledge`, `docs/knowledge-triage.md` |
+| Knowledge | 12 HarmonyOS system apps, 21 sites, 6 skills; 23 Mika apps triaged | `brain/knowledge`, `docs/knowledge-triage.md` |
 | CI | Python tests + ruff; HAP build and core Local Tests skip with a warning when the mirrored toolchain secret is absent | `.github/workflows/ci.yml` |
-| Tests baseline | 254 Python tests, 89 Kotlin assertions, ArkTS Local Tests pass; 20 bench tasks validate; device bench 3/5 | local run 2026-11-06 |
+| Tests baseline | 254 Python tests, 92 Kotlin assertions, ArkTS Local Tests pass; 20 bench tasks validate; device bench 5/7 | local run 2026-11-06 |
 
 Known gaps to close first:
 
@@ -407,7 +407,7 @@ Module responsibilities:
 - [ ] Build the HarmonyOS bundle map from `hdc shell bm dump -a`
 - [ ] Rewrite `APP.md` for the 10 highest-value apps that exist on HarmonyOS
 - [ ] Rewrite `APP.md` for the remaining HarmonyOS-available apps; drop absent apps with a written note
-- [x] Rewrite `SITE.md` for 18 sites (domains mostly reusable) (evidence: brain/knowledge/sites (18) + SiteLoaderTest)
+- [x] Rewrite `SITE.md` for 18 sites (domains mostly reusable) (evidence: brain/knowledge/sites (21, including LinkedIn, Uber and Uber Eats) + SiteLoaderTest)
 - [x] Add 12 HarmonyOS system apps: Settings, Clock, Calendar, Contacts, Notepad, Files, Camera, Gallery, Browser, AppGallery, Petal Maps, Music (evidence: brain/knowledge/apps (12 files))
 - [x] Add `pace: careful` to every irreversible app path (evidence: 12 APP.md files + KnowledgeLoaderTest)
 - [ ] Add `packageAliases` for HarmonyOS bundles
@@ -522,18 +522,18 @@ Module responsibilities:
 
 ### 8.2 Port modules
 
-- [ ] `Types`, `ToolRegistry`, `ActionExecutor`, `ApprovalPolicy`
+- [x] `Types`, `ToolRegistry`, `ActionExecutor`, `ApprovalPolicy` (evidence: app/core/src/main/ets + hypium tests in app/core/src/test)
 - [ ] `uistate` (46 files) — screen model
 - [ ] `observation`, `verify`, `record`
 - [ ] `knowledge` (routing, channel, catalog)
-- [ ] `agent` loop and context builder
+- [x] `agent` loop and context builder (evidence: app/core/src/main/ets/AgentLoop.ets + AgentLoop.test.ets)
 - [ ] Decide per remaining Mika module (action, run, gate, context, prompt, settings, trigger, usage, trace, net, remote, mcp, oauth, workspace, general, assembly, selfcheck): port, rewrite or drop; record in Appendix A.2b
 - [ ] `memory`, `skills`
-- [ ] `model` client over `@ohos.net.http`
+- [x] `model` client over `@ohos.net.http` (evidence: app/core/src/main/ets/OpenAiClient.ets (http from @kit.NetworkKit))
 - [ ] Serialization without kotlinx (`@ohos.util.json` or generated codecs)
 - [ ] File storage over `@ohos.file.fs`
 - [ ] Secure storage over Asset Store Kit / HUKS
-- [ ] Settings over `@ohos.data.preferences`
+- [x] Settings over `@ohos.data.preferences` (evidence: app/entry/src/main/ets/service/SettingsStore.ets + verified persistence on the emulator: provider survived a restart)
 - [ ] Remove the JVM service from the decision path behind a feature flag
 - [ ] Unit tests for every ported module (hypium)
 - [ ] Golden-file parity: 200 cases
@@ -543,13 +543,13 @@ Module responsibilities:
 
 ### 8.3 On-device model plumbing
 
-- [ ] Provider settings UI and storage
-- [ ] Streaming responses (or documented non-streaming)
+- [x] Provider settings UI and storage (evidence: Settings tab Select + SettingsStore; endpoint/model/provider persist, API key is memory-only by design)
+- [x] Streaming responses (or documented non-streaming) (evidence: docs/architecture.md section 7: non-streaming, timeouts documented)
 - [ ] Timeout, retry, backoff
 - [ ] Token and cost caps per task
 - [ ] Offline behavior: clear error, no silent retry loop
 - [ ] Model fallback list
-- [ ] Key never logged
+- [x] Key never logged (evidence: no logging call in OpenAiClient.ets or Index.ets; key only used in the Authorization header; documented in docs/architecture.md section 7)
 
 ### 8.4 Model quality and context
 

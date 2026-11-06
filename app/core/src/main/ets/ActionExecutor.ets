@@ -15,7 +15,7 @@ export interface ActionGuard {
 
 /** The UI/notification channel used to ask the user. */
 export interface ApprovalGateway {
-  requestApproval(action: Action): Promise<boolean>;
+  requestApproval(action: Action, screen?: Screen): Promise<boolean>;
 }
 
 /** Append-only run record sink. */
@@ -80,7 +80,7 @@ export class ActionExecutor {
     // 2. Approval. Payment is fail-closed and always asks.
     let approved: boolean = true;
     if (this.policy.requiresApproval(action, screen)) {
-      approved = await this.approvals.requestApproval(action);
+      approved = await this.approvals.requestApproval(action, screen);
       if (!approved) {
         const reason: string = this.policy.isPayment(action, screen)
           ? 'payment denied by user'

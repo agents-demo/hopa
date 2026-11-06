@@ -45,11 +45,14 @@ fun main(args: Array<String>) {
         Path.of("brain/knowledge/sites")
     }
     val loaded = SiteLoader.load(directory)
-    check(loaded.size == 18, "18 site files")
+    check(loaded.size == 21, "21 site files")
     check(loaded.all { it.platform == "harmonyos" }, "all harmonyos")
     check(loaded.all { it.domains.isNotEmpty() }, "all have domains")
     check(loaded.any { it.name == "bilibili.com" }, "bilibili present")
     check(loaded.any { it.name == "zhihu.com" }, "zhihu present")
+    check(loaded.any { it.name == "linkedin.com" }, "linkedin present")
+    check(loaded.any { it.name == "uber.com" }, "uber present")
+    check(loaded.any { it.name == "ubereats.com" }, "uber eats present")
 
     val store = KnowledgeStore(loaded.map { it.toEntry() })
     check(

@@ -8,7 +8,7 @@ export {
   RunStatus
 } from './src/main/ets/Types';
 
-export { ApprovalPolicy } from './src/main/ets/ApprovalPolicy';
+export { ApprovalPolicy, PaymentContext } from './src/main/ets/ApprovalPolicy';
 
 export {
   ActionCapability,
@@ -31,6 +31,8 @@ export {
 } from './src/main/ets/ModelClient';
 
 export { OpenAiCompatibleClient } from './src/main/ets/OpenAiClient';
+export { AnthropicClient } from './src/main/ets/AnthropicClient';
+export { GeminiClient } from './src/main/ets/GeminiClient';
 export { RunStore } from './src/main/ets/RunStore';
 export { AgentLoop } from './src/main/ets/AgentLoop';
 export { Screen, ScreenNode, ScreenSource } from './src/main/ets/Screen';

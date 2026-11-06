@@ -236,7 +236,13 @@ interface ModelClient {
 
 - Multi-provider, **OpenAI-compatible HTTP first** (`/v1/chat/completions`),
   configurable base URL, model, temperature, and API key.
-- The key is stored in secure storage / user settings, never in git.
+- **Non-streaming today.** `complete()` waits for the full JSON response
+  (`connectTimeout` 30 s, `readTimeout` 60 s). Streaming is a future change and
+  must be documented here when it lands.
+- The API key is held **in memory only** by `AgentService.configureModel`; it is
+  not written to preferences and never logged. The Authorization header is the
+  only place it is used. Persistent secure storage (Asset Store Kit / HUKS) is
+  not implemented yet.
 - A `StubModelClient` is used by tests and `bench` so the pipeline runs with no
   network.
 - The model only proposes actions/plans; it never executes and never decides

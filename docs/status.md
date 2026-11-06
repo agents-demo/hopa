@@ -16,20 +16,20 @@ because the accessibility extension is not declared and no ACL is filed. The
 standalone claim is still **not** met; the toolchain, tethered, install and
 UI-wiring claims are.
 
-Plan progress: **218 / 767 boxes (28.4%)**. The open boxes are concentrated in
+Plan progress: **225 / 767 boxes (29.3%)**. The open boxes are concentrated in
 the device/ACL, UI, release and sign-off phases.
 
 | Area | State | Evidence |
 |---|---|---|
 | `agent/` loop, gate, policy, records | working, tested | `pytest agent` |
-| `brain/` Kotlin router + HTTP service + knowledge + prompts + skills + sites | working, 89 assertions + schema contract | `scripts/brain.ps1` |
+| `brain/` Kotlin router + HTTP service + knowledge + prompts + skills + sites | working, 92 assertions + schema contract | `scripts/brain.ps1` |
 | `pc-agent` CLI + MCP | working; live device commands work | `pc-agent devices` |
 | `bench` 20 task definitions | valid | `pytest bench`, `validate` |
 | Observation/action/decision/record schemas | v1 | `schemas/` |
-| ArkTS `app/core` | screen-aware gate + observation loop; hypium pass | `hvigorw test` |
+| ArkTS `app/core` | screen-aware gate + observation loop; OpenAI, Anthropic and Gemini clients; hypium pass | `hvigorw test` |
 | HAP | builds and signed with the local debug kit | `scripts/sign-app.ps1` |
 | Installed on the emulator | yes: launch, first frame, four tabs | `hdc install -r` |
-| Entry UI | chat wired to `AgentLoop`; fail-closed approval dialog; model settings | `pages/Index.ets` |
+| Entry UI | chat wired to `AgentLoop`; fail-closed approval dialog; provider settings; memory; built-in Web tab | `pages/Index.ets` |
 | Accessibility extension | bridge compiled; not declared; no ACL | `docs/a11y.md` |
 | Emulator | Pura 90, API 24, locked screen | `hdc` |
 | ACL | not filed | Phase 0 box open |

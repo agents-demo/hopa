@@ -1,9 +1,10 @@
 # HOPA — HarmonyOS On-device Phone Agent
 
-HOPA is a GUI agent for **HarmonyOS NEXT / HarmonyOS 6+**. It operates other apps and
-websites much like a person would (read the screen, tap, type, scroll, navigate),
-runs user scripts inside an **on-device WebAssembly sandbox** (Pyodide + QuickJS,
-bundled and offline by default), and **always asks the user before any payment**.
+HOPA is a GUI agent for **HarmonyOS NEXT / HarmonyOS 6+**. It is built to operate
+other apps and websites much like a person would (read the screen, tap, type,
+scroll, navigate), it has a built-in browser for web tasks, and it **always asks
+the user before any payment**. A WebAssembly sandbox for user scripts (Pyodide +
+QuickJS) is designed but **not bundled yet**.
 
 > **Design reference:** the open-source Android agent
 > [Mika](https://github.com/wangzan101/Mika) (Apache-2.0). No Mika source code is
@@ -15,20 +16,21 @@ bundled and offline by default), and **always asks the user before any payment**
 
 ## Status
 
-Early scaffold / proof of concept. The first milestone is a PC-driven
-device-control proof of concept (`pc-agent` + `HOPA-Bench`).
-See [docs/roadmap.md](docs/roadmap.md).
+Working prototype. The PC harness closes the observe → decide → act → verify →
+record loop, and the signed HarmonyOS app is installed and usable for chat, web
+pages, memory and model settings. Operating **other apps on the phone** still
+needs the accessibility ACL, which is not filed.
 
 | Area | State |
 | --- | --- |
 | Dev environment (DevEco Studio 26 / API 26) | see [docs/setup.md](docs/setup.md) |
-| `app/` ArkUI shell | scaffold |
-| `app/core/` agent loop, tool registry, action gate | scaffold + unit tests |
-| `app/capabilities/` web / sandbox / a11y / system | scaffold |
+| `app/` ArkUI app | chat, Web tab, Tasks, Settings, Memory; signed debug HAP installed on the emulator |
+| `app/core/` agent loop, tool registry, action gate | implemented + hypium tests; OpenAI, Anthropic and Gemini clients |
+| `app/capabilities/` web / sandbox / a11y / system | web works via ArkWeb; a11y compiled but not declared; sandbox is a stub |
 | `pc-agent/` hdc + uitest CLI & MCP server | implemented |
 | `agent/` PC reference loop (observe → decide → act → verify → record) | implemented + tests |
 | `schemas/` JSON contracts (observation, action, decision, record) | v1 |
-| `bench/` HOPA-Bench 20 task definitions | implemented |
+| `bench/` HOPA-Bench 20 task definitions | implemented; 5/7 runnable tasks pass on the emulator |
 
 ## Safety model (non-negotiable)
 
