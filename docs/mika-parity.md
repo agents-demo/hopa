@@ -20,14 +20,14 @@ app module supplies device control; HOPA must supply its own HarmonyOS layer.
 | 7 | Ask / Autonomous modes | both modes; autonomous skips non-payment approvals, payment is always fail-closed | — | yes |
 | 8 | Memory and preferences | explicit user memory, persisted, visible and deletable | learned memory + profile | yes |
 | 9 | Learns skills and app knowledge | explicit skills + draft from a successful run + 27-app/21-site catalogue; no automatic trial/scoring | drafter trial+outcomes | yes |
-| 10 | Batch jobs | sequential batch runner in Tasks (one goal per line), stop between goals; no scheduling or parallelism | parallel/scheduled batches | yes |
+| 10 | Batch jobs | sequential batch runner in Tasks; verified on device (2 s, 409 tokens); stop between goals; no scheduling or parallelism | parallel/scheduled batches | yes |
 | 11 | Traceable runs | history, tokens measured on device, duration, export; no cost/trace UI | trace + cost UI | yes |
 | 12 | Linux sandbox | WASM stub, nothing bundled | Linux is out of scope; WASM only | no (Linux) |
 | 13 | CLI + MCP from a computer | `pc-agent` CLI + MCP server | near parity, needs tool breadth | yes |
-| 14 | Many model providers + account sign-in | OpenAI-compatible, Anthropic, Gemini, DeepSeek; verified end-to-end with DeepSeek on the emulator; no OAuth | OAuth sign-in, more presets | yes |
+| 14 | Many model providers + account sign-in | OpenAI-compatible, Anthropic, Gemini, DeepSeek; verified end-to-end on device, including chat with no screen; no OAuth | OAuth sign-in, more presets | yes |
 | 15 | 10 UI languages | English only | i18n | yes |
 
-Usable today: **~8.9 of 15** (~59%).
+Usable today: **~9.0 of 15** (~60%).
 
 ## 2. Core package matrix
 
@@ -77,7 +77,7 @@ extension on device.
 
 | Measure | Value |
 |---|---|
-| User-visible capabilities usable | ~8.9 / 15 (~59%) |
+| User-visible capabilities usable | ~9.0 / 15 (~60%) |
 | Portable core ported | ~20% |
 | Shared product surfaces (CLI/MCP, knowledge, records) | ~50% |
 | Device-control layer | replaced, not ported; on-device part blocked by ACL |
@@ -89,8 +89,9 @@ vision and the UI that make it feel like an assistant.
 
 Verified on the emulator on 2026-11-07: DeepSeek V4 Flash answered a question
 about the page loaded in HOPA's browser, reported **400 tokens**, and the run was
-saved as a skill. This proves the on-device chat + browser-text + usage + skill
-chain, not app control.
+saved as a skill. A second run answered with no screen at all, and a batch job
+finished in 2 s with 409 tokens. This proves chat, the browser-text path, usage,
+batch and skill drafting — not app control.
 
 ## 4. Effort to "a kind of Mika"
 
