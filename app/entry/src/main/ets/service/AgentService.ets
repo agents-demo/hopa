@@ -23,9 +23,11 @@ import { A11yBridge, A11yCapability, UiCapability } from '@hopa/capability-a11y'
 import { SystemCapability } from '@hopa/capability-system';
 import { Context } from '@kit.AbilityKit';
 import { preferences } from '@kit.ArkData';
+import { fileIo } from '@kit.CoreFileKit';
 import { BrowserController } from './BrowserController';
-import { MemoryStore } from './MemoryStore';
+import { MemoryItem, MemoryStore } from './MemoryStore';
 import { SkillStore } from './SkillStore';
+import { Skill } from '@hopa/core';
 
 /** Called when an action needs the user's decision. Must be fail-closed. */
 export type ApprovalPrompt = (action: Action, screen: Screen | undefined) => Promise<boolean>;
@@ -67,6 +69,14 @@ class CompositeScreenSource implements ScreenSource {
     }
     return new Screen(await this.browser.pageText());
   }
+}
+
+/** The JSON written by the export action. The API key is never part of it. */
+class ExportPayload {
+  exportedAt: string = '';
+  memory: MemoryItem[] = [];
+  skills: Skill[] = [];
+  runs: RunRecord[] = [];
 }
 
 /** Process-wide composition root: policy + gate + capabilities + tool registry. */
@@ -195,6 +205,29 @@ export class AgentService {
     const store = await preferences.getPreferences(context, AgentService.STORE);
     await store.put(AgentService.RUNS_KEY, JSON.stringify(recent));
     await store.flush();
+  }
+
+  /**
+   * Writes memory, skills and run records to one JSON file in the app sandbox.
+   * The API key is never included. The path is returned so the user can find it.
+   */
+  async exportData(context: Context): Promise<string> {
+    const payload = new ExportPayload();
+    payload.exportedAt = new Date().toISOString();
+    payload.memory = this.memory.all();
+    payload.skills = this.skills.all();
+    payload.runs = this.runs.all();
+    const path: string = `${context.filesDir}/hopa-export.json`;
+    const file = fileIo.openSync(
+      path,
+      fileIo.OpenMode.READ_WRITE | fileIo.OpenMode.CREATE | fileIo.OpenMode.TRUNC
+    );
+    try {
+      fileIo.writeSync(file.fd, JSON.stringify(payload, null, 2));
+    } finally {
+      fileIo.closeSync(file);
+    }
+    return path;
   }
 
   /**

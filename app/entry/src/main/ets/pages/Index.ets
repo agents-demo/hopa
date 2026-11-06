@@ -197,6 +197,25 @@ struct Index {
     });
   }
 
+  private async exportData(): Promise<void> {
+    try {
+      const path: string = await AgentService.get().exportData(getContext(this) as Context);
+      this.messages = this.messages.concat([
+        `HOPA: exported memory, skills and runs to ${path}`
+      ]);
+    } catch (error) {
+      this.messages = this.messages.concat([`HOPA: export failed: ${error}`]);
+    }
+    this.currentTab = 0;
+  }
+
+  private clearMemory(): void {
+    AgentService.get().memory.clear();
+    this.memoryItems = [];
+    this.saveMemory();
+    this.messages = this.messages.concat(['HOPA: cleared all remembered facts.']);
+  }
+
   private addSkill(): void {
     const skill: Skill | undefined = AgentService.get().skills.add(
       this.skillName,
@@ -688,6 +707,22 @@ struct Index {
         Button('Add')
           .onClick(() => {
             this.addMemory();
+          })
+      }
+      .width('100%')
+
+      Row({ space: 8 }) {
+        Button('Export data')
+          .fontSize(12)
+          .onClick(() => {
+            this.exportData();
+          })
+        Button('Clear facts')
+          .fontSize(12)
+          .backgroundColor('#E5E6E8')
+          .fontColor('#B42318')
+          .onClick(() => {
+            this.clearMemory();
           })
       }
       .width('100%')

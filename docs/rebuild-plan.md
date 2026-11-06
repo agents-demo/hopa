@@ -456,7 +456,7 @@ Module responsibilities:
 - [ ] Memory view data source
 - [ ] Redaction before storage
 - [ ] Encryption at rest or an explicit risk note
-- [ ] Export and delete memory
+- [x] Export and delete memory (evidence: app Memory tab "Export data" writes hopa-export.json; "Clear facts" and per-item delete; verified on the emulator)
 - [ ] Memory retention policy implemented (runs, notes, screenshots)
 
 ### 7.6 Knowledge validation and maintenance
