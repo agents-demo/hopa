@@ -2,6 +2,7 @@ import type {
   AccessibilityElement,
   AccessibilityExtensionContext
 } from '@ohos.application.AccessibilityExtensionAbility';
+import { GesturePath, GesturePoint } from '@kit.AccessibilityKit';
 import { Screen, ScreenNode } from '@hopa/core';
 
 /**
@@ -43,6 +44,78 @@ export class A11yBridge {
 
   find(ref: string): AccessibilityElement | undefined {
     return this.elements.get(ref);
+  }
+
+  /** Clicks the element captured in the last `capture()`. */
+  async tap(ref: string): Promise<boolean> {
+    const element: AccessibilityElement | undefined = this.elements.get(ref);
+    if (element === undefined) {
+      return false;
+    }
+    try {
+      const names = await element.actionNames();
+      if (!names.includes('click')) {
+        return false;
+      }
+      await element.performAction('click');
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /** Sets text on an editable element captured in the last `capture()`. */  async typeInto(ref: string, text: string): Promise<boolean> {
+    const element: AccessibilityElement | undefined = this.elements.get(ref);
+    if (element === undefined) {
+      return false;
+    }
+    try {
+      const names = await element.actionNames();
+      if (!names.includes('setText')) {
+        if (names.includes('focus')) {
+          await element.performAction('focus');
+        }
+        return false;
+      }
+      await element.performAction('setText', { setText: text });
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /** Long-presses the element captured in the last `capture()`. */
+  async longPress(ref: string): Promise<boolean> {
+    const element: AccessibilityElement | undefined = this.elements.get(ref);
+    if (element === undefined) {
+      return false;
+    }
+    try {
+      const names = await element.actionNames();
+      if (!names.includes('longClick')) {
+        return false;
+      }
+      await element.performAction('longClick');
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /** Swipes between two screen points, in layout pixels. */
+  async swipe(fromX: number, fromY: number, toX: number, toY: number): Promise<boolean> {
+    if (this.context === undefined) {
+      return false;
+    }
+    try {
+      const path = new GesturePath(300);
+      path.points.push(new GesturePoint(fromX, fromY));
+      path.points.push(new GesturePoint(toX, toY));
+      await this.context.injectGesture(path);
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 
   async capture(): Promise<Screen> {

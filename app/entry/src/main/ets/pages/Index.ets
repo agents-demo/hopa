@@ -1,3 +1,5 @@
+import { promptAction } from '@kit.ArkUI';
+import { Action, RiskLevel } from '@hopa/core';
 import { AgentService } from '../service/AgentService';
 
 @Entry
@@ -7,6 +9,7 @@ struct Index {
   @State runCount: number = 0;
   @State a11yAvailable: boolean = false;
   @State draft: string = '';
+  @State busy: boolean = false;
   @State messages: string[] = [
     'Hi — I am HOPA, your on-device phone agent.',
     'I always ask before any payment.'
@@ -15,23 +18,80 @@ struct Index {
   @State networkEnabled: boolean = false;
   @State accessibilityEnabled: boolean = false;
   @State modelEndpoint: string = 'https://api.openai.com/v1';
+  @State modelName: string = 'gpt-4o-mini';
+  @State apiKey: string = '';
+  @State modelLabel: string = '';
 
   aboutToAppear(): void {
     const service = AgentService.get();
     this.runCount = service.runs.all().length;
-    this.a11yAvailable = service.a11y.isAvailable();
+    this.a11yAvailable = service.isA11yAvailable();
+    this.modelLabel = service.getModelLabel();
+
+    // Fail-closed by default; the sheet is the only way to allow an action.
+    service.approvals.setHandler(async (action: Action): Promise<boolean> => {
+      const payment: boolean = action.kind === 'payment.confirm' || action.isPayment;
+      const title: string = payment ? 'Confirm payment?' : 'Allow this action?';
+      const message: string = payment
+        ? `HOPA wants to run: ${action.kind}\n\n` +
+          'This looks like a payment. HOPA cannot verify the amount or merchant yet, ' +
+          'so check the next screen yourself before you confirm.\n\nAllow it?'
+        : `HOPA wants to run: ${action.kind}\nTarget: ${action.target || '(none)'}\n\nAllow it?`;
+      try {
+        const result = await promptAction.showDialog({
+          title: title,
+          message: message,
+          buttons: [
+            { text: 'Deny', color: '#666666' },
+            { text: 'Allow', color: '#B42318' }
+          ]
+        });
+        return result.index === 1;
+      } catch (error) {
+        return false;
+      }
+    });
   }
 
-  private send(): void {
+  private async send(): Promise<void> {
     const text: string = this.draft.trim();
-    if (text.length === 0) {
+    if (text.length === 0 || this.busy) {
       return;
     }
-    this.messages = this.messages.concat([
-      `You: ${text}`,
-      'HOPA: (agent loop placeholder — wire core/AgentLoop here)'
-    ]);
+    const service = AgentService.get();
+    if (!service.hasModel()) {
+      this.messages = this.messages.concat([
+        `You: ${text}`,
+        'HOPA: no model configured. Open Settings, fill in the endpoint, model and key, then Save.'
+      ]);
+      this.draft = '';
+      return;
+    }
+
     this.draft = '';
+    this.busy = true;
+    this.taskStatus = 'Running';
+    this.messages = this.messages.concat([`You: ${text}`, 'HOPA: working…']);
+
+    const reply: string = await service.run(text);
+
+    // Replace the "working…" line with the real transcript.
+    const next: string[] = this.messages.slice(0, this.messages.length - 1);
+    next.push(`HOPA: ${reply}`);
+    this.messages = next;
+
+    this.busy = false;
+    this.taskStatus = 'Idle';
+    this.runCount = service.runs.all().length;
+  }
+
+  private saveModel(): void {
+    const service = AgentService.get();
+    service.configureModel(this.modelEndpoint.trim(), this.apiKey, this.modelName.trim(), 6);
+    this.modelLabel = service.getModelLabel();
+    this.messages = this.messages.concat([
+      `HOPA: model set to ${this.modelLabel}. The key stays in memory and is not saved.`
+    ]);
   }
 
   @Builder
@@ -61,7 +121,8 @@ struct Index {
           .onSubmit(() => {
             this.send();
           })
-        Button('Send')
+        Button(this.busy ? 'Working…' : 'Send')
+          .enabled(!this.busy)
           .onClick(() => {
             this.send();
           })
@@ -81,9 +142,11 @@ struct Index {
         .fontWeight(FontWeight.Bold)
       Text(this.taskStatus)
         .fontSize(16)
-      Progress({ value: 0, total: 100, type: ProgressType.Linear })
+      Progress({ value: this.busy ? 50 : 0, total: 100, type: ProgressType.Linear })
         .width('100%')
-      Text('No task is running. Start one from the Chat tab.')
+      Text(this.a11yAvailable
+        ? 'Accessibility is available. The loop can read the screen.'
+        : 'Accessibility is unavailable, so the loop cannot read other apps yet.')
         .fontSize(14)
         .fontColor('#666666')
     }
@@ -128,6 +191,28 @@ struct Index {
       TextInput({ text: this.modelEndpoint })
         .onChange((value: string) => {
           this.modelEndpoint = value;
+        })
+
+      Text('Model name')
+        .fontSize(14)
+        .fontColor('#666666')
+      TextInput({ text: this.modelName })
+        .onChange((value: string) => {
+          this.modelName = value;
+        })
+
+      Text('API key (kept in memory only, never saved)')
+        .fontSize(14)
+        .fontColor('#666666')
+      TextInput({ text: this.apiKey, placeholder: 'sk-…' })
+        .type(InputType.Password)
+        .onChange((value: string) => {
+          this.apiKey = value;
+        })
+
+      Button(this.modelLabel.length > 0 ? `Save (current: ${this.modelLabel})` : 'Save model settings')
+        .onClick(() => {
+          this.saveModel();
         })
 
       Text('Payment: always requires your confirmation. This cannot be changed.')
