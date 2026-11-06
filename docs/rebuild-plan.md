@@ -203,7 +203,7 @@ Module responsibilities:
 - [ ] Coverage report for ArkTS; threshold set
 - [x] `pip-audit` / Dependabot enabled (evidence: `.github/dependabot.yml` (pip + actions))
 - [x] License check: Apache-2.0, NOTICE current, no GPL (evidence: scripts/license-check.py + CI security job)
-- [ ] Secret scan (gitleaks) in CI
+- [x] Secret scan (gitleaks) in CI (evidence: security job, CI run 42144612306)
 
 ### 5.3 Environment and baseline
 
@@ -635,7 +635,7 @@ Module responsibilities:
 - [ ] Signed-in site detection
 - [ ] HTTPS allow-list for deep links
 - [ ] Tests on 5 sites
-- [ ] `docs/web.md`
+- [x] `docs/web.md` (evidence: docs/web.md)
 
 ### 9.3 System intents
 
@@ -647,7 +647,7 @@ Module responsibilities:
 - [ ] Install/uninstall with approval
 - [ ] Settings deep links
 - [ ] Tests for each intent
-- [ ] `docs/system.md`
+- [x] `docs/system.md` (evidence: docs/system.md)
 
 ### 9.4 Sandbox
 
@@ -665,7 +665,7 @@ Module responsibilities:
 - [ ] 10 sandbox escape tests
 - [ ] Startup time measured
 - [ ] Companion Linux fallback documented, not built
-- [ ] `docs/sandbox.md`
+- [x] `docs/sandbox.md` (evidence: docs/sandbox.md)
 
 ### 9.5 Platform edge cases
 
@@ -852,7 +852,7 @@ Module responsibilities:
 - [ ] Memory footprint budget
 - [ ] Network usage budget
 - [ ] Error messages localized
-- [ ] `docs/ux.md`
+- [x] `docs/ux.md` (evidence: docs/ux.md)
 - [ ] 10 beta users, feedback log
 
 ### 11.1 Missing product features
