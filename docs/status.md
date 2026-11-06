@@ -30,7 +30,7 @@ the device/ACL, UI, release and sign-off phases.
 | HAP | builds and signed with the local debug kit | `scripts/sign-app.ps1` |
 | Installed on the emulator | yes: launch, first frame, six tabs | `hdc install -r` |
 | On-device real model | DeepSeek V4 Flash answered from the browser text (400 tokens) and without any screen; a batch ran in 2 s with 409 tokens; skill saved | device runs 2026-11-07 |
-| Entry UI | chat wired to `AgentLoop`; fail-closed approval dialog; provider settings; memory and skills; Web, Apps and run-history tabs; English + Simplified Chinese shell strings | `pages/Index.ets` |
+| Entry UI | chat wired to `AgentLoop`; fail-closed approval dialog; provider settings; memory and skills; Web (with JS sandbox), Apps and run-history tabs; English + Simplified Chinese shell strings | `pages/Index.ets` |
 | Accessibility extension | declared; permission granted on the emulator; framework lists the service; no Settings toggle on this image | `docs/a11y.md` |
 | Emulator | Pura 90, API 24, unlocked | `hdc` |
 | ACL | local debug profile accepted on the emulator; AppGallery ACL not filed | `docs/acl-request.md` |

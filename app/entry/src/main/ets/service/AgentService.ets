@@ -241,6 +241,25 @@ export class AgentService {
     return this.lastSuccess && this.lastGoal.length > 0 && this.lastTranscript.length > 0;
   }
 
+  canContinue(): boolean {
+    return this.lastGoal.length > 0;
+  }
+
+  /** Re-runs the last goal with the previous transcript as context. */
+  async continueLast(): Promise<string> {
+    if (!this.canContinue()) {
+      return 'There is no previous task to continue.';
+    }
+    const goal: string = this.lastGoal;
+    const transcript: string = this.lastTranscript;
+    const output: string = await this.run(
+      `${goal}\n\nPrevious attempt:\n${transcript}\nContinue from where it stopped.`
+    );
+    this.lastGoal = goal;
+    this.lastTranscript = `${transcript}\n${output}`;
+    return output;
+  }
+
   /** Saves the last successful run as a skill the user can edit or delete. */
   saveLastRunAsSkill(): Skill | undefined {
     const draft: SkillDraft | undefined = SkillDrafter.draft(this.lastGoal, this.lastTranscript);

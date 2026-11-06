@@ -9,6 +9,7 @@ import { SettingsStore, StoredSettings } from '../service/SettingsStore';
 import { MemoryItem } from '../service/MemoryStore';
 import { APP_CATALOG, CatalogApp, SITE_CATALOG, CatalogSite } from '../service/AppCatalog';
 import { RunRecord } from '@hopa/core';
+import { JsSandboxBridge } from '../service/JsSandboxBridge';
 
 @Entry
 @Component
@@ -47,8 +48,11 @@ struct Index {
   @State skills: Skill[] = [];
   @State runRecords: RunRecord[] = [];
   @State catalogSection: number = 0;
+  @State script: string = '';
+  @State scriptOutput: string = '';
 
   private webController: webview.WebviewController = new webview.WebviewController();
+  private sandboxController: webview.WebviewController = new webview.WebviewController();
 
   aboutToAppear(): void {
     const service = AgentService.get();
@@ -123,6 +127,21 @@ struct Index {
   private stopRun(): void {
     AgentService.get().cancel();
     this.taskStatus = 'Stopping...';
+  }
+
+  private async runContinue(): Promise<void> {
+    if (this.busy) {
+      return;
+    }
+    this.busy = true;
+    this.taskStatus = 'Continuing';
+    const reply: string = await AgentService.get().continueLast();
+    this.messages = this.messages.concat([`HOPA: ${reply}`]);
+    this.busy = false;
+    this.taskStatus = 'Idle';
+    this.lastTokens = AgentService.get().getLastTokens();
+    this.lastDurationMs = AgentService.get().getLastDurationMs();
+    this.refreshRuns();
   }
 
   private async runBatch(): Promise<void> {
@@ -390,6 +409,19 @@ struct Index {
     }
   }
 
+  private async runScript(): Promise<void> {
+    const code: string = this.script.trim();
+    if (code.length === 0) {
+      return;
+    }
+    try {
+      const bridge = new JsSandboxBridge(this.sandboxController);
+      this.scriptOutput = await bridge.run(code, 'javascript');
+    } catch (error) {
+      this.scriptOutput = `error: ${error}`;
+    }
+  }
+
   private openAddress(): void {
     const url: string = this.address.trim();
     if (!url.startsWith('https://')) {
@@ -520,6 +552,24 @@ struct Index {
       }
       .width('100%')
 
+      Text('JavaScript sandbox (isolated about:blank page, offline)')
+        .fontSize(12)
+        .fontColor('#666666')
+      TextArea({ placeholder: '1 + 1', text: this.script })
+        .height(70)
+        .onChange((value: string) => {
+          this.script = value;
+        })
+      Button('Run script')
+        .fontSize(12)
+        .onClick(() => {
+          this.runScript();
+        })
+      Text(this.scriptOutput)
+        .fontSize(11)
+        .fontColor('#0A7F3F')
+        .maxLines(4)
+
       Web({ src: 'https://example.com', controller: this.webController })
         .layoutWeight(1)
         .width('100%')
@@ -530,6 +580,14 @@ struct Index {
             this.pageUrl = this.address;
           }
           AgentService.get().browser.attach(this.webController);
+        })
+
+      Web({ src: 'about:blank', controller: this.sandboxController })
+        .width(1)
+        .height(1)
+        .opacity(0)
+        .onPageEnd(() => {
+          AgentService.get().sandbox.setBridge(new JsSandboxBridge(this.sandboxController));
         })
     }
     .width('100%')
@@ -764,6 +822,16 @@ struct Index {
           .height(30)
           .onClick(() => {
             this.draftLastSkill();
+          })
+      }
+      if (AgentService.get().canContinue()) {
+        Button('Continue last task')
+          .fontSize(12)
+          .height(30)
+          .backgroundColor('#E5E6E8')
+          .fontColor('#333333')
+          .onClick(() => {
+            this.runContinue();
           })
       }
 

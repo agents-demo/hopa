@@ -15,19 +15,19 @@ app module supplies device control; HOPA must supply its own HarmonyOS layer.
 | 2 | Built-in desktop-class browser | single-tab ArkWeb browser; read/click/type wired; verified loading a page | tabs, downloads, uploads, sign-in | yes (ArkWeb) |
 | 3 | "Act on the screen I am looking at" | extension installed and listed by the framework; not enableable on this emulator | needs the service enabled | partial |
 | 4 | Scheduled and conditional tasks | not shipped; the system reminder API failed on the emulator (1700002) | scheduler + triggers | yes, with HarmonyOS background limits |
-| 5 | Interrupt, stop, report, continue | Stop button in Chat; loops stops before the next model call; no continue UI | resume + steering UI | yes |
+| 5 | Interrupt, stop, report, continue | Stop button; cancellation before the next model call; Continue reruns the last goal with the previous transcript | steering while running | yes |
 | 6 | Hold to talk (speech) | none | platform ASR or provider | yes |
 | 7 | Ask / Autonomous modes | both modes; autonomous skips non-payment approvals, payment is always fail-closed | — | yes |
 | 8 | Memory and preferences | explicit user memory, persisted, visible and deletable | learned memory + profile | yes |
 | 9 | Learns skills and app knowledge | explicit skills + draft from a successful run + 27-app/21-site catalogue; no automatic trial/scoring | drafter trial+outcomes | yes |
 | 10 | Batch jobs | sequential batch runner in Tasks; verified on device (2 s, 409 tokens); stop between goals; no scheduling or parallelism | parallel/scheduled batches | yes |
 | 11 | Traceable runs | history, tokens measured on device, duration, export; no cost/trace UI | trace + cost UI | yes |
-| 12 | Linux sandbox | WASM stub, nothing bundled | Linux is out of scope; WASM only | no (Linux) |
+| 12 | Linux sandbox | isolated ArkWeb JavaScript sandbox (`about:blank`, verified: `1+1` -> `2`); Python/WASM not bundled; Linux out of scope | Python/WASM, limits | partial |
 | 13 | CLI + MCP from a computer | `pc-agent` CLI + MCP server | near parity, needs tool breadth | yes |
 | 14 | Many model providers + account sign-in | OpenAI-compatible, Anthropic, Gemini, DeepSeek; verified end-to-end on device, including chat with no screen; no OAuth | OAuth sign-in, more presets | yes |
 | 15 | 10 UI languages | English + Simplified Chinese resources for the app shell (tabs, titles, buttons, settings); chat and system messages are still English | more languages, translate messages | yes |
 
-Usable today: **~9.4 of 15** (~63%).
+Usable today: **~10.3 of 15** (~69%).
 
 ## 2. Core package matrix
 
@@ -77,7 +77,7 @@ extension on device.
 
 | Measure | Value |
 |---|---|
-| User-visible capabilities usable | ~9.4 / 15 (~63%) |
+| User-visible capabilities usable | ~10.3 / 15 (~69%) |
 | Portable core ported | ~20% |
 | Shared product surfaces (CLI/MCP, knowledge, records) | ~50% |
 | Device-control layer | replaced, not ported; on-device part blocked by ACL |
