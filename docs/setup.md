@@ -266,4 +266,24 @@ ruff check pc-agent bench agent
   Automatically generate signature`).
 - Enabling Developer mode / USB debugging and accepting the RSA prompt.
 - Approving the ACL request for the accessibility capability (see
-  `docs/architecture.md`).
+  `docs/architecture.md` and `docs/acl-request.md`).
+- Enabling HOPA in **Settings → Accessibility** on a device that exposes a
+  third-party services page. The Pura 90 emulator image does not.
+- Unlocking the emulator after it sleeps; automatic unlock is disabled in
+  developer mode.
+
+## 12. Local model key for debug builds (never commit)
+
+For local on-device testing without typing a key through the IME:
+
+1. Put one API key on one line in
+   `app/entry/src/main/resources/rawfile/deepseek.key`.
+2. `*.key` is already in `.gitignore`; never force-add it.
+3. Build and install. On start the app configures DeepSeek
+   (`https://api.deepseek.com/v1`, `deepseek-v4-flash`) and persists the
+   provider settings; the key itself stays in memory.
+4. Delete the file before producing any HAP you share; the resource is packaged
+   into the HAP.
+
+A release build must use Settings and, eventually, secure storage — not a
+rawfile.
