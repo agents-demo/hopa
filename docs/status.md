@@ -16,7 +16,7 @@ because the accessibility extension is not declared and no ACL is filed. The
 standalone claim is still **not** met; the toolchain, tethered, install and
 UI-wiring claims are.
 
-Plan progress: **217 / 767 boxes (28.3%)**. The open boxes are concentrated in
+Plan progress: **218 / 767 boxes (28.4%)**. The open boxes are concentrated in
 the device/ACL, UI, release and sign-off phases.
 
 | Area | State | Evidence |
