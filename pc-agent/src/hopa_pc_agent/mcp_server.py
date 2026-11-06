@@ -39,6 +39,27 @@ TOOLS: list[dict[str, Any]] = [
         },
     },
     {
+        "name": "hopa_list_apps",
+        "description": "List installed app bundles on the device, optionally filtered.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "filter": {"type": "string", "description": "case-insensitive bundle/label filter"},
+            },
+            "additionalProperties": False,
+        },
+    },
+    {
+        "name": "hopa_stop_app",
+        "description": "Force-stop an app by bundle name.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"bundle": {"type": "string"}},
+            "required": ["bundle"],
+            "additionalProperties": False,
+        },
+    },
+    {
         "name": "hopa_tap",
         "description": "Tap a screen coordinate.",
         "inputSchema": {
@@ -253,6 +274,21 @@ class McpServer:
             bundle = _ALIASES.get(raw.lower(), raw)
             self.device.launch(bundle, ability=str(arguments.get("ability", "")))
             return _text_result(f"launched {bundle}")
+
+        if name == "hopa_list_apps":
+            needle = str(arguments.get("filter", "")).lower()
+            apps = [
+                app
+                for app in self.device.apps()
+                if needle in app["bundle"].lower() or needle in app.get("label", "").lower()
+            ]
+            return _text_result(json.dumps(apps, ensure_ascii=False))
+
+        if name == "hopa_stop_app":
+            raw = str(arguments["bundle"])
+            bundle = _ALIASES.get(raw.lower(), raw)
+            self.device.stop(bundle)
+            return _text_result(f"stopped {bundle}")
 
         if name == "hopa_press_key":
             self.device.press_key(str(arguments["name"]))

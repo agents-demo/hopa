@@ -35,6 +35,15 @@ class FakeDevice:
     def press_key(self, name: str) -> None:
         self.calls.append(("key", name))
 
+    def apps(self) -> list[dict[str, str]]:
+        return [
+            {"bundle": "com.huawei.hmos.settings", "label": "Settings"},
+            {"bundle": "com.huawei.hmos.calendar", "label": "Calendar"},
+        ]
+
+    def stop(self, bundle: str) -> None:
+        self.calls.append(("stop", bundle))
+
 
 def _server() -> tuple[McpServer, FakeDevice]:
     device = FakeDevice()
@@ -61,6 +70,7 @@ def test_tools_list_contains_core_tools() -> None:
     response = server.handle({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
     names = {tool["name"] for tool in response["result"]["tools"]}
     assert {"hopa_tap", "hopa_dump_layout", "hopa_screenshot"} <= names
+    assert {"hopa_list_apps", "hopa_stop_app"} <= names
 
 
 def test_tools_call_tap() -> None:
@@ -89,6 +99,52 @@ def test_tools_call_launch_alias() -> None:
     )
     assert response["result"]["isError"] is False
     assert device.calls == [("launch", "com.huawei.hmos.settings", "")]
+
+
+def test_tools_call_list_apps() -> None:
+    server, _ = _server()
+    response = server.handle(
+        {
+            "jsonrpc": "2.0",
+            "id": 5,
+            "method": "tools/call",
+            "params": {"name": "hopa_list_apps", "arguments": {}},
+        }
+    )
+    text = response["result"]["content"][0]["text"]
+    apps = json.loads(text)
+    assert [app["bundle"] for app in apps] == [
+        "com.huawei.hmos.settings",
+        "com.huawei.hmos.calendar",
+    ]
+
+
+def test_tools_call_list_apps_filter() -> None:
+    server, _ = _server()
+    response = server.handle(
+        {
+            "jsonrpc": "2.0",
+            "id": 6,
+            "method": "tools/call",
+            "params": {"name": "hopa_list_apps", "arguments": {"filter": "cal"}},
+        }
+    )
+    apps = json.loads(response["result"]["content"][0]["text"])
+    assert [app["bundle"] for app in apps] == ["com.huawei.hmos.calendar"]
+
+
+def test_tools_call_stop_app_alias() -> None:
+    server, device = _server()
+    response = server.handle(
+        {
+            "jsonrpc": "2.0",
+            "id": 7,
+            "method": "tools/call",
+            "params": {"name": "hopa_stop_app", "arguments": {"bundle": "settings"}},
+        }
+    )
+    assert response["result"]["isError"] is False
+    assert device.calls == [("stop", "com.huawei.hmos.settings")]
 
 
 def test_notifications_get_no_response() -> None:
