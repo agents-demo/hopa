@@ -1,4 +1,4 @@
-# HOPA — HarmonyOS On-device Phone Agent
+﻿# HOPA â€” HarmonyOS On-device Phone Agent
 
 HOPA is a GUI agent for **HarmonyOS NEXT / HarmonyOS 6+**. It is built to operate
 other apps and websites much like a person would (read the screen, tap, type,
@@ -16,7 +16,7 @@ QuickJS) is designed but **not bundled yet**.
 
 ## Status
 
-Working prototype. The PC harness closes the observe → decide → act → verify →
+Working prototype. The PC harness closes the observe â†’ decide â†’ act â†’ verify â†’
 record loop, and the signed HarmonyOS app is installed and usable for chat, web
 pages, memory and model settings. Operating **other apps on the phone** still
 needs the accessibility ACL, which is not filed.
@@ -24,11 +24,11 @@ needs the accessibility ACL, which is not filed.
 | Area | State |
 | --- | --- |
 | Dev environment (DevEco Studio 26 / API 26) | see [docs/setup.md](docs/setup.md) |
-| `app/` ArkUI app | chat, Web tab, Tasks, Settings, Memory; signed debug HAP installed on the emulator |
+| `app/` ArkUI app | chat, Web, Apps, Tasks, Settings, Memory; signed debug HAP installed on the emulator |
 | `app/core/` agent loop, tool registry, action gate | implemented + hypium tests; OpenAI, Anthropic and Gemini clients |
 | `app/capabilities/` web / sandbox / a11y / system | web works via ArkWeb; a11y compiled but not declared; sandbox is a stub |
 | `pc-agent/` hdc + uitest CLI & MCP server | implemented |
-| `agent/` PC reference loop (observe → decide → act → verify → record) | implemented + tests |
+| `agent/` PC reference loop (observe â†’ decide â†’ act â†’ verify â†’ record) | implemented + tests |
 | `schemas/` JSON contracts (observation, action, decision, record) | v1 |
 | `bench/` HOPA-Bench 20 task definitions | implemented; 5/7 runnable tasks pass on the emulator |
 
@@ -38,14 +38,14 @@ Every action the agent proposes passes through **one** gate, `ActionExecutor`,
 in this order:
 
 ```
-guards → payment approval → execute → verify → record
+guards â†’ payment approval â†’ execute â†’ verify â†’ record
 ```
 
 - **Guards** enforce capability boundaries, app allow-lists, and destructive-action
   limits.
 - **Payment approval** is a hard stop. Any action classified as payment (or as a
   step that can trigger payment) must be confirmed by the user. The gate must never
-  be weakened, bypassed, or made optional — not by a tool, a model, a script, or a
+  be weakened, bypassed, or made optional â€” not by a tool, a model, a script, or a
   future refactor.
 - **Verify** compares the observed screen/state with the intended effect.
 - **Record** writes an immutable run record for audit and replay.
@@ -54,25 +54,25 @@ guards → payment approval → execute → verify → record
 
 ```
 hopa/
-├── app/                      # DevEco Studio project (Stage model)
-│   ├── AppScope/
-│   ├── entry/                # ArkUI shell: chat, task progress, settings, memory
-│   ├── core/                 # HAR: agent loop, tool registry, ActionExecutor (no UI)
-│   └── capabilities/         # independent HAR modules
-│       ├── web/              # ArkWeb browser agent
-│       ├── sandbox/          # hidden ArkWeb + Pyodide/QuickJS (offline)
-│       ├── a11y/             # AccessibilityExtensionAbility skeleton (ACL)
-│       └── system/           # system intents (alarm, calendar, deep links)
-├── pc-agent/                 # Python: hdc + uitest control, CLI and MCP server
-├── agent/                    # Python: reference loop, gate, policy, records
-├── schemas/                  # v1 JSON contracts shared with the ArkTS core
-├── bench/                    # HOPA-Bench tasks + runner
-├── docs/                     # setup, architecture, contracts, plan
-├── scripts/                  # build / install / test / bench (bash + PowerShell)
-├── .github/workflows/        # CI
-├── CLAUDE.md                 # conventions for future coding sessions
-├── NOTICE
-└── LICENSE                   # Apache-2.0
+â”œâ”€â”€ app/                      # DevEco Studio project (Stage model)
+â”‚   â”œâ”€â”€ AppScope/
+â”‚   â”œâ”€â”€ entry/                # ArkUI shell: chat, task progress, settings, memory
+â”‚   â”œâ”€â”€ core/                 # HAR: agent loop, tool registry, ActionExecutor (no UI)
+â”‚   â””â”€â”€ capabilities/         # independent HAR modules
+â”‚       â”œâ”€â”€ web/              # ArkWeb browser agent
+â”‚       â”œâ”€â”€ sandbox/          # hidden ArkWeb + Pyodide/QuickJS (offline)
+â”‚       â”œâ”€â”€ a11y/             # AccessibilityExtensionAbility skeleton (ACL)
+â”‚       â””â”€â”€ system/           # system intents (alarm, calendar, deep links)
+â”œâ”€â”€ pc-agent/                 # Python: hdc + uitest control, CLI and MCP server
+â”œâ”€â”€ agent/                    # Python: reference loop, gate, policy, records
+â”œâ”€â”€ schemas/                  # v1 JSON contracts shared with the ArkTS core
+â”œâ”€â”€ bench/                    # HOPA-Bench tasks + runner
+â”œâ”€â”€ docs/                     # setup, architecture, contracts, plan
+â”œâ”€â”€ scripts/                  # build / install / test / bench (bash + PowerShell)
+â”œâ”€â”€ .github/workflows/        # CI
+â”œâ”€â”€ CLAUDE.md                 # conventions for future coding sessions
+â”œâ”€â”€ NOTICE
+â””â”€â”€ LICENSE                   # Apache-2.0
 ```
 
 ## Requirements
@@ -143,40 +143,41 @@ packaged into the app.
 
 ## Documentation
 
-- [docs/setup.md](docs/setup.md) — toolchain, SDK paths, emulator, device, env vars.
-- [docs/architecture.md](docs/architecture.md) — layers, the action gate,
+- [docs/setup.md](docs/setup.md) â€” toolchain, SDK paths, emulator, device, env vars.
+- [docs/architecture.md](docs/architecture.md) â€” layers, the action gate,
   capability boundaries, ACL/permission dependency list.
-- [docs/contracts/observation.md](docs/contracts/observation.md) — refs,
+- [docs/contracts/observation.md](docs/contracts/observation.md) â€” refs,
   redaction, hashing, truncation.
-- [docs/contracts/action.md](docs/contracts/action.md) — kinds, validation,
+- [docs/contracts/action.md](docs/contracts/action.md) â€” kinds, validation,
   payment classification.
-- [docs/contracts/errors.md](docs/contracts/errors.md) — error codes and retry
+- [docs/contracts/errors.md](docs/contracts/errors.md) â€” error codes and retry
   rules.
-- [docs/bench-v0.md](docs/bench-v0.md) — the first five tasks, predicates and
+- [docs/bench-v0.md](docs/bench-v0.md) â€” the first five tasks, predicates and
   failure taxonomy.
-- [docs/eval.md](docs/eval.md) — metrics, targets and reproducibility.
-- [docs/brain.md](docs/brain.md) — JVM brain endpoints and decision contract.
+- [docs/eval.md](docs/eval.md) â€” metrics, targets and reproducibility.
+- [docs/brain.md](docs/brain.md) â€” JVM brain endpoints and decision contract.
 - [docs/knowledge.md](docs/knowledge.md) - app knowledge format and the 27 app files.
 - [docs/knowledge-triage.md](docs/knowledge-triage.md) - the 23 Mika apps classified.
 - [docs/bundles.md](docs/bundles.md) - bundle names verified on a device.
-- [docs/skills.md](docs/skills.md) — the six reusable skill manifests.
+- [docs/skills.md](docs/skills.md) â€” the six reusable skill manifests.
 - [docs/a11y.md](docs/a11y.md) - what the accessibility bridge does and does not do.
 - [docs/acl-request.md](docs/acl-request.md) - the accessibility ACL request package.
-- [docs/web.md](docs/web.md), [docs/system.md](docs/system.md), [docs/sandbox.md](docs/sandbox.md) — capability designs.
-- [docs/ux.md](docs/ux.md) — screens, states, trust and accessibility.
-- [docs/safety.md](docs/safety.md) — payment, irreversible actions, limits.
-- [docs/abuse.md](docs/abuse.md) — refusal taxonomy, CAPTCHA, scraping.
-- [docs/threat-model.md](docs/threat-model.md) — assets, actors, threats.
-- [docs/privacy.md](docs/privacy.md) — data inventory, retention, consent.
-- [SECURITY.md](SECURITY.md) — reporting and key handling.
-- [CHANGELOG.md](CHANGELOG.md) — version history.
-- [docs/release.md](docs/release.md) — install, upgrade, rollback, support.
-- [docs/emulator-crash-2026-11-06.md](docs/emulator-crash-2026-11-06.md) — emulator freeze analysis.
-- [docs/status.md](docs/status.md) — honest current state.
-- [docs/roadmap.md](docs/roadmap.md) — milestones G1–G4.
-- [docs/rebuild-plan.md](docs/rebuild-plan.md) — the delivery plan: phases,
+- [docs/web.md](docs/web.md), [docs/system.md](docs/system.md), [docs/sandbox.md](docs/sandbox.md) â€” capability designs.
+- [docs/ux.md](docs/ux.md) â€” screens, states, trust and accessibility.
+- [docs/safety.md](docs/safety.md) â€” payment, irreversible actions, limits.
+- [docs/abuse.md](docs/abuse.md) â€” refusal taxonomy, CAPTCHA, scraping.
+- [docs/threat-model.md](docs/threat-model.md) â€” assets, actors, threats.
+- [docs/privacy.md](docs/privacy.md) â€” data inventory, retention, consent.
+- [SECURITY.md](SECURITY.md) â€” reporting and key handling.
+- [CHANGELOG.md](CHANGELOG.md) â€” version history.
+- [docs/release.md](docs/release.md) â€” install, upgrade, rollback, support.
+- [docs/emulator-crash-2026-11-06.md](docs/emulator-crash-2026-11-06.md) â€” emulator freeze analysis.
+- [docs/status.md](docs/status.md) â€” honest current state.
+- [docs/roadmap.md](docs/roadmap.md) â€” milestones G1â€“G4.
+- [docs/rebuild-plan.md](docs/rebuild-plan.md) â€” the delivery plan: phases,
   checkboxes, evidence rules and the definition of finished.
 
 ## License
 
 Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
+
