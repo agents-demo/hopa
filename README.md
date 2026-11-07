@@ -87,7 +87,7 @@ It also remembers facts and skills you choose to keep.
 
 <img src="docs/media/apps.jpeg" alt="HOPA app catalogue with Chinese apps" height="560" />
 
-<br/><sub><b>Real: the app catalogue.</b> WeChat, Weibo, Xiaohongshu, Zhihu and more; where a HarmonyOS bundle is missing, HOPA says so. The top of the same tab lists 12 apps with a verified bundle.</sub>
+<br/><sub><b>Real: the app catalogue.</b> WeChat, Weibo, Xiaohongshu, Zhihu and more; where a HarmonyOS bundle is missing, HOPA says so. The top of the same tab lists 12 apps with a known bundle, 7 of them verified on a device.</sub>
 
 </td>
 <td width="50%" align="center" valign="top">

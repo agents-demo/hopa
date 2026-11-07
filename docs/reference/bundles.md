@@ -76,6 +76,19 @@ but never launch by a guessed package. Replace `UNCONFIRMED` only after
 | `messages-*` | `com.huawei.hmos.mms` | not on this image |
 | `music-*` | `com.huawei.hmos.music` | not on this image |
 
+## Check a device
+
+The catalogue and the installed bundles drift apart quickly. Run:
+
+```powershell
+py tools/scripts/verify-bundles.py --hdc "C:\Program Files\Huawei\DevEco Studio\sdk\default\openharmony\toolchains\hdc.exe" --device 127.0.0.1:5555
+```
+
+It prints all 27 apps, whether each bundle is installed, and whether the file
+has `bundle_verified`. Use `--input bm-dump.txt` for a saved `bm dump -a`
+output, and `--check` to exit 1 when an app marked verified is missing. The tool
+does not edit `APP.md`; add `bundle_verified` only after a launch smoke test.
+
 ## How to re-check on another device
 
 ```bash

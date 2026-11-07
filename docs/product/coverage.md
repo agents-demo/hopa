@@ -7,10 +7,12 @@ code.
 
 | Capability | Status | Notes |
 |---|---|---|
-| Chat and reasoning | Works | Plain answers, drafts and explanations; tokens and duration are recorded. |
-| Built-in browser | Works | Read a page, click, type, run an offline JavaScript snippet. One tab. |
+| Chat and reasoning | Works | Blue/grey bubbles, natural replies, no raw action logs; tokens and duration are recorded. |
+| Built-in browser | Works | Read a page, click, type; compact toolbar; one tab; the visible sandbox demo is gone. |
+| Website task from Chat | Works | One prompt opens the browser, reads the page and answers; verified with Bilibili. |
 | App control | With the PC bridge | Launch, read the screen, tap, type, scroll and go back. |
 | Untethered app control | Not on this image | The accessibility settings page is missing. A real phone with the service enabled is the untethered path. |
+| Approval sheet | Works | Human titles and labels instead of action kinds and refs; unit tested. |
 | Payment gate | Works | Every payment asks, in every mode. A denied action is still recorded. |
 | Memory | Works | Explicit facts, automatic "remember ..." extraction, visible and deletable. |
 | Skills | Works | Saved skills, a draft from a successful run, uses/successes counters. |
@@ -36,6 +38,9 @@ code.
 - `Open Settings and tap Network and internet.` ran in one request: router chose
   Settings, bridge `/launch`, `/observe`, `ui.tap e8`, `/observe` showed the
   WLAN page.
+- `Answer in Chinese: summarize the 2 hottest Bilibili videos today...` ran in
+  one request: `web.navigate` → `web.read`; the chat listed the two videos and
+  view counts in Chinese, and the Bilibili page showed the video cards.
 - The app catalogue and site catalogue are current; the structure and link
   checks are clean.
 

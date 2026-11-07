@@ -9,6 +9,7 @@ export {
 } from './src/main/ets/Types';
 
 export { ApprovalPolicy, PaymentContext } from './src/main/ets/gate/ApprovalPolicy';
+export { ApprovalDescription } from './src/main/ets/gate/ApprovalDescription';
 export { ActionCapability } from './src/main/ets/gate/ActionCapability';
 export { ActionGuard } from './src/main/ets/gate/ActionGuard';
 export { ApprovalGateway } from './src/main/ets/gate/ApprovalGateway';

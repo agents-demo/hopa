@@ -1,8 +1,9 @@
 import { UIContext } from '@kit.ArkUI';
 import { Context } from '@kit.AbilityKit';
-import { Action, PaymentContext, Screen } from '@hopa/core';
+import { Action, ApprovalDescription, PaymentContext, Screen } from '@hopa/core';
 import { MemoryExtractor } from '@hopa/core';
 import { AgentService } from '../../services/AgentService';
+import { AppRouteTargets } from '../../services/AppRouteTargets';
 
 /** Chat: the transcript, the composer and the approval dialog. */
 @Component
@@ -93,7 +94,10 @@ export struct ChatPage {
     const uiContext: UIContext = this.getUIContext();
     service.approvals.setHandler(async (action: Action, screen: Screen | undefined): Promise<boolean> => {
       const payment: boolean = service.policy.isPayment(action, screen);
-      const title: string = payment ? 'Confirm payment?' : 'Allow this action?';
+      const names = AppRouteTargets.displayNames();
+      const title: string = payment
+        ? 'Confirm payment?'
+        : ApprovalDescription.title(action, screen, names);
       const context: PaymentContext = service.policy.extractPaymentContext(screen);
       const amount: string = context.amount.length > 0 ? context.amount : 'not visible';
       const merchant: string = context.merchant.length > 0 ? context.merchant : 'not visible';
@@ -102,7 +106,7 @@ export struct ChatPage {
           `Amount: ${amount}\nMerchant: ${merchant}\n\n` +
           `${context.consequence}\n\n` +
           'Check the next screen yourself before you confirm.\n\nAllow it?'
-        : `HOPA wants to run: ${action.kind}\nTarget: ${action.target || '(none)'}\n\nAllow it?`;
+        : ApprovalDescription.body(action, screen, names);
       try {
         const result = await uiContext.getPromptAction().showDialog({
           title: title,

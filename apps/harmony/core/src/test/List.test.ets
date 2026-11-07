@@ -12,6 +12,7 @@ import schedulesTest from './Schedules.test';
 import chatHistoryTest from './ChatHistory.test';
 import appRouterTest from './AppRouter.test';
 import runNarratorTest from './RunNarrator.test';
+import approvalDescriptionTest from './ApprovalDescription.test';
 
 export default function testsuite(): void {
   approvalPolicyTest();
@@ -28,4 +29,5 @@ export default function testsuite(): void {
   chatHistoryTest();
   appRouterTest();
   runNarratorTest();
+  approvalDescriptionTest();
 }
