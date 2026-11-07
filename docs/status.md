@@ -20,7 +20,7 @@ Device control now has two backends:
 
 The standalone claim is still **not** met; the toolchain, tethered, install,
 UI-wiring and app-control-over-bridge claims are. Parity with Mika is
-**12.6 / 15 (84%)** with the PC attached; see `docs/mika-parity.md` for the
+**12.5 / 15 (83%)** with the PC attached; see `docs/mika-parity.md` for the
 per-row breakdown.
 
 ## Screens (2026-11-07)

@@ -25,9 +25,9 @@ app module supplies device control; HOPA must supply its own HarmonyOS layer.
 | 12 | Linux sandbox | isolated ArkWeb JavaScript sandbox (`about:blank`, verified: `1+1` -> `2`); Python/WASM not bundled; Linux out of scope | Python/WASM, limits | partial |
 | 13 | CLI + MCP from a computer | `pc-agent` CLI + MCP server | near parity, needs tool breadth | yes |
 | 14 | Many model providers + account sign-in | OpenAI-compatible, Anthropic, Gemini, DeepSeek; verified end-to-end on device, including chat with no screen; no OAuth | OAuth sign-in, more presets | yes |
-| 15 | 10 UI languages | English + Simplified Chinese + Japanese + French + Spanish + German + Korean + Italian + Portuguese + Russian (10 of 10); every shell string is translated; model text follows the model | keep translations in sync as strings change | yes |
+| 15 | 10 UI languages | English + Simplified Chinese + Japanese + French + Spanish + German + Korean + Italian + Portuguese + Russian (10 of 10) for the shell, greeting and fixed messages; the newer drawer and tool pages are English-only for now; model text follows the model | translate the drawer/tool pages as they settle | yes |
 
-Usable today: **~12.6 of 15** (~84%).
+Usable today: **~12.5 of 15** (~83%).
 
 ### Credit breakdown
 
@@ -50,7 +50,7 @@ image, and halves when a platform block limits it.
 | 12 | 0.4 | JS sandbox only; no Python/WASM bundle |
 | 13 | 0.8 | CLI + MCP + bridge; tool breadth |
 | 14 | 0.9 | four providers; no OAuth |
-| 15 | 1.0 | 10 of 10 UI languages |
+| 15 | 0.9 | 10 of 10 shell languages; newer pages are English-only |
 
 ## 2. Core package matrix
 
@@ -100,7 +100,7 @@ extension on device.
 
 | Measure | Value |
 |---|---|
-| User-visible capabilities usable | ~12.2 / 15 (~81%) |
+| User-visible capabilities usable | ~12.5 / 15 (~83%) |
 | Portable core ported | ~20% || Shared product surfaces (CLI/MCP, knowledge, records) | ~50% |
 | Device-control layer | replaced, not ported; on-device path blocked by the ACL, tethered path verified |
 
@@ -134,7 +134,7 @@ Four capabilities cannot be completed on this image, regardless of code:
 Untethered, that is **3.4 of 15 credits** unavailable, so the on-device ceiling is
 **~11.6 / 15 (77%)**. With the PC bridge attached, rows 1 and 3 are usable and
 only the system half of row 4 plus row 6 are blocked, so the tethered ceiling is
-about **13.5 / 15 (90%)**. HOPA is at **12.2 / 15 (81%)** today. Reaching the
+about **13.5 / 15 (90%)**. HOPA is at **12.5 / 15 (83%)** today. Reaching the
 remaining points needs a device image where the accessibility service can be
 enabled (untethered rows 1 and 3), a speech SDK, or the system reminder agent.
 It is a platform/image limit, not a missing implementation.

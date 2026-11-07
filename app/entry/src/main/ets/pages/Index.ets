@@ -387,6 +387,15 @@ struct Index {
     }
   }
 
+  private deleteChat(id: string): void {
+    if (!this.history.remove(id)) {
+      return;
+    }
+    this.history.ensureCurrent(Date.now());
+    this.renderHistory();
+    this.saveHistory();
+  }
+
   private async addSchedule(intervalMs: number, delayMs: number): Promise<void> {
     const ok: boolean = await AgentService.get().addSchedule(this.scheduleGoal, intervalMs, delayMs);
     if (!ok) {
@@ -2252,14 +2261,22 @@ struct Index {
         .fontColor('#999999')
         .padding({ left: 12, top: 4, bottom: 2 })
       ForEach(this.recentChats(), (session: ChatSession, index: number) => {
-        Row() {
+        Row({ space: 6 }) {
           Text(session.title)
             .fontSize(13)
             .maxLines(1)
             .textOverflow({ overflow: TextOverflow.Ellipsis })
+            .layoutWeight(1)
+          Text('x')
+            .fontSize(13)
+            .fontColor('#B42318')
+            .padding({ left: 8, right: 4 })
+            .onClick(() => {
+              this.deleteChat(session.id);
+            })
         }
         .width('100%')
-        .padding({ left: 12, right: 12, top: 8, bottom: 8 })
+        .padding({ left: 12, right: 8, top: 8, bottom: 8 })
         .borderRadius(8)
         .backgroundColor(session.id === this.history.currentId() ? '#EAF1FF' : '#00000000')
         .onClick(() => {
