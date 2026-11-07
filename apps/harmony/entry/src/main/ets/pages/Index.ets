@@ -4,7 +4,7 @@ import { Context, common } from '@kit.AbilityKit';
 import { accessibility } from '@kit.AccessibilityKit';
 import { buffer } from '@kit.ArkTS';
 import { preferences } from '@kit.ArkData';
-import { Action, BatchItemResult, ChatHistory, ChatSession, PaymentContext, Screen, ScheduledTask, Skill } from '@hopa/core';
+import { Action, BatchItemResult, ChatHistory, ChatSession, PaymentContext, Screen, Skill } from '@hopa/core';
 import { MemoryExtractor } from '@hopa/core';
 import { AgentService } from '../services/AgentService';
 import { SettingsStore, StoredSettings } from '../services/SettingsStore';
@@ -13,6 +13,7 @@ import { APP_CATALOG, CatalogApp, SITE_CATALOG, CatalogSite } from '../services/
 import { RunRecord } from '@hopa/core';
 import { JsSandboxBridge } from '../services/JsSandboxBridge';
 import { AppLauncher } from '../services/AppLauncher';
+import { PlansPage } from './plans/PlansPage';
 import { ScreensPage } from './tools/ScreensPage';
 import { SelfCheckPage } from './tools/SelfCheckPage';
 import { FilesPage } from './tools/FilesPage';
@@ -45,9 +46,6 @@ struct Index {
     $r('app.string.greeting_2')
   ];
   @State taskStatus: string = 'Idle';
-  @State schedules: ScheduledTask[] = [];
-  @State scheduleGoal: string = '';
-  private scheduleRefresh: number = -1;
   @State networkEnabled: boolean = false;
   @State accessibilityEnabled: boolean = false;
   @State modelEndpoint: string = 'https://api.openai.com/v1';
@@ -269,22 +267,6 @@ struct Index {
       this.activePage = 'welcome';
       await SettingsStore.markWelcomeSeen(getContext(this) as Context);
     }
-    this.scheduleRefresh = setInterval(() => {
-      this.schedules = AgentService.get().schedules.all().slice();
-      const busy: boolean = AgentService.get().isBusy();
-      if (!this.busy && busy) {
-        this.taskStatus = 'Scheduled goal running';
-      } else if (!this.busy && !busy && this.taskStatus === 'Scheduled goal running') {
-        this.taskStatus = 'Idle';
-      }
-    }, 5000);
-  }
-
-  aboutToDisappear(): void {
-    if (this.scheduleRefresh >= 0) {
-      clearInterval(this.scheduleRefresh);
-      this.scheduleRefresh = -1;
-    }
   }
 
   private async loadSettings(): Promise<void> {
@@ -324,7 +306,6 @@ struct Index {
 
   private async loadSchedules(): Promise<void> {
     await AgentService.get().loadSchedules(getContext(this) as Context);
-    this.schedules = AgentService.get().schedules.all().slice();
     AgentService.get().startScheduler();
   }
 
@@ -400,22 +381,6 @@ struct Index {
     this.history.ensureCurrent(Date.now());
     this.renderHistory();
     this.saveHistory();
-  }
-
-  private async addSchedule(intervalMs: number, delayMs: number): Promise<void> {
-    const ok: boolean = await AgentService.get().addSchedule(this.scheduleGoal, intervalMs, delayMs);
-    if (!ok) {
-      this.taskStatus = 'Enter a goal for the schedule';
-      return;
-    }
-    this.scheduleGoal = '';
-    this.schedules = AgentService.get().schedules.all().slice();
-    this.taskStatus = 'Schedule added';
-  }
-
-  private async removeSchedule(id: string): Promise<void> {
-    await AgentService.get().removeSchedule(id);
-    this.schedules = AgentService.get().schedules.all().slice();
   }
 
   private addMemory(): void {
@@ -927,100 +892,6 @@ struct Index {
   }
 
   @Builder
-  PlansPage() {
-    Column({ space: 12 }) {
-      Text('Plans')
-        .fontSize(22)
-        .fontWeight(FontWeight.Bold)
-      Text('Scheduled goals that run while HOPA is open. This image has no system alarm, so nothing fires after the app is closed.')
-        .fontSize(12)
-        .fontColor('#666666')
-
-      Row({ space: 6 }) {
-        Button('Every 5 min')
-          .fontSize(10)
-          .height(28)
-          .onClick(() => {
-            this.addSchedule(300000, 300000);
-          })
-        Button('Every 30 min')
-          .fontSize(10)
-          .height(28)
-          .onClick(() => {
-            this.addSchedule(1800000, 1800000);
-          })
-        Button('Daily')
-          .fontSize(10)
-          .height(28)
-          .onClick(() => {
-            this.addSchedule(86400000, 86400000);
-          })
-      }
-      .width('100%')
-      Row({ space: 6 }) {
-        Button('Once in 1 min')
-          .fontSize(10)
-          .height(28)
-          .onClick(() => {
-            this.addSchedule(0, 60000);
-          })
-        Text(`${this.schedules.length} planned`)
-          .fontSize(11)
-          .fontColor('#999999')
-      }
-      .width('100%')
-      TextInput({ placeholder: 'Goal for the plan', text: this.scheduleGoal })
-        .fontSize(13)
-        .onChange((value: string) => {
-          this.scheduleGoal = value;
-        })
-
-      if (this.schedules.length > 0) {
-        List({ space: 4 }) {
-          ForEach(this.schedules, (item: ScheduledTask, index: number) => {
-            ListItem() {
-              Row({ space: 8 }) {
-                Column({ space: 2 }) {
-                  Text(item.goal)
-                    .fontSize(13)
-                    .maxLines(2)
-                  Text(`${item.label()} | ${this.scheduleWhen(item)}`)
-                    .fontSize(10)
-                    .fontColor('#999999')
-                }
-                .layoutWeight(1)
-                .alignItems(HorizontalAlign.Start)
-                Button('Delete')
-                  .fontSize(10)
-                  .height(26)
-                  .backgroundColor('#E5E6E8')
-                  .fontColor('#B42318')
-                  .onClick(() => {
-                    this.removeSchedule(item.id);
-                  })
-              }
-              .width('100%')
-              .padding(8)
-              .backgroundColor('#F7F8FA')
-              .borderRadius(8)
-            }
-          }, (item: ScheduledTask, index: number) => `${item.id}-${item.enabled}-${item.nextRunAt}`)
-        }
-        .layoutWeight(1)
-        .width('100%')
-      } else {
-        Text('No plans yet. Type a goal above, then choose how often it should run.')
-          .fontSize(12)
-          .fontColor('#999999')
-      }
-    }
-    .width('100%')
-    .height('100%')
-    .padding(16)
-    .alignItems(HorizontalAlign.Start)
-  }
-
-  @Builder
   RunsPage() {
     Column({ space: 12 }) {
       Text('Runs and batches')
@@ -1214,7 +1085,7 @@ struct Index {
       this.UsageLine('Denied', `${this.countRuns('denied')}`)
       this.UsageLine('Last run tokens', `${this.lastTokens}`)
       this.UsageLine('Last run time', `${(this.lastDurationMs / 1000).toFixed(1)} s`)
-      this.UsageLine('Plans', `${this.schedules.length}`)
+      this.UsageLine('Plans', `${AgentService.get().schedules.all().length}`)
       this.UsageLine('Facts and skills', `${this.memoryItems.length} / ${this.skills.length}`)
       Text('Per-run tokens are not stored yet; the last run total is shown.')
         .fontSize(11)
@@ -1406,18 +1277,6 @@ struct Index {
     .width('100%')
     .height('100%')
     .alignItems(HorizontalAlign.Start)
-  }
-
-  private scheduleWhen(item: ScheduledTask): string {
-    if (!item.enabled) {
-      return 'done';
-    }
-    const delta: number = item.nextRunAt - Date.now();
-    if (delta <= 0) {
-      return 'due now';
-    }
-    const minutes: number = Math.ceil(delta / 60000);
-    return minutes <= 1 ? 'in <1 min' : `in ${minutes} min`;
   }
 
   @Builder
@@ -1924,7 +1783,7 @@ struct Index {
   @Builder
   PageHost() {
     if (this.activePage === 'plans') {
-      this.PlansPage()
+      PlansPage()
     } else if (this.activePage === 'memory') {
       this.MemoryPage()
     } else if (this.activePage === 'browser') {
@@ -2294,7 +2153,7 @@ struct Index {
       this.DevLine('Accessibility', this.a11yAvailable ? 'available' : 'unavailable')
       this.DevLine('PC bridge', AgentService.get().isRemoteConfigured() ? 'configured' : 'not configured')
       this.DevLine('Runs stored', `${this.runRecords.length}`)
-      this.DevLine('Plans stored', `${this.schedules.length}`)
+      this.DevLine('Plans stored', `${AgentService.get().schedules.all().length}`)
       Button('Clear run history')
         .fontSize(12)
         .backgroundColor('#E5E6E8')
