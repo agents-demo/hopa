@@ -7,10 +7,10 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@hopa/core": "file:../core",
-    "@hopa/capability-web": "file:../capabilities/web",
+    "@hopa/capability-browser": "file:../capabilities/browser",
     "@hopa/capability-llm": "file:../capabilities/llm",
     "@hopa/capability-sandbox": "file:../capabilities/sandbox",
-    "@hopa/capability-a11y": "file:../capabilities/a11y",
+    "@hopa/capability-accessibility": "file:../capabilities/accessibility",
     "@hopa/capability-system": "file:../capabilities/system"
   },
   "devDependencies": {

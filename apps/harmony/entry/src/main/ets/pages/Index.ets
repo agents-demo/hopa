@@ -67,7 +67,7 @@ struct Index {
       AgentService.get().setNetworkEnabled(stored.network);
       AgentService.get().setAutonomous(stored.autonomous);
       if (stored.bridgeUrl.length > 0 && stored.bridgeToken.length > 0) {
-        AgentService.get().configureRemote(stored.bridgeUrl, stored.bridgeToken);
+        AgentService.get().configureBridge(stored.bridgeUrl, stored.bridgeToken);
       }
     } catch (error) {
       // First run or an unreadable store: keep the defaults.

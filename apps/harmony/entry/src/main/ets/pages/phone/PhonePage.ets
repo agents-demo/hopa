@@ -10,7 +10,7 @@ export struct PhonePage {
       Text('Accessibility')
         .fontSize(16)
         .fontWeight(FontWeight.Bold)
-      Text(AgentService.get().isA11yAvailable()
+      Text(AgentService.get().isAccessibilityAvailable()
         ? 'The service is available. The loop can read and tap other apps on the phone.'
         : 'The service cannot be enabled on this emulator. Use the PC bridge below, or a device with an accessibility settings page.')
         .fontSize(12)
@@ -18,7 +18,7 @@ export struct PhonePage {
       Text('PC bridge')
         .fontSize(16)
         .fontWeight(FontWeight.Bold)
-      Text(AgentService.get().isRemoteConfigured()
+      Text(AgentService.get().isBridgeConfigured()
         ? 'A bridge is configured. It is the active control backend.'
         : 'No bridge yet. Run pc-agent bridge on the PC, then enter the URL and token in Settings.')
         .fontSize(12)

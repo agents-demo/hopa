@@ -1,5 +1,5 @@
 import { Action, ActionCapability, Observation } from '@hopa/core';
-import { A11yBridge } from './A11yBridge';
+import { AccessibilityBridge } from './AccessibilityBridge';
 
 /** Starts another app; implemented by the entry module with a UI context. */
 export interface UiLauncher {
@@ -14,7 +14,7 @@ export interface UiLauncher {
  * `ui.tap` and `ui.type` address element refs from the latest observation, and
  * `ui.swipe` uses the coordinates the gate already received.
  */
-export class UiCapability implements ActionCapability {
+export class UiActionCapability implements ActionCapability {
   private launcher: UiLauncher | undefined = undefined;
 
   setLauncher(launcher: UiLauncher): void {
@@ -26,11 +26,11 @@ export class UiCapability implements ActionCapability {
     if (kind === 'ui.launch') {
       return true;
     }
-    if (A11yBridge.get().isRemotePreferred()) {
+    if (AccessibilityBridge.get().isBridgePreferred()) {
       // The PC bridge owns the screen refs, so it must own the actions too.
       return false;
     }
-    if (!A11yBridge.get().isAvailable()) {
+    if (!AccessibilityBridge.get().isAvailable()) {
       return false;
     }
     return kind === 'ui.tap' ||
@@ -61,7 +61,7 @@ export class UiCapability implements ActionCapability {
         : Observation.fail(`could not launch ${bundle}`);
     }
 
-    const bridge = A11yBridge.get();
+    const bridge = AccessibilityBridge.get();
     if (!bridge.isAvailable()) {
       return Observation.fail(
         'accessibility unavailable: restricted permission/ACL not granted or service disabled'

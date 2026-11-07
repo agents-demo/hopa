@@ -1,7 +1,7 @@
 import AccessibilityExtensionAbility, {
   AccessibilityEvent
 } from '@ohos.application.AccessibilityExtensionAbility';
-import { A11yBridge } from '@hopa/capability-a11y';
+import { AccessibilityBridge } from '@hopa/capability-accessibility';
 
 /**
  * AccessibilityExtensionAbility for HOPA.
@@ -12,7 +12,7 @@ import { A11yBridge } from '@hopa/capability-a11y';
  */
 export default class HopaAccessibilityExtension extends AccessibilityExtensionAbility {
   onConnect(): void {
-    A11yBridge.get().attach(this.context);
+    AccessibilityBridge.get().attach(this.context);
   }
 
   onAccessibilityEvent(event: AccessibilityEvent): void {
@@ -20,6 +20,6 @@ export default class HopaAccessibilityExtension extends AccessibilityExtensionAb
   }
 
   onDisconnect(): void {
-    A11yBridge.get().detach();
+    AccessibilityBridge.get().detach();
   }
 }

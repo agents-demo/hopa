@@ -1,7 +1,7 @@
 import { http } from '@kit.NetworkKit';
 import { buffer } from '@kit.ArkTS';
 
-export class RemoteNode {
+export class BridgeNode {
   ref: string = '';
   text: string = '';
   description: string = '';
@@ -10,14 +10,14 @@ export class RemoteNode {
   clickable: boolean = false;
 }
 
-class RemoteObservationBody {
+class BridgeObservationBody {
   text: string = '';
-  nodes: RemoteNode[] = [];
+  nodes: BridgeNode[] = [];
   width: number = 0;
   height: number = 0;
 }
 
-class RemoteOkBody {
+class BridgeOkBody {
   ok: boolean = false;
 }
 
@@ -33,11 +33,11 @@ class ScreenshotBody {
  * The phone asks the PC for the current layout and sends taps/types/launches
  * back. The token stays in memory only.
  */
-export class RemoteBridge {
+export class BridgeClient {
   private baseUrl: string = '';
   private token: string = '';
   private lastText: string = '';
-  private lastNodes: RemoteNode[] = [];
+  private lastNodes: BridgeNode[] = [];
   private width: number = 0;
   private height: number = 0;
   private lastError: string = '';
@@ -118,7 +118,7 @@ export class RemoteBridge {
   async health(): Promise<boolean> {
     try {
       const raw: string = await this.get('/health');
-      const parsed = JSON.parse(raw) as RemoteOkBody;
+      const parsed = JSON.parse(raw) as BridgeOkBody;
       this.lastError = parsed.ok ? '' : 'bridge said not ok';
       return parsed.ok;
     } catch (error) {
@@ -130,7 +130,7 @@ export class RemoteBridge {
   async observe(): Promise<boolean> {
     try {
       const raw: string = await this.call('/observe', '{}');
-      const parsed = JSON.parse(raw) as RemoteObservationBody;
+      const parsed = JSON.parse(raw) as BridgeObservationBody;
       this.lastText = parsed.text;
       this.lastNodes = parsed.nodes;
       this.width = parsed.width;
@@ -150,7 +150,7 @@ export class RemoteBridge {
     return [];
   }
 
-  nodes(): RemoteNode[] {
+  nodes(): BridgeNode[] {
     return this.lastNodes;
   }
 

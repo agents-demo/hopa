@@ -1,7 +1,7 @@
 {
-  "name": "@hopa/capability-a11y",
+  "name": "@hopa/capability-browser",
   "version": "0.1.0",
-  "description": "HOPA accessibility capability (restricted permission / ACL).",
+  "description": "HOPA ArkWeb browser capability.",
   "main": "Index.ets",
   "author": "The HOPA Authors",
   "license": "Apache-2.0",

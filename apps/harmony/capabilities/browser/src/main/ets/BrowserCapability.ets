@@ -15,7 +15,7 @@ export interface WebController {
  * Browser capability. It never renders UI; it turns gated actions into controller
  * calls. Network use is gated by the user setting in the entry app.
  */
-export class WebCapability implements ActionCapability {
+export class BrowserCapability implements ActionCapability {
   private controller: WebController | undefined = undefined;
   private lastUrl: string = '';
   private lastText: string = '';

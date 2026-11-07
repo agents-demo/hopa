@@ -6,13 +6,13 @@ import {
   ScreenNode,
   ScreenSource
 } from '@hopa/core';
-import { A11yBridge } from '@hopa/capability-a11y';
-import { RemoteBridge, RemoteNode } from './RemoteBridge';
+import { AccessibilityBridge } from '@hopa/capability-accessibility';
+import { BridgeClient, BridgeNode } from './BridgeClient';
 /** Feeds the loop with the PC bridge's layout instead of the local screen. */
-export class RemoteScreenSource implements ScreenSource {
-  private bridge: RemoteBridge;
+export class BridgeScreenSource implements ScreenSource {
+  private bridge: BridgeClient;
 
-  constructor(bridge: RemoteBridge) {
+  constructor(bridge: BridgeClient) {
     this.bridge = bridge;
   }
 
@@ -41,10 +41,10 @@ export class RemoteScreenSource implements ScreenSource {
  * It only handles actions when the bridge is configured and the local
  * accessibility service is not available, so the on-device path always wins.
  */
-export class RemoteUiCapability implements ActionCapability {
-  private bridge: RemoteBridge;
+export class BridgeUiCapability implements ActionCapability {
+  private bridge: BridgeClient;
 
-  constructor(bridge: RemoteBridge) {
+  constructor(bridge: BridgeClient) {
     this.bridge = bridge;
   }
 
@@ -64,10 +64,10 @@ export class RemoteUiCapability implements ActionCapability {
     if (!wanted) {
       return false;
     }
-    if (A11yBridge.get().isRemotePreferred()) {
+    if (AccessibilityBridge.get().isBridgePreferred()) {
       return true;
     }
-    return !A11yBridge.get().isAvailable();
+    return !AccessibilityBridge.get().isAvailable();
   }
 
   private center(ref: string): number[] {

@@ -1,6 +1,6 @@
 {
   "module": {
-    "name": "capability_web",
+    "name": "capability_browser",
     "type": "har",
     "deviceTypes": [
       "phone",

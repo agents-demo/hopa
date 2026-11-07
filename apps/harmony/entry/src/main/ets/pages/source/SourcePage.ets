@@ -49,9 +49,9 @@ export struct SourcePage {
       this.Line('Provider', this.provider)
       this.Line('Endpoint', this.endpoint)
       this.Line('Model', this.model)
-      this.Line('Control backend', AgentService.get().isRemoteConfigured()
+      this.Line('Control backend', AgentService.get().isBridgeConfigured()
         ? 'PC bridge: live screen and taps'
-        : (AgentService.get().isA11yAvailable() ? 'on-device accessibility' : 'built-in browser text only'))
+        : (AgentService.get().isAccessibilityAvailable() ? 'on-device accessibility' : 'built-in browser text only'))
       this.Line('Last run', `${AgentService.get().getLastTokens()} tokens, ${(AgentService.get().getLastDurationMs() / 1000).toFixed(1)} s`)
       Text('Screen text and page URLs are not stored per run yet, so this page reports the configured source instead of a citation list.')
         .fontSize(11)

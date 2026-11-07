@@ -1,7 +1,7 @@
 {
   "string": [
     {
-      "name": "capability_a11y_desc",
+      "name": "capability_accessibility_desc",
       "value": "HOPA accessibility capability"
     }
   ]

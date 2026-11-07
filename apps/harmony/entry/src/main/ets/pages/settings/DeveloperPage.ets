@@ -38,8 +38,8 @@ export struct DeveloperPage {
       this.Line('Model', AgentService.get().getModelLabel().length > 0
         ? AgentService.get().getModelLabel()
         : 'not configured')
-      this.Line('Accessibility', AgentService.get().isA11yAvailable() ? 'available' : 'unavailable')
-      this.Line('PC bridge', AgentService.get().isRemoteConfigured() ? 'configured' : 'not configured')
+      this.Line('Accessibility', AgentService.get().isAccessibilityAvailable() ? 'available' : 'unavailable')
+      this.Line('PC bridge', AgentService.get().isBridgeConfigured() ? 'configured' : 'not configured')
       this.Line('Runs stored', `${AgentService.get().runs.all().length}`)
       this.Line('Plans stored', `${AgentService.get().schedules.all().length}`)
       if (this.status.length > 0) {

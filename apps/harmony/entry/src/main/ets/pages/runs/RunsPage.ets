@@ -164,9 +164,9 @@ export struct RunsPage {
           Progress({ value: 50, total: 100, type: ProgressType.Linear })
             .width('100%')
         }
-        Text(AgentService.get().isA11yAvailable()
+        Text(AgentService.get().isAccessibilityAvailable()
           ? 'Accessibility is available. The loop can read other apps.'
-          : (AgentService.get().isRemoteConfigured()
+          : (AgentService.get().isBridgeConfigured()
             ? 'Accessibility is unavailable; actions go through the connected PC bridge.'
             : 'Accessibility is unavailable, so the loop can read only the built-in browser.'))
           .fontSize(13)

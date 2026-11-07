@@ -12,22 +12,22 @@ import { Screen, ScreenNode } from '@hopa/core';
  * enables the service. `capture()` never throws to the agent: on any failure it
  * returns the last known screen.
  */
-export class A11yBridge {
-  private static instance: A11yBridge | undefined = undefined;
+export class AccessibilityBridge {
+  private static instance: AccessibilityBridge | undefined = undefined;
   private context?: AccessibilityExtensionContext;
   private connected: boolean = false;
-  private remotePreferred: boolean = false;
+  private bridgePreferred: boolean = false;
   private lastScreen: Screen = new Screen();
   private elements: Map<string, AccessibilityElement> = new Map<string, AccessibilityElement>();
   private nextRef: number = 0;
   private width: number = 0;
   private height: number = 0;
 
-  static get(): A11yBridge {
-    if (A11yBridge.instance === undefined) {
-      A11yBridge.instance = new A11yBridge();
+  static get(): AccessibilityBridge {
+    if (AccessibilityBridge.instance === undefined) {
+      AccessibilityBridge.instance = new AccessibilityBridge();
     }
-    return A11yBridge.instance;
+    return AccessibilityBridge.instance;
   }
 
   attach(context: AccessibilityExtensionContext): void {
@@ -53,12 +53,12 @@ export class A11yBridge {
    * bridge is configured it is the only safe backend for both the screen and
    * the actions, so the on-device path stands down.
    */
-  setRemotePreferred(value: boolean): void {
-    this.remotePreferred = value;
+  setBridgePreferred(value: boolean): void {
+    this.bridgePreferred = value;
   }
 
-  isRemotePreferred(): boolean {
-    return this.remotePreferred;
+  isBridgePreferred(): boolean {
+    return this.bridgePreferred;
   }
 
   find(ref: string): AccessibilityElement | undefined {

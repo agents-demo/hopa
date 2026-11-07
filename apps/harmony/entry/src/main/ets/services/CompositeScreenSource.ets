@@ -1,9 +1,9 @@
 import { Screen, ScreenSource } from '@hopa/core';
-import { A11yBridge } from '@hopa/capability-a11y';
+import { AccessibilityBridge } from '@hopa/capability-accessibility';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { BrowserController } from './BrowserController';
-import { RemoteBridge } from './RemoteBridge';
-import { RemoteScreenSource } from './RemoteUiCapability';
+import { BridgeClient } from './BridgeClient';
+import { BridgeScreenSource } from './BridgeUiCapability';
 
 /**
  * Prefers the PC bridge, then the accessibility tree, then the built-in
@@ -11,17 +11,17 @@ import { RemoteScreenSource } from './RemoteUiCapability';
  */
 export class CompositeScreenSource implements ScreenSource {
   private browser: BrowserController;
-  private remote: RemoteBridge;
+  private bridge: BridgeClient;
 
-  constructor(browser: BrowserController, remote: RemoteBridge) {
+  constructor(browser: BrowserController, bridge: BridgeClient) {
     this.browser = browser;
-    this.remote = remote;
+    this.bridge = bridge;
   }
 
   async capture(): Promise<Screen> {
-    if (this.remote.isConfigured()) {
+    if (this.bridge.isConfigured()) {
       hilog.info(0x0000, 'HOPA', 'capture: bridge observe start');
-      const screen: Screen = await new RemoteScreenSource(this.remote).capture();
+      const screen: Screen = await new BridgeScreenSource(this.bridge).capture();
       hilog.info(
         0x0000,
         'HOPA',
@@ -31,9 +31,9 @@ export class CompositeScreenSource implements ScreenSource {
         return screen;
       }
     }
-    if (A11yBridge.get().isAvailable()) {
+    if (AccessibilityBridge.get().isAvailable()) {
       hilog.info(0x0000, 'HOPA', 'capture: a11y start');
-      const local: Promise<Screen> = A11yBridge.get().capture();
+      const local: Promise<Screen> = AccessibilityBridge.get().capture();
       const guard: Promise<Screen> = new Promise<Screen>((resolve: (value: Screen) => void) => {
         setTimeout(() => {
           resolve(new Screen(''));

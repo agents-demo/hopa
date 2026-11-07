@@ -1,5 +1,5 @@
 import { Action, ActionCapability, Observation } from '@hopa/core';
-import { A11yBridge } from './A11yBridge';
+import { AccessibilityBridge } from './AccessibilityBridge';
 
 /**
  * Accessibility capability.
@@ -8,7 +8,7 @@ import { A11yBridge } from './A11yBridge';
  * the app has the approved ACL, the extension is declared, and the user enables
  * the HOPA accessibility service in Settings -> Accessibility.
  */
-export class A11yCapability implements ActionCapability {
+export class AccessibilityCapability implements ActionCapability {
   private available: boolean = false;
 
   setAvailable(available: boolean): void {
@@ -16,7 +16,7 @@ export class A11yCapability implements ActionCapability {
   }
 
   isAvailable(): boolean {
-    return this.available || A11yBridge.get().isAvailable();
+    return this.available || AccessibilityBridge.get().isAvailable();
   }
 
   canHandle(kind: string): boolean {
@@ -30,7 +30,7 @@ export class A11yCapability implements ActionCapability {
       );
     }
     if (action.kind === 'a11y.observe') {
-      const screen = await A11yBridge.get().capture();
+      const screen = await AccessibilityBridge.get().capture();
       return Observation.ok(
         screen.text.length > 0 ? screen.text.substring(0, 120) : 'screen captured'
       );

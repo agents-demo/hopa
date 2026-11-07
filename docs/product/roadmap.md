@@ -58,11 +58,11 @@ an optional cloud fallback.
 
 Work:
 
-- `capabilities/a11y`: full AccessibilityExtensionAbility after the **ACL request
+- `capabilities/accessibility`: full AccessibilityExtensionAbility after the **ACL request
   for accessibility** is approved; foreground-only fallback otherwise.
 - Background/virtual-screen control behind `ACCESS_VIRTUAL_SCREEN` (restricted /
   ACL); never assume it is granted.
-- `capabilities/web`: navigate/read/click/type with per-task network gating.
+- `capabilities/browser`: navigate/read/click/type with per-task network gating.
 - `capabilities/system`: alarm, calendar, deep links (https allow-list).
 - Human takeover for login and payment (pause, hand control to the user, resume).
 - `capabilities/sandbox`: Pyodide + QuickJS from bundled assets, offline by

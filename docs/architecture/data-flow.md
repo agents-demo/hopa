@@ -67,7 +67,7 @@ The timer lives in `entry/services/ScheduleService.ets`; the run lives in
 ## Tethered control
 
 ```
-entry services/RemoteBridge ──HTTP──▶ services/pc-agent api/bridge.py
+entry services/BridgeClient ──HTTP──▶ services/pc-agent api/bridge.py
         │                                     │
         │                                     ├─ hdc dumpLayout ─▶ Layout
         │                                     └─ hdc tap / type / launch

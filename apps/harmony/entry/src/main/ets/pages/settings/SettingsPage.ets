@@ -28,7 +28,7 @@ export struct SettingsPage {
   @State status: string = '';
 
   aboutToAppear(): void {
-    this.a11yAvailable = AgentService.get().isA11yAvailable();
+    this.a11yAvailable = AgentService.get().isAccessibilityAvailable();
     this.modelLabel = AgentService.get().getModelLabel();
     this.load();
     this.loadA11yList();
@@ -107,14 +107,14 @@ export struct SettingsPage {
   }
 
   private async connectBridge(): Promise<void> {
-    AgentService.get().configureRemote(this.bridgeUrl, this.bridgeToken);
-    if (!AgentService.get().isRemoteConfigured()) {
+    AgentService.get().configureBridge(this.bridgeUrl, this.bridgeToken);
+    if (!AgentService.get().isBridgeConfigured()) {
       this.bridgeStatus = 'enter URL and token';
       return;
     }
     this.bridgeStatus = 'checking...';
-    const ok: boolean = await AgentService.get().testRemote();
-    this.bridgeStatus = ok ? 'connected' : `unreachable: ${AgentService.get().remoteFailure()}`;
+    const ok: boolean = await AgentService.get().testBridge();
+    this.bridgeStatus = ok ? 'connected' : `unreachable: ${AgentService.get().bridgeFailure()}`;
     if (ok) {
       this.persist();
     }

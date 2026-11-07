@@ -1,8 +1,8 @@
 import { webview } from '@kit.ArkWeb';
-import { WebController } from '@hopa/capability-web';
+import { WebController } from '@hopa/capability-browser';
 
 /**
- * The entry app's ArkWeb surface, exposed to `WebCapability`.
+ * The entry app's ArkWeb surface, exposed to `BrowserCapability`.
  *
  * Only `https://` navigation is allowed here, in addition to the gate. Page
  * text is read from `document.body.innerText` and is capped so a huge page

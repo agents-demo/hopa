@@ -66,7 +66,7 @@ bench (HOPA-Bench) ── uses pc-agent ──► scored tasks (5 now; 20 at M2;
 ```
 
 `pc-agent` is the **G1 PoC** control path. The shipping agent uses
-`capabilities/a11y` (once the ACL is granted), `capabilities/web`, and
+`capabilities/accessibility` (once the ACL is granted), `capabilities/browser`, and
 `capabilities/system`.
 
 ### 2.1 PC reference loop (`harness/agent/`)

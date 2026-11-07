@@ -103,10 +103,10 @@ capabilities/<name> (HAR)
 
 - `core/` defines: `Action`, `ActionExecutor`, `ToolRegistry`, `ApprovalPolicy`,
   `ModelClient`, `RunRecord`, capability interfaces.
-- `capabilities/web` implements browser actions via ArkWeb.
+- `capabilities/browser` implements browser actions via ArkWeb.
 - `capabilities/sandbox` hosts the hidden WebView + Pyodide/QuickJS. Offline by
   default; no network unless explicitly enabled by the user.
-- `capabilities/a11y` is an `AccessibilityExtensionAbility` skeleton. It depends on
+- `capabilities/accessibility` is an `AccessibilityExtensionAbility` skeleton. It depends on
   **restricted permissions / an ACL request**; see `docs/architecture/overview.md`. Do not
   claim it works until the ACL is approved and verified on a device.
 - `capabilities/system` uses system intents (alarm, calendar, deep links). Prefer

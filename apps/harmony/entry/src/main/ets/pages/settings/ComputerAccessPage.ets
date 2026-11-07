@@ -7,7 +7,7 @@ export struct ComputerAccessPage {
 
   build() {
     Column({ space: 12 }) {
-      Text(AgentService.get().isRemoteConfigured()
+      Text(AgentService.get().isBridgeConfigured()
         ? 'The PC bridge is connected. The phone can be driven from the computer.'
         : 'The PC bridge is not connected. Start it on the computer, then connect in Settings.')
         .fontSize(13)

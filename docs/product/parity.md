@@ -88,7 +88,7 @@ Lines are Mika's Kotlin lines; they show size, not remaining work.
 | `oauth` | 743 | device code, PKCE, OpenRouter/xAI | none | decision |
 | `chatgpt` | 411 | ChatGPT account flow | none | decision |
 | `adb`, `shell` | 3,475 | Android device control | `hdc` + `uitest` | **not takable** |
-| `access`, `cap`, `uistate`, `userscreen`, `device`, `child`, `wechat` | ~18,000 | Android a11y engine, gestures, screen state, WeChat | a11y extension + `UiCapability` | **reimplement, not copy** |
+| `access`, `cap`, `uistate`, `userscreen`, `device`, `child`, `wechat` | ~18,000 | Android a11y engine, gestures, screen state, WeChat | a11y extension + `UiActionCapability` | **reimplement, not copy** |
 | `assembly` | 254 | wiring | manual | skip |
 
 The device-control group is the one place where "take everything" is impossible:

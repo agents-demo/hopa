@@ -40,7 +40,7 @@ the product's stated purpose.
 
 ## Exact declaration (to apply after approval)
 
-In `apps/harmony/capabilities/a11y/src/main/module.json5`:
+In `apps/harmony/capabilities/accessibility/src/main/module.json5`:
 
 ```json5
 {

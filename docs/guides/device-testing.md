@@ -21,13 +21,13 @@ profiles, not the OpenHarmony test CA.
 
 ## What exists
 
-- `A11yBridge` — attaches to `AccessibilityExtensionContext`, captures the
+- `AccessibilityBridge` — attaches to `AccessibilityExtensionContext`, captures the
   window root, and converts it into the core `Screen` / `ScreenNode` model.
 - `HopaAccessibilityExtension` — `onConnect` / `onDisconnect` attach and detach
   the bridge.
-- `A11yCapability` — handles `a11y.observe` by capturing a screen; returns a
+- `AccessibilityCapability` — handles `a11y.observe` by capturing a screen; returns a
   typed failure when unavailable.
-- `UiCapability` — handles `ui.tap` and `ui.longPress` with
+- `UiActionCapability` — handles `ui.tap` and `ui.longPress` with
   `performAction`, `ui.type` with `performAction('setText')`, `ui.doubleTap`
   as two clicks, `ui.swipe` and `ui.scroll` with `injectGesture`, `ui.back` and
   `ui.home` as edge/bottom gestures, and `ui.launch` through the entry app's
@@ -41,7 +41,7 @@ The only missing step on the emulator is enabling the service in Settings.
 
 ### Backend selection
 
-`A11yBridge.setRemotePreferred(true)` is set when a PC bridge is configured.
+`AccessibilityBridge.setRemotePreferred(true)` is set when a PC bridge is configured.
 In that state the on-device capability declines every action except
 `ui.launch`, so the refs produced by the bridge are always executed by the
 bridge. This matters because the service can report `connected` even when the
@@ -80,7 +80,7 @@ What the bridge reads from each node:
    [docs/operations/acl-request.md](../operations/acl-request.md).
 2. After approval, add the permission to `requestPermissions` and the ACL to the
    debug/release profile, then declare the extension in
-   `apps/harmony/capabilities/a11y/src/main/module.json5`:
+   `apps/harmony/capabilities/accessibility/src/main/module.json5`:
 
    ```json5
    {
@@ -104,16 +104,16 @@ What the bridge reads from each node:
 
 3. Install the signed HAP.
 4. Enable **HOPA** in `Settings → Accessibility`.
-5. Verify `onConnect` runs and `A11yCapability.isAvailable()` returns true.
+5. Verify `onConnect` runs and `AccessibilityCapability.isAvailable()` returns true.
 
 Do not claim the capability works before all five steps are verified.
 
 ## Files
 
-- `apps/harmony/capabilities/a11y/src/main/ets/A11yBridge.ets`
-- `apps/harmony/capabilities/a11y/src/main/ets/extension/AccessibilityExtension.ets`
-- `apps/harmony/capabilities/a11y/src/main/ets/A11yCapability.ets`
-- `apps/harmony/capabilities/a11y/src/main/ets/UiCapability.ets`
+- `apps/harmony/capabilities/accessibility/src/main/ets/AccessibilityBridge.ets`
+- `apps/harmony/capabilities/accessibility/src/main/ets/extension/AccessibilityExtension.ets`
+- `apps/harmony/capabilities/accessibility/src/main/ets/AccessibilityCapability.ets`
+- `apps/harmony/capabilities/accessibility/src/main/ets/UiActionCapability.ets`
 - `apps/harmony/core/src/main/ets/Screen.ets`
 
 ## Tests

@@ -6,8 +6,8 @@ capability, and no site has been tested.
 ## Ownership
 
 - `entry` owns the ArkUI `Web` component and its lifecycle.
-- `entry` passes the `WebviewController` to `WebCapability`.
-- `WebCapability` must not create a second hidden browser for normal browsing.
+- `entry` passes the `WebviewController` to `BrowserCapability`.
+- `BrowserCapability` must not create a second hidden browser for normal browsing.
 
 ## Actions
 

@@ -17,16 +17,16 @@ import {
   ToolDescriptor,
   ToolRegistry
 } from '@hopa/core';
-import { WebCapability } from '@hopa/capability-web';
+import { BrowserCapability } from '@hopa/capability-browser';
 import { SandboxCapability } from '@hopa/capability-sandbox';
-import { A11yBridge, A11yCapability, UiCapability, UiLauncher } from '@hopa/capability-a11y';
+import { AccessibilityBridge, AccessibilityCapability, UiActionCapability, UiLauncher } from '@hopa/capability-accessibility';
 import { SystemCapability } from '@hopa/capability-system';
 import { Context, common } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { BrowserController } from './BrowserController';
 import { BackgroundKeeper } from './BackgroundKeeper';
-import { RemoteBridge } from './RemoteBridge';
-import { RemoteUiCapability } from './RemoteUiCapability';
+import { BridgeClient } from './BridgeClient';
+import { BridgeUiCapability } from './BridgeUiCapability';
 import { MemoryStore } from './MemoryStore';
 import { SkillStore } from './SkillStore';
 import { UiApprovalGateway } from './ApprovalPromptGateway';
@@ -52,13 +52,13 @@ export class AgentService {
   readonly skills: SkillStore = new SkillStore();
   readonly scheduleService: ScheduleService = new ScheduleService();
   readonly batch: BatchRunner = new BatchRunner();
-  readonly web: WebCapability;
+  readonly browserCapability: BrowserCapability;
   readonly browser: BrowserController;
-  readonly remote: RemoteBridge = new RemoteBridge();
+  readonly bridge: BridgeClient = new BridgeClient();
   readonly background: BackgroundKeeper = new BackgroundKeeper();
   readonly sandbox: SandboxCapability;
-  readonly a11y: A11yCapability;
-  readonly ui: UiCapability;
+  readonly accessibility: AccessibilityCapability;
+  readonly ui: UiActionCapability;
   readonly system: SystemCapability;
   readonly runArchive: RunArchive;
   readonly conversations: ConversationService = new ConversationService();
@@ -83,20 +83,20 @@ export class AgentService {
     this.policy = new ApprovalPolicy();
     this.executor = new ActionExecutor(this.policy, this.approvals, this.runs);
 
-    this.web = new WebCapability();
+    this.browserCapability = new BrowserCapability();
     this.browser = new BrowserController();
-    this.web.setController(this.browser);
+    this.browserCapability.setController(this.browser);
     this.sandbox = new SandboxCapability();
-    this.a11y = new A11yCapability();
-    this.ui = new UiCapability();
+    this.accessibility = new AccessibilityCapability();
+    this.ui = new UiActionCapability();
     this.system = new SystemCapability();
 
-    this.executor.registerCapability(this.web);
+    this.executor.registerCapability(this.browserCapability);
     this.executor.registerCapability(this.sandbox);
-    this.executor.registerCapability(this.a11y);
+    this.executor.registerCapability(this.accessibility);
     this.executor.registerCapability(this.ui);
     this.executor.registerCapability(this.system);
-    this.executor.registerCapability(new RemoteUiCapability(this.remote));
+    this.executor.registerCapability(new BridgeUiCapability(this.bridge));
 
     this.tools = new ToolRegistry();
     this.tools.register(new ToolDescriptor('web.navigate', 'Navigate the web view', RiskLevel.Read));
@@ -141,7 +141,7 @@ export class AgentService {
       this.executor,
       new LoggingModelClient(this.model),
       maxSteps,
-      new CompositeScreenSource(this.browser, this.remote)
+      new CompositeScreenSource(this.browser, this.bridge)
     );
     this.loop.setMemory(this.memory.toPrompt());
     this.modelLabel = modelName;
@@ -155,14 +155,14 @@ export class AgentService {
     return this.loop !== undefined;
   }
 
-  isA11yAvailable(): boolean {
-    return this.a11y.isAvailable();
+  isAccessibilityAvailable(): boolean {
+    return this.accessibility.isAvailable();
   }
 
   /** Gates agent-driven web navigation. Manual browsing in the Web tab is not gated. */
   setNetworkEnabled(enabled: boolean): void {
     this.networkEnabled = enabled;
-    this.web.setNetworkAllowed(enabled);
+    this.browserCapability.setNetworkAllowed(enabled);
   }
 
   isNetworkEnabled(): boolean {
@@ -175,21 +175,21 @@ export class AgentService {
   }
 
   /** Points the remote capability at a running `pc-agent bridge`. */
-  configureRemote(url: string, token: string): void {
-    this.remote.configure(url, token);
-    A11yBridge.get().setRemotePreferred(this.remote.isConfigured());
+  configureBridge(url: string, token: string): void {
+    this.bridge.configure(url, token);
+    AccessibilityBridge.get().setBridgePreferred(this.bridge.isConfigured());
   }
 
-  isRemoteConfigured(): boolean {
-    return this.remote.isConfigured();
+  isBridgeConfigured(): boolean {
+    return this.bridge.isConfigured();
   }
 
-  async testRemote(): Promise<boolean> {
-    return this.remote.health();
+  async testBridge(): Promise<boolean> {
+    return this.bridge.health();
   }
 
-  remoteFailure(): string {
-    return this.remote.lastFailure();
+  bridgeFailure(): string {
+    return this.bridge.lastFailure();
   }
 
   /** Enables the continuous task that keeps a run alive while backgrounded. */
@@ -325,7 +325,7 @@ export class AgentService {
     if (this.loop === undefined) {
       return 'No model configured. Open Settings, enter an endpoint, a model and a key, then press Save.';
     }
-    if (!this.a11y.isAvailable() && !this.browser.isReady() && !this.remote.isConfigured()) {
+    if (!this.accessibility.isAvailable() && !this.browser.isReady() && !this.bridge.isConfigured()) {
       // Chat still works without a screen; actions will fail closed in the executor.
       this.loop.setSurfaceAvailable(false);
     } else {
@@ -344,7 +344,7 @@ export class AgentService {
     this.loop.setAppCatalog(AppCatalogPrompt.text());
     this.loop.resetCancel();
     hilog.info(0x0000, 'HOPA', `run: start goal=${goal.length} chars`);
-    if (this.remote.isConfigured()) {
+    if (this.bridge.isConfigured()) {
       await this.background.begin();
     }
     try {

@@ -1,5 +1,5 @@
 import { common } from '@kit.AbilityKit';
-import { UiLauncher } from '@hopa/capability-a11y';
+import { UiLauncher } from '@hopa/capability-accessibility';
 import { APP_CATALOG, CatalogApp } from './AppCatalog';
 
 /**

@@ -5,7 +5,7 @@
   // pointing at ./ets/extension/AccessibilityExtension.ets, and enable the
   // service in Settings -> Accessibility. See docs/architecture.md.
   "module": {
-    "name": "capability_a11y",
+    "name": "capability_accessibility",
     "type": "har",
     "deviceTypes": [
       "phone",

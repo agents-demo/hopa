@@ -19,12 +19,12 @@ export struct SelfCheckPage {
 
   private async run(): Promise<void> {
     this.model = AgentService.get().hasModel() ? 'ok' : 'missing';
-    if (AgentService.get().isRemoteConfigured()) {
-      this.bridge = await AgentService.get().testRemote() ? 'ok' : 'unreachable';
+    if (AgentService.get().isBridgeConfigured()) {
+      this.bridge = await AgentService.get().testBridge() ? 'ok' : 'unreachable';
     } else {
       this.bridge = 'not configured';
     }
-    this.accessibility = AgentService.get().isA11yAvailable() ? 'ok' : 'unavailable';
+    this.accessibility = AgentService.get().isAccessibilityAvailable() ? 'ok' : 'unavailable';
   }
 
   build() {

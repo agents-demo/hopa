@@ -36,7 +36,7 @@ export struct ScreensPage {
   }
 
   private async refresh(): Promise<void> {
-    if (!AgentService.get().isRemoteConfigured()) {
+    if (!AgentService.get().isBridgeConfigured()) {
       this.screenStatus = 'bridge not configured';
       return;
     }
@@ -44,7 +44,7 @@ export struct ScreensPage {
       return;
     }
     this.screenStatus = 'loading...';
-    const image: string = await AgentService.get().remote.screenshot();
+    const image: string = await AgentService.get().bridge.screenshot();
     if (image.length === 0) {
       this.screenStatus = 'no frame (bridge unreachable)';
       return;
@@ -55,7 +55,7 @@ export struct ScreensPage {
 
   build() {
     Column({ space: 10 }) {
-      Text(AgentService.get().isRemoteConfigured()
+      Text(AgentService.get().isBridgeConfigured()
         ? 'Live view of the phone through pc-agent bridge.'
         : 'Connect the PC bridge in Settings to see the phone screen here.')
         .fontSize(12)
