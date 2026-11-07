@@ -21,7 +21,7 @@
 - [ ] Serialization without kotlinx (`@ohos.util.json` or generated codecs)
 - [ ] File storage over `@ohos.file.fs`
 - [ ] Secure storage over Asset Store Kit / HUKS
-- [x] Settings over `@ohos.data.preferences` (evidence: apps/harmony/entry/src/main/ets/service/SettingsStore.ets + verified persistence on the emulator: provider survived a restart)
+- [x] Settings over `@ohos.data.preferences` (evidence: apps/harmony/entry/src/main/ets/services/SettingsStore.ets + verified persistence on the emulator: provider survived a restart)
 - [ ] Remove the JVM service from the decision path behind a feature flag
 - [ ] Unit tests for every ported module (hypium)
 - [ ] Golden-file parity: 200 cases

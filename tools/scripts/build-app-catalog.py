@@ -15,7 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 KNOWLEDGE = ROOT / "services" / "brain" / "knowledge" / "apps"
 SITES = ROOT / "services" / "brain" / "knowledge" / "sites"
-TARGET = ROOT / "apps" / "harmony" / "entry" / "src" / "main" / "ets" / "service" / "AppCatalog.ets"
+TARGET = ROOT / "apps" / "harmony" / "entry" / "src" / "main" / "ets" / "services" / "AppCatalog.ets"
 
 
 def parse_front_matter(text: str) -> dict[str, str]:
