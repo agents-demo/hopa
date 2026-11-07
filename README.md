@@ -1,190 +1,295 @@
-﻿# HOPA â€” HarmonyOS On-device Phone Agent
+﻿<div align="center">
 
-HOPA is a GUI agent for **HarmonyOS NEXT / HarmonyOS 6+**. It is built to operate
-other apps and websites much like a person would (read the screen, tap, type,
-scroll, navigate), it has a built-in browser for web tasks, and it **always asks
-the user before any payment**. A WebAssembly sandbox for user scripts (Pyodide +
-QuickJS) is designed but **not bundled yet**.
+# HOPA
 
-> **Design reference:** the open-source Android agent
-> [Mika](https://github.com/wangzan101/Mika) (Apache-2.0). No Mika source code is
-> copied into this repository; see [NOTICE](NOTICE). HOPA does **not** use Mika's
-> GPL sandbox components (e.g. proot).
+**A phone agent for HarmonyOS: say what you need, and it works the app or the site for you — and always stops for payment.**
 
-> **No background screen.** HOPA drives the visible screen only. It does not use
-> a virtual display, and it cannot operate while you are using the phone.
+[![CI](https://github.com/michaelatamuk/hopa/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/michaelatamuk/hopa/actions/workflows/ci.yml)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/HarmonyOS-6.1%20%2F%20API%2024-0A59F7.svg)](docs/guides/setup.md)
+[![Status](https://img.shields.io/badge/status-working%20prototype-orange.svg)](docs/history/status-2026-11-07.md)
+
+<sub>ArkTS on HarmonyOS NEXT · one safety gate · a token-authenticated PC bridge when the phone cannot expose accessibility</sub>
+
+</div>
+
+---
+
+HOPA turns a sentence into real taps, typing, scrolling and navigation on a
+HarmonyOS phone. It reads the visible screen, proposes one action at a time,
+runs that action through a single safety gate, verifies the result and records
+what happened.
+
+The shipped app is **ArkTS only**. Python and Kotlin in this repository are the
+development tools and the PC-side bridge; they are not packaged into the HAP.
+There is no hosted HOPA backend and no root requirement. Your model key goes
+from the phone to the model endpoint you choose.
+
+> **Design reference:** the open-source Android agent [Mika](https://github.com/wangzan101/Mika)
+> (Apache-2.0). No Mika source code is copied into this repository; see
+> [NOTICE](NOTICE). HOPA does not use Mika's GPL sandbox components.
+
+## Why HOPA
+
+| | |
+|---|---|
+| **Built for HarmonyOS, not wrapped** | A native ArkTS HAP for HarmonyOS NEXT, with ArkWeb, accessibility and system capabilities. |
+| **One gate, payment first** | Every action goes through the same executor. Anything that can spend money is fail-closed and always asks, in every mode. |
+| **Works with real apps** | It reads the screen and uses element refs instead of per-app APIs, so an app does not need an integration to be usable. |
+| **A deterministic router before the model** | Names, aliases, bundles and site domains pick the likely app or site first; the model handles the rest. |
+| **Two control backends** | On-device accessibility when the device allows it, or a token-authenticated PC bridge over `hdc` + `uitest`. |
+| **Memory that helps** | Saved facts, reusable skills, schedules, batch runs and an inspectable run history. |
+| **No HOPA account** | Bring an OpenAI-compatible, Anthropic, Gemini or DeepSeek endpoint and key. |
+
+## What it does today
+
+| Area | What works | What needs something else |
+|---|---|---|
+| **Chat and reasoning** | Plain answers, drafts, explanations; model and token usage are recorded per run. | — |
+| **Web** | Built-in ArkWeb browser: read a page, click a link, type into a field, run an offline JavaScript sandbox. | Tabs, downloads, uploads and sign-in are not built. |
+| **Phone apps** | Launch a known app, read its screen, tap, type, scroll and go back through the PC bridge. | On the Pura 90 emulator, the accessibility settings page is missing; untethered control needs a real device with the service enabled. |
+| **App knowledge and routing** | 27 apps with a purpose and first actions, plus 21 site domains in the prompt; a deterministic lexical router chooses the target before the model. | 15 catalogue apps have no HarmonyOS bundle at all, and 5 more have a confirmed bundle that has not been smoke-tested; HOPA refuses to guess one. |
+| **Memory and skills** | Facts you add, automatic "remember ..." extraction, reusable skills, a skill drafted from a successful run. | — |
+| **Plans and batches** | In-app one-shot and repeating schedules; a sequential batch runner. | The system reminder API is unavailable on this emulator, so nothing fires after the app closes. |
+| **Runs and export** | History, duration, approval and payment flags, per-run detail; export facts, skills and runs as JSON. | No cost report or replay UI yet. |
+| **From a computer** | `pc-agent` CLI, an MCP stdio server and the HTTP bridge. | — |
+
+Verified in one request on a Pura 90 emulator with the PC bridge:
+`Open Settings and tap Network and internet.` → the router chose Settings →
+`ui.launch` → `observe` → `ui.tap e8` → `observe` showed the WLAN page.
+
+## Try these
+
+Connect the PC bridge first for the app and screen examples (see
+[Quick start](#quick-start)).
+
+| Say | What you should see |
+|---|---|
+| `Explain the difference between a thread and a process in three sentences.` | A plain answer; the run records tokens and duration. |
+| `Remember that I prefer aisle seats.` | `HOPA: remembered: ...`; the fact is visible and deletable in **Memory**. |
+| `Open Settings and tap Network and internet.` | Launch, read the screen, tap the row, then report the WLAN page. |
+| `What can you see on this screen?` | A description built from the bridge layout or the page text, depending on the active backend. |
+| `(Open the Browser tab first) Summarize this page in two bullet points.` | A short summary from the page text. |
+| `Pay 20 yuan for the order on the screen.` | If an action is proposed, a payment prompt shows amount, merchant and consequence, with **Deny** first; payment never runs without you. |
+
+## How it works
+
+```mermaid
+flowchart LR
+    U["You: a sentence"] --> R["Deterministic router<br/>app / site, or none"]
+    R --> L["Agent loop"]
+    L --> S["Screen<br/>bridge · accessibility · browser"]
+    S --> M["Model<br/>one action"]
+    M --> P["Action parser"]
+    P --> G{"Safety gate"}
+    G -->|"payment"| A["Ask the user"]
+    A -->|"allow"| X["Capability"]
+    G -->|"no payment"| X
+    X --> V["Verify"]
+    V --> D[("Run record")]
+    V --> L
+```
+
+- **`core`** is pure ArkTS: the loop, action parsing, the gate, the router,
+  domain types and stores. It has no `@kit.*` import.
+- **`capabilities`** are leaves: accessibility, browser, LLM clients, sandbox
+  and system intents. A capability never imports another capability.
+- **`entry`** is the composition root and the UI. It wires the capabilities
+  once and owns the pages, the drawer and the services.
+- **The PC side** is replaceable tooling: `pc-agent` controls a device over
+  `hdc` + `uitest`; `services/brain` is the Kotlin reference for routing and
+  prompts; `harness` holds the reference loop and HOPA-Bench.
+
+The gate is the invariant:
+
+```
+guards → payment approval → execute → verify → record
+```
+
+A denied action still produces a run record. Any change that makes payment
+skippable is treated as a bug.
+
+## Quick start
+
+### Requirements
+
+- Windows 10/11 64-bit or macOS for DevEco Studio; Linux works for the headless
+  CLI build.
+- **DevEco Studio** with the **HarmonyOS SDK 6.1.1 (API 24)** and the
+  Command Line Tools.
+- Python **3.11+** and Node **LTS** for the PC tools.
+- A HarmonyOS emulator or a HarmonyOS NEXT device. An Android phone cannot run
+  this HAP.
+
+The full toolchain guide is [docs/guides/setup.md](docs/guides/setup.md).
+
+### Build, sign and install
+
+```powershell
+# Windows PowerShell
+.\tools\scripts\build.ps1
+.\tools\scripts\sign-app.ps1 -Install
+```
+
+```bash
+# macOS / Linux
+./tools/scripts/build.sh
+./tools/scripts/sign-app.sh --install
+```
+
+The debug kit is local: it signs with the OpenHarmony debug certificates
+shipped with the SDK and binds the profile to the connected device's UDID.
+No Huawei account is needed for the emulator. To install on a real phone,
+re-sign with that phone's UDID (or let DevEco automatic signing do it).
+
+### Connect a model
+
+In **Settings**, choose the provider, endpoint, model name and API key:
+
+- OpenAI-compatible (OpenAI, DeepSeek, a local server)
+- Anthropic
+- Gemini
+
+The key stays in memory and is never written to preferences. The model label
+and the endpoint are shown on **Models** and **Source**.
+
+### Connect the PC bridge (for app control)
+
+On the PC:
+
+```powershell
+python -m pip install -e .\services\pc-agent   # once
+pc-agent bridge --host 0.0.0.0 --port 8765 --token <token>
+```
+
+On the phone, open **Settings → PC bridge**, enter the URL and token, and press
+**Connect** until the status reads `connected`.
+
+| Device | URL |
+|---|---|
+| Emulator | `http://10.0.2.2:8765` |
+| Phone on the same Wi-Fi | `http://<PC-LAN-IP>:8765` |
+
+Then try `Open Settings and tap Network and internet.` The **Screens** page
+shows a live JPEG of the device while the bridge is connected, and pauses its
+polling during a run so it does not compete with `observe`.
+
+### Run the tests
+
+```powershell
+.\tools\scripts\run-tests.ps1
+```
+
+```bash
+./tools/scripts/run-tests.sh
+```
+
+## Safety and honest limits
+
+- **Payment always asks.** The classifier is fail-closed; autonomous mode skips
+  other approvals, never payment.
+- **Irreversible actions ask by default.** Sending a message, posting,
+  deleting, ordering and changing an account are classified as sensitive.
+- **Login, CAPTCHA and verification codes stay with you.** HOPA hands them back
+  instead of reading or bypassing them.
+- **Screen text is untrusted.** It is placed in the user message, never in the
+  system rules.
+- **Visible screen only.** There is no virtual display: HOPA operates the screen
+  you are looking at, and it cannot work while you use the phone for something
+  else.
+- **The bridge is HTTP without TLS.** Bind it to a trusted network, use a
+  strong token, and do not expose the port to the internet.
+- **The emulator is not a phone.** Its accessibility settings page is missing,
+  `uitest` can stall, and some system APIs fail. A real device with the service
+  enabled is the untethered path; a retail build also needs the AppGallery ACL.
+- **No guessed bundles.** A catalogue entry with `no verified bundle` is never
+  launched by a guessed package name.
 
 ## Status
 
-Working prototype. The PC harness closes the observe â†’ decide â†’ act â†’ verify â†’
-record loop, and the signed HarmonyOS app is installed and usable for chat, web
-pages, memory, skills and model settings. The accessibility extension is
-declared and its permission is granted on the emulator, but this emulator image
-has no Settings page to enable a third-party accessibility service, so operating
-**other apps on the phone** is still blocked. A retail device needs the
-AppGallery ACL approval.
+HOPA is a **working prototype**. With the PC bridge attached it covers
+**12.5 of 15** user-visible Mika capabilities (~83%); the untethered ceiling on
+this emulator is ~77% because the accessibility service cannot be enabled and
+speech/system reminders are unavailable.
 
-| Area | State |
-| --- | --- |
-| Dev environment (DevEco Studio 26 / API 26) | see [docs/guides/setup.md](docs/guides/setup.md) |
-| `apps/harmony/` ArkUI app | chat, Web, Apps, Tasks, Settings, Memory; signed debug HAP installed on the emulator |
-| `apps/harmony/core/` agent loop, tool registry, action gate | implemented + hypium tests; OpenAI, Anthropic and Gemini clients |
-| `apps/harmony/capabilities/` web / sandbox / a11y / system | web works via ArkWeb; a11y declared + ACL granted on the emulator (no enable UI); sandbox is a stub |
-| `services/pc-agent/` hdc + uitest CLI & MCP server | implemented |
-| `harness/agent/` PC reference loop (observe â†’ decide â†’ act â†’ verify â†’ record) | implemented + tests |
-| `contracts/schemas/` JSON contracts (observation, action, decision, record) | v1 |
-| `harness/bench/` HOPA-Bench 20 task definitions | implemented; 5/7 runnable tasks pass on the emulator |
+| Verified on the emulator | Not available on this image |
+|---|---|
+| Chat, memory, skills, batch, schedules, model settings | Untethered app control (no accessibility settings page) |
+| Bridge `observe`, `tap`, `type`, `launch`, `screenshot` | Speech (no CoreSpeechKit) |
+| Full `launch → observe → tap → observe` inside Settings | System reminders (`1700002`) |
+| Export, run history, self-check | 20 catalogue apps are not installed on this image (15 of them also have no verified bundle) |
 
-## Safety model (non-negotiable)
-
-Every action the agent proposes passes through **one** gate, `ActionExecutor`,
-in this order:
-
-```
-guards â†’ payment approval â†’ execute â†’ verify â†’ record
-```
-
-- **Guards** enforce capability boundaries, app allow-lists, and destructive-action
-  limits.
-- **Payment approval** is a hard stop. Any action classified as payment (or as a
-  step that can trigger payment) must be confirmed by the user. The gate must never
-  be weakened, bypassed, or made optional â€” not by a tool, a model, a script, or a
-  future refactor.
-- **Verify** compares the observed screen/state with the intended effect.
-- **Record** writes an immutable run record for audit and replay.
+Read the honest, dated state in
+[docs/history/status-2026-11-07.md](docs/history/status-2026-11-07.md) and the
+per-capability score in [docs/product/parity.md](docs/product/parity.md).
 
 ## Repository layout
 
 ```
 hopa/
-├─ apps/harmony/            # DevEco Studio project (Stage model)
-│  ├─ AppScope/
-│  ├─ entry/                # ArkUI shell: navigation, pages, services
-│  ├─ core/                 # HAR: domain, agent, gate, model, stores
-│  └─ capabilities/         # accessibility, browser, llm, sandbox, system
+├─ apps/harmony/            # the shippable app (DevEco Stage model)
+│  ├─ core/                 # pure ArkTS: agent, gate, router, stores
+│  ├─ capabilities/         # accessibility, browser, llm, sandbox, system
+│  └─ entry/                # UI shell, pages, navigation, services
 ├─ services/
 │  ├─ pc-agent/             # Python: hdc + uitest, CLI, MCP, HTTP bridge
-│  └─ brain/                # Kotlin: http, routing, knowledge, prompts, demo
+│  └─ brain/                # Kotlin: reference routing, prompts, knowledge
 ├─ harness/
-│  ├─ agent/                # Python: reference loop, gate, policy, records
-│  └─ bench/                # HOPA-Bench tasks + runner
-├─ contracts/schemas/       # v1 JSON contracts shared with the ArkTS core
-├─ tools/
-│  ├─ scripts/              # build / install / test / sign / bench
-│  └─ checks/               # structure rules and documentation links
-├─ docs/                    # architecture, guides, reference, product, operations, plan
-├─ .github/workflows/       # CI
-├─ CLAUDE.md                # conventions for future coding sessions
-├─ NOTICE
-└─ LICENSE                  # Apache-2.0
+│  ├─ agent/                # Python reference loop and records
+│  └─ bench/                # HOPA-Bench task format and runner
+├─ contracts/schemas/       # v1 JSON contracts shared with the core
+├─ tools/{scripts,checks,signing}
+├─ docs/                    # architecture, guides, reference, product, operations
+└─ .github/workflows/       # CI
 ```
 
-## Requirements
+## Tests and CI
 
-- Windows 10/11 64-bit, or macOS; **DevEco Studio 26.0.0** with the bundled
-  **HarmonyOS SDK 26.0.0** (API 26).
-- **Command Line Tools 26.0.0.851** for headless builds and CI.
-- Python **3.11+** and Node **LTS** for `services/pc-agent/` and `harness/bench/`.
-- Emulator: hardware virtualization (Hyper-V + Windows Hypervisor Platform +
-  Virtual Machine Platform on Windows), 16 GB+ RAM (32 GB recommended).
+`tools/scripts/run-tests.ps1` runs the Python suites, the Kotlin brain tests
+and the ArkTS core tests, then checks that the generated app catalogue is
+current.
 
-Full, reproducible instructions: [docs/guides/setup.md](docs/guides/setup.md).
+CI runs on every push:
 
-## Quickstart
+- Ruff and pytest for `pc-agent`, the harness and the plan tooling
+- Kotlin brain tests and the cross-language contract test
+- structure rules, documentation links and the generated catalogue check
+- a secret scan and a license check
 
-```bash
-# 1. Build the HAP from the command line
-./tools/scripts/build.sh              # or .\tools\scripts\build.ps1 on Windows
-
-# 2. Sign with the SDK's local debug kit and install
-./tools/scripts/sign-app.sh --install   # or .\tools\scripts\sign-app.ps1 -Install on Windows
-
-# 3. Run core unit tests + python checks
-./tools/scripts/run-tests.sh          # or .\tools\scripts\run-tests.ps1
-
-# 4. Run the benchmark against the stub model
-./tools/scripts/run-bench.sh          # or .\tools\scripts\run-bench.ps1
-
-# 5. Summarize a results file
-bench report --input .hopa/bench-v0.json --out docs/product/bench-results-v0.md
-```
-
-No Huawei account is needed: `tools/scripts/sign-app` uses the OpenHarmony debug
-certificates shipped with the SDK, embeds the connected device's UDID, and
-regenerates everything under `tools/signing/` (gitignored). See
-[docs/guides/build-and-sign.md](docs/guides/build-and-sign.md).
-
-`pc-agent` can also be used directly:
-
-```bash
-pc-agent devices
-pc-agent apps
-pc-agent dump --out layout.json
-pc-agent tap 540 1200
-pc-agent type 540 900 "hello"
-pc-agent screenshot --out screen.jpeg
-pc-agent launch com.huawei.hmos.settings
-pc-agent mcp          # run as an MCP stdio server
-pc-agent bridge       # serve the PC-tethered HTTP bridge (token-authenticated)
-```
-
-The reference loop runs on the PC for M1:
-
-```bash
-hopa-agent observe --json
-hopa-agent observe --screenshot --out .hopa/screens
-hopa-agent run "Open Settings and reach Bluetooth" --steps steps.json
-hopa-agent run "open settings" --model openai --brain http://127.0.0.1:8731
-hopa-agent records --path .hopa/runs.jsonl
-hopa-agent verify-chain --path .hopa/runs.jsonl
-```
-
-With `--brain` (or `HOPA_BRAIN_URL`), the JVM brain picks the first action from
-the app knowledge base, then the model drives the rest. See
-[docs/reference/brain.md](docs/reference/brain.md).
-
-The shipped HAP is **ArkTS only**. Python is the development harness; it is not
-packaged into the app.
+The HAP build and the ArkTS Local Tests are conditional jobs: the official
+HarmonyOS Command Line Tools require a Huawei developer login, so they run only
+when the repository secrets contain a mirrored toolchain. The workflow skips
+them with a warning instead of pretending they passed.
 
 ## Documentation
 
-- [docs/guides/setup.md](docs/guides/setup.md) â€” toolchain, SDK paths, emulator, device, env vars.
-- [docs/architecture/overview.md](docs/architecture/overview.md) â€” layers, the action gate,
-  capability boundaries, ACL/permission dependency list.
-- [docs/contracts/observation.md](docs/contracts/observation.md) â€” refs,
-  redaction, hashing, truncation.
-- [docs/contracts/action.md](docs/contracts/action.md) â€” kinds, validation,
-  payment classification.
-- [docs/contracts/errors.md](docs/contracts/errors.md) â€” error codes and retry
-  rules.
-- [docs/product/bench-results-v0.md](docs/product/bench-results-v0.md) â€” the first five tasks, predicates and
-  failure taxonomy.
-- [docs/product/bench.md](docs/product/bench.md) â€” metrics, targets and reproducibility.
-- [docs/reference/brain.md](docs/reference/brain.md) â€” JVM brain endpoints and decision contract.
-- [docs/reference/knowledge.md](docs/reference/knowledge.md) - app knowledge format and the 27 app files.
-- [docs/history/knowledge-triage.md](docs/history/knowledge-triage.md) - the 23 Mika apps classified.
-- [docs/reference/bundles.md](docs/reference/bundles.md) - bundle names verified on a device.
-- [docs/reference/skills.md](docs/reference/skills.md) â€” the six reusable skill manifests.
-- [docs/guides/device-testing.md](docs/guides/device-testing.md) - what the accessibility bridge does and does not do.
-- [docs/operations/acl-request.md](docs/operations/acl-request.md) - the accessibility ACL request package.
-- [docs/reference/capabilities/browser.md](docs/reference/capabilities/browser.md), [docs/reference/capabilities/system.md](docs/reference/capabilities/system.md), [docs/reference/capabilities/sandbox.md](docs/reference/capabilities/sandbox.md) â€” capability designs.
-- [docs/product/ux.md](docs/product/ux.md) â€” screens, states, trust and accessibility.
-- [docs/reference/safety.md](docs/reference/safety.md) â€” payment, irreversible actions, limits.
-- [docs/reference/abuse.md](docs/reference/abuse.md) â€” refusal taxonomy, CAPTCHA, scraping.
-- [docs/reference/threat-model.md](docs/reference/threat-model.md) â€” assets, actors, threats.
-- [docs/reference/privacy.md](docs/reference/privacy.md) â€” data inventory, retention, consent.
-- [SECURITY.md](SECURITY.md) â€” reporting and key handling.
-- [CHANGELOG.md](CHANGELOG.md) â€” version history.
-- [docs/operations/release.md](docs/operations/release.md) â€” install, upgrade, rollback, support.
-- [docs/history/emulator-crash-2026-11-06.md](docs/history/emulator-crash-2026-11-06.md) â€” emulator freeze analysis.
-- [docs/history/status-2026-11-07.md](docs/history/status-2026-11-07.md) â€” honest current state.
-- [docs/product/roadmap.md](docs/product/roadmap.md) â€” milestones G1â€“G4.
-- [docs/plan/README.md](docs/plan/README.md) â€” the delivery plan: phases,
-  checkboxes, evidence rules and the definition of finished.
+Start here, not with the whole tree:
+
+- [Setup and toolchain](docs/guides/setup.md)
+- [Build, sign and install](docs/guides/build-and-sign.md)
+- [PC-tethered control bridge](docs/guides/pc-bridge.md)
+- [Architecture overview](docs/architecture/overview.md) and [layers](docs/architecture/layers.md)
+- [App knowledge format](docs/reference/knowledge.md)
+- [Mika parity and honest limits](docs/product/parity.md)
+- [Current status](docs/history/status-2026-11-07.md)
+- [Safety model](docs/reference/safety.md)
+- [Roadmap](docs/product/roadmap.md) and [delivery plan](docs/plan/README.md)
+
+## Contributing
+
+- Read [CONTRIBUTING.md](CONTRIBUTING.md).
+- Run `.\tools\scripts\run-tests.ps1` (or `.sh`) before opening a pull request.
+- Keep one concern per file; the structure check enforces import direction,
+  barrels and file budgets.
+- Do not weaken the payment gate. A change that makes payment skippable, or
+  moves it after execution, will not be accepted.
+- Keep the shipped app ArkTS-only; Python and Kotlin stay in the development
+  and PC layers.
+- Report security issues privately: [SECURITY.md](SECURITY.md).
 
 ## License
 
 Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
 
-
-
+HOPA is an independent implementation. Mika is a design reference; no Mika
+source code is included. Third-party components keep their own licenses.
