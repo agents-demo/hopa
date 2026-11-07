@@ -1,7 +1,7 @@
 import { describe, expect, it } from '@ohos/hypium';
 import { Action, RiskLevel } from '../main/ets/Types';
-import { ApprovalPolicy } from '../main/ets/ApprovalPolicy';
-import { Screen } from '../main/ets/Screen';
+import { ApprovalPolicy } from '../main/ets/gate/ApprovalPolicy';
+import { Screen } from '../main/ets/domain/Screen';
 
 export default function approvalPolicyTest(): void {
   describe('ApprovalPolicy', () => {

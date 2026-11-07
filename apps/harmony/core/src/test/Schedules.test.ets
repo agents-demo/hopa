@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@ohos/hypium';
-import { ScheduleBook, ScheduledTask } from '../main/ets/Schedules';
+import { ScheduleBook, ScheduledTask } from '../main/ets/schedules/ScheduleBook';
 
 export default function schedulesTest(): void {
   describe('ScheduleBook', () => {

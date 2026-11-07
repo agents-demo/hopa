@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@ohos/hypium';
-import { ChatHistory, ChatSession } from '../main/ets/ChatHistory';
+import { ChatHistory, ChatSession } from '../main/ets/conversations/ChatHistory';
 
 export default function chatHistoryTest(): void {
   describe('ChatHistory', () => {

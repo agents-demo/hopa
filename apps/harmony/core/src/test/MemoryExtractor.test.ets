@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@ohos/hypium';
-import { MemoryExtractor } from '../main/ets/MemoryExtractor';
+import { MemoryExtractor } from '../main/ets/memory/MemoryExtractor';
 
 export default function memoryExtractorTest(): void {
   describe('MemoryExtractor', () => {

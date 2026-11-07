@@ -25,6 +25,7 @@
     },
     { "name": "core", "srcPath": "./core" },
     { "name": "capability_web", "srcPath": "./capabilities/web" },
+        { "name": "capability_llm", "srcPath": "./capabilities/llm" },
     { "name": "capability_sandbox", "srcPath": "./capabilities/sandbox" },
     { "name": "capability_a11y", "srcPath": "./capabilities/a11y" },
     { "name": "capability_system", "srcPath": "./capabilities/system" }

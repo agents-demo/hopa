@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@ohos/hypium';
 import { RiskLevel } from '../main/ets/Types';
-import { ToolDescriptor, ToolRegistry } from '../main/ets/ToolRegistry';
+import { ToolDescriptor, ToolRegistry } from '../main/ets/tools/ToolRegistry';
 
 export default function toolRegistryTest(): void {
   describe('ToolRegistry', () => {

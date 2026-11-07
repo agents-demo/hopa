@@ -1,5 +1,6 @@
 import { describe, expect, it } from '@ohos/hypium';
-import { Skill, SkillBook } from '../main/ets/Skills';
+import { Skill } from '../main/ets/skills/Skill';
+import { SkillBook } from '../main/ets/skills/SkillBook';
 
 export default function skillsTest(): void {
   describe('SkillBook', () => {

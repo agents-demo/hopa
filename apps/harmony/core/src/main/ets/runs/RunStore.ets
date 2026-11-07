@@ -1,5 +1,5 @@
-import { RunRecord } from './Types';
-import { RunRecorder } from './ActionExecutor';
+import { RunRecord } from '../Types';
+import { RunRecorder } from '../gate/RunRecorder';
 
 /** In-memory, append-only run store. Persist it later behind the same interface. */
 export class RunStore implements RunRecorder {

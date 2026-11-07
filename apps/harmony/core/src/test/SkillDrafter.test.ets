@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@ohos/hypium';
-import { SkillDraft, SkillDrafter } from '../main/ets/SkillDrafter';
+import { SkillDraft, SkillDrafter } from '../main/ets/skills/SkillDrafter';
 
 export default function skillDrafterTest(): void {
   describe('SkillDrafter', () => {

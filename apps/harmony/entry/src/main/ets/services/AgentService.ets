@@ -1,25 +1,19 @@
 import {
-  Action,
   ActionExecutor,
   ActionOutcome,
   AgentLoop,
-  AnthropicClient,
-  ApprovalGateway,
   ApprovalPolicy,
   BatchItemResult,
   BatchRunner,
-  GeminiClient,
   ModelClient,
-  ModelRequest,
-  ModelResponse,
-  OpenAiCompatibleClient,
   RiskLevel,
   RunRecord,
   RunStore,
   ScheduleBook,
   ScheduledTask,
-  Screen,
-  ScreenSource,
+  Skill,
+  SkillDraft,
+  SkillDrafter,
   ToolDescriptor,
   ToolRegistry
 } from '@hopa/core';
@@ -28,115 +22,21 @@ import { SandboxCapability } from '@hopa/capability-sandbox';
 import { A11yBridge, A11yCapability, UiCapability, UiLauncher } from '@hopa/capability-a11y';
 import { SystemCapability } from '@hopa/capability-system';
 import { Context, common } from '@kit.AbilityKit';
-import { preferences } from '@kit.ArkData';
-import { fileIo } from '@kit.CoreFileKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { BrowserController } from './BrowserController';
 import { BackgroundKeeper } from './BackgroundKeeper';
-import { APP_CATALOG, CatalogApp } from './AppCatalog';
 import { RemoteBridge } from './RemoteBridge';
-import { RemoteScreenSource, RemoteUiCapability } from './RemoteUiCapability';
-import { MemoryItem, MemoryStore } from './MemoryStore';
+import { RemoteUiCapability } from './RemoteUiCapability';
+import { MemoryStore } from './MemoryStore';
 import { SkillStore } from './SkillStore';
-import { Skill } from '@hopa/core';
-import { SkillDraft, SkillDrafter } from '@hopa/core';
-
-/** Called when an action needs the user's decision. Must be fail-closed. */
-export type ApprovalPrompt = (action: Action, screen: Screen | undefined) => Promise<boolean>;
-
-/** Adds coarse timing breadcrumbs to the model call (hilog tag HOPA). */
-class LoggedModelClient implements ModelClient {
-  private inner: ModelClient;
-
-  constructor(inner: ModelClient) {
-    this.inner = inner;
-  }
-
-  async complete(request: ModelRequest): Promise<ModelResponse> {
-    hilog.info(0x0000, 'HOPA', `model: start messages=${request.messages.length}`);
-    try {
-      const response: ModelResponse = await this.inner.complete(request);
-      hilog.info(
-        0x0000,
-        'HOPA',
-        `model: done tokens=${response.tokens} error=${response.error.length}`
-      );
-      return response;
-    } catch (error) {
-      hilog.error(0x0000, 'HOPA', `model: threw ${error}`);
-      throw new Error(`${error}`);
-    }
-  }
-}
-
-/**
- * Approval gateway backed by the ArkUI sheet. Until the page installs a
- * handler, every request is denied: the default is never "allow".
- */
-export class UiApprovalGateway implements ApprovalGateway {
-  private handler: ApprovalPrompt | undefined = undefined;
-
-  setHandler(handler: ApprovalPrompt | undefined): void {
-    this.handler = handler;
-  }
-
-  async requestApproval(action: Action, screen?: Screen): Promise<boolean> {
-    if (this.handler === undefined) {
-      return false;
-    }
-    hilog.info(0x0000, 'HOPA', `approval: ask ${action.kind}`);
-    const approved: boolean = await this.handler(action, screen);
-    hilog.info(0x0000, 'HOPA', `approval: answer ${approved}`);
-    return approved;
-  }
-}
-
-/**
- * Prefers the accessibility tree; falls back to the text of the built-in
- * browser page. That keeps web tasks and the payment gate working without the
- * ACL, while never pretending there is a screen when there is none.
- */
-class CompositeScreenSource implements ScreenSource {
-  private browser: BrowserController;
-  private remote: RemoteBridge;
-
-  constructor(browser: BrowserController, remote: RemoteBridge) {
-    this.browser = browser;
-    this.remote = remote;
-  }
-
-  async capture(): Promise<Screen> {
-    if (this.remote.isConfigured()) {
-      hilog.info(0x0000, 'HOPA', 'capture: bridge observe start');
-      const screen: Screen = await new RemoteScreenSource(this.remote).capture();
-      hilog.info(0x0000, 'HOPA', `capture: bridge observe done text=${screen.text.length} nodes=${screen.nodes.length}`);
-      if (screen.text.length > 0 || screen.nodes.length > 0) {
-        return screen;
-      }
-      // Fall through to the local paths if the PC bridge is unreachable.
-    }
-    if (A11yBridge.get().isAvailable()) {
-      hilog.info(0x0000, 'HOPA', 'capture: a11y start');
-      // A declared-but-disabled service can leave capture pending forever.
-      const local: Promise<Screen> = A11yBridge.get().capture();
-      const guard: Promise<Screen> = new Promise<Screen>((resolve: (value: Screen) => void) => {
-        setTimeout(() => {
-          resolve(new Screen(''));
-        }, 4000);
-      });
-      return Promise.race([local, guard]);
-    }
-    return new Screen(await this.browser.pageText());
-  }
-}
-
-/** The JSON written by the export action. The API key is never part of it. */
-class ExportPayload {
-  exportedAt: string = '';
-  memory: MemoryItem[] = [];
-  skills: Skill[] = [];
-  runs: RunRecord[] = [];
-}
+import { UiApprovalGateway } from './ApprovalPromptGateway';
+import { CompositeScreenSource } from './CompositeScreenSource';
+import { LoggingModelClient } from './LoggingModelClient';
+import { ModelFactory } from './ModelFactory';
+import { AppCatalogPrompt } from './AppCatalogPrompt';
+import { ScheduleService } from './ScheduleService';
+import { RunArchive } from './RunArchive';
+import { ExportService } from './ExportService';
 
 /** Process-wide composition root: policy + gate + capabilities + tool registry. */
 export class AgentService {
@@ -149,7 +49,7 @@ export class AgentService {
   readonly tools: ToolRegistry;
   readonly memory: MemoryStore = new MemoryStore();
   readonly skills: SkillStore = new SkillStore();
-  schedules: ScheduleBook = new ScheduleBook();
+  readonly scheduleService: ScheduleService = new ScheduleService();
   readonly batch: BatchRunner = new BatchRunner();
   readonly web: WebCapability;
   readonly browser: BrowserController;
@@ -159,6 +59,8 @@ export class AgentService {
   readonly a11y: A11yCapability;
   readonly ui: UiCapability;
   readonly system: SystemCapability;
+  readonly runArchive: RunArchive;
+  readonly exportService: ExportService;
 
   private model: ModelClient | undefined = undefined;
   private loop: AgentLoop | undefined = undefined;
@@ -171,13 +73,6 @@ export class AgentService {
   private lastTranscript: string = '';
   private lastSuccess: boolean = false;
   private matchedSkillId: string = '';
-  private static readonly STORE: string = 'hopa_settings';
-  private static readonly RUNS_KEY: string = 'runs_v1';
-  private static readonly SCHEDULES_KEY: string = 'schedules_v1';
-  private static readonly SCHEDULE_TICK_MS: number = 30000;
-
-  private abilityContext: common.UIAbilityContext | undefined = undefined;
-  private scheduleTimer: number = -1;
   private activeRuns: number = 0;
 
   private constructor() {
@@ -212,6 +107,13 @@ export class AgentService {
     this.tools.register(new ToolDescriptor('system.openLink', 'Open an https link', RiskLevel.Read));
     this.tools.register(new ToolDescriptor('ui.sendMessage', 'Send a message', RiskLevel.Sensitive));
     this.tools.register(new ToolDescriptor('payment.confirm', 'Confirm a payment', RiskLevel.Payment));
+
+    this.runArchive = new RunArchive(this.runs);
+    this.exportService = new ExportService(this.memory, this.skills, this.runs);
+    this.scheduleService.bindRunner(
+      (goal: string): Promise<string> => this.run(goal),
+      (): boolean => this.isBusy()
+    );
   }
 
   static get(): AgentService {
@@ -232,16 +134,10 @@ export class AgentService {
     modelName: string,
     maxSteps: number = 6
   ): void {
-    if (provider === 'anthropic') {
-      this.model = new AnthropicClient(endpoint, apiKey, modelName);
-    } else if (provider === 'gemini') {
-      this.model = new GeminiClient(endpoint, apiKey, modelName);
-    } else {
-      this.model = new OpenAiCompatibleClient(endpoint, apiKey, modelName);
-    }
+    this.model = ModelFactory.create(provider, endpoint, apiKey, modelName);
     this.loop = new AgentLoop(
       this.executor,
-      new LoggedModelClient(this.model),
+      new LoggingModelClient(this.model),
       maxSteps,
       new CompositeScreenSource(this.browser, this.remote)
     );
@@ -282,103 +178,6 @@ export class AgentService {
     A11yBridge.get().setRemotePreferred(this.remote.isConfigured());
   }
 
-  private appList(): string {
-    const lines: string[] = [];
-    for (const app of APP_CATALOG) {
-      if (app.confirmed && app.bundle.length > 0) {
-        lines.push(`${app.display}: ${app.bundle}`);
-      }
-    }
-    return lines.join('\n');
-  }
-
-  /** Enables the continuous task that keeps a run alive while backgrounded. */
-  setAbilityContext(context: common.UIAbilityContext): void {
-    this.background.setContext(context);
-    this.abilityContext = context;
-  }
-
-  async loadSchedules(context: Context): Promise<void> {
-    try {
-      const store = await preferences.getPreferences(context, AgentService.STORE);
-      const raw = await store.get(AgentService.SCHEDULES_KEY, '');
-      this.schedules = ScheduleBook.fromJson(`${raw}`);
-    } catch (error) {
-      this.schedules = new ScheduleBook();
-    }
-  }
-
-  async saveSchedules(): Promise<void> {
-    if (this.abilityContext === undefined) {
-      return;
-    }
-    try {
-      const store = await preferences.getPreferences(this.abilityContext, AgentService.STORE);
-      await store.put(AgentService.SCHEDULES_KEY, this.schedules.toJson());
-      await store.flush();
-    } catch (error) {
-      // Losing a schedule edit is not worth failing the UI over.
-    }
-  }
-
-  /** Adds a goal to the in-app schedule and persists it. */
-  async addSchedule(goal: string, intervalMs: number, delayMs: number): Promise<boolean> {
-    const task: ScheduledTask | undefined = this.schedules.add(goal, intervalMs, Date.now(), delayMs);
-    if (task === undefined) {
-      return false;
-    }
-    await this.saveSchedules();
-    return true;
-  }
-
-  async removeSchedule(id: string): Promise<void> {
-    this.schedules.remove(id);
-    await this.saveSchedules();
-  }
-
-  /**
-   * Fires due goals while the process is alive.
-   *
-   * The HarmonyOS reminder agent rejects this emulator, so this is an in-app
-   * schedule, not a system alarm. It is explicit in the UI and in the docs.
-   */
-  startScheduler(): void {
-    if (this.scheduleTimer >= 0) {
-      return;
-    }
-    this.scheduleTimer = setInterval(() => {
-      this.tickSchedules();
-    }, AgentService.SCHEDULE_TICK_MS);
-  }
-
-  stopScheduler(): void {
-    if (this.scheduleTimer >= 0) {
-      clearInterval(this.scheduleTimer);
-      this.scheduleTimer = -1;
-    }
-  }
-
-  private tickSchedules(): void {
-    if (this.activeRuns > 0) {
-      return;
-    }
-    const task: ScheduledTask | undefined = this.schedules.nextDue(Date.now());
-    if (task === undefined) {
-      return;
-    }
-    this.schedules.markRan(task.id, Date.now());
-    this.saveSchedules().catch(() => {
-      // The run matters more than the timestamp write.
-    });
-    this.run(task.goal).catch(() => {
-      // run() already turns failures into a transcript.
-    });
-  }
-
-  isBusy(): boolean {
-    return this.activeRuns > 0;
-  }
-
   isRemoteConfigured(): boolean {
     return this.remote.isConfigured();
   }
@@ -389,6 +188,45 @@ export class AgentService {
 
   remoteFailure(): string {
     return this.remote.lastFailure();
+  }
+
+  /** Enables the continuous task that keeps a run alive while backgrounded. */
+  setAbilityContext(context: common.UIAbilityContext): void {
+    this.background.setContext(context);
+    this.scheduleService.setContext(context);
+  }
+
+  /** The schedule view for the UI. */
+  get schedules(): ScheduleBook {
+    return this.scheduleService.book;
+  }
+
+  loadSchedules(context: Context): Promise<void> {
+    return this.scheduleService.load(context);
+  }
+
+  saveSchedules(): Promise<void> {
+    return this.scheduleService.save();
+  }
+
+  addSchedule(goal: string, intervalMs: number, delayMs: number): Promise<boolean> {
+    return this.scheduleService.add(goal, intervalMs, delayMs);
+  }
+
+  removeSchedule(id: string): Promise<void> {
+    return this.scheduleService.remove(id);
+  }
+
+  startScheduler(): void {
+    this.scheduleService.start();
+  }
+
+  stopScheduler(): void {
+    this.scheduleService.stop();
+  }
+
+  isBusy(): boolean {
+    return this.activeRuns > 0;
   }
 
   /** Autonomous mode skips non-payment approvals. Payment is still fail-closed. */
@@ -456,51 +294,16 @@ export class AgentService {
     return this.skills.add(draft.name, draft.trigger, draft.guidance);
   }
 
-  /** Restores the last run records shown in the Tasks tab. */
-  async loadRuns(context: Context): Promise<void> {
-    const store = await preferences.getPreferences(context, AgentService.STORE);
-    const raw = await store.get(AgentService.RUNS_KEY, '');
-    if (typeof raw !== 'string' || raw.length === 0) {
-      return;
-    }
-    try {
-      const parsed = JSON.parse(raw) as RunRecord[];
-      this.runs.replace(parsed);
-    } catch (error) {
-      // Unreadable history: keep the empty store.
-    }
+  loadRuns(context: Context): Promise<void> {
+    return this.runArchive.load(context);
   }
 
-  /** Persists the most recent records; the history is capped. */
-  async saveRuns(context: Context): Promise<void> {
-    const all: RunRecord[] = this.runs.all();
-    const recent: RunRecord[] = all.length > 100 ? all.slice(all.length - 100) : all;
-    const store = await preferences.getPreferences(context, AgentService.STORE);
-    await store.put(AgentService.RUNS_KEY, JSON.stringify(recent));
-    await store.flush();
+  saveRuns(context: Context): Promise<void> {
+    return this.runArchive.save(context);
   }
 
-  /**
-   * Writes memory, skills and run records to one JSON file in the app sandbox.
-   * The API key is never included. The path is returned so the user can find it.
-   */
-  async exportData(context: Context): Promise<string> {
-    const payload = new ExportPayload();
-    payload.exportedAt = new Date().toISOString();
-    payload.memory = this.memory.all();
-    payload.skills = this.skills.all();
-    payload.runs = this.runs.all();
-    const path: string = `${context.filesDir}/hopa-export.json`;
-    const file = fileIo.openSync(
-      path,
-      fileIo.OpenMode.READ_WRITE | fileIo.OpenMode.CREATE | fileIo.OpenMode.TRUNC
-    );
-    try {
-      fileIo.writeSync(file.fd, JSON.stringify(payload, null, 2));
-    } finally {
-      fileIo.closeSync(file);
-    }
-    return path;
+  exportData(context: Context): Promise<string> {
+    return this.exportService.exportData(context);
   }
 
   /**
@@ -536,7 +339,7 @@ export class AgentService {
     this.matchedSkillId = matchedSkill === undefined ? '' : matchedSkill.id;
     this.loop.setMemory(this.memory.toPrompt());
     this.loop.setSkill(this.skills.toPrompt(goal));
-    this.loop.setAppCatalog(this.appList());
+    this.loop.setAppCatalog(AppCatalogPrompt.text());
     this.loop.resetCancel();
     hilog.info(0x0000, 'HOPA', `run: start goal=${goal.length} chars`);
     if (this.remote.isConfigured()) {

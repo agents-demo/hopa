@@ -6,13 +6,13 @@ import { buffer } from '@kit.ArkTS';
 import { preferences } from '@kit.ArkData';
 import { Action, BatchItemResult, ChatHistory, ChatSession, PaymentContext, Screen, ScheduledTask, Skill } from '@hopa/core';
 import { MemoryExtractor } from '@hopa/core';
-import { AgentService } from '../service/AgentService';
-import { SettingsStore, StoredSettings } from '../service/SettingsStore';
-import { MemoryItem } from '../service/MemoryStore';
-import { APP_CATALOG, CatalogApp, SITE_CATALOG, CatalogSite } from '../service/AppCatalog';
+import { AgentService } from '../services/AgentService';
+import { SettingsStore, StoredSettings } from '../services/SettingsStore';
+import { MemoryItem } from '../services/MemoryStore';
+import { APP_CATALOG, CatalogApp, SITE_CATALOG, CatalogSite } from '../services/AppCatalog';
 import { RunRecord } from '@hopa/core';
-import { JsSandboxBridge } from '../service/JsSandboxBridge';
-import { AppLauncher } from '../service/AppLauncher';
+import { JsSandboxBridge } from '../services/JsSandboxBridge';
+import { AppLauncher } from '../services/AppLauncher';
 import { fileIo } from '@kit.CoreFileKit';
 
 @Entry

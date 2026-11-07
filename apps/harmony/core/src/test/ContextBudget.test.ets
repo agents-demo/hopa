@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@ohos/hypium';
-import { ModelMessage } from '../main/ets/ModelClient';
-import { ContextBudget } from '../main/ets/ContextBudget';
+import { ModelMessage } from '../main/ets/model/ModelClient';
+import { ContextBudget } from '../main/ets/agent/ContextBudget';
 
 function messages(count: number, size: number): ModelMessage[] {
   const list: ModelMessage[] = [new ModelMessage('system', 'system')];

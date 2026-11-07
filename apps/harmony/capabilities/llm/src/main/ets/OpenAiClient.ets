@@ -1,6 +1,6 @@
 import { http } from '@kit.NetworkKit';
 import { buffer } from '@kit.ArkTS';
-import { ModelClient, ModelMessage, ModelRequest, ModelResponse } from './ModelClient';
+import { ModelClient, ModelMessage, ModelRequest, ModelResponse } from '@hopa/core';
 
 class OpenAiMessage {
   role: string = '';

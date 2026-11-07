@@ -5,11 +5,11 @@ import {
   ActionExecutor,
   ApprovalGateway,
   RunRecorder
-} from '../main/ets/ActionExecutor';
-import { ApprovalPolicy } from '../main/ets/ApprovalPolicy';
-import { AgentLoop } from '../main/ets/AgentLoop';
-import { ModelClient, ModelRequest, ModelResponse } from '../main/ets/ModelClient';
-import { Screen, ScreenSource } from '../main/ets/Screen';
+} from '../main/ets/gate/ActionExecutor';
+import { ApprovalPolicy } from '../main/ets/gate/ApprovalPolicy';
+import { AgentLoop } from '../main/ets/agent/AgentLoop';
+import { ModelClient, ModelRequest, ModelResponse } from '../main/ets/model/ModelClient';
+import { Screen, ScreenSource } from '../main/ets/domain/Screen';
 
 class FixedApproval implements ApprovalGateway {
   private answer: boolean;

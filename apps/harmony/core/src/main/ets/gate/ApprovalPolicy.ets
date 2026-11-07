@@ -1,5 +1,5 @@
-import { Action, RiskLevel } from './Types';
-import { Screen } from './Screen';
+import { Action, RiskLevel } from '../Types';
+import { Screen } from '../domain/Screen';
 
 /**
  * Amount, currency and merchant read from the screen. Best effort: a missing

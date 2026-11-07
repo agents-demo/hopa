@@ -1,45 +1,18 @@
-import { Action, ActionOutcome, GuardResult, Observation, RunRecord, RunStatus } from './Types';
+import { Action, ActionOutcome, GuardResult, Observation, RunRecord, RunStatus } from '../Types';
+import { Screen, ScreenSource } from '../domain/Screen';
 import { ApprovalPolicy } from './ApprovalPolicy';
-import { Screen, ScreenSource } from './Screen';
+import { ActionCapability } from './ActionCapability';
+import { ActionGuard } from './ActionGuard';
+import { ApprovalGateway } from './ApprovalGateway';
+import { RunRecorder } from './RunRecorder';
+import { Verifier, AllowAllVerifier } from './Verifier';
 
-/** A capability that can execute one or more action kinds. */
-export interface ActionCapability {
-  canHandle(kind: string): boolean;
-  execute(action: Action): Promise<Observation>;
-}
+export { ActionCapability } from './ActionCapability';
+export { ActionGuard } from './ActionGuard';
+export { ApprovalGateway } from './ApprovalGateway';
+export { RunRecorder } from './RunRecorder';
+export { Verifier, AllowAllVerifier } from './Verifier';
 
-/** A pre-execution guard (allow-list, preconditions, destructive limits). */
-export interface ActionGuard {
-  check(action: Action): GuardResult;
-}
-
-/** The UI/notification channel used to ask the user. */
-export interface ApprovalGateway {
-  requestApproval(action: Action, screen?: Screen): Promise<boolean>;
-}
-
-/** Append-only run record sink. */
-export interface RunRecorder {
-  record(run: RunRecord): void;
-}
-
-/** Compares the intended effect with the observation. */
-export interface Verifier {
-  verify(action: Action, observation: Observation): boolean;
-}
-
-export class AllowAllVerifier implements Verifier {
-  verify(action: Action, observation: Observation): boolean {
-    return observation.success;
-  }
-}
-
-/**
- * THE action gate. Every capability action must pass through execute().
- *
- * Pipeline (do not reorder):
- *   guards -> payment approval -> execute -> verify -> record
- */
 export class ActionExecutor {
   private capabilities: ActionCapability[] = [];
   private guards: ActionGuard[] = [];

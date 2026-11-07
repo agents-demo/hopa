@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@ohos/hypium';
-import { BatchItemResult, BatchRunner } from '../main/ets/BatchRunner';
+import { BatchItemResult, BatchRunner } from '../main/ets/runs/BatchRunner';
 
 export default function batchRunnerTest(): void {
   describe('BatchRunner', () => {

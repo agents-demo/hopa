@@ -7,15 +7,15 @@ import {
   RunRecord,
   RunStatus
 } from '../main/ets/Types';
-import { ApprovalPolicy } from '../main/ets/ApprovalPolicy';
+import { ApprovalPolicy } from '../main/ets/gate/ApprovalPolicy';
 import {
   ActionCapability,
   ActionExecutor,
   ActionGuard,
   ApprovalGateway,
   RunRecorder
-} from '../main/ets/ActionExecutor';
-import { Screen } from '../main/ets/Screen';
+} from '../main/ets/gate/ActionExecutor';
+import { Screen } from '../main/ets/domain/Screen';
 
 class RecordingCapability implements ActionCapability {
   executions: number = 0;

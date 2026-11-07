@@ -1,4 +1,4 @@
-import { ModelMessage } from './ModelClient';
+import { ModelMessage } from '../model/ModelClient';
 
 /**
  * Keeps the prompt bounded during long runs.

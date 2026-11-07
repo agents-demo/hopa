@@ -1,6 +1,6 @@
 import { http } from '@kit.NetworkKit';
 import { buffer } from '@kit.ArkTS';
-import { ModelClient, ModelRequest, ModelResponse } from './ModelClient';
+import { ModelClient, ModelRequest, ModelResponse } from '@hopa/core';
 
 class GeminiPart {
   text: string = '';

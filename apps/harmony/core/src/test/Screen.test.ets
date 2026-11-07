@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@ohos/hypium';
-import { Screen, ScreenNode } from '../main/ets/Screen';
+import { Screen, ScreenNode } from '../main/ets/domain/Screen';
 
 function node(ref: string, text: string, clickable: boolean): ScreenNode {
   const item = new ScreenNode();

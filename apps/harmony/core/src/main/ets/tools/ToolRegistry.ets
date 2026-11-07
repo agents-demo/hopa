@@ -1,4 +1,4 @@
-import { RiskLevel } from './Types';
+import { RiskLevel } from '../Types';
 
 export class ToolDescriptor {
   name: string;
