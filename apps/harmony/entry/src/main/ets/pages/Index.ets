@@ -12,7 +12,12 @@ import { APP_CATALOG, CatalogApp } from '../services/AppCatalog';
 import { JsSandboxBridge } from '../services/JsSandboxBridge';
 import { AppLauncher } from '../services/AppLauncher';
 import { AppsPage } from './apps/AppsPage';
+import { McpServersPage } from './mcp/McpServersPage';
 import { MemoryPage } from './memory/MemoryPage';
+import { ModelsPage } from './models/ModelsPage';
+import { PhonePage } from './phone/PhonePage';
+import { SourcePage } from './source/SourcePage';
+import { UsagePage } from './usage/UsagePage';
 import { RunsPage } from './runs/RunsPage';
 import { PlansPage } from './plans/PlansPage';
 import { ScreensPage } from './tools/ScreensPage';
@@ -36,8 +41,6 @@ struct Index {
   @State draft: string = '';
   @State busy: boolean = false;
   @State autonomous: boolean = false;
-  @State lastTokens: number = 0;
-  @State lastDurationMs: number = 0;
   @State messages: ResourceStr[] = [
     $r('app.string.greeting_1'),
     $r('app.string.greeting_2')
@@ -150,8 +153,6 @@ struct Index {
     this.chatSessions = this.history.all().slice();
 
     this.busy = false;
-    this.lastTokens = service.getLastTokens();
-    this.lastDurationMs = service.getLastDurationMs();
     AgentService.get().skills.save(getContext(this) as Context).catch(() => {
       // Persistence is best effort.
     });
@@ -593,125 +594,6 @@ struct Index {
   }
 
   @Builder
-  ModelsPage() {
-    Column({ space: 12 }) {
-      Text('Current model')
-        .fontSize(12)
-        .fontColor('#666666')
-      Text(this.modelLabel.length > 0 ? this.modelLabel : 'not configured')
-        .fontSize(20)
-        .fontWeight(FontWeight.Bold)
-      Text(`Provider: ${this.provider}`)
-        .fontSize(12)
-      Text(`Endpoint: ${this.modelEndpoint}`)
-        .fontSize(12)
-        .maxLines(1)
-      Text(`Model: ${this.modelName}`)
-        .fontSize(12)
-      Text('Presets')
-        .fontSize(16)
-        .fontWeight(FontWeight.Bold)
-      Text('OpenAI-compatible (OpenAI, DeepSeek, local), Anthropic and Gemini use the same fields. Speech models are not available in this SDK.')
-        .fontSize(11)
-        .fontColor('#999999')
-      Button('Open Settings')
-        .fontSize(12)
-        .onClick(() => {
-          this.activePage = 'settings';
-        })
-    }
-    .width('100%')
-    .height('100%')
-    .alignItems(HorizontalAlign.Start)
-  }
-
-  @Builder
-  UsagePage() {
-    Column({ space: 10 }) {
-      this.UsageLine('Actions recorded', `${AgentService.get().runs.all().length}`)
-      this.UsageLine('Executed', `${this.countRuns('executed')}`)
-      this.UsageLine('Failed', `${this.countRuns('failed')}`)
-      this.UsageLine('Denied', `${this.countRuns('denied')}`)
-      this.UsageLine('Last run tokens', `${this.lastTokens}`)
-      this.UsageLine('Last run time', `${(this.lastDurationMs / 1000).toFixed(1)} s`)
-      this.UsageLine('Plans', `${AgentService.get().schedules.all().length}`)
-      this.UsageLine('Facts and skills', `${AgentService.get().memory.all().length} / ${AgentService.get().skills.all().length}`)
-      Text('Per-run tokens are not stored yet; the last run total is shown.')
-        .fontSize(11)
-        .fontColor('#999999')
-    }
-    .width('100%')
-    .height('100%')
-    .alignItems(HorizontalAlign.Start)
-  }
-
-  @Builder
-  UsageLine(label: string, value: string) {
-    Row() {
-      Text(label)
-        .fontSize(14)
-        .fontColor('#666666')
-        .layoutWeight(1)
-      Text(value)
-        .fontSize(14)
-        .fontWeight(FontWeight.Bold)
-    }
-    .width('100%')
-    .padding(12)
-    .backgroundColor('#F7F8FA')
-    .borderRadius(8)
-  }
-
-  private countRuns(status: string): number {
-    let count: number = 0;
-    for (const run of AgentService.get().runs.all()) {
-      if (run.status === status) {
-        count += 1;
-      }
-    }
-    return count;
-  }
-
-  @Builder
-  PhonePage() {
-    Column({ space: 12 }) {
-      Text('Accessibility')
-        .fontSize(16)
-        .fontWeight(FontWeight.Bold)
-      Text(this.a11yAvailable
-        ? 'The service is available. The loop can read and tap other apps on the phone.'
-        : 'The service cannot be enabled on this emulator. Use the PC bridge below, or a device with an accessibility settings page.')
-        .fontSize(12)
-        .fontColor('#666666')
-      Text('PC bridge')
-        .fontSize(16)
-        .fontWeight(FontWeight.Bold)
-      Text(AgentService.get().isRemoteConfigured()
-        ? 'A bridge is configured. It is the active control backend.'
-        : 'No bridge yet. Run pc-agent bridge on the PC, then enter the URL and token in Settings.')
-        .fontSize(12)
-        .fontColor('#666666')
-      Text('1. pc-agent bridge --host 0.0.0.0 --port 8765 --token <token>')
-        .fontSize(11)
-        .fontColor('#999999')
-      Text('2. Emulator: http://10.0.2.2:8765. Phone on Wi-Fi: the PC LAN address.')
-        .fontSize(11)
-        .fontColor('#999999')
-      Text('3. Settings -> PC bridge -> Connect. The status must read connected.')
-        .fontSize(11)
-        .fontColor('#999999')
-      Button('Open Settings')
-        .fontSize(12)
-        .onClick(() => {
-          this.activePage = 'settings';
-        })
-    }
-    .width('100%')
-    .height('100%')
-    .alignItems(HorizontalAlign.Start)
-  }
-
-  @Builder
   MoreToolsPage() {
     Column({ space: 10 }) {
       Text('More')
@@ -754,78 +636,6 @@ struct Index {
     .onClick(() => {
       this.activePage = key;
     })
-  }
-
-  @Builder
-  SourcePage() {
-    Column({ space: 10 }) {
-      Text('Where the last answer looked')
-        .fontSize(14)
-        .fontWeight(FontWeight.Bold)
-      this.SourceLine('Provider', this.provider)
-      this.SourceLine('Endpoint', this.modelEndpoint)
-      this.SourceLine('Model', this.modelName)
-      this.SourceLine('Control backend', AgentService.get().isRemoteConfigured()
-        ? 'PC bridge: live screen and taps'
-        : (this.a11yAvailable ? 'on-device accessibility' : 'built-in browser text only'))
-      this.SourceLine('Last run', `${this.lastTokens} tokens, ${(this.lastDurationMs / 1000).toFixed(1)} s`)
-      Text('Screen text and page URLs are not stored per run yet, so this page reports the configured source instead of a citation list.')
-        .fontSize(11)
-        .fontColor('#999999')
-    }
-    .width('100%')
-    .height('100%')
-    .alignItems(HorizontalAlign.Start)
-  }
-
-  @Builder
-  SourceLine(label: string, value: string) {
-    Row() {
-      Text(label)
-        .fontSize(12)
-        .fontColor('#999999')
-        .width(120)
-      Text(value)
-        .fontSize(13)
-        .layoutWeight(1)
-    }
-    .width('100%')
-    .padding(10)
-    .backgroundColor('#F7F8FA')
-    .borderRadius(6)
-  }
-
-  @Builder
-  McpServersPage() {
-    Column({ space: 12 }) {
-      Text('On this phone')
-        .fontSize(16)
-        .fontWeight(FontWeight.Bold)
-      Text('This build does not run an MCP server on the device. The app is a client of the PC agent, not a server.')
-        .fontSize(12)
-        .fontColor('#666666')
-      Text('On the computer')
-        .fontSize(16)
-        .fontWeight(FontWeight.Bold)
-      Text('pc-agent mcp    # stdio MCP server for Claude/other clients')
-        .fontSize(11)
-        .backgroundColor('#F2F3F5')
-        .padding(8)
-        .borderRadius(6)
-        .width('100%')
-      Text('pc-agent bridge --host 0.0.0.0 --port 8765 --token <token>')
-        .fontSize(11)
-        .backgroundColor('#F2F3F5')
-        .padding(8)
-        .borderRadius(6)
-        .width('100%')
-      Text('Mika exposes MCP servers in Settings. HOPA keeps MCP on the PC side; the phone talks to the bridge over HTTP with a token.')
-        .fontSize(11)
-        .fontColor('#999999')
-    }
-    .width('100%')
-    .height('100%')
-    .alignItems(HorizontalAlign.Start)
   }
 
   @Builder
@@ -1264,11 +1074,11 @@ struct Index {
         } else if (key === 'runs') {
           RunsPage()
         } else if (key === 'models') {
-          this.ModelsPage()
+          ModelsPage({ onOpenSettings: () => { this.activePage = 'settings'; this.menuOpen = false; } })
         } else if (key === 'usage') {
-          this.UsagePage()
+          UsagePage()
         } else if (key === 'phone') {
-          this.PhonePage()
+          PhonePage({ onOpenSettings: () => { this.activePage = 'settings'; this.menuOpen = false; } })
         } else if (key === 'selfcheck') {
           SelfCheckPage()
         } else if (key === 'welcome') {
@@ -1278,9 +1088,9 @@ struct Index {
         } else if (key === 'screens') {
           ScreensPage()
         } else if (key === 'source') {
-          this.SourcePage()
+          SourcePage()
         } else if (key === 'mcpservers') {
-          this.McpServersPage()
+          McpServersPage()
         } else if (key === 'files') {
           FilesPage()
         } else if (key === 'license') {
