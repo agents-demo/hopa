@@ -8,11 +8,12 @@ import { Action, BatchItemResult, ChatHistory, ChatSession, PaymentContext, Scre
 import { MemoryExtractor } from '@hopa/core';
 import { AgentService } from '../services/AgentService';
 import { SettingsStore, StoredSettings } from '../services/SettingsStore';
-import { MemoryItem } from '../services/MemoryStore';
-import { APP_CATALOG, CatalogApp, SITE_CATALOG, CatalogSite } from '../services/AppCatalog';
+import { APP_CATALOG, CatalogApp } from '../services/AppCatalog';
 import { RunRecord } from '@hopa/core';
 import { JsSandboxBridge } from '../services/JsSandboxBridge';
 import { AppLauncher } from '../services/AppLauncher';
+import { AppsPage } from './apps/AppsPage';
+import { MemoryPage } from './memory/MemoryPage';
 import { PlansPage } from './plans/PlansPage';
 import { ScreensPage } from './tools/ScreensPage';
 import { SelfCheckPage } from './tools/SelfCheckPage';
@@ -31,7 +32,6 @@ struct Index {
   @State selectedRunId: string = '';
   @State chatSessions: ChatSession[] = [];
   private history: ChatHistory = new ChatHistory();
-  @State runCount: number = 0;
   @State a11yAvailable: boolean = false;
   @State a11yInstalled: string = 'checking...';
   @State draft: string = '';
@@ -55,15 +55,7 @@ struct Index {
   @State modelLabel: string = '';
   @State address: string = 'https://example.com';
   @State pageUrl: string = '';
-  @State memoryDraft: string = '';
-  @State memoryItems: MemoryItem[] = [];
-  @State memorySection: number = 0;
-  @State skillName: string = '';
-  @State skillTrigger: string = '';
-  @State skillGuidance: string = '';
-  @State skills: Skill[] = [];
   @State runRecords: RunRecord[] = [];
-  @State catalogSection: number = 0;
   @State script: string = '';
   @State scriptOutput: string = '';
   @State bridgeUrl: string = '';
@@ -76,7 +68,6 @@ struct Index {
   aboutToAppear(): void {
     const service = AgentService.get();
     service.setAbilityContext(getContext(this) as common.UIAbilityContext);
-    this.runCount = service.runs.all().length;
     this.a11yAvailable = service.isA11yAvailable();
     this.modelLabel = service.getModelLabel();
     this.initialize();
@@ -128,12 +119,10 @@ struct Index {
       return;
     }
     const fact: string | undefined = MemoryExtractor.extract(text);
-    if (fact !== undefined) {
-      const item: MemoryItem | undefined = AgentService.get().memory.add(fact);
-      if (item !== undefined) {
-        this.memoryItems = AgentService.get().memory.all().slice();
-        this.saveMemory();
-      }
+    if (fact !== undefined && AgentService.get().memory.add(fact) !== undefined) {
+      AgentService.get().memory.save(getContext(this) as Context).catch(() => {
+        // Persistence is best effort; memory still works in this session.
+      });
     }
     const service = AgentService.get();
     if (!service.hasModel()) {
@@ -171,8 +160,9 @@ struct Index {
     this.lastTokens = service.getLastTokens();
     this.lastDurationMs = service.getLastDurationMs();
     this.refreshRuns();
-    this.refreshSkills();
-    this.saveSkills();
+    AgentService.get().skills.save(getContext(this) as Context).catch(() => {
+      // Persistence is best effort.
+    });
   }
 
   private stopRun(): void {
@@ -383,91 +373,20 @@ struct Index {
     this.saveHistory();
   }
 
-  private addMemory(): void {
-    const item: MemoryItem | undefined = AgentService.get().memory.add(this.memoryDraft);
-    if (item === undefined) {
-      return;
-    }
-    this.memoryDraft = '';
-    this.memoryItems = AgentService.get().memory.all().slice();
-    this.saveMemory();
-    this.messages = this.messages.concat([`HOPA: remembered: ${item.text}`]);
-  }
-
-  private removeMemory(id: string): void {
-    if (AgentService.get().memory.remove(id)) {
-      this.memoryItems = AgentService.get().memory.all().slice();
-      this.saveMemory();
-    }
-  }
-
   private async loadMemory(): Promise<void> {
     try {
       await AgentService.get().memory.load(getContext(this) as Context);
-      this.memoryItems = AgentService.get().memory.all().slice();
     } catch (error) {
       // First run: no memory yet.
     }
   }
 
-  private saveMemory(): void {
-    AgentService.get().memory.save(getContext(this) as Context).catch(() => {
-      // Persistence is best effort; memory still works in this session.
-    });
-  }
-
-  private async exportData(): Promise<void> {
-    try {
-      const path: string = await AgentService.get().exportData(getContext(this) as Context);
-      this.messages = this.messages.concat([
-        `HOPA: exported memory, skills and runs to ${path}`
-      ]);
-    } catch (error) {
-      this.messages = this.messages.concat([`HOPA: export failed: ${error}`]);
-    }
-    this.activePage = 'chat';
-  }
-
-  private clearMemory(): void {
-    AgentService.get().memory.clear();
-    this.memoryItems = [];
-    this.saveMemory();
-    this.messages = this.messages.concat(['HOPA: cleared all remembered facts.']);
-  }
-
-  private addSkill(): void {
-    const skill: Skill | undefined = AgentService.get().skills.add(
-      this.skillName,
-      this.skillTrigger,
-      this.skillGuidance
-    );
-    if (skill === undefined) {
-      return;
-    }
-    this.skillName = '';
-    this.skillTrigger = '';
-    this.skillGuidance = '';
-    this.refreshSkills();
-    this.saveSkills();
-    this.messages = this.messages.concat([`HOPA: saved skill "${skill.name}".`]);
-  }
-
-  private removeSkill(id: string): void {
-    if (AgentService.get().skills.remove(id)) {
-      this.refreshSkills();
-      this.saveSkills();
-    }
-  }
-
-  private refreshSkills(): void {
-    this.skills = AgentService.get().skills.all().slice();
-  }
-
   private draftLastSkill(): void {
     const skill: Skill | undefined = AgentService.get().saveLastRunAsSkill();
     if (skill !== undefined) {
-      this.refreshSkills();
-      this.saveSkills();
+      AgentService.get().skills.save(getContext(this) as Context).catch(() => {
+        // Persistence is best effort.
+      });
       this.messages = this.messages.concat([
         `HOPA: saved "${skill.name}" as a skill. Edit it in Memory & skills.`
       ]);
@@ -477,23 +396,15 @@ struct Index {
   private async loadSkills(): Promise<void> {
     try {
       await AgentService.get().skills.load(getContext(this) as Context);
-      this.refreshSkills();
     } catch (error) {
       // First run: no skills yet.
     }
-  }
-
-  private saveSkills(): void {
-    AgentService.get().skills.save(getContext(this) as Context).catch(() => {
-      // Persistence is best effort.
-    });
   }
 
   private async loadRuns(): Promise<void> {
     try {
       await AgentService.get().loadRuns(getContext(this) as Context);
       this.runRecords = AgentService.get().runs.all();
-      this.runCount = this.runRecords.length;
     } catch (error) {
       // First run: no history yet.
     }
@@ -501,7 +412,6 @@ struct Index {
 
   private refreshRuns(): void {
     this.runRecords = AgentService.get().runs.all();
-    this.runCount = this.runRecords.length;
     AgentService.get().saveRuns(getContext(this) as Context).catch(() => {
       // Persistence is best effort.
     });
@@ -643,19 +553,6 @@ struct Index {
     .padding(16)
   }
 
-  private async launchApp(bundle: string, ability: string): Promise<void> {
-    try {
-      const context = getContext(this) as common.UIAbilityContext;
-      await context.startAbility({ bundleName: bundle, abilityName: ability });
-      this.messages = this.messages.concat([
-        `HOPA: opened ${bundle}. To let HOPA read and drive it, accessibility (ACL) must be enabled.`
-      ]);
-    } catch (error) {
-      this.messages = this.messages.concat([`HOPA: could not open ${bundle}: ${error}`]);
-    }
-    this.activePage = 'chat';
-  }
-
   @Builder
   WebPage() {
     Column({ space: 8 }) {
@@ -756,139 +653,6 @@ struct Index {
     .width('100%')
     .height('100%')
     .padding(8)
-  }
-
-  @Builder
-  AppsListSection() {
-    List({ space: 8 }) {
-      ForEach(APP_CATALOG, (app: CatalogApp, index: number) => {
-        ListItem() {
-          Column({ space: 2 }) {
-            Row({ space: 8 }) {
-              Text(app.display)
-                .fontSize(15)
-                .fontWeight(FontWeight.Bold)
-                .layoutWeight(1)
-              if (app.verified && app.ability.length > 0) {
-                Button($r('app.string.btn_open'))
-                  .fontSize(12)
-                  .height(28)
-                  .onClick(() => {
-                    this.launchApp(app.bundle, app.ability);
-                  })
-              }
-              Text(app.verified
-                ? 'bundle verified'
-                : (app.confirmed ? 'bundle unverified' : 'no bundle yet'))
-                .fontSize(11)
-                .fontColor(app.verified ? '#0A7F3F' : (app.confirmed ? '#B26A00' : '#8A8A8A'))
-            }
-            .width('100%')
-            Text(app.bundle.length > 0 ? app.bundle : 'no HarmonyOS bundle yet')
-              .fontSize(12)
-              .fontColor('#666666')
-            if (app.aliases.length > 0) {
-              Text(app.aliases.slice(0, 3).join(', '))
-                .fontSize(11)
-                .fontColor('#999999')
-                .maxLines(1)
-            }
-          }
-          .width('100%')
-          .padding(10)
-          .backgroundColor('#F7F8FA')
-          .borderRadius(8)
-          .alignItems(HorizontalAlign.Start)
-        }
-      }, (app: CatalogApp) => app.name)
-    }
-    .layoutWeight(1)
-    .width('100%')
-  }
-
-  @Builder
-  SitesListSection() {
-    List({ space: 8 }) {
-      ForEach(SITE_CATALOG, (site: CatalogSite, index: number) => {
-        ListItem() {
-          Column({ space: 2 }) {
-            Row({ space: 8 }) {
-              Text(site.display)
-                .fontSize(15)
-                .fontWeight(FontWeight.Bold)
-                .layoutWeight(1)
-              if (site.domains.length > 0) {
-                Button($r('app.string.btn_open'))
-                  .fontSize(12)
-                  .height(28)
-                  .onClick(() => {
-                    this.address = `https://${site.domains[0]}`;
-                    this.activePage = 'browser';
-                    setTimeout(() => {
-                      this.openAddress();
-                    }, 500);
-                  })
-              }
-            }
-            .width('100%')
-            Text(site.domains.join(', '))
-              .fontSize(12)
-              .fontColor('#666666')
-            Text(`validated: ${site.validated}`)
-              .fontSize(11)
-              .fontColor('#999999')
-          }
-          .width('100%')
-          .padding(10)
-          .backgroundColor('#F7F8FA')
-          .borderRadius(8)
-          .alignItems(HorizontalAlign.Start)
-        }
-      }, (site: CatalogSite) => site.name)
-    }
-    .layoutWeight(1)
-    .width('100%')
-  }
-
-  @Builder
-  AppsPage() {
-    Column({ space: 10 }) {
-      Text(`Catalogue (${APP_CATALOG.length} apps, ${SITE_CATALOG.length} sites)`)
-        .fontSize(22)
-        .fontWeight(FontWeight.Bold)
-
-      Row({ space: 8 }) {
-        Button(`Apps ${APP_CATALOG.length}`)
-          .backgroundColor(this.catalogSection === 0 ? '#0A59F7' : '#E5E6E8')
-          .fontColor(this.catalogSection === 0 ? '#FFFFFF' : '#333333')
-          .onClick(() => {
-            this.catalogSection = 0;
-          })
-        Button(`Sites ${SITE_CATALOG.length}`)
-          .backgroundColor(this.catalogSection === 1 ? '#0A59F7' : '#E5E6E8')
-          .fontColor(this.catalogSection === 1 ? '#FFFFFF' : '#333333')
-          .onClick(() => {
-            this.catalogSection = 1;
-          })
-      }
-      .width('100%')
-
-      Text(this.catalogSection === 0
-        ? 'Verified bundles can launch. Unverified and unconfirmed names never launch a guessed bundle.'
-        : 'Sites open in the built-in browser. Only https pages are allowed.')
-        .fontSize(12)
-        .fontColor('#666666')
-
-      if (this.catalogSection === 0) {
-        this.AppsListSection()
-      } else {
-        this.SitesListSection()
-      }
-    }
-    .width('100%')
-    .height('100%')
-    .padding(16)
-    .alignItems(HorizontalAlign.Start)
   }
 
   @Builder
@@ -1086,7 +850,7 @@ struct Index {
       this.UsageLine('Last run tokens', `${this.lastTokens}`)
       this.UsageLine('Last run time', `${(this.lastDurationMs / 1000).toFixed(1)} s`)
       this.UsageLine('Plans', `${AgentService.get().schedules.all().length}`)
-      this.UsageLine('Facts and skills', `${this.memoryItems.length} / ${this.skills.length}`)
+      this.UsageLine('Facts and skills', `${AgentService.get().memory.all().length} / ${AgentService.get().skills.all().length}`)
       Text('Per-run tokens are not stored yet; the last run total is shown.')
         .fontSize(11)
         .fontColor('#999999')
@@ -1485,178 +1249,6 @@ struct Index {
     })
   }
 
-  @Builder
-  FactsSection() {
-    Column({ space: 12 }) {
-      Text('Only what you type here is stored. It is added to HOPA\'s prompt; delete anything you do not want kept.')
-        .fontSize(13)
-        .fontColor('#666666')
-
-      Row({ space: 8 }) {
-        TextInput({ placeholder: $r('app.string.placeholder_memory'), text: this.memoryDraft })
-          .layoutWeight(1)
-          .onChange((value: string) => {
-            this.memoryDraft = value;
-          })
-          .onSubmit(() => {
-            this.addMemory();
-          })
-        Button($r('app.string.btn_add'))
-          .onClick(() => {
-            this.addMemory();
-          })
-      }
-      .width('100%')
-
-      Row({ space: 8 }) {
-        Button($r('app.string.btn_export'))
-          .fontSize(12)
-          .onClick(() => {
-            this.exportData();
-          })
-        Button($r('app.string.btn_clear_facts'))
-          .fontSize(12)
-          .backgroundColor('#E5E6E8')
-          .fontColor('#B42318')
-          .onClick(() => {
-            this.clearMemory();
-          })
-      }
-      .width('100%')
-
-      List({ space: 8 }) {
-        ForEach(this.memoryItems, (item: MemoryItem, index: number) => {
-          ListItem() {
-            Row({ space: 8 }) {
-              Text(item.text)
-                .layoutWeight(1)
-                .fontSize(14)
-              Button($r('app.string.btn_delete'))
-                .fontSize(12)
-                .onClick(() => {
-                  this.removeMemory(item.id);
-                })
-            }
-            .width('100%')
-            .padding(12)
-            .backgroundColor('#F7F8FA')
-            .borderRadius(8)
-          }
-        }, (item: MemoryItem) => item.id)
-      }
-      .layoutWeight(1)
-      .width('100%')
-    }
-    .width('100%')
-    .layoutWeight(1)
-    .alignItems(HorizontalAlign.Start)
-  }
-
-  @Builder
-  SkillsSection() {
-    Column({ space: 10 }) {
-      Text('A skill is a procedure HOPA follows when your request contains the trigger words.')
-        .fontSize(13)
-        .fontColor('#666666')
-      TextInput({ placeholder: $r('app.string.placeholder_skill_name'), text: this.skillName })
-        .onChange((value: string) => {
-          this.skillName = value;
-        })
-      TextInput({ placeholder: $r('app.string.placeholder_trigger'), text: this.skillTrigger })
-        .onChange((value: string) => {
-          this.skillTrigger = value;
-        })
-      TextArea({ placeholder: $r('app.string.placeholder_steps'), text: this.skillGuidance })
-        .height(90)
-        .onChange((value: string) => {
-          this.skillGuidance = value;
-        })
-      Button($r('app.string.btn_save_skill'))
-        .onClick(() => {
-          this.addSkill();
-        })
-
-      List({ space: 8 }) {
-        ForEach(this.skills, (item: Skill, index: number) => {
-          ListItem() {
-            Column({ space: 4 }) {
-              Row({ space: 8 }) {
-                Text(item.name)
-                  .fontWeight(FontWeight.Bold)
-                  .fontSize(14)
-                  .layoutWeight(1)
-                Button($r('app.string.btn_delete'))
-                  .fontSize(12)
-                  .onClick(() => {
-                    this.removeSkill(item.id);
-                  })
-              }
-              .width('100%')
-              Text(`when: ${item.trigger}`)
-                .fontSize(12)
-                .fontColor('#666666')
-              Text(`used ${item.uses}, ok ${item.successes}`)
-                .fontSize(11)
-                .fontColor('#999999')
-              Text(item.guidance)
-                .fontSize(13)
-                .maxLines(4)
-            }
-            .width('100%')
-            .padding(12)
-            .backgroundColor('#F7F8FA')
-            .borderRadius(8)
-            .alignItems(HorizontalAlign.Start)
-          }
-        }, (item: Skill) => item.id)
-      }
-      .layoutWeight(1)
-      .width('100%')
-    }
-    .width('100%')
-    .layoutWeight(1)
-    .alignItems(HorizontalAlign.Start)
-  }
-
-  @Builder
-  MemoryPage() {
-    Column({ space: 12 }) {
-      Text($r('app.string.title_memory'))
-        .fontSize(22)
-        .fontWeight(FontWeight.Bold)
-
-      Row({ space: 8 }) {
-        Button($r('app.string.label_facts'))
-          .backgroundColor(this.memorySection === 0 ? '#0A59F7' : '#E5E6E8')
-          .fontColor(this.memorySection === 0 ? '#FFFFFF' : '#333333')
-          .onClick(() => {
-            this.memorySection = 0;
-          })
-        Button($r('app.string.label_skills'))
-          .backgroundColor(this.memorySection === 1 ? '#0A59F7' : '#E5E6E8')
-          .fontColor(this.memorySection === 1 ? '#FFFFFF' : '#333333')
-          .onClick(() => {
-            this.memorySection = 1;
-          })
-      }
-      .width('100%')
-
-      if (this.memorySection === 0) {
-        this.FactsSection()
-      } else {
-        this.SkillsSection()
-      }
-
-      Text(`Runs recorded: ${this.runCount}`)
-        .fontSize(12)
-        .fontColor('#666666')
-    }
-    .width('100%')
-    .height('100%')
-    .padding(16)
-    .alignItems(HorizontalAlign.Start)
-  }
-
   private pageTitle(): string {
     if (this.activePage === 'chat') {
       return 'Chat';
@@ -1818,7 +1410,7 @@ struct Index {
     if (this.activePage === 'plans') {
       PlansPage()
     } else if (this.activePage === 'memory') {
-      this.MemoryPage()
+      MemoryPage()
     } else if (this.activePage === 'browser') {
       this.WebPage()
     } else if (this.activePage === 'screens') {
@@ -1877,7 +1469,15 @@ struct Index {
       .width('100%')
       Column() {
         if (key === 'apps') {
-          this.AppsPage()
+          AppsPage({
+            onOpenSite: (url: string) => {
+              this.address = url;
+              this.activePage = 'browser';
+              setTimeout(() => {
+                this.openAddress();
+              }, 500);
+            }
+          })
         } else if (key === 'runs') {
           this.RunsPage()
         } else if (key === 'models') {
