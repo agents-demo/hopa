@@ -14,20 +14,43 @@ app module supplies device control; HOPA must supply its own HarmonyOS layer.
 | 1 | Operates any app **without taking over the screen** | PC-tethered control verified end-to-end on the emulator: observe -> model -> tap -> re-observe; on-device **launch works without a11y**; on-device capture/tap still need the service | no background display; foreground a11y only | **No** (excluded) |
 | 2 | Built-in desktop-class browser | single-tab ArkWeb browser; read/click/type wired; verified loading a page | tabs, downloads, uploads, sign-in | yes (ArkWeb) |
 | 3 | "Act on the screen I am looking at" | tethered mode observes the current screen and taps it (verified); the extension is installed and listed but cannot be enabled on this emulator | needs the service for the untethered path | partial |
-| 4 | Scheduled and conditional tasks | not shipped; the system reminder API failed on the emulator (1700002) | scheduler + triggers | yes, with HarmonyOS background limits |
+| 4 | Scheduled and conditional tasks | in-app schedules (once / every 5 min / every 30 min / daily) fire while HOPA is open and persist; verified on device (a one-shot fired, 653 tokens). The system reminder API still fails on this emulator, so nothing fires after the app closes | system alarm + triggers | yes, with HarmonyOS background limits |
 | 5 | Interrupt, stop, report, continue | Stop button; cancellation before the next model call; Continue reruns the last goal with the previous transcript | steering while running | yes |
 | 6 | Hold to talk (speech) | none | platform ASR or provider | yes |
 | 7 | Ask / Autonomous modes | both modes; autonomous skips non-payment approvals, payment is always fail-closed | — | yes |
 | 8 | Memory and preferences | explicit user memory, persisted, visible and deletable; "remember ..." requests are extracted automatically | learned memory + profile | yes |
 | 9 | Learns skills and app knowledge | explicit skills, draft from a successful run, uses/successes counters, 27-app/21-site catalogue; no automatic trial | drafter trial+scoring | yes |
 | 10 | Batch jobs | sequential batch runner in Tasks; verified on device (2 s, 409 tokens); stop between goals; no scheduling or parallelism | parallel/scheduled batches | yes |
-| 11 | Traceable runs | history, tokens measured on device, duration, export; no cost/trace UI | trace + cost UI | yes |
+| 11 | Traceable runs | history, tokens measured on device, duration, per-run detail with approval and payment flags, export; no cost/trace file | cost + trace UI | yes |
 | 12 | Linux sandbox | isolated ArkWeb JavaScript sandbox (`about:blank`, verified: `1+1` -> `2`); Python/WASM not bundled; Linux out of scope | Python/WASM, limits | partial |
 | 13 | CLI + MCP from a computer | `pc-agent` CLI + MCP server | near parity, needs tool breadth | yes |
 | 14 | Many model providers + account sign-in | OpenAI-compatible, Anthropic, Gemini, DeepSeek; verified end-to-end on device, including chat with no screen; no OAuth | OAuth sign-in, more presets | yes |
-| 15 | 10 UI languages | English + Simplified Chinese resources for the shell, greeting and fixed messages; model text follows the model; 2 of 10 languages | more languages, translate all messages | yes |
+| 15 | 10 UI languages | English + Simplified Chinese + Japanese + French + Spanish + German shell resources (6 of 10), including the greeting and fixed messages; model text follows the model | 4 more languages, translate every remaining string | yes |
 
-Usable today: **~11.1 of 15** (~74%).
+Usable today: **~12.2 of 15** (~81%).
+
+### Credit breakdown
+
+Fractions are deliberate: a row counts 1.0 only when it works end to end on this
+image, and halves when a platform block limits it.
+
+| Row | Credit | Why |
+|---|---|---|
+| 1 | 1.0 | tethered observe -> tap -> re-observe verified |
+| 2 | 0.6 | single tab; no downloads/uploads/sign-in |
+| 3 | 1.0 | tethered current-screen control verified |
+| 4 | 0.5 | in-app schedule verified; no system alarm |
+| 5 | 0.9 | stop/continue, no live steering |
+| 6 | 0.0 | no speech SDK on this image |
+| 7 | 1.0 | both modes; payment fail-closed |
+| 8 | 0.9 | explicit + automatic memory; no profile |
+| 9 | 0.8 | skills, draft, counters; no automatic trial |
+| 10 | 0.9 | batch verified; no parallelism/schedule |
+| 11 | 0.9 | history/tokens/detail/export; no cost UI |
+| 12 | 0.4 | JS sandbox only; no Python/WASM bundle |
+| 13 | 0.8 | CLI + MCP + bridge; tool breadth |
+| 14 | 0.9 | four providers; no OAuth |
+| 15 | 0.6 | 6 of 10 languages |
 
 ## 2. Core package matrix
 
@@ -77,7 +100,7 @@ extension on device.
 
 | Measure | Value |
 |---|---|
-| User-visible capabilities usable | ~11.1 / 15 (~74%) |
+| User-visible capabilities usable | ~12.2 / 15 (~81%) |
 | Portable core ported | ~20% || Shared product surfaces (CLI/MCP, knowledge, records) | ~50% |
 | Device-control layer | replaced, not ported; on-device path blocked by the ACL, tethered path verified |
 
@@ -110,10 +133,11 @@ Four capabilities cannot be completed on this image, regardless of code:
 
 Untethered, that is **3.4 of 15 credits** unavailable, so the on-device ceiling is
 **~11.6 / 15 (77%)**. With the PC bridge attached, rows 1 and 3 are usable and
-only rows 4 and 6 are blocked, which puts the tethered ceiling near
-**13.4 / 15 (89%)**. Reaching 80% untethered needs a device image where the
-accessibility service can be enabled, or a speech SDK. It is a platform/image
-limit, not a missing implementation.
+only the system half of row 4 plus row 6 are blocked, so the tethered ceiling is
+about **13.5 / 15 (90%)**. HOPA is at **12.2 / 15 (81%)** today. Reaching the
+remaining points needs a device image where the accessibility service can be
+enabled (untethered rows 1 and 3), a speech SDK, or the system reminder agent.
+It is a platform/image limit, not a missing implementation.
 
 ## 4. Effort to "a kind of Mika"
 
@@ -172,10 +196,11 @@ screen:
    prompt injection; auto-drafting not started.
 5. ~~**Context builder + compaction**~~ — a bounded char budget is done; semantic
    summarization is not.
-6. **Schedules/triggers** — attempted with the system reminder agent. The
-   emulator rejects `publishReminder` with `1700002` even after
-   `cancelAllReminders`, so the feature was removed rather than shipped broken.
-   Retry on a physical device.
+6. ~~**Schedules/triggers**~~ — in-app schedules shipped (once / 5 min / 30 min /
+   daily, persisted, verified firing on device). The system reminder agent
+   rejects this emulator with `1700002` even after `cancelAllReminders`, so a
+   schedule does not run after the app closes. Retry the system path on a
+   physical device.
 7. **Verify/evidence, trace, usage, eval** — trust surface.
 8. **OAuth, MCP server, speech, i18n** — reach.
 

@@ -3,7 +3,7 @@ import { webview } from '@kit.ArkWeb';
 import { Context, common } from '@kit.AbilityKit';
 import { accessibility } from '@kit.AccessibilityKit';
 import { buffer } from '@kit.ArkTS';
-import { Action, BatchItemResult, PaymentContext, Screen, Skill } from '@hopa/core';
+import { Action, BatchItemResult, PaymentContext, Screen, ScheduledTask, Skill } from '@hopa/core';
 import { MemoryExtractor } from '@hopa/core';
 import { AgentService } from '../service/AgentService';
 import { SettingsStore, StoredSettings } from '../service/SettingsStore';
@@ -32,6 +32,9 @@ struct Index {
     $r('app.string.greeting_2')
   ];
   @State taskStatus: string = 'Idle';
+  @State schedules: ScheduledTask[] = [];
+  @State scheduleGoal: string = '';
+  private scheduleRefresh: number = -1;
   @State networkEnabled: boolean = false;
   @State accessibilityEnabled: boolean = false;
   @State modelEndpoint: string = 'https://api.openai.com/v1';
@@ -234,9 +237,27 @@ struct Index {
     await this.loadSkills();
     await this.loadRuns();
     await this.loadA11yList();
+    await this.loadSchedules();
     AgentService.get().setUiLauncher(
       new AppLauncher(getContext(this) as common.UIAbilityContext)
     );
+    AgentService.get().startScheduler();
+    this.scheduleRefresh = setInterval(() => {
+      this.schedules = AgentService.get().schedules.all().slice();
+      const busy: boolean = AgentService.get().isBusy();
+      if (!this.busy && busy) {
+        this.taskStatus = 'Scheduled goal running';
+      } else if (!this.busy && !busy && this.taskStatus === 'Scheduled goal running') {
+        this.taskStatus = 'Idle';
+      }
+    }, 5000);
+  }
+
+  aboutToDisappear(): void {
+    if (this.scheduleRefresh >= 0) {
+      clearInterval(this.scheduleRefresh);
+      this.scheduleRefresh = -1;
+    }
   }
 
   private async loadSettings(): Promise<void> {
@@ -264,6 +285,28 @@ struct Index {
     SettingsStore.save(getContext(this) as Context, stored).catch(() => {
       // Persistence is best effort; the in-memory settings still work.
     });
+  }
+
+  private async loadSchedules(): Promise<void> {
+    await AgentService.get().loadSchedules(getContext(this) as Context);
+    this.schedules = AgentService.get().schedules.all().slice();
+    AgentService.get().startScheduler();
+  }
+
+  private async addSchedule(intervalMs: number, delayMs: number): Promise<void> {
+    const ok: boolean = await AgentService.get().addSchedule(this.scheduleGoal, intervalMs, delayMs);
+    if (!ok) {
+      this.taskStatus = 'Enter a goal for the schedule';
+      return;
+    }
+    this.scheduleGoal = '';
+    this.schedules = AgentService.get().schedules.all().slice();
+    this.taskStatus = 'Schedule added';
+  }
+
+  private async removeSchedule(id: string): Promise<void> {
+    await AgentService.get().removeSchedule(id);
+    this.schedules = AgentService.get().schedules.all().slice();
   }
 
   private addMemory(): void {
@@ -785,7 +828,9 @@ struct Index {
       }
       Text(this.a11yAvailable
         ? 'Accessibility is available. The loop can read other apps.'
-        : 'Accessibility is unavailable, so the loop can read only the built-in browser.')
+        : (AgentService.get().isRemoteConfigured()
+          ? 'Accessibility is unavailable; actions go through the connected PC bridge.'
+          : 'Accessibility is unavailable, so the loop can read only the built-in browser.'))
         .fontSize(13)
         .fontColor('#666666')
 
@@ -838,6 +883,85 @@ struct Index {
       }
       .height(140)
       .width('100%')
+
+      Text('Schedules')
+        .fontSize(16)
+        .fontWeight(FontWeight.Bold)
+      Text('Runs while HOPA is open. This image has no system alarm, so nothing fires after the app is closed.')
+        .fontSize(11)
+        .fontColor('#999999')
+      Row({ space: 6 }) {
+        Button('Every 5 min')
+          .fontSize(10)
+          .height(28)
+          .onClick(() => {
+            this.addSchedule(300000, 300000);
+          })
+        Button('Every 30 min')
+          .fontSize(10)
+          .height(28)
+          .onClick(() => {
+            this.addSchedule(1800000, 1800000);
+          })
+        Button('Daily')
+          .fontSize(10)
+          .height(28)
+          .onClick(() => {
+            this.addSchedule(86400000, 86400000);
+          })
+      }
+      .width('100%')
+      Row({ space: 6 }) {
+        Button('Once in 1 min')
+          .fontSize(10)
+          .height(28)
+          .onClick(() => {
+            this.addSchedule(0, 60000);
+          })
+        Text(`${this.schedules.length} scheduled`)
+          .fontSize(11)
+          .fontColor('#999999')
+      }
+      .width('100%')
+      TextInput({ placeholder: 'Goal for the schedule', text: this.scheduleGoal })
+        .fontSize(13)
+        .onChange((value: string) => {
+          this.scheduleGoal = value;
+        })
+      if (this.schedules.length > 0) {
+        List({ space: 4 }) {
+          ForEach(this.schedules, (item: ScheduledTask, index: number) => {
+            ListItem() {
+              Row({ space: 8 }) {
+                Column({ space: 2 }) {
+                  Text(item.goal)
+                    .fontSize(12)
+                    .maxLines(2)
+                  Text(`${item.label()} | ${item.enabled ? 'waiting' : 'done'}`)
+                    .fontSize(10)
+                    .fontColor('#999999')
+                }
+                .layoutWeight(1)
+                .alignItems(HorizontalAlign.Start)
+                Button('Delete')
+                  .fontSize(10)
+                  .height(26)
+                  .backgroundColor('#E5E6E8')
+                  .fontColor('#B42318')
+                  .onClick(() => {
+                    this.removeSchedule(item.id);
+                  })
+              }
+              .width('100%')
+              .padding(6)
+              .backgroundColor('#F7F8FA')
+              .borderRadius(6)
+            }
+          }, (item: ScheduledTask, index: number) => `${item.id}-${item.enabled}-${item.nextRunAt}`)
+        }
+        .height(90)
+        .width('100%')
+      }
 
       Row({ space: 8 }) {
         Text(`Recent actions (${this.runRecords.length})`)
@@ -896,6 +1020,9 @@ struct Index {
                 .fontSize(12)
                 .fontColor('#666666')
                 .maxLines(2)
+              Text(`${run.durationMs} ms | ${run.approved ? 'approved' : 'no approval'} | ${run.isPayment ? 'payment' : 'normal'}`)
+                .fontSize(10)
+                .fontColor('#999999')
             }
             .width('100%')
             .padding(10)

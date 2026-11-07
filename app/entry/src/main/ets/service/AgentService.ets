@@ -16,6 +16,8 @@ import {
   RiskLevel,
   RunRecord,
   RunStore,
+  ScheduleBook,
+  ScheduledTask,
   Screen,
   ScreenSource,
   ToolDescriptor,
@@ -147,6 +149,7 @@ export class AgentService {
   readonly tools: ToolRegistry;
   readonly memory: MemoryStore = new MemoryStore();
   readonly skills: SkillStore = new SkillStore();
+  schedules: ScheduleBook = new ScheduleBook();
   readonly batch: BatchRunner = new BatchRunner();
   readonly web: WebCapability;
   readonly browser: BrowserController;
@@ -170,6 +173,12 @@ export class AgentService {
   private matchedSkillId: string = '';
   private static readonly STORE: string = 'hopa_settings';
   private static readonly RUNS_KEY: string = 'runs_v1';
+  private static readonly SCHEDULES_KEY: string = 'schedules_v1';
+  private static readonly SCHEDULE_TICK_MS: number = 30000;
+
+  private abilityContext: common.UIAbilityContext | undefined = undefined;
+  private scheduleTimer: number = -1;
+  private activeRuns: number = 0;
 
   private constructor() {
     this.runs = new RunStore();
@@ -286,6 +295,88 @@ export class AgentService {
   /** Enables the continuous task that keeps a run alive while backgrounded. */
   setAbilityContext(context: common.UIAbilityContext): void {
     this.background.setContext(context);
+    this.abilityContext = context;
+  }
+
+  async loadSchedules(context: Context): Promise<void> {
+    try {
+      const store = await preferences.getPreferences(context, AgentService.STORE);
+      const raw = await store.get(AgentService.SCHEDULES_KEY, '');
+      this.schedules = ScheduleBook.fromJson(`${raw}`);
+    } catch (error) {
+      this.schedules = new ScheduleBook();
+    }
+  }
+
+  async saveSchedules(): Promise<void> {
+    if (this.abilityContext === undefined) {
+      return;
+    }
+    try {
+      const store = await preferences.getPreferences(this.abilityContext, AgentService.STORE);
+      await store.put(AgentService.SCHEDULES_KEY, this.schedules.toJson());
+      await store.flush();
+    } catch (error) {
+      // Losing a schedule edit is not worth failing the UI over.
+    }
+  }
+
+  /** Adds a goal to the in-app schedule and persists it. */
+  async addSchedule(goal: string, intervalMs: number, delayMs: number): Promise<boolean> {
+    const task: ScheduledTask | undefined = this.schedules.add(goal, intervalMs, Date.now(), delayMs);
+    if (task === undefined) {
+      return false;
+    }
+    await this.saveSchedules();
+    return true;
+  }
+
+  async removeSchedule(id: string): Promise<void> {
+    this.schedules.remove(id);
+    await this.saveSchedules();
+  }
+
+  /**
+   * Fires due goals while the process is alive.
+   *
+   * The HarmonyOS reminder agent rejects this emulator, so this is an in-app
+   * schedule, not a system alarm. It is explicit in the UI and in the docs.
+   */
+  startScheduler(): void {
+    if (this.scheduleTimer >= 0) {
+      return;
+    }
+    this.scheduleTimer = setInterval(() => {
+      this.tickSchedules();
+    }, AgentService.SCHEDULE_TICK_MS);
+  }
+
+  stopScheduler(): void {
+    if (this.scheduleTimer >= 0) {
+      clearInterval(this.scheduleTimer);
+      this.scheduleTimer = -1;
+    }
+  }
+
+  private tickSchedules(): void {
+    if (this.activeRuns > 0) {
+      return;
+    }
+    const task: ScheduledTask | undefined = this.schedules.nextDue(Date.now());
+    if (task === undefined) {
+      return;
+    }
+    this.schedules.markRan(task.id, Date.now());
+    this.saveSchedules().catch(() => {
+      // The run matters more than the timestamp write.
+    });
+    this.run(task.goal).catch(() => {
+      // run() already turns failures into a transcript.
+    });
+  }
+
+  isBusy(): boolean {
+    return this.activeRuns > 0;
   }
 
   isRemoteConfigured(): boolean {
@@ -417,6 +508,15 @@ export class AgentService {
    * throws to the UI: failures become lines the user can read.
    */
   async run(goal: string): Promise<string> {
+    this.activeRuns += 1;
+    try {
+      return await this.runInner(goal);
+    } finally {
+      this.activeRuns -= 1;
+    }
+  }
+
+  private async runInner(goal: string): Promise<string> {
     if (this.loop === undefined) {
       return 'No model configured. Open Settings, enter an endpoint, a model and a key, then press Save.';
     }

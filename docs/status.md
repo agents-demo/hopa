@@ -19,7 +19,9 @@ Device control now has two backends:
   is the path that works on this emulator.
 
 The standalone claim is still **not** met; the toolchain, tethered, install,
-UI-wiring and app-control-over-bridge claims are.
+UI-wiring and app-control-over-bridge claims are. Parity with Mika is
+**12.2 / 15 (81%)** with the PC attached; see `docs/mika-parity.md` for the
+per-row breakdown.
 
 Plan progress: **229 / 767 boxes (29.9%)**. The open boxes are concentrated in
 the device/ACL, UI, release and sign-off phases.
@@ -36,7 +38,9 @@ the device/ACL, UI, release and sign-off phases.
 | Installed on the emulator | yes: launch, first frame, six tabs | `hdc install -r` |
 | On-device real model | DeepSeek V4 Flash answered from the browser text (400 tokens) and without any screen; a batch ran in 2 s with 409 tokens; skill saved | device runs 2026-11-07 |
 | PC-tethered app control | connected over `10.0.2.2:8765`; `POST /observe` -> model `ui.tap` -> `POST /tap` -> re-observe; Web tab opened | device run 2026-11-07 |
+| Schedules | in-app once / 5 min / 30 min / daily, persisted; a one-shot fired on device (653 tokens) and moved to `done`; no system alarm on this image | device run 2026-11-07 |
 | Background run | continuous task started and stopped around a bridged run | hilog `background: continuous task` |
+| Languages | English + Simplified Chinese + Japanese + French + Spanish + German (6 of 10) | `resources/*/element/string.json` |
 | Entry UI | chat wired to `AgentLoop`; fail-closed approval dialog; provider settings; memory and skills; Web (with JS sandbox), Apps and run-history tabs; English + Simplified Chinese shell strings | `pages/Index.ets` |
 | Accessibility extension | declared; permission granted on the emulator; framework lists the service; no Settings toggle on this image | `docs/a11y.md` |
 | Emulator | Pura 90, API 24, unlocked; `hdc` and the display glitch under load | `hdc` |

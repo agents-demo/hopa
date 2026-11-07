@@ -8,6 +8,7 @@ import batchRunnerTest from './BatchRunner.test';
 import skillDrafterTest from './SkillDrafter.test';
 import memoryExtractorTest from './MemoryExtractor.test';
 import screenTest from './Screen.test';
+import schedulesTest from './Schedules.test';
 
 export default function testsuite(): void {
   approvalPolicyTest();
@@ -20,4 +21,5 @@ export default function testsuite(): void {
   skillDrafterTest();
   memoryExtractorTest();
   screenTest();
+  schedulesTest();
 }
