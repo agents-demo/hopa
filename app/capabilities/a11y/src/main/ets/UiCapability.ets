@@ -22,12 +22,22 @@ export class UiCapability implements ActionCapability {
   }
 
   canHandle(kind: string): boolean {
+    // Launching uses the app's own context, so it never needs the service.
+    if (kind === 'ui.launch') {
+      return true;
+    }
+    if (A11yBridge.get().isRemotePreferred()) {
+      // The PC bridge owns the screen refs, so it must own the actions too.
+      return false;
+    }
+    if (!A11yBridge.get().isAvailable()) {
+      return false;
+    }
     return kind === 'ui.tap' ||
       kind === 'ui.doubleTap' ||
       kind === 'ui.type' ||
       kind === 'ui.swipe' ||
       kind === 'ui.longPress' ||
-      kind === 'ui.launch' ||
       kind === 'ui.back' ||
       kind === 'ui.home' ||
       kind === 'ui.scroll';

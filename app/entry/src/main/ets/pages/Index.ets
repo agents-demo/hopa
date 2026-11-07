@@ -1,4 +1,4 @@
-import { promptAction } from '@kit.ArkUI';
+import { UIContext } from '@kit.ArkUI';
 import { webview } from '@kit.ArkWeb';
 import { Context, common } from '@kit.AbilityKit';
 import { accessibility } from '@kit.AccessibilityKit';
@@ -52,6 +52,9 @@ struct Index {
   @State catalogSection: number = 0;
   @State script: string = '';
   @State scriptOutput: string = '';
+  @State bridgeUrl: string = '';
+  @State bridgeToken: string = '';
+  @State bridgeStatus: string = 'not connected';
 
   private webController: webview.WebviewController = new webview.WebviewController();
   private sandboxController: webview.WebviewController = new webview.WebviewController();
@@ -64,6 +67,7 @@ struct Index {
     this.initialize();
 
     // Fail-closed by default; the sheet is the only way to allow an action.
+    const uiContext: UIContext = this.getUIContext();
     service.approvals.setHandler(async (action: Action, screen: Screen | undefined): Promise<boolean> => {
       const payment: boolean = service.policy.isPayment(action, screen);
       const title: string = payment ? 'Confirm payment?' : 'Allow this action?';
@@ -77,7 +81,7 @@ struct Index {
           'Check the next screen yourself before you confirm.\n\nAllow it?'
         : `HOPA wants to run: ${action.kind}\nTarget: ${action.target || '(none)'}\n\nAllow it?`;
       try {
-        const result = await promptAction.showDialog({
+        const result = await uiContext.getPromptAction().showDialog({
           title: title,
           message: message,
           buttons: [
@@ -90,6 +94,17 @@ struct Index {
         return false;
       }
     });
+  }
+
+  /**
+   * ForEach keys must change when the text at an index changes, otherwise the
+   * "working..." placeholder is never replaced by the answer.
+   */
+  private messageKey(item: ResourceStr, index: number): string {
+    if (typeof item === 'string') {
+      return `${index}-${item}`;
+    }
+    return `${index}-resource`;
   }
 
   private async send(): Promise<void> {
@@ -424,6 +439,18 @@ struct Index {
     }
   }
 
+  private async connectBridge(): Promise<void> {
+    AgentService.get().configureRemote(this.bridgeUrl, this.bridgeToken);
+    if (!AgentService.get().isRemoteConfigured()) {
+      this.bridgeStatus = 'enter URL and token';
+      return;
+    }
+    this.bridgeStatus = 'checking...';
+    const ok: boolean = await AgentService.get().testRemote();
+    this.bridgeStatus = ok ? 'connected' : `unreachable: ${AgentService.get().remoteFailure()}`;
+    this.messages = this.messages.concat([`HOPA: PC bridge ${this.bridgeStatus}.`]);
+  }
+
   private async runScript(): Promise<void> {
     const code: string = this.script.trim();
     if (code.length === 0) {
@@ -464,7 +491,7 @@ struct Index {
               .borderRadius(10)
               .fontSize(15)
           }
-        }, (item: ResourceStr, index: number) => `${index}`)
+        }, (item: ResourceStr, index: number) => this.messageKey(item, index))
       }
       .layoutWeight(1)
       .width('100%')
@@ -929,6 +956,33 @@ struct Index {
           })
       }
       .width('100%')
+
+      Text('PC bridge (fallback control)')
+        .fontSize(14)
+        .fontColor('#666666')
+      TextInput({ text: this.bridgeUrl, placeholder: 'http://192.168.1.10:8765' })
+        .onChange((value: string) => {
+          this.bridgeUrl = value;
+        })
+      TextInput({ text: this.bridgeToken, placeholder: 'bridge token' })
+        .type(InputType.Password)
+        .onChange((value: string) => {
+          this.bridgeToken = value;
+        })
+      Row({ space: 8 }) {
+        Button('Connect')
+          .fontSize(12)
+          .onClick(() => {
+            this.connectBridge();
+          })
+        Text(this.bridgeStatus)
+          .fontSize(12)
+          .fontColor('#666666')
+      }
+      .width('100%')
+      Text('Run "pc-agent bridge" on the PC. Used only when accessibility is unavailable.')
+        .fontSize(11)
+        .fontColor('#999999')
 
       Text($r('app.string.label_provider'))
         .fontSize(14)

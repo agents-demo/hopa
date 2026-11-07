@@ -18,7 +18,9 @@ from __future__ import annotations
 
 import hmac
 import json
+import sys
 import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 
@@ -70,7 +72,11 @@ class _Handler(BaseHTTPRequestHandler):
     server_version = "hopa-bridge/0.1"
 
     def log_message(self, format: str, *args: Any) -> None:  # noqa: A002
-        return
+        print(
+            f"{self.command} {self.path} {args[0] if args else ''}",
+            file=sys.stderr,
+            flush=True,
+        )
 
     @property
     def bridge(self) -> BridgeServer:
@@ -131,7 +137,9 @@ class _Handler(BaseHTTPRequestHandler):
     def _dispatch(self, data: dict[str, Any]) -> dict[str, Any]:
         device = self.bridge.device
         if self.path == "/observe":
+            started = time.perf_counter()
             observation = _observe(device)
+            print(f"observe {time.perf_counter() - started:.2f}s", file=sys.stderr, flush=True)
             # The app only needs serialisable fields.
             observation.pop("refs", None)
             return observation

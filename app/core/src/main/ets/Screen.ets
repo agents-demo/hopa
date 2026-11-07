@@ -60,6 +60,36 @@ export class Screen {
     }
     return undefined;
   }
+
+  /**
+   * The prompt view of the elements the model may address.
+   *
+   * `ui.tap` and `ui.type` take a ref from this list, never raw coordinates.
+   */
+  describeNodes(limit: number = 120): string {
+    const lines: string[] = [];
+    for (const node of this.nodes) {
+      this.describeNode(node, lines, limit);
+      if (lines.length >= limit) {
+        break;
+      }
+    }
+    return lines.join('\n');
+  }
+
+  private describeNode(node: ScreenNode, lines: string[], limit: number): void {
+    if (lines.length >= limit) {
+      return;
+    }
+    if (node.ref.length > 0 && (node.text.length > 0 || node.clickable)) {
+      const label: string = node.text.length > 0 ? node.text : node.type;
+      const flag: string = node.clickable ? ' [tap]' : '';
+      lines.push(`${node.ref} ${node.type} "${label}"${flag}`);
+    }
+    for (const child of node.children) {
+      this.describeNode(child, lines, limit);
+    }
+  }
 }
 
 /** The capability that captures the current screen. */

@@ -10,6 +10,10 @@ class ActionPayload {
   text: string = '';
   url: string = '';
   app: string = '';
+  x: number = 0;
+  y: number = 0;
+  toX: number = 0;
+  toY: number = 0;
 }
 
 /**
@@ -88,7 +92,9 @@ export class AgentLoop {
       'You are HOPA, a phone agent. Propose exactly one JSON action at a time: ' +
       '{"kind":"web.read","target":"","text":"","url":""}. ' +      'The key is "kind", never "action". ' +
       'To open another app use {"kind":"ui.launch","app":"<bundle>"}. ' +
-      'On a phone screen use element refs from the current screen. Never invent coordinates. ' +
+      'To tap a phone control use {"kind":"ui.tap","target":"<ref>"}; to type, ' +
+      '{"kind":"ui.type","target":"<ref>","text":"..."}. ' +
+      'On a phone screen use element refs from ELEMENTS. Never invent coordinates. ' +
       'On a web page use web.navigate, web.read, web.click or web.type; ' +
       'target is the visible link or button text, or a field placeholder. ' +
       'For a question that needs no action, reply with plain text only, never JSON. ' +
@@ -107,7 +113,7 @@ export class AgentLoop {
     }
     const messages: ModelMessage[] = [
       new ModelMessage('system', systemText),
-      new ModelMessage('user', `${goal}\n\nSCREEN:\n${screen.text}`)
+      new ModelMessage('user', `${goal}\n\nSCREEN:\n${this.screenPrompt(screen)}`)
     ];
 
     for (let step = 0; step < this.maxSteps; step++) {
@@ -147,7 +153,7 @@ export class AgentLoop {
         new ModelMessage(
           'user',
           `Observation: ${outcome.observation.summary} ${outcome.observation.detail}\n` +
-            `SCREEN:\n${screen.text}`
+            `SCREEN:\n${this.screenPrompt(screen)}`
         )
       );
 
@@ -169,6 +175,14 @@ export class AgentLoop {
     return this.source.capture();
   }
 
+  private screenPrompt(screen: Screen): string {
+    const nodes: string = screen.describeNodes();
+    if (nodes.length === 0) {
+      return screen.text;
+    }
+    return `${screen.text}\n\nELEMENTS (target takes the ref):\n${nodes}`;
+  }
+
   private parseAction(text: string): Action | undefined {
     try {
       let raw: string = text.trim();
@@ -187,6 +201,10 @@ export class AgentLoop {
       action.text = payload.text === undefined ? '' : payload.text;
       action.url = payload.url === undefined ? '' : payload.url;
       action.app = payload.app === undefined ? '' : payload.app;
+      action.x = payload.x === undefined ? 0 : payload.x;
+      action.y = payload.y === undefined ? 0 : payload.y;
+      action.toX = payload.toX === undefined ? 0 : payload.toX;
+      action.toY = payload.toY === undefined ? 0 : payload.toY;
       // isPayment is never read from the model. The gate classifies it.
       return action;
     } catch (error) {

@@ -16,6 +16,7 @@ export class A11yBridge {
   private static instance: A11yBridge | undefined = undefined;
   private context?: AccessibilityExtensionContext;
   private connected: boolean = false;
+  private remotePreferred: boolean = false;
   private lastScreen: Screen = new Screen();
   private elements: Map<string, AccessibilityElement> = new Map<string, AccessibilityElement>();
   private nextRef: number = 0;
@@ -42,6 +43,22 @@ export class A11yBridge {
 
   isAvailable(): boolean {
     return this.connected;
+  }
+
+  /**
+   * Marks the PC bridge as the active control backend.
+   *
+   * The extension can report `connected` even when the user has not enabled
+   * the service, and in that state `capture()` and gestures can hang. When a
+   * bridge is configured it is the only safe backend for both the screen and
+   * the actions, so the on-device path stands down.
+   */
+  setRemotePreferred(value: boolean): void {
+    this.remotePreferred = value;
+  }
+
+  isRemotePreferred(): boolean {
+    return this.remotePreferred;
   }
 
   find(ref: string): AccessibilityElement | undefined {

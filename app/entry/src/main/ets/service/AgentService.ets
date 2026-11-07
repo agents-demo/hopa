@@ -10,6 +10,8 @@ import {
   BatchRunner,
   GeminiClient,
   ModelClient,
+  ModelRequest,
+  ModelResponse,
   OpenAiCompatibleClient,
   RiskLevel,
   RunRecord,
@@ -26,7 +28,10 @@ import { SystemCapability } from '@hopa/capability-system';
 import { Context } from '@kit.AbilityKit';
 import { preferences } from '@kit.ArkData';
 import { fileIo } from '@kit.CoreFileKit';
+import { hilog } from '@kit.PerformanceAnalysisKit';
 import { BrowserController } from './BrowserController';
+import { RemoteBridge } from './RemoteBridge';
+import { RemoteScreenSource, RemoteUiCapability } from './RemoteUiCapability';
 import { MemoryItem, MemoryStore } from './MemoryStore';
 import { SkillStore } from './SkillStore';
 import { Skill } from '@hopa/core';
@@ -34,6 +39,31 @@ import { SkillDraft, SkillDrafter } from '@hopa/core';
 
 /** Called when an action needs the user's decision. Must be fail-closed. */
 export type ApprovalPrompt = (action: Action, screen: Screen | undefined) => Promise<boolean>;
+
+/** Adds coarse timing breadcrumbs to the model call (hilog tag HOPA). */
+class LoggedModelClient implements ModelClient {
+  private inner: ModelClient;
+
+  constructor(inner: ModelClient) {
+    this.inner = inner;
+  }
+
+  async complete(request: ModelRequest): Promise<ModelResponse> {
+    hilog.info(0x0000, 'HOPA', `model: start messages=${request.messages.length}`);
+    try {
+      const response: ModelResponse = await this.inner.complete(request);
+      hilog.info(
+        0x0000,
+        'HOPA',
+        `model: done tokens=${response.tokens} error=${response.error.length}`
+      );
+      return response;
+    } catch (error) {
+      hilog.error(0x0000, 'HOPA', `model: threw ${error}`);
+      throw new Error(`${error}`);
+    }
+  }
+}
 
 /**
  * Approval gateway backed by the ArkUI sheet. Until the page installs a
@@ -50,7 +80,10 @@ export class UiApprovalGateway implements ApprovalGateway {
     if (this.handler === undefined) {
       return false;
     }
-    return this.handler(action, screen);
+    hilog.info(0x0000, 'HOPA', `approval: ask ${action.kind}`);
+    const approved: boolean = await this.handler(action, screen);
+    hilog.info(0x0000, 'HOPA', `approval: answer ${approved}`);
+    return approved;
   }
 }
 
@@ -61,14 +94,33 @@ export class UiApprovalGateway implements ApprovalGateway {
  */
 class CompositeScreenSource implements ScreenSource {
   private browser: BrowserController;
+  private remote: RemoteBridge;
 
-  constructor(browser: BrowserController) {
+  constructor(browser: BrowserController, remote: RemoteBridge) {
     this.browser = browser;
+    this.remote = remote;
   }
 
   async capture(): Promise<Screen> {
+    if (this.remote.isConfigured()) {
+      hilog.info(0x0000, 'HOPA', 'capture: bridge observe start');
+      const screen: Screen = await new RemoteScreenSource(this.remote).capture();
+      hilog.info(0x0000, 'HOPA', `capture: bridge observe done text=${screen.text.length} nodes=${screen.nodes.length}`);
+      if (screen.text.length > 0 || screen.nodes.length > 0) {
+        return screen;
+      }
+      // Fall through to the local paths if the PC bridge is unreachable.
+    }
     if (A11yBridge.get().isAvailable()) {
-      return A11yBridge.get().capture();
+      hilog.info(0x0000, 'HOPA', 'capture: a11y start');
+      // A declared-but-disabled service can leave capture pending forever.
+      const local: Promise<Screen> = A11yBridge.get().capture();
+      const guard: Promise<Screen> = new Promise<Screen>((resolve: (value: Screen) => void) => {
+        setTimeout(() => {
+          resolve(new Screen(''));
+        }, 4000);
+      });
+      return Promise.race([local, guard]);
     }
     return new Screen(await this.browser.pageText());
   }
@@ -96,6 +148,7 @@ export class AgentService {
   readonly batch: BatchRunner = new BatchRunner();
   readonly web: WebCapability;
   readonly browser: BrowserController;
+  readonly remote: RemoteBridge = new RemoteBridge();
   readonly sandbox: SandboxCapability;
   readonly a11y: A11yCapability;
   readonly ui: UiCapability;
@@ -134,6 +187,7 @@ export class AgentService {
     this.executor.registerCapability(this.a11y);
     this.executor.registerCapability(this.ui);
     this.executor.registerCapability(this.system);
+    this.executor.registerCapability(new RemoteUiCapability(this.remote));
 
     this.tools = new ToolRegistry();
     this.tools.register(new ToolDescriptor('web.navigate', 'Navigate the web view', RiskLevel.Read));
@@ -175,9 +229,9 @@ export class AgentService {
     }
     this.loop = new AgentLoop(
       this.executor,
-      this.model,
+      new LoggedModelClient(this.model),
       maxSteps,
-      new CompositeScreenSource(this.browser)
+      new CompositeScreenSource(this.browser, this.remote)
     );
     this.loop.setMemory(this.memory.toPrompt());
     this.modelLabel = modelName;
@@ -208,6 +262,24 @@ export class AgentService {
   /** Wires the entry module's app launcher into the ui capability. */
   setUiLauncher(launcher: UiLauncher): void {
     this.ui.setLauncher(launcher);
+  }
+
+  /** Points the remote capability at a running `pc-agent bridge`. */
+  configureRemote(url: string, token: string): void {
+    this.remote.configure(url, token);
+    A11yBridge.get().setRemotePreferred(this.remote.isConfigured());
+  }
+
+  isRemoteConfigured(): boolean {
+    return this.remote.isConfigured();
+  }
+
+  async testRemote(): Promise<boolean> {
+    return this.remote.health();
+  }
+
+  remoteFailure(): string {
+    return this.remote.lastFailure();
   }
 
   /** Autonomous mode skips non-payment approvals. Payment is still fail-closed. */
@@ -330,7 +402,7 @@ export class AgentService {
     if (this.loop === undefined) {
       return 'No model configured. Open Settings, enter an endpoint, a model and a key, then press Save.';
     }
-    if (!this.a11y.isAvailable() && !this.browser.isReady()) {
+    if (!this.a11y.isAvailable() && !this.browser.isReady() && !this.remote.isConfigured()) {
       // Chat still works without a screen; actions will fail closed in the executor.
       this.loop.setSurfaceAvailable(false);
     } else {
@@ -347,11 +419,13 @@ export class AgentService {
     this.loop.setMemory(this.memory.toPrompt());
     this.loop.setSkill(this.skills.toPrompt(goal));
     this.loop.resetCancel();
+    hilog.info(0x0000, 'HOPA', `run: start goal=${goal.length} chars`);
     try {
       outcomes = await this.loop.run(goal);
     } catch (error) {
       return `Loop error: ${error}`;
     }
+    hilog.info(0x0000, 'HOPA', `run: done outcomes=${outcomes.length} tokens=${this.loop.getTokens()}`);
     this.lastTokens = this.loop.getTokens();
     this.lastDurationMs = Date.now() - startedAt;
 
