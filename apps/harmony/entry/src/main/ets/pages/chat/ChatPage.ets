@@ -61,6 +61,33 @@ export struct ChatPage {
     return `${index}-resource`;
   }
 
+  private isUser(item: ResourceStr): boolean {
+    return typeof item === 'string' && item.startsWith('You: ');
+  }
+
+  private bubbleText(item: ResourceStr): ResourceStr {
+    if (typeof item !== 'string') {
+      return item;
+    }
+    if (item.startsWith('You: ')) {
+      return item.substring(5);
+    }
+    if (item.startsWith('HOPA: ')) {
+      return this.plainAnswer(item.substring(6));
+    }
+    return item;
+  }
+
+  /** Chat bubbles are plain text; strip the Markdown a model may add. */
+  private plainAnswer(text: string): string {
+    let clean: string = text.replace(/\*\*/g, '');
+    clean = clean.replace(/__/g, '');
+    clean = clean.replace(/`/g, '');
+    clean = clean.replace(/^#{1,6}\s*/gm, '');
+    clean = clean.replace(/^>\s?/gm, '');
+    return clean;
+  }
+
   private installApproval(): void {
     const service = AgentService.get();
     const uiContext: UIContext = this.getUIContext();
@@ -145,12 +172,17 @@ export struct ChatPage {
       List({ space: 8 }) {
         ForEach(this.messages, (item: ResourceStr, index: number) => {
           ListItem() {
-            Text(item)
-              .width('100%')
-              .padding(12)
-              .backgroundColor('#F2F3F5')
-              .borderRadius(10)
-              .fontSize(15)
+            Row() {
+              Text(this.bubbleText(item))
+                .padding({ left: 14, right: 14, top: 10, bottom: 10 })
+                .backgroundColor(this.isUser(item) ? '#0A59F7' : '#F2F3F5')
+                .fontColor(this.isUser(item) ? '#FFFFFF' : '#0A1B3A')
+                .borderRadius(16)
+                .fontSize(15)
+                .constraintSize({ maxWidth: '84%' })
+            }
+            .width('100%')
+            .justifyContent(this.isUser(item) ? FlexAlign.End : FlexAlign.Start)
           }
         }, (item: ResourceStr, index: number) => this.messageKey(item, index))
       }

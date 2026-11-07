@@ -7,6 +7,7 @@ import {
   BatchRunner,
   ModelClient,
   RouteMatch,
+  RunNarrator,
   Skill,
   SkillDraft,
   SkillDrafter
@@ -48,6 +49,7 @@ export class AgentRuntime {
   private lastSuccess: boolean = false;
   private matchedSkillId: string = '';
   private activeRuns: number = 0;
+  private appNames: Map<string, string> = new Map<string, string>();
 
   constructor(
     executor: ActionExecutor,
@@ -65,6 +67,7 @@ export class AgentRuntime {
     this.bridge = bridge;
     this.accessibility = accessibility;
     this.background = background;
+    this.appNames = AppRouteTargets.displayNames();
   }
 
   configureModel(
@@ -238,6 +241,10 @@ export class AgentRuntime {
     if (this.matchedSkillId.length > 0) {
       this.skills.recordOutcome(this.matchedSkillId, this.lastSuccess);
     }
-    return transcript;
+    const answer: string = this.loop.getAnswer();
+    if (answer.length > 0) {
+      return answer;
+    }
+    return RunNarrator.summarize(outcomes, this.appNames);
   }
 }

@@ -69,23 +69,18 @@ installed; HOPA says when a bundle is missing instead of guessing.</sub>
 
 <table>
 <tr>
-<td width="58%" valign="top">
+<td width="50%" align="center" valign="top">
 
-## A look inside
+<img src="docs/media/chat-example.svg" alt="Designed example of a WeChat message task with the approval dialog" width="270" />
 
-The catalogue knows **27 apps and 21 sites**. The **Sites** tab opens Bilibili,
-Xiaohongshu, Weibo, YouTube and 17 more in the built-in browser. The **Apps**
-tab does the same for apps, with a verified bundle or an honest “not yet”.
-
-The same screen shows which bundles are verified, so you always know what the
-assistant can actually reach.
+<sub><b>Designed example.</b> A WeChat task with the approval step. WeChat is not installed on the test emulator.</sub>
 
 </td>
-<td width="42%" align="center">
+<td width="50%" align="center" valign="top">
 
 <img src="docs/media/sites.jpeg" alt="HOPA site catalogue with Bilibili, Xiaohongshu and Weibo" width="270" />
 
-<sub>The site catalogue on a Pura 90 emulator.</sub>
+<sub><b>Real screenshot.</b> Bilibili, Xiaohongshu, Weibo and more in the site catalogue.</sub>
 
 </td>
 </tr>

@@ -29,6 +29,7 @@ export {
 export { RunStore } from './src/main/ets/runs/RunStore';
 export { AgentLoop } from './src/main/ets/agent/AgentLoop';
 export { ContextBudget } from './src/main/ets/agent/ContextBudget';
+export { RunNarrator } from './src/main/ets/agent/RunNarrator';
 export { AppRouter, RouteMatch, RouteTarget } from './src/main/ets/router/AppRouter';
 export { Skill } from './src/main/ets/skills/Skill';
 export { SkillBook } from './src/main/ets/skills/SkillBook';
