@@ -1,28 +1,24 @@
 import {
   ActionExecutor,
-  ActionOutcome,
-  AgentLoop,
   ApprovalPolicy,
   BatchItemResult,
-  BatchRunner,
-  ModelClient,
   RiskLevel,
-  RunRecord,
   RunStore,
   ScheduleBook,
-  ScheduledTask,
   Skill,
-  SkillDraft,
-  SkillDrafter,
   ToolDescriptor,
   ToolRegistry
 } from '@hopa/core';
 import { BrowserCapability } from '@hopa/capability-browser';
 import { SandboxCapability } from '@hopa/capability-sandbox';
-import { AccessibilityBridge, AccessibilityCapability, UiActionCapability, UiLauncher } from '@hopa/capability-accessibility';
+import {
+  AccessibilityBridge,
+  AccessibilityCapability,
+  UiActionCapability,
+  UiLauncher
+} from '@hopa/capability-accessibility';
 import { SystemCapability } from '@hopa/capability-system';
 import { Context, common } from '@kit.AbilityKit';
-import { hilog } from '@kit.PerformanceAnalysisKit';
 import { BrowserController } from './BrowserController';
 import { BackgroundKeeper } from './BackgroundKeeper';
 import { BridgeClient } from './BridgeClient';
@@ -30,16 +26,13 @@ import { BridgeUiCapability } from './BridgeUiCapability';
 import { MemoryStore } from './MemoryStore';
 import { SkillStore } from './SkillStore';
 import { UiApprovalGateway } from './ApprovalPromptGateway';
-import { CompositeScreenSource } from './CompositeScreenSource';
-import { LoggingModelClient } from './LoggingModelClient';
-import { ModelFactory } from './ModelFactory';
-import { AppCatalogPrompt } from './AppCatalogPrompt';
 import { ScheduleService } from './ScheduleService';
 import { RunArchive } from './RunArchive';
 import { ExportService } from './ExportService';
 import { ConversationService } from './ConversationService';
+import { AgentRuntime } from './AgentRuntime';
 
-/** Process-wide composition root: policy + gate + capabilities + tool registry. */
+/** Process-wide composition root: policy + gate + capabilities + runtime. */
 export class AgentService {
   private static instance: AgentService | undefined = undefined;
 
@@ -51,7 +44,6 @@ export class AgentService {
   readonly memory: MemoryStore = new MemoryStore();
   readonly skills: SkillStore = new SkillStore();
   readonly scheduleService: ScheduleService = new ScheduleService();
-  readonly batch: BatchRunner = new BatchRunner();
   readonly browserCapability: BrowserCapability;
   readonly browser: BrowserController;
   readonly bridge: BridgeClient = new BridgeClient();
@@ -63,19 +55,10 @@ export class AgentService {
   readonly runArchive: RunArchive;
   readonly conversations: ConversationService = new ConversationService();
   readonly exportService: ExportService;
+  readonly runtime: AgentRuntime;
 
-  private model: ModelClient | undefined = undefined;
-  private loop: AgentLoop | undefined = undefined;
-  private modelLabel: string = '';
   private networkEnabled: boolean = false;
   private autonomous: boolean = false;
-  private lastTokens: number = 0;
-  private lastDurationMs: number = 0;
-  private lastGoal: string = '';
-  private lastTranscript: string = '';
-  private lastSuccess: boolean = false;
-  private matchedSkillId: string = '';
-  private activeRuns: number = 0;
 
   private constructor() {
     this.runs = new RunStore();
@@ -112,6 +95,15 @@ export class AgentService {
 
     this.runArchive = new RunArchive(this.runs);
     this.exportService = new ExportService(this.memory, this.skills, this.runs);
+    this.runtime = new AgentRuntime(
+      this.executor,
+      this.memory,
+      this.skills,
+      this.browser,
+      this.bridge,
+      this.accessibility,
+      this.background
+    );
     this.scheduleService.bindRunner(
       (goal: string): Promise<string> => this.run(goal),
       (): boolean => this.isBusy()
@@ -125,10 +117,6 @@ export class AgentService {
     return AgentService.instance;
   }
 
-  /**
-   * Creates the on-device loop. The key stays in memory only: it is never
-   * written to disk and never logged.
-   */
   configureModel(
     provider: string,
     endpoint: string,
@@ -136,30 +124,22 @@ export class AgentService {
     modelName: string,
     maxSteps: number = 6
   ): void {
-    this.model = ModelFactory.create(provider, endpoint, apiKey, modelName);
-    this.loop = new AgentLoop(
-      this.executor,
-      new LoggingModelClient(this.model),
-      maxSteps,
-      new CompositeScreenSource(this.browser, this.bridge)
-    );
-    this.loop.setMemory(this.memory.toPrompt());
-    this.modelLabel = modelName;
+    this.runtime.configureModel(provider, endpoint, apiKey, modelName, maxSteps);
   }
 
   getModelLabel(): string {
-    return this.modelLabel;
+    return this.runtime.getModelLabel();
   }
 
   hasModel(): boolean {
-    return this.loop !== undefined;
+    return this.runtime.hasModel();
   }
 
   isAccessibilityAvailable(): boolean {
     return this.accessibility.isAvailable();
   }
 
-  /** Gates agent-driven web navigation. Manual browsing in the Web tab is not gated. */
+  /** Gates agent-driven web navigation. Manual browsing is not gated. */
   setNetworkEnabled(enabled: boolean): void {
     this.networkEnabled = enabled;
     this.browserCapability.setNetworkAllowed(enabled);
@@ -169,12 +149,11 @@ export class AgentService {
     return this.networkEnabled;
   }
 
-  /** Wires the entry module's app launcher into the ui capability. */
   setUiLauncher(launcher: UiLauncher): void {
     this.ui.setLauncher(launcher);
   }
 
-  /** Points the remote capability at a running `pc-agent bridge`. */
+  /** Points the bridge capability at a running `pc-agent bridge`. */
   configureBridge(url: string, token: string): void {
     this.bridge.configure(url, token);
     AccessibilityBridge.get().setBridgePreferred(this.bridge.isConfigured());
@@ -192,13 +171,11 @@ export class AgentService {
     return this.bridge.lastFailure();
   }
 
-  /** Enables the continuous task that keeps a run alive while backgrounded. */
   setAbilityContext(context: common.UIAbilityContext): void {
     this.background.setContext(context);
     this.scheduleService.setContext(context);
   }
 
-  /** The schedule view for the UI. */
   get schedules(): ScheduleBook {
     return this.scheduleService.book;
   }
@@ -228,10 +205,9 @@ export class AgentService {
   }
 
   isBusy(): boolean {
-    return this.activeRuns > 0;
+    return this.runtime.isBusy();
   }
 
-  /** Autonomous mode skips non-payment approvals. Payment is still fail-closed. */
   setAutonomous(enabled: boolean): void {
     this.autonomous = enabled;
     this.policy.setAutonomous(enabled);
@@ -241,59 +217,36 @@ export class AgentService {
     return this.autonomous;
   }
 
-  /** Stops the loop before the next model call or after the current action. */
   cancel(): void {
-    this.batch.cancel();
-    if (this.loop !== undefined) {
-      this.loop.cancel();
-    }
+    this.runtime.cancel();
   }
 
-  /** Runs each goal in order; cancellation stops between goals. */
-  async runBatch(goals: string[]): Promise<BatchItemResult[]> {
-    return this.batch.run(goals, async (goal: string): Promise<string> => {
-      return this.run(goal);
-    });
+  runBatch(goals: string[]): Promise<BatchItemResult[]> {
+    return this.runtime.runBatch(goals);
   }
 
   getLastTokens(): number {
-    return this.lastTokens;
+    return this.runtime.getLastTokens();
   }
 
   getLastDurationMs(): number {
-    return this.lastDurationMs;
+    return this.runtime.getLastDurationMs();
   }
 
   canDraftSkill(): boolean {
-    return this.lastSuccess && this.lastGoal.length > 0 && this.lastTranscript.length > 0;
+    return this.runtime.canDraftSkill();
   }
 
   canContinue(): boolean {
-    return this.lastGoal.length > 0;
+    return this.runtime.canContinue();
   }
 
-  /** Re-runs the last goal with the previous transcript as context. */
-  async continueLast(): Promise<string> {
-    if (!this.canContinue()) {
-      return 'There is no previous task to continue.';
-    }
-    const goal: string = this.lastGoal;
-    const transcript: string = this.lastTranscript;
-    const output: string = await this.run(
-      `${goal}\n\nPrevious attempt:\n${transcript}\nContinue from where it stopped.`
-    );
-    this.lastGoal = goal;
-    this.lastTranscript = `${transcript}\n${output}`;
-    return output;
+  continueLast(): Promise<string> {
+    return this.runtime.continueLast();
   }
 
-  /** Saves the last successful run as a skill the user can edit or delete. */
   saveLastRunAsSkill(): Skill | undefined {
-    const draft: SkillDraft | undefined = SkillDrafter.draft(this.lastGoal, this.lastTranscript);
-    if (draft === undefined) {
-      return undefined;
-    }
-    return this.skills.add(draft.name, draft.trigger, draft.guidance);
+    return this.runtime.saveLastRunAsSkill();
   }
 
   loadRuns(context: Context): Promise<void> {
@@ -308,85 +261,7 @@ export class AgentService {
     return this.exportService.exportData(context);
   }
 
-  /**
-   * Runs one goal through the loop and returns a readable transcript. It never
-   * throws to the UI: failures become lines the user can read.
-   */
-  async run(goal: string): Promise<string> {
-    this.activeRuns += 1;
-    try {
-      return await this.runInner(goal);
-    } finally {
-      this.activeRuns -= 1;
-    }
-  }
-
-  private async runInner(goal: string): Promise<string> {
-    if (this.loop === undefined) {
-      return 'No model configured. Open Settings, enter an endpoint, a model and a key, then press Save.';
-    }
-    if (!this.accessibility.isAvailable() && !this.browser.isReady() && !this.bridge.isConfigured()) {
-      // Chat still works without a screen; actions will fail closed in the executor.
-      this.loop.setSurfaceAvailable(false);
-    } else {
-      this.loop.setSurfaceAvailable(true);
-    }
-
-    let outcomes: ActionOutcome[] = [];
-    const startedAt: number = Date.now();
-    this.lastGoal = goal;
-    this.lastSuccess = false;
-    this.lastTranscript = '';
-    const matchedSkill: Skill | undefined = this.skills.match(goal);
-    this.matchedSkillId = matchedSkill === undefined ? '' : matchedSkill.id;
-    this.loop.setMemory(this.memory.toPrompt());
-    this.loop.setSkill(this.skills.toPrompt(goal));
-    this.loop.setAppCatalog(AppCatalogPrompt.text());
-    this.loop.resetCancel();
-    hilog.info(0x0000, 'HOPA', `run: start goal=${goal.length} chars`);
-    if (this.bridge.isConfigured()) {
-      await this.background.begin();
-    }
-    try {
-      outcomes = await this.loop.run(goal);
-    } catch (error) {
-      await this.background.end();
-      return `Loop error: ${error}`;
-    }
-    await this.background.end();
-    hilog.info(0x0000, 'HOPA', `run: done outcomes=${outcomes.length} tokens=${this.loop.getTokens()}`);
-    this.lastTokens = this.loop.getTokens();
-    this.lastDurationMs = Date.now() - startedAt;
-
-    if (this.loop.wasCancelled() && outcomes.length === 0) {
-      return 'Stopped before any action.';
-    }
-
-    if (outcomes.length === 0) {
-      const answer: string = this.loop.getAnswer();
-      if (answer.length > 0) {
-        this.lastTranscript = answer;
-        this.lastSuccess = !this.loop.wasCancelled();
-        return answer;
-      }
-      return 'The model proposed no executable action.';
-    }
-
-    const lines: string[] = [];
-    for (const outcome of outcomes) {
-      const state: string = outcome.executed ? (outcome.observation.success ? 'ok' : 'failed') : 'denied';
-      const detail: string =
-        outcome.observation.summary.length > 0 ? outcome.observation.summary : outcome.observation.detail;
-      lines.push(`${outcome.action.kind} -> ${state}: ${detail}`);
-    }
-    const transcript: string = lines.join('\n');
-    this.lastTranscript = transcript;
-    this.lastSuccess = !this.loop.wasCancelled() && outcomes.every(
-      (outcome: ActionOutcome) => outcome.executed && outcome.observation.success
-    );
-    if (this.matchedSkillId.length > 0) {
-      this.skills.recordOutcome(this.matchedSkillId, this.lastSuccess);
-    }
-    return transcript;
+  run(goal: string): Promise<string> {
+    return this.runtime.run(goal);
   }
 }
