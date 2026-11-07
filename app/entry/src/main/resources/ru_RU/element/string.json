@@ -1,55 +1,208 @@
 {
   "string": [
-    { "name": "module_desc", "value": "Входной модуль HOPA" },
-    { "name": "EntryAbility_desc", "value": "Телефонный агент HOPA" },
-    { "name": "EntryAbility_label", "value": "HOPA" },
-    { "name": "tab_chat", "value": "Чат" },
-    { "name": "greeting_1", "value": "Привет, я HOPA, ваш телефонный агент." },
-    { "name": "greeting_2", "value": "Я всегда спрашиваю перед любой оплатой." },
-    { "name": "msg_working", "value": "HOPA: работаю..." },
-    { "name": "msg_no_model", "value": "HOPA: модель не настроена. Откройте Настройки, укажите endpoint, модель и ключ, затем сохраните." },
-    { "name": "msg_https_only", "value": "HOPA: в браузере разрешены только страницы https://." },
-    { "name": "tab_web", "value": "Веб" },
-    { "name": "tab_apps", "value": "Приложения" },
-    { "name": "tab_tasks", "value": "Задачи" },
-    { "name": "tab_settings", "value": "Настройки" },
-    { "name": "tab_memory", "value": "Память" },
-    { "name": "title_settings", "value": "Настройки" },
-    { "name": "title_tasks", "value": "Ход задач" },
-    { "name": "title_memory", "value": "Память и навыки" },
-    { "name": "btn_send", "value": "Отправить" },
-    { "name": "btn_stop", "value": "Стоп" },
-    { "name": "btn_add", "value": "Добавить" },
-    { "name": "btn_delete", "value": "Удалить" },
-    { "name": "btn_open", "value": "Открыть" },
-    { "name": "btn_back", "value": "Назад" },
-    { "name": "btn_forward", "value": "Вперёд" },
-    { "name": "btn_reload", "value": "Обновить" },
-    { "name": "btn_save_skill", "value": "Сохранить навык" },
-    { "name": "btn_run_batch", "value": "Запустить пакет" },
-    { "name": "btn_clear", "value": "Очистить" },
-    { "name": "btn_export", "value": "Экспорт данных" },
-    { "name": "btn_clear_facts", "value": "Очистить факты" },
-    { "name": "btn_draft_skill", "value": "Сохранить последний запуск как навык" },
-    { "name": "label_facts", "value": "Факты" },
-    { "name": "label_skills", "value": "Навыки" },
-    { "name": "label_network", "value": "Разрешить сеть для веб-задач" },
-    { "name": "label_autonomous", "value": "Автономный режим (никогда не пропускает оплату)" },
-    { "name": "label_provider", "value": "Провайдер модели" },
-    { "name": "label_endpoint", "value": "Endpoint модели" },
-    { "name": "label_model", "value": "Имя модели" },
-    { "name": "label_api_key", "value": "API-ключ (только в памяти, не сохраняется)" },
-    { "name": "label_payment", "value": "Оплата: всегда требует подтверждения. Изменить нельзя." },
-    { "name": "label_sandbox", "value": "Песочница: не включена. Pyodide/QuickJS - необязательные WASM-страницы; Linux-песочницы нет." },
-    { "name": "label_retention", "value": "Хранение: последние 100 запусков и 50 фактов. Навыки остаются до удаления." },
-    { "name": "label_batch", "value": "Пакет" },
-    { "name": "placeholder_ask", "value": "Спросите HOPA..." },
-    { "name": "placeholder_url", "value": "https://..." },
-    { "name": "placeholder_memory", "value": "напр. я предпочитаю место у прохода" },
-    { "name": "placeholder_skill_name", "value": "Название навыка, напр. Забронировать столик" },
-    { "name": "placeholder_trigger", "value": "Слова-триггеры, напр. забронировать столик" },
-    { "name": "placeholder_steps", "value": "Шаги" },
-    { "name": "placeholder_batch", "value": "Одна цель на строку" },
-    { "name": "placeholder_key", "value": "sk-..." }
+    {
+      "name": "module_desc",
+      "value": "Входной модуль HOPA"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "Телефонный агент HOPA"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "HOPA"
+    },
+    {
+      "name": "tab_chat",
+      "value": "Чат"
+    },
+    {
+      "name": "greeting_1",
+      "value": "Привет, я HOPA, ваш телефонный агент."
+    },
+    {
+      "name": "greeting_2",
+      "value": "Я всегда спрашиваю перед любой оплатой."
+    },
+    {
+      "name": "msg_working",
+      "value": "HOPA: работаю..."
+    },
+    {
+      "name": "msg_no_model",
+      "value": "HOPA: модель не настроена. Откройте Настройки, укажите endpoint, модель и ключ, затем сохраните."
+    },
+    {
+      "name": "msg_https_only",
+      "value": "HOPA: в браузере разрешены только страницы https://."
+    },
+    {
+      "name": "tab_web",
+      "value": "Браузер"
+    },
+    {
+      "name": "tab_apps",
+      "value": "Ещё"
+    },
+    {
+      "name": "tab_tasks",
+      "value": "Планы"
+    },
+    {
+      "name": "tab_settings",
+      "value": "Настройки"
+    },
+    {
+      "name": "tab_memory",
+      "value": "Память"
+    },
+    {
+      "name": "title_settings",
+      "value": "Настройки"
+    },
+    {
+      "name": "title_tasks",
+      "value": "Ход задач"
+    },
+    {
+      "name": "title_memory",
+      "value": "Память и навыки"
+    },
+    {
+      "name": "btn_send",
+      "value": "Отправить"
+    },
+    {
+      "name": "btn_stop",
+      "value": "Стоп"
+    },
+    {
+      "name": "btn_add",
+      "value": "Добавить"
+    },
+    {
+      "name": "btn_delete",
+      "value": "Удалить"
+    },
+    {
+      "name": "btn_open",
+      "value": "Открыть"
+    },
+    {
+      "name": "btn_back",
+      "value": "Назад"
+    },
+    {
+      "name": "btn_forward",
+      "value": "Вперёд"
+    },
+    {
+      "name": "btn_reload",
+      "value": "Обновить"
+    },
+    {
+      "name": "btn_save_skill",
+      "value": "Сохранить навык"
+    },
+    {
+      "name": "btn_run_batch",
+      "value": "Запустить пакет"
+    },
+    {
+      "name": "btn_clear",
+      "value": "Очистить"
+    },
+    {
+      "name": "btn_export",
+      "value": "Экспорт данных"
+    },
+    {
+      "name": "btn_clear_facts",
+      "value": "Очистить факты"
+    },
+    {
+      "name": "btn_draft_skill",
+      "value": "Сохранить последний запуск как навык"
+    },
+    {
+      "name": "label_facts",
+      "value": "Факты"
+    },
+    {
+      "name": "label_skills",
+      "value": "Навыки"
+    },
+    {
+      "name": "label_network",
+      "value": "Разрешить сеть для веб-задач"
+    },
+    {
+      "name": "label_autonomous",
+      "value": "Автономный режим (никогда не пропускает оплату)"
+    },
+    {
+      "name": "label_provider",
+      "value": "Провайдер модели"
+    },
+    {
+      "name": "label_endpoint",
+      "value": "Endpoint модели"
+    },
+    {
+      "name": "label_model",
+      "value": "Имя модели"
+    },
+    {
+      "name": "label_api_key",
+      "value": "API-ключ (только в памяти, не сохраняется)"
+    },
+    {
+      "name": "label_payment",
+      "value": "Оплата: всегда требует подтверждения. Изменить нельзя."
+    },
+    {
+      "name": "label_sandbox",
+      "value": "Песочница: не включена. Pyodide/QuickJS - необязательные WASM-страницы; Linux-песочницы нет."
+    },
+    {
+      "name": "label_retention",
+      "value": "Хранение: последние 100 запусков и 50 фактов. Навыки остаются до удаления."
+    },
+    {
+      "name": "label_batch",
+      "value": "Пакет"
+    },
+    {
+      "name": "placeholder_ask",
+      "value": "Спросите HOPA..."
+    },
+    {
+      "name": "placeholder_url",
+      "value": "https://..."
+    },
+    {
+      "name": "placeholder_memory",
+      "value": "напр. я предпочитаю место у прохода"
+    },
+    {
+      "name": "placeholder_skill_name",
+      "value": "Название навыка, напр. Забронировать столик"
+    },
+    {
+      "name": "placeholder_trigger",
+      "value": "Слова-триггеры, напр. забронировать столик"
+    },
+    {
+      "name": "placeholder_steps",
+      "value": "Шаги"
+    },
+    {
+      "name": "placeholder_batch",
+      "value": "Одна цель на строку"
+    },
+    {
+      "name": "placeholder_key",
+      "value": "sk-..."
+    }
   ]
 }

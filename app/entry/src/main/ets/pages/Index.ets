@@ -34,6 +34,12 @@ struct Index {
   @State taskStatus: string = 'Idle';
   @State schedules: ScheduledTask[] = [];
   @State scheduleGoal: string = '';
+  @State morePage: string = '';
+  @State selfCheckModel: string = 'not checked';
+  @State selfCheckBridge: string = 'not checked';
+  @State selfCheckA11y: string = 'not checked';
+  @State screenImage: string = '';
+  @State screenStatus: string = 'not loaded';
   private scheduleRefresh: number = -1;
   @State networkEnabled: boolean = false;
   @State accessibilityEnabled: boolean = false;
@@ -815,9 +821,103 @@ struct Index {
   }
 
   @Builder
-  TasksPage() {
+  PlansPage() {
     Column({ space: 12 }) {
-      Text($r('app.string.title_tasks'))
+      Text('Plans')
+        .fontSize(22)
+        .fontWeight(FontWeight.Bold)
+      Text('Scheduled goals that run while HOPA is open. This image has no system alarm, so nothing fires after the app is closed.')
+        .fontSize(12)
+        .fontColor('#666666')
+
+      Row({ space: 6 }) {
+        Button('Every 5 min')
+          .fontSize(10)
+          .height(28)
+          .onClick(() => {
+            this.addSchedule(300000, 300000);
+          })
+        Button('Every 30 min')
+          .fontSize(10)
+          .height(28)
+          .onClick(() => {
+            this.addSchedule(1800000, 1800000);
+          })
+        Button('Daily')
+          .fontSize(10)
+          .height(28)
+          .onClick(() => {
+            this.addSchedule(86400000, 86400000);
+          })
+      }
+      .width('100%')
+      Row({ space: 6 }) {
+        Button('Once in 1 min')
+          .fontSize(10)
+          .height(28)
+          .onClick(() => {
+            this.addSchedule(0, 60000);
+          })
+        Text(`${this.schedules.length} planned`)
+          .fontSize(11)
+          .fontColor('#999999')
+      }
+      .width('100%')
+      TextInput({ placeholder: 'Goal for the plan', text: this.scheduleGoal })
+        .fontSize(13)
+        .onChange((value: string) => {
+          this.scheduleGoal = value;
+        })
+
+      if (this.schedules.length > 0) {
+        List({ space: 4 }) {
+          ForEach(this.schedules, (item: ScheduledTask, index: number) => {
+            ListItem() {
+              Row({ space: 8 }) {
+                Column({ space: 2 }) {
+                  Text(item.goal)
+                    .fontSize(13)
+                    .maxLines(2)
+                  Text(`${item.label()} | ${this.scheduleWhen(item)}`)
+                    .fontSize(10)
+                    .fontColor('#999999')
+                }
+                .layoutWeight(1)
+                .alignItems(HorizontalAlign.Start)
+                Button('Delete')
+                  .fontSize(10)
+                  .height(26)
+                  .backgroundColor('#E5E6E8')
+                  .fontColor('#B42318')
+                  .onClick(() => {
+                    this.removeSchedule(item.id);
+                  })
+              }
+              .width('100%')
+              .padding(8)
+              .backgroundColor('#F7F8FA')
+              .borderRadius(8)
+            }
+          }, (item: ScheduledTask, index: number) => `${item.id}-${item.enabled}-${item.nextRunAt}`)
+        }
+        .layoutWeight(1)
+        .width('100%')
+      } else {
+        Text('No plans yet. Type a goal above, then choose how often it should run.')
+          .fontSize(12)
+          .fontColor('#999999')
+      }
+    }
+    .width('100%')
+    .height('100%')
+    .padding(16)
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  @Builder
+  RunsPage() {
+    Column({ space: 12 }) {
+      Text('Runs and batches')
         .fontSize(22)
         .fontWeight(FontWeight.Bold)
       Text(this.taskStatus)
@@ -881,87 +981,8 @@ struct Index {
           }
         }, (item: BatchItemResult, index: number) => `${index}-${item.goal}`)
       }
-      .height(140)
+      .height(120)
       .width('100%')
-
-      Text('Schedules')
-        .fontSize(16)
-        .fontWeight(FontWeight.Bold)
-      Text('Runs while HOPA is open. This image has no system alarm, so nothing fires after the app is closed.')
-        .fontSize(11)
-        .fontColor('#999999')
-      Row({ space: 6 }) {
-        Button('Every 5 min')
-          .fontSize(10)
-          .height(28)
-          .onClick(() => {
-            this.addSchedule(300000, 300000);
-          })
-        Button('Every 30 min')
-          .fontSize(10)
-          .height(28)
-          .onClick(() => {
-            this.addSchedule(1800000, 1800000);
-          })
-        Button('Daily')
-          .fontSize(10)
-          .height(28)
-          .onClick(() => {
-            this.addSchedule(86400000, 86400000);
-          })
-      }
-      .width('100%')
-      Row({ space: 6 }) {
-        Button('Once in 1 min')
-          .fontSize(10)
-          .height(28)
-          .onClick(() => {
-            this.addSchedule(0, 60000);
-          })
-        Text(`${this.schedules.length} scheduled`)
-          .fontSize(11)
-          .fontColor('#999999')
-      }
-      .width('100%')
-      TextInput({ placeholder: 'Goal for the schedule', text: this.scheduleGoal })
-        .fontSize(13)
-        .onChange((value: string) => {
-          this.scheduleGoal = value;
-        })
-      if (this.schedules.length > 0) {
-        List({ space: 4 }) {
-          ForEach(this.schedules, (item: ScheduledTask, index: number) => {
-            ListItem() {
-              Row({ space: 8 }) {
-                Column({ space: 2 }) {
-                  Text(item.goal)
-                    .fontSize(12)
-                    .maxLines(2)
-                  Text(`${item.label()} | ${item.enabled ? 'waiting' : 'done'}`)
-                    .fontSize(10)
-                    .fontColor('#999999')
-                }
-                .layoutWeight(1)
-                .alignItems(HorizontalAlign.Start)
-                Button('Delete')
-                  .fontSize(10)
-                  .height(26)
-                  .backgroundColor('#E5E6E8')
-                  .fontColor('#B42318')
-                  .onClick(() => {
-                    this.removeSchedule(item.id);
-                  })
-              }
-              .width('100%')
-              .padding(6)
-              .backgroundColor('#F7F8FA')
-              .borderRadius(6)
-            }
-          }, (item: ScheduledTask, index: number) => `${item.id}-${item.enabled}-${item.nextRunAt}`)
-        }
-        .height(90)
-        .width('100%')
-      }
 
       Row({ space: 8 }) {
         Text(`Recent actions (${this.runRecords.length})`)
@@ -1039,6 +1060,465 @@ struct Index {
     .height('100%')
     .padding(16)
     .alignItems(HorizontalAlign.Start)
+  }
+
+  @Builder
+  MorePage() {
+    Column({ space: 12 }) {
+      if (this.morePage.length === 0) {
+        Text('More')
+          .fontSize(22)
+          .fontWeight(FontWeight.Bold)
+        Text('Everything else, grouped the way Mika groups it.')
+          .fontSize(12)
+          .fontColor('#666666')
+        this.MoreRow('Screens', 'Live phone screen through the PC bridge', 'screens')
+        this.MoreRow('Apps', 'Catalogue, sites and launch', 'apps')
+        this.MoreRow('Runs and batches', 'History, batch goals, skill drafts', 'runs')
+        this.MoreRow('Models', 'Providers, endpoints and the current model', 'models')
+        this.MoreRow('Usage', 'Runs, tokens and time', 'usage')
+        this.MoreRow('Phone setup', 'Accessibility and the PC bridge', 'phone')
+        this.MoreRow('Self-check', 'Verify that the setup works', 'selfcheck')
+        this.MoreRow('Welcome', 'The three first steps', 'welcome')
+        this.MoreRow('About', 'Version, credits and licenses', 'about')
+      } else {
+        Row({ space: 8 }) {
+          Button('Back')
+            .fontSize(12)
+            .backgroundColor('#E5E6E8')
+            .fontColor('#333333')
+            .onClick(() => {
+              this.morePage = '';
+            })
+          Text(this.moreTitle())
+            .fontSize(20)
+            .fontWeight(FontWeight.Bold)
+            .layoutWeight(1)
+        }
+        .width('100%')
+        Column() {
+          if (this.morePage === 'apps') {
+            this.AppsPage()
+          } else if (this.morePage === 'runs') {
+            this.RunsPage()
+          } else if (this.morePage === 'models') {
+            this.ModelsPage()
+          } else if (this.morePage === 'usage') {
+            this.UsagePage()
+          } else if (this.morePage === 'phone') {
+            this.PhonePage()
+          } else if (this.morePage === 'selfcheck') {
+            this.SelfCheckPage()
+          } else if (this.morePage === 'welcome') {
+            this.WelcomePage()
+          } else if (this.morePage === 'about') {
+            this.AboutPage()
+          } else if (this.morePage === 'screens') {
+            this.ScreensPage()
+          }
+        }
+        .layoutWeight(1)
+        .width('100%')
+      }
+    }
+    .width('100%')
+    .height('100%')
+    .padding(16)
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  @Builder
+  MoreRow(title: string, subtitle: string, key: string) {
+    Row({ space: 12 }) {
+      Column({ space: 2 }) {
+        Text(title)
+          .fontSize(16)
+        Text(subtitle)
+          .fontSize(11)
+          .fontColor('#999999')
+      }
+      .layoutWeight(1)
+      .alignItems(HorizontalAlign.Start)
+      Text('>')
+        .fontSize(16)
+        .fontColor('#999999')
+    }
+    .width('100%')
+    .padding(14)
+    .backgroundColor('#F7F8FA')
+    .borderRadius(10)
+    .onClick(() => {
+      this.morePage = key;
+    })
+  }
+
+  private moreTitle(): string {
+    if (this.morePage === 'screens') {
+      return 'Screens';
+    }
+    if (this.morePage === 'apps') {
+      return 'Apps';
+    }
+    if (this.morePage === 'runs') {
+      return 'Runs and batches';
+    }
+    if (this.morePage === 'models') {
+      return 'Models';
+    }
+    if (this.morePage === 'usage') {
+      return 'Usage';
+    }
+    if (this.morePage === 'phone') {
+      return 'Phone setup';
+    }
+    if (this.morePage === 'selfcheck') {
+      return 'Self-check';
+    }
+    if (this.morePage === 'welcome') {
+      return 'Welcome';
+    }
+    return 'About';
+  }
+
+  @Builder
+  ModelsPage() {
+    Column({ space: 12 }) {
+      Text('Current model')
+        .fontSize(12)
+        .fontColor('#666666')
+      Text(this.modelLabel.length > 0 ? this.modelLabel : 'not configured')
+        .fontSize(20)
+        .fontWeight(FontWeight.Bold)
+      Text(`Provider: ${this.provider}`)
+        .fontSize(12)
+      Text(`Endpoint: ${this.modelEndpoint}`)
+        .fontSize(12)
+        .maxLines(1)
+      Text(`Model: ${this.modelName}`)
+        .fontSize(12)
+      Text('Presets')
+        .fontSize(16)
+        .fontWeight(FontWeight.Bold)
+      Text('OpenAI-compatible (OpenAI, DeepSeek, local), Anthropic and Gemini use the same fields. Speech models are not available in this SDK.')
+        .fontSize(11)
+        .fontColor('#999999')
+      Button('Open Settings')
+        .fontSize(12)
+        .onClick(() => {
+          this.morePage = '';
+          this.currentTab = 4;
+        })
+    }
+    .width('100%')
+    .height('100%')
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  @Builder
+  UsagePage() {
+    Column({ space: 10 }) {
+      this.UsageLine('Actions recorded', `${this.runRecords.length}`)
+      this.UsageLine('Executed', `${this.countRuns('executed')}`)
+      this.UsageLine('Failed', `${this.countRuns('failed')}`)
+      this.UsageLine('Denied', `${this.countRuns('denied')}`)
+      this.UsageLine('Last run tokens', `${this.lastTokens}`)
+      this.UsageLine('Last run time', `${(this.lastDurationMs / 1000).toFixed(1)} s`)
+      this.UsageLine('Plans', `${this.schedules.length}`)
+      this.UsageLine('Facts and skills', `${this.memoryItems.length} / ${this.skills.length}`)
+      Text('Per-run tokens are not stored yet; the last run total is shown.')
+        .fontSize(11)
+        .fontColor('#999999')
+    }
+    .width('100%')
+    .height('100%')
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  @Builder
+  UsageLine(label: string, value: string) {
+    Row() {
+      Text(label)
+        .fontSize(14)
+        .fontColor('#666666')
+        .layoutWeight(1)
+      Text(value)
+        .fontSize(14)
+        .fontWeight(FontWeight.Bold)
+    }
+    .width('100%')
+    .padding(12)
+    .backgroundColor('#F7F8FA')
+    .borderRadius(8)
+  }
+
+  private countRuns(status: string): number {
+    let count: number = 0;
+    for (const run of this.runRecords) {
+      if (run.status === status) {
+        count += 1;
+      }
+    }
+    return count;
+  }
+
+  @Builder
+  PhonePage() {
+    Column({ space: 12 }) {
+      Text('Accessibility')
+        .fontSize(16)
+        .fontWeight(FontWeight.Bold)
+      Text(this.a11yAvailable
+        ? 'The service is available. The loop can read and tap other apps on the phone.'
+        : 'The service cannot be enabled on this emulator. Use the PC bridge below, or a device with an accessibility settings page.')
+        .fontSize(12)
+        .fontColor('#666666')
+      Text('PC bridge')
+        .fontSize(16)
+        .fontWeight(FontWeight.Bold)
+      Text(AgentService.get().isRemoteConfigured()
+        ? 'A bridge is configured. It is the active control backend.'
+        : 'No bridge yet. Run pc-agent bridge on the PC, then enter the URL and token in Settings.')
+        .fontSize(12)
+        .fontColor('#666666')
+      Text('1. pc-agent bridge --host 0.0.0.0 --port 8765 --token <token>')
+        .fontSize(11)
+        .fontColor('#999999')
+      Text('2. Emulator: http://10.0.2.2:8765. Phone on Wi-Fi: the PC LAN address.')
+        .fontSize(11)
+        .fontColor('#999999')
+      Text('3. Settings -> PC bridge -> Connect. The status must read connected.')
+        .fontSize(11)
+        .fontColor('#999999')
+      Button('Open Settings')
+        .fontSize(12)
+        .onClick(() => {
+          this.morePage = '';
+          this.currentTab = 4;
+        })
+    }
+    .width('100%')
+    .height('100%')
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  @Builder
+  SelfCheckPage() {
+    Column({ space: 10 }) {
+      Text('Run the checks before a task.')
+        .fontSize(12)
+        .fontColor('#666666')
+      Row() {
+        Text('Model').fontSize(14).layoutWeight(1)
+        Text(this.selfCheckModel)
+          .fontSize(13)
+          .fontColor(this.checkColor(this.selfCheckModel))
+      }
+      .width('100%')
+      .padding(12)
+      .backgroundColor('#F7F8FA')
+      .borderRadius(8)
+      Row() {
+        Text('PC bridge').fontSize(14).layoutWeight(1)
+        Text(this.selfCheckBridge)
+          .fontSize(13)
+          .fontColor(this.checkColor(this.selfCheckBridge))
+      }
+      .width('100%')
+      .padding(12)
+      .backgroundColor('#F7F8FA')
+      .borderRadius(8)
+      Row() {
+        Text('Accessibility').fontSize(14).layoutWeight(1)
+        Text(this.selfCheckA11y)
+          .fontSize(13)
+          .fontColor(this.checkColor(this.selfCheckA11y))
+      }
+      .width('100%')
+      .padding(12)
+      .backgroundColor('#F7F8FA')
+      .borderRadius(8)
+      Row() {
+        Text('Network for web tasks').fontSize(14).layoutWeight(1)
+        Text(this.networkEnabled ? 'on' : 'off')
+          .fontSize(13)
+          .fontColor(this.networkEnabled ? '#0A7F3F' : '#B42318')
+      }
+      .width('100%')
+      .padding(12)
+      .backgroundColor('#F7F8FA')
+      .borderRadius(8)
+      Row() {
+        Text('Facts and skills').fontSize(14).layoutWeight(1)
+        Text(`${this.memoryItems.length} / ${this.skills.length}`)
+          .fontSize(13)
+      }
+      .width('100%')
+      .padding(12)
+      .backgroundColor('#F7F8FA')
+      .borderRadius(8)
+      Button('Run check')
+        .fontSize(12)
+        .onClick(() => {
+          this.runSelfCheck();
+        })
+    }
+    .width('100%')
+    .height('100%')
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  private checkColor(value: string): string {
+    if (value === 'ok' || value === 'on') {
+      return '#0A7F3F';
+    }
+    if (value === 'not checked') {
+      return '#999999';
+    }
+    return '#B42318';
+  }
+
+  private async runSelfCheck(): Promise<void> {
+    this.selfCheckModel = AgentService.get().hasModel() ? 'ok' : 'missing';
+    if (AgentService.get().isRemoteConfigured()) {
+      this.selfCheckBridge = await AgentService.get().testRemote() ? 'ok' : 'unreachable';
+    } else {
+      this.selfCheckBridge = 'not configured';
+    }
+    this.selfCheckA11y = AgentService.get().isA11yAvailable() ? 'ok' : 'unavailable';
+  }
+
+  @Builder
+  WelcomePage() {
+    Column({ space: 14 }) {
+      Text('Three steps and HOPA is ready.')
+        .fontSize(20)
+        .fontWeight(FontWeight.Bold)
+      Text('1. Add a model')
+        .fontSize(16)
+        .fontWeight(FontWeight.Bold)
+      Text('Settings -> provider, endpoint, model and key. The key is kept in memory only.')
+        .fontSize(12)
+        .fontColor('#666666')
+      Text('2. Give it a screen')
+        .fontSize(16)
+        .fontWeight(FontWeight.Bold)
+      Text('Enable the accessibility service on a device that allows it, or connect the PC bridge for tethered control.')
+        .fontSize(12)
+        .fontColor('#666666')
+      Text('3. Ask in Chat')
+        .fontSize(16)
+        .fontWeight(FontWeight.Bold)
+      Text('"Open Settings and turn on Wi-Fi." Every action passes the payment gate, and every result is recorded.')
+        .fontSize(12)
+        .fontColor('#666666')
+      Row({ space: 8 }) {
+        Button('Open Settings')
+          .fontSize(12)
+          .onClick(() => {
+            this.morePage = '';
+            this.currentTab = 4;
+          })
+        Button('Open Chat')
+          .fontSize(12)
+          .backgroundColor('#E5E6E8')
+          .fontColor('#333333')
+          .onClick(() => {
+            this.morePage = '';
+            this.currentTab = 0;
+          })
+      }
+    }
+    .width('100%')
+    .height('100%')
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  @Builder
+  AboutPage() {
+    Column({ space: 12 }) {
+      Text('HOPA')
+        .fontSize(26)
+        .fontWeight(FontWeight.Bold)
+      Text('HarmonyOS phone agent, inspired by Mika.')
+        .fontSize(13)
+        .fontColor('#666666')
+      Text('Version 0.1.0')
+        .fontSize(12)
+      Text('Records, the payment gate and the PC bridge are original work. Mika is Apache-2.0; its Android device-control layer is not copied. This app contains no Kotlin or Python at runtime.')
+        .fontSize(11)
+        .fontColor('#999999')
+      Text('Licenses')
+        .fontSize(16)
+        .fontWeight(FontWeight.Bold)
+      Text('HOPA is distributed under the Apache License 2.0. ArkWeb, ArkUI, hdc and the HarmonyOS SDK are used under their own terms. Mika is credited as the design reference.')
+        .fontSize(11)
+        .fontColor('#999999')
+    }
+    .width('100%')
+    .height('100%')
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  @Builder
+  ScreensPage() {
+    Column({ space: 10 }) {
+      Text(AgentService.get().isRemoteConfigured()
+        ? 'Live view of the phone through pc-agent bridge.'
+        : 'Connect the PC bridge in Settings to see the phone screen here.')
+        .fontSize(12)
+        .fontColor('#666666')
+      if (this.screenImage.length > 0) {
+        Image(this.screenImage)
+          .width('100%')
+          .layoutWeight(1)
+          .objectFit(ImageFit.Contain)
+          .borderRadius(8)
+      } else {
+        Text('No frame yet.')
+          .fontSize(12)
+          .fontColor('#999999')
+      }
+      Row({ space: 8 }) {
+        Button('Refresh')
+          .fontSize(12)
+          .onClick(() => {
+            this.refreshScreen();
+          })
+        Text(this.screenStatus)
+          .fontSize(11)
+          .fontColor('#999999')
+      }
+    }
+    .width('100%')
+    .height('100%')
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  private async refreshScreen(): Promise<void> {
+    if (!AgentService.get().isRemoteConfigured()) {
+      this.screenStatus = 'bridge not configured';
+      return;
+    }
+    this.screenStatus = 'loading...';
+    const image: string = await AgentService.get().remote.screenshot();
+    if (image.length === 0) {
+      this.screenStatus = 'no frame (bridge unreachable)';
+      return;
+    }
+    this.screenImage = image;
+    this.screenStatus = `updated ${new Date().toLocaleTimeString()}`;
+  }
+
+  private scheduleWhen(item: ScheduledTask): string {
+    if (!item.enabled) {
+      return 'done';
+    }
+    const delta: number = item.nextRunAt - Date.now();
+    if (delta <= 0) {
+      return 'due now';
+    }
+    const minutes: number = Math.ceil(delta / 60000);
+    return minutes <= 1 ? 'in <1 min' : `in ${minutes} min`;
   }
 
   @Builder
@@ -1390,19 +1870,19 @@ struct Index {
       .tabBar($r('app.string.tab_chat'))
 
       TabContent() {
+        this.PlansPage()
+      }
+      .tabBar($r('app.string.tab_tasks'))
+
+      TabContent() {
+        this.MemoryPage()
+      }
+      .tabBar($r('app.string.tab_memory'))
+
+      TabContent() {
         this.WebPage()
       }
       .tabBar($r('app.string.tab_web'))
-
-      TabContent() {
-        this.AppsPage()
-      }
-      .tabBar($r('app.string.tab_apps'))
-
-      TabContent() {
-        this.TasksPage()
-      }
-      .tabBar($r('app.string.tab_tasks'))
 
       TabContent() {
         this.SettingsPage()
@@ -1410,9 +1890,9 @@ struct Index {
       .tabBar($r('app.string.tab_settings'))
 
       TabContent() {
-        this.MemoryPage()
+        this.MorePage()
       }
-      .tabBar($r('app.string.tab_memory'))
+      .tabBar($r('app.string.tab_apps'))
     }
     .onChange((index: number) => {
       this.currentTab = index;

@@ -57,6 +57,7 @@ reason, e.g. `unreachable: bridge HTTP 401`.
 |---|---|---|---|
 | GET | `/health` | — | `{"ok":true}` |
 | POST | `/observe` | `{}` | `{"text","nodes":[{"ref","text","description","type","bounds","clickable"}],"width","height"}` |
+| POST | `/screenshot` | `{}` | `{"mime":"image/jpeg","bytes":int,"image":"<base64>"}` |
 | POST | `/tap` | `{"x","y"}` | `{"ok":true}` |
 | POST | `/type` | `{"text","x"?,"y"?}` | `{"ok":true}` |
 | POST | `/launch` | `{"bundle","ability"?}` | `{"ok":true}` |
@@ -73,8 +74,10 @@ to the model (`e1 Button "Web"`), and the model must target a `ref`.
 2. Ask "Tap the Web tab.": the bridge logged `POST /observe`, then `POST /tap`;
    the app switched from Chat to the Web tab and the loop re-observed (795
    chars, 34 nodes) before finishing with one executed action.
-3. A payment prompt appears only because HOPA's own greeting contains the word
-   "payment"; allowing it runs the tap. Payment screens are still fail-closed.
+3. `POST /screenshot` returns a JPEG of the device (1.2 s); the **More ->
+   Screens** page renders it as a data URI. A payment prompt appears only
+   because HOPA's own greeting contains the word "payment"; allowing it runs
+   the tap. Payment screens are still fail-closed.
 4. `run: start` -> continuous task started -> work -> `background: continuous
    task stopped` in hilog, so a run can outlive the switch to another app.
 

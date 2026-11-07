@@ -1,55 +1,208 @@
 {
   "string": [
-    { "name": "module_desc", "value": "HOPA entry module" },
-    { "name": "EntryAbility_desc", "value": "HOPA phone agent" },
-    { "name": "EntryAbility_label", "value": "HOPA" },
-    { "name": "tab_chat", "value": "チャット" },
-    { "name": "greeting_1", "value": "こんにちは。HOPA、あなたのスマートフォンエージェントです。" },
-    { "name": "greeting_2", "value": "支払いの前には必ず確認します。" },
-    { "name": "msg_working", "value": "HOPA: 実行中..." },
-    { "name": "msg_no_model", "value": "HOPA: モデルが設定されていません。設定を開き、エンドポイント、モデル、キーを入力して保存してください。" },
-    { "name": "msg_https_only", "value": "HOPA: ブラウザは https:// のページのみ許可されています。" },
-    { "name": "tab_web", "value": "ウェブ" },
-    { "name": "tab_apps", "value": "アプリ" },
-    { "name": "tab_tasks", "value": "タスク" },
-    { "name": "tab_settings", "value": "設定" },
-    { "name": "tab_memory", "value": "メモリ" },
-    { "name": "title_settings", "value": "設定" },
-    { "name": "title_tasks", "value": "タスクの進捗" },
-    { "name": "title_memory", "value": "メモリとスキル" },
-    { "name": "btn_send", "value": "送信" },
-    { "name": "btn_stop", "value": "停止" },
-    { "name": "btn_add", "value": "追加" },
-    { "name": "btn_delete", "value": "削除" },
-    { "name": "btn_open", "value": "開く" },
-    { "name": "btn_back", "value": "戻る" },
-    { "name": "btn_forward", "value": "進む" },
-    { "name": "btn_reload", "value": "再読み込み" },
-    { "name": "btn_save_skill", "value": "スキルを保存" },
-    { "name": "btn_run_batch", "value": "バッチ実行" },
-    { "name": "btn_clear", "value": "クリア" },
-    { "name": "btn_export", "value": "データを書き出す" },
-    { "name": "btn_clear_facts", "value": "事実を消去" },
-    { "name": "btn_draft_skill", "value": "直前の実行をスキルとして保存" },
-    { "name": "label_facts", "value": "事実" },
-    { "name": "label_skills", "value": "スキル" },
-    { "name": "label_network", "value": "ウェブタスクのネットワークを許可" },
-    { "name": "label_autonomous", "value": "自動モード（支払いは決して省略しません）" },
-    { "name": "label_provider", "value": "モデルプロバイダー" },
-    { "name": "label_endpoint", "value": "モデルのエンドポイント" },
-    { "name": "label_model", "value": "モデル名" },
-    { "name": "label_api_key", "value": "API キー（メモリ内のみ、保存しません）" },
-    { "name": "label_payment", "value": "支払い: 常に確認が必要です。変更できません。" },
-    { "name": "label_sandbox", "value": "サンドボックス: 同梱されていません。Pyodide/QuickJS は任意の WASM ページです。Linux サンドボックスはありません。" },
-    { "name": "label_retention", "value": "保持: 直近 100 実行と 50 の記憶した事実。スキルは削除するまで残ります。" },
-    { "name": "label_batch", "value": "バッチ" },
-    { "name": "placeholder_ask", "value": "HOPA に質問..." },
-    { "name": "placeholder_url", "value": "https://..." },
-    { "name": "placeholder_memory", "value": "例: 通路側の席が好き" },
-    { "name": "placeholder_skill_name", "value": "スキル名（例: レストランを予約）" },
-    { "name": "placeholder_trigger", "value": "トリガー語（例: レストランを予約）" },
-    { "name": "placeholder_steps", "value": "実行する手順" },
-    { "name": "placeholder_batch", "value": "1 行に 1 つのゴール" },
-    { "name": "placeholder_key", "value": "sk-..." }
+    {
+      "name": "module_desc",
+      "value": "HOPA entry module"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "HOPA phone agent"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "HOPA"
+    },
+    {
+      "name": "tab_chat",
+      "value": "チャット"
+    },
+    {
+      "name": "greeting_1",
+      "value": "こんにちは。HOPA、あなたのスマートフォンエージェントです。"
+    },
+    {
+      "name": "greeting_2",
+      "value": "支払いの前には必ず確認します。"
+    },
+    {
+      "name": "msg_working",
+      "value": "HOPA: 実行中..."
+    },
+    {
+      "name": "msg_no_model",
+      "value": "HOPA: モデルが設定されていません。設定を開き、エンドポイント、モデル、キーを入力して保存してください。"
+    },
+    {
+      "name": "msg_https_only",
+      "value": "HOPA: ブラウザは https:// のページのみ許可されています。"
+    },
+    {
+      "name": "tab_web",
+      "value": "ブラウザ"
+    },
+    {
+      "name": "tab_apps",
+      "value": "その他"
+    },
+    {
+      "name": "tab_tasks",
+      "value": "プラン"
+    },
+    {
+      "name": "tab_settings",
+      "value": "設定"
+    },
+    {
+      "name": "tab_memory",
+      "value": "メモリ"
+    },
+    {
+      "name": "title_settings",
+      "value": "設定"
+    },
+    {
+      "name": "title_tasks",
+      "value": "タスクの進捗"
+    },
+    {
+      "name": "title_memory",
+      "value": "メモリとスキル"
+    },
+    {
+      "name": "btn_send",
+      "value": "送信"
+    },
+    {
+      "name": "btn_stop",
+      "value": "停止"
+    },
+    {
+      "name": "btn_add",
+      "value": "追加"
+    },
+    {
+      "name": "btn_delete",
+      "value": "削除"
+    },
+    {
+      "name": "btn_open",
+      "value": "開く"
+    },
+    {
+      "name": "btn_back",
+      "value": "戻る"
+    },
+    {
+      "name": "btn_forward",
+      "value": "進む"
+    },
+    {
+      "name": "btn_reload",
+      "value": "再読み込み"
+    },
+    {
+      "name": "btn_save_skill",
+      "value": "スキルを保存"
+    },
+    {
+      "name": "btn_run_batch",
+      "value": "バッチ実行"
+    },
+    {
+      "name": "btn_clear",
+      "value": "クリア"
+    },
+    {
+      "name": "btn_export",
+      "value": "データを書き出す"
+    },
+    {
+      "name": "btn_clear_facts",
+      "value": "事実を消去"
+    },
+    {
+      "name": "btn_draft_skill",
+      "value": "直前の実行をスキルとして保存"
+    },
+    {
+      "name": "label_facts",
+      "value": "事実"
+    },
+    {
+      "name": "label_skills",
+      "value": "スキル"
+    },
+    {
+      "name": "label_network",
+      "value": "ウェブタスクのネットワークを許可"
+    },
+    {
+      "name": "label_autonomous",
+      "value": "自動モード（支払いは決して省略しません）"
+    },
+    {
+      "name": "label_provider",
+      "value": "モデルプロバイダー"
+    },
+    {
+      "name": "label_endpoint",
+      "value": "モデルのエンドポイント"
+    },
+    {
+      "name": "label_model",
+      "value": "モデル名"
+    },
+    {
+      "name": "label_api_key",
+      "value": "API キー（メモリ内のみ、保存しません）"
+    },
+    {
+      "name": "label_payment",
+      "value": "支払い: 常に確認が必要です。変更できません。"
+    },
+    {
+      "name": "label_sandbox",
+      "value": "サンドボックス: 同梱されていません。Pyodide/QuickJS は任意の WASM ページです。Linux サンドボックスはありません。"
+    },
+    {
+      "name": "label_retention",
+      "value": "保持: 直近 100 実行と 50 の記憶した事実。スキルは削除するまで残ります。"
+    },
+    {
+      "name": "label_batch",
+      "value": "バッチ"
+    },
+    {
+      "name": "placeholder_ask",
+      "value": "HOPA に質問..."
+    },
+    {
+      "name": "placeholder_url",
+      "value": "https://..."
+    },
+    {
+      "name": "placeholder_memory",
+      "value": "例: 通路側の席が好き"
+    },
+    {
+      "name": "placeholder_skill_name",
+      "value": "スキル名（例: レストランを予約）"
+    },
+    {
+      "name": "placeholder_trigger",
+      "value": "トリガー語（例: レストランを予約）"
+    },
+    {
+      "name": "placeholder_steps",
+      "value": "実行する手順"
+    },
+    {
+      "name": "placeholder_batch",
+      "value": "1 行に 1 つのゴール"
+    },
+    {
+      "name": "placeholder_key",
+      "value": "sk-..."
+    }
   ]
 }

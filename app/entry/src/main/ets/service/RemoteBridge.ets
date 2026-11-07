@@ -21,6 +21,12 @@ class RemoteOkBody {
   ok: boolean = false;
 }
 
+class ScreenshotBody {
+  image: string = '';
+  mime: string = 'image/jpeg';
+  bytes: number = 0;
+}
+
 /**
  * Client for `pc-agent bridge`.
  *
@@ -189,6 +195,19 @@ export class RemoteBridge {
       return true;
     } catch (error) {
       return false;
+    }
+  }
+
+  /** A JPEG of the device screen as a data URI, or '' when unavailable. */
+  async screenshot(): Promise<string> {
+    try {
+      const raw: string = await this.call('/screenshot', '{}');
+      const parsed = JSON.parse(raw) as ScreenshotBody;
+      this.lastError = '';
+      return parsed.image.length > 0 ? `data:${parsed.mime};base64,${parsed.image}` : '';
+    } catch (error) {
+      this.lastError = `${(error as Error).message}`;
+      return '';
     }
   }
 

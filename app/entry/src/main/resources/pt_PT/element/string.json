@@ -1,55 +1,208 @@
 {
   "string": [
-    { "name": "module_desc", "value": "Modulo de entrada HOPA" },
-    { "name": "EntryAbility_desc", "value": "Agente telefonico HOPA" },
-    { "name": "EntryAbility_label", "value": "HOPA" },
-    { "name": "tab_chat", "value": "Chat" },
-    { "name": "greeting_1", "value": "Ola, sou a HOPA, o seu agente no telefone." },
-    { "name": "greeting_2", "value": "Pergunto sempre antes de qualquer pagamento." },
-    { "name": "msg_working", "value": "HOPA: a trabalhar..." },
-    { "name": "msg_no_model", "value": "HOPA: nenhum modelo configurado. Abra Definicoes, introduza o endpoint, o modelo e a chave e guarde." },
-    { "name": "msg_https_only", "value": "HOPA: no navegador so sao permitidas paginas https://." },
-    { "name": "tab_web", "value": "Web" },
-    { "name": "tab_apps", "value": "Apps" },
-    { "name": "tab_tasks", "value": "Tarefas" },
-    { "name": "tab_settings", "value": "Definicoes" },
-    { "name": "tab_memory", "value": "Memoria" },
-    { "name": "title_settings", "value": "Definicoes" },
-    { "name": "title_tasks", "value": "Progresso das tarefas" },
-    { "name": "title_memory", "value": "Memoria e competencias" },
-    { "name": "btn_send", "value": "Enviar" },
-    { "name": "btn_stop", "value": "Parar" },
-    { "name": "btn_add", "value": "Adicionar" },
-    { "name": "btn_delete", "value": "Eliminar" },
-    { "name": "btn_open", "value": "Abrir" },
-    { "name": "btn_back", "value": "Voltar" },
-    { "name": "btn_forward", "value": "Avancar" },
-    { "name": "btn_reload", "value": "Recarregar" },
-    { "name": "btn_save_skill", "value": "Guardar competencia" },
-    { "name": "btn_run_batch", "value": "Executar lote" },
-    { "name": "btn_clear", "value": "Limpar" },
-    { "name": "btn_export", "value": "Exportar dados" },
-    { "name": "btn_clear_facts", "value": "Limpar factos" },
-    { "name": "btn_draft_skill", "value": "Guardar a ultima execucao como competencia" },
-    { "name": "label_facts", "value": "Factos" },
-    { "name": "label_skills", "value": "Competencias" },
-    { "name": "label_network", "value": "Permitir rede para tarefas web" },
-    { "name": "label_autonomous", "value": "Modo autonomo (nunca ignora o pagamento)" },
-    { "name": "label_provider", "value": "Fornecedor do modelo" },
-    { "name": "label_endpoint", "value": "Endpoint do modelo" },
-    { "name": "label_model", "value": "Nome do modelo" },
-    { "name": "label_api_key", "value": "Chave API (apenas em memoria, nunca guardada)" },
-    { "name": "label_payment", "value": "Pagamento: exige sempre a sua confirmacao. Nao pode ser alterado." },
-    { "name": "label_sandbox", "value": "Sandbox: nao incluida. Pyodide/QuickJS sao paginas WASM opcionais; nao ha sandbox Linux." },
-    { "name": "label_retention", "value": "Retencao: ultimas 100 execucoes e 50 factos. As competencias ficam ate as eliminar." },
-    { "name": "label_batch", "value": "Lote" },
-    { "name": "placeholder_ask", "value": "Pergunte a HOPA..." },
-    { "name": "placeholder_url", "value": "https://..." },
-    { "name": "placeholder_memory", "value": "ex. prefiro o corredor" },
-    { "name": "placeholder_skill_name", "value": "Nome da competencia, ex. Reservar mesa" },
-    { "name": "placeholder_trigger", "value": "Palavras de ativacao, ex. reservar mesa" },
-    { "name": "placeholder_steps", "value": "Passos a seguir" },
-    { "name": "placeholder_batch", "value": "Um objetivo por linha" },
-    { "name": "placeholder_key", "value": "sk-..." }
+    {
+      "name": "module_desc",
+      "value": "Modulo de entrada HOPA"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "Agente telefonico HOPA"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "HOPA"
+    },
+    {
+      "name": "tab_chat",
+      "value": "Chat"
+    },
+    {
+      "name": "greeting_1",
+      "value": "Ola, sou a HOPA, o seu agente no telefone."
+    },
+    {
+      "name": "greeting_2",
+      "value": "Pergunto sempre antes de qualquer pagamento."
+    },
+    {
+      "name": "msg_working",
+      "value": "HOPA: a trabalhar..."
+    },
+    {
+      "name": "msg_no_model",
+      "value": "HOPA: nenhum modelo configurado. Abra Definicoes, introduza o endpoint, o modelo e a chave e guarde."
+    },
+    {
+      "name": "msg_https_only",
+      "value": "HOPA: no navegador so sao permitidas paginas https://."
+    },
+    {
+      "name": "tab_web",
+      "value": "Navegador"
+    },
+    {
+      "name": "tab_apps",
+      "value": "Mais"
+    },
+    {
+      "name": "tab_tasks",
+      "value": "Planos"
+    },
+    {
+      "name": "tab_settings",
+      "value": "Definicoes"
+    },
+    {
+      "name": "tab_memory",
+      "value": "Memoria"
+    },
+    {
+      "name": "title_settings",
+      "value": "Definicoes"
+    },
+    {
+      "name": "title_tasks",
+      "value": "Progresso das tarefas"
+    },
+    {
+      "name": "title_memory",
+      "value": "Memoria e competencias"
+    },
+    {
+      "name": "btn_send",
+      "value": "Enviar"
+    },
+    {
+      "name": "btn_stop",
+      "value": "Parar"
+    },
+    {
+      "name": "btn_add",
+      "value": "Adicionar"
+    },
+    {
+      "name": "btn_delete",
+      "value": "Eliminar"
+    },
+    {
+      "name": "btn_open",
+      "value": "Abrir"
+    },
+    {
+      "name": "btn_back",
+      "value": "Voltar"
+    },
+    {
+      "name": "btn_forward",
+      "value": "Avancar"
+    },
+    {
+      "name": "btn_reload",
+      "value": "Recarregar"
+    },
+    {
+      "name": "btn_save_skill",
+      "value": "Guardar competencia"
+    },
+    {
+      "name": "btn_run_batch",
+      "value": "Executar lote"
+    },
+    {
+      "name": "btn_clear",
+      "value": "Limpar"
+    },
+    {
+      "name": "btn_export",
+      "value": "Exportar dados"
+    },
+    {
+      "name": "btn_clear_facts",
+      "value": "Limpar factos"
+    },
+    {
+      "name": "btn_draft_skill",
+      "value": "Guardar a ultima execucao como competencia"
+    },
+    {
+      "name": "label_facts",
+      "value": "Factos"
+    },
+    {
+      "name": "label_skills",
+      "value": "Competencias"
+    },
+    {
+      "name": "label_network",
+      "value": "Permitir rede para tarefas web"
+    },
+    {
+      "name": "label_autonomous",
+      "value": "Modo autonomo (nunca ignora o pagamento)"
+    },
+    {
+      "name": "label_provider",
+      "value": "Fornecedor do modelo"
+    },
+    {
+      "name": "label_endpoint",
+      "value": "Endpoint do modelo"
+    },
+    {
+      "name": "label_model",
+      "value": "Nome do modelo"
+    },
+    {
+      "name": "label_api_key",
+      "value": "Chave API (apenas em memoria, nunca guardada)"
+    },
+    {
+      "name": "label_payment",
+      "value": "Pagamento: exige sempre a sua confirmacao. Nao pode ser alterado."
+    },
+    {
+      "name": "label_sandbox",
+      "value": "Sandbox: nao incluida. Pyodide/QuickJS sao paginas WASM opcionais; nao ha sandbox Linux."
+    },
+    {
+      "name": "label_retention",
+      "value": "Retencao: ultimas 100 execucoes e 50 factos. As competencias ficam ate as eliminar."
+    },
+    {
+      "name": "label_batch",
+      "value": "Lote"
+    },
+    {
+      "name": "placeholder_ask",
+      "value": "Pergunte a HOPA..."
+    },
+    {
+      "name": "placeholder_url",
+      "value": "https://..."
+    },
+    {
+      "name": "placeholder_memory",
+      "value": "ex. prefiro o corredor"
+    },
+    {
+      "name": "placeholder_skill_name",
+      "value": "Nome da competencia, ex. Reservar mesa"
+    },
+    {
+      "name": "placeholder_trigger",
+      "value": "Palavras de ativacao, ex. reservar mesa"
+    },
+    {
+      "name": "placeholder_steps",
+      "value": "Passos a seguir"
+    },
+    {
+      "name": "placeholder_batch",
+      "value": "Um objetivo por linha"
+    },
+    {
+      "name": "placeholder_key",
+      "value": "sk-..."
+    }
   ]
 }

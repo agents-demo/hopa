@@ -12,16 +12,20 @@ Endpoints (JSON):
     POST /launch               {"bundle": str, "ability": str?}
     POST /key                  {"name": str}
     POST /swipe                {"from_x", "from_y", "to_x", "to_y", "velocity"?}
+    POST /screenshot           -> {"mime": "image/jpeg", "bytes": int, "image": "base64"}
 """
 
 from __future__ import annotations
 
+import base64
 import hmac
 import json
 import sys
+import tempfile
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 from typing import Any
 
 from .device import Device
@@ -65,6 +69,20 @@ def _observe(device: Device) -> dict[str, Any]:
         "width": width,
         "height": height,
         "refs": refs,
+    }
+
+
+def _screenshot(device: Device) -> dict[str, Any]:
+    remote = "/data/local/tmp/hopa-bridge.jpeg"
+    device.hdc.shell(f"snapshot_display -f {remote}")
+    with tempfile.TemporaryDirectory(prefix="hopa-shot-") as tmp:
+        local = Path(tmp) / "screen.jpeg"
+        device.hdc.file_recv(remote, local)
+        raw = local.read_bytes()
+    return {
+        "mime": "image/jpeg",
+        "bytes": len(raw),
+        "image": base64.b64encode(raw).decode("ascii"),
     }
 
 
@@ -146,6 +164,11 @@ class _Handler(BaseHTTPRequestHandler):
         if self.path == "/tap":
             device.tap(int(data["x"]), int(data["y"]))
             return {"ok": True}
+        if self.path == "/screenshot":
+            started = time.perf_counter()
+            shot = _screenshot(device)
+            print(f"screenshot {time.perf_counter() - started:.2f}s", file=sys.stderr, flush=True)
+            return shot
         if self.path == "/type":
             x = data.get("x")
             y = data.get("y")

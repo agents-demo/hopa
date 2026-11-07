@@ -23,6 +23,16 @@ UI-wiring and app-control-over-bridge claims are. Parity with Mika is
 **12.6 / 15 (84%)** with the PC attached; see `docs/mika-parity.md` for the
 per-row breakdown.
 
+## Screens (2026-11-07)
+
+The top level now uses Mika's names: **Chat, Plans, Memory, Browser, Settings,
+More**. More holds Screens, Apps, Runs and batches, Models, Usage, Phone setup,
+Self-check, Welcome and About. **Screens** renders a live JPEG from
+`pc-agent bridge /screenshot` and was verified on the emulator (1.2 s per
+frame). This is closer to Mika's drawer than the previous six ad-hoc tabs, but
+it is still a tab bar, not a drawer, and About/License/Source/AppAccess/Developer
+remain single pages or are missing.
+
 Plan progress: **229 / 767 boxes (29.9%)**. The open boxes are concentrated in
 the device/ACL, UI, release and sign-off phases.
 
@@ -41,7 +51,7 @@ the device/ACL, UI, release and sign-off phases.
 | Schedules | in-app once / 5 min / 30 min / daily, persisted; a one-shot fired on device (653 tokens) and moved to `done`; no system alarm on this image | device run 2026-11-07 |
 | Background run | continuous task started and stopped around a bridged run | hilog `background: continuous task` |
 | Languages | 10 of 10: English, Chinese, Japanese, French, Spanish, German, Korean, Italian, Portuguese, Russian | `resources/*/element/string.json` |
-| Entry UI | chat wired to `AgentLoop`; fail-closed approval dialog; provider settings; memory and skills; Web (with JS sandbox), Apps and run-history tabs; English + Simplified Chinese shell strings | `pages/Index.ets` |
+| Entry UI | Mika-style top level: Chat, Plans, Memory, Browser, Settings, More; More holds Screens (live JPEG via the bridge), Apps, Runs, Models, Usage, Phone setup, Self-check, Welcome, About; fail-closed approval dialog; 10 languages | `pages/Index.ets` |
 | Accessibility extension | declared; permission granted on the emulator; framework lists the service; no Settings toggle on this image | `docs/a11y.md` |
 | Emulator | Pura 90, API 24, unlocked; `hdc` and the display glitch under load | `hdc` |
 | ACL | local debug profile accepted on the emulator; AppGallery ACL not filed | `docs/acl-request.md` |

@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import base64
 import json
 import urllib.error
 import urllib.request
+from pathlib import Path
 
 import pytest
 
@@ -25,10 +27,21 @@ LAYOUT = parse_layout(
     }
 )
 
+FAKE_JPEG = b"\xff\xd8fakejpeg"
+
+
+class FakeHdc:
+    def shell(self, command: str, timeout: float | None = None) -> str:
+        return ""
+
+    def file_recv(self, remote: str, local, timeout: float | None = None) -> None:
+        Path(local).write_bytes(FAKE_JPEG)
+
 
 class FakeDevice:
     def __init__(self) -> None:
         self.calls: list[tuple] = []
+        self.hdc = FakeHdc()
 
     def devices(self) -> list[str]:
         return ["127.0.0.1:5555"]
@@ -119,6 +132,14 @@ def test_unknown_endpoint(bridge) -> None:
     with pytest.raises(urllib.error.HTTPError) as error:
         _call(server, "/nope", {})
     assert error.value.code == 400
+
+
+def test_screenshot_returns_base64(bridge) -> None:
+    server, _ = bridge
+    result = _call(server, "/screenshot", {})
+    assert result["mime"] == "image/jpeg"
+    assert result["bytes"] == len(FAKE_JPEG)
+    assert base64.b64decode(result["image"]) == FAKE_JPEG
 
 
 def test_bad_body(bridge) -> None:
