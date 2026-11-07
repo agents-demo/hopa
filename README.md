@@ -20,9 +20,10 @@ scrolls — then tells you what happened.
 
 Before money moves, it stops and asks. Every time.
 
-> **Today:** a working prototype. Chat, the browser, memory and the
-> app-and-website control loop are real. On this emulator a small PC companion
-> lends HOPA its hands. [The honest details →](docs/history/status-2026-11-07.md)
+> **Today:** a working prototype. Chat, the browser and website tasks are real.
+> On this emulator, app control uses a small PC companion; a real phone with the
+> accessibility service does not need it.
+> [The honest details →](docs/history/status-2026-11-07.md)
 
 ## See it work
 
@@ -204,6 +205,7 @@ Read the dated, per-capability state in
 - [PC companion guide](docs/guides/pc-bridge.md)
 - [Architecture](docs/architecture/overview.md)
 - [App knowledge](docs/reference/knowledge.md)
+- [Bundles on a device](docs/reference/bundles.md)
 - [Safety model](docs/reference/safety.md)
 - [Current status](docs/history/status-2026-11-07.md)
 
