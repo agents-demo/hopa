@@ -67,24 +67,24 @@ installed; HOPA says when a bundle is missing instead of guessing.</sub>
 > HOPA shows the item, the total and the seller. You choose **Deny** or
 > **Allow**. Nothing is paid without you.
 
-<table>
-<tr>
-<td width="50%" align="center" valign="top">
+<div align="center">
 
-<img src="docs/media/chat-example.svg" alt="Designed example of a WeChat message task with the approval dialog" width="270" />
+<img src="docs/media/chat-example.svg" alt="Designed example of a WeChat message task with the approval dialog" width="220" />
 
-<sub><b>Designed example.</b> A WeChat task with the approval step. WeChat is not installed on the test emulator.</sub>
+<br/><sub><b>Designed example.</b> A WeChat task with the approval step. WeChat is not installed on the test emulator.</sub>
 
-</td>
-<td width="50%" align="center" valign="top">
+</div>
 
-<img src="docs/media/sites.jpeg" alt="HOPA site catalogue with Bilibili, Xiaohongshu and Weibo" width="270" />
+The assistant works from the catalogue below — apps on the phone and popular
+sites in the built-in browser.
 
-<sub><b>Real screenshot.</b> Bilibili, Xiaohongshu, Weibo and more in the site catalogue.</sub>
+<div align="center">
 
-</td>
-</tr>
-</table>
+<img src="docs/media/sites.jpeg" alt="HOPA site catalogue with Bilibili, Xiaohongshu and Weibo" width="220" />
+
+<br/><sub><b>Real screenshot.</b> Bilibili, Xiaohongshu, Weibo and more in the site catalogue.</sub>
+
+</div>
 
 ## Getting started
 

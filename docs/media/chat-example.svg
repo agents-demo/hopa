@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1800" role="img" aria-label="Illustration of a WeChat message task with the approval dialog">
-  <rect width="900" height="1800" fill="#FFFFFF"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1260" role="img" aria-label="Illustration of a WeChat message task with the approval dialog">
+  <rect width="900" height="1260" fill="#FFFFFF"/>
 
   <!-- status bar -->
   <text x="40" y="62" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="22" fill="#5B6B85">9:41</text>
@@ -22,7 +22,7 @@
   <text x="72" y="494" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="28" fill="#0A1B3A">Ready to send:</text>
 
   <!-- dimmed app behind the dialog -->
-  <rect width="900" height="1800" fill="#000000" opacity="0.35"/>
+  <rect width="900" height="1260" fill="#000000" opacity="0.35"/>
 
   <!-- approval dialog -->
   <rect x="80" y="620" width="740" height="590" rx="36" fill="#FFFFFF"/>
@@ -39,12 +39,6 @@
   <text x="262" y="1078" text-anchor="middle" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="28" fill="#333333">Deny</text>
   <rect x="460" y="1026" width="320" height="82" rx="41" fill="#B42318"/>
   <text x="620" y="1078" text-anchor="middle" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="28" font-weight="600" fill="#FFFFFF">Allow</text>
-
-  <!-- composer behind the dialog -->
-  <rect x="40" y="1640" width="650" height="84" rx="42" fill="#F2F3F5"/>
-  <text x="76" y="1692" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#8A9BB5">Ask HOPA...</text>
-  <rect x="710" y="1640" width="150" height="84" rx="42" fill="#0A59F7"/>
-  <text x="785" y="1692" text-anchor="middle" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="24" font-weight="600" fill="#FFFFFF">Send</text>
 
   <!-- honesty label -->
   <rect x="680" y="104" width="186" height="46" rx="23" fill="#FFFFFF" opacity="0.96"/>
