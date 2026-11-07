@@ -141,6 +141,11 @@ export class AgentService {
     this.ui.setLauncher(launcher);
   }
 
+  /** Opens the Browser page from Chat and resolves when its WebView is ready. */
+  setSiteOpener(opener: (url: string) => Promise<boolean>): void {
+    this.browserCapability.setSiteOpener(opener);
+  }
+
   /** Points the bridge capability at a running `pc-agent bridge`. */
   configureBridge(url: string, token: string): void {
     this.bridge.configure(url, token);

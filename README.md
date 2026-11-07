@@ -24,10 +24,10 @@ Before money moves, it stops and asks. Every time.
 
 ## A small example
 
-> **You:** “What are the top videos on Bilibili right now?”
+> **You:** “Summarize what’s trending on Bilibili today in three short points.”
 >
-> **HOPA:** opens Bilibili in the built-in browser, reads the page, and gives
-> you the top three with links. If it needs to post, send or pay, it asks first.
+> **HOPA:** opens Bilibili, reads the page and gives you the three main trends.
+> If it needs to post, send or pay, it asks first.
 
 <img src="docs/media/how-it-works.svg" alt="You ask; HOPA looks and acts; you see the result" width="100%" />
 
@@ -57,8 +57,8 @@ model key goes to the model you choose.
 |---|---|
 | “What are the top stories on Zhihu?”<br/>“What’s trending on Xiaohongshu?”<br/>“Summarize the top videos on Bilibili.” | “Send Alice ‘running 10 minutes late’ on WeChat.”<br/>“Find a 4.5-star charger under $30 on Amazon.”<br/>“Remember that I prefer aisle seats.” |
 
-<sub>Site examples work in the built-in browser. App examples need that app
-installed; HOPA says when a bundle is missing instead of guessing.</sub>
+<sub>Site examples run in the browser HOPA opens for you. App examples need
+that app installed; HOPA says when a bundle is missing instead of guessing.</sub>
 
 **When money is involved**
 
@@ -66,6 +66,14 @@ installed; HOPA says when a bundle is missing instead of guessing.</sub>
 >
 > HOPA shows the item, the total and the seller. You choose **Deny** or
 > **Allow**. Nothing is paid without you.
+
+<div align="center">
+
+<img src="docs/media/chat.jpeg" alt="Real chat: HOPA opens Bilibili and summarizes the trends" width="220" />
+
+<br/><sub><b>Real screenshot.</b> One short prompt: HOPA opened Bilibili, read the page and summarized the trends.</sub>
+
+</div>
 
 <div align="center">
 
@@ -133,6 +141,7 @@ A working prototype. With the PC companion, these work today:
 - run history, export and self-check
 - app launch, screen reading, tap, type and scroll
 - the full **launch → observe → tap → observe** loop inside a real app
+- a website task from Chat: open Bilibili, read it and summarize the trends
 
 Not available on this emulator: untethered app control, speech and system
 reminders. A real phone with the built-in control is the untethered path.

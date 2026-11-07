@@ -73,7 +73,6 @@ export class ApprovalPolicy {
     'ui.type',
     'ui.swipe',
     'ui.scroll',
-    'web.navigate',
     'web.click',
     'web.type'
   ]);

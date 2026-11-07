@@ -40,7 +40,30 @@ struct Index {
   aboutToAppear(): void {
     const service = AgentService.get();
     service.setAbilityContext(getContext(this) as common.UIAbilityContext);
+    service.setSiteOpener((url: string) => this.openSite(url));
     this.initialize();
+  }
+
+  /**
+   * Switches to the Browser page for an agent navigation and waits until the
+   * WebView is attached. This lets a short Chat prompt operate a site without
+   * the user opening the Browser first.
+   */
+  private async openSite(url: string): Promise<boolean> {
+    AgentService.get().browser.requestUrl(url);
+    this.activePage = 'browser';
+    this.menuOpen = false;
+    for (let attempt = 0; attempt < 150; attempt++) {
+      if (AgentService.get().browser.isReady()) {
+        return true;
+      }
+      await new Promise<void>((resolve: () => void) => {
+        setTimeout(() => {
+          resolve();
+        }, 100);
+      });
+    }
+    return false;
   }
 
   private async initialize(): Promise<void> {

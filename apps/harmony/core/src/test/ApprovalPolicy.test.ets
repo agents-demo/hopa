@@ -51,6 +51,15 @@ export default function approvalPolicyTest(): void {
       expect(policy.requiresApproval(action, screen)).assertTrue();
     });
 
+    it('web_navigate_is_not_a_payment', 0, () => {
+      const policy = new ApprovalPolicy();
+      const screen = new Screen('Checkout\nTotal ¥9.99\nPay now\nI always ask before any payment.');
+      const action = new Action('web.navigate');
+      action.url = 'https://bilibili.com';
+      expect(policy.isPayment(action, screen)).assertFalse();
+      expect(policy.requiresApproval(action, screen)).assertFalse();
+    });
+
     it('model_flag_cannot_clear_screen_payment', 0, () => {
       const policy = new ApprovalPolicy();
       const screen = new Screen('Checkout Total ¥9.99');
