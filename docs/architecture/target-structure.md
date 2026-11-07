@@ -1,8 +1,19 @@
-# Target structure (proposal)
+# Target structure
 
-Status: **proposal, not executed.** This is the structure I recommend and the
-order I would migrate in. Each phase is meant to be a separate, CI-green change
-with no behaviour change.
+Status: **executed on 2026-11-07.** The tree below is the structure that now
+exists, with three deliberate deltas:
+
+1. `capabilities/llm` exists; `BridgeClient`/`BridgeUiCapability` stay in
+   `entry/services` because splitting them into a capability would make a
+   capability import another capability.
+2. Tests stay flat in `core/src/test` (their imports point at the new folders);
+   moving each test next to its layer is optional polish.
+3. The UI shell (`Index.ets`, drawer, route host) remains a single entry page;
+   every screen is a component under `pages/`.
+
+This document records the audit that motivated the refactor and the order it
+was executed in. For the current rules, read `layers.md`.
+
 
 ## 1. Why now: the audit
 

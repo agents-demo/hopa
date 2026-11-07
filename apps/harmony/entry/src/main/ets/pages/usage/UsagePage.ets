@@ -38,7 +38,7 @@ export struct UsagePage {
       this.Line('Denied', `${this.countRuns('denied')}`)
       this.Line('Last run tokens', `${AgentService.get().getLastTokens()}`)
       this.Line('Last run time', `${(AgentService.get().getLastDurationMs() / 1000).toFixed(1)} s`)
-      this.Line('Plans', `${AgentService.get().schedules.all().length}`)
+      this.Line('Plans', `${AgentService.get().scheduleService.book.all().length}`)
       this.Line('Facts and skills', `${AgentService.get().memory.all().length} / ${AgentService.get().skills.all().length}`)
       Text('Per-run tokens are not stored yet; the last run total is shown.')
         .fontSize(11)

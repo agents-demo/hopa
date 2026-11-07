@@ -6,6 +6,7 @@ import { SettingsStore, StoredSettings } from '../services/SettingsStore';
 import { AppLauncher } from '../services/AppLauncher';
 import { AppsPage } from './apps/AppsPage';
 import { ChatPage } from './chat/ChatPage';
+import { Drawer } from '../navigation/Drawer';
 import { BrowserPage } from './browser/BrowserPage';
 import { McpServersPage } from './mcp/McpServersPage';
 import { MemoryPage } from './memory/MemoryPage';
@@ -16,6 +17,7 @@ import { UsagePage } from './usage/UsagePage';
 import { RunsPage } from './runs/RunsPage';
 import { PlansPage } from './plans/PlansPage';
 import { SettingsPage } from './settings/SettingsPage';
+import { MoreToolsPage } from './tools/MoreToolsPage';
 import { ScreensPage } from './tools/ScreensPage';
 import { SelfCheckPage } from './tools/SelfCheckPage';
 import { FilesPage } from './tools/FilesPage';
@@ -46,11 +48,11 @@ struct Index {
     await this.loadMemory();
     await this.loadSkills();
     await this.loadRuns();
-    await this.loadSchedules();
+    await AgentService.get().scheduleService.load(getContext(this) as Context);
+    AgentService.get().scheduleService.start();
     AgentService.get().setUiLauncher(
       new AppLauncher(getContext(this) as common.UIAbilityContext)
     );
-    AgentService.get().startScheduler();
     if (await SettingsStore.needsWelcome(getContext(this) as Context)) {
       this.activePage = 'welcome';
       await SettingsStore.markWelcomeSeen(getContext(this) as Context);
@@ -90,11 +92,6 @@ struct Index {
     }
   }
 
-  private async loadSchedules(): Promise<void> {
-    await AgentService.get().loadSchedules(getContext(this) as Context);
-    AgentService.get().startScheduler();
-  }
-
   private async loadMemory(): Promise<void> {
     try {
       await AgentService.get().memory.load(getContext(this) as Context);
@@ -117,51 +114,6 @@ struct Index {
     } catch (error) {
       // First run: no history yet.
     }
-  }
-
-  @Builder
-  MoreToolsPage() {
-    Column({ space: 10 }) {
-      Text('More')
-        .fontSize(22)
-        .fontWeight(FontWeight.Bold)
-      Text('The screens Mika keeps in its drawer that do not fit above.')
-        .fontSize(12)
-        .fontColor('#666666')
-      this.ToolRow('Source', 'Model, backend and observation source', 'source')
-      this.ToolRow('MCP servers', 'What runs on the phone and what runs on the PC', 'mcpservers')
-      this.ToolRow('Files', 'Exported data on this device', 'files')
-      this.ToolRow('License', 'Apache-2.0 and third-party notices', 'license')
-    }
-    .width('100%')
-    .height('100%')
-    .padding(16)
-    .alignItems(HorizontalAlign.Start)
-  }
-
-  @Builder
-  ToolRow(title: string, subtitle: string, key: string) {
-    Row({ space: 10 }) {
-      Column({ space: 2 }) {
-        Text(title)
-          .fontSize(16)
-        Text(subtitle)
-          .fontSize(11)
-          .fontColor('#999999')
-      }
-      .layoutWeight(1)
-      .alignItems(HorizontalAlign.Start)
-      Text('>')
-        .fontSize(16)
-        .fontColor('#999999')
-    }
-    .width('100%')
-    .padding(14)
-    .backgroundColor('#F7F8FA')
-    .borderRadius(10)
-    .onClick(() => {
-      this.activePage = key;
-    })
   }
 
   private pageTitle(): string {
@@ -226,107 +178,6 @@ struct Index {
   }
 
   @Builder
-  DrawerItem(title: string, key: string) {
-    Row() {
-      Text(title)
-        .fontSize(16)
-        .fontColor(this.activePage === key ? '#0A59F7' : '#333333')
-    }
-    .width('100%')
-    .padding({ left: 12, right: 12, top: 8, bottom: 8 })
-    .backgroundColor(this.activePage === key ? '#EAF1FF' : '#00000000')
-    .borderRadius(8)
-    .onClick(() => {
-        this.activePage = key;
-      this.menuOpen = false;
-    })
-  }
-
-  @Builder
-  Drawer() {
-    Column({ space: 6 }) {
-      Text('HOPA')
-        .fontSize(24)
-        .fontWeight(FontWeight.Bold)
-        .padding({ left: 12, top: 8, bottom: 2 })
-      Button('+ New chat')
-        .fontSize(13)
-        .height(34)
-        .width('100%')
-        .backgroundColor('#0A59F7')
-        .onClick(() => {
-          AgentService.get().conversations.newChat();
-          this.refreshChats();
-          this.activePage = 'chat';
-          this.menuOpen = false;
-        })
-      Text('CONVERSATIONS')
-        .fontSize(10)
-        .fontColor('#999999')
-        .padding({ left: 12, top: 4, bottom: 2 })
-      ForEach(this.chatSessions, (session: ChatSession, index: number) => {
-        Row({ space: 6 }) {
-          Text(session.title)
-            .fontSize(13)
-            .maxLines(1)
-            .textOverflow({ overflow: TextOverflow.Ellipsis })
-            .layoutWeight(1)
-          Text('x')
-            .fontSize(13)
-            .fontColor('#B42318')
-            .padding({ left: 8, right: 4 })
-            .onClick(() => {
-              AgentService.get().conversations.delete(session.id);
-              this.refreshChats();
-            })
-        }
-        .width('100%')
-        .padding({ left: 12, right: 8, top: 8, bottom: 8 })
-        .borderRadius(8)
-        .backgroundColor(session.id === AgentService.get().conversations.currentId() ? '#EAF1FF' : '#00000000')
-        .onClick(() => {
-          AgentService.get().conversations.select(session.id);
-          this.refreshChats();
-          this.activePage = 'chat';
-          this.menuOpen = false;
-        })
-      }, (session: ChatSession, index: number) => `${session.id}-${session.updatedAt}`)
-      Divider()
-        .margin({ top: 4, bottom: 4 })
-      Column({ space: 1 }) {
-        this.DrawerItem('Chat', 'chat')
-        this.DrawerItem('Plans', 'plans')
-        this.DrawerItem('Memory', 'memory')
-        this.DrawerItem('Browser', 'browser')
-        this.DrawerItem('Screens', 'screens')
-        this.DrawerItem('Settings', 'settings')
-        this.DrawerItem('About', 'about')
-        this.DrawerItem('More', 'more')
-        Divider()
-          .margin({ top: 6, bottom: 6 })
-        Text('TOOLS')
-          .fontSize(10)
-          .fontColor('#999999')
-          .padding({ left: 12, bottom: 2 })
-        this.DrawerItem('Apps', 'apps')
-        this.DrawerItem('Runs and batches', 'runs')
-        this.DrawerItem('Models', 'models')
-        this.DrawerItem('Usage', 'usage')
-        this.DrawerItem('Phone setup', 'phone')
-        this.DrawerItem('Self-check', 'selfcheck')
-        this.DrawerItem('Welcome', 'welcome')
-      }
-      .width('100%')
-      .alignItems(HorizontalAlign.Start)
-    }
-    .width('100%')
-    .height('100%')
-    .padding(10)
-    .alignItems(HorizontalAlign.Start)
-    .backgroundColor('#FFFFFF')
-  }
-
-  @Builder
   PageHost() {
     if (this.activePage === 'plans') {
       PlansPage()
@@ -341,7 +192,7 @@ struct Index {
     } else if (this.activePage === 'about') {
       AboutPage()
     } else if (this.activePage === 'more') {
-      this.MoreToolsPage()
+      MoreToolsPage({ onNavigate: (key: string) => { this.activePage = key; } })
     } else if (this.activePage === 'source') {
       this.MoreContainer('source')
     } else if (this.activePage === 'mcpservers') {
@@ -472,7 +323,31 @@ struct Index {
 
   build() {
     SideBarContainer(SideBarContainerType.Overlay) {
-      this.Drawer()
+      Drawer({
+        activePage: this.activePage,
+        sessions: this.chatSessions,
+        currentId: AgentService.get().conversations.currentId(),
+        onNewChat: () => {
+          AgentService.get().conversations.newChat();
+          this.refreshChats();
+          this.activePage = 'chat';
+          this.menuOpen = false;
+        },
+        onSelect: (id: string) => {
+          AgentService.get().conversations.select(id);
+          this.refreshChats();
+          this.activePage = 'chat';
+          this.menuOpen = false;
+        },
+        onDelete: (id: string) => {
+          AgentService.get().conversations.delete(id);
+          this.refreshChats();
+        },
+        onNavigate: (key: string) => {
+          this.activePage = key;
+          this.menuOpen = false;
+        }
+      })
       Column() {
         Row({ space: 10 }) {
           Text('☰')

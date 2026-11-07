@@ -13,7 +13,7 @@ PromptBuilder ──▶ ModelClient ──▶ ActionParser
 Screen ◀── ScreenSource        ActionExecutor (gate)
   ▲                                   │
   │                                   ▼
-  └──────── Observation ◀──── capability (accessibility | browser | llm | bridge-client | system)
+  └──────── Observation ◀──── capability (accessibility | browser | llm | sandbox | system)
                                           │
                                           ▼
                                       RunRecord ──▶ RunStore
@@ -72,7 +72,7 @@ entry services/BridgeClient ──HTTP──▶ services/pc-agent api/bridge.py
         │                                     ├─ hdc dumpLayout ─▶ Layout
         │                                     └─ hdc tap / type / launch
         ▼
-capabilities/bridge-client (screen source + ui actions)
+entry/services/BridgeUiCapability.ets (screen source + ui actions)
 ```
 
 The bridge is the active backend when one is configured: the accessibility

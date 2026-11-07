@@ -28,7 +28,7 @@ export struct PlansPage {
   }
 
   private refresh(): void {
-    this.items = AgentService.get().schedules.all().slice();
+    this.items = AgentService.get().scheduleService.book.all().slice();
     if (AgentService.get().isBusy()) {
       this.status = 'Scheduled goal running';
     } else if (this.status === 'Scheduled goal running') {
@@ -37,7 +37,7 @@ export struct PlansPage {
   }
 
   private async add(intervalMs: number, delayMs: number): Promise<void> {
-    const ok: boolean = await AgentService.get().addSchedule(this.goal, intervalMs, delayMs);
+    const ok: boolean = await AgentService.get().scheduleService.add(this.goal, intervalMs, delayMs);
     if (!ok) {
       this.status = 'Enter a goal for the plan';
       return;
@@ -48,7 +48,7 @@ export struct PlansPage {
   }
 
   private async remove(id: string): Promise<void> {
-    await AgentService.get().removeSchedule(id);
+    await AgentService.get().scheduleService.remove(id);
     this.refresh();
   }
 

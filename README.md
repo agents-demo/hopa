@@ -57,25 +57,26 @@ guards â†’ payment approval â†’ execute â†’ verify â†’ recor
 
 ```
 hopa/
-â”œâ”€â”€ app/                      # DevEco Studio project (Stage model)
-â”‚   â”œâ”€â”€ AppScope/
-â”‚   â”œâ”€â”€ entry/                # ArkUI shell: chat, task progress, settings, memory
-â”‚   â”œâ”€â”€ core/                 # HAR: agent loop, tool registry, ActionExecutor (no UI)
-â”‚   â””â”€â”€ capabilities/         # independent HAR modules
-â”‚       â”œâ”€â”€ web/              # ArkWeb browser agent
-â”‚       â”œâ”€â”€ sandbox/          # hidden ArkWeb + Pyodide/QuickJS (offline)
-â”‚       â”œâ”€â”€ a11y/             # AccessibilityExtensionAbility skeleton (ACL)
-â”‚       â””â”€â”€ system/           # system intents (alarm, calendar, deep links)
-â”œâ”€â”€ services/pc-agent/                 # Python: hdc + uitest control, CLI and MCP server
-â”œâ”€â”€ harness/agent/                    # Python: reference loop, gate, policy, records
-â”œâ”€â”€ contracts/schemas/                  # v1 JSON contracts shared with the ArkTS core
-â”œâ”€â”€ harness/bench/                    # HOPA-Bench tasks + runner
-â”œâ”€â”€ docs/                     # setup, architecture, contracts, plan
-â”œâ”€â”€ tools/scripts/                  # build / install / test / bench (bash + PowerShell)
-â”œâ”€â”€ .github/workflows/        # CI
-â”œâ”€â”€ CLAUDE.md                 # conventions for future coding sessions
-â”œâ”€â”€ NOTICE
-â””â”€â”€ LICENSE                   # Apache-2.0
+├─ apps/harmony/            # DevEco Studio project (Stage model)
+│  ├─ AppScope/
+│  ├─ entry/                # ArkUI shell: navigation, pages, services
+│  ├─ core/                 # HAR: domain, agent, gate, model, stores
+│  └─ capabilities/         # accessibility, browser, llm, sandbox, system
+├─ services/
+│  ├─ pc-agent/             # Python: hdc + uitest, CLI, MCP, HTTP bridge
+│  └─ brain/                # Kotlin: http, routing, knowledge, prompts, demo
+├─ harness/
+│  ├─ agent/                # Python: reference loop, gate, policy, records
+│  └─ bench/                # HOPA-Bench tasks + runner
+├─ contracts/schemas/       # v1 JSON contracts shared with the ArkTS core
+├─ tools/
+│  ├─ scripts/              # build / install / test / sign / bench
+│  └─ checks/               # structure rules and documentation links
+├─ docs/                    # architecture, guides, reference, product, operations, plan
+├─ .github/workflows/       # CI
+├─ CLAUDE.md                # conventions for future coding sessions
+├─ NOTICE
+└─ LICENSE                  # Apache-2.0
 ```
 
 ## Requirements

@@ -41,7 +41,7 @@ export struct DeveloperPage {
       this.Line('Accessibility', AgentService.get().isAccessibilityAvailable() ? 'available' : 'unavailable')
       this.Line('PC bridge', AgentService.get().isBridgeConfigured() ? 'configured' : 'not configured')
       this.Line('Runs stored', `${AgentService.get().runs.all().length}`)
-      this.Line('Plans stored', `${AgentService.get().schedules.all().length}`)
+      this.Line('Plans stored', `${AgentService.get().scheduleService.book.all().length}`)
       if (this.status.length > 0) {
         Text(this.status)
           .fontSize(11)

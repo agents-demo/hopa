@@ -2,11 +2,8 @@ import {
   ActionExecutor,
   ApprovalPolicy,
   BatchItemResult,
-  RiskLevel,
   RunStore,
-  ScheduleBook,
   Skill,
-  ToolDescriptor,
   ToolRegistry
 } from '@hopa/core';
 import { BrowserCapability } from '@hopa/capability-browser';
@@ -31,6 +28,7 @@ import { RunArchive } from './RunArchive';
 import { ExportService } from './ExportService';
 import { ConversationService } from './ConversationService';
 import { AgentRuntime } from './AgentRuntime';
+import { ToolRegistryDefaults } from './ToolRegistryDefaults';
 
 /** Process-wide composition root: policy + gate + capabilities + runtime. */
 export class AgentService {
@@ -81,17 +79,7 @@ export class AgentService {
     this.executor.registerCapability(this.system);
     this.executor.registerCapability(new BridgeUiCapability(this.bridge));
 
-    this.tools = new ToolRegistry();
-    this.tools.register(new ToolDescriptor('web.navigate', 'Navigate the web view', RiskLevel.Read));
-    this.tools.register(new ToolDescriptor('web.read', 'Read the current page', RiskLevel.Read));
-    this.tools.register(new ToolDescriptor('ui.tap', 'Tap a screen element', RiskLevel.Read));
-    this.tools.register(new ToolDescriptor('ui.type', 'Type into a screen element', RiskLevel.Sensitive));
-    this.tools.register(new ToolDescriptor('ui.swipe', 'Scroll the current screen', RiskLevel.Read));
-    this.tools.register(new ToolDescriptor('ui.longPress', 'Long-press a screen element', RiskLevel.Sensitive));
-    this.tools.register(new ToolDescriptor('sandbox.run', 'Run an offline script', RiskLevel.Read));
-    this.tools.register(new ToolDescriptor('system.openLink', 'Open an https link', RiskLevel.Read));
-    this.tools.register(new ToolDescriptor('ui.sendMessage', 'Send a message', RiskLevel.Sensitive));
-    this.tools.register(new ToolDescriptor('payment.confirm', 'Confirm a payment', RiskLevel.Payment));
+    this.tools = ToolRegistryDefaults.create();
 
     this.runArchive = new RunArchive(this.runs);
     this.exportService = new ExportService(this.memory, this.skills, this.runs);
@@ -174,34 +162,6 @@ export class AgentService {
   setAbilityContext(context: common.UIAbilityContext): void {
     this.background.setContext(context);
     this.scheduleService.setContext(context);
-  }
-
-  get schedules(): ScheduleBook {
-    return this.scheduleService.book;
-  }
-
-  loadSchedules(context: Context): Promise<void> {
-    return this.scheduleService.load(context);
-  }
-
-  saveSchedules(): Promise<void> {
-    return this.scheduleService.save();
-  }
-
-  addSchedule(goal: string, intervalMs: number, delayMs: number): Promise<boolean> {
-    return this.scheduleService.add(goal, intervalMs, delayMs);
-  }
-
-  removeSchedule(id: string): Promise<void> {
-    return this.scheduleService.remove(id);
-  }
-
-  startScheduler(): void {
-    this.scheduleService.start();
-  }
-
-  stopScheduler(): void {
-    this.scheduleService.stop();
   }
 
   isBusy(): boolean {

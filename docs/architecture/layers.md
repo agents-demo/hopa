@@ -38,7 +38,6 @@ A capability answers one question and does not call another capability:
 | `accessibility` | what is on screen and how to tap it | decide whether tapping is allowed |
 | `browser` | read, click and type on a web page | launch apps |
 | `llm` | send one model request | choose the model or keep the key |
-| `bridge-client` | observe and act through the PC bridge | decide the backend |
 | `sandbox` | run an isolated script | open the network |
 | `system` | start a system intent | record the outcome |
 
@@ -49,11 +48,13 @@ Cross-capability work happens in `entry`, which is the composition root.
 `entry` owns the running app and is allowed to know every layer:
 
 - `services/AgentService.ets` is the composition root. It builds the executor,
-  the loop, the stores and the capabilities once.
-- `services/AgentRuntime`-style concerns (run, cancel, continue) live in
-  `AgentService` today; the extraction target is a dedicated runtime service.
-- `navigation/` maps a route to a page and owns the drawer.
-- `pages/` renders, and nothing else.
+  the capabilities and the runtime once, and exposes narrow delegates.
+- `services/AgentRuntime.ets` owns the loop, the model, the last-run facts and
+  the batch. It has no UI and no persistence.
+- `services/*` are one concern each: conversations, schedules, runs, export,
+  settings, approvals, bridge, model factory, logging.
+- `navigation/` (the drawer) and `pages/<area>/` render; they never build a
+  loop or a model client.
 
 ## Where does a new thing go?
 
