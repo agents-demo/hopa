@@ -1682,6 +1682,39 @@ struct Index {
     if (this.activePage === 'run') {
       return 'Run';
     }
+    if (this.activePage === 'selfcheck') {
+      return 'Self-check';
+    }
+    if (this.activePage === 'files') {
+      return 'Files';
+    }
+    if (this.activePage === 'license') {
+      return 'License';
+    }
+    if (this.activePage === 'welcome') {
+      return 'Welcome';
+    }
+    if (this.activePage === 'apps') {
+      return 'Apps';
+    }
+    if (this.activePage === 'runs') {
+      return 'Runs and batches';
+    }
+    if (this.activePage === 'models') {
+      return 'Models';
+    }
+    if (this.activePage === 'usage') {
+      return 'Usage';
+    }
+    if (this.activePage === 'phone') {
+      return 'Phone setup';
+    }
+    if (this.activePage === 'source') {
+      return 'Source';
+    }
+    if (this.activePage === 'mcpservers') {
+      return 'MCP servers';
+    }
     return 'HOPA';
   }
 
