@@ -40,7 +40,7 @@ stricter safety check.
 | Node (bundled) | 24.14.1 |
 | Python | 3.11+ (3.12 recommended) |
 
-Environment variables are documented in `docs/setup.md`. Do not hard-code absolute
+Environment variables are documented in `docs/guides/setup.md`. Do not hard-code absolute
 paths in tracked files; scripts should discover tools or read env vars.
 
 ## Build
@@ -107,7 +107,7 @@ capabilities/<name> (HAR)
 - `capabilities/sandbox` hosts the hidden WebView + Pyodide/QuickJS. Offline by
   default; no network unless explicitly enabled by the user.
 - `capabilities/a11y` is an `AccessibilityExtensionAbility` skeleton. It depends on
-  **restricted permissions / an ACL request**; see `docs/architecture.md`. Do not
+  **restricted permissions / an ACL request**; see `docs/architecture/overview.md`. Do not
   claim it works until the ACL is approved and verified on a device.
 - `capabilities/system` uses system intents (alarm, calendar, deep links). Prefer
   public `startAbility` / want APIs over private ones.
@@ -129,7 +129,7 @@ capabilities/<name> (HAR)
    descriptors registered with `ToolRegistry`.
 3. Classify each action's risk in `ApprovalPolicy` (payment conservatively).
 4. Add host unit tests where logic allows; device tests go in `ohosTest/`.
-5. Update `docs/architecture.md` (boundaries + permissions) and `NOTICE` if you
+5. Update `docs/architecture/overview.md` (boundaries + permissions) and `NOTICE` if you
    add third-party code.
 
 ## Benchmarks

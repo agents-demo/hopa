@@ -26,7 +26,7 @@ AppGallery ACL approval.
 
 | Area | State |
 | --- | --- |
-| Dev environment (DevEco Studio 26 / API 26) | see [docs/setup.md](docs/setup.md) |
+| Dev environment (DevEco Studio 26 / API 26) | see [docs/guides/setup.md](docs/guides/setup.md) |
 | `app/` ArkUI app | chat, Web, Apps, Tasks, Settings, Memory; signed debug HAP installed on the emulator |
 | `app/core/` agent loop, tool registry, action gate | implemented + hypium tests; OpenAI, Anthropic and Gemini clients |
 | `app/capabilities/` web / sandbox / a11y / system | web works via ArkWeb; a11y declared + ACL granted on the emulator (no enable UI); sandbox is a stub |
@@ -87,7 +87,7 @@ hopa/
 - Emulator: hardware virtualization (Hyper-V + Windows Hypervisor Platform +
   Virtual Machine Platform on Windows), 16 GB+ RAM (32 GB recommended).
 
-Full, reproducible instructions: [docs/setup.md](docs/setup.md).
+Full, reproducible instructions: [docs/guides/setup.md](docs/guides/setup.md).
 
 ## Quickstart
 
@@ -105,13 +105,13 @@ Full, reproducible instructions: [docs/setup.md](docs/setup.md).
 ./scripts/run-bench.sh          # or .\scripts\run-bench.ps1
 
 # 5. Summarize a results file
-bench report --input .hopa/bench-v0.json --out docs/bench-v0.md
+bench report --input .hopa/bench-v0.json --out docs/product/bench-results-v0.md
 ```
 
 No Huawei account is needed: `scripts/sign-app` uses the OpenHarmony debug
 certificates shipped with the SDK, embeds the connected device's UDID, and
 regenerates everything under `signing/` (gitignored). See
-[docs/signing.md](docs/signing.md).
+[docs/guides/build-and-sign.md](docs/guides/build-and-sign.md).
 
 `pc-agent` can also be used directly:
 
@@ -140,15 +140,15 @@ hopa-agent verify-chain --path .hopa/runs.jsonl
 
 With `--brain` (or `HOPA_BRAIN_URL`), the JVM brain picks the first action from
 the app knowledge base, then the model drives the rest. See
-[docs/brain.md](docs/brain.md).
+[docs/reference/brain.md](docs/reference/brain.md).
 
 The shipped HAP is **ArkTS only**. Python is the development harness; it is not
 packaged into the app.
 
 ## Documentation
 
-- [docs/setup.md](docs/setup.md) â€” toolchain, SDK paths, emulator, device, env vars.
-- [docs/architecture.md](docs/architecture.md) â€” layers, the action gate,
+- [docs/guides/setup.md](docs/guides/setup.md) â€” toolchain, SDK paths, emulator, device, env vars.
+- [docs/architecture/overview.md](docs/architecture/overview.md) â€” layers, the action gate,
   capability boundaries, ACL/permission dependency list.
 - [docs/contracts/observation.md](docs/contracts/observation.md) â€” refs,
   redaction, hashing, truncation.
@@ -156,29 +156,29 @@ packaged into the app.
   payment classification.
 - [docs/contracts/errors.md](docs/contracts/errors.md) â€” error codes and retry
   rules.
-- [docs/bench-v0.md](docs/bench-v0.md) â€” the first five tasks, predicates and
+- [docs/product/bench-results-v0.md](docs/product/bench-results-v0.md) â€” the first five tasks, predicates and
   failure taxonomy.
-- [docs/eval.md](docs/eval.md) â€” metrics, targets and reproducibility.
-- [docs/brain.md](docs/brain.md) â€” JVM brain endpoints and decision contract.
-- [docs/knowledge.md](docs/knowledge.md) - app knowledge format and the 27 app files.
-- [docs/knowledge-triage.md](docs/knowledge-triage.md) - the 23 Mika apps classified.
-- [docs/bundles.md](docs/bundles.md) - bundle names verified on a device.
-- [docs/skills.md](docs/skills.md) â€” the six reusable skill manifests.
-- [docs/a11y.md](docs/a11y.md) - what the accessibility bridge does and does not do.
-- [docs/acl-request.md](docs/acl-request.md) - the accessibility ACL request package.
-- [docs/web.md](docs/web.md), [docs/system.md](docs/system.md), [docs/sandbox.md](docs/sandbox.md) â€” capability designs.
-- [docs/ux.md](docs/ux.md) â€” screens, states, trust and accessibility.
-- [docs/safety.md](docs/safety.md) â€” payment, irreversible actions, limits.
-- [docs/abuse.md](docs/abuse.md) â€” refusal taxonomy, CAPTCHA, scraping.
-- [docs/threat-model.md](docs/threat-model.md) â€” assets, actors, threats.
-- [docs/privacy.md](docs/privacy.md) â€” data inventory, retention, consent.
+- [docs/product/bench.md](docs/product/bench.md) â€” metrics, targets and reproducibility.
+- [docs/reference/brain.md](docs/reference/brain.md) â€” JVM brain endpoints and decision contract.
+- [docs/reference/knowledge.md](docs/reference/knowledge.md) - app knowledge format and the 27 app files.
+- [docs/history/knowledge-triage.md](docs/history/knowledge-triage.md) - the 23 Mika apps classified.
+- [docs/reference/bundles.md](docs/reference/bundles.md) - bundle names verified on a device.
+- [docs/reference/skills.md](docs/reference/skills.md) â€” the six reusable skill manifests.
+- [docs/guides/device-testing.md](docs/guides/device-testing.md) - what the accessibility bridge does and does not do.
+- [docs/operations/acl-request.md](docs/operations/acl-request.md) - the accessibility ACL request package.
+- [docs/reference/capabilities/browser.md](docs/reference/capabilities/browser.md), [docs/reference/capabilities/system.md](docs/reference/capabilities/system.md), [docs/reference/capabilities/sandbox.md](docs/reference/capabilities/sandbox.md) â€” capability designs.
+- [docs/product/ux.md](docs/product/ux.md) â€” screens, states, trust and accessibility.
+- [docs/reference/safety.md](docs/reference/safety.md) â€” payment, irreversible actions, limits.
+- [docs/reference/abuse.md](docs/reference/abuse.md) â€” refusal taxonomy, CAPTCHA, scraping.
+- [docs/reference/threat-model.md](docs/reference/threat-model.md) â€” assets, actors, threats.
+- [docs/reference/privacy.md](docs/reference/privacy.md) â€” data inventory, retention, consent.
 - [SECURITY.md](SECURITY.md) â€” reporting and key handling.
 - [CHANGELOG.md](CHANGELOG.md) â€” version history.
-- [docs/release.md](docs/release.md) â€” install, upgrade, rollback, support.
-- [docs/emulator-crash-2026-11-06.md](docs/emulator-crash-2026-11-06.md) â€” emulator freeze analysis.
-- [docs/status.md](docs/status.md) â€” honest current state.
-- [docs/roadmap.md](docs/roadmap.md) â€” milestones G1â€“G4.
-- [docs/rebuild-plan.md](docs/rebuild-plan.md) â€” the delivery plan: phases,
+- [docs/operations/release.md](docs/operations/release.md) â€” install, upgrade, rollback, support.
+- [docs/history/emulator-crash-2026-11-06.md](docs/history/emulator-crash-2026-11-06.md) â€” emulator freeze analysis.
+- [docs/history/status-2026-11-07.md](docs/history/status-2026-11-07.md) â€” honest current state.
+- [docs/product/roadmap.md](docs/product/roadmap.md) â€” milestones G1â€“G4.
+- [docs/plan/README.md](docs/plan/README.md) â€” the delivery plan: phases,
   checkboxes, evidence rules and the definition of finished.
 
 ## License

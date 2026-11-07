@@ -2,7 +2,7 @@
 
 ## The evidence rule
 
-A checkbox in [`docs/rebuild-plan.md`](docs/rebuild-plan.md) is done only when
+A checkbox in [`docs/plan/README.md`](docs/plan/README.md) is done only when
 the stated verification passes on the stated target. Append the evidence on the
 same line:
 
