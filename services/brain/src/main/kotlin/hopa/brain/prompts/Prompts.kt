@@ -1,4 +1,4 @@
-package hopa.brain
+package hopa.brain.prompts
 
 /** What the user is asking for. */
 enum class Intent { DISCUSS, READ, ACT }

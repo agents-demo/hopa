@@ -1,4 +1,4 @@
-package hopa.brain
+package hopa.brain.knowledge
 
 import java.nio.file.Path
 

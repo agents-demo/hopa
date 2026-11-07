@@ -1,4 +1,4 @@
-package hopa.brain
+package hopa.brain.prompts
 
 private var passed = 0
 

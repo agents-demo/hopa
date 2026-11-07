@@ -62,7 +62,7 @@ def main() -> int:
 
     classpath = args.jar + os.pathsep + args.gson
     process = subprocess.Popen(
-        ["java", "-cp", classpath, "hopa.brain.ServerKt", "0"],
+        ["java", "-cp", classpath, "hopa.brain.http.ServerKt", "0"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,

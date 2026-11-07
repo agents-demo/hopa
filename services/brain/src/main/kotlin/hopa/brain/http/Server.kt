@@ -1,4 +1,10 @@
-package hopa.brain
+package hopa.brain.http
+import hopa.brain.routing.KnowledgeEntry
+import hopa.brain.routing.KnowledgeStore
+import hopa.brain.knowledge.KnowledgeLoader
+import hopa.brain.knowledge.SiteLoader
+import hopa.brain.demo.DemoEntries
+
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject

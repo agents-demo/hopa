@@ -12,7 +12,7 @@ endpoint, not the full Mika port.
 
 ```bash
 ./tools/scripts/brain.sh          # or .\tools\scripts\brain.ps1
-java -cp "services/brain/build/brain.jar;.tools/gson-2.11.0.jar" hopa.brain.ServerKt 8731
+java -cp "services/brain/build/brain.jar;.tools/gson-2.11.0.jar" hopa.brain.http.ServerKt 8731
 ```
 
 Linux/macOS classpath separator is `:`; Windows uses `;`.
@@ -89,7 +89,7 @@ The harness asks the brain for the **first** action, then delegates later steps 
 
 ```bash
 # terminal 1: the brain
-java -cp "services/brain/build/brain.jar;.tools/gson-2.11.0.jar" hopa.brain.ServerKt 8731
+java -cp "services/brain/build/brain.jar;.tools/gson-2.11.0.jar" hopa.brain.http.ServerKt 8731
 
 # terminal 2: the loop, with the brain in front of the model
 hopa-agent run "open settings" --model openai --brain http://127.0.0.1:8731

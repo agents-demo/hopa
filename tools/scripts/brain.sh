@@ -27,9 +27,9 @@ mkdir -p "$(dirname "$OUT")"
 find "$ROOT/services/brain/src" -name '*.kt' -print0 |
   xargs -0 "$KOTLINC/bin/kotlinc" -classpath "$GSON" -include-runtime -d "$OUT"
 
-java -cp "$OUT:$GSON" hopa.brain.RouterTestKt
-java -cp "$OUT:$GSON" hopa.brain.ServerTestKt
-java -cp "$OUT:$GSON" hopa.brain.KnowledgeLoaderTestKt "$ROOT/services/brain/knowledge/apps"
-java -cp "$OUT:$GSON" hopa.brain.PromptBookTestKt
-java -cp "$OUT:$GSON" hopa.brain.SkillLoaderTestKt "$ROOT/services/brain/knowledge/skills"
-java -cp "$OUT:$GSON" hopa.brain.SiteLoaderTestKt "$ROOT/services/brain/knowledge/sites"
+java -cp "$OUT:$GSON" hopa.brain.routing.RouterTestKt
+java -cp "$OUT:$GSON" hopa.brain.http.ServerTestKt
+java -cp "$OUT:$GSON" hopa.brain.knowledge.KnowledgeLoaderTestKt "$ROOT/services/brain/knowledge/apps"
+java -cp "$OUT:$GSON" hopa.brain.prompts.PromptBookTestKt
+java -cp "$OUT:$GSON" hopa.brain.knowledge.SkillLoaderTestKt "$ROOT/services/brain/knowledge/skills"
+java -cp "$OUT:$GSON" hopa.brain.knowledge.SiteLoaderTestKt "$ROOT/services/brain/knowledge/sites"

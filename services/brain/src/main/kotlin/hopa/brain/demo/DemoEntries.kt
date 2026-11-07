@@ -1,4 +1,6 @@
-package hopa.brain
+package hopa.brain.demo
+import hopa.brain.routing.KnowledgeEntry
+
 
 /**
  * Demo knowledge for the reference brain and the contract tests.

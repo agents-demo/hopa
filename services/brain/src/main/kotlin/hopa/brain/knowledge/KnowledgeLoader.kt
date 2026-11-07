@@ -1,4 +1,6 @@
-package hopa.brain
+package hopa.brain.knowledge
+import hopa.brain.routing.KnowledgeEntry
+
 
 import java.nio.file.Files
 import java.nio.file.Path

@@ -1,4 +1,7 @@
-package hopa.brain
+package hopa.brain.http
+import hopa.brain.routing.KnowledgeStore
+import hopa.brain.demo.DemoEntries
+
 
 import com.google.gson.JsonParser
 import java.net.URI

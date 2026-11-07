@@ -30,20 +30,20 @@ New-Item -ItemType Directory -Force (Split-Path $out) | Out-Null
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 $classpath = "$out;$gson"
-& java -cp $classpath hopa.brain.RouterTestKt
+& java -cp $classpath hopa.brain.routing.RouterTestKt
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-& java -cp $classpath hopa.brain.ServerTestKt
+& java -cp $classpath hopa.brain.http.ServerTestKt
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-& java -cp $classpath hopa.brain.KnowledgeLoaderTestKt (Join-Path $root "services/brain/knowledge/apps")
+& java -cp $classpath hopa.brain.knowledge.KnowledgeLoaderTestKt (Join-Path $root "services/brain/knowledge/apps")
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-& java -cp $classpath hopa.brain.PromptBookTestKt
+& java -cp $classpath hopa.brain.prompts.PromptBookTestKt
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-& java -cp $classpath hopa.brain.SkillLoaderTestKt (Join-Path $root "services/brain/knowledge/skills")
+& java -cp $classpath hopa.brain.knowledge.SkillLoaderTestKt (Join-Path $root "services/brain/knowledge/skills")
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-& java -cp $classpath hopa.brain.SiteLoaderTestKt (Join-Path $root "services/brain/knowledge/sites")
+& java -cp $classpath hopa.brain.knowledge.SiteLoaderTestKt (Join-Path $root "services/brain/knowledge/sites")
 exit $LASTEXITCODE

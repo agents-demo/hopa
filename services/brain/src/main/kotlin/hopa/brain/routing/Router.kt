@@ -1,4 +1,4 @@
-package hopa.brain
+package hopa.brain.routing
 
 /**
  * Pure-Kotlin routing reference for the HOPA brain.
