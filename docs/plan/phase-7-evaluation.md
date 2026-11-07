@@ -3,14 +3,14 @@
 - [ ] Bench v1 (20 tasks) stable for 7 days
 - [ ] Bench v2 (50 tasks, 10 apps)
 - [ ] Held-out task set
-- [x] Failure taxonomy with counts (evidence: bench/src/hopa_bench/report.py + test_report)
-- [x] Per-app success rates (evidence: bench/src/hopa_bench/report.py + test_report)
-- [x] Latency p50/p95 (evidence: bench/src/hopa_bench/report.py + test_report)
+- [x] Failure taxonomy with counts (evidence: harness/bench/src/hopa_bench/report.py + test_report)
+- [x] Per-app success rates (evidence: harness/bench/src/hopa_bench/report.py + test_report)
+- [x] Latency p50/p95 (evidence: harness/bench/src/hopa_bench/report.py + test_report)
 - [ ] Cost per task
 - [ ] Human evaluation rubric
 - [ ] Nightly device run
 - [ ] Regression gate on every PR (stub model)
-- [x] Reproducible seeds and fixtures (evidence: bench/tasks (20) + deterministic StubModelClient)
+- [x] Reproducible seeds and fixtures (evidence: harness/bench/tasks (20) + deterministic StubModelClient)
 - [ ] Public report
 - [ ] Comparison with Mika on equivalent Android tasks (clearly labelled)
 - [x] `docs/product/bench.md` (evidence: docs/product/bench.md)

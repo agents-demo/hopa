@@ -24,7 +24,7 @@ except ImportError:  # pragma: no cover - CI installs it
     print("brain-contract: jsonschema is required", file=sys.stderr)
     raise SystemExit(2)
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def wait_for_port(process: subprocess.Popen[str], timeout: float = 20.0) -> int:
@@ -56,7 +56,7 @@ def request(url: str, payload: dict | None = None) -> tuple[int, dict]:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--jar", default=str(ROOT / "brain" / "build" / "brain.jar"))
+    parser.add_argument("--jar", default=str(ROOT / "services" / "brain" / "build" / "brain.jar"))
     parser.add_argument("--gson", default=str(ROOT / ".tools" / "gson-2.11.0.jar"))
     args = parser.parse_args()
 
@@ -91,8 +91,8 @@ def main() -> int:
             },
         )
         assert status == 200, decision
-        schema = json.loads((ROOT / "schemas" / "decision.schema.json").read_text("utf-8"))
-        action_schema = json.loads((ROOT / "schemas" / "action.schema.json").read_text("utf-8"))
+        schema = json.loads((ROOT / "contracts" / "schemas" / "decision.schema.json").read_text("utf-8"))
+        action_schema = json.loads((ROOT / "contracts" / "schemas" / "action.schema.json").read_text("utf-8"))
         registry = Registry().with_resources(
             [
                 ("action.schema.json", Resource.from_contents(action_schema)),

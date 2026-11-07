@@ -2,7 +2,7 @@
 # Run Python, brain and ArkTS tests, plus lint and plan checks (Windows).
 $ErrorActionPreference = 'Stop'
 
-$root = Split-Path -Parent $PSScriptRoot
+$root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $venv = Join-Path $root '.venv\Scripts\python.exe'
 
 if (Test-Path $venv) {
@@ -21,38 +21,38 @@ if (Test-Path $venv) {
 Write-Host '=== installing Python packages (editable) ==='
 & $pythonExe @pythonPrefix -m pip install -U pip | Out-Host
 & $pythonExe @pythonPrefix -m pip install `
-    -e (Join-Path $root 'pc-agent') `
-    -e (Join-Path $root 'bench[dev]') `
-    -e (Join-Path $root 'agent[dev]') | Out-Host
+    -e (Join-Path $root 'services\pc-agent') `
+    -e (Join-Path $root 'harness\bench[dev]') `
+    -e (Join-Path $root 'harness\agent[dev]') | Out-Host
 if ($LASTEXITCODE -ne 0) { throw 'pip install failed' }
 
 Write-Host '=== Python tests ==='
 & $pythonExe @pythonPrefix -m pytest `
-    (Join-Path $root 'pc-agent') `
-    (Join-Path $root 'bench') `
-    (Join-Path $root 'agent') `
-    (Join-Path $root 'scripts') -q
+    (Join-Path $root 'services\pc-agent') `
+    (Join-Path $root 'harness\bench') `
+    (Join-Path $root 'harness\agent') `
+    (Join-Path $root 'tools\scripts') -q
 if ($LASTEXITCODE -ne 0) { throw 'Python tests failed' }
 
 Write-Host '=== agent coverage ==='
-& $pythonExe @pythonPrefix -m pytest (Join-Path $root 'agent') `
+& $pythonExe @pythonPrefix -m pytest (Join-Path $root 'harness\agent') `
     --cov=hopa_agent --cov-report=term --cov-fail-under=80 -q
 if ($LASTEXITCODE -ne 0) { throw 'agent coverage gate failed' }
 
 Write-Host '=== ruff ==='
 & $pythonExe @pythonPrefix -m ruff check `
-    (Join-Path $root 'pc-agent') (Join-Path $root 'bench') (Join-Path $root 'agent')
+    (Join-Path $root 'services\pc-agent') (Join-Path $root 'harness\bench') (Join-Path $root 'harness\agent')
 if ($LASTEXITCODE -ne 0) { throw 'ruff check failed' }
 & $pythonExe @pythonPrefix -m ruff format --check `
-    (Join-Path $root 'pc-agent') (Join-Path $root 'bench') (Join-Path $root 'agent')
+    (Join-Path $root 'services\pc-agent') (Join-Path $root 'harness\bench') (Join-Path $root 'harness\agent')
 if ($LASTEXITCODE -ne 0) { throw 'ruff format check failed' }
 
 Write-Host '=== plan lint ==='
-& $pythonExe @pythonPrefix (Join-Path $root 'scripts\plan-status.py') --lint
+& $pythonExe @pythonPrefix (Join-Path $root 'tools\scripts\plan-status.py') --lint
 if ($LASTEXITCODE -ne 0) { throw 'plan lint failed' }
 
 Write-Host '=== app catalogue ==='
-& $pythonExe @pythonPrefix (Join-Path $root 'scripts\build-app-catalog.py') --check
+& $pythonExe @pythonPrefix (Join-Path $root 'tools\scripts\build-app-catalog.py') --check
 if ($LASTEXITCODE -ne 0) { throw 'app catalogue is stale' }
 
 Write-Host '=== brain tests ==='

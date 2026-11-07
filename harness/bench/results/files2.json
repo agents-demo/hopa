@@ -1,0 +1,48 @@
+{
+  "started_at": "2026-11-06T10:29:01.637252+00:00",
+  "total": 1,
+  "results": [
+    {
+      "task_id": "files-locate",
+      "goal": "Locate a file by name",
+      "app": "Files",
+      "success": false,
+      "error": null,
+      "failure": "predicate_not_met",
+      "tokens": 0,
+      "duration_s": 32.862,
+      "steps": [
+        {
+          "action": "launch",
+          "ok": true,
+          "detail": "launched com.huawei.hmos.files",
+          "latency_ms": 1399.4
+        },
+        {
+          "action": "wait",
+          "ok": true,
+          "detail": "5.0s",
+          "latency_ms": 5000.2
+        },
+        {
+          "action": "tap_id",
+          "ok": true,
+          "detail": "tapped 660,626",
+          "latency_ms": 1971.6
+        },
+        {
+          "action": "wait",
+          "ok": true,
+          "detail": "1.0s",
+          "latency_ms": 1003.6
+        },
+        {
+          "action": "type",
+          "ok": true,
+          "detail": "report",
+          "latency_ms": 770.3
+        }
+      ]
+    }
+  ]
+}

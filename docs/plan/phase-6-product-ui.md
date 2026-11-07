@@ -13,7 +13,7 @@
 - [ ] i18n: English + Chinese minimum
 - [ ] Dark mode
 - [ ] App icon and splash
-- [x] Signing configuration (evidence: scripts/sign-app.ps1 + docs/guides/build-and-sign.md; debug profile only, release profile pending)
+- [x] Signing configuration (evidence: tools/scripts/sign-app.ps1 + docs/guides/build-and-sign.md; debug profile only, release profile pending)
 - [ ] Opt-in crash reporting
 - [ ] E2E UI tests
 - [ ] Cold start < 2 s

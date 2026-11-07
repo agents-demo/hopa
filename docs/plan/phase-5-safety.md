@@ -4,14 +4,14 @@
 
 - [x] Classify payment from screen semantics, not action kind (evidence: ApprovalPolicy.classify (screen semantics))
 - [x] Detect pay, checkout, confirm order, amount, merchant, currency (evidence: PAYMENT_SCREEN_WORDS + extract_payment_context)
-- [x] Any tap on a payment-classified screen asks (evidence: agent/tests/test_policy.py)
+- [x] Any tap on a payment-classified screen asks (evidence: harness/agent/tests/test_policy.py)
 - [ ] Approval sheet shows amount, merchant and consequence
 - [x] Deny stops the branch and cannot be retried elsewhere (evidence: DeviceExecutor deny path + AgentLoop stop)
 - [x] Approval is never remembered (evidence: ApprovalPolicy has no remember state)
 - [x] Model cannot clear or set payment classification (evidence: Action.from_dict drops isPayment)
-- [x] Test: model claims â€œalready approvedâ€ â†’ still asks (evidence: agent/tests/test_adversarial.py)
-- [x] Test: model sets `isPayment:false` â†’ ignored (evidence: agent/tests/test_adversarial.py)
-- [x] Test: hidden payment step inside a long flow â†’ asks (evidence: agent/tests/test_adversarial.py)
+- [x] Test: model claims â€œalready approvedâ€ â†’ still asks (evidence: harness/agent/tests/test_adversarial.py)
+- [x] Test: model sets `isPayment:false` â†’ ignored (evidence: harness/agent/tests/test_adversarial.py)
+- [x] Test: hidden payment step inside a long flow â†’ asks (evidence: harness/agent/tests/test_adversarial.py)
 - [ ] 100% refusal on the payment bench
 - [ ] Tested on 3 checkout flows with a test merchant and no real charge
 
@@ -21,16 +21,16 @@
 - [ ] Bulk actions capped
 - [ ] Undo offered where the platform allows
 - [x] Plain-language confirmation text (evidence: ApprovalRequest.consequence + docs/reference/safety.md)
-- [x] Tests for each action class (evidence: agent/tests/test_policy.py (sensitive kinds))
+- [x] Tests for each action class (evidence: harness/agent/tests/test_policy.py (sensitive kinds))
 
 ### 10.3 Security
 
-- [x] Prompt injection: screen text never becomes instructions (evidence: agent/tests/test_safety.py + SYSTEM_PROMPT)
+- [x] Prompt injection: screen text never becomes instructions (evidence: harness/agent/tests/test_safety.py + SYSTEM_PROMPT)
 - [x] Tool allow-list per task (evidence: DeviceExecutor.allowed_kinds + test_safety)
 - [ ] Optional app allow-list
 - [ ] Sandbox escape suite green
 - [ ] Secrets absent from logs and traces
-- [x] Redaction suite green (evidence: agent/tests/test_observation.py (20 cases))
+- [x] Redaction suite green (evidence: harness/agent/tests/test_observation.py (20 cases))
 - [ ] TLS and certificate handling decided and documented
 - [ ] Dependency audit clean
 - [x] Threat model document (evidence: docs/reference/threat-model.md)
@@ -81,11 +81,11 @@
 ### 10.6 Abuse, content and exfiltration
 
 - [x] Disallowed-task taxonomy written (illegal, harmful, harassing, fraudulent) (evidence: docs/reference/abuse.md (taxonomy))
-- [x] Refusal behaviour implemented with a plain explanation (evidence: agent/src/hopa_agent/refusal.py + AgentLoop refusal)
-- [x] Jailbreak test suite (20 prompts) green (evidence: agent/tests/test_refusal.py (20 prompts))
-- [x] Indirect prompt injection from web pages and documents tested (evidence: agent/tests/test_safety.py + PromptBookTest)
-- [x] Data-exfiltration test: model tries to send screen text to an unapproved URL (evidence: agent/tests/test_net.py (unapproved host))
-- [x] URL allow-list enforced inside `ActionExecutor`, not only in the prompt (evidence: agent/src/hopa_agent/net.py + DeviceExecutor)
+- [x] Refusal behaviour implemented with a plain explanation (evidence: harness/agent/src/hopa_agent/refusal.py + AgentLoop refusal)
+- [x] Jailbreak test suite (20 prompts) green (evidence: harness/agent/tests/test_refusal.py (20 prompts))
+- [x] Indirect prompt injection from web pages and documents tested (evidence: harness/agent/tests/test_safety.py + PromptBookTest)
+- [x] Data-exfiltration test: model tries to send screen text to an unapproved URL (evidence: harness/agent/tests/test_net.py (unapproved host))
+- [x] URL allow-list enforced inside `ActionExecutor`, not only in the prompt (evidence: harness/agent/src/hopa_agent/net.py + DeviceExecutor)
 - [ ] No user data in URLs, query strings or referrers
 - [ ] MCP server trust model and authentication documented
 - [ ] API keys stored in HUKS, never in preferences or logs

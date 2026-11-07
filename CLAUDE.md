@@ -45,7 +45,7 @@ paths in tracked files; scripts should discover tools or read env vars.
 
 ## Build
 
-From `app/` (or through `scripts/build.*`):
+From `app/` (or through `tools/scripts/build.*`):
 
 ```bash
 hvigorw assembleHap --no-daemon
@@ -87,7 +87,7 @@ hdc shell aa start -a EntryAbility -b com.hopa.agent
 hdc shell uitest dumpLayout -p /data/local/tmp/layout.json
 ```
 
-Use `scripts/install-to-device.*` for the supported flow. Signing is done in
+Use `tools/scripts/install-to-device.*` for the supported flow. Signing is done in
 DevEco Studio (automatic signing) or CI secrets; never commit signing material.
 
 ## Module boundaries
@@ -134,7 +134,7 @@ capabilities/<name> (HAR)
 
 ## Benchmarks
 
-- Tasks live in `bench/tasks/*.yaml` and follow the schema in `bench/README.md`.
+- Tasks live in `harness/bench/tasks/*.yaml` and follow the schema in `harness/bench/README.md`.
 - A task must declare `goal`, `app` (and ideally `bundle`), and a `success` check.
 - Never make a benchmark task bypass the payment gate. Payment tasks assert that
   the gate *blocks* until confirmation.

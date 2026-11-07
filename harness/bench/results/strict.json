@@ -1,0 +1,222 @@
+{
+  "started_at": "2026-11-06T10:07:31.789444+00:00",
+  "total": 7,
+  "results": [
+    {
+      "task_id": "settings-wlan",
+      "goal": "Open Settings and reach the WLAN screen",
+      "app": "Settings",
+      "success": true,
+      "error": null,
+      "failure": null,
+      "tokens": 0,
+      "duration_s": 11.158,
+      "steps": [
+        {
+          "action": "launch",
+          "ok": true,
+          "detail": "launched com.huawei.hmos.settings",
+          "latency_ms": 1466.1
+        },
+        {
+          "action": "wait",
+          "ok": true,
+          "detail": "2.0s",
+          "latency_ms": 2000.5
+        },
+        {
+          "action": "tap_text",
+          "ok": true,
+          "detail": "tapped 377,1074",
+          "latency_ms": 3827.9
+        },
+        {
+          "action": "wait",
+          "ok": true,
+          "detail": "1.0s",
+          "latency_ms": 1001.7
+        }
+      ]
+    },
+    {
+      "task_id": "calendar-new-event",
+      "goal": "Open Calendar and start creating a new event",
+      "app": "Calendar",
+      "success": false,
+      "error": null,
+      "failure": "target_not_found",
+      "tokens": 0,
+      "duration_s": 70.028,
+      "steps": [
+        {
+          "action": "launch",
+          "ok": true,
+          "detail": "launched com.huawei.hmos.calendar",
+          "latency_ms": 368.9
+        },
+        {
+          "action": "wait",
+          "ok": true,
+          "detail": "2.0s",
+          "latency_ms": 2000.4
+        },
+        {
+          "action": "tap_id",
+          "ok": false,
+          "detail": "target not found: {'id': 'phone_add_agenda'}",
+          "latency_ms": 4011.2
+        }
+      ]
+    },
+    {
+      "task_id": "browser-search-harmonyos",
+      "goal": "Open the browser and search for HarmonyOS",
+      "app": "Browser",
+      "success": false,
+      "error": null,
+      "failure": "target_not_found",
+      "tokens": 0,
+      "duration_s": 38.931,
+      "steps": [
+        {
+          "action": "launch",
+          "ok": true,
+          "detail": "launched com.huawei.hmos.browser",
+          "latency_ms": 870.2
+        },
+        {
+          "action": "wait",
+          "ok": true,
+          "detail": "6.0s",
+          "latency_ms": 6000.6
+        },
+        {
+          "action": "tap_text",
+          "ok": false,
+          "detail": "target not found: {'text': 'Search or type a URL'}",
+          "latency_ms": 1681.5
+        }
+      ]
+    },
+    {
+      "task_id": "contacts-find",
+      "goal": "Find a contact by name",
+      "app": "Contacts",
+      "success": false,
+      "error": null,
+      "failure": "target_not_found",
+      "tokens": 0,
+      "duration_s": 8.72,
+      "steps": [
+        {
+          "action": "launch",
+          "ok": true,
+          "detail": "launched com.ohos.contacts",
+          "latency_ms": 925.5
+        },
+        {
+          "action": "wait",
+          "ok": true,
+          "detail": "2.0s",
+          "latency_ms": 2000.6
+        },
+        {
+          "action": "tap_text",
+          "ok": false,
+          "detail": "target not found: {'text': 'Search'}",
+          "latency_ms": 3162.9
+        }
+      ]
+    },
+    {
+      "task_id": "files-locate",
+      "goal": "Locate a file by name",
+      "app": "Files",
+      "success": false,
+      "error": null,
+      "failure": "target_not_found",
+      "tokens": 0,
+      "duration_s": 7.798,
+      "steps": [
+        {
+          "action": "launch",
+          "ok": true,
+          "detail": "launched com.huawei.hmos.files",
+          "latency_ms": 603.5
+        },
+        {
+          "action": "wait",
+          "ok": true,
+          "detail": "2.0s",
+          "latency_ms": 2000.5
+        },
+        {
+          "action": "tap_text",
+          "ok": false,
+          "detail": "target not found: {'text': 'Search'}",
+          "latency_ms": 3090.0
+        }
+      ]
+    },
+    {
+      "task_id": "settings-wifi-toggle",
+      "goal": "Toggle Wi-Fi off and on",
+      "app": "Settings",
+      "success": false,
+      "error": null,
+      "failure": "target_not_found",
+      "tokens": 0,
+      "duration_s": 94.716,
+      "steps": [
+        {
+          "action": "launch",
+          "ok": true,
+          "detail": "launched com.huawei.hmos.settings",
+          "latency_ms": 1095.3
+        },
+        {
+          "action": "wait",
+          "ok": true,
+          "detail": "2.0s",
+          "latency_ms": 2000.7
+        },
+        {
+          "action": "tap_text",
+          "ok": false,
+          "detail": "target not found: {'text': 'Wi-Fi'}",
+          "latency_ms": 55183.5
+        }
+      ]
+    },
+    {
+      "task_id": "settings-brightness",
+      "goal": "Change the screen brightness",
+      "app": "Settings",
+      "success": true,
+      "error": null,
+      "failure": null,
+      "tokens": 0,
+      "duration_s": 9.293,
+      "steps": [
+        {
+          "action": "launch",
+          "ok": true,
+          "detail": "launched com.huawei.hmos.settings",
+          "latency_ms": 1333.8
+        },
+        {
+          "action": "wait",
+          "ok": true,
+          "detail": "2.0s",
+          "latency_ms": 2000.4
+        },
+        {
+          "action": "tap_text",
+          "ok": true,
+          "detail": "tapped 533,1482",
+          "latency_ms": 3293.4
+        }
+      ]
+    }
+  ]
+}

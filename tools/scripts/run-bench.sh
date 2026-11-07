@@ -2,8 +2,8 @@
 # Run HOPA-Bench against the connected device with the stub model.
 set -euo pipefail
 
-ROOT=$(cd "$(dirname "$0")/.." && pwd)
-RESULTS="$ROOT/bench/results/latest.json"
+ROOT=$(cd "$(dirname "$0")/../.." && pwd)
+RESULTS="$ROOT/harness/bench/results/latest.json"
 
 if [ -x "$ROOT/.venv/bin/python" ]; then
   PY="$ROOT/.venv/bin/python"
@@ -17,7 +17,7 @@ else
 fi
 
 "$PY" -c "import hopa_pc_agent, hopa_bench" 2>/dev/null || {
-  "$PY" -m pip install -e "$ROOT/pc-agent" -e "$ROOT/bench"
+  "$PY" -m pip install -e "$ROOT/services/pc-agent" -e "$ROOT/harness/bench"
 }
 
-"$PY" -m hopa_bench run --tasks "$ROOT/bench/tasks" --out "$RESULTS" "$@"
+"$PY" -m hopa_bench run --tasks "$ROOT/harness/bench/tasks" --out "$RESULTS" "$@"

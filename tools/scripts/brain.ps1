@@ -1,7 +1,7 @@
 # Compile and test the Kotlin brain. Pinned to Kotlin 2.1.0, Gson 2.11.0 and JDK 17.
 $ErrorActionPreference = "Stop"
 
-$root = Split-Path -Parent $PSScriptRoot
+$root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $version = "2.1.0"
 $gsonVersion = "2.11.0"
 $tools = Join-Path $root ".tools"
@@ -21,9 +21,9 @@ if (-not (Test-Path $gson)) {
     Invoke-WebRequest -Uri "https://repo1.maven.org/maven2/com/google/code/gson/gson/$gsonVersion/gson-$gsonVersion.jar" -OutFile $gson
 }
 
-$sources = Get-ChildItem (Join-Path $root "brain/src") -Recurse -Filter *.kt |
+$sources = Get-ChildItem (Join-Path $root "services/brain/src") -Recurse -Filter *.kt |
     ForEach-Object { $_.FullName }
-$out = Join-Path $root "brain/build/brain.jar"
+$out = Join-Path $root "services/brain/build/brain.jar"
 New-Item -ItemType Directory -Force (Split-Path $out) | Out-Null
 
 & (Join-Path $kotlinc "bin/kotlinc.bat") $sources -classpath $gson -include-runtime -d $out
@@ -36,14 +36,14 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 & java -cp $classpath hopa.brain.ServerTestKt
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-& java -cp $classpath hopa.brain.KnowledgeLoaderTestKt (Join-Path $root "brain/knowledge/apps")
+& java -cp $classpath hopa.brain.KnowledgeLoaderTestKt (Join-Path $root "services/brain/knowledge/apps")
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 & java -cp $classpath hopa.brain.PromptBookTestKt
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-& java -cp $classpath hopa.brain.SkillLoaderTestKt (Join-Path $root "brain/knowledge/skills")
+& java -cp $classpath hopa.brain.SkillLoaderTestKt (Join-Path $root "services/brain/knowledge/skills")
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-& java -cp $classpath hopa.brain.SiteLoaderTestKt (Join-Path $root "brain/knowledge/sites")
+& java -cp $classpath hopa.brain.SiteLoaderTestKt (Join-Path $root "services/brain/knowledge/sites")
 exit $LASTEXITCODE

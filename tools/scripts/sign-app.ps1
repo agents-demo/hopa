@@ -17,8 +17,8 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$root = Split-Path -Parent $PSScriptRoot
-$signing = Join-Path $root 'signing'
+$root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+$signing = Join-Path $root 'tools\signing'
 $keystore = Join-Path $signing 'OpenHarmony.p12'
 $keystorePwd = '123456'
 $keyAlias = 'hopa-app-debug'

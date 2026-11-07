@@ -23,22 +23,22 @@ python -m pip install -e ./pc-agent -e ./bench[dev] -e ./agent[dev]
 ruff check pc-agent bench agent
 ruff format --check pc-agent bench agent
 pytest pc-agent bench agent
-python scripts/plan-status.py --lint
-python scripts/build-app-catalog.py --check
-python -m hopa_bench validate --tasks bench/tasks
+python tools/scripts/plan-status.py --lint
+python tools/scripts/build-app-catalog.py --check
+python -m hopa_bench validate --tasks harness/bench/tasks
 ```
 
 For an ArkTS change, also run the core Local Tests on a machine with DevEco.
 
 ## Adding an app or a site
 
-1. Copy `brain/knowledge/apps/settings/APP.md` as a template.
+1. Copy `services/brain/knowledge/apps/settings/APP.md` as a template.
 2. `bundle` must be a name checked on a device or AppGallery. If it is not
    checked yet, write `bundle: UNCONFIRMED`; never guess a package.
 3. Add `bundle_verified: YYYY-MM-DD` only after a launch on a device.
 4. Add `ability:` (the launcher ability) if the app should be openable from the
    Apps tab.
-5. Run `python scripts/build-app-catalog.py` to regenerate the in-app catalogue.
+5. Run `python tools/scripts/build-app-catalog.py` to regenerate the in-app catalogue.
 6. Sites follow the same rule with `domains` in `SITE.md`.
 
 The generated `AppCatalog.ets` is committed; CI fails if it is stale.

@@ -6,12 +6,12 @@ No YAML library is required; the parser accepts only `key: value` lines.
 ## Layout
 
 ```
-brain/knowledge/apps/
+services/brain/knowledge/apps/
 ├── settings/APP.md
 ...
 └── music/APP.md
 
-brain/knowledge/sites/
+services/brain/knowledge/sites/
 ├── amazon.com/SITE.md
 ...
 └── zhipin.com/SITE.md
@@ -50,13 +50,13 @@ That is honest: the loader validates the format, not the screen selectors.
 
 ## Add an app
 
-1. Create `brain/knowledge/apps/<name>/APP.md`.
+1. Create `services/brain/knowledge/apps/<name>/APP.md`.
 2. Fill the required fields. Use the real bundle from `hdc shell bm dump -a`.
 3. Write the shortest path to the task, with irreversible steps marked.
 4. Run:
 
 ```bash
-./scripts/brain.sh          # or .\scripts\brain.ps1
+./tools/scripts/brain.sh          # or .\tools\scripts\brain.ps1
 ```
 
 The `KnowledgeLoaderTest` loads every file and fails on a missing field or a
@@ -70,8 +70,8 @@ non-HarmonyOS platform.
   Zhipin, Dedao, Douyin, Feishu, Jike, Kuaishou, QQ Mail, Toutiao, WeChat,
   Weibo, Xianyu, Xiaohongshu, Zhihu. They match by name/alias but never launch
   by an unverified bundle.
-- 21 web sites under `brain/knowledge/sites/`.
-- 6 skill manifests under `brain/knowledge/skills/`.
+- 21 web sites under `services/brain/knowledge/sites/`.
+- 6 skill manifests under `services/brain/knowledge/skills/`.
 - All are `validated: pending`.
 - The 23 Mika Android apps are triaged in `docs/history/knowledge-triage.md`; 1 is
   replaced, 15 are catalogued with unconfirmed bundles, 7 are web-only.
@@ -93,10 +93,10 @@ name must be the ability whose skills include `entity.system.home`; check it wit
 
 ## The in-app catalogue
 
-`scripts/build-app-catalog.py` reads every `APP.md` and generates
+`tools/scripts/build-app-catalog.py` reads every `APP.md` and generates
 `app/entry/src/main/ets/service/AppCatalog.ets`, which the **Apps** tab shows.
 The generated file is committed, and `build-app-catalog.py --check` runs in CI
-and in `scripts/run-tests`, so the app and the knowledge cannot drift.
+and in `tools/scripts/run-tests`, so the app and the knowledge cannot drift.
 
 ## Sites
 

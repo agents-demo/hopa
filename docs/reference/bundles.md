@@ -14,7 +14,7 @@ A name is "verified" only when the bundle exists **and** the launched screen
 matches the app. "Not on this image" is not a failure of the name; it means the
 name cannot be checked here.
 
-## Knowledge apps (`brain/knowledge/apps`)
+## Knowledge apps (`services/brain/knowledge/apps`)
 
 | App | Bundle | Status | How it was checked |
 |---|---|---|---|
@@ -60,7 +60,7 @@ but never launch by a guessed package. Replace `UNCONFIRMED` only after
 | Xiaohongshu | `com.xingin.xhs` | to confirm |
 | Zhihu | `com.zhihu.android` | to confirm |
 
-## Bench tasks (`bench/tasks`)
+## Bench tasks (`harness/bench/tasks`)
 
 | Task | Bundle | Status |
 |---|---|---|

@@ -5,7 +5,7 @@ trigger term. There are six launch skills.
 
 ## Format
 
-`brain/knowledge/skills/<name>/SKILL.md`:
+`services/brain/knowledge/skills/<name>/SKILL.md`:
 
 ```markdown
 ---
@@ -45,7 +45,7 @@ sites: []
 
 ## Loader
 
-`brain/src/main/kotlin/hopa/brain/SkillLoader.kt` parses every `SKILL.md` and
+`services/brain/src/main/kotlin/hopa/services/brain/SkillLoader.kt` parses every `SKILL.md` and
 validates the required fields. `SkillLoaderTest` loads all six.
 
 ## Status
@@ -57,7 +57,7 @@ validates the required fields. `SkillLoaderTest` loads all six.
 
 ## Add a skill
 
-1. Create `brain/knowledge/skills/<name>/SKILL.md`.
+1. Create `services/brain/knowledge/skills/<name>/SKILL.md`.
 2. Fill the front matter and write the shortest reliable path.
 3. Mark irreversible steps and ask-before-send actions.
-4. Run `./scripts/brain.sh` (or `.\\scripts\\brain.ps1`).
+4. Run `./tools/scripts/brain.sh` (or `.\\tools\scripts\\brain.ps1`).

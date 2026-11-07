@@ -6,8 +6,8 @@
 #   ./scripts/sign-app.sh --udid <id>  # override the embedded device id
 set -euo pipefail
 
-ROOT=$(cd "$(dirname "$0")/.." && pwd)
-SIGNING="$ROOT/signing"
+ROOT=$(cd "$(dirname "$0")/../.." && pwd)
+SIGNING="$ROOT/tools/signing"
 KEYSTORE="$SIGNING/OpenHarmony.p12"
 KEYSTORE_PWD=123456
 KEY_ALIAS=hopa-app-debug

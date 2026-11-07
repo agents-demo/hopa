@@ -1,0 +1,36 @@
+{
+  "started_at": "2026-11-06T10:01:23.950382+00:00",
+  "total": 1,
+  "results": [
+    {
+      "task_id": "contacts-find",
+      "goal": "Find a contact by name",
+      "app": "Contacts",
+      "success": true,
+      "error": null,
+      "failure": "target_not_found",
+      "tokens": 0,
+      "duration_s": 48.102,
+      "steps": [
+        {
+          "action": "launch",
+          "ok": true,
+          "detail": "launched com.ohos.contacts",
+          "latency_ms": 24887.3
+        },
+        {
+          "action": "wait",
+          "ok": true,
+          "detail": "2.0s",
+          "latency_ms": 2068.4
+        },
+        {
+          "action": "tap_text",
+          "ok": false,
+          "detail": "target not found: {'text': 'Search'}",
+          "latency_ms": 5060.7
+        }
+      ]
+    }
+  ]
+}

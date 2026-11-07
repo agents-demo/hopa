@@ -1,7 +1,7 @@
 ﻿# HOPA rebuild plan and roadmap
 
 **This document is the contract.** Development is finished when every checkbox in
-Â§5â€“Â§15 is checked, `python scripts/plan-status.py --require-complete` exits `0`,
+Â§5â€“Â§15 is checked, `python tools/scripts/plan-status.py --require-complete` exits `0`,
 and the two sign-offs in Â§15 are recorded.
 
 Reference product: Mika (Apache-2.0). HOPA keeps its own name, UI and NOTICE.
@@ -28,15 +28,15 @@ Reference product: Mika (Apache-2.0). HOPA keeps its own name, UI and NOTICE.
 - Box size is not uniform: one box may be an hour or a two-week epic. The
   percentage is a count, not a schedule. Exit criteria, not the count, decide a
   milestone.
-- `python scripts/plan-status.py --lint` must pass: no duplicate boxes, every
+- `python tools/scripts/plan-status.py --lint` must pass: no duplicate boxes, every
   `[x]` carries `(evidence: â€¦)`, and no decision pair is double-checked.
 
 ### 1.2 Progress
 
 ```bash
-python scripts/plan-status.py                 # per-phase table
-python scripts/plan-status.py --lint          # check evidence, duplicates, decision pairs
-python scripts/plan-status.py --require-complete   # exit 1 until finished
+python tools/scripts/plan-status.py                 # per-phase table
+python tools/scripts/plan-status.py --lint          # check evidence, duplicates, decision pairs
+python tools/scripts/plan-status.py --require-complete   # exit 1 until finished
 ```
 
 ### 1.3 Milestones
@@ -109,11 +109,11 @@ it, not at the end.
 | `app/capabilities` | interfaces + web bridge (ArkWeb), a11y extension declared with the ACL granted on the emulator, sandbox stub, system intents | `module.json5`, `BrowserController.ets` |
 | `app/entry` | 6-tab ArkUI app (Chat, Web, Apps, Tasks, Settings, Memory) wired to `AgentLoop`; approval sheet; providers; memory; skills; run history | `pages/Index.ets` |
 | Agent loop | captures the screen, asks for one action, gates, records | `AgentLoop.ets` |
-| `pc-agent` | CLI + MCP implemented: devices, dump, tap, double-tap, long-press, type, swipe, screenshot, launch, stop, key, install, uninstall, apps | `pc-agent/src` |
-| `bench` | 20 task files; 5/7 tasks pass on the emulator (strict: a failed step cannot pass) | `bench/tasks`, `docs/product/bench-results-v0.md` |
-| Brain | Kotlin router + HTTP service + knowledge + prompts + skills + sites (98 assertions + schema contract) | `brain/src`, `docs/reference/brain.md` |
-| HAP | builds with DevEco 6.1.1 / API 24; signed with the SDK local debug kit; installed with the ACL permission on the Pura 90 emulator | `scripts/sign-app.ps1` |
-| Knowledge | 27 apps (12 system + 15 Mika catalogued), 21 sites, 6 skills | `brain/knowledge`, `docs/history/knowledge-triage.md` |
+| `pc-agent` | CLI + MCP implemented: devices, dump, tap, double-tap, long-press, type, swipe, screenshot, launch, stop, key, install, uninstall, apps | `services/pc-agent/src` |
+| `bench` | 20 task files; 5/7 tasks pass on the emulator (strict: a failed step cannot pass) | `harness/bench/tasks`, `docs/product/bench-results-v0.md` |
+| Brain | Kotlin router + HTTP service + knowledge + prompts + skills + sites (98 assertions + schema contract) | `services/brain/src`, `docs/reference/brain.md` |
+| HAP | builds with DevEco 6.1.1 / API 24; signed with the SDK local debug kit; installed with the ACL permission on the Pura 90 emulator | `tools/scripts/sign-app.ps1` |
+| Knowledge | 27 apps (12 system + 15 Mika catalogued), 21 sites, 6 skills | `services/brain/knowledge`, `docs/history/knowledge-triage.md` |
 | CI | Python tests + ruff; HAP build and core Local Tests skip with a warning when the mirrored toolchain secret is absent | `.github/workflows/ci.yml` |
 | Tests baseline | 277 Python tests, 98 Kotlin assertions, ArkTS Local Tests pass; 20 bench tasks validate; device bench 5/7 | local run 2026-11-06 |
 
@@ -152,8 +152,8 @@ Module responsibilities:
 | `core/` | loop, gate, routing, memory, records | import UI or platform APIs |
 | `capabilities/*` | one platform surface each | import each other |
 | `entry/` | UI, permissions, wiring | contain agent logic |
-| `pc-agent/` | device I/O for development | be required at runtime |
-| `bench/` | tasks, runner, scoring | be imported by the app |
+| `services/pc-agent/` | device I/O for development | be required at runtime |
+| `harness/bench/` | tasks, runner, scoring | be imported by the app |
 
 ---
 

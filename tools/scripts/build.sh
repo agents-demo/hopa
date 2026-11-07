@@ -2,7 +2,7 @@
 # Build the HOPA HAP with DevEco Studio or the Command Line Tools.
 set -euo pipefail
 
-ROOT=$(cd "$(dirname "$0")/.." && pwd)
+ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 APP="$ROOT/app"
 
 if [ -n "${HOPA_CLT_HOME:-}" ] && [ -x "$HOPA_CLT_HOME/bin/hvigorw" ]; then

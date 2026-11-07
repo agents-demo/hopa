@@ -45,7 +45,7 @@ confirmed with `hdc shell bm dump -a` or AppGallery.
 
 ## Sites
 
-21 sites are ported as `brain/knowledge/sites/<domain>/SITE.md`. Each has the
+21 sites are ported as `services/brain/knowledge/sites/<domain>/SITE.md`. Each has the
 domain, aliases, linked apps and `validated: pending`.
 
 Chrome has no site file: a "open Chrome" request uses the built-in browser

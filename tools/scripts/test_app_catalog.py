@@ -5,8 +5,8 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
-SCRIPT = ROOT / "scripts" / "build-app-catalog.py"
+ROOT = Path(__file__).resolve().parents[2]
+SCRIPT = ROOT / "tools" / "scripts" / "build-app-catalog.py"
 
 
 def _module():

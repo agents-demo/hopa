@@ -24,7 +24,7 @@
 - [x] Add a decision log index under `docs/adr/` (evidence: docs/adr/README.md)
 - [x] Pin toolchain versions in `docs/guides/setup.md`: Python 3.12, Node LTS, DevEco 26, compileSdk 26, minCompatible 6.1.1 (API 24), CLT 26.0.0.851 (evidence: docs/guides/setup.md)
 - [x] Add `.editorconfig` and formatting rules for ArkTS and Python (evidence: .editorconfig)
-- [x] Add `scripts/plan-status.py` and test it (evidence: table, --json, --lint, --require-complete, --list-unchecked, decision pairs)
+- [x] Add `tools/scripts/plan-status.py` and test it (evidence: table, --json, --lint, --require-complete, --list-unchecked, decision pairs)
 - [x] Add a CI job that prints plan progress and runs `plan-status.py --lint` on every PR (evidence: .github/workflows/ci.yml)
 
 ### 5.2 CI and quality gates
@@ -33,14 +33,14 @@
 - [x] `ruff format --check` green (evidence: CI: ruff format --check)
 - [x] `pytest pc-agent` green (evidence: CI run 42094448015)
 - [x] `pytest bench` green (evidence: CI run 42094448015)
-- [x] `hopa_bench validate --tasks bench/tasks` green (evidence: CI run 42094448015)
+- [x] `hopa_bench validate --tasks harness/bench/tasks` green (evidence: CI run 42094448015)
 - [ ] ArkTS unit tests run on a macOS runner
 - [ ] HAP build runs on Linux with a mirrored CLT archive
 - [ ] CI fails (not skips) when `HARMONY_CLI_TOOLS_URL` is missing on `main`
 - [x] Coverage report for Python; threshold set (evidence: CI: pytest agent --cov --cov-fail-under=80 (89%))
 - [ ] Coverage report for ArkTS; threshold set
 - [x] `pip-audit` / Dependabot enabled (evidence: `.github/dependabot.yml` (pip + actions))
-- [x] License check: Apache-2.0, NOTICE current, no GPL (evidence: scripts/license-check.py + CI security job)
+- [x] License check: Apache-2.0, NOTICE current, no GPL (evidence: tools/scripts/license-check.py + CI security job)
 - [x] Secret scan (gitleaks) in CI (evidence: security job, CI run 42144612306)
 
 ### 5.3 Environment and baseline

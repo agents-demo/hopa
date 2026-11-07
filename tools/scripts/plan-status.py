@@ -241,7 +241,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--plan",
         type=Path,
-        default=Path(__file__).resolve().parents[1] / "docs" / "plan",
+        default=Path(__file__).resolve().parents[2] / "docs" / "plan",
         help="path to the plan markdown file or its directory",
     )
     parser.add_argument("--json", action="store_true", help="print machine-readable JSON")

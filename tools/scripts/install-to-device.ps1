@@ -2,7 +2,7 @@
 # Install the built HAP on the connected emulator/device and launch it (Windows).
 $ErrorActionPreference = 'Stop'
 
-$root = Split-Path -Parent $PSScriptRoot
+$root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $app = Join-Path $root 'app'
 $out = Join-Path $app 'entry\build\default\outputs\default'
 $bundle = 'com.hopa.agent'

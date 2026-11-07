@@ -30,10 +30,10 @@ AppGallery ACL approval.
 | `app/` ArkUI app | chat, Web, Apps, Tasks, Settings, Memory; signed debug HAP installed on the emulator |
 | `app/core/` agent loop, tool registry, action gate | implemented + hypium tests; OpenAI, Anthropic and Gemini clients |
 | `app/capabilities/` web / sandbox / a11y / system | web works via ArkWeb; a11y declared + ACL granted on the emulator (no enable UI); sandbox is a stub |
-| `pc-agent/` hdc + uitest CLI & MCP server | implemented |
-| `agent/` PC reference loop (observe â†’ decide â†’ act â†’ verify â†’ record) | implemented + tests |
-| `schemas/` JSON contracts (observation, action, decision, record) | v1 |
-| `bench/` HOPA-Bench 20 task definitions | implemented; 5/7 runnable tasks pass on the emulator |
+| `services/pc-agent/` hdc + uitest CLI & MCP server | implemented |
+| `harness/agent/` PC reference loop (observe â†’ decide â†’ act â†’ verify â†’ record) | implemented + tests |
+| `contracts/schemas/` JSON contracts (observation, action, decision, record) | v1 |
+| `harness/bench/` HOPA-Bench 20 task definitions | implemented; 5/7 runnable tasks pass on the emulator |
 
 ## Safety model (non-negotiable)
 
@@ -66,12 +66,12 @@ hopa/
 â”‚       â”œâ”€â”€ sandbox/          # hidden ArkWeb + Pyodide/QuickJS (offline)
 â”‚       â”œâ”€â”€ a11y/             # AccessibilityExtensionAbility skeleton (ACL)
 â”‚       â””â”€â”€ system/           # system intents (alarm, calendar, deep links)
-â”œâ”€â”€ pc-agent/                 # Python: hdc + uitest control, CLI and MCP server
-â”œâ”€â”€ agent/                    # Python: reference loop, gate, policy, records
-â”œâ”€â”€ schemas/                  # v1 JSON contracts shared with the ArkTS core
-â”œâ”€â”€ bench/                    # HOPA-Bench tasks + runner
+â”œâ”€â”€ services/pc-agent/                 # Python: hdc + uitest control, CLI and MCP server
+â”œâ”€â”€ harness/agent/                    # Python: reference loop, gate, policy, records
+â”œâ”€â”€ contracts/schemas/                  # v1 JSON contracts shared with the ArkTS core
+â”œâ”€â”€ harness/bench/                    # HOPA-Bench tasks + runner
 â”œâ”€â”€ docs/                     # setup, architecture, contracts, plan
-â”œâ”€â”€ scripts/                  # build / install / test / bench (bash + PowerShell)
+â”œâ”€â”€ tools/scripts/                  # build / install / test / bench (bash + PowerShell)
 â”œâ”€â”€ .github/workflows/        # CI
 â”œâ”€â”€ CLAUDE.md                 # conventions for future coding sessions
 â”œâ”€â”€ NOTICE
@@ -83,7 +83,7 @@ hopa/
 - Windows 10/11 64-bit, or macOS; **DevEco Studio 26.0.0** with the bundled
   **HarmonyOS SDK 26.0.0** (API 26).
 - **Command Line Tools 26.0.0.851** for headless builds and CI.
-- Python **3.11+** and Node **LTS** for `pc-agent/` and `bench/`.
+- Python **3.11+** and Node **LTS** for `services/pc-agent/` and `harness/bench/`.
 - Emulator: hardware virtualization (Hyper-V + Windows Hypervisor Platform +
   Virtual Machine Platform on Windows), 16 GB+ RAM (32 GB recommended).
 
@@ -93,24 +93,24 @@ Full, reproducible instructions: [docs/guides/setup.md](docs/guides/setup.md).
 
 ```bash
 # 1. Build the HAP from the command line
-./scripts/build.sh              # or .\scripts\build.ps1 on Windows
+./tools/scripts/build.sh              # or .\tools\scripts\build.ps1 on Windows
 
 # 2. Sign with the SDK's local debug kit and install
-./scripts/sign-app.sh --install   # or .\scripts\sign-app.ps1 -Install on Windows
+./tools/scripts/sign-app.sh --install   # or .\tools\scripts\sign-app.ps1 -Install on Windows
 
 # 3. Run core unit tests + python checks
-./scripts/run-tests.sh          # or .\scripts\run-tests.ps1
+./tools/scripts/run-tests.sh          # or .\tools\scripts\run-tests.ps1
 
 # 4. Run the benchmark against the stub model
-./scripts/run-bench.sh          # or .\scripts\run-bench.ps1
+./tools/scripts/run-bench.sh          # or .\tools\scripts\run-bench.ps1
 
 # 5. Summarize a results file
 bench report --input .hopa/bench-v0.json --out docs/product/bench-results-v0.md
 ```
 
-No Huawei account is needed: `scripts/sign-app` uses the OpenHarmony debug
+No Huawei account is needed: `tools/scripts/sign-app` uses the OpenHarmony debug
 certificates shipped with the SDK, embeds the connected device's UDID, and
-regenerates everything under `signing/` (gitignored). See
+regenerates everything under `tools/signing/` (gitignored). See
 [docs/guides/build-and-sign.md](docs/guides/build-and-sign.md).
 
 `pc-agent` can also be used directly:

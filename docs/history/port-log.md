@@ -5,16 +5,16 @@ and never copies Android-only code.
 
 | Date | Mika source | HOPA target | Action | Notes |
 |---|---|---|---|---|
-| 2026-11-05 | `core/knowledge/KnowledgeStore.kt` | `brain/src/main/kotlin/hopa/brain/Router.kt` | clean-room reimplementation | lexical match, installed-first, word boundaries, generic-word rejection |
-| 2026-11-05 | `core/knowledge/ChannelAdvisor.kt` | `brain/src/main/kotlin/hopa/brain/Router.kt` | clean-room reimplementation | app vs web vs signed-in |
-| 2026-11-05 | `KnowledgeStore.packageFor` | `brain/src/main/kotlin/hopa/brain/Router.kt` | clean-room reimplementation | alias and package map |
+| 2026-11-05 | `core/knowledge/KnowledgeStore.kt` | `services/brain/src/main/kotlin/hopa/services/brain/Router.kt` | clean-room reimplementation | lexical match, installed-first, word boundaries, generic-word rejection |
+| 2026-11-05 | `core/knowledge/ChannelAdvisor.kt` | `services/brain/src/main/kotlin/hopa/services/brain/Router.kt` | clean-room reimplementation | app vs web vs signed-in |
+| 2026-11-05 | `KnowledgeStore.packageFor` | `services/brain/src/main/kotlin/hopa/services/brain/Router.kt` | clean-room reimplementation | alias and package map |
 | 2026-11-05 | — | `pc-agent apps` | new code | installed bundle listing from `bm dump -a` |
-| 2026-11-05 | — | `brain/src/main/kotlin/hopa/brain/Server.kt` | new code | `/health`, `/version`, `/decide`, `/session/{id}`; JDK HTTP server + Gson |
-| 2026-11-06 | `core/knowledge/` format | `brain/src/main/kotlin/hopa/brain/KnowledgeLoader.kt` | clean-room | Markdown + front matter; 12 HarmonyOS system app files |
-| 2026-11-06 | `core/prompt/` rules | `brain/src/main/kotlin/hopa/brain/Prompts.kt` | clean-room | system rules, intent gate, channel order, truncation |
-| 2026-11-06 | `core/skills/` format | `brain/src/main/kotlin/hopa/brain/SkillLoader.kt` | clean-room | 6 skill manifests with terms/apps/sites |
-| 2026-11-06 | `knowledge/sites/` metadata | `brain/knowledge/sites/` | clean-room | 18 sites; domains/aliases from Mika metadata, bodies rewritten |
-| 2026-11-06 | `knowledge/apps/` (Mika) | `brain/knowledge/apps/` | clean-room | added 15 Mika apps with `bundle: UNCONFIRMED`; no guessed packages |
+| 2026-11-05 | — | `services/brain/src/main/kotlin/hopa/services/brain/Server.kt` | new code | `/health`, `/version`, `/decide`, `/session/{id}`; JDK HTTP server + Gson |
+| 2026-11-06 | `core/knowledge/` format | `services/brain/src/main/kotlin/hopa/services/brain/KnowledgeLoader.kt` | clean-room | Markdown + front matter; 12 HarmonyOS system app files |
+| 2026-11-06 | `core/prompt/` rules | `services/brain/src/main/kotlin/hopa/services/brain/Prompts.kt` | clean-room | system rules, intent gate, channel order, truncation |
+| 2026-11-06 | `core/skills/` format | `services/brain/src/main/kotlin/hopa/services/brain/SkillLoader.kt` | clean-room | 6 skill manifests with terms/apps/sites |
+| 2026-11-06 | `knowledge/sites/` metadata | `services/brain/knowledge/sites/` | clean-room | 18 sites; domains/aliases from Mika metadata, bodies rewritten |
+| 2026-11-06 | `knowledge/apps/` (Mika) | `services/brain/knowledge/apps/` | clean-room | added 15 Mika apps with `bundle: UNCONFIRMED`; no guessed packages |
 
 No Mika source file is copied. The routing rules are reimplemented from the
 documented behaviour; Mika is credited in `NOTICE`.
@@ -22,10 +22,10 @@ documented behaviour; Mika is credited in `NOTICE`.
 ## Verification
 
 ```bash
-./scripts/brain.sh          # or .\scripts\brain.ps1
+./tools/scripts/brain.sh          # or .\tools\scripts\brain.ps1
 # RouterTest: 17 assertions passed
 
-grep -r "android\." brain/src || true
+grep -r "android\." services/brain/src || true
 # no output
 ```
 

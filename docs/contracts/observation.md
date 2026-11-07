@@ -3,7 +3,7 @@
 An **observation** is the only picture of the screen the model sees. It is
 redacted, hashable and scoped to one moment.
 
-- Schema: [`schemas/observation.schema.json`](../../schemas/observation.schema.json)
+- Schema: [`contracts/schemas/observation.schema.json`](../../contracts/schemas/observation.schema.json)
 - Producer: `hopa-agent observe` on the PC harness; the ArkTS a11y capability on
   device.
 - Consumer: the loop, the approval policy, the run record.
@@ -92,6 +92,6 @@ a future renderer can convert them; the current harness does not scale.
 
 ## Verification
 
-- `agent/tests/test_observation.py`
-- `agent/tests/test_schemas.py`
+- `harness/agent/tests/test_observation.py`
+- `harness/agent/tests/test_schemas.py`
 - `hopa-agent observe --json`

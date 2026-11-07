@@ -6,7 +6,7 @@ Semantic versioning for three things, independently:
 |---|---|---|
 | HAP / app | `MAJOR.MINOR.PATCH` | `0.1.0` |
 | Brain service | `MAJOR.MINOR.PATCH` | `0.1.0` |
-| Contracts (`schemas/`) | integer major + additive minor | `v1` |
+| Contracts (`contracts/schemas/`) | integer major + additive minor | `v1` |
 
 ## Contract rules
 

@@ -12,12 +12,12 @@ HarmonyOS app cannot host a JVM, but the PC harness can.
 ## Decision
 
 1. **M1–M2:** run the loop on the PC. The reference implementation is Python
-   (`agent/`); the Mika Kotlin brain is extracted into a standalone JVM service
+   (`harness/agent/`); the Mika Kotlin brain is extracted into a standalone JVM service
    with no `android.*` imports and an HTTP `POST /decide` contract.
 2. **M3+:** port the same contract to ArkTS in `app/core`. The JVM service
    becomes optional behind a feature flag.
 3. Both implementations share one JSON contract and one golden-file corpus
-   (`schemas/`, `schemas/fixtures/`).
+   (`contracts/schemas/`, `contracts/schemas/fixtures/`).
 
 ## Consequences
 

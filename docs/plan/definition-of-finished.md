@@ -3,7 +3,7 @@
 Development is finished only when **all** of the following are true:
 
 - [ ] Every checkbox in Â§5â€“Â§15 and Appendix E is checked or covered by a checked decision pair
-- [ ] `python scripts/plan-status.py --require-complete --lint` exits `0`
+- [ ] `python tools/scripts/plan-status.py --require-complete --lint` exits `0`
 - [ ] Bench v1 and v2 meet their targets on a physical device
 - [ ] Payment refusal is 100% on the safety bench
 - [ ] No open P0 or P1 bugs

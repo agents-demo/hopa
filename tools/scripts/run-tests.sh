@@ -2,7 +2,7 @@
 # Run Python, brain and ArkTS tests, plus lint and plan checks.
 set -euo pipefail
 
-ROOT=$(cd "$(dirname "$0")/.." && pwd)
+ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 
 if [ -x "$ROOT/.venv/bin/python" ]; then
   PY="$ROOT/.venv/bin/python"
@@ -17,27 +17,27 @@ fi
 
 echo "=== installing Python packages (editable) ==="
 "$PY" -m pip install -U pip
-"$PY" -m pip install -e "$ROOT/pc-agent" -e "$ROOT/bench[dev]" -e "$ROOT/agent[dev]"
+"$PY" -m pip install -e "$ROOT/services/pc-agent" -e "$ROOT/harness/bench[dev]" -e "$ROOT/harness/agent[dev]"
 
 echo "=== Python tests ==="
-"$PY" -m pytest "$ROOT/pc-agent" "$ROOT/bench" "$ROOT/agent" "$ROOT/scripts" -q
+"$PY" -m pytest "$ROOT/services/pc-agent" "$ROOT/harness/bench" "$ROOT/harness/agent" "$ROOT/tools/scripts" -q
 
 echo "=== agent coverage ==="
-"$PY" -m pytest "$ROOT/agent" --cov=hopa_agent --cov-report=term --cov-fail-under=80 -q
+"$PY" -m pytest "$ROOT/harness/agent" --cov=hopa_agent --cov-report=term --cov-fail-under=80 -q
 
 echo "=== ruff ==="
-"$PY" -m ruff check "$ROOT/pc-agent" "$ROOT/bench" "$ROOT/agent"
-"$PY" -m ruff format --check "$ROOT/pc-agent" "$ROOT/bench" "$ROOT/agent"
+"$PY" -m ruff check "$ROOT/services/pc-agent" "$ROOT/harness/bench" "$ROOT/harness/agent"
+"$PY" -m ruff format --check "$ROOT/services/pc-agent" "$ROOT/harness/bench" "$ROOT/harness/agent"
 
 echo "=== plan lint ==="
-"$PY" "$ROOT/scripts/plan-status.py" --lint
+"$PY" "$ROOT/tools/scripts/plan-status.py" --lint
 
 echo "=== app catalogue ==="
-"$PY" "$ROOT/scripts/build-app-catalog.py" --check
+"$PY" "$ROOT/tools/scripts/build-app-catalog.py" --check
 
 echo "=== brain tests ==="
 if [ -x "$ROOT/.tools/kotlinc/bin/kotlinc" ] || command -v java >/dev/null 2>&1; then
-  bash "$ROOT/scripts/brain.sh"
+  bash "$ROOT/tools/scripts/brain.sh"
 else
   echo "Java not found; skipping brain tests." >&2
 fi

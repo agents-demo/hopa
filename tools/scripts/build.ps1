@@ -2,7 +2,7 @@
 # Build the HOPA HAP with DevEco Studio or the Command Line Tools (Windows).
 $ErrorActionPreference = 'Stop'
 
-$root = Split-Path -Parent $PSScriptRoot
+$root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $app = Join-Path $root 'app'
 $dev = 'C:\Program Files\Huawei\DevEco Studio'
 $hvigorw = $null

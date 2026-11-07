@@ -14,7 +14,7 @@
 |---|---|---|---|
 | `core/knowledge/` | 11 | `core/knowledge/` | routing, channel, catalog, learning |
 | `core/skills/` | 5 | `core/skills/` | personal skills |
-| `core/agent/` | 37 | `core/agent/` | loop, context, recommender |
+| `core/harness/agent/` | 37 | `core/harness/agent/` | loop, context, recommender |
 | `core/tool/` | 18 | `core/tool/` | registry, dispatcher, args |
 | `core/uistate/` | 46 | `core/uistate/` | screen model |
 | `core/observation/` | 2 | `core/observation/` | observations |

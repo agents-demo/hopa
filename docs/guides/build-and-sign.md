@@ -2,7 +2,7 @@
 
 HOPA does **not** need a Huawei developer account to run on an emulator or a
 debug device. The DevEco / Command Line Tools SDK ships a complete OpenHarmony
-debug signing kit, and `scripts/sign-app` drives it end to end.
+debug signing kit, and `tools/scripts/sign-app` drives it end to end.
 
 ## What the SDK provides
 
@@ -23,28 +23,28 @@ must still have its UDID in the profile before it will install the HAP.
 ## Run it
 
 ```powershell
-.\scripts\build.ps1
-.\scripts\sign-app.ps1 -Install
+.\tools\scripts\build.ps1
+.\tools\scripts\sign-app.ps1 -Install
 ```
 
 ```bash
-./scripts/build.sh
-./scripts/sign-app.sh --install
+./tools/scripts/build.sh
+./tools/scripts/sign-app.sh --install
 ```
 
 The script:
 
-1. copies the SDK keystore to `signing/OpenHarmony.p12`;
+1. copies the SDK keystore to `tools/signing/OpenHarmony.p12`;
 2. creates an ECC P-256 app key `hopa-app-debug` if it is missing;
 3. issues an app certificate chain from `OpenHarmony Application CA`;
-4. builds `signing/profile.json` from the template with the bundle name
+4. builds `tools/signing/profile.json` from the template with the bundle name
    `com.hopa.agent` and the connected device's UDID;
-5. signs the profile into `signing/profile.p7b`;
+5. signs the profile into `tools/signing/profile.p7b`;
 6. signs `entry-default-unsigned.hap` into `entry-default-signed.hap`;
 7. verifies the result;
 8. with `-Install` / `--install`, runs `hdc install -r`.
 
-Everything the script writes is under `signing/`, which is gitignored. Nothing
+Everything the script writes is under `tools/signing/`, which is gitignored. Nothing
 secret is committed, and the script is safe to re-run.
 
 ## Two pitfalls that cost time
@@ -65,4 +65,4 @@ secret is committed, and the script is safe to re-run.
 - This is not a release signature. Store distribution still needs a Huawei
   developer account and a release profile (`OpenHarmonyProfileRelease.pem`).
 - The accessibility ACL is unrelated to signing; it must be filed separately.
-- `signing/` must never be committed. `.gitignore` already blocks it.
+- `tools/signing/` must never be committed. `.gitignore` already blocks it.

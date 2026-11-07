@@ -11,8 +11,8 @@ endpoint, not the full Mika port.
 ## Run
 
 ```bash
-./scripts/brain.sh          # or .\scripts\brain.ps1
-java -cp "brain/build/brain.jar;.tools/gson-2.11.0.jar" hopa.brain.ServerKt 8731
+./tools/scripts/brain.sh          # or .\tools\scripts\brain.ps1
+java -cp "services/brain/build/brain.jar;.tools/gson-2.11.0.jar" hopa.brain.ServerKt 8731
 ```
 
 Linux/macOS classpath separator is `:`; Windows uses `;`.
@@ -89,7 +89,7 @@ The harness asks the brain for the **first** action, then delegates later steps 
 
 ```bash
 # terminal 1: the brain
-java -cp "brain/build/brain.jar;.tools/gson-2.11.0.jar" hopa.brain.ServerKt 8731
+java -cp "services/brain/build/brain.jar;.tools/gson-2.11.0.jar" hopa.brain.ServerKt 8731
 
 # terminal 2: the loop, with the brain in front of the model
 hopa-agent run "open settings" --model openai --brain http://127.0.0.1:8731
@@ -117,7 +117,7 @@ Verified against the running service on 2026-11-06:
 
 ## Tests
 
-`scripts/brain.sh` runs:
+`tools/scripts/brain.sh` runs:
 
 - `RouterTest` — 19 routing assertions
 - `ServerTest` — 20 HTTP assertions
@@ -126,8 +126,8 @@ Verified against the running service on 2026-11-06:
 - `SkillLoaderTest` — 11 skill assertions
 - `SiteLoaderTest` — 14 site assertions
 
-`scripts/brain-contract.py` starts the server, calls `/decide`, and validates the
-reply against `schemas/decision.schema.json`.
+`tools/scripts/brain-contract.py` starts the server, calls `/decide`, and validates the
+reply against `contracts/schemas/decision.schema.json`.
 
 ## Not in this slice
 

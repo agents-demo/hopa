@@ -1,0 +1,102 @@
+{
+  "started_at": "2026-11-06T10:20:18.466720+00:00",
+  "total": 3,
+  "results": [
+    {
+      "task_id": "calendar-new-event",
+      "goal": "Open Calendar and start creating a new event",
+      "app": "Calendar",
+      "success": true,
+      "error": null,
+      "failure": null,
+      "tokens": 0,
+      "duration_s": 13.277,
+      "steps": [
+        {
+          "action": "launch",
+          "ok": true,
+          "detail": "launched com.huawei.hmos.calendar",
+          "latency_ms": 387.2
+        },
+        {
+          "action": "wait",
+          "ok": true,
+          "detail": "6.0s",
+          "latency_ms": 6001.2
+        },
+        {
+          "action": "tap_id",
+          "ok": true,
+          "detail": "tapped 1026,231",
+          "latency_ms": 2996.3
+        },
+        {
+          "action": "wait",
+          "ok": true,
+          "detail": "1.0s",
+          "latency_ms": 1000.2
+        }
+      ]
+    },
+    {
+      "task_id": "browser-search-harmonyos",
+      "goal": "Open the browser and search for HarmonyOS",
+      "app": "Browser",
+      "success": false,
+      "error": null,
+      "failure": "device",
+      "tokens": 0,
+      "duration_s": 87.707,
+      "steps": [
+        {
+          "action": "launch",
+          "ok": true,
+          "detail": "launched com.huawei.hmos.browser",
+          "latency_ms": 611.7
+        },
+        {
+          "action": "wait",
+          "ok": true,
+          "detail": "10.0s",
+          "latency_ms": 10001.8
+        },
+        {
+          "action": "tap_text",
+          "ok": false,
+          "detail": "hdc timed out after 60.0s: C:\\Program Files\\Huawei\\DevEco Studio\\sdk\\default\\openharmony\\toolchains\\hdc.exe shell uitest dumpLayout -p /data/local/tmp/hopa_layout_1793960333045_3.json",
+          "latency_ms": 71013.2
+        }
+      ]
+    },
+    {
+      "task_id": "settings-wifi-toggle",
+      "goal": "Open Settings and reach the WLAN screen",
+      "app": "Settings",
+      "success": true,
+      "error": null,
+      "failure": null,
+      "tokens": 0,
+      "duration_s": 8.962,
+      "steps": [
+        {
+          "action": "launch",
+          "ok": true,
+          "detail": "launched com.huawei.hmos.settings",
+          "latency_ms": 757.1
+        },
+        {
+          "action": "wait",
+          "ok": true,
+          "detail": "2.0s",
+          "latency_ms": 2000.4
+        },
+        {
+          "action": "tap_text",
+          "ok": true,
+          "detail": "tapped 377,1074",
+          "latency_ms": 3691.0
+        }
+      ]
+    }
+  ]
+}

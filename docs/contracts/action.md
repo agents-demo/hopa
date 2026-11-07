@@ -4,9 +4,9 @@ An **action** is one thing the agent asks the device to do. The model proposes
 it; `Action.from_dict` validates it; `DeviceExecutor` is the only code that runs
 it.
 
-- Schema: [`schemas/action.schema.json`](../../schemas/action.schema.json)
-- Validator: `agent/src/hopa_agent/actions.py`
-- Executor: `agent/src/hopa_agent/executor.py`
+- Schema: [`contracts/schemas/action.schema.json`](../../contracts/schemas/action.schema.json)
+- Validator: `harness/agent/src/hopa_agent/actions.py`
+- Executor: `harness/agent/src/hopa_agent/executor.py`
 
 ## Kinds
 

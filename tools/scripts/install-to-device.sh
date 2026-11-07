@@ -2,7 +2,7 @@
 # Install the built HAP on the connected emulator/device and launch it.
 set -euo pipefail
 
-root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 app="$root/app"
 out="$app/entry/build/default/outputs/default"
 bundle='com.hopa.agent'
