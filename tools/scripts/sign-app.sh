@@ -15,8 +15,8 @@ PROFILE_KEY_ALIAS="openharmony application profile debug"
 APP_CHAIN="$SIGNING/app-chain.cer"
 PROFILE_JSON="$SIGNING/profile.json"
 PROFILE_P7B="$SIGNING/profile.p7b"
-UNSIGNED="$ROOT/app/entry/build/default/outputs/default/entry-default-unsigned.hap"
-SIGNED="$ROOT/app/entry/build/default/outputs/default/entry-default-signed.hap"
+UNSIGNED="$ROOT/apps/harmony/entry/build/default/outputs/default/entry-default-unsigned.hap"
+SIGNED="$ROOT/apps/harmony/entry/build/default/outputs/default/entry-default-signed.hap"
 
 INSTALL=0
 UDID=""

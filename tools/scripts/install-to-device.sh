@@ -3,7 +3,7 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-app="$root/app"
+app="$root/apps/harmony"
 out="$app/entry/build/default/outputs/default"
 bundle='com.hopa.agent'
 ability='EntryAbility'

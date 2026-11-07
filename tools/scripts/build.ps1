@@ -3,7 +3,7 @@
 $ErrorActionPreference = 'Stop'
 
 $root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-$app = Join-Path $root 'app'
+$app = Join-Path $root 'apps\harmony'
 $dev = 'C:\Program Files\Huawei\DevEco Studio'
 $hvigorw = $null
 

@@ -45,7 +45,7 @@ paths in tracked files; scripts should discover tools or read env vars.
 
 ## Build
 
-From `app/` (or through `tools/scripts/build.*`):
+From `apps/harmony/` (or through `tools/scripts/build.*`):
 
 ```bash
 hvigorw assembleHap --no-daemon
@@ -63,7 +63,7 @@ hvigorw assembleHap --no-daemon
 
 ```bash
 # core/ local unit tests (host, no device; Windows/macOS only -- see CI note)
-cd app
+cd apps/harmony
 hvigorw test -p module=core@default --no-daemon -p coverage=false
 
 # pc-agent + bench
@@ -124,7 +124,7 @@ capabilities/<name> (HAR)
 
 ## Adding a capability
 
-1. Add `app/capabilities/<name>/` as a HAR; add it to `app/build-profile.json5`.
+1. Add `apps/harmony/capabilities/<name>/` as a HAR; add it to `apps/harmony/build-profile.json5`.
 2. Implement the capability interface from `core/`; expose actions as `Action`
    descriptors registered with `ToolRegistry`.
 3. Classify each action's risk in `ApprovalPolicy` (payment conservatively).

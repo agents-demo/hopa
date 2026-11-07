@@ -5,7 +5,7 @@ Pura 90 emulator image has no UI to enable it.**
 
 What was verified on 2026-11-06:
 
-- the extension is declared in `app/entry/src/main/module.json5`;
+- the extension is declared in `apps/harmony/entry/src/main/module.json5`;
 - the debug profile carries the ACL entry, and `atm dump -t -b com.hopa.agent`
   reports `grantStatus: 0` (granted) for
   `ohos.permission.ACCESSIBILITY_EXTENSION_ABILITY`;
@@ -80,7 +80,7 @@ What the bridge reads from each node:
    [docs/operations/acl-request.md](../operations/acl-request.md).
 2. After approval, add the permission to `requestPermissions` and the ACL to the
    debug/release profile, then declare the extension in
-   `app/capabilities/a11y/src/main/module.json5`:
+   `apps/harmony/capabilities/a11y/src/main/module.json5`:
 
    ```json5
    {
@@ -110,11 +110,11 @@ Do not claim the capability works before all five steps are verified.
 
 ## Files
 
-- `app/capabilities/a11y/src/main/ets/A11yBridge.ets`
-- `app/capabilities/a11y/src/main/ets/extension/AccessibilityExtension.ets`
-- `app/capabilities/a11y/src/main/ets/A11yCapability.ets`
-- `app/capabilities/a11y/src/main/ets/UiCapability.ets`
-- `app/core/src/main/ets/Screen.ets`
+- `apps/harmony/capabilities/a11y/src/main/ets/A11yBridge.ets`
+- `apps/harmony/capabilities/a11y/src/main/ets/extension/AccessibilityExtension.ets`
+- `apps/harmony/capabilities/a11y/src/main/ets/A11yCapability.ets`
+- `apps/harmony/capabilities/a11y/src/main/ets/UiCapability.ets`
+- `apps/harmony/core/src/main/ets/Screen.ets`
 
 ## Tests
 

@@ -78,6 +78,6 @@ def test_committed_file_is_current() -> None:
     module = _module()
     expected = module.render(module.collect(), module.collect_sites())
     target = (
-        ROOT / "app" / "entry" / "src" / "main" / "ets" / "service" / "AppCatalog.ets"
+        ROOT / "apps" / "harmony" / "entry" / "src" / "main" / "ets" / "service" / "AppCatalog.ets"
     )
     assert target.read_text(encoding="utf-8") == expected

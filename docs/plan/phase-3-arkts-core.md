@@ -3,25 +3,25 @@
 ### 8.1 Port scope and skeleton
 
 - [ ] ADR: exactly which modules move on device
-- [ ] `app/core` file layout mirrors Mika's core directories
+- [ ] `apps/harmony/core` file layout mirrors Mika's core directories
 - [ ] Shared JSON contracts package for JVM and ArkTS
 - [ ] Golden-file corpus shared by both implementations
 - [ ] Parity test harness defined
 
 ### 8.2 Port modules
 
-- [x] `Types`, `ToolRegistry`, `ActionExecutor`, `ApprovalPolicy` (evidence: app/core/src/main/ets + hypium tests in app/core/src/test)
+- [x] `Types`, `ToolRegistry`, `ActionExecutor`, `ApprovalPolicy` (evidence: apps/harmony/core/src/main/ets + hypium tests in apps/harmony/core/src/test)
 - [ ] `uistate` (46 files) â€” screen model
 - [ ] `observation`, `verify`, `record`
 - [ ] `knowledge` (routing, channel, catalog)
-- [x] `agent` loop and context builder (evidence: app/core/src/main/ets/AgentLoop.ets + AgentLoop.test.ets)
+- [x] `agent` loop and context builder (evidence: apps/harmony/core/src/main/ets/AgentLoop.ets + AgentLoop.test.ets)
 - [ ] Decide per remaining Mika module (action, run, gate, context, prompt, settings, trigger, usage, trace, net, remote, mcp, oauth, workspace, general, assembly, selfcheck): port, rewrite or drop; record in Appendix A.2b
 - [ ] `memory`, `skills`
-- [x] `model` client over `@ohos.net.http` (evidence: app/core/src/main/ets/OpenAiClient.ets (http from @kit.NetworkKit))
+- [x] `model` client over `@ohos.net.http` (evidence: apps/harmony/core/src/main/ets/OpenAiClient.ets (http from @kit.NetworkKit))
 - [ ] Serialization without kotlinx (`@ohos.util.json` or generated codecs)
 - [ ] File storage over `@ohos.file.fs`
 - [ ] Secure storage over Asset Store Kit / HUKS
-- [x] Settings over `@ohos.data.preferences` (evidence: app/entry/src/main/ets/service/SettingsStore.ets + verified persistence on the emulator: provider survived a restart)
+- [x] Settings over `@ohos.data.preferences` (evidence: apps/harmony/entry/src/main/ets/service/SettingsStore.ets + verified persistence on the emulator: provider survived a restart)
 - [ ] Remove the JVM service from the decision path behind a feature flag
 - [ ] Unit tests for every ported module (hypium)
 - [ ] Golden-file parity: 200 cases

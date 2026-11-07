@@ -9,7 +9,7 @@ The HAP is ArkTS only. It contains no CPython, no Kotlin/JVM and no native
 Python interpreter. If the sandbox is ever enabled, Python means **Pyodide**:
 CPython compiled to WebAssembly, loaded by an optional ArkWeb page. Removing
 that page removes Python completely; the app still builds and runs. Nothing in
-`app/core` imports Python, and no `.py` file is packaged.
+`apps/harmony/core` imports Python, and no `.py` file is packaged.
 
 Checked on 2026-11-06 by unzipping `entry-default-signed.hap`: the archive holds
 `ets/`, `resources/`, `module.json`, `pack.info`, `pkgSdkInfo.json`,

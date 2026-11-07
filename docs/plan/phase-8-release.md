@@ -1,6 +1,6 @@
 # 13. Phase 8 â€” Release readiness (3â€“4 weeks)
 
-- [x] Version 0.1.0 (evidence: app/AppScope/app.json5 versionName 0.1.0)
+- [x] Version 0.1.0 (evidence: apps/harmony/AppScope/app.json5 versionName 0.1.0)
 - [x] CHANGELOG (evidence: CHANGELOG.md)
 - [x] SBOM (evidence: docs/operations/sbom.json)
 - [ ] License review: Apache-2.0, MPL-2.0 (Pyodide), MIT (QuickJS), no GPL

@@ -6,7 +6,7 @@ been made.
 
 ## Version
 
-- App: `0.1.0` (`app/AppScope/app.json5`)
+- App: `0.1.0` (`apps/harmony/AppScope/app.json5`)
 - Brain: `0.1.0`
 - Contracts: `v1`
 - SBOM: `docs/operations/sbom.json`
@@ -20,12 +20,12 @@ $dev='C:\Program Files\Huawei\DevEco Studio'
 $env:DEVECO_SDK_HOME="$dev\sdk"
 $env:JAVA_HOME="$dev\jbr"
 $env:PATH="$dev\tools\node;$dev\tools\hvigor\bin;$dev\tools\ohpm\bin;$dev\sdk\default\openharmony\toolchains;$env:PATH"
-cd app
+cd apps/harmony
 ohpm install
 hvigorw assembleHap --no-daemon
 ```
 
-2. The output is `app/entry/build/default/outputs/default/entry-default-unsigned.hap`.
+2. The output is `apps/harmony/entry/build/default/outputs/default/entry-default-unsigned.hap`.
 3. Sign it in DevEco (`Project Structure → Signing Configs`) before installing.
 4. Install with `hdc install <signed.hap>`.
 

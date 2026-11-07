@@ -98,7 +98,7 @@ jobs:
         if: env.CLT_URL != ''
         run: |
           export PATH="$RUNNER_TEMP/command-line-tools/bin:$RUNNER_TEMP/command-line-tools/sdk/default/openharmony/toolchains:$PATH"
-          cd app
+          cd apps/harmony
           ohpm install
           hvigorw assembleHap --no-daemon
 
@@ -107,7 +107,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: hopa-hap
-          path: app/entry/build/default/outputs/default/*.hap
+          path: apps/harmony/entry/build/default/outputs/default/*.hap
           if-no-files-found: error
 
   brain:
@@ -200,7 +200,7 @@ jobs:
         if: env.CLT_URL != ''
         run: |
           export PATH="$RUNNER_TEMP/command-line-tools/bin:$RUNNER_TEMP/command-line-tools/sdk/default/openharmony/toolchains:$PATH"
-          cd app
+          cd apps/harmony
           ohpm install
           # Do not set DEVECO_SDK_HOME here: a mismatch makes the CLI SDK unavailable.
           hvigorw test -p module=core@default --no-daemon -p coverage=false

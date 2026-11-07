@@ -63,9 +63,9 @@ must be classified before Phase 3 ends; every "drop" needs a one-line reason.
 
 | Mika source | Files | HOPA target |
 |---|---|---|
-| `core/cap/` | 73 | `app/capabilities/*` |
+| `core/cap/` | 73 | `apps/harmony/capabilities/*` |
 | `core/userscreen/`, `vision/`, `visual/` | 12 | a11y + OCR + vision |
-| `app/a11y`, `browser`, `sandbox`, `capsule`, `takeover`, `wechat` | â€” | ArkUI + extension |
+| `apps/harmony/a11y`, `browser`, `sandbox`, `capsule`, `takeover`, `wechat` | â€” | ArkUI + extension |
 
 ### A.4 Drop
 

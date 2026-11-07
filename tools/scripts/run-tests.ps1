@@ -91,7 +91,7 @@ if (-not $hvigorw) {
     if ($cmd) { $hvigorw = $cmd.Source }
 }
 if ($hvigorw) {
-    Push-Location (Join-Path $root 'app')
+    Push-Location (Join-Path $root 'apps\harmony')
     try {
         $ohpm = Get-Command ohpm -ErrorAction SilentlyContinue
         if ($ohpm) { & $ohpm.Source install }

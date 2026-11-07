@@ -3,7 +3,7 @@
 $ErrorActionPreference = 'Stop'
 
 $root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-$app = Join-Path $root 'app'
+$app = Join-Path $root 'apps\harmony'
 $out = Join-Path $app 'entry\build\default\outputs\default'
 $bundle = 'com.hopa.agent'
 $ability = 'EntryAbility'

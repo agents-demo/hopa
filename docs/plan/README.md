@@ -105,9 +105,9 @@ it, not at the end.
 | Area | State | Evidence |
 |---|---|---|
 | Repo | public, Apache-2.0 | `git log` |
-| `app/core` | screen-aware gate, observation loop, tool registry, types, model interface; hypium tests pass | `app/core/src` |
-| `app/capabilities` | interfaces + web bridge (ArkWeb), a11y extension declared with the ACL granted on the emulator, sandbox stub, system intents | `module.json5`, `BrowserController.ets` |
-| `app/entry` | 6-tab ArkUI app (Chat, Web, Apps, Tasks, Settings, Memory) wired to `AgentLoop`; approval sheet; providers; memory; skills; run history | `pages/Index.ets` |
+| `apps/harmony/core` | screen-aware gate, observation loop, tool registry, types, model interface; hypium tests pass | `apps/harmony/core/src` |
+| `apps/harmony/capabilities` | interfaces + web bridge (ArkWeb), a11y extension declared with the ACL granted on the emulator, sandbox stub, system intents | `module.json5`, `BrowserController.ets` |
+| `apps/harmony/entry` | 6-tab ArkUI app (Chat, Web, Apps, Tasks, Settings, Memory) wired to `AgentLoop`; approval sheet; providers; memory; skills; run history | `pages/Index.ets` |
 | Agent loop | captures the screen, asks for one action, gates, records | `AgentLoop.ets` |
 | `pc-agent` | CLI + MCP implemented: devices, dump, tap, double-tap, long-press, type, swipe, screenshot, launch, stop, key, install, uninstall, apps | `services/pc-agent/src` |
 | `bench` | 20 task files; 5/7 tasks pass on the emulator (strict: a failed step cannot pass) | `harness/bench/tasks`, `docs/product/bench-results-v0.md` |

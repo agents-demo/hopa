@@ -3,7 +3,7 @@
 set -euo pipefail
 
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
-APP="$ROOT/app"
+APP="$ROOT/apps/harmony"
 
 if [ -n "${HOPA_CLT_HOME:-}" ] && [ -x "$HOPA_CLT_HOME/bin/hvigorw" ]; then
   export DEVECO_SDK_HOME="$HOPA_CLT_HOME/sdk"

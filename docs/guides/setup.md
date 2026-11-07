@@ -203,7 +203,7 @@ hdc shell snapshot_display -f /data/local/tmp/screen.jpeg
 hdc file recv /data/local/tmp/screen.jpeg .\screen.jpeg
 
 # headless build
-cd app
+cd apps/harmony
 hvigorw assembleHap --no-daemon
 
 # reference observation (device required)
@@ -215,9 +215,9 @@ hvigorw test -p module=core@default --no-daemon -p coverage=false
 
 Result files:
 
-- HAP: `app/entry/build/default/outputs/default/entry-default-signed.hap`
-- Local test results: `app/core/.test/default/intermediates/test/coverage_data/test_result.txt`
-- Local test report: `app/core/.test/default/outputs/test/reports/index.html`
+- HAP: `apps/harmony/entry/build/default/outputs/default/entry-default-signed.hap`
+- Local test results: `apps/harmony/core/.test/default/intermediates/test/coverage_data/test_result.txt`
+- Local test report: `apps/harmony/core/.test/default/outputs/test/reports/index.html`
 
 ## 9. Python-side tooling
 
@@ -255,7 +255,7 @@ ruff check pc-agent bench agent
 | `SDK component missing` | Do not mix IDE hvigor with CLI SDK (or vice versa). Use the Command Line Tools `hvigorw` + its SDK. |
 | `hvigorw test` hangs / fails | Unset `DEVECO_SDK_HOME` and `HOS_SDK_HOME`; Local Test is not supported on Linux. |
 | `spawn java ENOENT` | Use the JBR bundled with DevEco Studio, or install JDK 17+. |
-| Build uses wrong API level | Check `compileSdkVersion` (26.0.0) and `compatibleSdkVersion` (6.1.1 / API 24) in `app/build-profile.json5`. |
+| Build uses wrong API level | Check `compileSdkVersion` (26.0.0) and `compatibleSdkVersion` (6.1.1 / API 24) in `apps/harmony/build-profile.json5`. |
 | `ohpm install` can't reach registry | Corporate proxy? Configure `ohpm config set registry` per official docs. |
 
 ## 11. What still needs a human
@@ -277,7 +277,7 @@ ruff check pc-agent bench agent
 For local on-device testing without typing a key through the IME:
 
 1. Put one API key on one line in
-   `app/entry/src/main/resources/rawfile/deepseek.key`.
+   `apps/harmony/entry/src/main/resources/rawfile/deepseek.key`.
 2. `*.key` is already in `.gitignore`; never force-add it.
 3. Build and install. On start the app configures DeepSeek
    (`https://api.deepseek.com/v1`, `deepseek-v4-flash`) and persists the
