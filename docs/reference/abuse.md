@@ -50,7 +50,7 @@ implemented yet.
 
 - Security issues: private advisory, see `SECURITY.md`.
 - Abuse reports: GitHub issue with the `risk` label.
-- Response owner: the acting maintainer (`docs/owners.md`).
+- Response owner: the acting maintainer (`docs/operations/owners.md`).
 
 ## Model provider filters
 

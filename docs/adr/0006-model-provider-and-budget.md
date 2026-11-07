@@ -17,7 +17,7 @@ data residency and safety filters. The app must not be locked to one vendor.
 - A fallback list is configured; a failed primary moves to the next entry.
 - Per-task and per-day cost caps are enforced by the loop.
 - Default targets: p95 step latency ≤ 8 s, cost per task recorded in
-  `docs/bench-v0.md`, and a hard stop at the task budget.
+  `docs/product/bench-results-v0.md`, and a hard stop at the task budget.
 
 ## Consequences
 

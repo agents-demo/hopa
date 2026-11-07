@@ -18,6 +18,6 @@
 | **Record** | One append-only, hash-chained step in `.hopa/runs.jsonl`. |
 | **Brain** | The decision layer (JVM service first, ArkTS later). |
 | **Body** | The device surface the brain drives. |
-| **M0–M6** | Milestones in `docs/rebuild-plan.md`. |
+| **M0–M6** | Milestones in `docs/plan/README.md`. |
 | **WASM** | WebAssembly. The only on-device user-script runtime. |
 | **Pyodide** | CPython compiled to WASM, used only inside an optional sandbox page. |

@@ -239,7 +239,8 @@ docs/
 │  ├─ overview.md                  # from architecture.md
 │  ├─ layers.md                    # the dependency rules, with the import lint
 │  ├─ data-flow.md                 # observation -> model -> gate -> action -> record
-│  └─ decisions/ADR-0001-....md    # one decision per file
+├─ adr/                            # one decision per file (kept, already good)
+├─ contracts/                      # observation/action/error contracts (kept)
 ├─ guides/
 │  ├─ setup.md                     # from setup.md
 │  ├─ build-and-sign.md            # from signing.md + setup build part

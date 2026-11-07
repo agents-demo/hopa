@@ -73,7 +73,7 @@ non-HarmonyOS platform.
 - 21 web sites under `brain/knowledge/sites/`.
 - 6 skill manifests under `brain/knowledge/skills/`.
 - All are `validated: pending`.
-- The 23 Mika Android apps are triaged in `docs/knowledge-triage.md`; 1 is
+- The 23 Mika Android apps are triaged in `docs/history/knowledge-triage.md`; 1 is
   replaced, 15 are catalogued with unconfirmed bundles, 7 are web-only.
 
 ## The `UNCONFIRMED` bundle

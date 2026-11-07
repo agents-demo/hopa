@@ -50,11 +50,11 @@ second reviewer before M5.
 
 | Page | Owner |
 |---|---|
-| `docs/rebuild-plan.md` | michaelatamuk |
-| `docs/architecture.md` | michaelatamuk |
+| `docs/plan/README.md` | michaelatamuk |
+| `docs/architecture/overview.md` | michaelatamuk |
 | `docs/contracts/*` | michaelatamuk |
 | `docs/adr/*` | michaelatamuk |
-| `docs/status.md`, `docs/baseline.md` | michaelatamuk |
+| `docs/history/status-2026-11-07.md`, `docs/history/baseline-2026-11-06.md` | michaelatamuk |
 | `README.md`, `CONTRIBUTING.md`, `SECURITY.md` | michaelatamuk |
 
 ## Offboarding

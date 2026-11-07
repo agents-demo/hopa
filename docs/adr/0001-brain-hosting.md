@@ -24,7 +24,7 @@ HarmonyOS app cannot host a JVM, but the PC harness can.
 - The phone app is ArkTS only; no JVM, no Python, no `proot`.
 - The PC harness is a first-class deliverable, not a throwaway.
 - Two implementations must be kept in parity; contract tests are mandatory.
-- `docs/port-log.md` records every ported module.
+- `docs/history/port-log.md` records every ported module.
 
 ## Alternatives considered
 

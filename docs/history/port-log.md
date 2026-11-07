@@ -44,4 +44,4 @@ grep -r "android\." brain/src || true
 - the HTTP `/decide` service
 - the ArkTS parity layer
 
-These are tracked in `docs/rebuild-plan.md` Phase 2.
+These are tracked in `docs/plan/README.md` Phase 2.

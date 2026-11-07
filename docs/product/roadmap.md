@@ -1,7 +1,7 @@
 # HOPA roadmap (G1–G4)
 
 > **Superseded for delivery tracking.**
-> [docs/rebuild-plan.md](rebuild-plan.md) is the working plan with checkboxes and
+> [docs/plan/README.md](../plan/README.md) is the working plan with checkboxes and
 > the definition of finished. This page keeps the original public G1–G4 scope.
 
 HOPA is delivered in four milestones. The committed schedule and numeric targets
@@ -96,7 +96,7 @@ Exit criteria:
 
 - Release candidate passes the full benchmark and the security checklist.
 - All restricted permissions have approved ACLs, or the features are disabled.
-- A new teammate can build, test, and run the benchmark from `docs/setup.md`.
+- A new teammate can build, test, and run the benchmark from `docs/guides/setup.md`.
 
 ## Dependencies and risks
 

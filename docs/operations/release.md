@@ -9,7 +9,7 @@ been made.
 - App: `0.1.0` (`app/AppScope/app.json5`)
 - Brain: `0.1.0`
 - Contracts: `v1`
-- SBOM: `docs/sbom.json`
+- SBOM: `docs/operations/sbom.json`
 
 ## Install (development)
 

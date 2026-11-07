@@ -31,7 +31,7 @@ Failure taxonomy: `target_not_found`, `unsupported_action`, `schema`, `device`,
 
 ```bash
 bench run --tasks bench/tasks --json --out .hopa/bench-v0.json
-bench report --input .hopa/bench-v0.json --out docs/bench-v0.md
+bench report --input .hopa/bench-v0.json --out docs/product/bench-results-v0.md
 ```
 
 `bench report` prints totals, failure counts, per-app rates and p50/p95 latency.

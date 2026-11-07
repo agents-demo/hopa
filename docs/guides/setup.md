@@ -251,7 +251,7 @@ ruff check pc-agent bench agent
 | `hdc list targets` shows `[Empty]` | Start the emulator; enable USB debugging; accept the RSA prompt; `hdc kill` then retry. |
 | Emulator: "Hyper-V not enabled" | Enable the three Windows features, run `bcdedit /set hypervisorlaunchtype auto`, reboot, enable VT-x in BIOS. |
 | Emulator won't start on a VM | Unsupported — the emulator cannot run inside a VM. Use a physical host or a real device. |
-| Emulator freezes / "Guest no response" / kernel panic `SceneBoard exits 4times` | Wipe data and cold boot; update the emulator; free host RAM; update the Intel GPU driver. See `docs/emulator-crash-2026-11-06.md`. |
+| Emulator freezes / "Guest no response" / kernel panic `SceneBoard exits 4times` | Wipe data and cold boot; update the emulator; free host RAM; update the Intel GPU driver. See `docs/history/emulator-crash-2026-11-06.md`. |
 | `SDK component missing` | Do not mix IDE hvigor with CLI SDK (or vice versa). Use the Command Line Tools `hvigorw` + its SDK. |
 | `hvigorw test` hangs / fails | Unset `DEVECO_SDK_HOME` and `HOS_SDK_HOME`; Local Test is not supported on Linux. |
 | `spawn java ENOENT` | Use the JBR bundled with DevEco Studio, or install JDK 17+. |
@@ -266,7 +266,7 @@ ruff check pc-agent bench agent
   Automatically generate signature`).
 - Enabling Developer mode / USB debugging and accepting the RSA prompt.
 - Approving the ACL request for the accessibility capability (see
-  `docs/architecture.md` and `docs/acl-request.md`).
+  `docs/architecture/overview.md` and `docs/operations/acl-request.md`).
 - Enabling HOPA in **Settings → Accessibility** on a device that exposes a
   third-party services page. The Pura 90 emulator image does not.
 - Unlocking the emulator after it sleeps; automatic unlock is disabled in

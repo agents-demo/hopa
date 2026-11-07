@@ -204,5 +204,5 @@ screen:
 7. **Verify/evidence, trace, usage, eval** — trust surface.
 8. **OAuth, MCP server, speech, i18n** — reach.
 
-Progress on this list is tracked in `docs/rebuild-plan.md` Phase 3 and in the
+Progress on this list is tracked in `docs/plan/README.md` Phase 3 and in the
 commit log, not by inventing a second percentage.

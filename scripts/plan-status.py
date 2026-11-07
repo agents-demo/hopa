@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Count checkboxes in docs/rebuild-plan.md and gate completion.
+"""Count checkboxes in docs/plan and gate completion.
 
 Usage:
     python scripts/plan-status.py
@@ -39,6 +39,14 @@ CONDITIONAL = re.compile(r"^\s*If\b", re.IGNORECASE)
 EVIDENCE = "(evidence:"
 
 
+def _plan_text(path: Path) -> str:
+    """Read one plan file or a plan directory (one file per phase)."""
+    if path.is_dir():
+        files = sorted(path.glob("*.md"), key=lambda item: (item.name != "README.md", item.name))
+        return "\n".join(item.read_text(encoding="utf-8") for item in files)
+    return path.read_text(encoding="utf-8")
+
+
 def parse(path: Path) -> dict:
     sections: list[dict] = []
     current = {"title": "Preamble", "items": []}
@@ -46,7 +54,7 @@ def parse(path: Path) -> dict:
     in_fence = False
     line_no = 0
 
-    for line in path.read_text(encoding="utf-8").splitlines():
+    for line in _plan_text(path).splitlines():
         line_no += 1
         if FENCE.match(line):
             in_fence = not in_fence
@@ -233,8 +241,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--plan",
         type=Path,
-        default=Path(__file__).resolve().parents[1] / "docs" / "rebuild-plan.md",
-        help="path to the plan markdown file",
+        default=Path(__file__).resolve().parents[1] / "docs" / "plan",
+        help="path to the plan markdown file or its directory",
     )
     parser.add_argument("--json", action="store_true", help="print machine-readable JSON")
     parser.add_argument("--lint", action="store_true", help="check evidence and plan rules")
@@ -257,7 +265,7 @@ def main(argv: list[str] | None = None) -> int:
     except (AttributeError, ValueError):
         pass
 
-    if not args.plan.is_file():
+    if not args.plan.exists():
         print(f"plan not found: {args.plan}", file=sys.stderr)
         return 2
 

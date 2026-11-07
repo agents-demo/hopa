@@ -132,9 +132,9 @@ because retail trusts Huawei-issued profiles, not the OpenHarmony test CA.
 - [ ] App signing certificate uploaded to AppGallery Connect
 - [ ] Privacy policy URL published
 - [ ] This document attached as the justification
-- [ ] ACL ticket id, date and contact recorded in `docs/rebuild-plan.md`
+- [ ] ACL ticket id, date and contact recorded in `docs/plan/README.md`
 - [ ] After approval: declare the permission and extension, rebuild, sign, install
-- [ ] Re-run the a11y smoke test and mark `docs/a11y.md` active
+- [ ] Re-run the a11y smoke test and mark `docs/guides/device-testing.md` active
 
 ## Why it is not filed yet
 
