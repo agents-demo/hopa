@@ -49,6 +49,10 @@ jobs:
         run: pytest tools/scripts
       - name: Plan lint
         run: python tools/scripts/plan-status.py --lint
+      - name: Structure rules
+        run: python tools/checks/check-structure.py
+      - name: Documentation links
+        run: python tools/checks/check-links.py
       - name: Generated app catalogue is current
         run: python tools/scripts/build-app-catalog.py --check
       - name: Validate benchmark tasks

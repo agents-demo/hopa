@@ -7,6 +7,8 @@ The docs are grouped by what they answer. Pick the section, then the file.
 | File | Question |
 |---|---|
 | [overview.md](architecture/overview.md) | What is HOPA made of? |
+| [layers.md](architecture/layers.md) | What may import what? |
+| [data-flow.md](architecture/data-flow.md) | How does one goal become an action? |
 | [target-structure.md](architecture/target-structure.md) | Where is the code going, and why? |
 | [adr/](adr/README.md) | Why was a decision made? One ADR per decision. |
 
