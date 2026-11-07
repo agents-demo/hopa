@@ -85,9 +85,9 @@ that app installed; HOPA says when a bundle is missing instead of guessing.</sub
 </td>
 <td width="33%" align="center" valign="top">
 
-<img src="docs/media/sites.jpeg" alt="HOPA site catalogue with Bilibili, Xiaohongshu and Weibo" height="600" />
+<img src="docs/media/apps.jpeg" alt="HOPA app catalogue" height="600" />
 
-<br/><sub><b>Real: the catalogue.</b> Bilibili, Xiaohongshu, Weibo and more in the site catalogue.</sub>
+<br/><sub><b>Real: the app catalogue.</b> AppGallery, Browser, Calendar, Contacts and more, with a verified bundle or an honest “not yet”.</sub>
 
 </td>
 </tr>
