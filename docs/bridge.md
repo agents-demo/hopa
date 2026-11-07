@@ -39,7 +39,9 @@ Settings tab -> **PC bridge (fallback control)**:
 When a bridge is configured, it becomes the single control backend: the
 accessibility path stands down even if the extension reports itself connected
 (a declared-but-disabled service can leave capture pending). Failures show the
-reason, e.g. `unreachable: bridge HTTP 401`.
+reason, e.g. `unreachable: bridge HTTP 401`. The URL and token are saved in the
+app preferences so the connection survives a restart; they are not sent
+anywhere except to the configured bridge.
 
 ## Security
 

@@ -37,8 +37,10 @@ Runs and batches, Models, Usage, Phone setup, Self-check and Welcome.
   Self-check, Developer and About.
 - **Runs** opens a per-run timeline (started, finished, duration, approval,
   payment, detail).
-- **Screens** renders a live JPEG from `pc-agent bridge /screenshot`, verified
-  on the emulator (1.2 s per frame).
+- **Screens** renders a live JPEG from `pc-agent bridge /screenshot` and polls
+  every 3 s while the page is open (Live toggle); verified on the emulator
+  (1.2 s per frame). The bridge URL and token are saved so the connection
+  survives a restart.
 - **More** adds Source (provider, endpoint, control backend), MCP servers (what
   runs on the PC), Files (export and inspect the JSON) and License.
 

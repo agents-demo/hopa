@@ -49,6 +49,8 @@ struct Index {
   @State screenStatus: string = 'not loaded';
   @State fileText: string = '';
   @State filePath: string = 'not exported';
+  @State liveView: boolean = true;
+  private screenTimer: number = -1;
   private scheduleRefresh: number = -1;
   @State networkEnabled: boolean = false;
   @State accessibilityEnabled: boolean = false;
@@ -287,6 +289,7 @@ struct Index {
       clearInterval(this.scheduleRefresh);
       this.scheduleRefresh = -1;
     }
+    this.stopScreenPolling();
   }
 
   private async loadSettings(): Promise<void> {
@@ -297,6 +300,12 @@ struct Index {
       this.modelName = stored.model;
       this.networkEnabled = stored.network;
       this.autonomous = stored.autonomous;
+      this.bridgeUrl = stored.bridgeUrl;
+      this.bridgeToken = stored.bridgeToken;
+      if (this.bridgeUrl.length > 0 && this.bridgeToken.length > 0) {
+        AgentService.get().configureRemote(this.bridgeUrl, this.bridgeToken);
+        this.bridgeStatus = 'connected (saved)';
+      }
       AgentService.get().setNetworkEnabled(stored.network);
       AgentService.get().setAutonomous(stored.autonomous);
     } catch (error) {
@@ -311,6 +320,8 @@ struct Index {
     stored.model = this.modelName;
     stored.network = this.networkEnabled;
     stored.autonomous = this.autonomous;
+    stored.bridgeUrl = this.bridgeUrl;
+    stored.bridgeToken = this.bridgeToken;
     SettingsStore.save(getContext(this) as Context, stored).catch(() => {
       // Persistence is best effort; the in-memory settings still work.
     });
@@ -595,6 +606,9 @@ struct Index {
     this.bridgeStatus = 'checking...';
     const ok: boolean = await AgentService.get().testRemote();
     this.bridgeStatus = ok ? 'connected' : `unreachable: ${AgentService.get().remoteFailure()}`;
+    if (ok) {
+      this.persistSettings();
+    }
     this.messages = this.messages.concat([`HOPA: PC bridge ${this.bridgeStatus}.`]);
   }
 
@@ -1780,10 +1794,24 @@ struct Index {
           .onClick(() => {
             this.refreshScreen();
           })
+        Toggle({ type: ToggleType.Switch, isOn: this.liveView })
+          .onChange((on: boolean) => {
+            this.liveView = on;
+            if (on) {
+              this.startScreenPolling();
+            } else {
+              this.stopScreenPolling();
+            }
+          })
+        Text('Live')
+          .fontSize(11)
+          .fontColor('#666666')
         Text(this.screenStatus)
           .fontSize(11)
           .fontColor('#999999')
+          .layoutWeight(1)
       }
+      .width('100%')
     }
     .width('100%')
     .height('100%')
@@ -1795,6 +1823,9 @@ struct Index {
       this.screenStatus = 'bridge not configured';
       return;
     }
+    if (this.screenStatus === 'loading...') {
+      return;
+    }
     this.screenStatus = 'loading...';
     const image: string = await AgentService.get().remote.screenshot();
     if (image.length === 0) {
@@ -1803,6 +1834,25 @@ struct Index {
     }
     this.screenImage = image;
     this.screenStatus = `updated ${new Date().toLocaleTimeString()}`;
+  }
+
+  private startScreenPolling(): void {
+    if (this.screenTimer >= 0) {
+      return;
+    }
+    this.refreshScreen();
+    this.screenTimer = setInterval(() => {
+      if (this.liveView) {
+        this.refreshScreen();
+      }
+    }, 3000);
+  }
+
+  private stopScreenPolling(): void {
+    if (this.screenTimer >= 0) {
+      clearInterval(this.screenTimer);
+      this.screenTimer = -1;
+    }
   }
 
   private scheduleWhen(item: ScheduledTask): string {
@@ -2235,9 +2285,13 @@ struct Index {
     .backgroundColor(this.activePage === key ? '#EAF1FF' : '#00000000')
     .borderRadius(8)
     .onClick(() => {
+      this.stopScreenPolling();
       this.activePage = key;
       this.settingsPage = '';
       this.menuOpen = false;
+      if (key === 'screens') {
+        this.startScreenPolling();
+      }
     })
   }
 
@@ -2372,6 +2426,7 @@ struct Index {
           .backgroundColor('#E5E6E8')
           .fontColor('#333333')
           .onClick(() => {
+            this.stopScreenPolling();
             this.activePage = 'more';
           })
         Text(this.containerTitle(key))
