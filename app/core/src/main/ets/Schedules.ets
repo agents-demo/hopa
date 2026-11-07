@@ -141,7 +141,19 @@ export class ScheduleBook {
     try {
       const payload = JSON.parse(raw) as SchedulePayload;
       if (payload.items !== undefined) {
-        book.items = payload.items;
+        const restored: ScheduledTask[] = [];
+        for (const saved of payload.items) {
+          // JSON loses methods, so rebuild each item as a real ScheduledTask.
+          const task = new ScheduledTask();
+          task.id = saved.id;
+          task.goal = saved.goal;
+          task.intervalMs = saved.intervalMs;
+          task.nextRunAt = saved.nextRunAt;
+          task.lastRunAt = saved.lastRunAt;
+          task.enabled = saved.enabled;
+          restored.push(task);
+        }
+        book.items = restored;
       }
       if (payload.counter !== undefined) {
         book.counter = payload.counter;

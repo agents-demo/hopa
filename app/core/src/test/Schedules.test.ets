@@ -75,6 +75,7 @@ export default function schedulesTest(): void {
       if (item !== undefined) {
         expect(item.goal).assertEqual('persist me');
         expect(item.intervalMs).assertEqual(300000);
+        expect(item.label()).assertEqual('every 5 min');
       }
     });
 
