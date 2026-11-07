@@ -13,7 +13,21 @@ export class BrowserController implements WebController {
   private controller: webview.WebviewController | undefined = undefined;
   private loaded: boolean = false;
   private url: string = '';
+  private requestedUrl: string = '';
   private static readonly MAX_TEXT: number = 20000;
+
+  /** The catalogue asks the browser page to open this URL when it appears. */
+  requestUrl(url: string): void {
+    if (url.startsWith('https://')) {
+      this.requestedUrl = url;
+    }
+  }
+
+  takeRequestedUrl(): string {
+    const url: string = this.requestedUrl;
+    this.requestedUrl = '';
+    return url;
+  }
 
   attach(controller: webview.WebviewController): void {
     this.controller = controller;

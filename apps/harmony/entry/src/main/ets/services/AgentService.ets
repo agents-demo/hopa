@@ -37,6 +37,7 @@ import { AppCatalogPrompt } from './AppCatalogPrompt';
 import { ScheduleService } from './ScheduleService';
 import { RunArchive } from './RunArchive';
 import { ExportService } from './ExportService';
+import { ConversationService } from './ConversationService';
 
 /** Process-wide composition root: policy + gate + capabilities + tool registry. */
 export class AgentService {
@@ -60,6 +61,7 @@ export class AgentService {
   readonly ui: UiCapability;
   readonly system: SystemCapability;
   readonly runArchive: RunArchive;
+  readonly conversations: ConversationService = new ConversationService();
   readonly exportService: ExportService;
 
   private model: ModelClient | undefined = undefined;

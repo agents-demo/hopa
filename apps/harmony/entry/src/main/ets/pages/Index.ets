@@ -1,17 +1,12 @@
-import { UIContext } from '@kit.ArkUI';
-import { webview } from '@kit.ArkWeb';
 import { Context, common } from '@kit.AbilityKit';
-import { accessibility } from '@kit.AccessibilityKit';
 import { buffer } from '@kit.ArkTS';
-import { preferences } from '@kit.ArkData';
-import { Action, ChatHistory, ChatSession, PaymentContext, Screen, Skill } from '@hopa/core';
-import { MemoryExtractor } from '@hopa/core';
+import { ChatSession } from '@hopa/core';
 import { AgentService } from '../services/AgentService';
 import { SettingsStore, StoredSettings } from '../services/SettingsStore';
-import { APP_CATALOG, CatalogApp } from '../services/AppCatalog';
-import { JsSandboxBridge } from '../services/JsSandboxBridge';
 import { AppLauncher } from '../services/AppLauncher';
 import { AppsPage } from './apps/AppsPage';
+import { ChatPage } from './chat/ChatPage';
+import { BrowserPage } from './browser/BrowserPage';
 import { McpServersPage } from './mcp/McpServersPage';
 import { MemoryPage } from './memory/MemoryPage';
 import { ModelsPage } from './models/ModelsPage';
@@ -20,191 +15,38 @@ import { SourcePage } from './source/SourcePage';
 import { UsagePage } from './usage/UsagePage';
 import { RunsPage } from './runs/RunsPage';
 import { PlansPage } from './plans/PlansPage';
+import { SettingsPage } from './settings/SettingsPage';
 import { ScreensPage } from './tools/ScreensPage';
 import { SelfCheckPage } from './tools/SelfCheckPage';
 import { FilesPage } from './tools/FilesPage';
 import { LicensePage } from './tools/LicensePage';
 import { AboutPage } from './tools/AboutPage';
 import { WelcomePage } from './tools/WelcomePage';
-import { fileIo } from '@kit.CoreFileKit';
 
 @Entry
 @Component
 struct Index {
   @State activePage: string = 'chat';
   @State menuOpen: boolean = false;
-  @State settingsPage: string = '';
   @State chatSessions: ChatSession[] = [];
-  private history: ChatHistory = new ChatHistory();
-  @State a11yAvailable: boolean = false;
-  @State a11yInstalled: string = 'checking...';
-  @State draft: string = '';
-  @State busy: boolean = false;
-  @State autonomous: boolean = false;
-  @State messages: ResourceStr[] = [
-    $r('app.string.greeting_1'),
-    $r('app.string.greeting_2')
-  ];
-  @State networkEnabled: boolean = false;
-  @State accessibilityEnabled: boolean = false;
-  @State modelEndpoint: string = 'https://api.openai.com/v1';
-  @State modelName: string = 'gpt-4o-mini';
-  @State provider: string = 'openai';
-  @State apiKey: string = '';
-  @State modelLabel: string = '';
-  @State address: string = 'https://example.com';
-  @State pageUrl: string = '';
-  @State script: string = '';
-  @State scriptOutput: string = '';
-  @State bridgeUrl: string = '';
-  @State bridgeToken: string = '';
-  @State bridgeStatus: string = 'not connected';
 
-  private webController: webview.WebviewController = new webview.WebviewController();
-  private sandboxController: webview.WebviewController = new webview.WebviewController();
+  private refreshChats(): void {
+    this.chatSessions = AgentService.get().conversations.all().slice();
+  }
+
 
   aboutToAppear(): void {
     const service = AgentService.get();
     service.setAbilityContext(getContext(this) as common.UIAbilityContext);
-    this.a11yAvailable = service.isA11yAvailable();
-    this.modelLabel = service.getModelLabel();
     this.initialize();
-
-    // Fail-closed by default; the sheet is the only way to allow an action.
-    const uiContext: UIContext = this.getUIContext();
-    service.approvals.setHandler(async (action: Action, screen: Screen | undefined): Promise<boolean> => {
-      const payment: boolean = service.policy.isPayment(action, screen);
-      const title: string = payment ? 'Confirm payment?' : 'Allow this action?';
-      const context: PaymentContext = service.policy.extractPaymentContext(screen);
-      const amount: string = context.amount.length > 0 ? context.amount : 'not visible';
-      const merchant: string = context.merchant.length > 0 ? context.merchant : 'not visible';
-      const message: string = payment
-        ? `HOPA wants to run: ${action.kind}\n\n` +
-          `Amount: ${amount}\nMerchant: ${merchant}\n\n` +
-          `${context.consequence}\n\n` +
-          'Check the next screen yourself before you confirm.\n\nAllow it?'
-        : `HOPA wants to run: ${action.kind}\nTarget: ${action.target || '(none)'}\n\nAllow it?`;
-      try {
-        const result = await uiContext.getPromptAction().showDialog({
-          title: title,
-          message: message,
-          buttons: [
-            { text: 'Deny', color: '#666666' },
-            { text: 'Allow', color: '#B42318' }
-          ]
-        });
-        return result.index === 1;
-      } catch (error) {
-        return false;
-      }
-    });
   }
 
-  /**
-   * ForEach keys must change when the text at an index changes, otherwise the
-   * "working..." placeholder is never replaced by the answer.
-   */
-  private messageKey(item: ResourceStr, index: number): string {
-    if (typeof item === 'string') {
-      return `${index}-${item}`;
-    }
-    return `${index}-resource`;
-  }
-
-  private async send(): Promise<void> {
-    const text: string = this.draft.trim();
-    if (text.length === 0 || this.busy) {
-      return;
-    }
-    const fact: string | undefined = MemoryExtractor.extract(text);
-    if (fact !== undefined && AgentService.get().memory.add(fact) !== undefined) {
-      AgentService.get().memory.save(getContext(this) as Context).catch(() => {
-        // Persistence is best effort; memory still works in this session.
-      });
-    }
-    const service = AgentService.get();
-    if (!service.hasModel()) {
-      this.messages = this.messages.concat([
-        `You: ${text}`,
-        $r('app.string.msg_no_model')
-      ]);
-      this.history.add('user', text, Date.now());
-      this.history.add('assistant', 'No model configured.', Date.now());
-      this.saveHistory();
-      this.chatSessions = this.history.all().slice();
-      this.draft = '';
-      return;
-    }
-
-    this.draft = '';
-    this.busy = true;
-    this.messages = this.messages.concat([`You: ${text}`, $r('app.string.msg_working')]);
-    this.history.add('user', text, Date.now());
-    this.saveHistory();
-
-    const reply: string = await service.run(text);
-
-    // Replace the "working..." line with the real transcript.
-    const next: ResourceStr[] = this.messages.slice(0, this.messages.length - 1);
-    next.push(`HOPA: ${reply}`);
-    this.messages = next;
-    this.history.add('assistant', reply, Date.now());
-    this.saveHistory();
-    this.chatSessions = this.history.all().slice();
-
-    this.busy = false;
-    AgentService.get().skills.save(getContext(this) as Context).catch(() => {
-      // Persistence is best effort.
-    });
-  }
-
-  private stopRun(): void {
-    AgentService.get().cancel();
-  }
-
-  private saveModel(): void {
-    const service = AgentService.get();
-    service.configureModel(
-      this.provider,
-      this.modelEndpoint.trim(),
-      this.apiKey,
-      this.modelName.trim(),
-      6
-    );
-    this.modelLabel = service.getModelLabel();
-    this.persistSettings();
-    this.messages = this.messages.concat([
-      `HOPA: ${this.provider} model set to ${this.modelLabel}. ` +
-        'The key stays in memory and is not saved.'
-    ]);
-  }
-
-  private providerIndex(): number {
-    if (this.provider === 'anthropic') {
-      return 1;
-    }
-    if (this.provider === 'gemini') {
-      return 2;
-    }
-    if (this.provider === 'deepseek') {
-      return 3;
-    }
-    return 0;
-  }
-
-  /**
-   * Serial startup so several preference stores are not opened at once. The
-   * emulator froze when six async loads ran concurrently.
-   */
   private async initialize(): Promise<void> {
-    await this.loadSettings();
-    await this.loadBundledKey();
+    await this.bootstrapSettings();
     await this.loadMemory();
     await this.loadSkills();
     await this.loadRuns();
-    await this.loadA11yList();
     await this.loadSchedules();
-    await this.loadChats();
     AgentService.get().setUiLauncher(
       new AppLauncher(getContext(this) as common.UIAbilityContext)
     );
@@ -215,118 +57,42 @@ struct Index {
     }
   }
 
-  private async loadSettings(): Promise<void> {
+  /**
+   * Applies the saved switches and configures the bundled development key.
+   * The key is read from rawfile and never stored.
+   */
+  private async bootstrapSettings(): Promise<void> {
     try {
       const stored: StoredSettings = await SettingsStore.load(getContext(this) as Context);
-      this.provider = stored.provider;
-      this.modelEndpoint = stored.endpoint;
-      this.modelName = stored.model;
-      this.networkEnabled = stored.network;
-      this.autonomous = stored.autonomous;
-      this.bridgeUrl = stored.bridgeUrl;
-      this.bridgeToken = stored.bridgeToken;
-      if (this.bridgeUrl.length > 0 && this.bridgeToken.length > 0) {
-        AgentService.get().configureRemote(this.bridgeUrl, this.bridgeToken);
-        this.bridgeStatus = 'connected (saved)';
-      }
       AgentService.get().setNetworkEnabled(stored.network);
       AgentService.get().setAutonomous(stored.autonomous);
+      if (stored.bridgeUrl.length > 0 && stored.bridgeToken.length > 0) {
+        AgentService.get().configureRemote(stored.bridgeUrl, stored.bridgeToken);
+      }
     } catch (error) {
       // First run or an unreadable store: keep the defaults.
     }
-  }
-
-  private persistSettings(): void {
-    const stored = new StoredSettings();
-    stored.provider = this.provider;
-    stored.endpoint = this.modelEndpoint;
-    stored.model = this.modelName;
-    stored.network = this.networkEnabled;
-    stored.autonomous = this.autonomous;
-    stored.bridgeUrl = this.bridgeUrl;
-    stored.bridgeToken = this.bridgeToken;
-    SettingsStore.save(getContext(this) as Context, stored).catch(() => {
-      // Persistence is best effort; the in-memory settings still work.
-    });
+    try {
+      const context = getContext(this) as common.UIAbilityContext;
+      const data = await context.resourceManager.getRawFileContent('deepseek.key');
+      const key = buffer.from(data).toString('utf8').trim();
+      if (key.length >= 10) {
+        AgentService.get().configureModel(
+          'deepseek',
+          'https://api.deepseek.com/v1',
+          key,
+          'deepseek-v4-flash',
+          6
+        );
+      }
+    } catch (error) {
+      // No bundled key: a normal first run.
+    }
   }
 
   private async loadSchedules(): Promise<void> {
     await AgentService.get().loadSchedules(getContext(this) as Context);
     AgentService.get().startScheduler();
-  }
-
-  private async loadChats(): Promise<void> {
-    try {
-      const store = await preferences.getPreferences(getContext(this) as Context, 'hopa_settings');
-      const raw = await store.get('chats_v1', '');
-      this.history = ChatHistory.fromJson(`${raw}`);
-    } catch (error) {
-      this.history = new ChatHistory();
-    }
-    this.history.ensureCurrent(Date.now());
-    this.renderHistory();
-    await this.saveHistory();
-  }
-
-  private async saveHistory(): Promise<void> {
-    try {
-      const store = await preferences.getPreferences(getContext(this) as Context, 'hopa_settings');
-      await store.put('chats_v1', this.history.toJson());
-      await store.flush();
-    } catch (error) {
-      // History is best effort; the session still works in memory.
-    }
-  }
-
-  private renderHistory(): void {
-    const current: ChatSession | undefined = this.history.current();
-    const next: ResourceStr[] = [$r('app.string.greeting_1'), $r('app.string.greeting_2')];
-    if (current !== undefined) {
-      for (const entry of current.entries) {
-        next.push(entry.role === 'user' ? `You: ${entry.text}` : `HOPA: ${entry.text}`);
-      }
-    }
-    this.messages = next;
-    this.chatSessions = this.history.all().slice();
-  }
-
-  private newChat(): void {
-    this.history.newSession(Date.now());
-    this.renderHistory();
-    this.saveHistory();
-    this.activePage = 'chat';
-    this.menuOpen = false;
-  }
-
-  private recentChats(): ChatSession[] {
-    const result: ChatSession[] = [];
-    for (const session of this.chatSessions) {
-      if (session.entries.length > 0 || session.id === this.history.currentId()) {
-        result.push(session);
-      }
-      if (result.length >= 3) {
-        break;
-      }
-    }
-    return result;
-  }
-
-  private selectChat(id: string): void {
-    if (this.history.select(id)) {
-      this.renderHistory();
-      this.saveHistory();
-      this.activePage = 'chat';
-      this.menuOpen = false;
-    }
-  }
-
-  private deleteChat(id: string): void {
-    if (!this.history.remove(id)) {
-      return;
-    }
-    this.history.ensureCurrent(Date.now());
-    this.renderHistory();
-    this.saveHistory();
   }
 
   private async loadMemory(): Promise<void> {
@@ -351,246 +117,6 @@ struct Index {
     } catch (error) {
       // First run: no history yet.
     }
-  }
-
-  private clearRuns(): void {
-    AgentService.get().runs.clear();
-    AgentService.get().saveRuns(getContext(this) as Context).catch(() => {
-      // Persistence is best effort.
-    });
-    this.messages = this.messages.concat(['HOPA: cleared the run history.']);
-  }
-
-  /**
-   * Loads an optional developer key from `rawfile/deepseek.key`.
-   *
-   * The file is gitignored and exists only in local debug builds. It is never
-   * part of a release; production uses Settings and secure storage.
-   */
-  private async loadBundledKey(): Promise<void> {
-    try {
-      const context = getContext(this) as common.UIAbilityContext;
-      const data = await context.resourceManager.getRawFileContent('deepseek.key');
-      const key = buffer.from(data).toString('utf8').trim();
-      if (key.length < 10) {
-        return;
-      }
-      this.provider = 'deepseek';
-      this.modelEndpoint = 'https://api.deepseek.com/v1';
-      this.modelName = 'deepseek-v4-flash';
-      this.apiKey = key;
-      AgentService.get().configureModel(
-        'deepseek',
-        this.modelEndpoint,
-        key,
-        this.modelName,
-        6
-      );
-      this.modelLabel = AgentService.get().getModelLabel();
-    } catch (error) {
-      // No bundled key: a normal first run.
-    }
-  }
-
-  private async loadA11yList(): Promise<void> {
-    try {
-      const list = await accessibility.getAccessibilityExtensionList('all', 'install');
-      const names: string[] = [];
-      for (const item of list) {
-        names.push(`${item.bundleName}/${item.name}`);
-      }
-      this.a11yInstalled = names.length > 0 ? names.join(', ') : 'none';
-    } catch (error) {
-      this.a11yInstalled = `error: ${error}`;
-    }
-  }
-
-  private async connectBridge(): Promise<void> {
-    AgentService.get().configureRemote(this.bridgeUrl, this.bridgeToken);
-    if (!AgentService.get().isRemoteConfigured()) {
-      this.bridgeStatus = 'enter URL and token';
-      return;
-    }
-    this.bridgeStatus = 'checking...';
-    const ok: boolean = await AgentService.get().testRemote();
-    this.bridgeStatus = ok ? 'connected' : `unreachable: ${AgentService.get().remoteFailure()}`;
-    if (ok) {
-      this.persistSettings();
-    }
-    this.messages = this.messages.concat([`HOPA: PC bridge ${this.bridgeStatus}.`]);
-  }
-
-  private async runScript(): Promise<void> {
-    const code: string = this.script.trim();
-    if (code.length === 0) {
-      return;
-    }
-    try {
-      const bridge = new JsSandboxBridge(this.sandboxController);
-      this.scriptOutput = await bridge.run(code, 'javascript');
-    } catch (error) {
-      this.scriptOutput = `error: ${error}`;
-    }
-  }
-
-  private openAddress(): void {
-    const url: string = this.address.trim();
-    if (!url.startsWith('https://')) {
-      this.messages = this.messages.concat([$r('app.string.msg_https_only')]);
-      return;
-    }
-    try {
-      this.webController.loadUrl(url);
-      this.pageUrl = url;
-    } catch (error) {
-      this.messages = this.messages.concat([`HOPA: browser error: ${error}`]);
-    }
-  }
-
-  @Builder
-  ChatPage() {
-    Column({ space: 12 }) {
-      List({ space: 8 }) {
-        ForEach(this.messages, (item: ResourceStr, index: number) => {
-          ListItem() {
-            Text(item)
-              .width('100%')
-              .padding(12)
-              .backgroundColor('#F2F3F5')
-              .borderRadius(10)
-              .fontSize(15)
-          }
-        }, (item: ResourceStr, index: number) => this.messageKey(item, index))
-      }
-      .layoutWeight(1)
-      .width('100%')
-
-      Row({ space: 8 }) {
-        TextInput({ placeholder: 'Ask HOPA...', text: this.draft })
-          .layoutWeight(1)
-          .onChange((value: string) => {
-            this.draft = value;
-          })
-          .onSubmit(() => {
-            this.send();
-          })
-        Button(this.busy ? $r('app.string.btn_stop') : $r('app.string.btn_send'))
-          .backgroundColor(this.busy ? '#B42318' : '#0A59F7')
-          .onClick(() => {
-            if (this.busy) {
-              this.stopRun();
-            } else {
-              this.send();
-            }
-          })
-      }
-      .width('100%')
-    }
-    .width('100%')
-    .height('100%')
-    .padding(16)
-  }
-
-  @Builder
-  WebPage() {
-    Column({ space: 8 }) {
-      Row({ space: 8 }) {
-        TextInput({ text: this.address, placeholder: 'https://...' })
-          .layoutWeight(1)
-          .onChange((value: string) => {
-            this.address = value;
-          })
-          .onSubmit(() => {
-            this.openAddress();
-          })
-        Button('Go')
-          .onClick(() => {
-            this.openAddress();
-          })
-      }
-      .width('100%')
-
-      Text(this.pageUrl.length > 0
-        ? `${this.pageUrl} - ask in Chat, HOPA can read and click this page`
-        : 'Load an https page, then ask HOPA in Chat.')
-        .fontSize(12)
-        .fontColor('#666666')
-        .width('100%')
-        .maxLines(2)
-
-      Row({ space: 8 }) {
-        Button($r('app.string.btn_back'))
-          .fontSize(12)
-          .height(28)
-          .backgroundColor('#E5E6E8')
-          .fontColor('#333333')
-          .onClick(() => {
-            if (this.webController.accessBackward()) {
-              this.webController.backward();
-            }
-          })
-        Button($r('app.string.btn_forward'))
-          .fontSize(12)
-          .height(28)
-          .backgroundColor('#E5E6E8')
-          .fontColor('#333333')
-          .onClick(() => {
-            if (this.webController.accessForward()) {
-              this.webController.forward();
-            }
-          })
-        Button($r('app.string.btn_reload'))
-          .fontSize(12)
-          .height(28)
-          .backgroundColor('#E5E6E8')
-          .fontColor('#333333')
-          .onClick(() => {
-            this.webController.refresh();
-          })
-      }
-      .width('100%')
-
-      Text('JavaScript sandbox (isolated about:blank page, offline)')
-        .fontSize(12)
-        .fontColor('#666666')
-      TextArea({ placeholder: '1 + 1', text: this.script })
-        .height(70)
-        .onChange((value: string) => {
-          this.script = value;
-        })
-      Button('Run script')
-        .fontSize(12)
-        .onClick(() => {
-          this.runScript();
-        })
-      Text(this.scriptOutput)
-        .fontSize(11)
-        .fontColor('#0A7F3F')
-        .maxLines(4)
-
-      Web({ src: 'https://example.com', controller: this.webController })
-        .layoutWeight(1)
-        .width('100%')
-        .onPageEnd(() => {
-          try {
-            this.pageUrl = this.webController.getUrl();
-          } catch (error) {
-            this.pageUrl = this.address;
-          }
-          AgentService.get().browser.attach(this.webController);
-        })
-
-      Web({ src: 'about:blank', controller: this.sandboxController })
-        .width(1)
-        .height(1)
-        .opacity(0)
-        .onPageEnd(() => {
-          AgentService.get().sandbox.setBridge(new JsSandboxBridge(this.sandboxController));
-        })
-    }
-    .width('100%')
-    .height('100%')
-    .padding(8)
   }
 
   @Builder
@@ -635,212 +161,6 @@ struct Index {
     .borderRadius(10)
     .onClick(() => {
       this.activePage = key;
-    })
-  }
-
-  @Builder
-  SettingsPage() {
-    Scroll() {
-      Column({ space: 16 }) {
-      Text($r('app.string.title_settings'))
-        .fontSize(22)
-        .fontWeight(FontWeight.Bold)
-
-      Row() {
-        Text($r('app.string.label_network'))
-          .layoutWeight(1)
-        Toggle({ type: ToggleType.Switch, isOn: this.networkEnabled })
-          .onChange((on: boolean) => {
-            this.networkEnabled = on;
-            AgentService.get().setNetworkEnabled(on);
-            this.persistSettings();
-          })
-      }
-      .width('100%')
-
-      Row() {
-        Text(this.a11yAvailable
-          ? 'Accessibility service (available)'
-          : 'Accessibility service (requires ACL)')
-          .layoutWeight(1)
-        Toggle({ type: ToggleType.Switch, isOn: this.accessibilityEnabled })
-          .enabled(this.a11yAvailable)
-          .onChange((on: boolean) => {
-            this.accessibilityEnabled = on;
-          })
-      }
-      .width('100%')
-
-      Row() {
-        Text($r('app.string.label_autonomous'))
-          .layoutWeight(1)
-        Toggle({ type: ToggleType.Switch, isOn: this.autonomous })
-          .onChange((on: boolean) => {
-            this.autonomous = on;
-            AgentService.get().setAutonomous(on);
-            this.persistSettings();
-          })
-      }
-      .width('100%')
-
-      Text('PC bridge (fallback control)')
-        .fontSize(14)
-        .fontColor('#666666')
-      TextInput({ text: this.bridgeUrl, placeholder: 'http://192.168.1.10:8765' })
-        .onChange((value: string) => {
-          this.bridgeUrl = value;
-        })
-      TextInput({ text: this.bridgeToken, placeholder: 'bridge token' })
-        .type(InputType.Password)
-        .onChange((value: string) => {
-          this.bridgeToken = value;
-        })
-      Row({ space: 8 }) {
-        Button('Connect')
-          .fontSize(12)
-          .onClick(() => {
-            this.connectBridge();
-          })
-        Text(this.bridgeStatus)
-          .fontSize(12)
-          .fontColor('#666666')
-      }
-      .width('100%')
-      Text('Run "pc-agent bridge" on the PC. Used only when accessibility is unavailable.')
-        .fontSize(11)
-        .fontColor('#999999')
-
-      Text($r('app.string.label_provider'))
-        .fontSize(14)
-        .fontColor('#666666')
-      Select([
-        { value: 'openai' },
-        { value: 'anthropic' },
-        { value: 'gemini' },
-        { value: 'deepseek' }
-      ])
-        .selected(this.providerIndex())
-        .value(this.provider)
-        .onSelect((index: number, value: string) => {
-          this.provider = value;
-          if (value === 'anthropic') {
-            if (this.modelEndpoint === 'https://api.openai.com/v1') {
-              this.modelEndpoint = 'https://api.anthropic.com';
-            }
-            if (this.modelName === 'gpt-4o-mini') {
-              this.modelName = 'claude-3-5-sonnet-latest';
-            }
-          } else if (value === 'gemini') {
-            if (this.modelEndpoint === 'https://api.openai.com/v1' ||
-              this.modelEndpoint === 'https://api.anthropic.com') {
-              this.modelEndpoint = 'https://generativelanguage.googleapis.com';
-            }
-            if (this.modelName === 'gpt-4o-mini' || this.modelName === 'claude-3-5-sonnet-latest') {
-              this.modelName = 'gemini-2.0-flash';
-            }
-          } else if (value === 'deepseek') {
-            this.modelEndpoint = 'https://api.deepseek.com/v1';
-            if (this.modelName === 'gpt-4o-mini' ||
-              this.modelName === 'claude-3-5-sonnet-latest' ||
-              this.modelName === 'gemini-2.0-flash') {
-              this.modelName = 'deepseek-v4-flash';
-            }
-          } else {
-            if (this.modelEndpoint === 'https://api.anthropic.com' ||
-              this.modelEndpoint === 'https://generativelanguage.googleapis.com') {
-              this.modelEndpoint = 'https://api.openai.com/v1';
-            }
-            if (this.modelName === 'claude-3-5-sonnet-latest' || this.modelName === 'gemini-2.0-flash') {
-              this.modelName = 'gpt-4o-mini';
-            }
-          }
-          this.persistSettings();
-        })
-
-      Text($r('app.string.label_endpoint'))
-        .fontSize(14)
-        .fontColor('#666666')
-      TextInput({ text: this.modelEndpoint })
-        .onChange((value: string) => {
-          this.modelEndpoint = value;
-        })
-
-      Text($r('app.string.label_model'))
-        .fontSize(14)
-        .fontColor('#666666')
-      TextInput({ text: this.modelName })
-        .onChange((value: string) => {
-          this.modelName = value;
-        })
-
-      Text($r('app.string.label_api_key'))
-        .fontSize(14)
-        .fontColor('#666666')
-      TextInput({ text: this.apiKey, placeholder: 'sk-...' })
-        .type(InputType.Password)
-        .onChange((value: string) => {
-          this.apiKey = value;
-        })
-
-      Button(this.modelLabel.length > 0 ? `Save (current: ${this.modelLabel})` : 'Save model settings')
-        .onClick(() => {
-          this.saveModel();
-        })
-
-      Text($r('app.string.label_payment'))
-        .fontSize(13)
-        .fontColor('#B42318')
-
-      Text(`Installed accessibility services: ${this.a11yInstalled}`)
-        .fontSize(11)
-        .fontColor('#666666')
-
-      Text($r('app.string.label_sandbox'))
-        .fontSize(12)
-        .fontColor('#666666')
-      Text($r('app.string.label_retention'))
-        .fontSize(12)
-        .fontColor('#666666')
-
-      Text('Advanced')
-        .fontSize(16)
-        .fontWeight(FontWeight.Bold)
-      this.SettingsRow('App access', 'Which bundles may be launched', 'appaccess')
-      this.SettingsRow('Computer access', 'PC bridge and MCP commands', 'computer')
-      this.SettingsRow('Self-check', 'Verify the setup', 'selfcheck')
-      this.SettingsRow('Developer', 'Build and runtime details', 'developer')
-      this.SettingsRow('About', 'Version, credits and licenses', 'about')
-      }
-      .width('100%')
-      .padding(16)
-      .alignItems(HorizontalAlign.Start)
-    }
-    .width('100%')
-    .height('100%')
-  }
-
-  @Builder
-  SettingsRow(title: string, subtitle: string, key: string) {
-    Row({ space: 10 }) {
-      Column({ space: 2 }) {
-        Text(title)
-          .fontSize(14)
-        Text(subtitle)
-          .fontSize(10)
-          .fontColor('#999999')
-      }
-      .layoutWeight(1)
-      .alignItems(HorizontalAlign.Start)
-      Text('>')
-        .fontSize(14)
-        .fontColor('#999999')
-    }
-    .width('100%')
-    .padding(12)
-    .backgroundColor('#F7F8FA')
-    .borderRadius(8)
-    .onClick(() => {
-      this.settingsPage = key;
     })
   }
 
@@ -918,7 +238,6 @@ struct Index {
     .borderRadius(8)
     .onClick(() => {
         this.activePage = key;
-      this.settingsPage = '';
       this.menuOpen = false;
     })
   }
@@ -936,13 +255,16 @@ struct Index {
         .width('100%')
         .backgroundColor('#0A59F7')
         .onClick(() => {
-          this.newChat();
+          AgentService.get().conversations.newChat();
+          this.refreshChats();
+          this.activePage = 'chat';
+          this.menuOpen = false;
         })
       Text('CONVERSATIONS')
         .fontSize(10)
         .fontColor('#999999')
         .padding({ left: 12, top: 4, bottom: 2 })
-      ForEach(this.recentChats(), (session: ChatSession, index: number) => {
+      ForEach(this.chatSessions, (session: ChatSession, index: number) => {
         Row({ space: 6 }) {
           Text(session.title)
             .fontSize(13)
@@ -954,15 +276,19 @@ struct Index {
             .fontColor('#B42318')
             .padding({ left: 8, right: 4 })
             .onClick(() => {
-              this.deleteChat(session.id);
+              AgentService.get().conversations.delete(session.id);
+              this.refreshChats();
             })
         }
         .width('100%')
         .padding({ left: 12, right: 8, top: 8, bottom: 8 })
         .borderRadius(8)
-        .backgroundColor(session.id === this.history.currentId() ? '#EAF1FF' : '#00000000')
+        .backgroundColor(session.id === AgentService.get().conversations.currentId() ? '#EAF1FF' : '#00000000')
         .onClick(() => {
-          this.selectChat(session.id);
+          AgentService.get().conversations.select(session.id);
+          this.refreshChats();
+          this.activePage = 'chat';
+          this.menuOpen = false;
         })
       }, (session: ChatSession, index: number) => `${session.id}-${session.updatedAt}`)
       Divider()
@@ -1007,11 +333,11 @@ struct Index {
     } else if (this.activePage === 'memory') {
       MemoryPage()
     } else if (this.activePage === 'browser') {
-      this.WebPage()
+      BrowserPage()
     } else if (this.activePage === 'screens') {
       ScreensPage()
     } else if (this.activePage === 'settings') {
-      this.SettingsHost()
+      SettingsPage()
     } else if (this.activePage === 'about') {
       AboutPage()
     } else if (this.activePage === 'more') {
@@ -1039,7 +365,7 @@ struct Index {
     } else if (this.activePage === 'welcome') {
       WelcomePage({ onOpenSettings: () => { this.activePage = 'settings'; this.menuOpen = false; }, onOpenChat: () => { this.activePage = 'chat'; this.menuOpen = false; } })
     } else {
-      this.ChatPage()
+      ChatPage()
     }
   }
 
@@ -1064,11 +390,8 @@ struct Index {
         if (key === 'apps') {
           AppsPage({
             onOpenSite: (url: string) => {
-              this.address = url;
+              AgentService.get().browser.requestUrl(url);
               this.activePage = 'browser';
-              setTimeout(() => {
-                this.openAddress();
-              }, 500);
             }
           })
         } else if (key === 'runs') {
@@ -1146,196 +469,6 @@ struct Index {
     return 'About';
   }
 
-  @Builder
-  SettingsHost() {
-    if (this.settingsPage.length === 0) {
-      this.SettingsPage()
-    } else {
-      Column({ space: 10 }) {
-        Row({ space: 8 }) {
-          Button('Back')
-            .fontSize(12)
-            .backgroundColor('#E5E6E8')
-            .fontColor('#333333')
-            .onClick(() => {
-              this.settingsPage = '';
-            })
-          Text(this.settingsTitle())
-            .fontSize(20)
-            .fontWeight(FontWeight.Bold)
-            .layoutWeight(1)
-        }
-        .width('100%')
-        Column() {
-          if (this.settingsPage === 'appaccess') {
-            this.AppAccessPage()
-          } else if (this.settingsPage === 'computer') {
-            this.ComputerAccessPage()
-          } else if (this.settingsPage === 'developer') {
-            this.DeveloperPage()
-          } else if (this.settingsPage === 'selfcheck') {
-            SelfCheckPage()
-          } else if (this.settingsPage === 'about') {
-            AboutPage()
-          }
-        }
-        .layoutWeight(1)
-        .width('100%')
-      }
-      .width('100%')
-      .height('100%')
-      .padding(16)
-      .alignItems(HorizontalAlign.Start)
-    }
-  }
-
-  private settingsTitle(): string {
-    if (this.settingsPage === 'appaccess') {
-      return 'App access';
-    }
-    if (this.settingsPage === 'computer') {
-      return 'Computer access';
-    }
-    if (this.settingsPage === 'developer') {
-      return 'Developer';
-    }
-    if (this.settingsPage === 'selfcheck') {
-      return 'Self-check';
-    }
-    return 'About';
-  }
-
-  @Builder
-  AppAccessPage() {
-    Column({ space: 10 }) {
-      Text('Only verified bundles can be launched.')
-        .fontSize(14)
-        .fontWeight(FontWeight.Bold)
-      Text('Unverified and unconfirmed catalogue entries never launch a guessed bundle. This is the app access policy; there is no per-app toggle.')
-        .fontSize(12)
-        .fontColor('#666666')
-      List({ space: 6 }) {
-        ForEach(this.verifiedApps(), (app: CatalogApp, index: number) => {
-          ListItem() {
-            Column({ space: 2 }) {
-              Text(app.display)
-                .fontSize(14)
-                .fontWeight(FontWeight.Bold)
-              Text(app.bundle)
-                .fontSize(11)
-                .fontColor('#666666')
-              Text(`ability: ${app.ability.length > 0 ? app.ability : 'unknown'}`)
-                .fontSize(10)
-                .fontColor('#999999')
-            }
-            .width('100%')
-            .padding(10)
-            .backgroundColor('#F7F8FA')
-            .borderRadius(8)
-            .alignItems(HorizontalAlign.Start)
-          }
-        }, (app: CatalogApp, index: number) => app.bundle)
-      }
-      .layoutWeight(1)
-      .width('100%')
-    }
-    .width('100%')
-    .height('100%')
-    .alignItems(HorizontalAlign.Start)
-  }
-
-  private verifiedApps(): CatalogApp[] {
-    const apps: CatalogApp[] = [];
-    for (const app of APP_CATALOG) {
-      if (app.verified) {
-        apps.push(app);
-      }
-    }
-    return apps;
-  }
-
-  @Builder
-  ComputerAccessPage() {
-    Column({ space: 12 }) {
-      Text(AgentService.get().isRemoteConfigured()
-        ? 'The PC bridge is connected. The phone can be driven from the computer.'
-        : 'The PC bridge is not connected. Start it on the computer, then connect in Settings.')
-        .fontSize(13)
-        .fontColor('#666666')
-      Text('Commands')
-        .fontSize(16)
-        .fontWeight(FontWeight.Bold)
-      Text('pc-agent bridge --host 0.0.0.0 --port 8765 --token <token>')
-        .fontSize(11)
-        .fontColor('#333333')
-        .backgroundColor('#F2F3F5')
-        .padding(8)
-        .borderRadius(6)
-        .width('100%')
-      Text('pc-agent mcp    # drive the phone from an MCP client')
-        .fontSize(11)
-        .fontColor('#333333')
-        .backgroundColor('#F2F3F5')
-        .padding(8)
-        .borderRadius(6)
-        .width('100%')
-      Text('The app is the client; it does not run an MCP server on the phone.')
-        .fontSize(11)
-        .fontColor('#999999')
-      Text('Endpoints: /observe, /tap, /type, /launch, /key, /swipe, /screenshot')
-        .fontSize(11)
-        .fontColor('#999999')
-      Button('Open bridge settings')
-        .fontSize(12)
-        .onClick(() => {
-          this.settingsPage = '';
-          this.activePage = 'settings';
-        })
-    }
-    .width('100%')
-    .height('100%')
-    .alignItems(HorizontalAlign.Start)
-  }
-
-  @Builder
-  DeveloperPage() {
-    Column({ space: 10 }) {
-      this.DevLine('App', 'HOPA 0.1.0 (com.hopa.agent)')
-      this.DevLine('Runtime', 'ArkTS on HarmonyOS, API 24')
-      this.DevLine('Model', this.modelLabel.length > 0 ? this.modelLabel : 'not configured')
-      this.DevLine('Accessibility', this.a11yAvailable ? 'available' : 'unavailable')
-      this.DevLine('PC bridge', AgentService.get().isRemoteConfigured() ? 'configured' : 'not configured')
-      this.DevLine('Runs stored', `${AgentService.get().runs.all().length}`)
-      this.DevLine('Plans stored', `${AgentService.get().schedules.all().length}`)
-      Button('Clear run history')
-        .fontSize(12)
-        .backgroundColor('#E5E6E8')
-        .fontColor('#B42318')
-        .onClick(() => {
-          this.clearRuns();
-        })
-    }
-    .width('100%')
-    .height('100%')
-    .alignItems(HorizontalAlign.Start)
-  }
-
-  @Builder
-  DevLine(label: string, value: string) {
-    Row() {
-      Text(label)
-        .fontSize(12)
-        .fontColor('#999999')
-        .width(120)
-      Text(value)
-        .fontSize(12)
-        .layoutWeight(1)
-    }
-    .width('100%')
-    .padding(10)
-    .backgroundColor('#F7F8FA')
-    .borderRadius(6)
-  }
 
   build() {
     SideBarContainer(SideBarContainerType.Overlay) {
@@ -1347,6 +480,7 @@ struct Index {
             .fontColor('#333333')
             .padding(8)
             .onClick(() => {
+              this.refreshChats();
               this.menuOpen = true;
             })
           Text(this.pageTitle())
