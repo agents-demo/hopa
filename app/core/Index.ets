@@ -42,3 +42,4 @@ export { SkillDraft, SkillDrafter } from './src/main/ets/SkillDrafter';
 export { BatchItemResult, BatchRunner } from './src/main/ets/BatchRunner';
 export { Screen, ScreenNode, ScreenSource } from './src/main/ets/Screen';
 export { ScheduleBook, ScheduledTask } from './src/main/ets/Schedules';
+export { ChatEntry, ChatHistory, ChatSession } from './src/main/ets/ChatHistory';

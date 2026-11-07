@@ -26,9 +26,12 @@ per-row breakdown.
 ## Screens (2026-11-07)
 
 The app now has a **left drawer**, like Mika's root screen. It lists Chat, Plans,
-Memory, Browser, Screens, Settings and About, then a Tools group: Apps, Runs and
-batches, Models, Usage, Phone setup, Self-check and Welcome.
+Memory, Browser, Screens, Settings, About and More, then a Tools group: Apps,
+Runs and batches, Models, Usage, Phone setup, Self-check and Welcome.
 
+- **Conversations** live in the drawer: every chat is saved, `+ New chat`
+  starts a fresh one, and selecting an older chat restores it. The current chat
+  also survives a restart.
 - **Welcome** is shown automatically on the first launch and once only.
 - **Settings** has the Mika-style sub-pages: App access, Computer access,
   Self-check, Developer and About.
@@ -36,10 +39,13 @@ batches, Models, Usage, Phone setup, Self-check and Welcome.
   payment, detail).
 - **Screens** renders a live JPEG from `pc-agent bridge /screenshot`, verified
   on the emulator (1.2 s per frame).
+- **More** adds Source (provider, endpoint, control backend), MCP servers (what
+  runs on the PC), Files (export and inspect the JSON) and License.
 
-Still missing or folded: Source/evidence, a separate License page, MCP servers,
-a conversation-history drawer, and a file viewer. The run history is a list that
-opens one timeline at a time, not a full trace view.
+What is still narrower than Mika: Source is a summary, not a citation list;
+there is no MCP server on the phone, only the PC side; Files shows the export as
+text rather than a document viewer; and the run history is a list that opens
+one timeline at a time.
 
 Plan progress: **229 / 767 boxes (29.9%)**. The open boxes are concentrated in
 the device/ACL, UI, release and sign-off phases.
@@ -59,7 +65,7 @@ the device/ACL, UI, release and sign-off phases.
 | Schedules | in-app once / 5 min / 30 min / daily, persisted; a one-shot fired on device (653 tokens) and moved to `done`; no system alarm on this image | device run 2026-11-07 |
 | Background run | continuous task started and stopped around a bridged run | hilog `background: continuous task` |
 | Languages | 10 of 10: English, Chinese, Japanese, French, Spanish, German, Korean, Italian, Portuguese, Russian | `resources/*/element/string.json` |
-| Entry UI | Mika-style left drawer: Chat, Plans, Memory, Browser, Screens, Settings, About + Tools (Apps, Runs, Models, Usage, Phone setup, Self-check, Welcome); Settings sub-pages (App access, Computer access, Self-check, Developer, About); run timeline; welcome once; 10 languages | `pages/Index.ets` |
+| Entry UI | Mika-style left drawer: Chat (saved conversations, + New chat), Plans, Memory, Browser, Screens, Settings, About, More + Tools (Apps, Runs, Models, Usage, Phone setup, Self-check, Welcome); Settings sub-pages; run timeline; Source/MCP/Files/License; welcome once; 10 languages | `pages/Index.ets` |
 | Accessibility extension | declared; permission granted on the emulator; framework lists the service; no Settings toggle on this image | `docs/a11y.md` |
 | Emulator | Pura 90, API 24, unlocked; `hdc` and the display glitch under load | `hdc` |
 | ACL | local debug profile accepted on the emulator; AppGallery ACL not filed | `docs/acl-request.md` |

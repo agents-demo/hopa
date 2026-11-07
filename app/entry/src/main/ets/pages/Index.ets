@@ -3,7 +3,8 @@ import { webview } from '@kit.ArkWeb';
 import { Context, common } from '@kit.AbilityKit';
 import { accessibility } from '@kit.AccessibilityKit';
 import { buffer } from '@kit.ArkTS';
-import { Action, BatchItemResult, PaymentContext, Screen, ScheduledTask, Skill } from '@hopa/core';
+import { preferences } from '@kit.ArkData';
+import { Action, BatchItemResult, ChatHistory, ChatSession, PaymentContext, Screen, ScheduledTask, Skill } from '@hopa/core';
 import { MemoryExtractor } from '@hopa/core';
 import { AgentService } from '../service/AgentService';
 import { SettingsStore, StoredSettings } from '../service/SettingsStore';
@@ -12,6 +13,7 @@ import { APP_CATALOG, CatalogApp, SITE_CATALOG, CatalogSite } from '../service/A
 import { RunRecord } from '@hopa/core';
 import { JsSandboxBridge } from '../service/JsSandboxBridge';
 import { AppLauncher } from '../service/AppLauncher';
+import { fileIo } from '@kit.CoreFileKit';
 
 @Entry
 @Component
@@ -20,6 +22,8 @@ struct Index {
   @State menuOpen: boolean = false;
   @State settingsPage: string = '';
   @State selectedRunId: string = '';
+  @State chatSessions: ChatSession[] = [];
+  private history: ChatHistory = new ChatHistory();
   @State runCount: number = 0;
   @State a11yAvailable: boolean = false;
   @State a11yInstalled: string = 'checking...';
@@ -43,6 +47,8 @@ struct Index {
   @State selfCheckA11y: string = 'not checked';
   @State screenImage: string = '';
   @State screenStatus: string = 'not loaded';
+  @State fileText: string = '';
+  @State filePath: string = 'not exported';
   private scheduleRefresh: number = -1;
   @State networkEnabled: boolean = false;
   @State accessibilityEnabled: boolean = false;
@@ -139,6 +145,10 @@ struct Index {
         `You: ${text}`,
         $r('app.string.msg_no_model')
       ]);
+      this.history.add('user', text, Date.now());
+      this.history.add('assistant', 'No model configured.', Date.now());
+      this.saveHistory();
+      this.chatSessions = this.history.all().slice();
       this.draft = '';
       return;
     }
@@ -147,6 +157,8 @@ struct Index {
     this.busy = true;
     this.taskStatus = 'Running';
     this.messages = this.messages.concat([`You: ${text}`, $r('app.string.msg_working')]);
+    this.history.add('user', text, Date.now());
+    this.saveHistory();
 
     const reply: string = await service.run(text);
 
@@ -154,6 +166,9 @@ struct Index {
     const next: ResourceStr[] = this.messages.slice(0, this.messages.length - 1);
     next.push(`HOPA: ${reply}`);
     this.messages = next;
+    this.history.add('assistant', reply, Date.now());
+    this.saveHistory();
+    this.chatSessions = this.history.all().slice();
 
     this.busy = false;
     this.taskStatus = 'Idle';
@@ -247,6 +262,7 @@ struct Index {
     await this.loadRuns();
     await this.loadA11yList();
     await this.loadSchedules();
+    await this.loadChats();
     AgentService.get().setUiLauncher(
       new AppLauncher(getContext(this) as common.UIAbilityContext)
     );
@@ -304,6 +320,71 @@ struct Index {
     await AgentService.get().loadSchedules(getContext(this) as Context);
     this.schedules = AgentService.get().schedules.all().slice();
     AgentService.get().startScheduler();
+  }
+
+  private async loadChats(): Promise<void> {
+    try {
+      const store = await preferences.getPreferences(getContext(this) as Context, 'hopa_settings');
+      const raw = await store.get('chats_v1', '');
+      this.history = ChatHistory.fromJson(`${raw}`);
+    } catch (error) {
+      this.history = new ChatHistory();
+    }
+    this.history.ensureCurrent(Date.now());
+    this.renderHistory();
+    await this.saveHistory();
+  }
+
+  private async saveHistory(): Promise<void> {
+    try {
+      const store = await preferences.getPreferences(getContext(this) as Context, 'hopa_settings');
+      await store.put('chats_v1', this.history.toJson());
+      await store.flush();
+    } catch (error) {
+      // History is best effort; the session still works in memory.
+    }
+  }
+
+  private renderHistory(): void {
+    const current: ChatSession | undefined = this.history.current();
+    const next: ResourceStr[] = [$r('app.string.greeting_1'), $r('app.string.greeting_2')];
+    if (current !== undefined) {
+      for (const entry of current.entries) {
+        next.push(entry.role === 'user' ? `You: ${entry.text}` : `HOPA: ${entry.text}`);
+      }
+    }
+    this.messages = next;
+    this.chatSessions = this.history.all().slice();
+  }
+
+  private newChat(): void {
+    this.history.newSession(Date.now());
+    this.renderHistory();
+    this.saveHistory();
+    this.activePage = 'chat';
+    this.menuOpen = false;
+  }
+
+  private recentChats(): ChatSession[] {
+    const result: ChatSession[] = [];
+    for (const session of this.chatSessions) {
+      if (session.entries.length > 0 || session.id === this.history.currentId()) {
+        result.push(session);
+      }
+      if (result.length >= 3) {
+        break;
+      }
+    }
+    return result;
+  }
+
+  private selectChat(id: string): void {
+    if (this.history.select(id)) {
+      this.renderHistory();
+      this.saveHistory();
+      this.activePage = 'chat';
+      this.menuOpen = false;
+    }
   }
 
   private async addSchedule(intervalMs: number, delayMs: number): Promise<void> {
@@ -1471,8 +1552,203 @@ struct Index {
   }
 
   @Builder
-  ScreensPage() {
+  MoreToolsPage() {
     Column({ space: 10 }) {
+      Text('More')
+        .fontSize(22)
+        .fontWeight(FontWeight.Bold)
+      Text('The screens Mika keeps in its drawer that do not fit above.')
+        .fontSize(12)
+        .fontColor('#666666')
+      this.ToolRow('Source', 'Model, backend and observation source', 'source')
+      this.ToolRow('MCP servers', 'What runs on the phone and what runs on the PC', 'mcpservers')
+      this.ToolRow('Files', 'Exported data on this device', 'files')
+      this.ToolRow('License', 'Apache-2.0 and third-party notices', 'license')
+    }
+    .width('100%')
+    .height('100%')
+    .padding(16)
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  @Builder
+  ToolRow(title: string, subtitle: string, key: string) {
+    Row({ space: 10 }) {
+      Column({ space: 2 }) {
+        Text(title)
+          .fontSize(16)
+        Text(subtitle)
+          .fontSize(11)
+          .fontColor('#999999')
+      }
+      .layoutWeight(1)
+      .alignItems(HorizontalAlign.Start)
+      Text('>')
+        .fontSize(16)
+        .fontColor('#999999')
+    }
+    .width('100%')
+    .padding(14)
+    .backgroundColor('#F7F8FA')
+    .borderRadius(10)
+    .onClick(() => {
+      this.activePage = key;
+    })
+  }
+
+  @Builder
+  SourcePage() {
+    Column({ space: 10 }) {
+      Text('Where the last answer looked')
+        .fontSize(14)
+        .fontWeight(FontWeight.Bold)
+      this.SourceLine('Provider', this.provider)
+      this.SourceLine('Endpoint', this.modelEndpoint)
+      this.SourceLine('Model', this.modelName)
+      this.SourceLine('Control backend', AgentService.get().isRemoteConfigured()
+        ? 'PC bridge: live screen and taps'
+        : (this.a11yAvailable ? 'on-device accessibility' : 'built-in browser text only'))
+      this.SourceLine('Last run', `${this.lastTokens} tokens, ${(this.lastDurationMs / 1000).toFixed(1)} s`)
+      Text('Screen text and page URLs are not stored per run yet, so this page reports the configured source instead of a citation list.')
+        .fontSize(11)
+        .fontColor('#999999')
+    }
+    .width('100%')
+    .height('100%')
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  @Builder
+  SourceLine(label: string, value: string) {
+    Row() {
+      Text(label)
+        .fontSize(12)
+        .fontColor('#999999')
+        .width(120)
+      Text(value)
+        .fontSize(13)
+        .layoutWeight(1)
+    }
+    .width('100%')
+    .padding(10)
+    .backgroundColor('#F7F8FA')
+    .borderRadius(6)
+  }
+
+  @Builder
+  McpServersPage() {
+    Column({ space: 12 }) {
+      Text('On this phone')
+        .fontSize(16)
+        .fontWeight(FontWeight.Bold)
+      Text('This build does not run an MCP server on the device. The app is a client of the PC agent, not a server.')
+        .fontSize(12)
+        .fontColor('#666666')
+      Text('On the computer')
+        .fontSize(16)
+        .fontWeight(FontWeight.Bold)
+      Text('pc-agent mcp    # stdio MCP server for Claude/other clients')
+        .fontSize(11)
+        .backgroundColor('#F2F3F5')
+        .padding(8)
+        .borderRadius(6)
+        .width('100%')
+      Text('pc-agent bridge --host 0.0.0.0 --port 8765 --token <token>')
+        .fontSize(11)
+        .backgroundColor('#F2F3F5')
+        .padding(8)
+        .borderRadius(6)
+        .width('100%')
+      Text('Mika exposes MCP servers in Settings. HOPA keeps MCP on the PC side; the phone talks to the bridge over HTTP with a token.')
+        .fontSize(11)
+        .fontColor('#999999')
+    }
+    .width('100%')
+    .height('100%')
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  @Builder
+  FilesPage() {
+    Column({ space: 10 }) {
+      Text('Exports')
+        .fontSize(16)
+        .fontWeight(FontWeight.Bold)
+      Text('Memory, skills and runs are written as one JSON file in the app sandbox.')
+        .fontSize(12)
+        .fontColor('#666666')
+      Button('Export and load')
+        .fontSize(12)
+        .onClick(() => {
+          this.loadExport();
+        })
+      Text(this.filePath)
+        .fontSize(10)
+        .fontColor('#999999')
+        .maxLines(2)
+      if (this.fileText.length > 0) {
+        Scroll() {
+          Text(this.fileText)
+            .fontSize(9)
+            .fontColor('#333333')
+            .width('100%')
+        }
+        .layoutWeight(1)
+        .width('100%')
+        .backgroundColor('#F7F8FA')
+        .padding(8)
+        .borderRadius(8)
+      }
+    }
+    .width('100%')
+    .height('100%')
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  private async loadExport(): Promise<void> {
+    try {
+      const path: string = await AgentService.get().exportData(getContext(this) as Context);
+      this.filePath = path;
+      const file = fileIo.openSync(path, fileIo.OpenMode.READ_ONLY);
+      const stat = fileIo.statSync(path);
+      const data = new ArrayBuffer(stat.size);
+      fileIo.readSync(file.fd, data);
+      fileIo.closeSync(file);
+      this.fileText = buffer.from(data).toString('utf8');
+    } catch (error) {
+      this.filePath = `export failed: ${error}`;
+    }
+  }
+
+  @Builder
+  LicensePage() {
+    Column({ space: 12 }) {
+      Text('Apache License 2.0')
+        .fontSize(18)
+        .fontWeight(FontWeight.Bold)
+      Text('HOPA is distributed under the Apache License, Version 2.0. You may use, modify and redistribute it under the terms of that license, including the patent grant and the notice requirements.')
+        .fontSize(12)
+        .fontColor('#666666')
+      Text('Third-party components')
+        .fontSize(16)
+        .fontWeight(FontWeight.Bold)
+      Text('HarmonyOS ArkUI, ArkWeb, ArkData and the DevEco SDK are used under the Huawei/OpenHarmony terms.')
+        .fontSize(11)
+        .fontColor('#999999')
+      Text('Mika (Apache-2.0) is the design reference. No Mika Kotlin code runs in this app; the Android device-control layer was reimplemented with hdc, uitest and the HarmonyOS accessibility API.')
+        .fontSize(11)
+        .fontColor('#999999')
+      Text('DeepSeek, OpenAI, Anthropic and Gemini are accessed through their public HTTP APIs with the user-provided key.')
+        .fontSize(11)
+        .fontColor('#999999')
+    }
+    .width('100%')
+    .height('100%')
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  @Builder
+  ScreensPage() {    Column({ space: 10 }) {
       Text(AgentService.get().isRemoteConfigured()
         ? 'Live view of the phone through pc-agent bridge.'
         : 'Connect the PC bridge in Settings to see the phone screen here.')
@@ -1946,7 +2222,7 @@ struct Index {
         .fontColor(this.activePage === key ? '#0A59F7' : '#333333')
     }
     .width('100%')
-    .padding({ left: 12, right: 12, top: 11, bottom: 11 })
+    .padding({ left: 12, right: 12, top: 8, bottom: 8 })
     .backgroundColor(this.activePage === key ? '#EAF1FF' : '#00000000')
     .borderRadius(8)
     .onClick(() => {
@@ -1958,31 +2234,65 @@ struct Index {
 
   @Builder
   Drawer() {
-    Column({ space: 1 }) {
+    Column({ space: 6 }) {
       Text('HOPA')
         .fontSize(24)
         .fontWeight(FontWeight.Bold)
-        .padding({ left: 12, top: 8, bottom: 12 })
-      this.DrawerItem('Chat', 'chat')
-      this.DrawerItem('Plans', 'plans')
-      this.DrawerItem('Memory', 'memory')
-      this.DrawerItem('Browser', 'browser')
-      this.DrawerItem('Screens', 'screens')
-      this.DrawerItem('Settings', 'settings')
-      this.DrawerItem('About', 'about')
-      Divider()
-        .margin({ top: 8, bottom: 8 })
-      Text('TOOLS')
+        .padding({ left: 12, top: 8, bottom: 2 })
+      Button('+ New chat')
+        .fontSize(13)
+        .height(34)
+        .width('100%')
+        .backgroundColor('#0A59F7')
+        .onClick(() => {
+          this.newChat();
+        })
+      Text('CONVERSATIONS')
         .fontSize(10)
         .fontColor('#999999')
-        .padding({ left: 12, bottom: 4 })
-      this.DrawerItem('Apps', 'apps')
-      this.DrawerItem('Runs and batches', 'runs')
-      this.DrawerItem('Models', 'models')
-      this.DrawerItem('Usage', 'usage')
-      this.DrawerItem('Phone setup', 'phone')
-      this.DrawerItem('Self-check', 'selfcheck')
-      this.DrawerItem('Welcome', 'welcome')
+        .padding({ left: 12, top: 4, bottom: 2 })
+      ForEach(this.recentChats(), (session: ChatSession, index: number) => {
+        Row() {
+          Text(session.title)
+            .fontSize(13)
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+        }
+        .width('100%')
+        .padding({ left: 12, right: 12, top: 8, bottom: 8 })
+        .borderRadius(8)
+        .backgroundColor(session.id === this.history.currentId() ? '#EAF1FF' : '#00000000')
+        .onClick(() => {
+          this.selectChat(session.id);
+        })
+      }, (session: ChatSession, index: number) => `${session.id}-${session.updatedAt}`)
+      Divider()
+        .margin({ top: 4, bottom: 4 })
+      Column({ space: 1 }) {
+        this.DrawerItem('Chat', 'chat')
+        this.DrawerItem('Plans', 'plans')
+        this.DrawerItem('Memory', 'memory')
+        this.DrawerItem('Browser', 'browser')
+        this.DrawerItem('Screens', 'screens')
+        this.DrawerItem('Settings', 'settings')
+        this.DrawerItem('About', 'about')
+        this.DrawerItem('More', 'more')
+        Divider()
+          .margin({ top: 6, bottom: 6 })
+        Text('TOOLS')
+          .fontSize(10)
+          .fontColor('#999999')
+          .padding({ left: 12, bottom: 2 })
+        this.DrawerItem('Apps', 'apps')
+        this.DrawerItem('Runs and batches', 'runs')
+        this.DrawerItem('Models', 'models')
+        this.DrawerItem('Usage', 'usage')
+        this.DrawerItem('Phone setup', 'phone')
+        this.DrawerItem('Self-check', 'selfcheck')
+        this.DrawerItem('Welcome', 'welcome')
+      }
+      .width('100%')
+      .alignItems(HorizontalAlign.Start)
     }
     .width('100%')
     .height('100%')
@@ -2005,6 +2315,16 @@ struct Index {
       this.SettingsHost()
     } else if (this.activePage === 'about') {
       this.MoreContainer('about')
+    } else if (this.activePage === 'more') {
+      this.MoreToolsPage()
+    } else if (this.activePage === 'source') {
+      this.MoreContainer('source')
+    } else if (this.activePage === 'mcpservers') {
+      this.MoreContainer('mcpservers')
+    } else if (this.activePage === 'files') {
+      this.MoreContainer('files')
+    } else if (this.activePage === 'license') {
+      this.MoreContainer('license')
     } else if (this.activePage === 'apps') {
       this.MoreContainer('apps')
     } else if (this.activePage === 'runs') {
@@ -2035,7 +2355,7 @@ struct Index {
           .backgroundColor('#E5E6E8')
           .fontColor('#333333')
           .onClick(() => {
-            this.activePage = 'chat';
+            this.activePage = 'more';
           })
         Text(this.containerTitle(key))
           .fontSize(20)
@@ -2062,6 +2382,14 @@ struct Index {
           this.AboutPage()
         } else if (key === 'screens') {
           this.ScreensPage()
+        } else if (key === 'source') {
+          this.SourcePage()
+        } else if (key === 'mcpservers') {
+          this.McpServersPage()
+        } else if (key === 'files') {
+          this.FilesPage()
+        } else if (key === 'license') {
+          this.LicensePage()
         }
       }
       .layoutWeight(1)
@@ -2097,6 +2425,18 @@ struct Index {
     }
     if (key === 'screens') {
       return 'Screens';
+    }
+    if (key === 'source') {
+      return 'Source';
+    }
+    if (key === 'mcpservers') {
+      return 'MCP servers';
+    }
+    if (key === 'files') {
+      return 'Files';
+    }
+    if (key === 'license') {
+      return 'License';
     }
     return 'About';
   }

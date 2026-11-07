@@ -9,6 +9,7 @@ import skillDrafterTest from './SkillDrafter.test';
 import memoryExtractorTest from './MemoryExtractor.test';
 import screenTest from './Screen.test';
 import schedulesTest from './Schedules.test';
+import chatHistoryTest from './ChatHistory.test';
 
 export default function testsuite(): void {
   approvalPolicyTest();
@@ -22,4 +23,5 @@ export default function testsuite(): void {
   memoryExtractorTest();
   screenTest();
   schedulesTest();
+  chatHistoryTest();
 }
