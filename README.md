@@ -69,25 +69,34 @@ that app installed; HOPA says when a bundle is missing instead of guessing.</sub
 
 <table>
 <tr>
-<td width="33%" align="center" valign="top">
+<td width="50%" align="center" valign="top">
 
-<img src="docs/media/chat.jpeg" alt="Real chat: HOPA opens Bilibili and summarizes the trends" height="600" />
+<img src="docs/media/chat.jpeg" alt="Real chat: HOPA opens Bilibili and summarizes the trends" height="560" />
 
 <br/><sub><b>Real: a website task.</b> One prompt: HOPA opened Bilibili, read the page and answered in Chinese.</sub>
 
 </td>
-<td width="33%" align="center" valign="top">
+<td width="50%" align="center" valign="top">
 
-<img src="docs/media/chat-example.svg" alt="Designed example of a WeChat message task with the approval dialog" height="600" />
+<img src="docs/media/chat-example.svg" alt="Designed example of a WeChat message task with the approval dialog" height="560" />
 
 <br/><sub><b>Designed: an app task.</b> A WeChat message with the approval step; WeChat is not installed on the test emulator.</sub>
 
 </td>
-<td width="33%" align="center" valign="top">
+</tr>
+<tr>
+<td width="50%" align="center" valign="top">
 
-<img src="docs/media/apps.jpeg" alt="HOPA app catalogue" height="600" />
+<img src="docs/media/apps.jpeg" alt="HOPA app catalogue" height="560" />
 
-<br/><sub><b>Real: the app catalogue.</b> AppGallery, Browser, Calendar, Contacts and more, with a verified bundle or an honest “not yet”.</sub>
+<br/><sub><b>Real: the app catalogue.</b> WeChat, Weibo, Xiaohongshu, Zhihu and more; when a bundle is missing, HOPA says so instead of guessing.</sub>
+
+</td>
+<td width="50%" align="center" valign="top">
+
+<img src="docs/media/sites.jpeg" alt="HOPA site catalogue with Bilibili, Xiaohongshu and Weibo" height="560" />
+
+<br/><sub><b>Real: the site catalogue.</b> Bilibili, Xiaohongshu, Weibo and more in the site catalogue.</sub>
 
 </td>
 </tr>
