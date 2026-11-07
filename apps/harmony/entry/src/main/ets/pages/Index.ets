@@ -4,16 +4,16 @@ import { Context, common } from '@kit.AbilityKit';
 import { accessibility } from '@kit.AccessibilityKit';
 import { buffer } from '@kit.ArkTS';
 import { preferences } from '@kit.ArkData';
-import { Action, BatchItemResult, ChatHistory, ChatSession, PaymentContext, Screen, Skill } from '@hopa/core';
+import { Action, ChatHistory, ChatSession, PaymentContext, Screen, Skill } from '@hopa/core';
 import { MemoryExtractor } from '@hopa/core';
 import { AgentService } from '../services/AgentService';
 import { SettingsStore, StoredSettings } from '../services/SettingsStore';
 import { APP_CATALOG, CatalogApp } from '../services/AppCatalog';
-import { RunRecord } from '@hopa/core';
 import { JsSandboxBridge } from '../services/JsSandboxBridge';
 import { AppLauncher } from '../services/AppLauncher';
 import { AppsPage } from './apps/AppsPage';
 import { MemoryPage } from './memory/MemoryPage';
+import { RunsPage } from './runs/RunsPage';
 import { PlansPage } from './plans/PlansPage';
 import { ScreensPage } from './tools/ScreensPage';
 import { SelfCheckPage } from './tools/SelfCheckPage';
@@ -29,7 +29,6 @@ struct Index {
   @State activePage: string = 'chat';
   @State menuOpen: boolean = false;
   @State settingsPage: string = '';
-  @State selectedRunId: string = '';
   @State chatSessions: ChatSession[] = [];
   private history: ChatHistory = new ChatHistory();
   @State a11yAvailable: boolean = false;
@@ -39,13 +38,10 @@ struct Index {
   @State autonomous: boolean = false;
   @State lastTokens: number = 0;
   @State lastDurationMs: number = 0;
-  @State batchText: string = '';
-  @State batchResults: BatchItemResult[] = [];
   @State messages: ResourceStr[] = [
     $r('app.string.greeting_1'),
     $r('app.string.greeting_2')
   ];
-  @State taskStatus: string = 'Idle';
   @State networkEnabled: boolean = false;
   @State accessibilityEnabled: boolean = false;
   @State modelEndpoint: string = 'https://api.openai.com/v1';
@@ -55,7 +51,6 @@ struct Index {
   @State modelLabel: string = '';
   @State address: string = 'https://example.com';
   @State pageUrl: string = '';
-  @State runRecords: RunRecord[] = [];
   @State script: string = '';
   @State scriptOutput: string = '';
   @State bridgeUrl: string = '';
@@ -140,7 +135,6 @@ struct Index {
 
     this.draft = '';
     this.busy = true;
-    this.taskStatus = 'Running';
     this.messages = this.messages.concat([`You: ${text}`, $r('app.string.msg_working')]);
     this.history.add('user', text, Date.now());
     this.saveHistory();
@@ -156,10 +150,8 @@ struct Index {
     this.chatSessions = this.history.all().slice();
 
     this.busy = false;
-    this.taskStatus = 'Idle';
     this.lastTokens = service.getLastTokens();
     this.lastDurationMs = service.getLastDurationMs();
-    this.refreshRuns();
     AgentService.get().skills.save(getContext(this) as Context).catch(() => {
       // Persistence is best effort.
     });
@@ -167,43 +159,6 @@ struct Index {
 
   private stopRun(): void {
     AgentService.get().cancel();
-    this.taskStatus = 'Stopping...';
-  }
-
-  private async runContinue(): Promise<void> {
-    if (this.busy) {
-      return;
-    }
-    this.busy = true;
-    this.taskStatus = 'Continuing';
-    const reply: string = await AgentService.get().continueLast();
-    this.messages = this.messages.concat([`HOPA: ${reply}`]);
-    this.busy = false;
-    this.taskStatus = 'Idle';
-    this.lastTokens = AgentService.get().getLastTokens();
-    this.lastDurationMs = AgentService.get().getLastDurationMs();
-    this.refreshRuns();
-  }
-
-  private async runBatch(): Promise<void> {
-    const goals: string[] = [];
-    for (const line of this.batchText.split('\n')) {
-      const goal: string = line.trim();
-      if (goal.length > 0) {
-        goals.push(goal);
-      }
-    }
-    if (goals.length === 0 || this.busy) {
-      return;
-    }
-    this.busy = true;
-    this.taskStatus = `Batch: ${goals.length} goals`;
-    const results: BatchItemResult[] = await AgentService.get().runBatch(goals);
-    this.batchResults = results;
-    this.busy = false;
-    this.taskStatus = 'Idle';
-    this.lastTokens = AgentService.get().getLastTokens();
-    this.refreshRuns();
   }
 
   private saveModel(): void {
@@ -381,18 +336,6 @@ struct Index {
     }
   }
 
-  private draftLastSkill(): void {
-    const skill: Skill | undefined = AgentService.get().saveLastRunAsSkill();
-    if (skill !== undefined) {
-      AgentService.get().skills.save(getContext(this) as Context).catch(() => {
-        // Persistence is best effort.
-      });
-      this.messages = this.messages.concat([
-        `HOPA: saved "${skill.name}" as a skill. Edit it in Memory & skills.`
-      ]);
-    }
-  }
-
   private async loadSkills(): Promise<void> {
     try {
       await AgentService.get().skills.load(getContext(this) as Context);
@@ -404,22 +347,16 @@ struct Index {
   private async loadRuns(): Promise<void> {
     try {
       await AgentService.get().loadRuns(getContext(this) as Context);
-      this.runRecords = AgentService.get().runs.all();
     } catch (error) {
       // First run: no history yet.
     }
   }
 
-  private refreshRuns(): void {
-    this.runRecords = AgentService.get().runs.all();
+  private clearRuns(): void {
+    AgentService.get().runs.clear();
     AgentService.get().saveRuns(getContext(this) as Context).catch(() => {
       // Persistence is best effort.
     });
-  }
-
-  private clearRuns(): void {
-    AgentService.get().runs.clear();
-    this.refreshRuns();
     this.messages = this.messages.concat(['HOPA: cleared the run history.']);
   }
 
@@ -656,158 +593,6 @@ struct Index {
   }
 
   @Builder
-  RunsPage() {
-    Column({ space: 12 }) {
-      Text('Runs and batches')
-        .fontSize(22)
-        .fontWeight(FontWeight.Bold)
-      Text(this.taskStatus)
-        .fontSize(16)
-      if (this.busy) {
-        Progress({ value: 50, total: 100, type: ProgressType.Linear })
-          .width('100%')
-      }
-      Text(this.a11yAvailable
-        ? 'Accessibility is available. The loop can read other apps.'
-        : (AgentService.get().isRemoteConfigured()
-          ? 'Accessibility is unavailable; actions go through the connected PC bridge.'
-          : 'Accessibility is unavailable, so the loop can read only the built-in browser.'))
-        .fontSize(13)
-        .fontColor('#666666')
-
-      Text($r('app.string.label_batch'))
-        .fontSize(16)
-        .fontWeight(FontWeight.Bold)
-      TextArea({ placeholder: $r('app.string.placeholder_batch'), text: this.batchText })
-        .height(80)
-        .onChange((value: string) => {
-          this.batchText = value;
-        })
-      Row({ space: 8 }) {
-        Button($r('app.string.btn_run_batch'))
-          .fontSize(12)
-          .onClick(() => {
-            this.runBatch();
-          })
-        if (this.busy) {
-          Button('Stop')
-            .fontSize(12)
-            .backgroundColor('#B42318')
-            .onClick(() => {
-              this.stopRun();
-            })
-        }
-      }
-      .width('100%')
-
-      List({ space: 6 }) {
-        ForEach(this.batchResults, (item: BatchItemResult, index: number) => {
-          ListItem() {
-            Column({ space: 2 }) {
-              Text(item.goal)
-                .fontSize(12)
-                .fontWeight(FontWeight.Bold)
-              Text(item.output)
-                .fontSize(11)
-                .maxLines(3)
-              Text(`${Math.round(item.durationMs / 1000)}s`)
-                .fontSize(10)
-                .fontColor('#999999')
-            }
-            .width('100%')
-            .padding(8)
-            .backgroundColor('#F7F8FA')
-            .borderRadius(6)
-            .alignItems(HorizontalAlign.Start)
-          }
-        }, (item: BatchItemResult, index: number) => `${index}-${item.goal}`)
-      }
-      .height(120)
-      .width('100%')
-
-      Row({ space: 8 }) {
-        Text(`Recent actions (${this.runRecords.length})`)
-          .fontSize(14)
-          .fontColor('#666666')
-          .layoutWeight(1)
-        if (this.runRecords.length > 0) {
-          Button($r('app.string.btn_clear'))
-            .fontSize(11)
-            .height(26)
-            .backgroundColor('#E5E6E8')
-            .fontColor('#B42318')
-            .onClick(() => {
-              this.clearRuns();
-            })
-        }
-      }
-      .width('100%')
-      Text(`Last run: ${this.lastTokens} tokens | ${(this.lastDurationMs / 1000).toFixed(1)} s`)
-        .fontSize(11)
-        .fontColor('#999999')
-      if (AgentService.get().canDraftSkill()) {
-        Button($r('app.string.btn_draft_skill'))
-          .fontSize(12)
-          .height(30)
-          .onClick(() => {
-            this.draftLastSkill();
-          })
-      }
-      if (AgentService.get().canContinue()) {
-        Button('Continue last task')
-          .fontSize(12)
-          .height(30)
-          .backgroundColor('#E5E6E8')
-          .fontColor('#333333')
-          .onClick(() => {
-            this.runContinue();
-          })
-      }
-
-      List({ space: 8 }) {
-        ForEach(this.runRecords, (run: RunRecord, index: number) => {
-          ListItem() {
-            Column({ space: 2 }) {
-              Row({ space: 8 }) {
-                Text(run.kind)
-                  .fontSize(14)
-                  .fontWeight(FontWeight.Bold)
-                  .layoutWeight(1)
-                Text(run.status)
-                  .fontSize(12)
-                  .fontColor(run.status === 'executed' ? '#0A7F3F' : '#B42318')
-              }
-              .width('100%')
-              Text(run.detail.length > 0 ? run.detail : '(no detail)')
-                .fontSize(12)
-                .fontColor('#666666')
-                .maxLines(2)
-              Text(`${run.durationMs} ms | ${run.approved ? 'approved' : 'no approval'} | ${run.isPayment ? 'payment' : 'normal'}`)
-                .fontSize(10)
-                .fontColor('#999999')
-            }
-            .width('100%')
-            .padding(10)
-            .backgroundColor('#F7F8FA')
-            .borderRadius(8)
-            .alignItems(HorizontalAlign.Start)
-            .onClick(() => {
-              this.selectedRunId = run.id;
-              this.activePage = 'run';
-            })
-          }
-        }, (run: RunRecord) => run.id)
-      }
-      .layoutWeight(1)
-      .width('100%')
-    }
-    .width('100%')
-    .height('100%')
-    .padding(16)
-    .alignItems(HorizontalAlign.Start)
-  }
-
-  @Builder
   ModelsPage() {
     Column({ space: 12 }) {
       Text('Current model')
@@ -843,7 +628,7 @@ struct Index {
   @Builder
   UsagePage() {
     Column({ space: 10 }) {
-      this.UsageLine('Actions recorded', `${this.runRecords.length}`)
+      this.UsageLine('Actions recorded', `${AgentService.get().runs.all().length}`)
       this.UsageLine('Executed', `${this.countRuns('executed')}`)
       this.UsageLine('Failed', `${this.countRuns('failed')}`)
       this.UsageLine('Denied', `${this.countRuns('denied')}`)
@@ -879,7 +664,7 @@ struct Index {
 
   private countRuns(status: string): number {
     let count: number = 0;
-    for (const run of this.runRecords) {
+    for (const run of AgentService.get().runs.all()) {
       if (run.status === status) {
         count += 1;
       }
@@ -1432,7 +1217,7 @@ struct Index {
     } else if (this.activePage === 'apps') {
       this.MoreContainer('apps')
     } else if (this.activePage === 'runs') {
-      this.MoreContainer('runs')
+      RunsPage()
     } else if (this.activePage === 'models') {
       this.MoreContainer('models')
     } else if (this.activePage === 'usage') {
@@ -1443,8 +1228,6 @@ struct Index {
       SelfCheckPage()
     } else if (this.activePage === 'welcome') {
       WelcomePage({ onOpenSettings: () => { this.activePage = 'settings'; this.menuOpen = false; }, onOpenChat: () => { this.activePage = 'chat'; this.menuOpen = false; } })
-    } else if (this.activePage === 'run') {
-      this.RunDetailPage()
     } else {
       this.ChatPage()
     }
@@ -1479,7 +1262,7 @@ struct Index {
             }
           })
         } else if (key === 'runs') {
-          this.RunsPage()
+          RunsPage()
         } else if (key === 'models') {
           this.ModelsPage()
         } else if (key === 'usage') {
@@ -1613,79 +1396,6 @@ struct Index {
   }
 
   @Builder
-  RunDetailPage() {
-    Column({ space: 12 }) {
-      Row({ space: 8 }) {
-        Button('Back')
-          .fontSize(12)
-          .backgroundColor('#E5E6E8')
-          .fontColor('#333333')
-          .onClick(() => {
-            this.activePage = 'runs';
-          })
-        Text('Run')
-          .fontSize(20)
-          .fontWeight(FontWeight.Bold)
-          .layoutWeight(1)
-      }
-      .width('100%')
-      ForEach(this.selectedRuns(), (run: RunRecord, index: number) => {
-        Column({ space: 10 }) {
-          Text(run.kind)
-            .fontSize(18)
-            .fontWeight(FontWeight.Bold)
-          Text(run.status)
-            .fontSize(13)
-            .fontColor(run.status === 'executed' ? '#0A7F3F' : '#B42318')
-          Divider()
-          this.TimelineRow('Started', new Date(run.startedAt).toLocaleTimeString())
-          this.TimelineRow('Finished', new Date(run.finishedAt).toLocaleTimeString())
-          this.TimelineRow('Duration', `${run.durationMs} ms`)
-          this.TimelineRow('Approval', run.approved ? 'approved' : 'not required')
-          this.TimelineRow('Payment', run.isPayment ? 'yes' : 'no')
-          Divider()
-          Text(run.detail.length > 0 ? run.detail : '(no detail)')
-            .fontSize(13)
-            .fontColor('#666666')
-        }
-        .width('100%')
-        .padding(14)
-        .backgroundColor('#F7F8FA')
-        .borderRadius(10)
-        .alignItems(HorizontalAlign.Start)
-      }, (run: RunRecord, index: number) => run.id)
-    }
-    .width('100%')
-    .height('100%')
-    .padding(16)
-    .alignItems(HorizontalAlign.Start)
-  }
-
-  @Builder
-  TimelineRow(label: string, value: string) {
-    Row() {
-      Text(label)
-        .fontSize(12)
-        .fontColor('#999999')
-        .width(100)
-      Text(value)
-        .fontSize(13)
-        .layoutWeight(1)
-    }
-    .width('100%')
-  }
-
-  private selectedRuns(): RunRecord[] {
-    const found: RunRecord[] = [];
-    for (const run of this.runRecords) {
-      if (run.id === this.selectedRunId) {
-        found.push(run);
-      }
-    }
-    return found;
-  }
-
-  @Builder
   AppAccessPage() {
     Column({ space: 10 }) {
       Text('Only verified bundles can be launched.')
@@ -1785,7 +1495,7 @@ struct Index {
       this.DevLine('Model', this.modelLabel.length > 0 ? this.modelLabel : 'not configured')
       this.DevLine('Accessibility', this.a11yAvailable ? 'available' : 'unavailable')
       this.DevLine('PC bridge', AgentService.get().isRemoteConfigured() ? 'configured' : 'not configured')
-      this.DevLine('Runs stored', `${this.runRecords.length}`)
+      this.DevLine('Runs stored', `${AgentService.get().runs.all().length}`)
       this.DevLine('Plans stored', `${AgentService.get().schedules.all().length}`)
       Button('Clear run history')
         .fontSize(12)
