@@ -10,55 +10,67 @@
 
 </div>
 
+# HOPA
+
 **You have better things to do than tap through menus.**
 
 HOPA is a phone assistant for HarmonyOS. You say what you want in your own
-words. It opens the app, reads the screen, taps, types and scrolls — then tells
-you what happened.
+words. It opens the app or the website, reads the screen, taps, types and
+scrolls — then tells you what happened.
 
 Before money moves, it stops and asks. Every time.
 
-> **Today:** a working prototype. Chat, the browser, memory and the app-control
-> loop are real. On this emulator a small PC companion lends HOPA its hands.
-> [The honest details →](docs/history/status-2026-11-07.md)
+> **Today:** a working prototype. Chat, the browser, memory and the
+> app-and-website control loop are real. On this emulator a small PC companion
+> lends HOPA its hands. [The honest details →](docs/history/status-2026-11-07.md)
 
-## A small example
+## See it work
 
-> **You:** “Summarize what’s trending on Bilibili today in three short points.”
+> **You:** “Answer in Chinese: summarize the 2 hottest Bilibili videos today,
+> with titles and view counts.”
 >
-> **HOPA:** opens Bilibili, reads the page and gives you the three main trends.
-> If it needs to post, send or pay, it asks first.
+> **HOPA:** opens Bilibili, reads the page and answers in Chinese with the two
+> hottest videos. If it needs to post, send or pay, it asks first.
 
-<img src="docs/media/how-it-works.svg" alt="You ask; HOPA looks and acts; you see the result" width="100%" />
+<table>
+<tr>
+<td width="33%" align="center" valign="top">
 
-## What it feels like
+<img src="docs/media/chat.jpeg" alt="Real chat: HOPA lists the two hottest Bilibili videos in Chinese" height="560" />
 
-**You talk normally.** No commands, no scripts. “What’s hot on Bilibili?”
-“Send Alice a message.” “Find a charger under $30.”
+<br/><sub><b>Real: the answer.</b> The two hottest videos, in Chinese: 《近十几年的梗都在这里了》 (3.27M views) and 《“你土木的不会抽烟？？废物”》 (1.76M views).</sub>
 
-**It works in your apps.** HOPA uses the apps already on your phone, not a
-separate universe. No new ecosystem to learn.
+</td>
+<td width="33%" align="center" valign="top">
 
-**It stops for money.** Every payment waits for your yes — every time, in every
-mode.
+<img src="docs/media/bilibili-page.jpeg" alt="Real Bilibili page with video thumbnails and view counts" height="560" />
 
-**It remembers.** Tell it once: “I prefer aisle seats.” It keeps that, and you
-can delete it whenever you like.
+<br/><sub><b>Real: what it read.</b> The Bilibili page, with video cards and view counts, inside the compact browser.</sub>
 
-**It shows its work.** Every run has a history: what it did, how long it took,
-and what needed your approval.
+</td>
+<td width="33%" align="center" valign="top">
 
-**Your key, your data.** There is no HOPA account and no hosted backend. Your
-model key goes to the model you choose.
+<img src="docs/media/chat-example.svg" alt="Designed example: a WeChat message task with the approval dialog" height="560" />
 
-## Things you can say
+<br/><sub><b>Designed: the app side.</b> HOPA found Alice, drafted the message and stopped for approval. WeChat is not installed on the test emulator.</sub>
 
-| Sites and apps | The little things |
+</td>
+</tr>
+</table>
+
+The first two are real screenshots from the emulator. The WeChat image is a
+designed example of the app flow; the label says so.
+
+## What you can ask
+
+| Apps | The web |
 |---|---|
-| “What are the top stories on Zhihu?”<br/>“What’s trending on Xiaohongshu?”<br/>“Summarize the top videos on Bilibili.” | “Send Alice ‘running 10 minutes late’ on WeChat.”<br/>“Find a 4.5-star charger under $30 on Amazon.”<br/>“Remember that I prefer aisle seats.” |
+| “Send Alice ‘running 10 minutes late’ on WeChat.”<br/>“Check my messages on Feishu.”<br/>“Find a charger on Xianyu.” | “What are the top stories on Zhihu?”<br/>“What’s trending on Xiaohongshu?”<br/>“Summarize the top videos on Bilibili.” |
 
 <sub>Site examples run in the browser HOPA opens for you. App examples need
 that app installed; HOPA says when a bundle is missing instead of guessing.</sub>
+
+It also remembers facts and skills you choose to keep.
 
 **When money is involved**
 
@@ -67,42 +79,42 @@ that app installed; HOPA says when a bundle is missing instead of guessing.</sub
 > HOPA shows the item, the total and the seller. You choose **Deny** or
 > **Allow**. Nothing is paid without you.
 
+## What it can reach
+
 <table>
 <tr>
 <td width="50%" align="center" valign="top">
 
-<img src="docs/media/chat.jpeg" alt="Real chat: HOPA opens Bilibili and summarizes the trends" height="560" />
+<img src="docs/media/apps.jpeg" alt="HOPA app catalogue with Chinese apps" height="560" />
 
-<br/><sub><b>Real: a website task.</b> One prompt: HOPA opened Bilibili, read the page and answered in Chinese.</sub>
-
-</td>
-<td width="50%" align="center" valign="top">
-
-<img src="docs/media/chat-example.svg" alt="Designed example of a WeChat message task with the approval dialog" height="560" />
-
-<br/><sub><b>Designed: an app task.</b> A WeChat message with the approval step; WeChat is not installed on the test emulator.</sub>
-
-</td>
-</tr>
-<tr>
-<td width="50%" align="center" valign="top">
-
-<img src="docs/media/apps.jpeg" alt="HOPA app catalogue" height="560" />
-
-<br/><sub><b>Real: the app catalogue.</b> WeChat, Weibo, Xiaohongshu, Zhihu and more; when a bundle is missing, HOPA says so instead of guessing.</sub>
+<br/><sub><b>Real: the app catalogue.</b> WeChat, Weibo, Xiaohongshu, Zhihu and more; where a HarmonyOS bundle is missing, HOPA says so. The top of the same tab lists 12 apps with a verified bundle.</sub>
 
 </td>
 <td width="50%" align="center" valign="top">
 
 <img src="docs/media/sites.jpeg" alt="HOPA site catalogue with Bilibili, Xiaohongshu and Weibo" height="560" />
 
-<br/><sub><b>Real: the site catalogue.</b> Bilibili, Xiaohongshu, Weibo and more in the site catalogue.</sub>
+<br/><sub><b>Real: the site catalogue.</b> Bilibili, Xiaohongshu, Weibo and more open in the browser HOPA opens for you.</sub>
 
 </td>
 </tr>
 </table>
 
-## Getting started
+## Why it feels different
+
+- **You talk normally.** No commands, no scripts. “What’s hot on Bilibili?”
+  “Send Alice a message.” “Find a charger under $30.”
+- **It uses your apps, not a new ecosystem.** It reads the screen and works the
+  app or site you already have.
+- **It stops for money.** Every payment waits for your yes — every time, in
+  every mode.
+- **Your key, your data.** There is no HOPA account and no hosted backend. Your
+  model key goes to the model you choose.
+
+It also remembers what you tell it and can turn a successful run into a skill,
+both editable in the app.
+
+## Get started
 
 **1. Put HOPA on your phone.**
 Today the app is built and signed from source. The two commands live in the
@@ -117,42 +129,34 @@ in memory; it is not saved to preferences.
 On a real phone, enable the built-in screen control. On this emulator, start
 the small PC companion and connect it in **Settings → PC bridge**.
 
-**4. Say something.**
-Try “What are the top videos on Bilibili right now?”
+Why a companion? On a real phone, the system has a built-in way to let an
+assistant see and tap. This emulator does not have that switch. The companion
+is a small program on your computer that lends HOPA its hands. It runs on your
+machine, not in the cloud.
 
-### Why a PC companion?
-
-On a real phone, the system has a built-in way to let an assistant see and tap.
-This emulator does not have that switch. The companion is a small program on
-your computer that lends HOPA its hands. It runs on your machine, not in the
-cloud, and you only need it when the phone cannot do it alone.
+Then say: “What’s trending on Bilibili today?”
 
 ## Good to know
 
 - HOPA sees the screen you see. It cannot work in the background.
-- It will not guess an app it does not know.
+- It will not guess an app it does not know. Fifteen catalogue apps have no
+  HarmonyOS bundle yet, and five more have an unverified one.
 - Login, CAPTCHA and verification codes stay with you.
 - Some apps block automation; HOPA stops and hands over.
 - The PC companion is for a trusted network.
-- 15 apps in the catalogue have no HarmonyOS bundle yet, and 5 more have an
-  unverified one. HOPA says so instead of pretending.
-- This emulator is not a phone: its accessibility switch is missing, the input
-  service can stall, and some system features fail.
+- This emulator has no accessibility switch; a real phone with it enabled is
+  the untethered path.
 
-## Where it is today
+### Where it is today
 
-A working prototype. With the PC companion, these work today:
+| Works | Needs a device or data |
+|---|---|
+| Chat, browser, memory, skills, plans, batch, runs and export | Untethered app control on this emulator |
+| App control through the PC companion | Speech |
+| A website task from Chat: open Bilibili, read it and summarize | System reminders |
+|  | 15 apps without a bundle; 5 unverified |
+|  | The retail AppGallery ACL |
 
-- chat and reasoning
-- the built-in browser
-- memory, skills, plans and batch runs
-- run history, export and self-check
-- app launch, screen reading, tap, type and scroll
-- the full **launch → observe → tap → observe** loop inside a real app
-- a website task from Chat: open Bilibili, read it and summarize the trends
-
-Not available on this emulator: untethered app control, speech and system
-reminders. A real phone with the built-in control is the untethered path.
 Read the dated, per-capability state in
 [docs/product/coverage.md](docs/product/coverage.md).
 

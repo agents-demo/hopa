@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1800" role="img" aria-label="Illustration of a WeChat message task with the approval dialog">
-  <rect width="900" height="1800" fill="#FFFFFF"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1950" role="img" aria-label="Illustration of a WeChat message task with the approval dialog">
+  <rect width="900" height="1950" fill="#FFFFFF"/>
 
   <!-- status bar -->
   <text x="40" y="62" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="22" fill="#5B6B85">9:41</text>
@@ -28,7 +28,7 @@
   <text x="785" y="1692" text-anchor="middle" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="24" font-weight="600" fill="#FFFFFF">Send</text>
 
   <!-- dimmed app behind the dialog -->
-  <rect width="900" height="1800" fill="#000000" opacity="0.35"/>
+  <rect width="900" height="1950" fill="#000000" opacity="0.35"/>
 
   <!-- approval dialog -->
   <rect x="80" y="620" width="740" height="590" rx="36" fill="#FFFFFF"/>
