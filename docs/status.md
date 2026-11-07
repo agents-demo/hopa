@@ -1,38 +1,45 @@
 ﻿# Status
 
-**2026-11-06.** The repository is a working PC-tethered agent plus a signed,
+**2026-11-07.** The repository is a working PC-tethered agent plus a signed,
 installed HarmonyOS app. The Python harness captures an observation, asks a
 model for one action, classifies it, executes it, re-observes, verifies and
 appends a hash-chained record. It has 188 agent tests (277 across the harness)
 and a validated 20-task bench format. The ArkTS `app/core` has a screen-aware
-payment gate and a loop that captures observations; the HAP builds with DevEco
+payment gate and a loop that captures observations. The HAP builds with DevEco
 6.1.1 / API 24, the Local Tests pass, and the HAP is signed with the SDK's local
 OpenHarmony debug kit and installed on the Pura 90 emulator (`bm install` ok,
-`EntryAbility` starts, first frame drawn, all four tabs render). The chat page is
-wired to `AgentLoop`: with a model configured it captures the screen, asks for
-an action, gates it, executes it and records it. The approval gateway is
-fail-closed and opens an ArkUI dialog. The loop still cannot see other apps
-because the accessibility extension is not declared and no ACL is filed. The
-standalone claim is still **not** met; the toolchain, tethered, install and
-UI-wiring claims are.
+`EntryAbility` starts, first frame drawn, six tabs render).
 
-Plan progress: **228 / 767 boxes (29.7%)**. The open boxes are concentrated in
+Device control now has two backends:
+
+- **on-device accessibility** — extension declared, ACL granted, framework lists
+  it; this emulator has no Settings page to enable it, so capture/tap stay off;
+- **PC bridge** — `pc-agent bridge` over HTTP, token-authenticated, wired into
+  the app and verified end to end (observe -> model -> tap -> re-observe). This
+  is the path that works on this emulator.
+
+The standalone claim is still **not** met; the toolchain, tethered, install,
+UI-wiring and app-control-over-bridge claims are.
+
+Plan progress: **229 / 767 boxes (29.9%)**. The open boxes are concentrated in
 the device/ACL, UI, release and sign-off phases.
 
 | Area | State | Evidence |
 |---|---|---|
 | `agent/` loop, gate, policy, records | working, tested | `pytest agent` |
 | `brain/` Kotlin router + HTTP service + knowledge + prompts + skills + sites | working, 98 assertions + schema contract | `scripts/brain.ps1` |
-| `pc-agent` CLI + MCP | working; live device commands work | `pc-agent devices` |
+| `pc-agent` CLI + MCP + bridge | working; live device commands work; bridge has 8 HTTP tests | `pc-agent devices`, `pytest pc-agent` |
 | `bench` 20 task definitions | valid | `pytest bench`, `validate` |
 | Observation/action/decision/record schemas | v1 | `schemas/` |
-| ArkTS `app/core` | screen-aware gate + observation loop; OpenAI, Anthropic and Gemini clients; hypium pass | `hvigorw test` |
+| ArkTS `app/core` | screen-aware gate + observation loop; OpenAI, Anthropic and Gemini clients; element refs in the prompt | `hvigorw test` |
 | HAP | builds and signed with the local debug kit | `scripts/sign-app.ps1` |
 | Installed on the emulator | yes: launch, first frame, six tabs | `hdc install -r` |
 | On-device real model | DeepSeek V4 Flash answered from the browser text (400 tokens) and without any screen; a batch ran in 2 s with 409 tokens; skill saved | device runs 2026-11-07 |
+| PC-tethered app control | connected over `10.0.2.2:8765`; `POST /observe` -> model `ui.tap` -> `POST /tap` -> re-observe; Web tab opened | device run 2026-11-07 |
+| Background run | continuous task started and stopped around a bridged run | hilog `background: continuous task` |
 | Entry UI | chat wired to `AgentLoop`; fail-closed approval dialog; provider settings; memory and skills; Web (with JS sandbox), Apps and run-history tabs; English + Simplified Chinese shell strings | `pages/Index.ets` |
 | Accessibility extension | declared; permission granted on the emulator; framework lists the service; no Settings toggle on this image | `docs/a11y.md` |
-| Emulator | Pura 90, API 24, unlocked | `hdc` |
+| Emulator | Pura 90, API 24, unlocked; `hdc` and the display glitch under load | `hdc` |
 | ACL | local debug profile accepted on the emulator; AppGallery ACL not filed | `docs/acl-request.md` |
 | Bench on a device (stub model) | 5/7 on the tasks this image can run (3/5 on the original five) | `docs/bench-v0.md` |
 | Bench on a real model | one on-device page task passed (page title, 400 tokens); the 20-task bench has not been run | device run 2026-11-07 |

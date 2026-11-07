@@ -61,6 +61,7 @@ struct Index {
 
   aboutToAppear(): void {
     const service = AgentService.get();
+    service.setAbilityContext(getContext(this) as common.UIAbilityContext);
     this.runCount = service.runs.all().length;
     this.a11yAvailable = service.isA11yAvailable();
     this.modelLabel = service.getModelLabel();

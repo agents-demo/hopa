@@ -11,14 +11,14 @@ app module supplies device control; HOPA must supply its own HarmonyOS layer.
 
 | # | Mika capability | HOPA today | Gap | Portable? |
 |---|---|---|---|---|
-| 1 | Operates any app **without taking over the screen** | PC-tethered control works; on-device **launch works without a11y**; capture/tap need the service, which this emulator cannot enable | no background display; foreground a11y only | **No** (excluded) |
+| 1 | Operates any app **without taking over the screen** | PC-tethered control verified end-to-end on the emulator: observe -> model -> tap -> re-observe; on-device **launch works without a11y**; on-device capture/tap still need the service | no background display; foreground a11y only | **No** (excluded) |
 | 2 | Built-in desktop-class browser | single-tab ArkWeb browser; read/click/type wired; verified loading a page | tabs, downloads, uploads, sign-in | yes (ArkWeb) |
-| 3 | "Act on the screen I am looking at" | extension installed and listed by the framework; not enableable on this emulator | needs the service enabled | partial |
+| 3 | "Act on the screen I am looking at" | tethered mode observes the current screen and taps it (verified); the extension is installed and listed but cannot be enabled on this emulator | needs the service for the untethered path | partial |
 | 4 | Scheduled and conditional tasks | not shipped; the system reminder API failed on the emulator (1700002) | scheduler + triggers | yes, with HarmonyOS background limits |
 | 5 | Interrupt, stop, report, continue | Stop button; cancellation before the next model call; Continue reruns the last goal with the previous transcript | steering while running | yes |
 | 6 | Hold to talk (speech) | none | platform ASR or provider | yes |
 | 7 | Ask / Autonomous modes | both modes; autonomous skips non-payment approvals, payment is always fail-closed | — | yes |
-| 8 | Memory and preferences | explicit user memory, persisted, visible and deletable | learned memory + profile | yes |
+| 8 | Memory and preferences | explicit user memory, persisted, visible and deletable; "remember ..." requests are extracted automatically | learned memory + profile | yes |
 | 9 | Learns skills and app knowledge | explicit skills, draft from a successful run, uses/successes counters, 27-app/21-site catalogue; no automatic trial | drafter trial+scoring | yes |
 | 10 | Batch jobs | sequential batch runner in Tasks; verified on device (2 s, 409 tokens); stop between goals; no scheduling or parallelism | parallel/scheduled batches | yes |
 | 11 | Traceable runs | history, tokens measured on device, duration, export; no cost/trace UI | trace + cost UI | yes |
@@ -27,7 +27,7 @@ app module supplies device control; HOPA must supply its own HarmonyOS layer.
 | 14 | Many model providers + account sign-in | OpenAI-compatible, Anthropic, Gemini, DeepSeek; verified end-to-end on device, including chat with no screen; no OAuth | OAuth sign-in, more presets | yes |
 | 15 | 10 UI languages | English + Simplified Chinese resources for the shell, greeting and fixed messages; model text follows the model; 2 of 10 languages | more languages, translate all messages | yes |
 
-Usable today: **~10.6 of 15** (~71%).
+Usable today: **~11.1 of 15** (~74%).
 
 ## 2. Core package matrix
 
@@ -77,9 +77,9 @@ extension on device.
 
 | Measure | Value |
 |---|---|
-| User-visible capabilities usable | ~10.6 / 15 (~71%) |
+| User-visible capabilities usable | ~11.1 / 15 (~74%) |
 | Portable core ported | ~20% || Shared product surfaces (CLI/MCP, knowledge, records) | ~50% |
-| Device-control layer | replaced, not ported; on-device part blocked by ACL |
+| Device-control layer | replaced, not ported; on-device path blocked by the ACL, tethered path verified |
 
 The honest summary: **the skeleton and the safety gate are ahead of Mika; the
 product is far behind.** HOPA has a better-tested payment gate and a cleaner
@@ -90,7 +90,13 @@ Verified on the emulator on 2026-11-07: DeepSeek V4 Flash answered a question
 about the page loaded in HOPA's browser, reported **400 tokens**, and the run was
 saved as a skill. A second run answered with no screen at all, and a batch job
 finished in 2 s with 409 tokens. This proves chat, the browser-text path, usage,
-batch and skill drafting — not app control.
+batch and skill drafting.
+
+The PC-tethered path was verified the same day: the app connected to
+`pc-agent bridge` over the emulator NAT (`10.0.2.2:8765`), observed the device
+through `/observe`, the model chose a `ui.tap` on an element ref, the bridge
+executed `/tap`, and the loop re-observed the new screen before finishing. A
+continuous task kept the run alive while the app was in the background.
 
 ### Ceiling on the Pura 90 emulator
 
@@ -98,14 +104,16 @@ Four capabilities cannot be completed on this image, regardless of code:
 
 | Row | Blocker |
 |---|---|
-| 1, 3 — operate apps / act on the current screen | Settings has no third-party accessibility services page, so the service cannot be enabled. The extension is installed and the ACL is granted. |
+| 1, 3 — operate apps / act on the current screen | Settings has no third-party accessibility services page, so the service cannot be enabled. The extension is installed and the ACL is granted. **Tethered mode works** through the PC bridge. |
 | 4 — schedules | `publishReminder` returns `1700002` even after `cancelAllReminders` and a full reboot. |
 | 6 — speech | No `CoreSpeechKit` in this SDK/toolchain. |
 
-That is **3.4 of 15 credits** unavailable. Even with every other row perfect,
-the ceiling here is **~11.6 / 15 (77%)**. Reaching 80% needs a device image where
-the accessibility service can be enabled (row 1 + part of row 3), or a speech
-SDK. It is a platform/image limit, not a missing implementation.
+Untethered, that is **3.4 of 15 credits** unavailable, so the on-device ceiling is
+**~11.6 / 15 (77%)**. With the PC bridge attached, rows 1 and 3 are usable and
+only rows 4 and 6 are blocked, which puts the tethered ceiling near
+**13.4 / 15 (89%)**. Reaching 80% untethered needs a device image where the
+accessibility service can be enabled, or a speech SDK. It is a platform/image
+limit, not a missing implementation.
 
 ## 4. Effort to "a kind of Mika"
 

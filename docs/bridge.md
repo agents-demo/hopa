@@ -1,9 +1,9 @@
 # PC-tethered control bridge
 
-Status: **server implemented and tested; app client not wired yet.**
+Status: **wired into the app and verified end to end on the Pura 90 emulator.**
 
 This is the M4 fallback: when the on-device accessibility service cannot be
-enabled, the phone app can drive other apps through this server on the PC, which
+enabled, the phone app drives other apps through this server on the PC, which
 uses `hdc` + `uitest`. It is the same control path as `pc-agent`, behind a
 token-authenticated HTTP API.
 
@@ -16,12 +16,30 @@ pc-agent bridge --port 8765
 # token: <generated>
 ```
 
-Set `HOPA_BRIDGE_TOKEN` to choose the token instead of generating one. Bind to
-`0.0.0.0` only when the phone must reach the PC over the LAN:
+Set `HOPA_BRIDGE_TOKEN` to choose the token instead of generating one.
 
-```bash
-pc-agent bridge --host 0.0.0.0 --port 8765
-```
+### Reaching the PC from the phone
+
+- **Emulator (QEMU user-mode NAT):** use `http://10.0.2.2:8765`. Bind the
+  server to `0.0.0.0` (`--host 0.0.0.0`) so the guest's traffic is accepted.
+- **Physical phone on the same Wi-Fi:** bind `0.0.0.0` and use the PC's LAN
+  address, e.g. `http://192.168.1.10:8765`. Allow the port in the host firewall.
+- **USB only (`hdc`):** `hdc rport tcp:8765 tcp:8765` works, but the reverse
+  tunnel is reset whenever the `hdc` server restarts, which shows up as an
+  aborted request. Re-create the rule after `hdc start`.
+
+## App setup
+
+Settings tab -> **PC bridge (fallback control)**:
+
+1. `http://10.0.2.2:8765` (or the LAN address).
+2. The bridge token.
+3. **Connect**; the status must read `connected`.
+
+When a bridge is configured, it becomes the single control backend: the
+accessibility path stands down even if the extension reports itself connected
+(a declared-but-disabled service can leave capture pending). Failures show the
+reason, e.g. `unreachable: bridge HTTP 401`.
 
 ## Security
 
@@ -31,13 +49,13 @@ pc-agent bridge --host 0.0.0.0 --port 8765
   untrusted network.
 - The bridge can tap and type anything the device shows. Treat the token like a
   password.
-- `/health` is unauthenticated and reveals only whether a device is connected.
+- `/health` is unauthenticated and reveals only that the server is alive.
 
 ## Protocol
 
 | Method | Path | Body | Result |
 |---|---|---|---|
-| GET | `/health` | — | `{"ok":true,"device":true}` |
+| GET | `/health` | — | `{"ok":true}` |
 | POST | `/observe` | `{}` | `{"text","nodes":[{"ref","text","description","type","bounds","clickable"}],"width","height"}` |
 | POST | `/tap` | `{"x","y"}` | `{"ok":true}` |
 | POST | `/type` | `{"text","x"?,"y"?}` | `{"ok":true}` |
@@ -45,8 +63,20 @@ pc-agent bridge --host 0.0.0.0 --port 8765
 | POST | `/key` | `{"name"}` | `{"ok":true}` |
 | POST | `/swipe` | `{"from_x","from_y","to_x","to_y","velocity"?}` | `{"ok":true}` |
 
-`ref` values are stable only for one `/observe` response; the client must
-resolve a ref to bounds from that response before tapping.
+`ref` values are stable only for one `/observe` response; the client resolves a
+ref to bounds from that response before tapping. The app shows the element list
+to the model (`e1 Button "Web"`), and the model must target a `ref`.
+
+## Verified on the emulator (2026-11-07)
+
+1. Connect from Settings: `connected` over `http://10.0.2.2:8765`.
+2. Ask "Tap the Web tab.": the bridge logged `POST /observe`, then `POST /tap`;
+   the app switched from Chat to the Web tab and the loop re-observed (795
+   chars, 34 nodes) before finishing with one executed action.
+3. A payment prompt appears only because HOPA's own greeting contains the word
+   "payment"; allowing it runs the tap. Payment screens are still fail-closed.
+4. `run: start` -> continuous task started -> work -> `background: continuous
+   task stopped` in hilog, so a run can outlive the switch to another app.
 
 ## Tests
 
@@ -60,10 +90,7 @@ The tests run a real HTTP server on an ephemeral port with a fake device.
 
 - Requires the PC, `hdc` and an unlocked device.
 - One device per bridge process.
-- No screenshot endpoint yet; the client uses text and bounds.
+- No screenshot endpoint; the client uses text and bounds.
 - No wake/unlock; a locked screen fails the action.
-
-## Next
-
-Wire `RemoteScreenSource` and `RemoteUiCapability` in the app, then use the same
-capability interface as the accessibility path.
+- `hdc` is flaky under load: `/observe` normally takes 1.5-2.3 s, but an `hdc`
+  stall can take longer. The app's read timeout is 45 s.

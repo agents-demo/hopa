@@ -25,11 +25,13 @@ import { WebCapability } from '@hopa/capability-web';
 import { SandboxCapability } from '@hopa/capability-sandbox';
 import { A11yBridge, A11yCapability, UiCapability, UiLauncher } from '@hopa/capability-a11y';
 import { SystemCapability } from '@hopa/capability-system';
-import { Context } from '@kit.AbilityKit';
+import { Context, common } from '@kit.AbilityKit';
 import { preferences } from '@kit.ArkData';
 import { fileIo } from '@kit.CoreFileKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { BrowserController } from './BrowserController';
+import { BackgroundKeeper } from './BackgroundKeeper';
+import { APP_CATALOG, CatalogApp } from './AppCatalog';
 import { RemoteBridge } from './RemoteBridge';
 import { RemoteScreenSource, RemoteUiCapability } from './RemoteUiCapability';
 import { MemoryItem, MemoryStore } from './MemoryStore';
@@ -149,6 +151,7 @@ export class AgentService {
   readonly web: WebCapability;
   readonly browser: BrowserController;
   readonly remote: RemoteBridge = new RemoteBridge();
+  readonly background: BackgroundKeeper = new BackgroundKeeper();
   readonly sandbox: SandboxCapability;
   readonly a11y: A11yCapability;
   readonly ui: UiCapability;
@@ -268,6 +271,21 @@ export class AgentService {
   configureRemote(url: string, token: string): void {
     this.remote.configure(url, token);
     A11yBridge.get().setRemotePreferred(this.remote.isConfigured());
+  }
+
+  private appList(): string {
+    const lines: string[] = [];
+    for (const app of APP_CATALOG) {
+      if (app.confirmed && app.bundle.length > 0) {
+        lines.push(`${app.display}: ${app.bundle}`);
+      }
+    }
+    return lines.join('\n');
+  }
+
+  /** Enables the continuous task that keeps a run alive while backgrounded. */
+  setAbilityContext(context: common.UIAbilityContext): void {
+    this.background.setContext(context);
   }
 
   isRemoteConfigured(): boolean {
@@ -418,13 +436,19 @@ export class AgentService {
     this.matchedSkillId = matchedSkill === undefined ? '' : matchedSkill.id;
     this.loop.setMemory(this.memory.toPrompt());
     this.loop.setSkill(this.skills.toPrompt(goal));
+    this.loop.setAppCatalog(this.appList());
     this.loop.resetCancel();
     hilog.info(0x0000, 'HOPA', `run: start goal=${goal.length} chars`);
+    if (this.remote.isConfigured()) {
+      await this.background.begin();
+    }
     try {
       outcomes = await this.loop.run(goal);
     } catch (error) {
+      await this.background.end();
       return `Loop error: ${error}`;
     }
+    await this.background.end();
     hilog.info(0x0000, 'HOPA', `run: done outcomes=${outcomes.length} tokens=${this.loop.getTokens()}`);
     this.lastTokens = this.loop.getTokens();
     this.lastDurationMs = Date.now() - startedAt;

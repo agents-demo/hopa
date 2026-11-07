@@ -29,6 +29,7 @@ export class AgentLoop {
   private source?: ScreenSource;
   private memory: string = '';
   private skill: string = '';
+  private apps: string = '';
   private budget: ContextBudget = new ContextBudget();
   private tokensUsed: number = 0;
   private cancelled: boolean = false;
@@ -53,6 +54,11 @@ export class AgentLoop {
 
   setSkill(skill: string): void {
     this.skill = skill;
+  }
+
+  /** The known bundle/name pairs, so the model never guesses an Android name. */
+  setAppCatalog(apps: string): void {
+    this.apps = apps;
   }
 
   /** Total tokens reported by the model during the last run. */
@@ -105,6 +111,9 @@ export class AgentLoop {
     }
     if (this.skill.length > 0) {
       systemText = `${systemText}\n\n${this.skill}`;
+    }
+    if (this.apps.length > 0) {
+      systemText = `${systemText}\n\nKNOWN APPS (use the bundle exactly; never an Android name):\n${this.apps}`;
     }
     if (!this.surfaceAvailable) {
       systemText = `${systemText}\n\nNo screen is available. Answer with text only and do not ` +
