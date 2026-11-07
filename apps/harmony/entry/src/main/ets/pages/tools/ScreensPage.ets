@@ -1,0 +1,104 @@
+import { AgentService } from '../../services/AgentService';
+
+/** Live device screen through the PC bridge, refreshed every 3 seconds. */
+@Component
+export struct ScreensPage {
+  @State screenImage: string = '';
+  @State screenStatus: string = 'not loaded';
+  @State liveView: boolean = true;
+  private timer: number = -1;
+
+  aboutToAppear(): void {
+    this.startPolling();
+  }
+
+  aboutToDisappear(): void {
+    this.stopPolling();
+  }
+
+  private startPolling(): void {
+    if (this.timer >= 0) {
+      return;
+    }
+    this.refresh();
+    this.timer = setInterval(() => {
+      if (this.liveView) {
+        this.refresh();
+      }
+    }, 3000);
+  }
+
+  private stopPolling(): void {
+    if (this.timer >= 0) {
+      clearInterval(this.timer);
+      this.timer = -1;
+    }
+  }
+
+  private async refresh(): Promise<void> {
+    if (!AgentService.get().isRemoteConfigured()) {
+      this.screenStatus = 'bridge not configured';
+      return;
+    }
+    if (this.screenStatus === 'loading...') {
+      return;
+    }
+    this.screenStatus = 'loading...';
+    const image: string = await AgentService.get().remote.screenshot();
+    if (image.length === 0) {
+      this.screenStatus = 'no frame (bridge unreachable)';
+      return;
+    }
+    this.screenImage = image;
+    this.screenStatus = `updated ${new Date().toLocaleTimeString()}`;
+  }
+
+  build() {
+    Column({ space: 10 }) {
+      Text(AgentService.get().isRemoteConfigured()
+        ? 'Live view of the phone through pc-agent bridge.'
+        : 'Connect the PC bridge in Settings to see the phone screen here.')
+        .fontSize(12)
+        .fontColor('#666666')
+      if (this.screenImage.length > 0) {
+        Image(this.screenImage)
+          .width('100%')
+          .layoutWeight(1)
+          .objectFit(ImageFit.Contain)
+          .borderRadius(8)
+      } else {
+        Text('No frame yet.')
+          .fontSize(12)
+          .fontColor('#999999')
+      }
+      Row({ space: 8 }) {
+        Button('Refresh')
+          .fontSize(12)
+          .onClick(() => {
+            this.refresh();
+          })
+        Toggle({ type: ToggleType.Switch, isOn: this.liveView })
+          .onChange((on: boolean) => {
+            this.liveView = on;
+            if (on) {
+              this.startPolling();
+            } else {
+              this.stopPolling();
+            }
+          })
+        Text('Live')
+          .fontSize(11)
+          .fontColor('#666666')
+        Text(this.screenStatus)
+          .fontSize(11)
+          .fontColor('#999999')
+          .layoutWeight(1)
+      }
+      .width('100%')
+    }
+    .width('100%')
+    .height('100%')
+    .padding(16)
+    .alignItems(HorizontalAlign.Start)
+  }
+}
