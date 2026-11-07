@@ -47,14 +47,15 @@
     <circle cx="230" cy="52" r="4" fill="#C3CEDF"/>
 
     <rect x="36" y="86" width="214" height="74" rx="18" fill="#0A59F7"/>
-    <text x="54" y="118" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="600" fill="#FFFFFF">Open Settings and</text>
-    <text x="54" y="140" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="600" fill="#FFFFFF">tap Network.</text>
+    <text x="54" y="118" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="600" fill="#FFFFFF">What's hot on</text>
+    <text x="54" y="140" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="15" font-weight="600" fill="#FFFFFF">Bilibili today?</text>
 
-    <rect x="52" y="182" width="214" height="58" rx="18" fill="#E8EEFF"/>
-    <text x="70" y="216" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#0A2A66">Done — you're on WLAN.</text>
+    <rect x="52" y="178" width="214" height="64" rx="18" fill="#E8EEFF"/>
+    <text x="70" y="204" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#0A2A66">Top 3 videos,</text>
+    <text x="70" y="226" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#0A2A66">with links.</text>
 
-    <circle cx="216" cy="262" r="22" fill="#12B8A6"/>
-    <path d="M206 262l7 7 13-14" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="216" cy="268" r="22" fill="#12B8A6"/>
+    <path d="M206 268l7 7 13-14" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
 
     <rect x="36" y="300" width="214" height="44" rx="22" fill="#FFFFFF" stroke="#D8E2F3" stroke-width="2"/>
     <text x="56" y="327" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#8A9BB5">Ask HOPA anything…</text>

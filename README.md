@@ -24,17 +24,17 @@ Before money moves, it stops and asks. Every time.
 
 ## A small example
 
-> **You:** “Open Settings and tap Network and internet.”
+> **You:** “What are the top videos on Bilibili right now?”
 >
-> **HOPA:** opens Settings, finds the row, taps it, and shows you the WLAN
-> page. If anything could cost money, it would ask first.
+> **HOPA:** opens Bilibili in the built-in browser, reads the page, and gives
+> you the top three with links. If it needs to post, send or pay, it asks first.
 
 <img src="docs/media/how-it-works.svg" alt="You ask; HOPA looks and acts; you see the result" width="100%" />
 
 ## What it feels like
 
-**You talk normally.** No commands, no scripts. “Check my alarm.” “What’s on
-screen?” “Book a table for two.”
+**You talk normally.** No commands, no scripts. “What’s hot on Bilibili?”
+“Send Alice a message.” “Find a charger under $30.”
 
 **It works in your apps.** HOPA uses the apps already on your phone, not a
 separate universe. No new ecosystem to learn.
@@ -53,16 +53,19 @@ model key goes to the model you choose.
 
 ## Things you can say
 
-| Around the phone | The little things |
+| Sites and apps | The little things |
 |---|---|
-| “Open Settings and turn on Wi-Fi.”<br/>“What’s on my screen?”<br/>“Open Calendar and create an event tomorrow at 14:00.” | “Remember that I prefer aisle seats.”<br/>“Summarize this page in two bullet points.”<br/>“Check my alarm.” |
+| “What are the top stories on Zhihu?”<br/>“What’s trending on Xiaohongshu?”<br/>“Summarize the top videos on Bilibili.” | “Send Alice ‘running 10 minutes late’ on WeChat.”<br/>“Find a 4.5-star charger under $30 on Amazon.”<br/>“Remember that I prefer aisle seats.” |
+
+<sub>Site examples work in the built-in browser. App examples need that app
+installed; HOPA says when a bundle is missing instead of guessing.</sub>
 
 **When money is involved**
 
-> “Pay 20 yuan for the order.”
+> “Order the cheapest one in my cart.”
 >
-> HOPA shows the amount, the merchant and what will happen. You choose **Deny**
-> or **Allow**. Nothing is paid without you.
+> HOPA shows the item, the total and the seller. You choose **Deny** or
+> **Allow**. Nothing is paid without you.
 
 <table>
 <tr>
@@ -70,19 +73,19 @@ model key goes to the model you choose.
 
 ## A look inside
 
-The catalogue knows **27 apps and 21 sites**. A verified app opens with one tap.
-The rest tell you honestly what is missing; HOPA never launches a guessed
-package.
+The catalogue knows **27 apps and 21 sites**. The **Sites** tab opens Bilibili,
+Xiaohongshu, Weibo, YouTube and 17 more in the built-in browser. The **Apps**
+tab does the same for apps, with a verified bundle or an honest “not yet”.
 
-The same screen is where you can open a site, check which bundles are verified,
-and see how many apps the assistant can actually reach.
+The same screen shows which bundles are verified, so you always know what the
+assistant can actually reach.
 
 </td>
 <td width="42%" align="center">
 
-<img src="docs/media/apps.jpeg" alt="HOPA app catalogue" width="270" />
+<img src="docs/media/sites.jpeg" alt="HOPA site catalogue with Bilibili, Xiaohongshu and Weibo" width="270" />
 
-<sub>The app catalogue on a Pura 90 emulator.</sub>
+<sub>The site catalogue on a Pura 90 emulator.</sub>
 
 </td>
 </tr>
@@ -104,7 +107,7 @@ On a real phone, enable the built-in screen control. On this emulator, start
 the small PC companion and connect it in **Settings → PC bridge**.
 
 **4. Say something.**
-Try “Open Settings and tap Network and internet.”
+Try “What are the top videos on Bilibili right now?”
 
 ### Why a PC companion?
 
@@ -134,7 +137,7 @@ A working prototype. With the PC companion, these work today:
 - memory, skills, plans and batch runs
 - run history, export and self-check
 - app launch, screen reading, tap, type and scroll
-- the full **launch → observe → tap → observe** loop inside Settings
+- the full **launch → observe → tap → observe** loop inside a real app
 
 Not available on this emulator: untethered app control, speech and system
 reminders. A real phone with the built-in control is the untethered path.
