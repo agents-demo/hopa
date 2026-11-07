@@ -2,13 +2,13 @@ import { webview } from '@kit.ArkWeb';
 import { AgentService } from '../../services/AgentService';
 import { JsSandboxBridge } from '../../services/JsSandboxBridge';
 
-/** The ArkWeb browser, its sandbox and the URL intent from the catalogue. */
+/** The ArkWeb browser, its hidden sandbox and the URL intent from the catalogue. */
 @Component
 export struct BrowserPage {
   @State address: string = 'https://example.com';
+  @State webSrc: string = 'https://example.com';
   @State pageUrl: string = '';
-  @State script: string = '';
-  @State scriptOutput: string = '';
+  @State message: string = '';
   private controller: webview.WebviewController = new webview.WebviewController();
   private sandboxController: webview.WebviewController = new webview.WebviewController();
 
@@ -16,47 +16,65 @@ export struct BrowserPage {
     const requested: string = AgentService.get().browser.takeRequestedUrl();
     if (requested.length > 0) {
       this.address = requested;
-      try {
-        this.controller.loadUrl(requested);
-        this.pageUrl = requested;
-      } catch (error) {
-        this.scriptOutput = `browser error: ${error}`;
-      }
+      this.webSrc = requested;
+      this.pageUrl = requested;
     }
+  }
+
+  aboutToDisappear(): void {
+    AgentService.get().browser.detach();
   }
 
   private openAddress(): void {
     const url: string = this.address.trim();
     if (!url.startsWith('https://')) {
-      this.scriptOutput = 'Only https pages are allowed.';
+      this.message = 'Only https pages are allowed.';
       return;
     }
     try {
       this.controller.loadUrl(url);
       this.pageUrl = url;
+      this.message = '';
     } catch (error) {
-      this.scriptOutput = `browser error: ${error}`;
+      this.message = `browser error: ${error}`;
     }
   }
 
-  private async runScript(): Promise<void> {
-    const code: string = this.script.trim();
-    if (code.length === 0) {
-      return;
-    }
-    try {
-      const bridge = new JsSandboxBridge(this.sandboxController);
-      this.scriptOutput = await bridge.run(code, 'javascript');
-    } catch (error) {
-      this.scriptOutput = `error: ${error}`;
-    }
+  @Builder
+  Icon(label: string, action: string) {
+    Text(label)
+      .fontSize(24)
+      .fontColor('#333333')
+      .width(40)
+      .height(40)
+      .textAlign(TextAlign.Center)
+      .backgroundColor('#F2F3F5')
+      .borderRadius(20)
+      .onClick(() => {
+        if (action === 'back') {
+          if (this.controller.accessBackward()) {
+            this.controller.backward();
+          }
+        } else if (action === 'forward') {
+          if (this.controller.accessForward()) {
+            this.controller.forward();
+          }
+        } else {
+          this.controller.refresh();
+        }
+      })
   }
 
   build() {
     Column({ space: 8 }) {
-      Row({ space: 8 }) {
+      Row({ space: 6 }) {
+        this.Icon('‹', 'back')
+        this.Icon('›', 'forward')
+        this.Icon('↻', 'reload')
         TextInput({ text: this.address, placeholder: 'https://...' })
           .layoutWeight(1)
+          .height(40)
+          .fontSize(13)
           .onChange((value: string) => {
             this.address = value;
           })
@@ -64,67 +82,29 @@ export struct BrowserPage {
             this.openAddress();
           })
         Button('Go')
+          .fontSize(13)
+          .width(52)
+          .height(40)
           .onClick(() => {
             this.openAddress();
           })
       }
       .width('100%')
       Text(this.pageUrl.length > 0
-        ? `${this.pageUrl} - ask in Chat, HOPA can read and click this page`
-        : 'Load an https page, then ask HOPA in Chat.')
+        ? `Ask HOPA in Chat to use this page. ${this.pageUrl}`
+        : 'Open an https page, or ask HOPA in Chat.')
         .fontSize(12)
         .fontColor('#666666')
         .width('100%')
         .maxLines(2)
-      Row({ space: 8 }) {
-        Button('Back')
-          .fontSize(12)
-          .height(28)
-          .backgroundColor('#E5E6E8')
-          .fontColor('#333333')
-          .onClick(() => {
-            if (this.controller.accessBackward()) {
-              this.controller.backward();
-            }
-          })
-        Button('Forward')
-          .fontSize(12)
-          .height(28)
-          .backgroundColor('#E5E6E8')
-          .fontColor('#333333')
-          .onClick(() => {
-            if (this.controller.accessForward()) {
-              this.controller.forward();
-            }
-          })
-        Button('Reload')
-          .fontSize(12)
-          .height(28)
-          .backgroundColor('#E5E6E8')
-          .fontColor('#333333')
-          .onClick(() => {
-            this.controller.refresh();
-          })
+      if (this.message.length > 0) {
+        Text(this.message)
+          .fontSize(11)
+          .fontColor('#B42318')
+          .width('100%')
+          .maxLines(2)
       }
-      .width('100%')
-      Text('JavaScript sandbox (isolated about:blank page, offline)')
-        .fontSize(12)
-        .fontColor('#666666')
-      TextArea({ placeholder: '1 + 1', text: this.script })
-        .height(70)
-        .onChange((value: string) => {
-          this.script = value;
-        })
-      Button('Run script')
-        .fontSize(12)
-        .onClick(() => {
-          this.runScript();
-        })
-      Text(this.scriptOutput)
-        .fontSize(11)
-        .fontColor('#0A7F3F')
-        .maxLines(4)
-      Web({ src: 'https://example.com', controller: this.controller })
+      Web({ src: this.webSrc, controller: this.controller })
         .layoutWeight(1)
         .width('100%')
         .onPageEnd(() => {

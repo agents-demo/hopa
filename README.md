@@ -67,32 +67,31 @@ that app installed; HOPA says when a bundle is missing instead of guessing.</sub
 > HOPA shows the item, the total and the seller. You choose **Deny** or
 > **Allow**. Nothing is paid without you.
 
-<div align="center">
+<table>
+<tr>
+<td width="33%" align="center" valign="top">
 
-<img src="docs/media/chat.jpeg" alt="Real chat: HOPA opens Bilibili and summarizes the trends" width="220" />
+<img src="docs/media/chat.jpeg" alt="Real chat: HOPA opens Bilibili and summarizes the trends" height="600" />
 
-<br/><sub><b>Real screenshot.</b> One short prompt: HOPA opened Bilibili, read the page and summarized the trends.</sub>
+<br/><sub><b>Real: a website task.</b> One prompt: HOPA opened Bilibili, read the page and answered in Chinese.</sub>
 
-</div>
+</td>
+<td width="33%" align="center" valign="top">
 
-<div align="center">
+<img src="docs/media/chat-example.svg" alt="Designed example of a WeChat message task with the approval dialog" height="600" />
 
-<img src="docs/media/chat-example.svg" alt="Designed example of a WeChat message task with the approval dialog" width="220" />
+<br/><sub><b>Designed: an app task.</b> A WeChat message with the approval step; WeChat is not installed on the test emulator.</sub>
 
-<br/><sub><b>Designed example.</b> A WeChat task with the approval step. WeChat is not installed on the test emulator.</sub>
+</td>
+<td width="33%" align="center" valign="top">
 
-</div>
+<img src="docs/media/sites.jpeg" alt="HOPA site catalogue with Bilibili, Xiaohongshu and Weibo" height="600" />
 
-The assistant works from the catalogue below — apps on the phone and popular
-sites in the built-in browser.
+<br/><sub><b>Real: the catalogue.</b> Bilibili, Xiaohongshu, Weibo and more in the site catalogue.</sub>
 
-<div align="center">
-
-<img src="docs/media/sites.jpeg" alt="HOPA site catalogue with Bilibili, Xiaohongshu and Weibo" width="220" />
-
-<br/><sub><b>Real screenshot.</b> Bilibili, Xiaohongshu, Weibo and more in the site catalogue.</sub>
-
-</div>
+</td>
+</tr>
+</table>
 
 ## Getting started
 

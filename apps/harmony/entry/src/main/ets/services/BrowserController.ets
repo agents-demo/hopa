@@ -35,6 +35,12 @@ export class BrowserController implements WebController {
     this.url = controller.getUrl();
   }
 
+  /** The Browser page is gone; the old controller must not be reused. */
+  detach(): void {
+    this.controller = undefined;
+    this.loaded = false;
+  }
+
   isReady(): boolean {
     return this.controller !== undefined && this.loaded;
   }
