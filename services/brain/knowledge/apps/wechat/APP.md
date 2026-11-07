@@ -9,7 +9,7 @@ platform: harmonyos
 ---
 # WeChat
 
-Mika Android package: `com.tencent.mm`. A HarmonyOS build exists, but its bundle
+Android package: `com.tencent.mm`. A HarmonyOS build exists, but its bundle
 has not been confirmed on a device yet, so HOPA does not launch it by bundle.
 
 - Chats, contacts, search, Moments, Pay, mini programs.

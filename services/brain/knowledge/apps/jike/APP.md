@@ -9,7 +9,7 @@ platform: harmonyos
 ---
 # Jike
 
-Mika Android package: `com.ruguoapp.jike`. No HarmonyOS bundle has been
+Android package: `com.ruguoapp.jike`. No HarmonyOS bundle has been
 confirmed.
 
 - Feed, topics, comments, messages.

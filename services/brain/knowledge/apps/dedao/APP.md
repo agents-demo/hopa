@@ -9,7 +9,7 @@ platform: harmonyos
 ---
 # Dedao
 
-Mika Android package: `com.luojilab.player`. No HarmonyOS bundle has been
+Android package: `com.luojilab.player`. No HarmonyOS bundle has been
 confirmed.
 
 - Courses, audio, notes, purchases.

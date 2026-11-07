@@ -9,7 +9,7 @@ platform: harmonyos
 ---
 # BOSS Zhipin
 
-Mika Android package: `com.hpbr.bosszhipin`. No HarmonyOS bundle has been
+Android package: `com.hpbr.bosszhipin`. No HarmonyOS bundle has been
 confirmed.
 
 - Jobs, search, recruiter chat, resume.

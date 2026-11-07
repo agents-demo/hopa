@@ -9,7 +9,7 @@ platform: harmonyos
 ---
 # Baidu Baijiahao
 
-Mika Android package: `com.baidu.baijia`. No HarmonyOS bundle has been
+Android package: `com.baidu.baijia`. No HarmonyOS bundle has been
 confirmed, so HOPA never launches it by bundle.
 
 - Publishing an article or changing a published post is irreversible: ask first.

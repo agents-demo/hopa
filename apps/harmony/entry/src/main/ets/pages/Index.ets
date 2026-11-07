@@ -177,6 +177,18 @@ struct Index {
     return 'HOPA';
   }
 
+  /** Pages opened from the More page get a back arrow instead of the drawer. */
+  private isMoreChild(): boolean {
+    return this.activePage === 'apps' ||
+      this.activePage === 'models' ||
+      this.activePage === 'usage' ||
+      this.activePage === 'phone' ||
+      this.activePage === 'source' ||
+      this.activePage === 'mcpservers' ||
+      this.activePage === 'files' ||
+      this.activePage === 'license';
+  }
+
   @Builder
   PageHost() {
     if (this.activePage === 'plans') {
@@ -222,21 +234,7 @@ struct Index {
 
   @Builder
   MoreContainer(key: string) {
-    Column({ space: 10 }) {
-      Row({ space: 8 }) {
-        Button('Back')
-          .fontSize(12)
-          .backgroundColor('#E5E6E8')
-          .fontColor('#333333')
-          .onClick(() => {
-                    this.activePage = 'more';
-          })
-        Text(this.containerTitle(key))
-          .fontSize(20)
-          .fontWeight(FontWeight.Bold)
-          .layoutWeight(1)
-      }
-      .width('100%')
+    Column() {
       Column() {
         if (key === 'apps') {
           AppsPage({
@@ -276,48 +274,6 @@ struct Index {
     }
     .width('100%')
     .height('100%')
-    .padding(16)
-    .alignItems(HorizontalAlign.Start)
-  }
-
-  private containerTitle(key: string): string {
-    if (key === 'apps') {
-      return 'Apps';
-    }
-    if (key === 'runs') {
-      return 'Runs and batches';
-    }
-    if (key === 'models') {
-      return 'Models';
-    }
-    if (key === 'usage') {
-      return 'Usage';
-    }
-    if (key === 'phone') {
-      return 'Phone setup';
-    }
-    if (key === 'selfcheck') {
-      return 'Self-check';
-    }
-    if (key === 'welcome') {
-      return 'Welcome';
-    }
-    if (key === 'screens') {
-      return 'Screens';
-    }
-    if (key === 'source') {
-      return 'Source';
-    }
-    if (key === 'mcpservers') {
-      return 'MCP servers';
-    }
-    if (key === 'files') {
-      return 'Files';
-    }
-    if (key === 'license') {
-      return 'License';
-    }
-    return 'About';
   }
 
 
@@ -350,21 +306,36 @@ struct Index {
       })
       Column() {
         Row({ space: 10 }) {
-          Text('☰')
-            .fontSize(24)
-            .fontColor('#333333')
-            .padding(8)
-            .onClick(() => {
-              this.refreshChats();
-              this.menuOpen = true;
-            })
+          if (this.isMoreChild()) {
+            Text('‹')
+              .fontSize(34)
+              .fontColor('#333333')
+              .width(40)
+              .height(40)
+              .textAlign(TextAlign.Center)
+              .onClick(() => {
+                this.activePage = 'more';
+              })
+          } else {
+            Text('☰')
+              .fontSize(24)
+              .fontColor('#333333')
+              .width(40)
+              .height(40)
+              .textAlign(TextAlign.Center)
+              .onClick(() => {
+                this.refreshChats();
+                this.menuOpen = true;
+              })
+          }
           Text(this.pageTitle())
-            .fontSize(14)
-            .fontColor('#666666')
+            .fontSize(18)
+            .fontWeight(FontWeight.Medium)
+            .fontColor('#0A1B3A')
             .layoutWeight(1)
         }
         .width('100%')
-        .height(48)
+        .height(52)
         .padding({ left: 8, right: 12 })
         Column() {
           this.PageHost()

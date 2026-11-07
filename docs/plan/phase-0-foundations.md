@@ -79,7 +79,7 @@
 - [x] Semantic-versioning policy written down (evidence: docs/operations/versioning.md)
 - [x] Documentation ownership map: who updates which page (evidence: docs/operations/owners.md (documentation ownership))
 - [x] One-page architecture overview diagram committed (evidence: docs/architecture/overview.md)
-- [x] Glossary of HOPA, Mika, ACL, a11y, observation, capability (evidence: docs/reference/glossary.md)
+- [x] Glossary of HOPA, ACL, a11y, observation, capability (evidence: docs/reference/glossary.md)
 - [ ] Weekly 15-minute progress review using `plan-status.py`
 - [ ] Plan totals and phase estimates re-baselined after this audit
 - [ ] Decide how a managed / MDM device differs from a personal device, and whether HOPA supports it

@@ -268,7 +268,7 @@ docs/
 │  ├─ privacy.md
 │  └─ abuse.md
 ├─ product/
-│  ├─ parity.md                    # from mika-parity.md
+│  ├─ coverage.md                  # capability coverage
 │  ├─ roadmap.md
 │  ├─ ux.md
 │  ├─ bench.md                     # from bench-v0.md + eval.md
@@ -409,7 +409,7 @@ the navigation shell is stable.
 
 - No behaviour changes, no new features, no redesign of the screens.
 - No new dependencies.
-- No port of Mika code.
+- No third-party agent code.
 - The signing kit stays local and gitignored; it is only relocated.
 
 ## 14. Open decisions

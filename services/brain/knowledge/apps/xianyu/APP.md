@@ -9,7 +9,7 @@ platform: harmonyos
 ---
 # Xianyu
 
-Mika Android package: `com.taobao.idlefish`. No HarmonyOS bundle has been
+Android package: `com.taobao.idlefish`. No HarmonyOS bundle has been
 confirmed.
 
 - Marketplace listings, search, chat with sellers, orders.

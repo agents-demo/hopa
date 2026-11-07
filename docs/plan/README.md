@@ -4,7 +4,7 @@
 Â§5â€“Â§15 is checked, `python tools/scripts/plan-status.py --require-complete` exits `0`,
 and the two sign-offs in Â§15 are recorded.
 
-Reference product: Mika (Apache-2.0). HOPA keeps its own name, UI and NOTICE.
+HOPA keeps its own name, UI and NOTICE.
 
 ---
 
@@ -45,7 +45,7 @@ python tools/scripts/plan-status.py --require-complete   # exit 1 until finished
 |---|---|---|
 | M0 | 0 | Foundations: CI green, decisions recorded, baseline measured |
 | M1 | 1 | PC harness closes the observeâ†’actâ†’verify loop on 5 tasks |
-| M2 | 2 | Mika brain runs HOPA's body; 20-task bench published |
+| M2 | 2 | The reference brain runs HOPA's body; 20-task bench published |
 | M3 | 3 | ArkTS core reaches parity with the JVM brain |
 | M4 | 4 | On-device control works without a PC (or fallback signed) |
 | M5 | 5 | Safety and privacy suites pass; payment gate is unbypassable |
@@ -87,7 +87,7 @@ it, not at the end.
 - `proot`, Linux userland, `apt`, native binaries on device.
 - ADB self-connection, uid 2000 shell helper, Android hidden APIs.
 - Running Android APKs.
-- Copying Mika's name, UI assets or GPL components.
+- Copying a third-party name, UI assets or GPL components.
 
 ### 2.3 Non-negotiables
 
@@ -113,7 +113,7 @@ it, not at the end.
 | `bench` | 20 task files; 5/7 tasks pass on the emulator (strict: a failed step cannot pass) | `harness/bench/tasks`, `docs/product/bench-results-v0.md` |
 | Brain | Kotlin router + HTTP service + knowledge + prompts + skills + sites (98 assertions + schema contract) | `services/brain/src`, `docs/reference/brain.md` |
 | HAP | builds with DevEco 6.1.1 / API 24; signed with the SDK local debug kit; installed with the ACL permission on the Pura 90 emulator | `tools/scripts/sign-app.ps1` |
-| Knowledge | 27 apps (12 system + 15 Mika catalogued), 21 sites, 6 skills | `services/brain/knowledge`, `docs/history/knowledge-triage.md` |
+| Knowledge | 27 apps (12 system + 15 catalogued), 21 sites, 6 skills | `services/brain/knowledge`, `docs/history/knowledge-triage.md` |
 | CI | Python tests + ruff; HAP build and core Local Tests skip with a warning when the mirrored toolchain secret is absent | `.github/workflows/ci.yml` |
 | Tests baseline | 277 Python tests, 98 Kotlin assertions, ArkTS Local Tests pass; 20 bench tasks validate; device bench 5/7 | local run 2026-11-06 |
 
@@ -139,7 +139,7 @@ core/  AgentLoop â”€â”€ ModelClient (OpenAI-compatible)
               HarmonyOS device
 
 Brain host:
-  M1â€“M2: local JVM service (Mika core), HTTP / MCP
+  M1â€“M2: local JVM service, HTTP / MCP
   M3+:   ArkTS core on device, same contract, golden-file parity
 
 Harness: pc-agent (hdc + uitest) + HOPA-Bench

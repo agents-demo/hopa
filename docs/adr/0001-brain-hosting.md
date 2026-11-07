@@ -5,14 +5,14 @@
 
 ## Context
 
-Mika's decision core is pure Kotlin (387 files). Reimplementing it in ArkTS
+A pure-Kotlin decision core already exists (387 files). Reimplementing it in ArkTS
 before the loop is proven would delay every safety and bench result. The
 HarmonyOS app cannot host a JVM, but the PC harness can.
 
 ## Decision
 
 1. **M1–M2:** run the loop on the PC. The reference implementation is Python
-   (`harness/agent/`); the Mika Kotlin brain is extracted into a standalone JVM service
+   (`harness/agent/`); the Kotlin brain is extracted into a standalone JVM service
    with no `android.*` imports and an HTTP `POST /decide` contract.
 2. **M3+:** port the same contract to ArkTS in `apps/harmony/core`. The JVM service
    becomes optional behind a feature flag.

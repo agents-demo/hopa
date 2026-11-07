@@ -64,7 +64,7 @@ fun main(args: Array<String>) {
         Path.of("brain/knowledge/apps")
     }
     val loaded = KnowledgeLoader.load(directory)
-    check(loaded.size == 27, "27 app files (12 system + 15 Mika)")
+    check(loaded.size == 27, "27 app files (12 system + 15 catalogued)")
     check(loaded.all { it.platform == "harmonyos" }, "all harmonyos")
     check(loaded.all { it.pace.isNotEmpty() }, "all have a pace")
     check(loaded.any { it.entry.name == "clock" }, "clock present")

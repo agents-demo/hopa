@@ -3,7 +3,7 @@
 ### 8.1 Port scope and skeleton
 
 - [ ] ADR: exactly which modules move on device
-- [ ] `apps/harmony/core` file layout mirrors Mika's core directories
+- [ ] `apps/harmony/core` file layout mirrors the planned core directories
 - [ ] Shared JSON contracts package for JVM and ArkTS
 - [ ] Golden-file corpus shared by both implementations
 - [ ] Parity test harness defined
@@ -15,7 +15,7 @@
 - [ ] `observation`, `verify`, `record`
 - [ ] `knowledge` (routing, channel, catalog)
 - [x] `agent` loop and context builder (evidence: apps/harmony/core/src/main/ets/AgentLoop.ets + AgentLoop.test.ets)
-- [ ] Decide per remaining Mika module (action, run, gate, context, prompt, settings, trigger, usage, trace, net, remote, mcp, oauth, workspace, general, assembly, selfcheck): port, rewrite or drop; record in Appendix A.2b
+- [ ] Decide per remaining module (action, run, gate, context, prompt, settings, trigger, usage, trace, net, remote, mcp, oauth, workspace, general, assembly, selfcheck): port, rewrite or drop; record in Appendix A.2b
 - [ ] `memory`, `skills`
 - [x] `model` client over `@ohos.net.http` (evidence: apps/harmony/core/src/main/ets/OpenAiClient.ets (http from @kit.NetworkKit))
 - [ ] Serialization without kotlinx (`@ohos.util.json` or generated codecs)

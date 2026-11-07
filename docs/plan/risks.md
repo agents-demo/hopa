@@ -10,7 +10,7 @@
 | WASM limits | scripts break | pure Python/JS only, companion fallback | TBD |
 | Model outage | unusable | clear error, fallback list, no infinite retry | TBD |
 | Cost/latency | poor UX | caps, small routing model, caching | TBD |
-| Scope creep toward â€œMika cloneâ€ | never ships | this documentâ€™s out-of-scope list | TBD |
+| Scope creep toward â€œa clone of another productâ€ | never ships | this documentâ€™s out-of-scope list | TBD |
 
 Critical path: ACL â†’ a11y â†’ M4. Everything before M4 must ship without it.
 

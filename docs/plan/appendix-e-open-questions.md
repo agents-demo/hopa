@@ -12,7 +12,7 @@ project.
 - [ ] A physical HarmonyOS phone is available for the whole project
 - [ ] The model provider stays reachable and within budget
 - [ ] The `pc-agent` `hdc` + `uitest` harness is acceptable for enterprise use
-- [ ] Mika's Apache-2.0 licence permits the planned reuse
+- [ ] The upstream licence permits the planned reuse
 - [ ] AppGallery accepts a foreground-only automation app, or sideloading is acceptable
 - [ ] Chinese and English are the only launch locales
 - [ ] The team can hire or contract ArkTS and Kotlin skills

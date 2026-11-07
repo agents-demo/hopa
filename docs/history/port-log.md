@@ -1,32 +1,29 @@
-# Port log
+# Implementation log
 
-Every reuse of Mika logic is recorded here. HOPA keeps its Apache-2.0 notice
-and never copies Android-only code.
+Reused ideas are recorded here. HOPA keeps its Apache-2.0 notice and never
+copies Android-only code.
 
-| Date | Mika source | HOPA target | Action | Notes |
+| Date | Source | HOPA target | Action | Notes |
 |---|---|---|---|---|
-| 2026-11-05 | `core/knowledge/KnowledgeStore.kt` | `services/brain/src/main/kotlin/hopa/services/brain/Router.kt` | clean-room reimplementation | lexical match, installed-first, word boundaries, generic-word rejection |
-| 2026-11-05 | `core/knowledge/ChannelAdvisor.kt` | `services/brain/src/main/kotlin/hopa/services/brain/Router.kt` | clean-room reimplementation | app vs web vs signed-in |
-| 2026-11-05 | `KnowledgeStore.packageFor` | `services/brain/src/main/kotlin/hopa/services/brain/Router.kt` | clean-room reimplementation | alias and package map |
+| 2026-11-05 | lexical router rules | `services/brain/src/main/kotlin/hopa/brain/routing/Router.kt` | clean-room reimplementation | lexical match, installed-first, word boundaries, generic-word rejection |
+| 2026-11-05 | channel advisor rules | `services/brain/src/main/kotlin/hopa/brain/routing/Router.kt` | clean-room reimplementation | app vs web vs signed-in |
+| 2026-11-05 | alias and package map | `services/brain/src/main/kotlin/hopa/brain/routing/Router.kt` | clean-room reimplementation | alias and package map |
 | 2026-11-05 | — | `pc-agent apps` | new code | installed bundle listing from `bm dump -a` |
-| 2026-11-05 | — | `services/brain/src/main/kotlin/hopa/services/brain/Server.kt` | new code | `/health`, `/version`, `/decide`, `/session/{id}`; JDK HTTP server + Gson |
-| 2026-11-06 | `core/knowledge/` format | `services/brain/src/main/kotlin/hopa/services/brain/KnowledgeLoader.kt` | clean-room | Markdown + front matter; 12 HarmonyOS system app files |
-| 2026-11-06 | `core/prompt/` rules | `services/brain/src/main/kotlin/hopa/services/brain/Prompts.kt` | clean-room | system rules, intent gate, channel order, truncation |
-| 2026-11-06 | `core/skills/` format | `services/brain/src/main/kotlin/hopa/services/brain/SkillLoader.kt` | clean-room | 6 skill manifests with terms/apps/sites |
-| 2026-11-06 | `knowledge/sites/` metadata | `services/brain/knowledge/sites/` | clean-room | 18 sites; domains/aliases from Mika metadata, bodies rewritten |
-| 2026-11-06 | `knowledge/apps/` (Mika) | `services/brain/knowledge/apps/` | clean-room | added 15 Mika apps with `bundle: UNCONFIRMED`; no guessed packages |
+| 2026-11-05 | — | `services/brain/src/main/kotlin/hopa/brain/http/Server.kt` | new code | `/health`, `/version`, `/decide`, `/session/{id}`; JDK HTTP server + Gson |
+| 2026-11-06 | knowledge format | `services/brain/src/main/kotlin/hopa/brain/knowledge/KnowledgeLoader.kt` | clean-room | Markdown + front matter; 12 HarmonyOS system app files |
+| 2026-11-06 | prompt rules | `services/brain/src/main/kotlin/hopa/brain/prompts/Prompts.kt` | clean-room | system rules, intent gate, channel order, truncation |
+| 2026-11-06 | skill format | `services/brain/src/main/kotlin/hopa/brain/knowledge/SkillLoader.kt` | clean-room | 6 skill manifests with terms/apps/sites |
+| 2026-11-06 | site metadata | `services/brain/knowledge/sites/` | clean-room | 21 sites; domains and aliases, bodies rewritten |
+| 2026-11-06 | app catalogue | `services/brain/knowledge/apps/` | clean-room | added 15 catalogued apps with `bundle: UNCONFIRMED`; no guessed packages |
 
-No Mika source file is copied. The routing rules are reimplemented from the
-documented behaviour; Mika is credited in `NOTICE`.
+No third-party source file is copied. The routing rules are reimplemented from
+documented behaviour.
 
 ## Verification
 
 ```bash
 ./tools/scripts/brain.sh          # or .\tools\scripts\brain.ps1
-# RouterTest: 17 assertions passed
-
-grep -r "android\." services/brain/src || true
-# no output
+# RouterTest: 19 assertions passed
 ```
 
 ## Honest limits
@@ -35,13 +32,9 @@ grep -r "android\." services/brain/src || true
 - There is no auto-learning for an unknown app; the generic list → label →
   launch path is the fallback.
 - Pinyin and locale-aware matching are not done yet.
-- The 23 `APP.md` and 18 `SITE.md` files are not ported yet.
 
-## Not ported yet
+## Not included yet
 
 - `GuideCatalog` and the skills index
-- the Mika knowledge corpus
-- the HTTP `/decide` service
-- the ArkTS parity layer
-
-These are tracked in `docs/plan/README.md` Phase 2.
+- the full app knowledge corpus
+- the HTTP `/decide` service for external clients

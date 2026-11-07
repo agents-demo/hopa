@@ -9,7 +9,7 @@ platform: harmonyos
 ---
 # Toutiao
 
-Mika Android package: `com.ss.android.article.news`. No HarmonyOS bundle has
+Android package: `com.ss.android.article.news`. No HarmonyOS bundle has
 been confirmed.
 
 - News feed, search, comments, video.

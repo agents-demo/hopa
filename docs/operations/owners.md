@@ -23,7 +23,7 @@ second reviewer before M5.
 | Skill | Level | Notes |
 |---|---|---|
 | Python | strong | harness, bench, contracts |
-| Kotlin/JVM | partial | router and HTTP service; full Mika port not started |
+| Kotlin/JVM | partial | router and HTTP service; full port not started |
 | ArkTS / ArkUI | gap | no build has run |
 | HarmonyOS accessibility | gap | ACL not filed, no device |
 | Security review | partial | threat model written; external review pending |

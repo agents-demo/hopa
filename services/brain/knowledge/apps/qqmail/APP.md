@@ -9,7 +9,7 @@ platform: harmonyos
 ---
 # QQ Mail
 
-Mika Android package: `com.tencent.androidqqmail`. No HarmonyOS bundle has been
+Android package: `com.tencent.androidqqmail`. No HarmonyOS bundle has been
 confirmed.
 
 - Inbox, search, read, compose, attachments.

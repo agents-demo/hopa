@@ -48,7 +48,7 @@ The HTTP contract is documented in [`docs/brain.md`](../docs/brain.md).
 ## Not in this slice
 
 - model calls
-- the Mika knowledge files
+- the app knowledge files
 - skills and the guide catalog
 - ArkTS parity
 

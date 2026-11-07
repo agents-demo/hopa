@@ -9,7 +9,7 @@ platform: harmonyos
 ---
 # Zhihu
 
-Mika Android package: `com.zhihu.android`. No HarmonyOS bundle has been
+Android package: `com.zhihu.android`. No HarmonyOS bundle has been
 confirmed.
 
 - Feed, search, questions, answers, comments, messages.

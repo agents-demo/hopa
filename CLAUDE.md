@@ -22,8 +22,8 @@ stricter safety check.
    not depend on a sibling capability.
 5. **`core/` is UI-free.** No ArkUI/`@ohos.arkui` imports, no `@Component`, no page
    code. `core/` must remain unit-testable on the host with local tests.
-6. **Credit ideas, never copy code.** Mika is an Apache-2.0 design reference. Any
-   reused idea/prompt gets a note in `NOTICE`. Never import Mika source or its GPL
+6. **Credit ideas, never copy code.** Any reused idea or prompt gets a note in
+   `NOTICE`. Never import third-party source without a compatible licence or its
    sandbox parts (proot). New third-party code needs a license check and a NOTICE
    entry.
 

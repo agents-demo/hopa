@@ -1,11 +1,11 @@
-# 7. Phase 2 â€” Mika brain on HOPA body (4â€“6 weeks)
+# 7. Phase 2 â€” reference brain on HOPA body (4â€“6 weeks)
 
-> Target: reuse Mika's pure-Kotlin core as the brain, for speed and fidelity.
+> Target: reuse the pure-Kotlin core as the brain, for speed and fidelity.
 > The body stays HOPA. Nothing Android-specific is copied.
 
 ### 7.1 Brain service
 
-- [ ] Extract the ported Mika subset (Appendix A.2 and A.2b) into a standalone JVM module with zero `android.*` imports
+- [ ] Extract the ported subset (Appendix A.2 and A.2b) into a standalone JVM module with zero `android.*` imports
 - [x] Verify with `grep -r "android\."` returning nothing in the ported module (evidence: grep -r "android\." services/brain/src returns nothing)
 - [x] Build with JDK 17; pin the toolchain (evidence: tools/scripts/brain.ps1 / brain.sh (Kotlin 2.1.0, JDK 17))
 - [x] HTTP API `POST /decide`: `{goal, observation, history, settings}` â†’ `{action, say, done}` (evidence: services/brain/src/main/kotlin/hopa/services/brain/Server.kt + ServerTest)
@@ -15,13 +15,13 @@
 - [x] Contract tests against the JSON schema (evidence: tools/scripts/brain-contract.py validates decision.schema.json)
 - [x] No network except the model endpoint (evidence: services/brain/src has no outbound HTTP client)
 - [ ] Dockerfile for repeatable local runs
-- [ ] `NOTICE` lists every Mika file reused
+- [ ] `NOTICE` lists every third-party file reused
 - [x] `docs/history/port-log.md` started (evidence: docs/history/port-log.md)
 
 ### 7.2 Knowledge port
 
 - [x] Copy the knowledge schema and loader (evidence: services/brain/src/main/kotlin/hopa/services/brain/KnowledgeLoader.kt (clean-room))
-- [x] Inventory Mika's 23 apps and 18 sites; mark Android-only fields (evidence: docs/history/knowledge-triage.md (23 apps + 18 sites))
+- [x] Inventory the 23 apps and 18 sites; mark Android-only fields (evidence: docs/history/knowledge-triage.md (23 apps + 18 sites))
 - [x] Triage the 23 apps: available on HarmonyOS, web-only, or absent; record the evidence (evidence: docs/history/knowledge-triage.md (replaced/app?/web-only))
 - [ ] Build the HarmonyOS bundle map from `hdc shell bm dump -a`
 - [ ] Rewrite `APP.md` for the 10 highest-value apps that exist on HarmonyOS
@@ -117,15 +117,15 @@
 ### 7.9 Licensing and provenance
 
 - [ ] Apache-2.0 obligations met: copyright headers kept, NOTICE updated, changes stated
-- [ ] Per-file provenance manifest: Mika path, HOPA path, modified yes/no
+- [ ] Per-file provenance manifest: source path, HOPA path, modified yes/no
 - [ ] No GPL, AGPL or source-available code in the ported tree
 - [ ] No Android hidden API, `proot`, `adb` or `VirtualDisplay` code copied
 - [ ] Knowledge content licence audit: do not copy third-party app documentation
 - [ ] Prompt provenance recorded; Chinese prompts translated, not silently dropped
-- [ ] Mika trademarks and product names absent from HOPA UI and docs
+- [ ] Third-party trademarks and product names absent from HOPA UI and docs
 - [ ] Legal review of the port recorded
 - [ ] Third-party notices generated from the dependency tree
-- [ ] Reuse decision recorded for every Mika module (port, rewrite, drop)
+- [ ] Reuse decision recorded for every module (port, rewrite, drop)
 
 ---
 

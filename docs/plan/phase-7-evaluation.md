@@ -12,7 +12,7 @@
 - [ ] Regression gate on every PR (stub model)
 - [x] Reproducible seeds and fixtures (evidence: harness/bench/tasks (20) + deterministic StubModelClient)
 - [ ] Public report
-- [ ] Comparison with Mika on equivalent Android tasks (clearly labelled)
+- [ ] Comparison with the reference on equivalent Android tasks (clearly labelled)
 - [x] `docs/product/bench.md` (evidence: docs/product/bench.md)
 
 ### 12.1 Test matrix

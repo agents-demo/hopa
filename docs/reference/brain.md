@@ -1,7 +1,7 @@
 # HOPA brain service (v1)
 
 The JVM reference brain. It is the first Phase 2 slice: routing and a decision
-endpoint, not the full Mika port.
+endpoint, not the full port.
 
 - JDK 17, Kotlin 2.1.0, Gson 2.11.0
 - Binds to `127.0.0.1` only
@@ -136,6 +136,6 @@ reply against `contracts/schemas/decision.schema.json`.
 ## Not in this slice
 
 - model calls
-- the Mika 23-app corpus (triaged; bundles not confirmed)
+- the 23-app corpus (triaged; bundles not confirmed)
 - skill execution and the guide catalog
 - ArkTS parity

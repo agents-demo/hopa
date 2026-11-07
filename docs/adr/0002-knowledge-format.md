@@ -5,7 +5,7 @@
 
 ## Context
 
-Mika stores 23 app files (`APP.md`) and 18 site files (`SITE.md`) as Markdown
+The knowledge corpus has 23 app files (`APP.md`) and 18 site files (`SITE.md`) as Markdown
 with YAML front matter. Android package names do not map to HarmonyOS bundles.
 
 ## Decision
@@ -14,7 +14,7 @@ with YAML front matter. Android package names do not map to HarmonyOS bundles.
 - Every app file declares `bundle`, `aliases`, `pace`, `validated` and
   `platform: harmonyos`.
 - Build the real bundle map from `hdc shell bm dump -a`; never guess.
-- Triage Mika's apps into **available**, **web-only** and **absent**. Absent
+- Triage the apps into **available**, **web-only** and **absent**. Absent
   apps are dropped with a written note, not silently rewritten.
 - Store HarmonyOS system apps as first-class entries.
 

@@ -9,7 +9,7 @@ platform: harmonyos
 ---
 # Douyin
 
-Mika Android package: `com.ss.android.ugc.aweme`. No HarmonyOS bundle has been
+Android package: `com.ss.android.ugc.aweme`. No HarmonyOS bundle has been
 confirmed.
 
 - Feed, search, profile, messages, shopping.

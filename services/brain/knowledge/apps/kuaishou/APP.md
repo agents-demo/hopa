@@ -9,7 +9,7 @@ platform: harmonyos
 ---
 # Kuaishou
 
-Mika Android package: `com.smile.gifmaker`. No HarmonyOS bundle has been
+Android package: `com.smile.gifmaker`. No HarmonyOS bundle has been
 confirmed.
 
 - Short video, live, messages, shop.

@@ -1,8 +1,8 @@
 /**
  * Saved conversations.
  *
- * The Chat screen used to keep one in-memory transcript. Mika keeps a list of
- * conversations in its drawer; this is the same idea without moving message
+ * The Chat screen used to keep one in-memory transcript. The drawer keeps a
+ * list of conversations; this is the same idea without moving message
  * rendering out of the page: the page turns entries back into its message list.
  */
 export class ChatEntry {

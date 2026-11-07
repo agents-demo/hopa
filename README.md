@@ -1,180 +1,166 @@
 ﻿<div align="center">
 
-# HOPA
+<img src="docs/media/banner.svg" alt="HOPA — Say it. HOPA does it." width="100%" />
 
-**A phone agent for HarmonyOS: say what you need, and it works the app or the site for you — and always stops for payment.**
+<br/><br/>
 
-[![CI](https://github.com/michaelatamuk/hopa/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/michaelatamuk/hopa/actions/workflows/ci.yml)
-[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/HarmonyOS-6.1%20%2F%20API%2024-0A59F7.svg)](docs/guides/setup.md)
 [![Status](https://img.shields.io/badge/status-working%20prototype-orange.svg)](docs/history/status-2026-11-07.md)
-
-<sub>ArkTS on HarmonyOS NEXT · one safety gate · a token-authenticated PC bridge when the phone cannot expose accessibility</sub>
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/HarmonyOS-6.1%20%2F%20API%2024-0A59F7.svg)](docs/guides/setup.md)
 
 </div>
 
----
+**You have better things to do than tap through menus.**
 
-HOPA turns a sentence into real taps, typing, scrolling and navigation on a
-HarmonyOS phone. It reads the visible screen, proposes one action at a time,
-runs that action through a single safety gate, verifies the result and records
-what happened.
+HOPA is a phone assistant for HarmonyOS. You say what you want in your own
+words. It opens the app, reads the screen, taps, types and scrolls — then tells
+you what happened.
 
-The shipped app is **ArkTS only**. Python and Kotlin in this repository are the
-development tools and the PC-side bridge; they are not packaged into the HAP.
-There is no hosted HOPA backend and no root requirement. Your model key goes
-from the phone to the model endpoint you choose.
+Before money moves, it stops and asks. Every time.
 
-> **Design reference:** the open-source Android agent [Mika](https://github.com/wangzan101/Mika)
-> (Apache-2.0). No Mika source code is copied into this repository; see
-> [NOTICE](NOTICE). HOPA does not use Mika's GPL sandbox components.
+> **Today:** a working prototype. Chat, the browser, memory and the app-control
+> loop are real. On this emulator a small PC companion lends HOPA its hands.
+> [The honest details →](docs/history/status-2026-11-07.md)
 
-## Why HOPA
+## A small example
 
-| | |
+> **You:** “Open Settings and tap Network and internet.”
+>
+> **HOPA:** opens Settings, finds the row, taps it, and shows you the WLAN
+> page. If anything could cost money, it would ask first.
+
+<img src="docs/media/how-it-works.svg" alt="You ask; HOPA looks and acts; you see the result" width="100%" />
+
+## What it feels like
+
+**You talk normally.** No commands, no scripts. “Check my alarm.” “What’s on
+screen?” “Book a table for two.”
+
+**It works in your apps.** HOPA uses the apps already on your phone, not a
+separate universe. No new ecosystem to learn.
+
+**It stops for money.** Every payment waits for your yes — every time, in every
+mode.
+
+**It remembers.** Tell it once: “I prefer aisle seats.” It keeps that, and you
+can delete it whenever you like.
+
+**It shows its work.** Every run has a history: what it did, how long it took,
+and what needed your approval.
+
+**Your key, your data.** There is no HOPA account and no hosted backend. Your
+model key goes to the model you choose.
+
+## Things you can say
+
+| Around the phone | The little things |
 |---|---|
-| **Built for HarmonyOS, not wrapped** | A native ArkTS HAP for HarmonyOS NEXT, with ArkWeb, accessibility and system capabilities. |
-| **One gate, payment first** | Every action goes through the same executor. Anything that can spend money is fail-closed and always asks, in every mode. |
-| **Works with real apps** | It reads the screen and uses element refs instead of per-app APIs, so an app does not need an integration to be usable. |
-| **A deterministic router before the model** | Names, aliases, bundles and site domains pick the likely app or site first; the model handles the rest. |
-| **Two control backends** | On-device accessibility when the device allows it, or a token-authenticated PC bridge over `hdc` + `uitest`. |
-| **Memory that helps** | Saved facts, reusable skills, schedules, batch runs and an inspectable run history. |
-| **No HOPA account** | Bring an OpenAI-compatible, Anthropic, Gemini or DeepSeek endpoint and key. |
+| “Open Settings and turn on Wi-Fi.”<br/>“What’s on my screen?”<br/>“Open Calendar and create an event tomorrow at 14:00.” | “Remember that I prefer aisle seats.”<br/>“Summarize this page in two bullet points.”<br/>“Check my alarm.” |
 
-## What it does today
+**When money is involved**
 
-| Area | What works | What needs something else |
-|---|---|---|
-| **Chat and reasoning** | Plain answers, drafts, explanations; model and token usage are recorded per run. | — |
-| **Web** | Built-in ArkWeb browser: read a page, click a link, type into a field, run an offline JavaScript sandbox. | Tabs, downloads, uploads and sign-in are not built. |
-| **Phone apps** | Launch a known app, read its screen, tap, type, scroll and go back through the PC bridge. | On the Pura 90 emulator, the accessibility settings page is missing; untethered control needs a real device with the service enabled. |
-| **App knowledge and routing** | 27 apps with a purpose and first actions, plus 21 site domains in the prompt; a deterministic lexical router chooses the target before the model. | 15 catalogue apps have no HarmonyOS bundle at all, and 5 more have a confirmed bundle that has not been smoke-tested; HOPA refuses to guess one. |
-| **Memory and skills** | Facts you add, automatic "remember ..." extraction, reusable skills, a skill drafted from a successful run. | — |
-| **Plans and batches** | In-app one-shot and repeating schedules; a sequential batch runner. | The system reminder API is unavailable on this emulator, so nothing fires after the app closes. |
-| **Runs and export** | History, duration, approval and payment flags, per-run detail; export facts, skills and runs as JSON. | No cost report or replay UI yet. |
-| **From a computer** | `pc-agent` CLI, an MCP stdio server and the HTTP bridge. | — |
+> “Pay 20 yuan for the order.”
+>
+> HOPA shows the amount, the merchant and what will happen. You choose **Deny**
+> or **Allow**. Nothing is paid without you.
 
-Verified in one request on a Pura 90 emulator with the PC bridge:
-`Open Settings and tap Network and internet.` → the router chose Settings →
-`ui.launch` → `observe` → `ui.tap e8` → `observe` showed the WLAN page.
+<table>
+<tr>
+<td width="58%" valign="top">
 
-## Try these
+## A look inside
 
-Connect the PC bridge first for the app and screen examples (see
-[Quick start](#quick-start)).
+The catalogue knows **27 apps and 21 sites**. A verified app opens with one tap.
+The rest tell you honestly what is missing; HOPA never launches a guessed
+package.
 
-| Say | What you should see |
-|---|---|
-| `Explain the difference between a thread and a process in three sentences.` | A plain answer; the run records tokens and duration. |
-| `Remember that I prefer aisle seats.` | `HOPA: remembered: ...`; the fact is visible and deletable in **Memory**. |
-| `Open Settings and tap Network and internet.` | Launch, read the screen, tap the row, then report the WLAN page. |
-| `What can you see on this screen?` | A description built from the bridge layout or the page text, depending on the active backend. |
-| `(Open the Browser tab first) Summarize this page in two bullet points.` | A short summary from the page text. |
-| `Pay 20 yuan for the order on the screen.` | If an action is proposed, a payment prompt shows amount, merchant and consequence, with **Deny** first; payment never runs without you. |
+The same screen is where you can open a site, check which bundles are verified,
+and see how many apps the assistant can actually reach.
 
-## How it works
+</td>
+<td width="42%" align="center">
 
-```mermaid
-flowchart LR
-    U["You: a sentence"] --> R["Deterministic router<br/>app / site, or none"]
-    R --> L["Agent loop"]
-    L --> S["Screen<br/>bridge · accessibility · browser"]
-    S --> M["Model<br/>one action"]
-    M --> P["Action parser"]
-    P --> G{"Safety gate"}
-    G -->|"payment"| A["Ask the user"]
-    A -->|"allow"| X["Capability"]
-    G -->|"no payment"| X
-    X --> V["Verify"]
-    V --> D[("Run record")]
-    V --> L
-```
+<img src="docs/media/apps.jpeg" alt="HOPA app catalogue" width="270" />
 
-- **`core`** is pure ArkTS: the loop, action parsing, the gate, the router,
-  domain types and stores. It has no `@kit.*` import.
-- **`capabilities`** are leaves: accessibility, browser, LLM clients, sandbox
-  and system intents. A capability never imports another capability.
-- **`entry`** is the composition root and the UI. It wires the capabilities
-  once and owns the pages, the drawer and the services.
-- **The PC side** is replaceable tooling: `pc-agent` controls a device over
-  `hdc` + `uitest`; `services/brain` is the Kotlin reference for routing and
-  prompts; `harness` holds the reference loop and HOPA-Bench.
+<sub>The app catalogue on a Pura 90 emulator.</sub>
 
-The gate is the invariant:
+</td>
+</tr>
+</table>
 
-```
-guards → payment approval → execute → verify → record
-```
+## Getting started
 
-A denied action still produces a run record. Any change that makes payment
-skippable is treated as a bug.
+**1. Put HOPA on your phone.**
+Today the app is built and signed from source. The two commands live in the
+[developer corner](#for-developers).
 
-## Quick start
+**2. Connect a model.**
+Open **Settings**, pick a provider (OpenAI-compatible, Anthropic, Gemini or
+DeepSeek), then enter the endpoint, the model name and your key. The key stays
+in memory; it is not saved to preferences.
 
-### Requirements
+**3. Give it hands.**
+On a real phone, enable the built-in screen control. On this emulator, start
+the small PC companion and connect it in **Settings → PC bridge**.
 
-- Windows 10/11 64-bit or macOS for DevEco Studio; Linux works for the headless
-  CLI build.
-- **DevEco Studio** with the **HarmonyOS SDK 6.1.1 (API 24)** and the
-  Command Line Tools.
-- Python **3.11+** and Node **LTS** for the PC tools.
-- A HarmonyOS emulator or a HarmonyOS NEXT device. An Android phone cannot run
-  this HAP.
+**4. Say something.**
+Try “Open Settings and tap Network and internet.”
 
-The full toolchain guide is [docs/guides/setup.md](docs/guides/setup.md).
+### Why a PC companion?
 
-### Build, sign and install
+On a real phone, the system has a built-in way to let an assistant see and tap.
+This emulator does not have that switch. The companion is a small program on
+your computer that lends HOPA its hands. It runs on your machine, not in the
+cloud, and you only need it when the phone cannot do it alone.
+
+## Good to know
+
+- HOPA sees the screen you see. It cannot work in the background.
+- It will not guess an app it does not know.
+- Login, CAPTCHA and verification codes stay with you.
+- Some apps block automation; HOPA stops and hands over.
+- The PC companion is for a trusted network.
+- 15 apps in the catalogue have no HarmonyOS bundle yet, and 5 more have an
+  unverified one. HOPA says so instead of pretending.
+- This emulator is not a phone: its accessibility switch is missing, the input
+  service can stall, and some system features fail.
+
+## Where it is today
+
+A working prototype. With the PC companion, these work today:
+
+- chat and reasoning
+- the built-in browser
+- memory, skills, plans and batch runs
+- run history, export and self-check
+- app launch, screen reading, tap, type and scroll
+- the full **launch → observe → tap → observe** loop inside Settings
+
+Not available on this emulator: untethered app control, speech and system
+reminders. A real phone with the built-in control is the untethered path.
+Read the dated, per-capability state in
+[docs/product/coverage.md](docs/product/coverage.md).
+
+## For developers
+
+<details>
+<summary>Build it, test it, or look under the hood</summary>
+
+<br/>
+
+**Build and install**
 
 ```powershell
-# Windows PowerShell
 .\tools\scripts\build.ps1
 .\tools\scripts\sign-app.ps1 -Install
 ```
 
 ```bash
-# macOS / Linux
 ./tools/scripts/build.sh
 ./tools/scripts/sign-app.sh --install
 ```
 
-The debug kit is local: it signs with the OpenHarmony debug certificates
-shipped with the SDK and binds the profile to the connected device's UDID.
-No Huawei account is needed for the emulator. To install on a real phone,
-re-sign with that phone's UDID (or let DevEco automatic signing do it).
-
-### Connect a model
-
-In **Settings**, choose the provider, endpoint, model name and API key:
-
-- OpenAI-compatible (OpenAI, DeepSeek, a local server)
-- Anthropic
-- Gemini
-
-The key stays in memory and is never written to preferences. The model label
-and the endpoint are shown on **Models** and **Source**.
-
-### Connect the PC bridge (for app control)
-
-On the PC:
-
-```powershell
-python -m pip install -e .\services\pc-agent   # once
-pc-agent bridge --host 0.0.0.0 --port 8765 --token <token>
-```
-
-On the phone, open **Settings → PC bridge**, enter the URL and token, and press
-**Connect** until the status reads `connected`.
-
-| Device | URL |
-|---|---|
-| Emulator | `http://10.0.2.2:8765` |
-| Phone on the same Wi-Fi | `http://<PC-LAN-IP>:8765` |
-
-Then try `Open Settings and tap Network and internet.` The **Screens** page
-shows a live JPEG of the device while the bridge is connected, and pauses its
-polling during a run so it does not compete with `observe`.
-
-### Run the tests
+**Test**
 
 ```powershell
 .\tools\scripts\run-tests.ps1
@@ -184,112 +170,39 @@ polling during a run so it does not compete with `observe`.
 ./tools/scripts/run-tests.sh
 ```
 
-## Safety and honest limits
+**What is where**
 
-- **Payment always asks.** The classifier is fail-closed; autonomous mode skips
-  other approvals, never payment.
-- **Irreversible actions ask by default.** Sending a message, posting,
-  deleting, ordering and changing an account are classified as sensitive.
-- **Login, CAPTCHA and verification codes stay with you.** HOPA hands them back
-  instead of reading or bypassing them.
-- **Screen text is untrusted.** It is placed in the user message, never in the
-  system rules.
-- **Visible screen only.** There is no virtual display: HOPA operates the screen
-  you are looking at, and it cannot work while you use the phone for something
-  else.
-- **The bridge is HTTP without TLS.** Bind it to a trusted network, use a
-  strong token, and do not expose the port to the internet.
-- **The emulator is not a phone.** Its accessibility settings page is missing,
-  `uitest` can stall, and some system APIs fail. A real device with the service
-  enabled is the untethered path; a retail build also needs the AppGallery ACL.
-- **No guessed bundles.** A catalogue entry with `no verified bundle` is never
-  launched by a guessed package name.
+- `apps/harmony/` — the shippable ArkTS app (UI, agent loop, gate, router).
+- `services/pc-agent/` — the PC companion: device control, CLI, MCP, bridge.
+- `services/brain/` — the Kotlin reference brain for routing and knowledge.
+- `harness/` — the reference loop and HOPA-Bench.
+- `docs/` — setup, architecture, contracts and the honest status.
 
-## Status
-
-HOPA is a **working prototype**. With the PC bridge attached it covers
-**12.5 of 15** user-visible Mika capabilities (~83%); the untethered ceiling on
-this emulator is ~77% because the accessibility service cannot be enabled and
-speech/system reminders are unavailable.
-
-| Verified on the emulator | Not available on this image |
-|---|---|
-| Chat, memory, skills, batch, schedules, model settings | Untethered app control (no accessibility settings page) |
-| Bridge `observe`, `tap`, `type`, `launch`, `screenshot` | Speech (no CoreSpeechKit) |
-| Full `launch → observe → tap → observe` inside Settings | System reminders (`1700002`) |
-| Export, run history, self-check | 20 catalogue apps are not installed on this image (15 of them also have no verified bundle) |
-
-Read the honest, dated state in
-[docs/history/status-2026-11-07.md](docs/history/status-2026-11-07.md) and the
-per-capability score in [docs/product/parity.md](docs/product/parity.md).
-
-## Repository layout
-
-```
-hopa/
-├─ apps/harmony/            # the shippable app (DevEco Stage model)
-│  ├─ core/                 # pure ArkTS: agent, gate, router, stores
-│  ├─ capabilities/         # accessibility, browser, llm, sandbox, system
-│  └─ entry/                # UI shell, pages, navigation, services
-├─ services/
-│  ├─ pc-agent/             # Python: hdc + uitest, CLI, MCP, HTTP bridge
-│  └─ brain/                # Kotlin: reference routing, prompts, knowledge
-├─ harness/
-│  ├─ agent/                # Python reference loop and records
-│  └─ bench/                # HOPA-Bench task format and runner
-├─ contracts/schemas/       # v1 JSON contracts shared with the core
-├─ tools/{scripts,checks,signing}
-├─ docs/                    # architecture, guides, reference, product, operations
-└─ .github/workflows/       # CI
-```
-
-## Tests and CI
-
-`tools/scripts/run-tests.ps1` runs the Python suites, the Kotlin brain tests
-and the ArkTS core tests, then checks that the generated app catalogue is
-current.
-
-CI runs on every push:
-
-- Ruff and pytest for `pc-agent`, the harness and the plan tooling
-- Kotlin brain tests and the cross-language contract test
-- structure rules, documentation links and the generated catalogue check
-- a secret scan and a license check
-
-The HAP build and the ArkTS Local Tests are conditional jobs: the official
-HarmonyOS Command Line Tools require a Huawei developer login, so they run only
-when the repository secrets contain a mirrored toolchain. The workflow skips
-them with a warning instead of pretending they passed.
-
-## Documentation
-
-Start here, not with the whole tree:
+**A few useful links**
 
 - [Setup and toolchain](docs/guides/setup.md)
 - [Build, sign and install](docs/guides/build-and-sign.md)
-- [PC-tethered control bridge](docs/guides/pc-bridge.md)
-- [Architecture overview](docs/architecture/overview.md) and [layers](docs/architecture/layers.md)
-- [App knowledge format](docs/reference/knowledge.md)
-- [Mika parity and honest limits](docs/product/parity.md)
-- [Current status](docs/history/status-2026-11-07.md)
+- [PC companion guide](docs/guides/pc-bridge.md)
+- [Architecture](docs/architecture/overview.md)
+- [App knowledge](docs/reference/knowledge.md)
 - [Safety model](docs/reference/safety.md)
-- [Roadmap](docs/product/roadmap.md) and [delivery plan](docs/plan/README.md)
+- [Current status](docs/history/status-2026-11-07.md)
+
+The app is ArkTS only. Python and Kotlin are development and PC-side tools;
+they are not packaged into the HAP. CI runs the Python and Kotlin suites, the
+structure and link checks, the generated-catalogue check, and a secret/license
+scan. The HAP and ArkTS jobs need a mirrored Huawei toolchain and are
+conditional; the workflow skips them with a warning rather than pretending.
+
+</details>
 
 ## Contributing
 
-- Read [CONTRIBUTING.md](CONTRIBUTING.md).
-- Run `.\tools\scripts\run-tests.ps1` (or `.sh`) before opening a pull request.
-- Keep one concern per file; the structure check enforces import direction,
-  barrels and file budgets.
-- Do not weaken the payment gate. A change that makes payment skippable, or
-  moves it after execution, will not be accepted.
-- Keep the shipped app ArkTS-only; Python and Kotlin stay in the development
-  and PC layers.
-- Report security issues privately: [SECURITY.md](SECURITY.md).
+Read [CONTRIBUTING.md](CONTRIBUTING.md). Run the tests before a pull request.
+Do not weaken the payment gate: a change that makes payment skippable, or moves
+it after execution, will not be accepted. Report security issues privately
+through [SECURITY.md](SECURITY.md).
 
 ## License
 
 Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
-
-HOPA is an independent implementation. Mika is a design reference; no Mika
-source code is included. Third-party components keep their own licenses.

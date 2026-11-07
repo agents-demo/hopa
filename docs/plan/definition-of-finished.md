@@ -24,7 +24,7 @@ Development is finished only when **all** of the following are true:
 - [ ] On-call shadow completed by a second person
 - [ ] Post-release monitoring has run for 7 days with no P0 incident
 
-When these are checked, HOPA is a finished MVP. Near-parity with Mika minus the
+When these are checked, HOPA is a finished MVP. Near-parity minus the
 hidden background screen is the ceiling, and this document says so on purpose.
 
 ---

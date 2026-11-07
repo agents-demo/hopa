@@ -9,7 +9,7 @@ platform: harmonyos
 ---
 # Xiaohongshu (RED)
 
-Mika Android package: `com.xingin.xhs`. No HarmonyOS bundle has been confirmed.
+Android package: `com.xingin.xhs`. No HarmonyOS bundle has been confirmed.
 
 - Feed, search, notes, comments, messages, shop.
 - Liking, collecting, commenting, following and posting: ask first.

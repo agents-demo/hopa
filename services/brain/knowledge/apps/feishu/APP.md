@@ -9,7 +9,7 @@ platform: harmonyos
 ---
 # Feishu / Lark
 
-Mika Android package: `com.ss.android.lark`. No HarmonyOS bundle has been
+Android package: `com.ss.android.lark`. No HarmonyOS bundle has been
 confirmed.
 
 - Chats, docs, calendar, meetings.

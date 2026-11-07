@@ -3,7 +3,6 @@
 | Term | Meaning |
 |---|---|
 | **HOPA** | This project: a GUI agent for HarmonyOS. |
-| **Mika** | The Apache-2.0 Android reference product. Not our product; no source copied. |
 | **ACL** | Huawei's access-control approval for a restricted capability. |
 | **a11y** | Accessibility. The on-device way to read and drive other apps. |
 | **Observation** | One redacted, hashable picture of the screen (`e1`, `e2`, …). |

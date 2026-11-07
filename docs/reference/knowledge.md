@@ -66,14 +66,14 @@ non-HarmonyOS platform.
 
 - 12 HarmonyOS system apps: Settings, Clock, Calendar, Contacts, Notepad,
   Files, Camera, Gallery, Browser, AppGallery, Petal Maps, Music.
-- 15 Mika apps catalogued with `bundle: UNCONFIRMED`: Baijiahao, Bilibili, BOSS
+- 15 apps catalogued with `bundle: UNCONFIRMED`: Baijiahao, Bilibili, BOSS
   Zhipin, Dedao, Douyin, Feishu, Jike, Kuaishou, QQ Mail, Toutiao, WeChat,
   Weibo, Xianyu, Xiaohongshu, Zhihu. They match by name/alias but never launch
   by an unverified bundle.
 - 21 web sites under `services/brain/knowledge/sites/`.
 - 6 skill manifests under `services/brain/knowledge/skills/`.
 - All are `validated: pending`.
-- The 23 Mika Android apps are triaged in `docs/history/knowledge-triage.md`; 1 is
+- The 23 third-party Android apps are triaged in `docs/history/knowledge-triage.md`; 1 is
   replaced, 15 are catalogued with unconfirmed bundles, 7 are web-only.
 
 ## The `UNCONFIRMED` bundle
@@ -148,4 +148,4 @@ that `byDomain` resolves `www.xiaohongshu.com`.
 
 - Format validation is not screen validation.
 - The selectors are prose, not executable selectors yet.
-- The 23 Mika app files and 21 site files are a separate port.
+- The 23 app files and 21 site files are maintained separately.

@@ -88,7 +88,7 @@ Work:
 - Performance: startup, action latency, battery; emulator + device profiles.
 - Security/privacy: sandbox escape tests, permission minimization, encrypted
   on-device memory, DI + DPIA evidence.
-- SBOM + license review (Mika Apache-2.0 reference; Pyodide MPL-2.0; QuickJS MIT;
+- SBOM + license review (Pyodide MPL-2.0; QuickJS MIT;
   **no GPL sandbox code**), export-control review before external transfer.
 - Evaluation report, patents, and a reproducible release pipeline.
 

@@ -5,7 +5,7 @@ import hopa.brain.routing.KnowledgeEntry
 /**
  * Demo knowledge for the reference brain and the contract tests.
  *
- * This is not the Mika knowledge corpus. It is a small, explicit set of
+ * This is not the full knowledge corpus. It is a small, explicit set of
  * HarmonyOS system apps plus three web-capable apps.
  */
 object DemoEntries {

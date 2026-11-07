@@ -15,7 +15,7 @@ export struct LicensePage {
       Text('HarmonyOS ArkUI, ArkWeb, ArkData and the DevEco SDK are used under the Huawei/OpenHarmony terms.')
         .fontSize(11)
         .fontColor('#999999')
-      Text('Mika (Apache-2.0) is the design reference. No Mika Kotlin code runs in this app; the Android device-control layer was reimplemented with hdc, uitest and the HarmonyOS accessibility API.')
+      Text('No third-party agent code runs in this app. Device control is implemented with hdc, uitest and the HarmonyOS accessibility API.')
         .fontSize(11)
         .fontColor('#999999')
       Text('DeepSeek, OpenAI, Anthropic and Gemini are accessed through their public HTTP APIs with the user-provided key.')

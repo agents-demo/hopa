@@ -2,7 +2,7 @@
 
 ### A.1 Port as data
 
-| Mika source | Files | Action | Note |
+| Source | Files | Action | Note |
 |---|---|---|---|
 | `core/src/main/resources/knowledge/` | 46 | port format, re-validate content | 23 `APP.md` + 18 `SITE.md` are Android-specific |
 | `core/src/main/resources/prompts/` | 118 | port, then prune | strip Android tool names |
@@ -10,7 +10,7 @@
 
 ### A.2 Port as logic (pure Kotlin)
 
-| Mika source | Files | HOPA target | Note |
+| Source | Files | HOPA target | Note |
 |---|---|---|---|
 | `core/knowledge/` | 11 | `core/knowledge/` | routing, channel, catalog, learning |
 | `core/skills/` | 5 | `core/skills/` | personal skills |
@@ -29,10 +29,10 @@
 
 ### A.2b Remaining modules â€” decision required
 
-These modules exist in Mika's `core/` but are not in the port matrix above. They
+These modules exist in the original `core/` but are not in the port matrix above. They
 must be classified before Phase 3 ends; every "drop" needs a one-line reason.
 
-| Mika source | Files | Likely action | Reason |
+| Source | Files | Likely action | Reason |
 |---|---|---|---|
 | `core/action/` | 10 | port | action model shared by loop and gate |
 | `core/run/` | 11 | port | run lifecycle |
@@ -61,7 +61,7 @@ must be classified before Phase 3 ends; every "drop" needs a one-line reason.
 
 ### A.3 Rewrite
 
-| Mika source | Files | HOPA target |
+| Source | Files | HOPA target |
 |---|---|---|
 | `core/cap/` | 73 | `apps/harmony/capabilities/*` |
 | `core/userscreen/`, `vision/`, `visual/` | 12 | a11y + OCR + vision |

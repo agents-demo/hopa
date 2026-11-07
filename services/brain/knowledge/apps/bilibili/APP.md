@@ -9,7 +9,7 @@ platform: harmonyos
 ---
 # Bilibili
 
-Mika Android package: `tv.danmaku.bili`. No HarmonyOS bundle has been confirmed.
+Android package: `tv.danmaku.bili`. No HarmonyOS bundle has been confirmed.
 
 - Video, search, comments, favourites, downloads.
 - Watching is safe; posting, commenting and following are public actions: ask.

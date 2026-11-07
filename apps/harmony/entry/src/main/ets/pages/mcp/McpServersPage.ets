@@ -24,7 +24,7 @@ export struct McpServersPage {
         .padding(8)
         .borderRadius(6)
         .width('100%')
-      Text('Mika exposes MCP servers in Settings. HOPA keeps MCP on the PC side; the phone talks to the bridge over HTTP with a token.')
+      Text('Some assistants expose MCP servers in Settings. HOPA keeps MCP on the PC side; the phone talks to the bridge over HTTP with a token.')
         .fontSize(11)
         .fontColor('#999999')
     }

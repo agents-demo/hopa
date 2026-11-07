@@ -9,7 +9,7 @@ platform: harmonyos
 ---
 # Weibo
 
-Mika Android package: `com.sina.weibo`. No HarmonyOS bundle has been confirmed.
+Android package: `com.sina.weibo`. No HarmonyOS bundle has been confirmed.
 
 - Feed, search, profile, comments, direct messages.
 - Posting, reposting, commenting and following are public: ask first.

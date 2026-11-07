@@ -5,7 +5,7 @@
 
 ## Context
 
-Mika runs user scripts through `proot` and a Linux userland. HarmonyOS Next
+A Linux sandbox would run user scripts through `proot` and a Linux userland. HarmonyOS Next
 does not allow that, and shipping a hidden second screen or a native binary is
 out of scope.
 

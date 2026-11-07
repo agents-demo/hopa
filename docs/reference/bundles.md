@@ -36,13 +36,13 @@ Three names in the first draft were wrong and are now corrected:
 `com.huawei.hmos.gallery` -> `com.huawei.hmos.photos`,
 `com.huawei.hmos.appgallery` -> `com.huawei.hmsapp.appgallery`.
 
-## Catalogued but unconfirmed (15 Mika apps)
+## Catalogued but unconfirmed (15 apps)
 
 These have an `APP.md` with `bundle: UNCONFIRMED`, so they match by name/alias
 but never launch by a guessed package. Replace `UNCONFIRMED` only after
 `bm dump -n` or AppGallery confirms the HarmonyOS bundle.
 
-| App | Mika Android package | HarmonyOS bundle |
+| App | Android package | HarmonyOS bundle |
 |---|---|---|
 | Baijiahao | `com.baidu.baijia` | to confirm |
 | Bilibili | `tv.danmaku.bili` | to confirm |

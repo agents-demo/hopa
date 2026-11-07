@@ -40,7 +40,7 @@ The docs are grouped by what they answer. Pick the section, then the file.
 
 | File | Question |
 |---|---|
-| [parity.md](product/parity.md) | How close is HOPA to Mika? |
+| [coverage.md](product/coverage.md) | What works today, and what is blocked? |
 | [roadmap.md](product/roadmap.md) | What comes next? |
 | [ux.md](product/ux.md) | What is the intended experience? |
 | [bench.md](product/bench.md) | How is the agent evaluated? |
@@ -72,8 +72,8 @@ The docs are grouped by what they answer. Pick the section, then the file.
 | [status-2026-11-07.md](history/status-2026-11-07.md) | What was true on that day? |
 | [baseline-2026-11-06.md](history/baseline-2026-11-06.md) | What machine and SDK was the baseline? |
 | [emulator-crash-2026-11-06.md](history/emulator-crash-2026-11-06.md) | What broke, and how? |
-| [port-log.md](history/port-log.md) | What Mika logic was reused? |
-| [knowledge-triage.md](history/knowledge-triage.md) | How were Mika's apps classified? |
+| [port-log.md](history/port-log.md) | What ideas were reused? |
+| [knowledge-triage.md](history/knowledge-triage.md) | How is the app catalogue classified? |
 
 `history/` is a log. Current state lives in `history/status-*.md` only until the
 next snapshot replaces it; architecture and reference are the stable docs.

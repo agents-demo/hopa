@@ -33,7 +33,7 @@ export struct MoreToolsPage {
       Text('More')
         .fontSize(22)
         .fontWeight(FontWeight.Bold)
-      Text('The screens Mika keeps in its drawer that do not fit above.')
+      Text('The screens that do not fit above.')
         .fontSize(12)
         .fontColor('#666666')
       this.Row('Source', 'Model, backend and observation source', 'source')
