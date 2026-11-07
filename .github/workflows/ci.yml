@@ -50,7 +50,7 @@ jobs:
       - name: Plan lint
         run: python tools/scripts/plan-status.py --lint
       - name: Structure rules
-        run: python tools/checks/check-structure.py
+        run: python tools/checks/check-structure.py --strict
       - name: Documentation links
         run: python tools/checks/check-links.py
       - name: Generated app catalogue is current
