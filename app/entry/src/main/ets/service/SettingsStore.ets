@@ -55,4 +55,17 @@ export class SettingsStore {
     await store.put('autonomous', settings.autonomous);
     await store.flush();
   }
+
+  /** True until the user has seen the Welcome page once. */
+  static async needsWelcome(context: Context): Promise<boolean> {
+    const store = await preferences.getPreferences(context, SettingsStore.NAME);
+    const seen = await store.get('welcome_seen', false);
+    return typeof seen === 'boolean' ? !seen : true;
+  }
+
+  static async markWelcomeSeen(context: Context): Promise<void> {
+    const store = await preferences.getPreferences(context, SettingsStore.NAME);
+    await store.put('welcome_seen', true);
+    await store.flush();
+  }
 }

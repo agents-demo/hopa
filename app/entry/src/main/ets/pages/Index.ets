@@ -16,7 +16,10 @@ import { AppLauncher } from '../service/AppLauncher';
 @Entry
 @Component
 struct Index {
-  @State currentTab: number = 0;
+  @State activePage: string = 'chat';
+  @State menuOpen: boolean = false;
+  @State settingsPage: string = '';
+  @State selectedRunId: string = '';
   @State runCount: number = 0;
   @State a11yAvailable: boolean = false;
   @State a11yInstalled: string = 'checking...';
@@ -248,6 +251,10 @@ struct Index {
       new AppLauncher(getContext(this) as common.UIAbilityContext)
     );
     AgentService.get().startScheduler();
+    if (await SettingsStore.needsWelcome(getContext(this) as Context)) {
+      this.activePage = 'welcome';
+      await SettingsStore.markWelcomeSeen(getContext(this) as Context);
+    }
     this.scheduleRefresh = setInterval(() => {
       this.schedules = AgentService.get().schedules.all().slice();
       const busy: boolean = AgentService.get().isBusy();
@@ -357,7 +364,7 @@ struct Index {
     } catch (error) {
       this.messages = this.messages.concat([`HOPA: export failed: ${error}`]);
     }
-    this.currentTab = 0;
+    this.activePage = 'chat';
   }
 
   private clearMemory(): void {
@@ -582,7 +589,7 @@ struct Index {
     } catch (error) {
       this.messages = this.messages.concat([`HOPA: could not open ${bundle}: ${error}`]);
     }
-    this.currentTab = 0;
+    this.activePage = 'chat';
   }
 
   @Builder
@@ -752,7 +759,7 @@ struct Index {
                   .height(28)
                   .onClick(() => {
                     this.address = `https://${site.domains[0]}`;
-                    this.currentTab = 1;
+                    this.activePage = 'browser';
                     setTimeout(() => {
                       this.openAddress();
                     }, 500);
@@ -1050,6 +1057,10 @@ struct Index {
             .backgroundColor('#F7F8FA')
             .borderRadius(8)
             .alignItems(HorizontalAlign.Start)
+            .onClick(() => {
+              this.selectedRunId = run.id;
+              this.activePage = 'run';
+            })
           }
         }, (run: RunRecord) => run.id)
       }
@@ -1206,7 +1217,7 @@ struct Index {
         .fontSize(12)
         .onClick(() => {
           this.morePage = '';
-          this.currentTab = 4;
+          this.activePage = 'settings';
         })
     }
     .width('100%')
@@ -1293,7 +1304,7 @@ struct Index {
         .fontSize(12)
         .onClick(() => {
           this.morePage = '';
-          this.currentTab = 4;
+          this.activePage = 'settings';
         })
     }
     .width('100%')
@@ -1416,7 +1427,7 @@ struct Index {
           .fontSize(12)
           .onClick(() => {
             this.morePage = '';
-            this.currentTab = 4;
+            this.activePage = 'settings';
           })
         Button('Open Chat')
           .fontSize(12)
@@ -1424,7 +1435,7 @@ struct Index {
           .fontColor('#333333')
           .onClick(() => {
             this.morePage = '';
-            this.currentTab = 0;
+            this.activePage = 'chat';
           })
       }
     }
@@ -1523,7 +1534,8 @@ struct Index {
 
   @Builder
   SettingsPage() {
-    Column({ space: 16 }) {
+    Scroll() {
+      Column({ space: 16 }) {
       Text($r('app.string.title_settings'))
         .fontSize(22)
         .fontWeight(FontWeight.Bold)
@@ -1683,11 +1695,47 @@ struct Index {
       Text($r('app.string.label_retention'))
         .fontSize(12)
         .fontColor('#666666')
+
+      Text('Advanced')
+        .fontSize(16)
+        .fontWeight(FontWeight.Bold)
+      this.SettingsRow('App access', 'Which bundles may be launched', 'appaccess')
+      this.SettingsRow('Computer access', 'PC bridge and MCP commands', 'computer')
+      this.SettingsRow('Self-check', 'Verify the setup', 'selfcheck')
+      this.SettingsRow('Developer', 'Build and runtime details', 'developer')
+      this.SettingsRow('About', 'Version, credits and licenses', 'about')
+      }
+      .width('100%')
+      .padding(16)
+      .alignItems(HorizontalAlign.Start)
     }
     .width('100%')
     .height('100%')
-    .padding(16)
-    .alignItems(HorizontalAlign.Start)
+  }
+
+  @Builder
+  SettingsRow(title: string, subtitle: string, key: string) {
+    Row({ space: 10 }) {
+      Column({ space: 2 }) {
+        Text(title)
+          .fontSize(14)
+        Text(subtitle)
+          .fontSize(10)
+          .fontColor('#999999')
+      }
+      .layoutWeight(1)
+      .alignItems(HorizontalAlign.Start)
+      Text('>')
+        .fontSize(14)
+        .fontColor('#999999')
+    }
+    .width('100%')
+    .padding(12)
+    .backgroundColor('#F7F8FA')
+    .borderRadius(8)
+    .onClick(() => {
+      this.settingsPage = key;
+    })
   }
 
   @Builder
@@ -1862,42 +1910,498 @@ struct Index {
     .alignItems(HorizontalAlign.Start)
   }
 
-  build() {
-    Tabs({ barPosition: BarPosition.End, index: this.currentTab }) {
-      TabContent() {
-        this.ChatPage()
-      }
-      .tabBar($r('app.string.tab_chat'))
-
-      TabContent() {
-        this.PlansPage()
-      }
-      .tabBar($r('app.string.tab_tasks'))
-
-      TabContent() {
-        this.MemoryPage()
-      }
-      .tabBar($r('app.string.tab_memory'))
-
-      TabContent() {
-        this.WebPage()
-      }
-      .tabBar($r('app.string.tab_web'))
-
-      TabContent() {
-        this.SettingsPage()
-      }
-      .tabBar($r('app.string.tab_settings'))
-
-      TabContent() {
-        this.MorePage()
-      }
-      .tabBar($r('app.string.tab_apps'))
+  private pageTitle(): string {
+    if (this.activePage === 'chat') {
+      return 'Chat';
     }
-    .onChange((index: number) => {
-      this.currentTab = index;
+    if (this.activePage === 'plans') {
+      return 'Plans';
+    }
+    if (this.activePage === 'memory') {
+      return 'Memory';
+    }
+    if (this.activePage === 'browser') {
+      return 'Browser';
+    }
+    if (this.activePage === 'screens') {
+      return 'Screens';
+    }
+    if (this.activePage === 'settings') {
+      return 'Settings';
+    }
+    if (this.activePage === 'about') {
+      return 'About';
+    }
+    if (this.activePage === 'run') {
+      return 'Run';
+    }
+    return 'HOPA';
+  }
+
+  @Builder
+  DrawerItem(title: string, key: string) {
+    Row() {
+      Text(title)
+        .fontSize(16)
+        .fontColor(this.activePage === key ? '#0A59F7' : '#333333')
+    }
+    .width('100%')
+    .padding({ left: 12, right: 12, top: 11, bottom: 11 })
+    .backgroundColor(this.activePage === key ? '#EAF1FF' : '#00000000')
+    .borderRadius(8)
+    .onClick(() => {
+      this.activePage = key;
+      this.settingsPage = '';
+      this.menuOpen = false;
     })
-    .barMode(BarMode.Scrollable)
+  }
+
+  @Builder
+  Drawer() {
+    Column({ space: 1 }) {
+      Text('HOPA')
+        .fontSize(24)
+        .fontWeight(FontWeight.Bold)
+        .padding({ left: 12, top: 8, bottom: 12 })
+      this.DrawerItem('Chat', 'chat')
+      this.DrawerItem('Plans', 'plans')
+      this.DrawerItem('Memory', 'memory')
+      this.DrawerItem('Browser', 'browser')
+      this.DrawerItem('Screens', 'screens')
+      this.DrawerItem('Settings', 'settings')
+      this.DrawerItem('About', 'about')
+      Divider()
+        .margin({ top: 8, bottom: 8 })
+      Text('TOOLS')
+        .fontSize(10)
+        .fontColor('#999999')
+        .padding({ left: 12, bottom: 4 })
+      this.DrawerItem('Apps', 'apps')
+      this.DrawerItem('Runs and batches', 'runs')
+      this.DrawerItem('Models', 'models')
+      this.DrawerItem('Usage', 'usage')
+      this.DrawerItem('Phone setup', 'phone')
+      this.DrawerItem('Self-check', 'selfcheck')
+      this.DrawerItem('Welcome', 'welcome')
+    }
+    .width('100%')
+    .height('100%')
+    .padding(10)
+    .alignItems(HorizontalAlign.Start)
+    .backgroundColor('#FFFFFF')
+  }
+
+  @Builder
+  PageHost() {
+    if (this.activePage === 'plans') {
+      this.PlansPage()
+    } else if (this.activePage === 'memory') {
+      this.MemoryPage()
+    } else if (this.activePage === 'browser') {
+      this.WebPage()
+    } else if (this.activePage === 'screens') {
+      this.MoreContainer('screens')
+    } else if (this.activePage === 'settings') {
+      this.SettingsHost()
+    } else if (this.activePage === 'about') {
+      this.MoreContainer('about')
+    } else if (this.activePage === 'apps') {
+      this.MoreContainer('apps')
+    } else if (this.activePage === 'runs') {
+      this.MoreContainer('runs')
+    } else if (this.activePage === 'models') {
+      this.MoreContainer('models')
+    } else if (this.activePage === 'usage') {
+      this.MoreContainer('usage')
+    } else if (this.activePage === 'phone') {
+      this.MoreContainer('phone')
+    } else if (this.activePage === 'selfcheck') {
+      this.MoreContainer('selfcheck')
+    } else if (this.activePage === 'welcome') {
+      this.MoreContainer('welcome')
+    } else if (this.activePage === 'run') {
+      this.RunDetailPage()
+    } else {
+      this.ChatPage()
+    }
+  }
+
+  @Builder
+  MoreContainer(key: string) {
+    Column({ space: 10 }) {
+      Row({ space: 8 }) {
+        Button('Back')
+          .fontSize(12)
+          .backgroundColor('#E5E6E8')
+          .fontColor('#333333')
+          .onClick(() => {
+            this.activePage = 'chat';
+          })
+        Text(this.containerTitle(key))
+          .fontSize(20)
+          .fontWeight(FontWeight.Bold)
+          .layoutWeight(1)
+      }
+      .width('100%')
+      Column() {
+        if (key === 'apps') {
+          this.AppsPage()
+        } else if (key === 'runs') {
+          this.RunsPage()
+        } else if (key === 'models') {
+          this.ModelsPage()
+        } else if (key === 'usage') {
+          this.UsagePage()
+        } else if (key === 'phone') {
+          this.PhonePage()
+        } else if (key === 'selfcheck') {
+          this.SelfCheckPage()
+        } else if (key === 'welcome') {
+          this.WelcomePage()
+        } else if (key === 'about') {
+          this.AboutPage()
+        } else if (key === 'screens') {
+          this.ScreensPage()
+        }
+      }
+      .layoutWeight(1)
+      .width('100%')
+    }
+    .width('100%')
+    .height('100%')
+    .padding(16)
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  private containerTitle(key: string): string {
+    if (key === 'apps') {
+      return 'Apps';
+    }
+    if (key === 'runs') {
+      return 'Runs and batches';
+    }
+    if (key === 'models') {
+      return 'Models';
+    }
+    if (key === 'usage') {
+      return 'Usage';
+    }
+    if (key === 'phone') {
+      return 'Phone setup';
+    }
+    if (key === 'selfcheck') {
+      return 'Self-check';
+    }
+    if (key === 'welcome') {
+      return 'Welcome';
+    }
+    if (key === 'screens') {
+      return 'Screens';
+    }
+    return 'About';
+  }
+
+  @Builder
+  SettingsHost() {
+    if (this.settingsPage.length === 0) {
+      this.SettingsPage()
+    } else {
+      Column({ space: 10 }) {
+        Row({ space: 8 }) {
+          Button('Back')
+            .fontSize(12)
+            .backgroundColor('#E5E6E8')
+            .fontColor('#333333')
+            .onClick(() => {
+              this.settingsPage = '';
+            })
+          Text(this.settingsTitle())
+            .fontSize(20)
+            .fontWeight(FontWeight.Bold)
+            .layoutWeight(1)
+        }
+        .width('100%')
+        Column() {
+          if (this.settingsPage === 'appaccess') {
+            this.AppAccessPage()
+          } else if (this.settingsPage === 'computer') {
+            this.ComputerAccessPage()
+          } else if (this.settingsPage === 'developer') {
+            this.DeveloperPage()
+          } else if (this.settingsPage === 'selfcheck') {
+            this.SelfCheckPage()
+          } else if (this.settingsPage === 'about') {
+            this.AboutPage()
+          }
+        }
+        .layoutWeight(1)
+        .width('100%')
+      }
+      .width('100%')
+      .height('100%')
+      .padding(16)
+      .alignItems(HorizontalAlign.Start)
+    }
+  }
+
+  private settingsTitle(): string {
+    if (this.settingsPage === 'appaccess') {
+      return 'App access';
+    }
+    if (this.settingsPage === 'computer') {
+      return 'Computer access';
+    }
+    if (this.settingsPage === 'developer') {
+      return 'Developer';
+    }
+    if (this.settingsPage === 'selfcheck') {
+      return 'Self-check';
+    }
+    return 'About';
+  }
+
+  @Builder
+  RunDetailPage() {
+    Column({ space: 12 }) {
+      Row({ space: 8 }) {
+        Button('Back')
+          .fontSize(12)
+          .backgroundColor('#E5E6E8')
+          .fontColor('#333333')
+          .onClick(() => {
+            this.activePage = 'runs';
+          })
+        Text('Run')
+          .fontSize(20)
+          .fontWeight(FontWeight.Bold)
+          .layoutWeight(1)
+      }
+      .width('100%')
+      ForEach(this.selectedRuns(), (run: RunRecord, index: number) => {
+        Column({ space: 10 }) {
+          Text(run.kind)
+            .fontSize(18)
+            .fontWeight(FontWeight.Bold)
+          Text(run.status)
+            .fontSize(13)
+            .fontColor(run.status === 'executed' ? '#0A7F3F' : '#B42318')
+          Divider()
+          this.TimelineRow('Started', new Date(run.startedAt).toLocaleTimeString())
+          this.TimelineRow('Finished', new Date(run.finishedAt).toLocaleTimeString())
+          this.TimelineRow('Duration', `${run.durationMs} ms`)
+          this.TimelineRow('Approval', run.approved ? 'approved' : 'not required')
+          this.TimelineRow('Payment', run.isPayment ? 'yes' : 'no')
+          Divider()
+          Text(run.detail.length > 0 ? run.detail : '(no detail)')
+            .fontSize(13)
+            .fontColor('#666666')
+        }
+        .width('100%')
+        .padding(14)
+        .backgroundColor('#F7F8FA')
+        .borderRadius(10)
+        .alignItems(HorizontalAlign.Start)
+      }, (run: RunRecord, index: number) => run.id)
+    }
+    .width('100%')
+    .height('100%')
+    .padding(16)
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  @Builder
+  TimelineRow(label: string, value: string) {
+    Row() {
+      Text(label)
+        .fontSize(12)
+        .fontColor('#999999')
+        .width(100)
+      Text(value)
+        .fontSize(13)
+        .layoutWeight(1)
+    }
+    .width('100%')
+  }
+
+  private selectedRuns(): RunRecord[] {
+    const found: RunRecord[] = [];
+    for (const run of this.runRecords) {
+      if (run.id === this.selectedRunId) {
+        found.push(run);
+      }
+    }
+    return found;
+  }
+
+  @Builder
+  AppAccessPage() {
+    Column({ space: 10 }) {
+      Text('Only verified bundles can be launched.')
+        .fontSize(14)
+        .fontWeight(FontWeight.Bold)
+      Text('Unverified and unconfirmed catalogue entries never launch a guessed bundle. This is the app access policy; there is no per-app toggle.')
+        .fontSize(12)
+        .fontColor('#666666')
+      List({ space: 6 }) {
+        ForEach(this.verifiedApps(), (app: CatalogApp, index: number) => {
+          ListItem() {
+            Column({ space: 2 }) {
+              Text(app.display)
+                .fontSize(14)
+                .fontWeight(FontWeight.Bold)
+              Text(app.bundle)
+                .fontSize(11)
+                .fontColor('#666666')
+              Text(`ability: ${app.ability.length > 0 ? app.ability : 'unknown'}`)
+                .fontSize(10)
+                .fontColor('#999999')
+            }
+            .width('100%')
+            .padding(10)
+            .backgroundColor('#F7F8FA')
+            .borderRadius(8)
+            .alignItems(HorizontalAlign.Start)
+          }
+        }, (app: CatalogApp, index: number) => app.bundle)
+      }
+      .layoutWeight(1)
+      .width('100%')
+    }
+    .width('100%')
+    .height('100%')
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  private verifiedApps(): CatalogApp[] {
+    const apps: CatalogApp[] = [];
+    for (const app of APP_CATALOG) {
+      if (app.verified) {
+        apps.push(app);
+      }
+    }
+    return apps;
+  }
+
+  @Builder
+  ComputerAccessPage() {
+    Column({ space: 12 }) {
+      Text(AgentService.get().isRemoteConfigured()
+        ? 'The PC bridge is connected. The phone can be driven from the computer.'
+        : 'The PC bridge is not connected. Start it on the computer, then connect in Settings.')
+        .fontSize(13)
+        .fontColor('#666666')
+      Text('Commands')
+        .fontSize(16)
+        .fontWeight(FontWeight.Bold)
+      Text('pc-agent bridge --host 0.0.0.0 --port 8765 --token <token>')
+        .fontSize(11)
+        .fontColor('#333333')
+        .backgroundColor('#F2F3F5')
+        .padding(8)
+        .borderRadius(6)
+        .width('100%')
+      Text('pc-agent mcp    # drive the phone from an MCP client')
+        .fontSize(11)
+        .fontColor('#333333')
+        .backgroundColor('#F2F3F5')
+        .padding(8)
+        .borderRadius(6)
+        .width('100%')
+      Text('The app is the client; it does not run an MCP server on the phone.')
+        .fontSize(11)
+        .fontColor('#999999')
+      Text('Endpoints: /observe, /tap, /type, /launch, /key, /swipe, /screenshot')
+        .fontSize(11)
+        .fontColor('#999999')
+      Button('Open bridge settings')
+        .fontSize(12)
+        .onClick(() => {
+          this.settingsPage = '';
+          this.activePage = 'settings';
+        })
+    }
+    .width('100%')
+    .height('100%')
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  @Builder
+  DeveloperPage() {
+    Column({ space: 10 }) {
+      this.DevLine('App', 'HOPA 0.1.0 (com.hopa.agent)')
+      this.DevLine('Runtime', 'ArkTS on HarmonyOS, API 24')
+      this.DevLine('Model', this.modelLabel.length > 0 ? this.modelLabel : 'not configured')
+      this.DevLine('Accessibility', this.a11yAvailable ? 'available' : 'unavailable')
+      this.DevLine('PC bridge', AgentService.get().isRemoteConfigured() ? 'configured' : 'not configured')
+      this.DevLine('Runs stored', `${this.runRecords.length}`)
+      this.DevLine('Plans stored', `${this.schedules.length}`)
+      Button('Clear run history')
+        .fontSize(12)
+        .backgroundColor('#E5E6E8')
+        .fontColor('#B42318')
+        .onClick(() => {
+          this.clearRuns();
+        })
+    }
+    .width('100%')
+    .height('100%')
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  @Builder
+  DevLine(label: string, value: string) {
+    Row() {
+      Text(label)
+        .fontSize(12)
+        .fontColor('#999999')
+        .width(120)
+      Text(value)
+        .fontSize(12)
+        .layoutWeight(1)
+    }
+    .width('100%')
+    .padding(10)
+    .backgroundColor('#F7F8FA')
+    .borderRadius(6)
+  }
+
+  build() {
+    SideBarContainer(SideBarContainerType.Overlay) {
+      this.Drawer()
+      Column() {
+        Row({ space: 10 }) {
+          Text('☰')
+            .fontSize(24)
+            .fontColor('#333333')
+            .padding(8)
+            .onClick(() => {
+              this.menuOpen = true;
+            })
+          Text(this.pageTitle())
+            .fontSize(14)
+            .fontColor('#666666')
+            .layoutWeight(1)
+        }
+        .width('100%')
+        .height(48)
+        .padding({ left: 8, right: 12 })
+        Column() {
+          this.PageHost()
+        }
+        .layoutWeight(1)
+        .width('100%')
+      }
+      .width('100%')
+      .height('100%')
+    }
+    .showSideBar(this.menuOpen)
+    .showControlButton(false)
+    .sideBarWidth(280)
+    .minSideBarWidth(240)
+    .maxSideBarWidth(320)
+    .onChange((value: boolean) => {
+      this.menuOpen = value;
+    })
     .width('100%')
     .height('100%')
   }
