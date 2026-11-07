@@ -59,12 +59,17 @@ anywhere except to the configured bridge.
 |---|---|---|---|
 | GET | `/health` | — | `{"ok":true}` |
 | POST | `/observe` | `{}` | `{"text","nodes":[{"ref","text","description","type","bounds","clickable"}],"width","height"}` |
+| POST | `/foreground` | `{}` | `{"bundle"}` (the bundle in front, or `""`) |
 | POST | `/screenshot` | `{}` | `{"mime":"image/jpeg","bytes":int,"image":"<base64>"}` |
 | POST | `/tap` | `{"x","y"}` | `{"ok":true}` |
 | POST | `/type` | `{"text","x"?,"y"?}` | `{"ok":true}` |
-| POST | `/launch` | `{"bundle","ability"?}` | `{"ok":true}` |
+| POST | `/launch` | `{"bundle","ability"?}` | `{"ok":true,"foreground":"<bundle>|''"}` |
 | POST | `/key` | `{"name"}` | `{"ok":true}` |
 | POST | `/swipe` | `{"from_x","from_y","to_x","to_y","velocity"?}` | `{"ok":true}` |
+
+`/launch` waits up to 6 s for the bundle to reach the foreground and reports it
+in `foreground`; an empty value means "the command was accepted but the app was
+not confirmed in front", which is not treated as a failure.
 
 `ref` values are stable only for one `/observe` response; the client resolves a
 ref to bounds from that response before tapping. The app shows the element list
@@ -83,6 +88,13 @@ to the model (`e1 Button "Web"`), and the model must target a `ref`.
 4. `run: start` -> continuous task started -> work -> `background: continuous
    task stopped` in hilog, so a run can outlive the switch to another app.
 
+On 2026-11-08 the full chain ran in one request with the fixed loop:
+`Open Settings and tap Network and internet.` logged `route: Settings score=8`,
+`run: done outcomes=2`, `ui.launch` (bridge) ok, then `ui.tap e8` ok. The
+post-tap observation was the Settings WLAN page (25 nodes, `VirtWifi`,
+`Available`). The bridge log showed `/launch`, `/observe`, `/tap`, `/observe`,
+so launch -> observe -> tap -> observe is verified on the emulator.
+
 ## Tests
 
 ```bash
@@ -95,7 +107,9 @@ The tests run a real HTTP server on an ephemeral port with a fake device.
 
 - Requires the PC, `hdc` and an unlocked device.
 - One device per bridge process.
-- No screenshot endpoint; the client uses text and bounds.
+- The model receives text and bounds, not the screenshot; the **Screens** page
+  shows the JPEG for a human.
+- `/observe` retries once on a transport error, both in the app and on the PC.
 - No wake/unlock; a locked screen fails the action.
 - `hdc` is flaky under load: `/observe` normally takes 1.5-2.3 s, but an `hdc`
   stall can take longer. The app's read timeout is 45 s.

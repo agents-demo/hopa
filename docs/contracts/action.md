@@ -48,7 +48,10 @@ screen. A model cannot clear, set or pre-approve a payment.
 
 - `ui.tap` and friends need a ref or a point.
 - `ui.type` needs text.
-- `ui.launch` and `ui.stop` need an app.
+- `ui.launch` needs an app. It uses the PC bridge when one is the preferred
+  backend (so it also works while HOPA is in the background), otherwise the
+  app's own UI context, which needs no accessibility service.
+- `ui.stop` needs an app.
 - `web.navigate` needs a URL.
 - `system.call`, `system.sendMessage`, `system.delete` and `sandbox.run` need
   text.

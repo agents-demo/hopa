@@ -83,6 +83,10 @@ lexical matcher used by `/decide`.
 { "entries": [ { "name": "settings", "display": "Settings", "bundle": "com.huawei.hmos.settings" } ] }
 ```
 
+The same lexical rules are ported to the shipped app in
+`apps/harmony/core/src/main/ets/router/AppRouter.ets` (`AppRouterTest`). The
+Kotlin service stays the reference used by the contract tests.
+
 ## PC harness integration
 
 The harness asks the brain for the **first** action, then delegates later steps to the model:

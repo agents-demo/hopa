@@ -19,7 +19,7 @@ app module supplies device control; HOPA must supply its own HarmonyOS layer.
 | 6 | Hold to talk (speech) | none | platform ASR or provider | yes |
 | 7 | Ask / Autonomous modes | both modes; autonomous skips non-payment approvals, payment is always fail-closed | — | yes |
 | 8 | Memory and preferences | explicit user memory, persisted, visible and deletable; "remember ..." requests are extracted automatically | learned memory + profile | yes |
-| 9 | Learns skills and app knowledge | explicit skills, draft from a successful run, uses/successes counters, 27-app/21-site catalogue; no automatic trial | drafter trial+scoring | yes |
+| 9 | Learns skills and app knowledge | explicit skills, draft from a successful run, uses/successes counters, 27-app/21-site catalogue with purpose + actions in the prompt and a deterministic lexical router; no automatic trial | drafter trial+scoring | yes |
 | 10 | Batch jobs | sequential batch runner in Tasks; verified on device (2 s, 409 tokens); stop between goals; no scheduling or parallelism | parallel/scheduled batches | yes |
 | 11 | Traceable runs | history, tokens measured on device, duration, per-run detail with approval and payment flags, export; no cost/trace file | cost + trace UI | yes |
 | 12 | Linux sandbox | isolated ArkWeb JavaScript sandbox (`about:blank`, verified: `1+1` -> `2`); Python/WASM not bundled; Linux out of scope | Python/WASM, limits | partial |
@@ -101,7 +101,8 @@ extension on device.
 | Measure | Value |
 |---|---|
 | User-visible capabilities usable | ~12.5 / 15 (~83%) |
-| Portable core ported | ~20% || Shared product surfaces (CLI/MCP, knowledge, records) | ~50% |
+| Portable core ported | ~20% |
+| Shared product surfaces (CLI/MCP, knowledge, records) | ~50% |
 | Device-control layer | replaced, not ported; on-device path blocked by the ACL, tethered path verified |
 
 The honest summary: **the skeleton and the safety gate are ahead of Mika; the
@@ -120,6 +121,12 @@ The PC-tethered path was verified the same day: the app connected to
 through `/observe`, the model chose a `ui.tap` on an element ref, the bridge
 executed `/tap`, and the loop re-observed the new screen before finishing. A
 continuous task kept the run alive while the app was in the background.
+
+On 2026-11-08 the full in-app chain was verified in one request:
+`Open Settings and tap Network and internet.` -> router chose Settings ->
+bridge `/launch` -> `/observe` -> `ui.tap e8` -> `/observe` showed the WLAN
+page. That is launch, observe, tap and verify inside another app on the
+emulator, with the PC attached.
 
 ### Ceiling on the Pura 90 emulator
 

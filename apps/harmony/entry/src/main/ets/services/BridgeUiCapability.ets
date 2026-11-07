@@ -8,6 +8,7 @@ import {
 } from '@hopa/core';
 import { AccessibilityBridge } from '@hopa/capability-accessibility';
 import { BridgeClient, BridgeNode } from './BridgeClient';
+import { LaunchError } from './LaunchError';
 /** Feeds the loop with the PC bridge's layout instead of the local screen. */
 export class BridgeScreenSource implements ScreenSource {
   private bridge: BridgeClient;
@@ -80,10 +81,20 @@ export class BridgeUiCapability implements ActionCapability {
 
   async execute(action: Action): Promise<Observation> {
     if (action.kind === 'ui.launch') {
-      const launched: boolean = await this.bridge.launch(action.app);
-      return launched
-        ? Observation.ok(`launched ${action.app} (PC bridge)`)
-        : Observation.fail('bridge launch failed');
+      const bundle: string = action.app.length > 0
+        ? action.app
+        : (action.target.startsWith('com.') ? action.target : '');
+      if (bundle.length === 0) {
+        return Observation.fail('ui.launch needs the app bundle in app');
+      }
+      const launched: boolean = await this.bridge.launch(bundle);
+      if (launched) {
+        const foreground: string = this.bridge.lastForeground();
+        return Observation.ok(foreground.length > 0
+          ? `launched ${bundle} (PC bridge, in front)`
+          : `launched ${bundle} (PC bridge, front not confirmed)`);
+      }
+      return Observation.fail(`bridge launch failed: ${LaunchError.describe(this.bridge.lastFailure())}`);
     }
 
     if (action.kind === 'ui.back') {

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import shlex
 import tempfile
 import time
@@ -42,6 +43,32 @@ class Device:
         from .apps import parse_installed_apps
 
         return parse_installed_apps(self.hdc.shell("bm dump -a"))
+
+    def foreground(self) -> str:
+        """The bundle of the foreground mission, or '' when it cannot be read.
+
+        ``aa dump -a`` prints the current mission first, then extension records.
+        Only the mission section is considered: a service extension can also say
+        ``state #FOREGROUND`` and would otherwise be mistaken for the app.
+        """
+        text = self.hdc.shell("aa dump -a", timeout=10)
+        start = text.find("current mission lists")
+        end = text.find("ExtensionRecords")
+        if start < 0:
+            section = text
+        elif end > start:
+            section = text[start:end]
+        else:
+            section = text[start:]
+        lines = section.splitlines()
+        for index, line in enumerate(lines):
+            if "state #FOREGROUND" not in line:
+                continue
+            for offset in range(index, max(-1, index - 8), -1):
+                match = re.search(r"bundle name \[([^\]]+)\]", lines[offset])
+                if match:
+                    return match.group(1)
+        return ""
 
     # -- observation ---------------------------------------------------------
 

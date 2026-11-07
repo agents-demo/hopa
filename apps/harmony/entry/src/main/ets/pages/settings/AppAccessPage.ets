@@ -15,10 +15,10 @@ export struct AppAccessPage {
 
   build() {
     Column({ space: 10 }) {
-      Text('Only verified bundles can be launched.')
+      Text('Verified bundles open from the Apps tab.')
         .fontSize(14)
         .fontWeight(FontWeight.Bold)
-      Text('Unverified and unconfirmed catalogue entries never launch a guessed bundle. This is the app access policy; there is no per-app toggle.')
+      Text('A confirmed bundle without a device check may still be tried by the agent. Unconfirmed catalogue entries never launch a guessed bundle. This is the app access policy; there is no per-app toggle.')
         .fontSize(12)
         .fontColor('#666666')
       List({ space: 6 }) {

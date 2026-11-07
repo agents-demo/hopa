@@ -43,6 +43,12 @@ A capability answers one question and does not call another capability:
 
 Cross-capability work happens in `entry`, which is the composition root.
 
+The bridge client (`BridgeClient` + `BridgeUiCapability`) stays in
+`entry/services` because it must know whether accessibility is the preferred
+backend, and a capability may not import another capability. When the bridge is
+preferred it also owns `ui.launch`: the PC can start an ability while HOPA is in
+the background. Without a bridge, the local `AppLauncher` launches.
+
 ## Entry is the only place that wires things
 
 `entry` owns the running app and is allowed to know every layer:

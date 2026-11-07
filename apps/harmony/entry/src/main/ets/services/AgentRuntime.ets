@@ -2,9 +2,11 @@ import {
   ActionExecutor,
   ActionOutcome,
   AgentLoop,
+  AppRouter,
   BatchItemResult,
   BatchRunner,
   ModelClient,
+  RouteMatch,
   Skill,
   SkillDraft,
   SkillDrafter
@@ -18,6 +20,7 @@ import { CompositeScreenSource } from './CompositeScreenSource';
 import { LoggingModelClient } from './LoggingModelClient';
 import { ModelFactory } from './ModelFactory';
 import { AppCatalogPrompt } from './AppCatalogPrompt';
+import { AppRouteTargets } from './AppRouteTargets';
 import { MemoryStore } from './MemoryStore';
 import { SkillStore } from './SkillStore';
 
@@ -174,6 +177,13 @@ export class AgentRuntime {
     this.loop.setMemory(this.memory.toPrompt());
     this.loop.setSkill(this.skills.toPrompt(goal));
     this.loop.setAppCatalog(AppCatalogPrompt.text());
+    const match: RouteMatch = AppRouter.route(goal, AppRouteTargets.all());
+    this.loop.setRoute(AppRouter.hint(match));
+    hilog.info(
+      0x0000,
+      'HOPA',
+      `route: ${match.target === undefined ? 'none' : match.target.display} score=${match.score}`
+    );
     this.loop.resetCancel();
     hilog.info(0x0000, 'HOPA', `run: start goal=${goal.length} chars`);
     if (this.bridge.isConfigured()) {
@@ -187,6 +197,15 @@ export class AgentRuntime {
     }
     await this.background.end();
     hilog.info(0x0000, 'HOPA', `run: done outcomes=${outcomes.length} tokens=${this.loop.getTokens()}`);
+    for (const outcome of outcomes) {
+      const target: string = outcome.action.app.length > 0
+        ? outcome.action.app
+        : outcome.action.target;
+      const state: string = outcome.executed
+        ? (outcome.observation.success ? 'ok' : 'failed')
+        : 'denied';
+      hilog.info(0x0000, 'HOPA', `action: ${outcome.action.kind} ${target} -> ${state}`);
+    }
     this.lastTokens = this.loop.getTokens();
     this.lastDurationMs = Date.now() - startedAt;
 

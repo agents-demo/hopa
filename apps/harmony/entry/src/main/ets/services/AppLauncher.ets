@@ -1,6 +1,8 @@
 import { common } from '@kit.AbilityKit';
+import { hilog } from '@kit.PerformanceAnalysisKit';
 import { UiLauncher } from '@hopa/capability-accessibility';
 import { APP_CATALOG, CatalogApp } from './AppCatalog';
+import { LaunchError } from './LaunchError';
 
 /**
  * Starts another app from the entry module's UI context.
@@ -27,9 +29,15 @@ export class AppLauncher implements UiLauncher {
   ]);
 
   private context: common.UIAbilityContext;
+  private lastError: string = '';
 
   constructor(context: common.UIAbilityContext) {
     this.context = context;
+  }
+
+  /** Why the last launch failed, for a message the user can act on. */
+  lastFailure(): string {
+    return this.lastError;
   }
 
   async launch(bundle: string, ability: string): Promise<boolean> {
@@ -67,15 +75,20 @@ export class AppLauncher implements UiLauncher {
     for (const name of candidates) {
       try {
         await this.context.startAbility({ bundleName: target, abilityName: name });
+        this.lastError = '';
         return true;
       } catch (error) {
-        // Try the next candidate.
+        this.lastError = LaunchError.describe(`${error}`);
+        hilog.warn(0x0000, 'HOPA', `launch ${target}/${name} failed: ${error}`);
       }
     }
     try {
       await this.context.startAbility({ bundleName: target });
+      this.lastError = '';
       return true;
     } catch (error) {
+      this.lastError = LaunchError.describe(`${error}`);
+      hilog.warn(0x0000, 'HOPA', `launch ${target} (bundle only) failed: ${error}`);
       return false;
     }
   }

@@ -93,10 +93,37 @@ name must be the ability whose skills include `entity.system.home`; check it wit
 
 ## The in-app catalogue
 
-`tools/scripts/build-app-catalog.py` reads every `APP.md` and generates
-`apps/harmony/entry/src/main/ets/services/AppCatalog.ets`, which the **Apps** tab shows.
-The generated file is committed, and `build-app-catalog.py --check` runs in CI
-and in `tools/scripts/run-tests`, so the app and the knowledge cannot drift.
+`tools/scripts/build-app-catalog.py` reads every `APP.md` and `SITE.md` and
+generates `apps/harmony/entry/src/main/ets/services/AppCatalog.ets`, which the
+**Apps** tab shows. The generated file is committed, and
+`build-app-catalog.py --check` runs in CI and in `tools/scripts/run-tests`, so
+the app and the knowledge cannot drift.
+
+The generator also copies, per app:
+
+| Field | Source |
+|---|---|
+| `purpose` | the first body bullet (or the first paragraph when there are none) |
+| `actions` | the next up to four bullets |
+| `aliases`, `bundle`, `ability` | front matter |
+
+Sites get `aliases` plus a `purpose` from their first paragraph. This is what
+lets the prompt say "Clock - Open Clock. The Alarm tab lists alarms." instead of
+only `com.huawei.hmos.clock`.
+
+## Prompt and router
+
+`AppCatalogPrompt` sends the model:
+
+- every app with a bundle: `Display: bundle - purpose | actions`;
+- every app without a bundle: `Display: no verified bundle - purpose`;
+- every site's first domain.
+
+`AppRouter` (pure ArkTS, `apps/harmony/core/src/main/ets/router/AppRouter.ets`)
+uses the same names, aliases, domains and bundles as whole-word terms. The
+longest match wins; a target that can actually be opened wins a tie. The loop
+receives the result as a `ROUTER SUGGESTION:` line in the system prompt, so a
+clear request starts in the right app or site even before the model reasons.
 
 ## Sites
 
@@ -114,7 +141,7 @@ platform: harmonyos
 ---
 ```
 
-`SiteLoader` validates every file; `SiteLoaderTest` loads all 18 and checks
+`SiteLoader` validates every file; `SiteLoaderTest` loads all 21 and checks
 that `byDomain` resolves `www.xiaohongshu.com`.
 
 ## Honest limits

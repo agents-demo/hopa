@@ -42,9 +42,13 @@ class FakeDevice:
     def __init__(self) -> None:
         self.calls: list[tuple] = []
         self.hdc = FakeHdc()
+        self.foreground_bundle = ""
 
     def devices(self) -> list[str]:
         return ["127.0.0.1:5555"]
+
+    def foreground(self) -> str:
+        return self.foreground_bundle
 
     def dump_layout(self, **_kwargs):
         return LAYOUT
@@ -57,6 +61,7 @@ class FakeDevice:
 
     def launch(self, bundle: str, ability: str = "") -> None:
         self.calls.append(("launch", bundle, ability))
+        self.foreground_bundle = bundle
 
     def press_key(self, name: str) -> None:
         self.calls.append(("key", name))
@@ -109,6 +114,14 @@ def test_observe_returns_nodes(bridge) -> None:
     wlan = next(node for node in result["nodes"] if node["text"] == "WLAN")
     assert wlan["ref"].startswith("e")
     assert wlan["clickable"] is True
+
+
+def test_launch_confirms_the_foreground_app(bridge) -> None:
+    server, device = bridge
+    result = _call(server, "/launch", {"bundle": "com.huawei.hmos.settings"})
+    assert result["ok"] is True
+    assert result["foreground"] == "com.huawei.hmos.settings"
+    assert _call(server, "/foreground", {})["bundle"] == "com.huawei.hmos.settings"
 
 
 def test_tap_and_type_and_launch(bridge) -> None:

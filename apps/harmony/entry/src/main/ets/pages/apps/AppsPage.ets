@@ -18,7 +18,7 @@ export struct AppsPage {
     const opened: boolean = await launcher.launch(bundle, ability);
     this.status = opened
       ? `opened ${bundle}`
-      : `could not open ${bundle}`;
+      : `could not open ${bundle}: ${launcher.lastFailure()}`;
   }
 
   @Builder
@@ -32,7 +32,7 @@ export struct AppsPage {
                 .fontSize(15)
                 .fontWeight(FontWeight.Bold)
                 .layoutWeight(1)
-              if (app.verified && app.ability.length > 0) {
+              if (app.bundle.length > 0) {
                 Button('Open')
                   .fontSize(12)
                   .height(28)
@@ -50,6 +50,12 @@ export struct AppsPage {
             Text(app.bundle.length > 0 ? app.bundle : 'no HarmonyOS bundle yet')
               .fontSize(12)
               .fontColor('#666666')
+            if (app.purpose.length > 0) {
+              Text(app.purpose)
+                .fontSize(11)
+                .fontColor('#8A8A8A')
+                .maxLines(2)
+            }
             if (app.aliases.length > 0) {
               Text(app.aliases.slice(0, 3).join(', '))
                 .fontSize(11)
@@ -130,7 +136,7 @@ export struct AppsPage {
       }
       .width('100%')
       Text(this.section === 0
-        ? 'Verified bundles can launch. Unverified and unconfirmed names never launch a guessed bundle.'
+        ? 'Verified bundles open here. Confirmed bundles without a device check may still be tried by the agent; unconfirmed names never launch a guessed bundle.'
         : 'Sites open in the built-in browser. Only https pages are allowed.')
         .fontSize(12)
         .fontColor('#666666')

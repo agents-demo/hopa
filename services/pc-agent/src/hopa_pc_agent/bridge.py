@@ -7,9 +7,10 @@ enabled. Every request needs a bearer token; the default bind is 127.0.0.1.
 Endpoints (JSON):
     GET  /health
     POST /observe              -> {"text": str, "nodes": [...], "width": int, "height": int}
+    POST /foreground           -> {"bundle": str}
     POST /tap                  {"x": int, "y": int}
     POST /type                 {"text": str, "x": int?, "y": int?}
-    POST /launch               {"bundle": str, "ability": str?}
+    POST /launch               {"bundle": str, "ability": str?} -> {"ok", "foreground"}
     POST /key                  {"name": str}
     POST /swipe                {"from_x", "from_y", "to_x", "to_y", "velocity"?}
     POST /screenshot           -> {"mime": "image/jpeg", "bytes": int, "image": "base64"}
@@ -70,6 +71,19 @@ def _observe(device: Device) -> dict[str, Any]:
         "height": height,
         "refs": refs,
     }
+
+
+def _wait_for_foreground(device: Device, bundle: str, timeout: float = 6.0) -> str:
+    """Poll the foreground bundle after a launch; '' when it cannot be confirmed."""
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        try:
+            if device.foreground() == bundle:
+                return bundle
+        except Exception:  # noqa: BLE001 - a slow hdc is not a launch failure
+            pass
+        time.sleep(0.5)
+    return ""
 
 
 def _screenshot(device: Device) -> dict[str, Any]:
@@ -143,7 +157,10 @@ class _Handler(BaseHTTPRequestHandler):
             return
         try:
             data = self._read_json()
-            result = self._dispatch(data)
+            # hdc/uitest is one device: serialise observe, taps and screenshots
+            # so two clients cannot interleave commands on the same device.
+            with self.bridge.lock:
+                result = self._dispatch(data)
         except BridgeError as exc:
             self._send(400, {"error": str(exc)})
             return
@@ -161,6 +178,8 @@ class _Handler(BaseHTTPRequestHandler):
             # The app only needs serialisable fields.
             observation.pop("refs", None)
             return observation
+        if self.path == "/foreground":
+            return {"bundle": device.foreground()}
         if self.path == "/tap":
             device.tap(int(data["x"]), int(data["y"]))
             return {"ok": True}
@@ -179,8 +198,9 @@ class _Handler(BaseHTTPRequestHandler):
             )
             return {"ok": True}
         if self.path == "/launch":
-            device.launch(str(data["bundle"]), ability=str(data.get("ability", "")))
-            return {"ok": True}
+            bundle = str(data["bundle"])
+            device.launch(bundle, ability=str(data.get("ability", "")))
+            return {"ok": True, "foreground": _wait_for_foreground(device, bundle)}
         if self.path == "/key":
             device.press_key(str(data["name"]))
             return {"ok": True}
@@ -209,6 +229,7 @@ class BridgeServer:
             raise BridgeError("a token is required")
         self.device = device
         self.token = token
+        self.lock = threading.Lock()
         self.httpd = ThreadingHTTPServer((host, port), _Handler)
         self.httpd.bridge = self  # type: ignore[attr-defined]
         self.thread: threading.Thread | None = None

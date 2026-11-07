@@ -1,4 +1,4 @@
-import { Action, ActionOutcome } from '../Types';
+import { Action, ActionOutcome, Observation } from '../Types';
 import { ActionExecutor } from '../gate/ActionExecutor';
 import { ModelClient, ModelMessage, ModelRequest, ModelResponse } from '../model/ModelClient';
 import { Screen, ScreenSource } from '../domain/Screen';
@@ -20,6 +20,7 @@ export class AgentLoop {
   private memory: string = '';
   private skill: string = '';
   private apps: string = '';
+  private route: string = '';
   private budget: ContextBudget = new ContextBudget();
   private tokensUsed: number = 0;
   private cancelled: boolean = false;
@@ -51,6 +52,11 @@ export class AgentLoop {
     this.apps = apps;
   }
 
+  /** The deterministic router's suggestion for this goal, or ''. */
+  setRoute(route: string): void {
+    this.route = route;
+  }
+
   /** Total tokens reported by the model during the last run. */
   getTokens(): number {
     return this.tokensUsed;
@@ -80,11 +86,20 @@ export class AgentLoop {
 
   async run(goal: string): Promise<ActionOutcome[]> {
     const outcomes: ActionOutcome[] = [];
+    const launched: string[] = [];
     this.tokensUsed = 0;
     this.cancelled = false;
     this.answer = '';
     let screen: Screen = await this.capture();
-    const systemText: string = PromptBuilder.systemPrompt(this.memory, this.skill, this.apps, this.surfaceAvailable);
+    let systemText: string = PromptBuilder.systemPrompt(
+      this.memory,
+      this.skill,
+      this.apps,
+      this.surfaceAvailable
+    );
+    if (this.route.length > 0) {
+      systemText = `${systemText}\n\n${this.route}`;
+    }
     const messages: ModelMessage[] = [
       new ModelMessage('system', systemText),
       new ModelMessage('user', `${goal}\n\nSCREEN:\n${PromptBuilder.screenText(screen)}`)
@@ -118,8 +133,36 @@ export class AgentLoop {
         break;
       }
 
+      const launch: string = AgentLoop.launchBundle(action);
+      if (launch.length > 0 && launched.indexOf(launch) >= 0) {
+        // HarmonyOS refuses a UIAbility start from the background, so a second
+        // launch of the same app cannot succeed. Keep the first result and let
+        // the model work with the screen it already has.
+        const repeated: ActionOutcome = new ActionOutcome(
+          action,
+          Observation.ok(`already launched ${launch} in this run`)
+        );
+        repeated.executed = true;
+        repeated.approved = true;
+        repeated.verified = true;
+        outcomes.push(repeated);
+        messages.push(new ModelMessage('assistant', response.text));
+        messages.push(
+          new ModelMessage(
+            'user',
+            `Observation: ${repeated.observation.summary}\n` +
+              'Do not launch the same app twice; use the ELEMENTS to act.\n' +
+              `SCREEN:\n${PromptBuilder.screenText(screen)}`
+          )
+        );
+        continue;
+      }
+
       const outcome: ActionOutcome = await this.executor.execute(action, screen);
       outcomes.push(outcome);
+      if (launch.length > 0 && outcome.executed && outcome.observation.success) {
+        launched.push(launch);
+      }
 
       messages.push(new ModelMessage('assistant', response.text));
       screen = await this.capture();
@@ -147,6 +190,15 @@ export class AgentLoop {
       return new Screen();
     }
     return this.source.capture();
+  }
+
+  /** The lower-case bundle a launch action asks for, or '' for other actions. */
+  private static launchBundle(action: Action): string {
+    if (action.kind !== 'ui.launch') {
+      return '';
+    }
+    const raw: string = action.app.length > 0 ? action.app : action.target;
+    return raw.trim().toLowerCase();
   }
 
 }

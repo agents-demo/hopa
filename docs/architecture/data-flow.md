@@ -24,7 +24,7 @@ Screen ◀── ScreenSource        ActionExecutor (gate)
 | Step | File | What it does |
 |---|---|---|
 | 1. capture | `entry/services/CompositeScreenSource.ets` | PC bridge, else accessibility, else browser text; returns a `Screen` |
-| 2. prompt | `core/agent/PromptBuilder.ets` | system rules + memory + skill + known apps + screen text and element refs |
+| 2. prompt | `core/agent/PromptBuilder.ets` | system rules + memory + skill + deterministic router suggestion + known apps/sites + screen text and element refs |
 | 3. model | `capabilities/llm/*` behind `core/model/ModelClient.ets` | one request, one `ModelResponse` |
 | 4. parse | `core/agent/ActionParser.ets` | JSON to `Action`; plain text is a final answer |
 | 5. gate | `core/gate/ActionExecutor.ets` | guards, then `ApprovalPolicy` (payment always asks), then the owning capability |
@@ -46,7 +46,7 @@ Action ─▶ ApprovalPolicy.classify ─▶ Payment? ─ yes ─▶ ApprovalGat
                                                                             └─ no ─▶ ask
 ```
 
-The UI installs the prompt handler in `entry/pages/Index.ets`; until it does,
+The UI installs the prompt handler in `entry/pages/chat/ChatPage.ets`; until it does,
 `UiApprovalGateway` denies everything. A denied action still produces a
 `RunRecord` with status `denied`.
 

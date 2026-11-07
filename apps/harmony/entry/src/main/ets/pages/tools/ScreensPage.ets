@@ -20,9 +20,12 @@ export struct ScreensPage {
     if (this.timer >= 0) {
       return;
     }
-    this.refresh();
-    this.timer = setInterval(() => {
-      if (this.liveView) {
+    if (!AgentService.get().isBusy()) {
+      this.refresh();
+    }
+    this.timer = setInterval(() => {      // A live frame is nice, but the agent needs hdc more: do not compete
+      // with an observe/tap while a run is in progress.
+      if (this.liveView && !AgentService.get().isBusy()) {
         this.refresh();
       }
     }, 3000);

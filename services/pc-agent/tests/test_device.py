@@ -24,6 +24,50 @@ class FakeHdc:
         return ["fake-device"]
 
 
+def test_foreground_reads_the_top_mission() -> None:
+    class ForegroundHdc(FakeHdc):
+        def shell(self, command: str, *, check: bool = True, timeout: float | None = None) -> str:
+            self.calls.append(command)
+            return (
+                "User ID #100\n"
+                "  current mission lists:{\n"
+                "    Mission ID #30  mission name #[#com.hopa.agent:entry:EntryAbility]\n"
+                "      AbilityRecord ID #40\n"
+                "        app name [com.hopa.agent]\n"
+                "        main name [EntryAbility]\n"
+                "        bundle name [com.hopa.agent]\n"
+                "        ability type [PAGE]\n"
+                "        state #FOREGROUND  start time [533619]\n"
+                "  }\n"
+                "  ExtensionRecords:\n"
+                "    uri [/com.ohos.medialibrary/entry/DataShareExtAbility]\n"
+                "      bundle name [com.ohos.medialibrary]\n"
+                "      state #FOREGROUND\n"
+            )
+
+    hdc = ForegroundHdc()
+    assert Device(hdc=hdc).foreground() == "com.hopa.agent"
+    assert hdc.calls == ["aa dump -a"]
+
+
+def test_foreground_ignores_a_foreground_extension() -> None:
+    class ExtensionOnlyHdc(FakeHdc):
+        def shell(self, command: str, *, check: bool = True, timeout: float | None = None) -> str:
+            self.calls.append(command)
+            return (
+                "  current mission lists:{\n"
+                "    Mission ID #30\n"
+                "      bundle name [com.hopa.agent]\n"
+                "      state #BACKGROUND\n"
+                "  }\n"
+                "  ExtensionRecords:\n"
+                "    bundle name [com.ohos.medialibrary]\n"
+                "    state #FOREGROUND\n"
+            )
+
+    assert Device(hdc=ExtensionOnlyHdc()).foreground() == ""  # type: ignore[arg-type]
+
+
 def test_tap() -> None:
     hdc = FakeHdc()
     Device(hdc=hdc).tap(10, 20)  # type: ignore[arg-type]

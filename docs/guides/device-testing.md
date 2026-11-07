@@ -31,8 +31,8 @@ profiles, not the OpenHarmony test CA.
   `performAction`, `ui.type` with `performAction('setText')`, `ui.doubleTap`
   as two clicks, `ui.swipe` and `ui.scroll` with `injectGesture`, `ui.back` and
   `ui.home` as edge/bottom gestures, and `ui.launch` through the entry app's
-  `startAbility` (launch does **not** need the accessibility service). Every
-  other call returns a typed failure until the bridge is attached.
+  `startAbility` when no PC bridge is preferred. Every other call returns a
+  typed failure until the bridge is attached.
 
 The app side of on-device control is therefore code-complete:
 `ui.launch`, `ui.tap`, `ui.doubleTap`, `ui.type`, `ui.swipe`, `ui.scroll`,
@@ -42,11 +42,11 @@ The only missing step on the emulator is enabling the service in Settings.
 ### Backend selection
 
 `AccessibilityBridge.setRemotePreferred(true)` is set when a PC bridge is configured.
-In that state the on-device capability declines every action except
-`ui.launch`, so the refs produced by the bridge are always executed by the
-bridge. This matters because the service can report `connected` even when the
-user has not enabled it, and capture in that state can hang; the local capture
-is also raced against a 4 s guard.
+In that state the on-device capability declines every action, including
+`ui.launch`; the bridge owns the actions (and can start an app while HOPA is in
+the background). This matters because the service can report `connected` even
+when the user has not enabled it, and capture in that state can hang; the local
+capture is also raced against a 4 s guard.
 
 What the bridge reads from each node:
 

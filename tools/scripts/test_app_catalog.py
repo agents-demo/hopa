@@ -66,12 +66,29 @@ def test_unconfirmed_apps_have_no_bundle() -> None:
 
 def test_render_emits_both_catalogues() -> None:
     module = _module()
-    output = module.render(module.collect(), module.collect_sites())
+    apps = module.collect()
+    sites = module.collect_sites()
+    output = module.render(apps, sites)
     assert "export const APP_CATALOG" in output
     assert "export const SITE_CATALOG" in output
     assert "verified: true" in output
     assert "verified: false" in output
-    assert "https" not in output  # no URLs leaked into the generated file
+    # A bundle or a site domain is an identifier, never a URL. Prose in the
+    # purpose/actions may mention an https fallback on purpose.
+    assert all("://" not in app["bundle"] for app in apps)
+    assert all("://" not in domain for site in sites for domain in site["domains"])
+
+
+def test_entries_carry_purpose_and_actions() -> None:
+    module = _module()
+    apps = module.collect()
+    assert all(app["purpose"] for app in apps)
+    clock = next(app for app in apps if app["name"] == "clock")
+    assert "alarm" in clock["purpose"].lower()
+    assert clock["actions"]
+    sites = module.collect_sites()
+    assert all(site["domains"] for site in sites)
+    assert any(site["aliases"] for site in sites)
 
 
 def test_committed_file_is_current() -> None:

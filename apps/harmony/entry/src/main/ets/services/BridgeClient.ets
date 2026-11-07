@@ -21,6 +21,11 @@ class BridgeOkBody {
   ok: boolean = false;
 }
 
+class BridgeLaunchBody {
+  ok: boolean = false;
+  foreground: string = '';
+}
+
 class ScreenshotBody {
   image: string = '';
   mime: string = 'image/jpeg';
@@ -41,6 +46,7 @@ export class BridgeClient {
   private width: number = 0;
   private height: number = 0;
   private lastError: string = '';
+  private foreground: string = '';
 
   configure(url: string, token: string): void {
     let clean: string = url.trim();
@@ -82,7 +88,8 @@ export class BridgeClient {
       };
       const response = await client.request(`${this.baseUrl}${path}`, options);
       if (response.responseCode !== 200) {
-        throw new Error(`bridge HTTP ${response.responseCode}`);
+        const body: string = buffer.from(response.result as ArrayBuffer).toString('utf8');
+        throw new Error(`bridge HTTP ${response.responseCode}: ${body}`);
       }
       return buffer.from(response.result as ArrayBuffer).toString('utf8');
     } finally {
@@ -107,7 +114,8 @@ export class BridgeClient {
       };
       const response = await client.request(`${this.baseUrl}${path}`, options);
       if (response.responseCode !== 200) {
-        throw new Error(`bridge HTTP ${response.responseCode}`);
+        const body: string = buffer.from(response.result as ArrayBuffer).toString('utf8');
+        throw new Error(`bridge HTTP ${response.responseCode}: ${body}`);
       }
       return buffer.from(response.result as ArrayBuffer).toString('utf8');
     } finally {
@@ -128,17 +136,21 @@ export class BridgeClient {
   }
 
   async observe(): Promise<boolean> {
-    try {
-      const raw: string = await this.call('/observe', '{}');
-      const parsed = JSON.parse(raw) as BridgeObservationBody;
-      this.lastText = parsed.text;
-      this.lastNodes = parsed.nodes;
-      this.width = parsed.width;
-      this.height = parsed.height;
-      return true;
-    } catch (error) {
-      return false;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const raw: string = await this.call('/observe', '{}');
+        const parsed = JSON.parse(raw) as BridgeObservationBody;
+        this.lastText = parsed.text;
+        this.lastNodes = parsed.nodes;
+        this.width = parsed.width;
+        this.height = parsed.height;
+        this.lastError = '';
+        return true;
+      } catch (error) {
+        this.lastError = `${(error as Error).message}`;
+      }
     }
+    return false;
   }
 
   boundsFor(ref: string): number[] {
@@ -182,11 +194,20 @@ export class BridgeClient {
 
   async launch(bundle: string): Promise<boolean> {
     try {
-      await this.call('/launch', JSON.stringify({ bundle: bundle }));
-      return true;
+      const raw: string = await this.call('/launch', JSON.stringify({ bundle: bundle }));
+      const parsed = JSON.parse(raw) as BridgeLaunchBody;
+      this.foreground = parsed.foreground;
+      this.lastError = parsed.ok ? '' : 'bridge launch was not ok';
+      return parsed.ok;
     } catch (error) {
+      this.lastError = `${(error as Error).message}`;
       return false;
     }
+  }
+
+  /** The bundle the bridge confirmed in front after the last launch, or ''. */
+  lastForeground(): string {
+    return this.foreground;
   }
 
   async key(name: string): Promise<boolean> {

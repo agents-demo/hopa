@@ -4,6 +4,8 @@ import { AccessibilityBridge } from './AccessibilityBridge';
 /** Starts another app; implemented by the entry module with a UI context. */
 export interface UiLauncher {
   launch(bundle: string, ability: string): Promise<boolean>;
+  /** The last failure, for a message the user can act on. */
+  lastFailure(): string;
 }
 
 /**
@@ -22,9 +24,11 @@ export class UiActionCapability implements ActionCapability {
   }
 
   canHandle(kind: string): boolean {
-    // Launching uses the app's own context, so it never needs the service.
+    // Launching uses the app's own context, so it never needs the service. When
+    // the PC bridge is the preferred backend it owns the launch instead: the PC
+    // can start an app even while HOPA is in the background.
     if (kind === 'ui.launch') {
-      return true;
+      return !AccessibilityBridge.get().isBridgePreferred();
     }
     if (AccessibilityBridge.get().isBridgePreferred()) {
       // The PC bridge owns the screen refs, so it must own the actions too.
@@ -56,9 +60,13 @@ export class UiActionCapability implements ActionCapability {
         return Observation.fail('ui.launch needs the app bundle in app');
       }
       const launched: boolean = await this.launcher.launch(bundle, '');
-      return launched
-        ? Observation.ok(`launched ${bundle}`)
-        : Observation.fail(`could not launch ${bundle}`);
+      if (launched) {
+        return Observation.ok(`launched ${bundle}`);
+      }
+      const reason: string = this.launcher.lastFailure();
+      return Observation.fail(
+        reason.length > 0 ? `could not launch ${bundle}: ${reason}` : `could not launch ${bundle}`
+      );
     }
 
     const bridge = AccessibilityBridge.get();

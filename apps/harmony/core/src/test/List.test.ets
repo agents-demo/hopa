@@ -10,6 +10,7 @@ import memoryExtractorTest from './MemoryExtractor.test';
 import screenTest from './Screen.test';
 import schedulesTest from './Schedules.test';
 import chatHistoryTest from './ChatHistory.test';
+import appRouterTest from './AppRouter.test';
 
 export default function testsuite(): void {
   approvalPolicyTest();
@@ -24,4 +25,5 @@ export default function testsuite(): void {
   screenTest();
   schedulesTest();
   chatHistoryTest();
+  appRouterTest();
 }

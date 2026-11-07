@@ -99,6 +99,25 @@ class FixedSource implements ScreenSource {
   }
 }
 
+/** A model that never cancels, so a test can follow three steps. */
+class PlainQueueModel implements ModelClient {
+  private replies: string[];
+  private position: number = 0;
+
+  constructor(replies: string[]) {
+    this.replies = replies;
+  }
+
+  async complete(request: ModelRequest): Promise<ModelResponse> {
+    const response = new ModelResponse();
+    const index: number = Math.min(this.position, this.replies.length - 1);
+    response.text = this.replies[index];
+    response.tokens = request.messages.length;
+    this.position++;
+    return response;
+  }
+}
+
 export default function agentLoopTest(): void {
   describe('AgentLoop', () => {
     it('feeds_screen_and_stops_on_denied_payment', 0, async (done: Function) => {
@@ -195,6 +214,53 @@ export default function agentLoopTest(): void {
       if (parsed !== undefined) {
         expect(parsed.app).assertEqual('com.huawei.hmos.settings');
       }
+      done();
+    });
+
+    it('launches_the_same_app_only_once_per_run', 0, async (done: Function) => {
+      const capability = new RecordingCapability();
+      const executor = new ActionExecutor(
+        new ApprovalPolicy(),
+        new FixedApproval(true),
+        new MemoryRecorder()
+      );
+      executor.registerCapability(capability);
+      const model = new PlainQueueModel([
+        '{"kind":"ui.launch","app":"com.huawei.hmos.settings"}',
+        '{"kind":"ui.launch","app":"com.huawei.hmos.settings"}',
+        'Settings is open.'
+      ]);
+      const loop = new AgentLoop(executor, model, 5, new FixedSource(new Screen('Chat')));
+
+      const outcomes = await loop.run('open settings');
+
+      expect(capability.executions).assertEqual(1);
+      expect(outcomes.length).assertEqual(2);
+      expect(outcomes[0].observation.success).assertTrue();
+      expect(outcomes[1].observation.success).assertTrue();
+      expect(outcomes[1].observation.summary.includes('already launched')).assertTrue();
+      done();
+    });
+
+    it('still_launches_a_different_app', 0, async (done: Function) => {
+      const capability = new RecordingCapability();
+      const executor = new ActionExecutor(
+        new ApprovalPolicy(),
+        new FixedApproval(true),
+        new MemoryRecorder()
+      );
+      executor.registerCapability(capability);
+      const model = new PlainQueueModel([
+        '{"kind":"ui.launch","app":"com.huawei.hmos.settings"}',
+        '{"kind":"ui.launch","app":"com.huawei.hmos.calendar"}',
+        'Both are open.'
+      ]);
+      const loop = new AgentLoop(executor, model, 5, new FixedSource(new Screen('Chat')));
+
+      const outcomes = await loop.run('open settings then calendar');
+
+      expect(capability.executions).assertEqual(2);
+      expect(outcomes.length).assertEqual(2);
       done();
     });
 

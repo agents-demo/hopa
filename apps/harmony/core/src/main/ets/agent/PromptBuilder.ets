@@ -13,6 +13,7 @@ export class PromptBuilder {
       '{"kind":"web.read","target":"","text":"","url":""}. ' +
       'The key is "kind", never "action". ' +
       'To open another app use {"kind":"ui.launch","app":"<bundle>"}. ' +
+      'A successful ui.launch already brings the app to the front; never launch the same app twice in one task. ' +
       'To tap a phone control use {"kind":"ui.tap","target":"<ref>"}; to type, ' +
       '{"kind":"ui.type","target":"<ref>","text":"..."}. ' +
       'On a phone screen use element refs from ELEMENTS. Never invent coordinates. ' +
@@ -28,7 +29,9 @@ export class PromptBuilder {
       text = `${text}\n\n${skill}`;
     }
     if (apps.length > 0) {
-      text = `${text}\n\nKNOWN APPS (use the bundle exactly; never an Android name):\n${apps}`;
+      text = `${text}\n\nKNOWN APPS AND SITES (use the bundle exactly; a line with ` +
+        `"no verified bundle" must not be launched; never use an Android name). ` +
+        `For a site, open it with web.navigate in the built-in browser:\n${apps}`;
     }
     if (!surfaceAvailable) {
       text = `${text}\n\nNo screen is available. Answer with text only and do not ` +
