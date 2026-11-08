@@ -12,5 +12,6 @@ paths = [
   '''bench/tasks/.*'''
 ]
 regexes = [
-  '''harmony-clt-[0-9A-Za-z.\-]+'''
+  '''harmony-clt-[0-9A-Za-z.\-]+''',
+  '''key: gitleaks-v[0-9.]+'''
 ]
