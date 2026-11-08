@@ -15,10 +15,12 @@ export struct HopaMark {
   @State blink: boolean = false;
   @State cheer: boolean = false;
   @State bob: boolean = false;
+  @State waveStep: number = 0;
   private timer: number = -1;
   private blinkTimer: number = -1;
   private cheerTimer: number = -1;
   private bobTimer: number = -1;
+  private waveTimer: number = -1;
 
   aboutToAppear(): void {
     if (!this.animate) {
@@ -57,6 +59,33 @@ export struct HopaMark {
       clearInterval(this.bobTimer);
       this.bobTimer = -1;
     }
+    if (this.waveTimer >= 0) {
+      clearInterval(this.waveTimer);
+      this.waveTimer = -1;
+    }
+  }
+
+  private armAngle(): number {
+    if (this.waveStep === 0) {
+      return 45;
+    }
+    return this.waveStep % 2 === 1 ? 65 : 25;
+  }
+
+  private wave(): void {
+    if (this.waveTimer >= 0) {
+      clearInterval(this.waveTimer);
+    }
+    this.waveStep = 1;
+    this.waveTimer = setInterval(() => {
+      if (this.waveStep >= 7) {
+        clearInterval(this.waveTimer);
+        this.waveTimer = -1;
+        this.waveStep = 0;
+      } else {
+        this.waveStep += 1;
+      }
+    }, 180);
   }
 
   private label(): string {
@@ -77,10 +106,20 @@ export struct HopaMark {
 
   build() {
     Stack({ alignContent: Alignment.Center }) {
-      Image($r('app.media.hopa_mascot'))
+      Image($r('app.media.hopa_body'))
         .width('100%')
         .height('100%')
         .objectFit(ImageFit.Contain)
+
+      // The arm is a separate layer so it can wave on tap.
+      Column()
+        .width(this.markSize * 0.062)
+        .height(this.markSize * 0.20)
+        .borderRadius(this.markSize * 0.031)
+        .backgroundColor($r('app.color.accent'))
+        .position({ x: this.markSize * 0.713, y: this.markSize * 0.281 })
+        .rotate({ angle: this.armAngle() })
+        .animation({ duration: 110, curve: Curve.EaseInOut })
 
       // Closed eyelids: the same cream as the screen face in the SVG.
       Column()
@@ -114,6 +153,7 @@ export struct HopaMark {
     .animation({ duration: 900, curve: Curve.EaseInOut })
     .onClick(() => {
       Haptics.tap();
+      this.wave();
       this.cheer = true;
       if (this.cheerTimer >= 0) {
         clearTimeout(this.cheerTimer);
