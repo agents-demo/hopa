@@ -20,6 +20,9 @@ scrolls — then tells you what happened.
 
 Before money moves, it stops and asks. Every time.
 
+HOPA has three places: **Chat** to ask, **Activity** to see what it did, and
+**Capabilities** to see and set up what it can use.
+
 > **Today:** a working prototype. Chat, the browser and website tasks are real.
 > On this emulator, app control uses a small PC companion; a real phone with the
 > accessibility service does not need it.
@@ -37,30 +40,29 @@ Before money moves, it stops and asks. Every time.
 <tr>
 <td width="33%" align="center" valign="top">
 
-<img src="docs/media/chat.jpeg" alt="Real chat: HOPA lists the two hottest Bilibili videos in Chinese" height="560" />
+<img src="docs/media/chat.jpeg" alt="Real chat: HOPA answers in Chinese about the hottest Bilibili videos" height="560" />
 
-<br/><sub><b>Real: the answer.</b> The two hottest videos, in Chinese: 《近十几年的梗都在这里了》 (3.27M views) and 《“你土木的不会抽烟？？废物”》 (1.76M views).</sub>
-
-</td>
-<td width="33%" align="center" valign="top">
-
-<img src="docs/media/bilibili-page.jpeg" alt="Real Bilibili page with video thumbnails and view counts" height="560" />
-
-<br/><sub><b>Real: what it read.</b> The Bilibili page, with video cards and view counts, inside the compact browser.</sub>
+<br/><sub><b>Real: the answer.</b> Asked for the hottest Bilibili videos, HOPA opened the page, read it, and answered in Chinese with titles and view counts.</sub>
 
 </td>
 <td width="33%" align="center" valign="top">
 
-<img src="docs/media/chat-example.svg" alt="Designed example: a WeChat message task with the approval dialog" height="560" />
+<img src="docs/media/capabilities.jpeg" alt="Real Capabilities screen: model, phone control, apps, browser, memory, screens" height="560" />
 
-<br/><sub><b>Designed: the app side.</b> HOPA found Alice, drafted the message and stopped for approval. WeChat is not installed on the test emulator.</sub>
+<br/><sub><b>Real: what it can use.</b> The model, the working phone control path, and the apps, browser, memory and screen tools on one screen.</sub>
+
+</td>
+<td width="33%" align="center" valign="top">
+
+<img src="docs/media/activity.jpeg" alt="Real Activity screen: recent actions, runs and scheduled plans" height="560" />
+
+<br/><sub><b>Real: what it did.</b> Recent actions with their status, the full run history behind them, and scheduled plans.</sub>
 
 </td>
 </tr>
 </table>
 
-The first two are real screenshots from the emulator. The WeChat image is a
-designed example of the app flow; the label says so.
+All three are real screenshots from the emulator.
 
 When HOPA reads a page, the chat keeps a link to that page; **Open** takes you
 back to it without retyping the address.
@@ -89,16 +91,16 @@ It also remembers facts and skills you choose to keep.
 <tr>
 <td width="50%" align="center" valign="top">
 
-<img src="docs/media/apps.jpeg" alt="HOPA app catalogue with Chinese apps" height="560" />
+<img src="docs/media/apps.jpeg" alt="HOPA app catalogue with verified HarmonyOS bundles" height="560" />
 
-<br/><sub><b>Real: the app catalogue.</b> WeChat, Weibo, Xiaohongshu, Zhihu and more; where a HarmonyOS bundle is missing, HOPA says so. The top of the same tab lists 12 apps with a known bundle, 7 of them verified on a device.</sub>
+<br/><sub><b>Real: the app catalogue.</b> 27 apps and 21 sites. Green rows are bundles verified on a device; where a HarmonyOS bundle is missing, HOPA says so instead of guessing.</sub>
 
 </td>
 <td width="50%" align="center" valign="top">
 
-<img src="docs/media/sites.jpeg" alt="HOPA site catalogue with Bilibili, Xiaohongshu and Weibo" height="560" />
+<img src="docs/media/sites.jpeg" alt="HOPA site catalogue with Amazon, BOSS, Gmail and Uber" height="560" />
 
-<br/><sub><b>Real: the site catalogue.</b> Bilibili, Xiaohongshu, Weibo and more open in the browser HOPA opens for you.</sub>
+<br/><sub><b>Real: the site catalogue.</b> Amazon, BOSS, Gmail, Uber and more open in the browser HOPA opens for you.</sub>
 
 </td>
 </tr>
@@ -110,6 +112,8 @@ It also remembers facts and skills you choose to keep.
   “Send Alice a message.” “Find a charger under $30.”
 - **It uses your apps, not a new ecosystem.** It reads the screen and works the
   app or site you already have.
+- **It shows its work.** Every action lands in **Activity**, with the full run
+  detail behind it.
 - **It stops for money.** Every payment waits for your yes — every time, in
   every mode.
 - **Your key, your data.** There is no HOPA account and no hosted backend. Your
@@ -125,13 +129,13 @@ Today the app is built and signed from source. The two commands live in the
 [developer corner](#for-developers).
 
 **2. Connect a model.**
-Open **Settings**, pick a provider (OpenAI-compatible, Anthropic, Gemini or
-DeepSeek), then enter the endpoint, the model name and your key. The key stays
-in memory; it is not saved to preferences.
+Open **Capabilities** and tap the gear, then pick a provider (OpenAI-compatible,
+Anthropic, Gemini or DeepSeek), enter the endpoint, the model name and your key.
+The key stays in memory; it is not saved to preferences.
 
 **3. Give it hands.**
 On a real phone, enable the built-in screen control. On this emulator, start
-the small PC companion and connect it in **Settings → PC bridge**.
+the small PC companion and connect it in the gear → **Settings → PC bridge**.
 
 Why a companion? On a real phone, the system has a built-in way to let an
 assistant see and tap. This emulator does not have that switch. The companion
