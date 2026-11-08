@@ -60,5 +60,8 @@ export class PageLinkService {
         }
       }
     }
+    if (this.lastTitle.length === 0 && browser.isReady()) {
+      this.lastTitle = browser.currentTitle().trim();
+    }
   }
 }

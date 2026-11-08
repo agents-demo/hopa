@@ -54,6 +54,17 @@ export class BrowserController implements WebController {
     return this.controller.getUrl();
   }
 
+  currentTitle(): string {
+    if (this.controller === undefined) {
+      return '';
+    }
+    try {
+      return this.controller.getTitle();
+    } catch (error) {
+      return '';
+    }
+  }
+
   async navigate(url: string): Promise<void> {
     if (!url.startsWith('https://')) {
       throw new Error('only https URLs are allowed');
