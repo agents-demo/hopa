@@ -1,5 +1,4 @@
 import { AgentService } from '../../services/AgentService';
-import { APP_CATALOG } from '../../services/AppCatalog';
 import { HopaMark } from '../chat/HopaMark';
 
 /** Capabilities: what HOPA can use on this phone and what powers it. */
@@ -122,7 +121,7 @@ export struct CapabilitiesPage {
         })
         this.Section('WHAT HOPA CAN USE')
         Row({ space: 8 }) {
-          this.Tile('Apps', `${APP_CATALOG.length} apps to open`, 'apps')
+          this.Tile('Launchpad', 'Apps and sites to open', 'apps')
           this.Tile('Browser', 'Read, click and type', 'browser')
         }
         .width('100%')

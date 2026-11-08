@@ -1,16 +1,18 @@
 ---
+
 name: wechat
 display: WeChat
-bundle: UNCONFIRMED
+bundle: com.tencent.wechat
 aliases: [WeChat, 微信, weixin, wechat]
 pace: careful
-validated: pending
+validated: verified
 platform: harmonyos
+ability: EntryAbility
+bundle_verified: Mate 80, 2026-11-08
 ---
 # WeChat
 
-Android package: `com.tencent.mm`. A HarmonyOS build exists, but its bundle
-has not been confirmed on a device yet, so HOPA does not launch it by bundle.
+HarmonyOS bundle: `com.tencent.wechat` (verified on a Mate 80).
 
 - Chats, contacts, search, Moments, Pay, mini programs.
 - Sending a message is public and effectively irreversible: show recipient and

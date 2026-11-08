@@ -1,6 +1,6 @@
 ﻿<div align="center">
 
-<img src="docs/media/banner.svg" alt="HOPA — Say it. HOPA does it." width="100%" />
+<img src="docs/media/banner-2026.svg" alt="HOPA - Say it. HOPA does it." width="100%" />
 
 <br/><br/>
 
@@ -14,7 +14,7 @@
 
 **You have better things to do than tap through menus.**
 
-<sub>HOPA — the hands-off phone assistant.</sub>
+<sub>HOPA — the hands-off phone agent.</sub>
 
 HOPA is a phone agent for HarmonyOS. Say what you want in your own words. It
 opens the app or the website, reads the screen, taps, types and scrolls — then
@@ -59,23 +59,23 @@ In Chinese, the idea is simple: **动口不动手** — speak, don’t tap.
 <tr>
 <td width="33%" align="center" valign="top">
 
-<img src="docs/media/empty.jpeg" alt="HOPA home: the living phone mark and three example asks" height="560" />
+<img src="docs/media/home-2026.jpeg" alt="HOPA home: the smiling living-phone mascot and three example asks" height="560" />
 
-<br/><sub><b>Home.</b> One sentence, three gentle suggestions, and no menus to learn.</sub>
-
-</td>
-<td width="33%" align="center" valign="top">
-
-<img src="docs/media/chat.jpeg" alt="HOPA chat with an answer, Copy and Retry under the prompt" height="560" />
-
-<br/><sub><b>Chat.</b> Copy and Retry sit under the prompt; Copy under the answer. The mascot stays beside every reply.</sub>
+<br/><sub><b>Home.</b> One sentence, three gentle suggestions, and a mascot that smiles back.</sub>
 
 </td>
 <td width="33%" align="center" valign="top">
 
-<img src="docs/media/capabilities.jpeg" alt="HOPA Capabilities: model, phone control, apps, browser, memory and usage" height="560" />
+<img src="docs/media/chat-bilibili-2026.jpeg" alt="HOPA chat: the most popular Bilibili videos with play counts" height="560" />
 
-<br/><sub><b>Capabilities.</b> What HOPA can use, what it has done, and what is ready right now.</sub>
+<br/><sub><b>Bilibili.</b> HOPA reads the feed and answers with the most popular videos, play counts and comments.</sub>
+
+</td>
+<td width="33%" align="center" valign="top">
+
+<img src="docs/media/chat-weibo-2026.jpeg" alt="HOPA chat: a Weibo post confirmation before publishing" height="560" />
+
+<br/><sub><b>Weibo.</b> HOPA drafts the post and asks before publishing. Nothing public happens without your yes.</sub>
 
 </td>
 </tr>
@@ -102,22 +102,38 @@ Nothing is paid without you, and a payment is never remembered as a yes.
 The approval is written in your language — “Confirm payment?” — never in raw
 action names.
 
-## Apps and sites
+## Launchpad: apps and sites
 
 <table>
 <tr>
 <td width="50%" align="center" valign="top">
 
-<img src="docs/media/apps.jpeg" alt="HOPA app catalogue with verified HarmonyOS bundles" height="560" />
+<img src="docs/media/launchpad-top-2026.jpeg" alt="HOPA Launchpad showing Bilibili, Camera and Clock verified" height="560" />
 
-<br/><sub><b>Apps.</b> 27 apps, 8 verified on the test phone. Green means HOPA has seen the bundle work on a device.</sub>
+<br/><sub><b>Launchpad.</b> 27 apps, 18 verified on the test phone. Bilibili, Camera and Clock are now openable.</sub>
 
 </td>
 <td width="50%" align="center" valign="top">
 
-<img src="docs/media/sites.jpeg" alt="HOPA site catalogue with Amazon, BOSS, Gmail, Instagram and more" height="560" />
+<img src="docs/media/launchpad-sites-2026.jpeg" alt="HOPA Launchpad sites: 小红书, 微博, 抖音, 知乎 and 豆瓣" height="560" />
 
-<br/><sub><b>Sites.</b> 21 sites open in the browser HOPA controls, with no second browser to learn.</sub>
+<br/><sub><b>Chinese sites.</b> 小红书, 微博, 抖音, 知乎, 豆瓣 and more open in the browser HOPA controls.</sub>
+
+</td>
+</tr>
+<tr>
+<td width="50%" align="center" valign="top">
+
+<img src="docs/media/launchpad-douyin-2026.jpeg" alt="HOPA Launchpad showing Douyin and Kuaishou verified" height="560" />
+
+<br/><sub><b>Chinese apps.</b> Douyin and Kuaishou — plus WeChat, Weibo and Xianyu — are verified on this phone.</sub>
+
+</td>
+<td width="50%" align="center" valign="top">
+
+<img src="docs/media/launchpad-music-2026.jpeg" alt="HOPA Launchpad showing Music, Notes, Petal Maps and Kuaishou" height="560" />
+
+<br/><sub><b>More of the phone.</b> Music, Notes and Petal Maps are real entries now, not “no bundle”.</sub>
 
 </td>
 </tr>
@@ -129,7 +145,7 @@ action names.
 <tr>
 <td width="50%" align="center" valign="top">
 
-<img src="docs/media/activity.jpeg" alt="HOPA Activity: recent actions, runs, usage and scheduled plans" height="560" />
+<img src="docs/media/activity-2026.jpeg" alt="HOPA Activity: recent actions, runs, usage and scheduled plans" height="560" />
 
 </td>
 <td valign="middle">
@@ -150,21 +166,21 @@ The mascot sits at the top and tells you whether HOPA is ready or still working.
 <tr>
 <td width="33%" align="center" valign="top">
 
-<img src="docs/media/settings.jpeg" alt="HOPA Settings: model, phone access and the PC bridge" height="560" />
+<img src="docs/media/settings-2026.jpeg" alt="HOPA Settings: model, phone access and the PC bridge" height="560" />
 
 <br/><sub><b>Settings.</b> The model, the phone access path and the bridge state, all in one place.</sub>
 
 </td>
 <td width="33%" align="center" valign="top">
 
-<img src="docs/media/model.jpeg" alt="HOPA model card: provider, endpoint, model and a loaded hidden key" height="560" />
+<img src="docs/media/model-2026.jpeg" alt="HOPA model card: provider, endpoint, model and a loaded hidden key" height="560" />
 
 <br/><sub><b>Model.</b> A loaded key is hidden. The field stays blank; leave it blank to keep the key.</sub>
 
 </td>
 <td width="33%" align="center" valign="top">
 
-<img src="docs/media/phone.jpeg" alt="HOPA Phone access: on-device control and PC bridge status" height="560" />
+<img src="docs/media/phone-2026.jpeg" alt="HOPA Phone access: on-device control and PC bridge status" height="560" />
 
 <br/><sub><b>Phone access.</b> On-device control says “not granted” instead of pretending. The bridge shows its real state.</sub>
 
@@ -217,7 +233,7 @@ machine, not in the cloud.
 ## Good to know
 
 - HOPA sees the screen you see. It cannot work while it is fully closed.
-- It will not guess an app it does not know. 19 of the 27 catalogue apps do not
+- It will not guess an app it does not know. 9 of the 27 catalogue apps do not
   have a verified HarmonyOS bundle yet.
 - Login, CAPTCHA and verification codes stay with you.
 - Some apps block automation; HOPA stops and hands over.
@@ -232,7 +248,7 @@ machine, not in the cloud.
 | Chat, browser, memory, skills, plans, batch, runs and export | Untethered app control until Huawei grants the ACL |
 | App control through the PC companion | Speech |
 | A website task from Chat: open Bilibili, read it and summarize | System reminders |
-| Payment approval with a plain-language sheet | Verified bundles for 19 other apps |
+| Payment approval with a plain-language sheet | Verified bundles for 9 other apps |
 | Usage that survives a restart | |
 
 Read the dated, per-capability state in

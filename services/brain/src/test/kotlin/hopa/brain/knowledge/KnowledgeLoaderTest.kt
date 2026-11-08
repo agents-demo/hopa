@@ -71,15 +71,23 @@ fun main(args: Array<String>) {
     check(loaded.any { it.entry.name == "browser" }, "browser present")
     check(loaded.any { it.entry.name == "wechat" }, "wechat present")
     check(
-        loaded.first { it.entry.name == "wechat" }.entry.packages.isEmpty(),
-        "wechat has no unverified bundle",
+        loaded.first { it.entry.name == "wechat" }.entry.packages.contains("com.tencent.wechat"),
+        "wechat uses the verified HarmonyOS bundle",
+    )
+    check(
+        loaded.first { it.entry.name == "bilibili" }.entry.packages.contains("yylx.danmaku.bili"),
+        "bilibili uses the verified HarmonyOS bundle",
+    )
+    check(
+        loaded.first { it.entry.name == "douyin" }.entry.packages.contains("com.ss.hm.ugc.aweme"),
+        "douyin uses the verified HarmonyOS bundle",
     )
     check(
         loaded.first { it.entry.name == "weibo" }
             .entry.packages.contains("com.sina.weibo.stage"),
         "weibo uses the stage-model bundle",
     )
-    check(loaded.count { it.entry.packages.isEmpty() } == 14, "14 unconfirmed bundles")
+    check(loaded.count { it.entry.packages.isEmpty() } == 9, "9 unconfirmed bundles")
 
     println("KnowledgeLoaderTest: $passed assertions passed")
 }
