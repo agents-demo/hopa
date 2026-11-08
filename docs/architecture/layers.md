@@ -59,7 +59,7 @@ the background. Without a bridge, the local `AppLauncher` launches.
   the batch. It has no UI and no persistence.
 - `services/*` are one concern each: conversations, schedules, runs, export,
   settings, approvals, bridge, model factory, logging.
-- `navigation/` (the drawer) and `pages/<area>/` render; they never build a
+- `navigation/` (the sheet and bottom bar) and `pages/<area>/` render; they never build a
   loop or a model client.
 
 ## Where does a new thing go?
@@ -74,7 +74,7 @@ the background. Without a bridge, the local `AppLauncher` launches.
 | persistence for one kind of data | `entry/services/` |
 | a screen | `entry/pages/<area>/` |
 | a reusable visual row or card | `entry/components/` |
-| a route or drawer entry | `entry/navigation/` |
+| a route or shell entry | `entry/navigation/` |
 | a build or release step | `tools/scripts/` |
 | a rule that keeps this shape | `tools/checks/` |
 

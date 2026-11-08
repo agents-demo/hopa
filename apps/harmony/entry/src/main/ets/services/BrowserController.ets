@@ -65,6 +65,38 @@ export class BrowserController implements WebController {
     }
   }
 
+  /** A representative image from the page, preferably an Open Graph image. */
+  async currentImage(): Promise<string> {
+    if (this.controller === undefined) {
+      return '';
+    }
+    try {
+      const script: string =
+        '(function(){' +
+        'var m = document.querySelector("meta[property=\\"og:image\\"]");' +
+        'if (m && m.content && m.content.indexOf("https://") === 0) { return m.content; }' +
+        'var t = document.querySelector("meta[name=\\"twitter:image\\"]");' +
+        'if (t && t.content && t.content.indexOf("https://") === 0) { return t.content; }' +
+        'var imgs = Array.prototype.slice.call(document.images);' +
+        'for (var i = 0; i < imgs.length; i++) {' +
+        '  var s = imgs[i].currentSrc || imgs[i].src;' +
+        '  if (s && s.indexOf("https://") === 0 &&' +
+        '    (imgs[i].naturalWidth >= 200 || imgs[i].clientWidth >= 200)) { return s; }' +
+        '}' +
+        'for (var j = 0; j < imgs.length; j++) {' +
+        '  var r = imgs[j].currentSrc || imgs[j].src;' +
+        '  if (r && r.indexOf("https://") === 0) { return r; }' +
+        '}' +
+        'return "";' +
+        '})()';
+      const result: webview.JsMessageExt = await this.controller.runJavaScriptExt(script);
+      const url: string = result.getString();
+      return url.startsWith('https://') ? url : '';
+    } catch (error) {
+      return '';
+    }
+  }
+
   async navigate(url: string): Promise<void> {
     if (!url.startsWith('https://')) {
       throw new Error('only https URLs are allowed');

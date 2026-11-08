@@ -5,8 +5,8 @@ import { preferences } from '@kit.ArkData';
 /**
  * Owns the saved conversations and their persistence.
  *
- * The drawer and the chat page share this one instance; `version` lets the
- * chat page notice a change made from the drawer.
+ * The Chats sheet and the chat page share this one instance; `version` lets
+ * the chat page notice a change made from the sheet.
  */
 export class ConversationService {
   private static readonly STORE: string = 'hopa_settings';

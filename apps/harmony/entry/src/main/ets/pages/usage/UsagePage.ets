@@ -18,7 +18,7 @@ export struct UsagePage {
     Row() {
       Text(label)
         .fontSize(14)
-        .fontColor('#666666')
+        .fontColor($r('app.color.text_secondary'))
         .layoutWeight(1)
       Text(value)
         .fontSize(14)
@@ -26,7 +26,7 @@ export struct UsagePage {
     }
     .width('100%')
     .padding(12)
-    .backgroundColor('#F7F8FA')
+    .backgroundColor($r('app.color.surface_alt'))
     .borderRadius(8)
   }
 
@@ -42,7 +42,7 @@ export struct UsagePage {
       this.Line('Facts and skills', `${AgentService.get().memory.all().length} / ${AgentService.get().skills.all().length}`)
       Text('Per-run tokens are not stored yet; the last run total is shown.')
         .fontSize(11)
-        .fontColor('#999999')
+        .fontColor($r('app.color.text_hint'))
     }
     .width('100%')
     .height('100%')

@@ -164,7 +164,7 @@ apps/harmony/
 │     ├─ navigation/
 │     │  ├─ Route.ets                     # enum, one route per screen
 │     │  ├─ AppShell.ets                  # sidebar + header + host
-│     │  ├─ Drawer.ets
+│     │  ├─ ChatsSheet.ets
 │     │  └─ RouteHost.ets
 │     ├─ pages/
 │     │  ├─ chat/                         # ChatPage, ChatComposer, MessageList
@@ -346,7 +346,7 @@ Consequences:
 | `ScreensPage` | `pages/screens/ScreensPage.ets` |
 | `MoreToolsPage`, `SourcePage`, `McpServersPage`, `FilesPage`, `WelcomePage` | `pages/tools/` |
 | `MemoryPage`, `FactsSection`, `SkillsSection` | `pages/memory/` |
-| `Drawer`, `DrawerItem`, `PageHost`, `SettingsHost`, `MoreContainer` | `navigation/` |
+| `ChatsSheet`, `PageRouter`, `ToolCatalog`, `TabIcon`, `PageTitles` | `navigation/` |
 | `MoreRow`, `ToolRow`, `UsageLine`, `CheckLine`, `SourceLine`, `DevLine` | `components/MenuRow.ets`, `MetricRow.ets`, `StatusRow.ets` |
 
 ## 10. Splitting `AgentService` (527 lines)

@@ -31,7 +31,7 @@ export struct FilesPage {
         .fontWeight(FontWeight.Bold)
       Text('Memory, skills and runs are written as one JSON file in the app sandbox.')
         .fontSize(12)
-        .fontColor('#666666')
+        .fontColor($r('app.color.text_secondary'))
       Button('Export and load')
         .fontSize(12)
         .onClick(() => {
@@ -39,18 +39,18 @@ export struct FilesPage {
         })
       Text(this.filePath)
         .fontSize(10)
-        .fontColor('#999999')
+        .fontColor($r('app.color.text_hint'))
         .maxLines(2)
       if (this.fileText.length > 0) {
         Scroll() {
           Text(this.fileText)
             .fontSize(9)
-            .fontColor('#333333')
+            .fontColor($r('app.color.text_primary'))
             .width('100%')
         }
         .layoutWeight(1)
         .width('100%')
-        .backgroundColor('#F7F8FA')
+        .backgroundColor($r('app.color.surface_alt'))
         .padding(8)
         .borderRadius(8)
       }

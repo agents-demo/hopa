@@ -8,12 +8,14 @@ code.
 | Capability | Status | Notes |
 |---|---|---|
 | Chat and reasoning | Works | Blue/grey bubbles, natural replies, no raw action logs; tokens and duration are recorded. |
+| Navigation | Works | Bottom bar: Chat, Tools, Settings. A **History** sheet holds searchable, date-grouped chats; Tools is a searchable, grouped index. |
+| Appearance | Works | System/Light/Dark switch in Settings; semantic colour tokens with a dark palette. |
 | Built-in browser | Works | Read a page, click, type; compact toolbar; one tab; the visible sandbox demo is gone. |
 | Website task from Chat | Works | One prompt opens the browser, reads the page and answers; verified with Bilibili. |
 | Chat page link | Works | After a web task the chat keeps the page title, URL and an Open button; verified with example.com. |
 | App control | With the PC bridge | Launch, read the screen, tap, type, scroll and go back. |
 | Untethered app control | Not on this image | The accessibility settings page is missing. A real phone with the service enabled is the untethered path. |
-| Approval sheet | Works | Human titles and labels instead of action kinds and refs; unit tested. |
+| Approval sheet | Works | A bottom sheet owned by the shell, so it appears over Chat or Browser; human titles and labels instead of action kinds and refs; unit tested. |
 | Payment gate | Works | Every payment asks, in every mode. A denied action is still recorded. |
 | Memory | Works | Explicit facts, automatic "remember ..." extraction, visible and deletable. |
 | Skills | Works | Saved skills, a draft from a successful run, uses/successes counters. |

@@ -19,7 +19,7 @@ export struct DeveloperPage {
     Row() {
       Text(label)
         .fontSize(12)
-        .fontColor('#999999')
+        .fontColor($r('app.color.text_hint'))
         .width(120)
       Text(value)
         .fontSize(12)
@@ -27,7 +27,7 @@ export struct DeveloperPage {
     }
     .width('100%')
     .padding(10)
-    .backgroundColor('#F7F8FA')
+    .backgroundColor($r('app.color.surface_alt'))
     .borderRadius(6)
   }
 
@@ -45,12 +45,12 @@ export struct DeveloperPage {
       if (this.status.length > 0) {
         Text(this.status)
           .fontSize(11)
-          .fontColor('#666666')
+          .fontColor($r('app.color.text_secondary'))
       }
       Button('Clear run history')
         .fontSize(12)
-        .backgroundColor('#E5E6E8')
-        .fontColor('#B42318')
+        .backgroundColor($r('app.color.divider'))
+        .fontColor($r('app.color.danger'))
         .onClick(() => {
           this.clearRuns();
         })

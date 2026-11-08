@@ -92,7 +92,7 @@ export struct RunsPage {
     Row() {
       Text(label)
         .fontSize(12)
-        .fontColor('#999999')
+        .fontColor($r('app.color.text_hint'))
         .width(100)
       Text(value)
         .fontSize(13)
@@ -107,8 +107,8 @@ export struct RunsPage {
       Row({ space: 8 }) {
         Button('Back')
           .fontSize(12)
-          .backgroundColor('#E5E6E8')
-          .fontColor('#333333')
+          .backgroundColor($r('app.color.divider'))
+          .fontColor($r('app.color.text_primary'))
           .onClick(() => {
             this.selectedId = '';
           })
@@ -125,7 +125,7 @@ export struct RunsPage {
             .fontWeight(FontWeight.Bold)
           Text(run.status)
             .fontSize(13)
-            .fontColor(run.status === 'executed' ? '#0A7F3F' : '#B42318')
+            .fontColor(run.status === 'executed' ? $r('app.color.success') : $r('app.color.danger'))
           Divider()
           this.TimelineRow('Started', new Date(run.startedAt).toLocaleTimeString())
           this.TimelineRow('Finished', new Date(run.finishedAt).toLocaleTimeString())
@@ -135,11 +135,11 @@ export struct RunsPage {
           Divider()
           Text(run.detail.length > 0 ? run.detail : '(no detail)')
             .fontSize(13)
-            .fontColor('#666666')
+            .fontColor($r('app.color.text_secondary'))
         }
         .width('100%')
         .padding(14)
-        .backgroundColor('#F7F8FA')
+        .backgroundColor($r('app.color.surface_alt'))
         .borderRadius(10)
         .alignItems(HorizontalAlign.Start)
       }, (run: RunRecord, index: number) => run.id)
@@ -155,9 +155,6 @@ export struct RunsPage {
       this.Detail()
     } else {
       Column({ space: 12 }) {
-        Text('Runs and batches')
-          .fontSize(22)
-          .fontWeight(FontWeight.Bold)
         Text(this.status)
           .fontSize(16)
         if (this.busy) {
@@ -170,7 +167,7 @@ export struct RunsPage {
             ? 'Accessibility is unavailable; actions go through the connected PC bridge.'
             : 'Accessibility is unavailable, so the loop can read only the built-in browser.'))
           .fontSize(13)
-          .fontColor('#666666')
+          .fontColor($r('app.color.text_secondary'))
         Text('Batch')
           .fontSize(16)
           .fontWeight(FontWeight.Bold)
@@ -188,7 +185,7 @@ export struct RunsPage {
           if (this.busy) {
             Button('Stop')
               .fontSize(12)
-              .backgroundColor('#B42318')
+              .backgroundColor($r('app.color.danger'))
               .onClick(() => {
                 this.stop();
               })
@@ -207,11 +204,11 @@ export struct RunsPage {
                   .maxLines(3)
                 Text(`${Math.round(item.durationMs / 1000)}s`)
                   .fontSize(10)
-                  .fontColor('#999999')
+                  .fontColor($r('app.color.text_hint'))
               }
               .width('100%')
               .padding(8)
-              .backgroundColor('#F7F8FA')
+              .backgroundColor($r('app.color.surface_alt'))
               .borderRadius(6)
               .alignItems(HorizontalAlign.Start)
             }
@@ -222,14 +219,14 @@ export struct RunsPage {
         Row({ space: 8 }) {
           Text(`Recent actions (${this.runs.length})`)
             .fontSize(14)
-            .fontColor('#666666')
+            .fontColor($r('app.color.text_secondary'))
             .layoutWeight(1)
           if (this.runs.length > 0) {
             Button('Clear')
               .fontSize(11)
               .height(26)
-              .backgroundColor('#E5E6E8')
-              .fontColor('#B42318')
+              .backgroundColor($r('app.color.divider'))
+              .fontColor($r('app.color.danger'))
               .onClick(() => {
                 this.clear();
               })
@@ -238,7 +235,7 @@ export struct RunsPage {
         .width('100%')
         Text(`Last run: ${AgentService.get().getLastTokens()} tokens | ${(AgentService.get().getLastDurationMs() / 1000).toFixed(1)} s`)
           .fontSize(11)
-          .fontColor('#999999')
+          .fontColor($r('app.color.text_hint'))
         if (AgentService.get().canDraftSkill()) {
           Button('Save last run as skill')
             .fontSize(12)
@@ -251,8 +248,8 @@ export struct RunsPage {
           Button('Continue last task')
             .fontSize(12)
             .height(30)
-            .backgroundColor('#E5E6E8')
-            .fontColor('#333333')
+            .backgroundColor($r('app.color.divider'))
+            .fontColor($r('app.color.text_primary'))
             .onClick(() => {
               this.resume();
             })
@@ -268,20 +265,20 @@ export struct RunsPage {
                     .layoutWeight(1)
                   Text(run.status)
                     .fontSize(12)
-                    .fontColor(run.status === 'executed' ? '#0A7F3F' : '#B42318')
+                    .fontColor(run.status === 'executed' ? $r('app.color.success') : $r('app.color.danger'))
                 }
                 .width('100%')
                 Text(run.detail.length > 0 ? run.detail : '(no detail)')
                   .fontSize(12)
-                  .fontColor('#666666')
+                  .fontColor($r('app.color.text_secondary'))
                   .maxLines(2)
                 Text(`${run.durationMs} ms | ${run.approved ? 'approved' : 'no approval'} | ${run.isPayment ? 'payment' : 'normal'}`)
                   .fontSize(10)
-                  .fontColor('#999999')
+                  .fontColor($r('app.color.text_hint'))
               }
               .width('100%')
               .padding(10)
-              .backgroundColor('#F7F8FA')
+              .backgroundColor($r('app.color.surface_alt'))
               .borderRadius(8)
               .alignItems(HorizontalAlign.Start)
               .onClick(() => {

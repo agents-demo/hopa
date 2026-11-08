@@ -1,9 +1,6 @@
-import { UIContext } from '@kit.ArkUI';
 import { Context } from '@kit.AbilityKit';
-import { Action, ApprovalDescription, PaymentContext, Screen } from '@hopa/core';
 import { MemoryExtractor } from '@hopa/core';
 import { AgentService } from '../../services/AgentService';
-import { AppRouteTargets } from '../../services/AppRouteTargets';
 
 /** Chat: the transcript, the composer and the approval dialog. */
 @Component
@@ -18,6 +15,8 @@ export struct ChatPage {
   @State lastPageTitle: string = '';
   private seenVersion: number = -1;
   private timer: number = -1;
+  private listScroller: Scroller = new Scroller();
+  private renderedCount: number = 0;
 
   aboutToAppear(): void {
     const service = AgentService.get();
@@ -28,7 +27,6 @@ export struct ChatPage {
       this.render();
       this.sync();
     });
-    this.installApproval();
     this.timer = setInterval(() => {
       if (!this.busy && service.conversations.version !== this.seenVersion) {
         this.render();
@@ -56,7 +54,23 @@ export struct ChatPage {
     for (const entry of AgentService.get().conversations.entries()) {
       next.push(entry.role === 'user' ? `You: ${entry.text}` : `HOPA: ${entry.text}`);
     }
+    const grew: boolean = next.length > this.renderedCount;
+    this.renderedCount = next.length;
     this.messages = next;
+    if (grew) {
+      this.scrollToEnd();
+    }
+  }
+
+  /** Keeps the newest reply visible, including after a run returns to Chat. */
+  private scrollToEnd(): void {
+    setTimeout(() => {
+      try {
+        this.listScroller.scrollEdge(Edge.Bottom);
+      } catch (error) {
+        // The list is not mounted yet; the next render scrolls again.
+      }
+    }, 50);
   }
 
   private messageKey(item: ResourceStr, index: number): string {
@@ -93,40 +107,6 @@ export struct ChatPage {
     return clean;
   }
 
-  private installApproval(): void {
-    const service = AgentService.get();
-    const uiContext: UIContext = this.getUIContext();
-    service.approvals.setHandler(async (action: Action, screen: Screen | undefined): Promise<boolean> => {
-      const payment: boolean = service.policy.isPayment(action, screen);
-      const names = AppRouteTargets.displayNames();
-      const title: string = payment
-        ? 'Confirm payment?'
-        : ApprovalDescription.title(action, screen, names);
-      const context: PaymentContext = service.policy.extractPaymentContext(screen);
-      const amount: string = context.amount.length > 0 ? context.amount : 'not visible';
-      const merchant: string = context.merchant.length > 0 ? context.merchant : 'not visible';
-      const message: string = payment
-        ? `HOPA wants to run: ${action.kind}\n\n` +
-          `Amount: ${amount}\nMerchant: ${merchant}\n\n` +
-          `${context.consequence}\n\n` +
-          'Check the next screen yourself before you confirm.\n\nAllow it?'
-        : ApprovalDescription.body(action, screen, names);
-      try {
-        const result = await uiContext.getPromptAction().showDialog({
-          title: title,
-          message: message,
-          buttons: [
-            { text: 'Deny', color: '#666666' },
-            { text: 'Allow', color: '#B42318' }
-          ]
-        });
-        return result.index === 1;
-      } catch (error) {
-        return false;
-      }
-    });
-  }
-
   private async send(): Promise<void> {
     const text: string = this.draft.trim();
     if (text.length === 0 || this.busy) {
@@ -155,6 +135,8 @@ export struct ChatPage {
     this.draft = '';
     this.busy = true;
     this.messages = this.messages.concat([`You: ${text}`, $r('app.string.msg_working')]);
+    this.renderedCount = this.messages.length;
+    this.scrollToEnd();
     service.conversations.add('user', text);
     this.sync();
 
@@ -165,6 +147,8 @@ export struct ChatPage {
     const next: ResourceStr[] = this.messages.slice(0, this.messages.length - 1);
     next.push(`HOPA: ${reply}`);
     this.messages = next;
+    this.renderedCount = next.length;
+    this.scrollToEnd();
     service.conversations.add('assistant', reply);
     this.sync();
     this.busy = false;
@@ -179,14 +163,14 @@ export struct ChatPage {
 
   build() {
     Column({ space: 12 }) {
-      List({ space: 8 }) {
+      List({ space: 8, scroller: this.listScroller }) {
         ForEach(this.messages, (item: ResourceStr, index: number) => {
           ListItem() {
             Row() {
               Text(this.bubbleText(item))
                 .padding({ left: 14, right: 14, top: 10, bottom: 10 })
-                .backgroundColor(this.isUser(item) ? '#0A59F7' : '#F2F3F5')
-                .fontColor(this.isUser(item) ? '#FFFFFF' : '#0A1B3A')
+                .backgroundColor(this.isUser(item) ? $r('app.color.primary') : $r('app.color.surface_muted'))
+                .fontColor(this.isUser(item) ? $r('app.color.on_primary') : $r('app.color.text_primary'))
                 .borderRadius(16)
                 .fontSize(15)
                 .constraintSize({ maxWidth: '84%' })
@@ -204,12 +188,12 @@ export struct ChatPage {
             Text(this.lastPageTitle.length > 0 ? this.lastPageTitle : 'Page HOPA read')
               .fontSize(12)
               .fontWeight(FontWeight.Medium)
-              .fontColor('#0A1B3A')
+              .fontColor($r('app.color.text_primary'))
               .maxLines(1)
               .textOverflow({ overflow: TextOverflow.Ellipsis })
             Text(this.lastPageUrl)
               .fontSize(10)
-              .fontColor('#999999')
+              .fontColor($r('app.color.text_hint'))
               .maxLines(1)
               .textOverflow({ overflow: TextOverflow.Ellipsis })
           }
@@ -218,15 +202,15 @@ export struct ChatPage {
           Button('Open')
             .fontSize(12)
             .height(28)
-            .backgroundColor('#E5E6E8')
-            .fontColor('#333333')
+            .backgroundColor($r('app.color.divider'))
+            .fontColor($r('app.color.text_primary'))
             .onClick(() => {
               AgentService.get().pageLinks.open(this.lastPageUrl);
             })
         }
         .width('100%')
         .padding(8)
-        .backgroundColor('#F7F9FF')
+        .backgroundColor($r('app.color.primary_soft'))
         .borderRadius(8)
       }
       Row({ space: 8 }) {
@@ -239,7 +223,7 @@ export struct ChatPage {
             this.send();
           })
         Button(this.busy ? $r('app.string.btn_stop') : $r('app.string.btn_send'))
-          .backgroundColor(this.busy ? '#B42318' : '#0A59F7')
+          .backgroundColor(this.busy ? $r('app.color.danger') : $r('app.color.primary'))
           .onClick(() => {
             if (this.busy) {
               this.stopRun();

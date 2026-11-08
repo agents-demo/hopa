@@ -8,6 +8,7 @@ export class StoredSettings {
   model: string = 'gpt-4o-mini';
   network: boolean = false;
   autonomous: boolean = false;
+  appearance: string = 'system';
   bridgeUrl: string = '';
   bridgeToken: string = '';
 }
@@ -45,6 +46,10 @@ export class SettingsStore {
     if (typeof autonomous === 'boolean') {
       settings.autonomous = autonomous;
     }
+    const appearance = await store.get('appearance', settings.appearance);
+    if (typeof appearance === 'string') {
+      settings.appearance = appearance;
+    }
     const bridgeUrl = await store.get('bridge_url', settings.bridgeUrl);
     if (typeof bridgeUrl === 'string') {
       settings.bridgeUrl = bridgeUrl;
@@ -63,6 +68,7 @@ export class SettingsStore {
     await store.put('model', settings.model);
     await store.put('network', settings.network);
     await store.put('autonomous', settings.autonomous);
+    await store.put('appearance', settings.appearance);
     await store.put('bridge_url', settings.bridgeUrl);
     await store.put('bridge_token', settings.bridgeToken);
     await store.flush();

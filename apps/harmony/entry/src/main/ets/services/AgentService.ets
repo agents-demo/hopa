@@ -59,6 +59,7 @@ export class AgentService {
 
   private networkEnabled: boolean = false;
   private autonomous: boolean = false;
+  private runDone: (() => void) | undefined = undefined;
 
   private constructor() {
     this.runs = new RunStore();
@@ -149,6 +150,11 @@ export class AgentService {
     this.browserCapability.setSiteOpener(opener);
   }
 
+  /** Called after every run, so the UI can return to Chat when the answer is ready. */
+  setRunDoneListener(listener: () => void): void {
+    this.runDone = listener;
+  }
+
   /** Points the bridge capability at a running `pc-agent bridge`. */
   configureBridge(url: string, token: string): void {
     this.bridge.configure(url, token);
@@ -229,7 +235,13 @@ export class AgentService {
     return this.exportService.exportData(context);
   }
 
-  run(goal: string): Promise<string> {
-    return this.runtime.run(goal);
+  async run(goal: string): Promise<string> {
+    try {
+      return await this.runtime.run(goal);
+    } finally {
+      if (this.runDone !== undefined) {
+        this.runDone();
+      }
+    }
   }
 }

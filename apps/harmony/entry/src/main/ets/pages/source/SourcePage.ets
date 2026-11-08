@@ -29,7 +29,7 @@ export struct SourcePage {
     Row() {
       Text(label)
         .fontSize(12)
-        .fontColor('#999999')
+        .fontColor($r('app.color.text_hint'))
         .width(120)
       Text(value)
         .fontSize(13)
@@ -37,7 +37,7 @@ export struct SourcePage {
     }
     .width('100%')
     .padding(10)
-    .backgroundColor('#F7F8FA')
+    .backgroundColor($r('app.color.surface_alt'))
     .borderRadius(6)
   }
 
@@ -55,7 +55,7 @@ export struct SourcePage {
       this.Line('Last run', `${AgentService.get().getLastTokens()} tokens, ${(AgentService.get().getLastDurationMs() / 1000).toFixed(1)} s`)
       Text('Screen text and page URLs are not stored per run yet, so this page reports the configured source instead of a citation list.')
         .fontSize(11)
-        .fontColor('#999999')
+        .fontColor($r('app.color.text_hint'))
     }
     .width('100%')
     .height('100%')

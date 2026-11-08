@@ -7,14 +7,14 @@ export struct SelfCheckPage {
   @State bridge: string = 'not checked';
   @State accessibility: string = 'not checked';
 
-  private color(value: string): string {
+  private color(value: string): ResourceColor {
     if (value === 'ok' || value === 'on') {
-      return '#0A7F3F';
+      return $r('app.color.success');
     }
     if (value === 'not checked') {
-      return '#999999';
+      return $r('app.color.text_hint');
     }
-    return '#B42318';
+    return $r('app.color.danger');
   }
 
   private async run(): Promise<void> {
@@ -31,14 +31,14 @@ export struct SelfCheckPage {
     Column({ space: 10 }) {
       Text('Run the checks before a task.')
         .fontSize(12)
-        .fontColor('#666666')
+        .fontColor($r('app.color.text_secondary'))
       Row() {
         Text('Model').fontSize(14).layoutWeight(1)
         Text(this.model).fontSize(13).fontColor(this.color(this.model))
       }
       .width('100%')
       .padding(12)
-      .backgroundColor('#F7F8FA')
+      .backgroundColor($r('app.color.surface_alt'))
       .borderRadius(8)
       Row() {
         Text('PC bridge').fontSize(14).layoutWeight(1)
@@ -46,7 +46,7 @@ export struct SelfCheckPage {
       }
       .width('100%')
       .padding(12)
-      .backgroundColor('#F7F8FA')
+      .backgroundColor($r('app.color.surface_alt'))
       .borderRadius(8)
       Row() {
         Text('Accessibility').fontSize(14).layoutWeight(1)
@@ -54,17 +54,17 @@ export struct SelfCheckPage {
       }
       .width('100%')
       .padding(12)
-      .backgroundColor('#F7F8FA')
+      .backgroundColor($r('app.color.surface_alt'))
       .borderRadius(8)
       Row() {
         Text('Network for web tasks').fontSize(14).layoutWeight(1)
         Text(AgentService.get().isNetworkEnabled() ? 'on' : 'off')
           .fontSize(13)
-          .fontColor(AgentService.get().isNetworkEnabled() ? '#0A7F3F' : '#B42318')
+          .fontColor(AgentService.get().isNetworkEnabled() ? $r('app.color.success') : $r('app.color.danger'))
       }
       .width('100%')
       .padding(12)
-      .backgroundColor('#F7F8FA')
+      .backgroundColor($r('app.color.surface_alt'))
       .borderRadius(8)
       Row() {
         Text('Facts and skills').fontSize(14).layoutWeight(1)
@@ -73,7 +73,7 @@ export struct SelfCheckPage {
       }
       .width('100%')
       .padding(12)
-      .backgroundColor('#F7F8FA')
+      .backgroundColor($r('app.color.surface_alt'))
       .borderRadius(8)
       Button('Run check')
         .fontSize(12)

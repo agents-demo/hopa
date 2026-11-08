@@ -44,28 +44,28 @@ export struct AppsPage {
                 ? 'bundle verified'
                 : (app.confirmed ? 'bundle unverified' : 'no bundle yet'))
                 .fontSize(11)
-                .fontColor(app.verified ? '#0A7F3F' : (app.confirmed ? '#B26A00' : '#8A8A8A'))
+                .fontColor(app.verified ? $r('app.color.success') : (app.confirmed ? $r('app.color.warning') : $r('app.color.text_hint')))
             }
             .width('100%')
             Text(app.bundle.length > 0 ? app.bundle : 'no HarmonyOS bundle yet')
               .fontSize(12)
-              .fontColor('#666666')
+              .fontColor($r('app.color.text_secondary'))
             if (app.purpose.length > 0) {
               Text(app.purpose)
                 .fontSize(11)
-                .fontColor('#8A8A8A')
+                .fontColor($r('app.color.text_hint'))
                 .maxLines(2)
             }
             if (app.aliases.length > 0) {
               Text(app.aliases.slice(0, 3).join(', '))
                 .fontSize(11)
-                .fontColor('#999999')
+                .fontColor($r('app.color.text_hint'))
                 .maxLines(1)
             }
           }
           .width('100%')
           .padding(10)
-          .backgroundColor('#F7F8FA')
+          .backgroundColor($r('app.color.surface_alt'))
           .borderRadius(8)
           .alignItems(HorizontalAlign.Start)
         }
@@ -98,14 +98,14 @@ export struct AppsPage {
             .width('100%')
             Text(site.domains.join(', '))
               .fontSize(12)
-              .fontColor('#666666')
+              .fontColor($r('app.color.text_secondary'))
             Text(`validated: ${site.validated}`)
               .fontSize(11)
-              .fontColor('#999999')
+              .fontColor($r('app.color.text_hint'))
           }
           .width('100%')
           .padding(10)
-          .backgroundColor('#F7F8FA')
+          .backgroundColor($r('app.color.surface_alt'))
           .borderRadius(8)
           .alignItems(HorizontalAlign.Start)
         }
@@ -118,18 +118,18 @@ export struct AppsPage {
   build() {
     Column({ space: 10 }) {
       Text(`Catalogue (${APP_CATALOG.length} apps, ${SITE_CATALOG.length} sites)`)
-        .fontSize(22)
-        .fontWeight(FontWeight.Bold)
+        .fontSize(12)
+        .fontColor($r('app.color.text_secondary'))
       Row({ space: 8 }) {
         Button(`Apps ${APP_CATALOG.length}`)
-          .backgroundColor(this.section === 0 ? '#0A59F7' : '#E5E6E8')
-          .fontColor(this.section === 0 ? '#FFFFFF' : '#333333')
+          .backgroundColor(this.section === 0 ? $r('app.color.primary') : $r('app.color.divider'))
+          .fontColor(this.section === 0 ? $r('app.color.on_primary') : $r('app.color.text_primary'))
           .onClick(() => {
             this.section = 0;
           })
         Button(`Sites ${SITE_CATALOG.length}`)
-          .backgroundColor(this.section === 1 ? '#0A59F7' : '#E5E6E8')
-          .fontColor(this.section === 1 ? '#FFFFFF' : '#333333')
+          .backgroundColor(this.section === 1 ? $r('app.color.primary') : $r('app.color.divider'))
+          .fontColor(this.section === 1 ? $r('app.color.on_primary') : $r('app.color.text_primary'))
           .onClick(() => {
             this.section = 1;
           })
@@ -139,11 +139,11 @@ export struct AppsPage {
         ? 'Verified bundles open here. Confirmed bundles without a device check may still be tried by the agent; unconfirmed names never launch a guessed bundle.'
         : 'Sites open in the built-in browser. Only https pages are allowed.')
         .fontSize(12)
-        .fontColor('#666666')
+        .fontColor($r('app.color.text_secondary'))
       if (this.status.length > 0) {
         Text(this.status)
           .fontSize(11)
-          .fontColor('#666666')
+          .fontColor($r('app.color.text_secondary'))
       }
       if (this.section === 0) {
         this.AppList()

@@ -62,7 +62,7 @@ export struct ScreensPage {
         ? 'Live view of the phone through pc-agent bridge.'
         : 'Connect the PC bridge in Settings to see the phone screen here.')
         .fontSize(12)
-        .fontColor('#666666')
+        .fontColor($r('app.color.text_secondary'))
       if (this.screenImage.length > 0) {
         Image(this.screenImage)
           .width('100%')
@@ -72,7 +72,7 @@ export struct ScreensPage {
       } else {
         Text('No frame yet.')
           .fontSize(12)
-          .fontColor('#999999')
+          .fontColor($r('app.color.text_hint'))
       }
       Row({ space: 8 }) {
         Button('Refresh')
@@ -91,10 +91,10 @@ export struct ScreensPage {
           })
         Text('Live')
           .fontSize(11)
-          .fontColor('#666666')
+          .fontColor($r('app.color.text_secondary'))
         Text(this.screenStatus)
           .fontSize(11)
-          .fontColor('#999999')
+          .fontColor($r('app.color.text_hint'))
           .layoutWeight(1)
       }
       .width('100%')

@@ -1,6 +1,7 @@
 import { accessibility } from '@kit.AccessibilityKit';
-import { Context } from '@kit.AbilityKit';
+import { Context, common } from '@kit.AbilityKit';
 import { AgentService } from '../../services/AgentService';
+import { Appearance } from '../../services/Appearance';
 import { SettingsStore, StoredSettings } from '../../services/SettingsStore';
 import { AboutPage } from '../tools/AboutPage';
 import { SelfCheckPage } from '../tools/SelfCheckPage';
@@ -21,6 +22,7 @@ export struct SettingsPage {
   @State bridgeUrl: string = '';
   @State bridgeToken: string = '';
   @State bridgeStatus: string = 'not connected';
+  @State appearance: string = 'system';
   @State a11yAvailable: boolean = false;
   @State a11yInstalled: string = 'checking...';
   @State accessibilityEnabled: boolean = false;
@@ -42,6 +44,7 @@ export struct SettingsPage {
       this.modelName = stored.model;
       this.networkEnabled = stored.network;
       this.autonomous = stored.autonomous;
+      this.appearance = stored.appearance;
       this.bridgeUrl = stored.bridgeUrl;
       this.bridgeToken = stored.bridgeToken;
       if (this.bridgeUrl.length > 0 && this.bridgeToken.length > 0) {
@@ -72,6 +75,7 @@ export struct SettingsPage {
     stored.model = this.modelName;
     stored.network = this.networkEnabled;
     stored.autonomous = this.autonomous;
+    stored.appearance = this.appearance;
     stored.bridgeUrl = this.bridgeUrl;
     stored.bridgeToken = this.bridgeToken;
     SettingsStore.save(getContext(this) as Context, stored).catch(() => {
@@ -141,15 +145,15 @@ export struct SettingsPage {
     Row({ space: 10 }) {
       Column({ space: 2 }) {
         Text(title).fontSize(14)
-        Text(subtitle).fontSize(10).fontColor('#999999')
+        Text(subtitle).fontSize(10).fontColor($r('app.color.text_hint'))
       }
       .layoutWeight(1)
       .alignItems(HorizontalAlign.Start)
-      Text('>').fontSize(14).fontColor('#999999')
+      Text('>').fontSize(14).fontColor($r('app.color.text_hint'))
     }
     .width('100%')
     .padding(12)
-    .backgroundColor('#F7F8FA')
+    .backgroundColor($r('app.color.surface_alt'))
     .borderRadius(8)
     .onClick(() => {
       this.subPage = key;
@@ -162,8 +166,8 @@ export struct SettingsPage {
       Row({ space: 8 }) {
         Button('Back')
           .fontSize(12)
-          .backgroundColor('#E5E6E8')
-          .fontColor('#333333')
+          .backgroundColor($r('app.color.divider'))
+          .fontColor($r('app.color.text_primary'))
           .onClick(() => {
             this.subPage = '';
           })
@@ -201,15 +205,31 @@ export struct SettingsPage {
     } else {
       Scroll() {
         Column({ space: 16 }) {
-          Text('Settings')
-            .fontSize(22)
-            .fontWeight(FontWeight.Bold)
           Row() {
             Text('Allow network for web tasks').layoutWeight(1)
             Toggle({ type: ToggleType.Switch, isOn: this.networkEnabled })
               .onChange((on: boolean) => {
                 this.networkEnabled = on;
                 AgentService.get().setNetworkEnabled(on);
+                this.persist();
+              })
+          }
+          .width('100%')
+          Row({ space: 10 }) {
+            Text('Appearance').layoutWeight(1)
+            Select([
+              { value: 'System' },
+              { value: 'Light' },
+              { value: 'Dark' }
+            ])
+              .selected(Appearance.indexOf(this.appearance))
+              .value(Appearance.MODES[Appearance.indexOf(this.appearance)])
+              .onSelect((index: number) => {
+                this.appearance = Appearance.modeAt(index);
+                Appearance.apply(
+                  getContext(this) as common.UIAbilityContext,
+                  this.appearance
+                );
                 this.persist();
               })
           }
@@ -238,7 +258,7 @@ export struct SettingsPage {
           .width('100%')
           Text('PC bridge (fallback control)')
             .fontSize(14)
-            .fontColor('#666666')
+            .fontColor($r('app.color.text_secondary'))
           TextInput({ text: this.bridgeUrl, placeholder: 'http://192.168.1.10:8765' })
             .onChange((value: string) => {
               this.bridgeUrl = value;
@@ -256,15 +276,15 @@ export struct SettingsPage {
               })
             Text(this.bridgeStatus)
               .fontSize(12)
-              .fontColor('#666666')
+              .fontColor($r('app.color.text_secondary'))
           }
           .width('100%')
           Text('Run "pc-agent bridge" on the PC. Used only when accessibility is unavailable.')
             .fontSize(11)
-            .fontColor('#999999')
+            .fontColor($r('app.color.text_hint'))
           Text('Model provider')
             .fontSize(14)
-            .fontColor('#666666')
+            .fontColor($r('app.color.text_secondary'))
           Select([
             { value: 'openai' },
             { value: 'anthropic' },
@@ -310,21 +330,21 @@ export struct SettingsPage {
             })
           Text('Model endpoint')
             .fontSize(14)
-            .fontColor('#666666')
+            .fontColor($r('app.color.text_secondary'))
           TextInput({ text: this.modelEndpoint })
             .onChange((value: string) => {
               this.modelEndpoint = value;
             })
           Text('Model name')
             .fontSize(14)
-            .fontColor('#666666')
+            .fontColor($r('app.color.text_secondary'))
           TextInput({ text: this.modelName })
             .onChange((value: string) => {
               this.modelName = value;
             })
           Text('API key (kept in memory only, never saved)')
             .fontSize(14)
-            .fontColor('#666666')
+            .fontColor($r('app.color.text_secondary'))
           TextInput({ text: this.apiKey, placeholder: 'sk-...' })
             .type(InputType.Password)
             .onChange((value: string) => {
@@ -337,20 +357,20 @@ export struct SettingsPage {
           if (this.status.length > 0) {
             Text(this.status)
               .fontSize(11)
-              .fontColor('#666666')
+              .fontColor($r('app.color.text_secondary'))
           }
           Text('Payment: always requires your confirmation. This cannot be changed.')
             .fontSize(13)
-            .fontColor('#B42318')
+            .fontColor($r('app.color.danger'))
           Text(`Installed accessibility services: ${this.a11yInstalled}`)
             .fontSize(11)
-            .fontColor('#666666')
+            .fontColor($r('app.color.text_secondary'))
           Text('Sandbox: not bundled. Pyodide/QuickJS are optional WASM pages; there is no Linux sandbox.')
             .fontSize(12)
-            .fontColor('#666666')
+            .fontColor($r('app.color.text_secondary'))
           Text('Retention: last 100 runs and 50 remembered facts. Skills stay until you delete them.')
             .fontSize(12)
-            .fontColor('#666666')
+            .fontColor($r('app.color.text_secondary'))
           Text('Advanced')
             .fontSize(16)
             .fontWeight(FontWeight.Bold)

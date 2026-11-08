@@ -9,8 +9,10 @@ export struct BrowserPage {
   @State webSrc: string = 'https://example.com';
   @State pageUrl: string = '';
   @State message: string = '';
+  @State agentWorking: boolean = false;
   private controller: webview.WebviewController = new webview.WebviewController();
   private sandboxController: webview.WebviewController = new webview.WebviewController();
+  private timer: number = -1;
 
   aboutToAppear(): void {
     const requested: string = AgentService.get().browser.takeRequestedUrl();
@@ -19,9 +21,16 @@ export struct BrowserPage {
       this.webSrc = requested;
       this.pageUrl = requested;
     }
+    this.timer = setInterval(() => {
+      this.agentWorking = AgentService.get().isBusy();
+    }, 500);
   }
 
   aboutToDisappear(): void {
+    if (this.timer >= 0) {
+      clearInterval(this.timer);
+      this.timer = -1;
+    }
     AgentService.get().browser.detach();
   }
 
@@ -44,11 +53,11 @@ export struct BrowserPage {
   Icon(label: string, action: string) {
     Text(label)
       .fontSize(24)
-      .fontColor('#333333')
+      .fontColor($r('app.color.text_primary'))
       .width(40)
       .height(40)
       .textAlign(TextAlign.Center)
-      .backgroundColor('#F2F3F5')
+      .backgroundColor($r('app.color.surface_muted'))
       .borderRadius(20)
       .onClick(() => {
         if (action === 'back') {
@@ -90,17 +99,19 @@ export struct BrowserPage {
           })
       }
       .width('100%')
-      Text(this.pageUrl.length > 0
-        ? `Ask HOPA in Chat to use this page. ${this.pageUrl}`
-        : 'Open an https page, or ask HOPA in Chat.')
+      Text(this.agentWorking
+        ? 'HOPA is working on this page. It returns to Chat when the answer is ready.'
+        : (this.pageUrl.length > 0
+          ? `Ask HOPA in Chat to use this page. ${this.pageUrl}`
+          : 'Open an https page, or ask HOPA in Chat.'))
         .fontSize(12)
-        .fontColor('#666666')
+        .fontColor($r('app.color.text_secondary'))
         .width('100%')
         .maxLines(2)
       if (this.message.length > 0) {
         Text(this.message)
           .fontSize(11)
-          .fontColor('#B42318')
+          .fontColor($r('app.color.danger'))
           .width('100%')
           .maxLines(2)
       }

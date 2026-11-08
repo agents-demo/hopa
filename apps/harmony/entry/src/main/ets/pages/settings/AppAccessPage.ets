@@ -20,7 +20,7 @@ export struct AppAccessPage {
         .fontWeight(FontWeight.Bold)
       Text('A confirmed bundle without a device check may still be tried by the agent. Unconfirmed catalogue entries never launch a guessed bundle. This is the app access policy; there is no per-app toggle.')
         .fontSize(12)
-        .fontColor('#666666')
+        .fontColor($r('app.color.text_secondary'))
       List({ space: 6 }) {
         ForEach(this.verifiedApps(), (app: CatalogApp, index: number) => {
           ListItem() {
@@ -30,14 +30,14 @@ export struct AppAccessPage {
                 .fontWeight(FontWeight.Bold)
               Text(app.bundle)
                 .fontSize(11)
-                .fontColor('#666666')
+                .fontColor($r('app.color.text_secondary'))
               Text(`ability: ${app.ability.length > 0 ? app.ability : 'unknown'}`)
                 .fontSize(10)
-                .fontColor('#999999')
+                .fontColor($r('app.color.text_hint'))
             }
             .width('100%')
             .padding(10)
-            .backgroundColor('#F7F8FA')
+            .backgroundColor($r('app.color.surface_alt'))
             .borderRadius(8)
             .alignItems(HorizontalAlign.Start)
           }

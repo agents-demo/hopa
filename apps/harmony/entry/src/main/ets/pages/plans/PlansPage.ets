@@ -66,15 +66,12 @@ export struct PlansPage {
 
   build() {
     Column({ space: 12 }) {
-      Text('Plans')
-        .fontSize(22)
-        .fontWeight(FontWeight.Bold)
       Text('Scheduled goals that run while HOPA is open. This image has no system alarm, so nothing fires after the app is closed.')
         .fontSize(12)
-        .fontColor('#666666')
+        .fontColor($r('app.color.text_secondary'))
       Text(this.status)
         .fontSize(12)
-        .fontColor('#999999')
+        .fontColor($r('app.color.text_hint'))
       Row({ space: 6 }) {
         Button('Every 5 min')
           .fontSize(10)
@@ -105,7 +102,7 @@ export struct PlansPage {
           })
         Text(`${this.items.length} planned`)
           .fontSize(11)
-          .fontColor('#999999')
+          .fontColor($r('app.color.text_hint'))
       }
       .width('100%')
       TextInput({ placeholder: 'Goal for the plan', text: this.goal })
@@ -124,22 +121,22 @@ export struct PlansPage {
                     .maxLines(2)
                   Text(`${item.label()} | ${this.when(item)}`)
                     .fontSize(10)
-                    .fontColor('#999999')
+                    .fontColor($r('app.color.text_hint'))
                 }
                 .layoutWeight(1)
                 .alignItems(HorizontalAlign.Start)
                 Button('Delete')
                   .fontSize(10)
                   .height(26)
-                  .backgroundColor('#E5E6E8')
-                  .fontColor('#B42318')
+                  .backgroundColor($r('app.color.divider'))
+                  .fontColor($r('app.color.danger'))
                   .onClick(() => {
                     this.remove(item.id);
                   })
               }
               .width('100%')
               .padding(8)
-              .backgroundColor('#F7F8FA')
+              .backgroundColor($r('app.color.surface_alt'))
               .borderRadius(8)
             }
           }, (item: ScheduledTask, index: number) => `${item.id}-${item.enabled}-${item.nextRunAt}`)
@@ -149,7 +146,7 @@ export struct PlansPage {
       } else {
         Text('No plans yet. Type a goal above, then choose how often it should run.')
           .fontSize(12)
-          .fontColor('#999999')
+          .fontColor($r('app.color.text_hint'))
       }
     }
     .width('100%')

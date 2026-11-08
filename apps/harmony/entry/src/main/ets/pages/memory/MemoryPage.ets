@@ -96,19 +96,16 @@ export struct MemoryPage {
 
   build() {
     Column({ space: 12 }) {
-      Text('Memory & skills')
-        .fontSize(22)
-        .fontWeight(FontWeight.Bold)
       Row({ space: 8 }) {
         Button('Facts')
-          .backgroundColor(this.section === 0 ? '#0A59F7' : '#E5E6E8')
-          .fontColor(this.section === 0 ? '#FFFFFF' : '#333333')
+          .backgroundColor(this.section === 0 ? $r('app.color.primary') : $r('app.color.divider'))
+          .fontColor(this.section === 0 ? $r('app.color.on_primary') : $r('app.color.text_primary'))
           .onClick(() => {
             this.section = 0;
           })
         Button('Skills')
-          .backgroundColor(this.section === 1 ? '#0A59F7' : '#E5E6E8')
-          .fontColor(this.section === 1 ? '#FFFFFF' : '#333333')
+          .backgroundColor(this.section === 1 ? $r('app.color.primary') : $r('app.color.divider'))
+          .fontColor(this.section === 1 ? $r('app.color.on_primary') : $r('app.color.text_primary'))
           .onClick(() => {
             this.section = 1;
           })
@@ -117,13 +114,13 @@ export struct MemoryPage {
       if (this.status.length > 0) {
         Text(this.status)
           .fontSize(11)
-          .fontColor('#666666')
+          .fontColor($r('app.color.text_secondary'))
       }
       if (this.section === 0) {
         Column({ space: 12 }) {
           Text('Only what you type here is stored. It is added to HOPA\'s prompt; delete anything you do not want kept.')
             .fontSize(13)
-            .fontColor('#666666')
+            .fontColor($r('app.color.text_secondary'))
           Row({ space: 8 }) {
             TextInput({ placeholder: 'e.g. I prefer aisle seats', text: this.memoryDraft })
               .layoutWeight(1)
@@ -147,8 +144,8 @@ export struct MemoryPage {
               })
             Button('Clear facts')
               .fontSize(12)
-              .backgroundColor('#E5E6E8')
-              .fontColor('#B42318')
+              .backgroundColor($r('app.color.divider'))
+              .fontColor($r('app.color.danger'))
               .onClick(() => {
                 this.clearFacts();
               })
@@ -169,7 +166,7 @@ export struct MemoryPage {
                 }
                 .width('100%')
                 .padding(12)
-                .backgroundColor('#F7F8FA')
+                .backgroundColor($r('app.color.surface_alt'))
                 .borderRadius(8)
               }
             }, (item: MemoryItem) => item.id)
@@ -184,7 +181,7 @@ export struct MemoryPage {
         Column({ space: 10 }) {
           Text('A skill is a procedure HOPA follows when your request contains the trigger words.')
             .fontSize(13)
-            .fontColor('#666666')
+            .fontColor($r('app.color.text_secondary'))
           TextInput({ placeholder: 'Skill name, e.g. Book a table', text: this.skillName })
             .onChange((value: string) => {
               this.skillName = value;
@@ -220,17 +217,17 @@ export struct MemoryPage {
                   .width('100%')
                   Text(`when: ${item.trigger}`)
                     .fontSize(12)
-                    .fontColor('#666666')
+                    .fontColor($r('app.color.text_secondary'))
                   Text(`used ${item.uses}, ok ${item.successes}`)
                     .fontSize(11)
-                    .fontColor('#999999')
+                    .fontColor($r('app.color.text_hint'))
                   Text(item.guidance)
                     .fontSize(13)
                     .maxLines(4)
                 }
                 .width('100%')
                 .padding(12)
-                .backgroundColor('#F7F8FA')
+                .backgroundColor($r('app.color.surface_alt'))
                 .borderRadius(8)
                 .alignItems(HorizontalAlign.Start)
               }
@@ -245,7 +242,7 @@ export struct MemoryPage {
       }
       Text(`Runs recorded: ${AgentService.get().runs.all().length}`)
         .fontSize(12)
-        .fontColor('#666666')
+        .fontColor($r('app.color.text_secondary'))
     }
     .width('100%')
     .height('100%')

@@ -32,7 +32,7 @@ export struct ModelsPage {
     Column({ space: 12 }) {
       Text('Current model')
         .fontSize(12)
-        .fontColor('#666666')
+        .fontColor($r('app.color.text_secondary'))
       Text(this.label.length > 0 ? this.label : 'not configured')
         .fontSize(20)
         .fontWeight(FontWeight.Bold)
@@ -48,7 +48,7 @@ export struct ModelsPage {
         .fontWeight(FontWeight.Bold)
       Text('OpenAI-compatible (OpenAI, DeepSeek, local), Anthropic and Gemini use the same fields. Speech models are not available in this SDK.')
         .fontSize(11)
-        .fontColor('#999999')
+        .fontColor($r('app.color.text_hint'))
       Button('Open Settings')
         .fontSize(12)
         .onClick(() => {
