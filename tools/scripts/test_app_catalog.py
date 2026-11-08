@@ -49,8 +49,8 @@ def test_catalogue_counts_and_status() -> None:
     sites = module.collect_sites()
     assert len(apps) == 27
     assert len(sites) == 21
-    assert sum(1 for app in apps if app["verified"]) == 7
-    assert sum(1 for app in apps if not app["confirmed"]) == 15
+    assert sum(1 for app in apps if app["verified"]) == 8
+    assert sum(1 for app in apps if not app["confirmed"]) == 14
     # Verified apps must carry a launchable ability.
     assert all(app["ability"] for app in apps if app["verified"])
 
