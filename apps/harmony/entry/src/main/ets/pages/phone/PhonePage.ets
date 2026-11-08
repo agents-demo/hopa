@@ -6,15 +6,26 @@ import { HopaMark } from '../chat/HopaMark';
 export struct PhonePage {
   onOpenSettings: () => void = () => {};
   @State bridgeState: string = 'not checked';
+  @State checking: boolean = false;
 
   private async check(): Promise<void> {
+    if (this.checking) {
+      return;
+    }
     if (!AgentService.get().isBridgeConfigured()) {
       this.bridgeState = 'not configured';
       return;
     }
+    this.checking = true;
     this.bridgeState = 'checking...';
-    const ok: boolean = await AgentService.get().testBridge();
-    this.bridgeState = ok ? 'connected' : `unreachable (${AgentService.get().bridgeFailure()})`;
+    try {
+      const ok: boolean = await AgentService.get().testBridge();
+      this.bridgeState = ok ? 'connected' : `unreachable (${AgentService.get().bridgeFailure()})`;
+    } catch (error) {
+      this.bridgeState = 'unreachable';
+    } finally {
+      this.checking = false;
+    }
   }
 
   /** Never show a blank or stuck state, even before the first health check. */
@@ -78,12 +89,28 @@ export struct PhonePage {
             AgentService.get().isAccessibilityAvailable()
           )
           Divider().color($r('app.color.divider'))
-          this.StateLine(
-            'PC bridge',
-            this.statusText(),
-            'Runs pc-agent on your PC and sends taps over the USB tunnel or Wi-Fi.',
-            this.statusText() === 'connected'
-          )
+          Column({ space: 3 }) {
+            Row({ space: 8 }) {
+              Text('PC bridge')
+                .fontSize(14)
+                .fontColor($r('app.color.text_primary'))
+                .layoutWeight(1)
+              Text(this.statusText())
+                .fontSize(11)
+                .fontWeight(FontWeight.Medium)
+                .fontColor(this.statusText() === 'connected'
+                  ? $r('app.color.success')
+                  : $r('app.color.warning'))
+            }
+            .width('100%')
+            Text('Runs pc-agent on your PC and sends taps over the USB tunnel or Wi-Fi.')
+              .fontSize(11)
+              .lineHeight(16)
+              .fontColor($r('app.color.text_hint'))
+          }
+          .width('100%')
+          .padding({ top: 12, bottom: 12 })
+          .alignItems(HorizontalAlign.Start)
         }
         .width('100%')
         .padding({ left: 14, right: 14, top: 2, bottom: 2 })
@@ -112,9 +139,10 @@ export struct PhonePage {
         }
 
         Row({ space: 8 }) {
-          Button('Check again')
+          Button(this.checking ? 'Checking...' : 'Check again')
             .fontSize(12)
             .height(38)
+            .enabled(!this.checking)
             .onClick(() => {
               this.check();
             })
