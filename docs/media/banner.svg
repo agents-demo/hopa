@@ -22,8 +22,8 @@
   <circle cx="60" cy="510" r="250" fill="#0A59F7" opacity="0.04"/>
   <circle cx="1010" cy="500" r="120" fill="#E8703A" opacity="0.05"/>
 
-  <!-- Small mascot, left -->
-  <g transform="translate(88 118) scale(0.34)" filter="url(#markShadow)">
+  <!-- Small mascot, left; top aligned with the HOPA wordmark -->
+  <g transform="translate(88 96) scale(0.34)" filter="url(#markShadow)">
     <path d="M 350 226 L 412 164" stroke="url(#coral)" stroke-width="32" stroke-linecap="round" fill="none"/>
     <rect x="180" y="422" width="44" height="44" rx="14" fill="url(#coral)"/>
     <rect x="266" y="422" width="44" height="44" rx="14" fill="url(#coral)"/>
@@ -35,17 +35,14 @@
   </g>
 
   <!-- Words -->
-  <text x="308" y="208" font-family="'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
+  <text x="308" y="200" font-family="'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
         font-size="104" font-weight="800" letter-spacing="-3" fill="#1C1B18">HOPA</text>
-  <text x="312" y="260" font-family="'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
+  <text x="312" y="252" font-family="'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
         font-size="28" font-weight="500" fill="#6F675B">Say it. HOPA does it.</text>
-
-  <text x="312" y="342" font-family="'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
-        font-size="34" font-weight="600" fill="#1C1B18">Reads the screen. Taps. Types.</text>
-  <text x="312" y="394" font-family="'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
-        font-size="34" font-weight="600" fill="#E8703A">Asks before money moves.</text>
-  <text x="312" y="446" font-family="'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
-        font-size="21" fill="#8B8375">The hands-off phone assistant</text>
+  <text x="312" y="290" font-family="'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
+        font-size="21" fill="#8B8375">The phone assistant for HarmonyOS.</text>
+  <text x="312" y="362" font-family="'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
+        font-size="22" fill="#1C1B18">Reads the screen. Taps. Types. Asks before money moves.</text>
 
   <!-- The app working, right -->
   <g transform="translate(1136 34)" filter="url(#phoneShadow)">
