@@ -41,7 +41,6 @@
   <rect width="1600" height="520" fill="url(#dots)"/>
 
   <!-- Small mascot, left; top aligned with the HOPA wordmark -->
-  <ellipse cx="196" cy="212" rx="112" ry="112" fill="#E8703A" opacity="0.08"/>
   <g transform="translate(100 96) scale(0.34)" filter="url(#markShadow)">
     <path d="M 350 226 L 412 164" stroke="url(#coral)" stroke-width="32" stroke-linecap="round" fill="none"/>
     <rect x="180" y="422" width="44" height="44" rx="14" fill="url(#coral)"/>
@@ -52,11 +51,6 @@
     <rect x="280" y="204" width="26" height="58" rx="13" fill="#1C1B18"/>
     <path d="M 236 292 Q 261 312 286 292" stroke="#1C1B18" stroke-width="13" stroke-linecap="round" fill="none"/>
   </g>
-
-  <!-- Small sparkles around the waving hand -->
-  <path d="M 262 92 L 264 100 L 272 102 L 264 104 L 262 112 L 260 104 L 252 102 L 260 100 Z" fill="#E8703A" opacity="0.65"/>
-  <path d="M 300 126 L 301.5 131 L 307 133 L 301.5 135 L 300 140 L 298.5 135 L 293 133 L 298.5 131 Z" fill="#0A59F7" opacity="0.45"/>
-  <path d="M 248 168 L 249.2 172 L 253 173.2 L 249.2 174.4 L 248 178 L 246.8 174.4 L 243 173.2 L 246.8 172 Z" fill="#E8703A" opacity="0.4"/>
 
   <!-- Words -->
   <text x="278" y="200" font-family="'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
@@ -81,10 +75,10 @@
     <circle cx="242" cy="53" r="4" fill="#B9B0A2"/>
 
     <!-- user prompt -->
-    <rect x="112" y="86" width="188" height="64" rx="20" fill="#0A59F7"/>
-    <text x="130" y="112" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="600" fill="#FFFFFF">Open Settings and</text>
-    <text x="130" y="132" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="600" fill="#FFFFFF">show me Wi-Fi</text>
-    <text x="212" y="170" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#0A59F7">Copy   Retry</text>
+    <rect x="104" y="86" width="196" height="64" rx="20" fill="#0A59F7"/>
+    <text x="122" y="112" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="600" fill="#FFFFFF">Order the cheapest</text>
+    <text x="122" y="132" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="600" fill="#FFFFFF">charger in my cart.</text>
+    <text x="196" y="170" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#0A59F7">Copy   Retry</text>
 
     <!-- tiny mascot beside the answer -->
     <g transform="translate(36 190) scale(0.09)">
@@ -99,23 +93,30 @@
     </g>
 
     <!-- answer -->
-    <text x="86" y="200" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" fill="#1C1B18">WLAN is on.</text>
-    <text x="86" y="220" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" fill="#1C1B18">You’re connected to</text>
-    <text x="86" y="240" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#1C1B18">Huawei-Guest.</text>
+    <text x="86" y="200" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" fill="#1C1B18">The Anker 20W is ¥129.</text>
+    <text x="86" y="220" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" fill="#1C1B18">I need your OK before</text>
+    <text x="86" y="240" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" fill="#1C1B18">paying.</text>
     <text x="38" y="272" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#0A59F7">Copy</text>
 
-    <!-- composer -->
-    <rect x="26" y="338" width="290" height="52" rx="26" fill="#FFFFFF" stroke="#E4DED2" stroke-width="1.5"/>
-    <text x="48" y="370" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#A39A8B">Ask HOPA…</text>
-    <circle cx="292" cy="364" r="18" fill="#0A59F7"/>
-    <path d="M292 371V357M286 363l6-6 6 6" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- payment approval card -->
+    <rect x="26" y="284" width="290" height="124" rx="20" fill="#FFFFFF" stroke="#E4DED2" stroke-width="1.5"/>
+    <rect x="244" y="296" width="60" height="16" rx="8" fill="#E8703A" opacity="0.14"/>
+    <text x="254" y="307" font-family="'Segoe UI', Arial, sans-serif" font-size="8" font-weight="700" fill="#E8703A">PAYMENT</text>
+    <text x="42" y="316" font-family="'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" fill="#1C1B18">Confirm payment?</text>
+    <text x="42" y="336" font-family="'Segoe UI', Arial, sans-serif" font-size="11.5" fill="#5E574C">¥129  ·  Anker 20W charger</text>
+    <rect x="42" y="350" width="92" height="32" rx="16" fill="#F1ECE2"/>
+    <text x="88" y="371" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="600" fill="#1C1B18">Deny</text>
+    <rect x="146" y="350" width="92" height="32" rx="16" fill="#0A59F7"/>
+    <text x="192" y="371" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="600" fill="#FFFFFF">Allow</text>
+    <text x="42" y="400" font-family="'Segoe UI', Arial, sans-serif" font-size="9" fill="#8B8375">Nothing is paid until you Allow.</text>
   </g>
 
-  <!-- Floating success chip -->
-  <g transform="translate(1360 128)" filter="url(#chipShadow)">
-    <rect width="178" height="50" rx="25" fill="#FFFFFF" stroke="#E2D9CA" stroke-width="1.5"/>
-    <circle cx="25" cy="25" r="13" fill="#2E9E6B"/>
-    <path d="M18 25l5 5 8-9" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-    <text x="48" y="31" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="600" fill="#1C1B18">WLAN is on</text>
+  <!-- Floating payment-paused chip -->
+  <g transform="translate(1360 286)" filter="url(#chipShadow)">
+    <rect width="208" height="50" rx="25" fill="#FFFFFF" stroke="#E2D9CA" stroke-width="1.5"/>
+    <circle cx="25" cy="25" r="13" fill="#0A59F7"/>
+    <rect x="20" y="19" width="3.5" height="12" rx="1.75" fill="#FFFFFF"/>
+    <rect x="27" y="19" width="3.5" height="12" rx="1.75" fill="#FFFFFF"/>
+    <text x="48" y="31" font-family="'Segoe UI', Arial, sans-serif" font-size="13.5" font-weight="600" fill="#1C1B18">Waiting for your OK</text>
   </g>
 </svg>
