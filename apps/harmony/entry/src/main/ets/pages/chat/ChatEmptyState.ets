@@ -7,7 +7,7 @@ export struct ChatEmptyState {
 
   private suggestions(): string[] {
     return [
-      'Summarize the hottest Bilibili videos',
+      'Open Bilibili and show me the 3 most popular videos',
       'Open Settings and show me Wi-Fi',
       'Draft a one-line message to my team'
     ];
@@ -50,7 +50,7 @@ export struct ChatEmptyState {
       .margin({ top: 10 })
     }
     .width('100%')
-    .height('100%')
+    .constraintSize({ minHeight: '100%' })
     .justifyContent(FlexAlign.Center)
   }
 }

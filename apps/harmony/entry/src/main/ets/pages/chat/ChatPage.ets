@@ -270,7 +270,7 @@ export struct ChatPage {
   build() {
     Column({ space: 10 }) {
       if (this.messages.length === 0) {
-        Column() {
+        Scroll() {
           ChatEmptyState({
             onPick: (text: string) => {
               this.draft = text;
@@ -279,6 +279,8 @@ export struct ChatPage {
         }
         .layoutWeight(1)
         .width('100%')
+        .scrollBar(BarState.Off)
+        .clip(true)
       } else {
         List({ space: 10, scroller: this.listScroller }) {
           ForEach(this.messages, (item: ResourceStr, index: number) => {

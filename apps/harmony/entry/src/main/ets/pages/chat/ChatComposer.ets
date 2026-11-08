@@ -11,6 +11,12 @@ export struct ChatComposer {
     return this.draft.trim().length > 0;
   }
 
+  /** Send and hand the screen back to the conversation, keyboard closed. */
+  private submit(): void {
+    this.onSend();
+    this.getUIContext().getFocusController().clearFocus();
+  }
+
   build() {
     Row({ space: 4 }) {
       TextInput({ placeholder: 'Ask HOPA...', text: this.draft })
@@ -23,7 +29,7 @@ export struct ChatComposer {
           this.onDraft(value);
         })
         .onSubmit(() => {
-          this.onSend();
+          this.submit();
         })
       Stack({ alignContent: Alignment.Center }) {
         if (this.busy) {
@@ -52,7 +58,7 @@ export struct ChatComposer {
         if (this.busy) {
           this.onStop();
         } else {
-          this.onSend();
+          this.submit();
         }
       })
     }

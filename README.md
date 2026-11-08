@@ -14,7 +14,7 @@
 
 **You have better things to do than tap through menus.**
 
-<sub>HOPA — the hands-off phone agent.</sub>
+<sub>HOPA — the HarmonyOS On-device Phone Agent.</sub>
 
 HOPA is a phone agent for HarmonyOS. Say what you want in your own words. It
 opens the app or the website, reads the screen, taps, types and scrolls — then
@@ -42,6 +42,8 @@ HOPA has three places: **Chat** to ask, **Activity** to see what it did, and
 <td valign="middle">
 
 **The little phone with feet.**
+
+**HOPA** stands for **HarmonyOS On-device Phone Agent**.
 
 It blinks while it waits. It taps while it works. It hops when something
 actually gets done. HOPA is not a chatbot in a box; it is the part of the phone

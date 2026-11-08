@@ -9,6 +9,8 @@ import { TabIcon } from '../navigation/TabIcon';
 import { ApprovalSheet } from './chat/ApprovalSheet';
 import { PageRouter } from './PageRouter';
 import { Haptics } from '../services/Haptics';
+import { KeyboardAvoidMode as HostKeyboardAvoidMode } from '@ohos.arkui.UIContext';
+import { window } from '@kit.ArkUI';
 
 /**
  * The app shell: one page at a time, a bottom bar for the four primary areas,
@@ -18,6 +20,7 @@ import { Haptics } from '../services/Haptics';
 @Component
 struct Index {
   @State activePage: string = 'chat';
+  @State keyboardVisible: boolean = false;
   @State chatsOpen: boolean = false;
   @State chatSessions: ChatSession[] = [];
   @State chatTitle: string = '';
@@ -31,6 +34,22 @@ struct Index {
   private approvalResolve: ((allow: boolean) => void) | undefined = undefined;
 
   aboutToAppear(): void {
+    try {
+      this.getUIContext().setKeyboardAvoidMode(HostKeyboardAvoidMode.RESIZE);
+    } catch (error) {
+      // Older runtimes use the default avoidance mode.
+    }
+    try {
+      window.getLastWindow(getContext(this)).then((win: window.Window) => {
+        win.on('keyboardHeightChange', (height: number) => {
+          this.keyboardVisible = height > 0;
+        });
+      }).catch(() => {
+        // Keyboard state is cosmetic; the page still works.
+      });
+    } catch (error) {
+      // Best effort.
+    }
     const service = AgentService.get();
     service.setAbilityContext(getContext(this) as common.UIAbilityContext);
     service.setSiteOpener((url: string) => this.openSite(url));
@@ -361,7 +380,7 @@ struct Index {
         }
         .layoutWeight(1)
         .width('100%')
-        if (this.activePage !== 'browser') {
+        if (this.activePage !== 'browser' && !this.keyboardVisible) {
           this.BottomBar()
         }
       }
