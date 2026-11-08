@@ -8,10 +8,12 @@ export struct ChatPage {
   @State messages: ResourceStr[] = [];
   @State draft: string = '';
   @State busy: boolean = false;
+  @State pulse: boolean = false;
   @State lastPageUrl: string = '';
   @State lastPageTitle: string = '';
   private seenVersion: number = -1;
   private timer: number = -1;
+  private pulseTimer: number = -1;
   private listScroller: Scroller = new Scroller();
   private renderedCount: number = 0;
 
@@ -30,12 +32,19 @@ export struct ChatPage {
         this.sync();
       }
     }, 500);
+    this.pulseTimer = setInterval(() => {
+      this.pulse = !this.pulse;
+    }, 450);
   }
 
   aboutToDisappear(): void {
     if (this.timer >= 0) {
       clearInterval(this.timer);
       this.timer = -1;
+    }
+    if (this.pulseTimer >= 0) {
+      clearInterval(this.pulseTimer);
+      this.pulseTimer = -1;
     }
   }
 
@@ -140,7 +149,7 @@ export struct ChatPage {
 
     this.draft = '';
     this.busy = true;
-    this.messages = this.messages.concat([`You: ${text}`, $r('app.string.msg_working')]);
+    this.messages = this.messages.concat([`You: ${text}`]);
     this.renderedCount = this.messages.length;
     this.scrollToEnd();
     service.conversations.add('user', text);
@@ -150,10 +159,8 @@ export struct ChatPage {
     this.lastPageUrl = service.pageLinks.url();
     this.lastPageTitle = service.pageLinks.title();
 
-    const next: ResourceStr[] = this.messages.slice(0, this.messages.length - 1);
-    next.push(`HOPA: ${reply}`);
-    this.messages = next;
-    this.renderedCount = next.length;
+    this.messages = this.messages.concat([`HOPA: ${reply}`]);
+    this.renderedCount = this.messages.length;
     this.scrollToEnd();
     service.conversations.add('assistant', reply);
     this.sync();
@@ -165,6 +172,35 @@ export struct ChatPage {
 
   private stopRun(): void {
     AgentService.get().cancel();
+  }
+
+  @Builder
+  Typing() {
+    Row({ space: 4 }) {
+      Column()
+        .width(6)
+        .height(6)
+        .borderRadius(3)
+        .backgroundColor($r('app.color.text_hint'))
+        .opacity(this.pulse ? 1 : 0.3)
+        .animation({ duration: 380, curve: Curve.EaseInOut })
+      Column()
+        .width(6)
+        .height(6)
+        .borderRadius(3)
+        .backgroundColor($r('app.color.text_hint'))
+        .opacity(this.pulse ? 0.55 : 0.8)
+        .animation({ duration: 380, curve: Curve.EaseInOut })
+      Column()
+        .width(6)
+        .height(6)
+        .borderRadius(3)
+        .backgroundColor($r('app.color.text_hint'))
+        .opacity(this.pulse ? 0.3 : 1)
+        .animation({ duration: 380, curve: Curve.EaseInOut })
+    }
+    .width('100%')
+    .padding({ left: 4, top: 10, bottom: 10 })
   }
 
   @Builder
@@ -245,6 +281,7 @@ export struct ChatPage {
       .backgroundColor(this.busy
         ? $r('app.color.danger')
         : (this.canSend() ? $r('app.color.primary') : $r('app.color.surface_muted')))
+      .accessibilityText(this.busy ? 'Stop' : 'Send')
       .onClick(() => {
         if (this.busy) {
           this.stopRun();
@@ -299,26 +336,36 @@ export struct ChatPage {
       if (this.messages.length === 0) {
         this.EmptyState()
       } else {
-        List({ space: 8, scroller: this.listScroller }) {
+        List({ space: 10, scroller: this.listScroller }) {
           ForEach(this.messages, (item: ResourceStr, index: number) => {
             ListItem() {
               Row() {
-                Text(this.bubbleText(item))
-                  .padding({ left: 14, right: 14, top: 10, bottom: 10 })
-                  .backgroundColor(this.isUser(item)
-                    ? $r('app.color.primary')
-                    : $r('app.color.surface_muted'))
-                  .fontColor(this.isUser(item)
-                    ? $r('app.color.on_primary')
-                    : $r('app.color.text_primary'))
-                  .borderRadius(16)
-                  .fontSize(15)
-                  .constraintSize({ maxWidth: '84%' })
+                if (this.isUser(item)) {
+                  Text(this.bubbleText(item))
+                    .padding({ left: 14, right: 14, top: 10, bottom: 10 })
+                    .backgroundColor($r('app.color.primary'))
+                    .fontColor($r('app.color.on_primary'))
+                    .borderRadius(18)
+                    .fontSize(15)
+                    .constraintSize({ maxWidth: '84%' })
+                } else {
+                  Text(this.bubbleText(item))
+                    .width('100%')
+                    .fontSize(15)
+                    .lineHeight(22)
+                    .fontColor($r('app.color.text_primary'))
+                    .padding({ left: 2, right: 2, top: 2, bottom: 2 })
+                }
               }
               .width('100%')
               .justifyContent(this.isUser(item) ? FlexAlign.End : FlexAlign.Start)
             }
           }, (item: ResourceStr, index: number) => this.messageKey(item, index))
+          if (this.busy) {
+            ListItem() {
+              this.Typing()
+            }
+          }
         }
         .layoutWeight(1)
         .width('100%')

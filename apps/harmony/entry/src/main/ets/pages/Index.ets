@@ -248,6 +248,7 @@ struct Index {
         }
         .width(44)
         .height(44)
+        .accessibilityText('Chat history')
         .onClick(() => {
           this.openChats();
         })
@@ -269,6 +270,7 @@ struct Index {
         }
         .width(40)
         .height(44)
+        .accessibilityText('New chat')
         .onClick(() => {
           AgentService.get().conversations.newChat();
           this.refreshChats();
@@ -286,6 +288,7 @@ struct Index {
           }
           .width(44)
           .height(44)
+          .accessibilityText('Settings')
           .onClick(() => {
             this.go('settings');
           })

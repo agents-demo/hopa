@@ -115,6 +115,7 @@ export struct ChatsSheet {
     }
     .width(40)
     .height(40)
+    .accessibilityText(kind === 'search' ? 'Search chats' : 'Close history')
     .onClick(() => {
       if (kind === 'search') {
         this.searchOpen = !this.searchOpen;

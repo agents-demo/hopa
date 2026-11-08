@@ -10,6 +10,7 @@ export struct BrowserPage {
   @State pageUrl: string = '';
   @State message: string = '';
   @State agentWorking: boolean = false;
+  @State canGoBack: boolean = false;
   private controller: webview.WebviewController = new webview.WebviewController();
   private sandboxController: webview.WebviewController = new webview.WebviewController();
   private timer: number = -1;
@@ -49,83 +50,97 @@ export struct BrowserPage {
     }
   }
 
-  @Builder
-  Icon(label: string, action: string) {
-    Text(label)
-      .fontSize(24)
-      .fontColor($r('app.color.text_primary'))
-      .width(40)
-      .height(40)
-      .textAlign(TextAlign.Center)
-      .backgroundColor($r('app.color.surface_muted'))
-      .borderRadius(20)
-      .onClick(() => {
-        if (action === 'back') {
-          if (this.controller.accessBackward()) {
-            this.controller.backward();
-          }
-        } else if (action === 'forward') {
-          if (this.controller.accessForward()) {
-            this.controller.forward();
-          }
-        } else {
-          this.controller.refresh();
-        }
-      })
+  private goBack(): void {
+    try {
+      if (this.controller.accessBackward()) {
+        this.controller.backward();
+      }
+    } catch (error) {
+      // The controller may not be attached yet.
+    }
+  }
+
+  private reload(): void {
+    try {
+      this.controller.refresh();
+    } catch (error) {
+      // The controller may not be attached yet.
+    }
   }
 
   build() {
-    Column({ space: 8 }) {
-      Row({ space: 6 }) {
-        this.Icon('‹', 'back')
-        this.Icon('›', 'forward')
-        this.Icon('↻', 'reload')
-        TextInput({ text: this.address, placeholder: 'https://...' })
-          .layoutWeight(1)
-          .height(40)
-          .fontSize(13)
-          .onChange((value: string) => {
-            this.address = value;
-          })
-          .onSubmit(() => {
-            this.openAddress();
-          })
-        Button('Go')
-          .fontSize(13)
-          .width(52)
-          .height(40)
-          .onClick(() => {
-            this.openAddress();
-          })
-      }
-      .width('100%')
-      Text(this.agentWorking
-        ? 'HOPA is working on this page. It returns to Chat when the answer is ready.'
-        : (this.pageUrl.length > 0
-          ? `Ask HOPA in Chat to use this page. ${this.pageUrl}`
-          : 'Open an https page, or ask HOPA in Chat.'))
-        .fontSize(12)
-        .fontColor($r('app.color.text_secondary'))
-        .width('100%')
-        .maxLines(2)
-      if (this.message.length > 0) {
-        Text(this.message)
-          .fontSize(11)
-          .fontColor($r('app.color.danger'))
-          .width('100%')
-          .maxLines(2)
-      }
+    Column() {
       Web({ src: this.webSrc, controller: this.controller })
         .layoutWeight(1)
         .width('100%')
         .onPageEnd(() => {
           try {
             this.pageUrl = this.controller.getUrl();
+            this.canGoBack = this.controller.accessBackward();
+            if (this.pageUrl.startsWith('https://')) {
+              this.address = this.pageUrl;
+            }
           } catch (error) {
             this.pageUrl = this.address;
           }
           AgentService.get().browser.attach(this.controller);
         })
+      if (this.agentWorking) {
+        Text('HOPA is working on this page. It returns to Chat when the answer is ready.')
+          .fontSize(11)
+          .fontColor($r('app.color.text_secondary'))
+          .width('100%')
+          .padding({ left: 14, right: 14, top: 4, bottom: 2 })
+          .maxLines(2)
+      }
+      if (this.message.length > 0) {
+        Text(this.message)
+          .fontSize(11)
+          .fontColor($r('app.color.danger'))
+          .width('100%')
+          .padding({ left: 14, right: 14, top: 2, bottom: 2 })
+          .maxLines(2)
+      }
+      Row({ space: 4 }) {
+        Text('‹')
+          .fontSize(24)
+          .fontColor($r('app.color.text_primary'))
+          .width(36)
+          .height(38)
+          .textAlign(TextAlign.Center)
+          .opacity(this.canGoBack ? 1 : 0.3)
+          .accessibilityText('Back')
+          .onClick(() => {
+            this.goBack();
+          })
+        TextInput({ text: this.address, placeholder: 'https://...' })
+          .layoutWeight(1)
+          .height(38)
+          .fontSize(13)
+          .backgroundColor($r('app.color.surface_muted'))
+          .borderRadius(19)
+          .padding({ left: 12, right: 12 })
+          .onChange((value: string) => {
+            this.address = value;
+          })
+          .onSubmit(() => {
+            this.openAddress();
+          })
+        Text('↻')
+          .fontSize(19)
+          .fontColor($r('app.color.text_primary'))
+          .width(36)
+          .height(38)
+          .textAlign(TextAlign.Center)
+          .accessibilityText('Reload')
+          .onClick(() => {
+            this.reload();
+          })
+      }
+      .width('100%')
+      .padding({ left: 8, right: 8, top: 6, bottom: 8 })
+      .backgroundColor($r('app.color.surface'))
+      .border({ width: { top: 1 }, color: $r('app.color.divider') })
       Web({ src: 'about:blank', controller: this.sandboxController })
         .width(1)
         .height(1)
@@ -136,6 +151,5 @@ export struct BrowserPage {
     }
     .width('100%')
     .height('100%')
-    .padding(8)
   }
 }
