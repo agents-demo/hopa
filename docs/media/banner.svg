@@ -58,7 +58,7 @@
   <text x="282" y="252" font-family="'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
         font-size="30" font-weight="500" fill="#2B2722">Say it. HOPA does it.</text>
   <text x="282" y="292" font-family="'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
-        font-size="20" fill="#4A443A">The phone assistant for HarmonyOS.</text>
+        font-size="20" fill="#4A443A">The phone agent for HarmonyOS.</text>
   <rect x="282" y="312" width="86" height="6" rx="3" fill="#E8703A" opacity="0.9"/>
   <text x="282" y="374" font-family="'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
         font-size="23" font-weight="500" fill="#1C1B18">Reads the screen. Taps. Types. Asks before money moves.</text>
