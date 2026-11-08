@@ -1,7 +1,8 @@
 # Device bundle names
 
 Bundle names are the first thing an agent gets wrong. Every name below was
-checked on the Pura 90 emulator (HarmonyOS 6.1.1, API 24) on 2026-11-06 with:
+checked on the Pura 90 emulator (HarmonyOS 6.1.1, API 24) or, where the row
+says Mate 80, on the Mate 80 (HarmonyOS 6.0, API 22) on 2026-11-08 with:
 
 ```bash
 pc-agent apps
@@ -25,6 +26,7 @@ name cannot be checked here.
 | Gallery | `com.huawei.hmos.photos` | verified | launched, "Gallery" title read; ability `com.huawei.hmos.photos.MainAbility` |
 | Contacts / Phone | `com.ohos.contacts` | verified | launched, Phone/Contacts/Favorites tabs read; ability `com.ohos.contacts.EntryAbility` |
 | AppGallery | `com.huawei.hmsapp.appgallery` | verified | present in `pc-agent apps`, bundle dump ok; ability `MainAbility` |
+| Weibo | `com.sina.weibo.stage` | verified (Mate 80) | bundle dump and `aa start -a EntryAbility`; ability `EntryAbility` |
 | Camera | `com.huawei.hmos.camera` | not on this image | absent from `pc-agent apps` |
 | Clock | `com.huawei.hmos.clock` | not on this image | absent from `pc-agent apps` |
 | Music | `com.huawei.hmos.music` | not on this image | absent; only `com.huawei.hms.musicservice` exists |
