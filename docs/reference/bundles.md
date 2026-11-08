@@ -31,6 +31,20 @@ name cannot be checked here.
 | Music | `com.huawei.hmsapp.music` | verified (Mate 80) | bundle dump; ability `MainAbility` |
 | Notepad / Notes | `com.huawei.hmos.notepad` | verified (Mate 80) | bundle dump; ability `MainAbility` |
 | Petal Maps | `com.huawei.hmos.maps.app` | verified (Mate 80) | bundle dump; ability `EntryAbility` |
+| Weibo | `com.sina.weibo.stage` | verified (Mate 80) | bundle dump; ability `EntryAbility` |
+| Bilibili | `yylx.danmaku.bili` | verified (Mate 80) | bundle dump; ability `EntryAbility` |
+| Douyin | `com.ss.hm.ugc.aweme` | verified (Mate 80) | bundle dump; ability `MainAbility` |
+| WeChat | `com.tencent.wechat` | verified (Mate 80) | bundle dump; ability `EntryAbility` |
+| Xianyu | `com.taobao.idlefish4ohos` | verified (Mate 80) | bundle dump; ability `EntryAbility` |
+| Kuaishou | `com.kuaishou.hmapp` | verified (Mate 80) | bundle dump; ability `EntryAbility` |
+| Alipay | `com.alipay.mobile.client` | verified (Mate 80) | bundle dump; ability `EntryAbility` |
+| Taobao | `com.taobao.taobao4hmos` | verified (Mate 80) | bundle dump; ability `Taobao_mainAbility` |
+| JD | `com.jd.hm.mall` | verified (Mate 80) | bundle dump; ability `EntryAbility` |
+| Baidu | `com.baidu.baiduapp` | verified (Mate 80) | bundle dump; ability `EntryAbility` |
+| WPS Office | `cn.wps.mobileoffice.hap` | verified (Mate 80) | bundle dump; ability `DocumentAbility` |
+| Trip.com | `com.ctrip.harmonynext` | verified (Mate 80) | bundle dump; ability `CTEntryAbility` |
+| Qunar | `com.qunar.hos` | verified (Mate 80) | bundle dump; ability `EntryAbility` |
+| Quark | `com.quark.ohosbrowser` | verified (Mate 80) | bundle dump; ability `EntryAbility` |
 
 Three names in the first draft were wrong and are now corrected:
 `com.huawei.hmos.contacts` -> `com.ohos.contacts`,
@@ -79,7 +93,7 @@ The catalogue and the installed bundles drift apart quickly. Run:
 py tools/scripts/verify-bundles.py --hdc "C:\Program Files\Huawei\DevEco Studio\sdk\default\openharmony\toolchains\hdc.exe" --device 127.0.0.1:5555
 ```
 
-It prints all 27 apps, whether each bundle is installed, and whether the file
+It prints all 35 apps, whether each bundle is installed, and whether the file
 has `bundle_verified`. Use `--input bm-dump.txt` for a saved `bm dump -a`
 output, and `--check` to exit 1 when an app marked verified is missing. The tool
 does not edit `APP.md`; add `bundle_verified` only after a launch smoke test.

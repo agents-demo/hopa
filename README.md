@@ -108,9 +108,9 @@ action names.
 <tr>
 <td width="50%" align="center" valign="top">
 
-<img src="docs/media/launchpad-top-2026.jpeg" alt="HOPA Launchpad showing Bilibili, Camera and Clock verified" height="560" />
+<img src="docs/media/launchpad-top-2026.jpeg" alt="HOPA Launchpad showing Alipay, Baidu and Bilibili verified" height="560" />
 
-<br/><sub><b>Launchpad.</b> 27 apps, 18 verified on the test phone. Bilibili, Camera and Clock are now openable.</sub>
+<br/><sub><b>Launchpad.</b> 35 apps, 26 verified on the test phone. Alipay, Baidu and Bilibili are now openable.</sub>
 
 </td>
 <td width="50%" align="center" valign="top">
@@ -124,16 +124,16 @@ action names.
 <tr>
 <td width="50%" align="center" valign="top">
 
-<img src="docs/media/launchpad-douyin-2026.jpeg" alt="HOPA Launchpad showing Douyin and Kuaishou verified" height="560" />
+<img src="docs/media/launchpad-douyin-2026.jpeg" alt="HOPA Launchpad showing Camera, Clock and Douyin verified" height="560" />
 
-<br/><sub><b>Chinese apps.</b> Douyin and Kuaishou — plus WeChat, Weibo and Xianyu — are verified on this phone.</sub>
+<br/><sub><b>Chinese apps.</b> Camera, Clock and Douyin are real, verified entries now.</sub>
 
 </td>
 <td width="50%" align="center" valign="top">
 
-<img src="docs/media/launchpad-music-2026.jpeg" alt="HOPA Launchpad showing Music, Notes, Petal Maps and Kuaishou" height="560" />
+<img src="docs/media/launchpad-music-2026.jpeg" alt="HOPA Launchpad showing JD, Kuaishou, Music, Notes and Petal Maps" height="560" />
 
-<br/><sub><b>More of the phone.</b> Music, Notes and Petal Maps are real entries now, not “no bundle”.</sub>
+<br/><sub><b>More Chinese apps.</b> JD, Kuaishou, Music, Notes and Petal Maps are verified too.</sub>
 
 </td>
 </tr>
@@ -233,7 +233,7 @@ machine, not in the cloud.
 ## Good to know
 
 - HOPA sees the screen you see. It cannot work while it is fully closed.
-- It will not guess an app it does not know. 9 of the 27 catalogue apps do not
+- It will not guess an app it does not know. 9 of the 35 catalogue apps do not
   have a verified HarmonyOS bundle yet.
 - Login, CAPTCHA and verification codes stay with you.
 - Some apps block automation; HOPA stops and hands over.

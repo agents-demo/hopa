@@ -6,6 +6,7 @@ import { ChatEmptyState } from './ChatEmptyState';
 import { ChatPageCard } from './ChatPageCard';
 import { ChatComposer } from './ChatComposer';
 import { ChatTyping } from './ChatTyping';
+import { MessageActions } from './MessageActions';
 import { HopaMark } from './HopaMark';
 import { Haptics } from '../../services/Haptics';
 
@@ -165,14 +166,34 @@ export struct ChatPage {
     return item;
   }
 
+  /** Hide raw tool-call markup a model may leak into its answer. */
+  private stripToolMarkup(text: string): string {
+    const kept: string[] = [];
+    for (const line of text.split('\n')) {
+      if (/DSML|<\/?parameter|<\/?invoke|string="true"/i.test(line)) {
+        continue;
+      }
+      kept.push(line);
+    }
+    let clean: string = kept.join('\n');
+    clean = clean.replace(/<\|\s*[\s\S]*?\s*\|>/g, '');
+    clean = clean.replace(/<\/?\s*parameter[^>]*>/gi, '');
+    clean = clean.replace(/<\/?\s*invoke[^>]*>/gi, '');
+    return clean;
+  }
+
   /** Chat bubbles are plain text; strip the Markdown a model may add. */
   private plainAnswer(text: string): string {
-    let clean: string = text.replace(/\*\*/g, '');
+    let clean: string = this.stripToolMarkup(text);
+    clean = clean.replace(/\*\*/g, '');
     clean = clean.replace(/__/g, '');
     clean = clean.replace(/`/g, '');
     clean = clean.replace(/^#{1,6}\s*/gm, '');
     clean = clean.replace(/^>\s?/gm, '');
-    return clean;
+    if (clean.trim().length === 0) {
+      return 'I hit a formatting error. Please try again.';
+    }
+    return clean.trim();
   }
 
   private async send(): Promise<void> {
@@ -274,22 +295,15 @@ export struct ChatPage {
                       .constraintSize({ maxWidth: '84%' })
                       .copyOption(CopyOptions.LocalDevice)
                     if (index === this.lastUserIndex() && !this.busy) {
-                      Row({ space: 14 }) {
-                        Text('Copy')
-                          .fontSize(11)
-                          .fontColor($r('app.color.primary'))
-                          .padding({ top: 2, bottom: 2 })
-                          .onClick(() => {
-                            this.copy(this.textOf(item));
-                          })
-                        Text('Retry')
-                          .fontSize(11)
-                          .fontColor($r('app.color.primary'))
-                          .padding({ top: 2, bottom: 2 })
-                          .onClick(() => {
-                            this.retry();
-                          })
-                      }
+                      MessageActions({
+                        showRetry: true,
+                        onCopy: () => {
+                          this.copy(this.textOf(item));
+                        },
+                        onRetry: () => {
+                          this.retry();
+                        }
+                      })
                       .padding({ right: 4 })
                     }
                   }
@@ -313,13 +327,12 @@ export struct ChatPage {
                         .padding({ left: 2, right: 2, top: 2, bottom: 2 })
                         .copyOption(CopyOptions.LocalDevice)
                       if (index === this.lastAnswerIndex() && !this.busy) {
-                        Text('Copy')
-                          .fontSize(11)
-                          .fontColor($r('app.color.primary'))
-                          .padding({ left: 2, top: 2, bottom: 2 })
-                          .onClick(() => {
+                        MessageActions({
+                          showRetry: false,
+                          onCopy: () => {
                             this.copy(this.textOf(item));
-                          })
+                          }
+                        })
                       }
                     }
                     .layoutWeight(1)
