@@ -147,11 +147,29 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Cache gitleaks
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/gitleaks
+          key: gitleaks-v8.30.1
       - name: Install gitleaks
         run: |
-          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz" -o /tmp/gitleaks.tar.gz
-          tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
-          sudo install /tmp/gitleaks /usr/local/bin/gitleaks
+          set -euo pipefail
+          mkdir -p ~/.cache/gitleaks
+          if [ ! -x ~/.cache/gitleaks/gitleaks ]; then
+            for attempt in 1 2 3 4 5; do
+              if curl -sSfL --retry 5 --retry-all-errors --retry-delay 3 \
+                --connect-timeout 15 \
+                "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz" \
+                -o /tmp/gitleaks.tar.gz; then
+                break
+              fi
+              echo "gitleaks download failed (attempt $attempt); retrying"
+              sleep 5
+            done
+            tar -xzf /tmp/gitleaks.tar.gz -C ~/.cache/gitleaks gitleaks
+          fi
+          sudo install ~/.cache/gitleaks/gitleaks /usr/local/bin/gitleaks
       - name: gitleaks
         run: gitleaks detect --source . --no-git --config .gitleaks.toml --verbose --redact
       - name: License check
