@@ -51,6 +51,7 @@ export struct CapabilitiesPage {
     .height(78)
     .padding(12)
     .backgroundColor($r('app.color.surface'))
+    .border({ width: 1, color: $r('app.color.divider') })
     .borderRadius(12)
     .alignItems(HorizontalAlign.Start)
     .justifyContent(FlexAlign.Center)
@@ -95,6 +96,7 @@ export struct CapabilitiesPage {
         .width('100%')
         .padding(14)
         .backgroundColor($r('app.color.surface'))
+        .border({ width: 1, color: $r('app.color.divider') })
         .borderRadius(14)
         .alignItems(HorizontalAlign.Start)
         .onClick(() => {
@@ -140,7 +142,7 @@ export struct CapabilitiesPage {
         .width('100%')
       }
       .width('100%')
-      .padding(16)
+      .padding(20)
       .alignItems(HorizontalAlign.Start)
     }
     .width('100%')

@@ -283,15 +283,16 @@ struct Index {
           .fontColor($r('app.color.text_primary'))
           .layoutWeight(1)
         if (this.activePage === 'capabilities') {
-          Stack({ alignContent: Alignment.Center }) {
-            TabIcon({ kind: 'settings', active: false })
-          }
-          .width(44)
-          .height(44)
-          .accessibilityText('Settings')
-          .onClick(() => {
-            this.go('settings');
-          })
+          Text('Settings')
+            .fontSize(12)
+            .fontColor($r('app.color.primary'))
+            .padding({ left: 10, right: 10, top: 6, bottom: 6 })
+            .backgroundColor($r('app.color.primary_soft'))
+            .borderRadius(8)
+            .accessibilityText('Settings')
+            .onClick(() => {
+              this.go('settings');
+            })
         }
       }
     }
@@ -362,7 +363,9 @@ struct Index {
         }
         .layoutWeight(1)
         .width('100%')
-        this.BottomBar()
+        if (this.activePage !== 'browser') {
+          this.BottomBar()
+        }
       }
       .width('100%')
       .height('100%')

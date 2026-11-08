@@ -116,6 +116,7 @@ export struct ActivityPage {
     .width('100%')
     .padding({ left: 14, right: 14, top: 12, bottom: 12 })
     .backgroundColor($r('app.color.surface'))
+    .border({ width: 1, color: $r('app.color.divider') })
     .borderRadius(12)
     .onClick(() => {
       this.onNavigate(key);
@@ -151,6 +152,7 @@ export struct ActivityPage {
         .width('100%')
         .padding(14)
         .backgroundColor($r('app.color.surface'))
+        .border({ width: 1, color: $r('app.color.divider') })
         .borderRadius(14)
         .alignItems(HorizontalAlign.Start)
         if (this.recentActions().length > 0) {
@@ -204,7 +206,7 @@ export struct ActivityPage {
         this.Card('Plans', 'Goals that run while HOPA is open', 'plans')
       }
       .width('100%')
-      .padding(16)
+      .padding(20)
       .alignItems(HorizontalAlign.Start)
       .constraintSize({ minHeight: '100%' })
     }
