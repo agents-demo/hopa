@@ -18,12 +18,9 @@
   </defs>
 
   <rect width="1600" height="520" fill="url(#paper)"/>
-  <circle cx="1460" cy="40" r="220" fill="#E8703A" opacity="0.05"/>
-  <circle cx="60" cy="510" r="250" fill="#0A59F7" opacity="0.04"/>
-  <circle cx="1010" cy="500" r="120" fill="#E8703A" opacity="0.05"/>
 
   <!-- Small mascot, left; top aligned with the HOPA wordmark -->
-  <g transform="translate(88 96) scale(0.34)" filter="url(#markShadow)">
+  <g transform="translate(110 96) scale(0.34)" filter="url(#markShadow)">
     <path d="M 350 226 L 412 164" stroke="url(#coral)" stroke-width="32" stroke-linecap="round" fill="none"/>
     <rect x="180" y="422" width="44" height="44" rx="14" fill="url(#coral)"/>
     <rect x="266" y="422" width="44" height="44" rx="14" fill="url(#coral)"/>
@@ -35,17 +32,17 @@
   </g>
 
   <!-- Words -->
-  <text x="308" y="200" font-family="'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
+  <text x="278" y="200" font-family="'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
         font-size="104" font-weight="800" letter-spacing="-3" fill="#1C1B18">HOPA</text>
-  <text x="312" y="252" font-family="'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
-        font-size="28" font-weight="500" fill="#6F675B">Say it. HOPA does it.</text>
-  <text x="312" y="290" font-family="'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
-        font-size="21" fill="#8B8375">The phone assistant for HarmonyOS.</text>
-  <text x="312" y="362" font-family="'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
-        font-size="22" fill="#1C1B18">Reads the screen. Taps. Types. Asks before money moves.</text>
+  <text x="282" y="252" font-family="'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
+        font-size="30" font-weight="500" fill="#322E28">Say it. HOPA does it.</text>
+  <text x="282" y="292" font-family="'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
+        font-size="20" fill="#3F3A32">The phone assistant for HarmonyOS.</text>
+  <text x="282" y="364" font-family="'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
+        font-size="23" font-weight="500" fill="#1C1B18">Reads the screen. Taps. Types. Asks before money moves.</text>
 
   <!-- The app working, right -->
-  <g transform="translate(1136 34)" filter="url(#phoneShadow)">
+  <g transform="translate(1000 34)" filter="url(#phoneShadow)">
     <rect width="342" height="452" rx="48" fill="#FFFFFF" stroke="#E4DED2" stroke-width="2"/>
     <rect x="16" y="26" width="310" height="400" rx="34" fill="#F7F4EE"/>
 
