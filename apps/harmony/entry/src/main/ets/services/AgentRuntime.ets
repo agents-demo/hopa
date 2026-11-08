@@ -8,9 +8,7 @@ import {
   ModelClient,
   RouteMatch,
   RunNarrator,
-  Skill,
-  SkillDraft,
-  SkillDrafter
+  Skill
 } from '@hopa/core';
 import { AccessibilityCapability } from '@hopa/capability-accessibility';
 import { hilog } from '@kit.PerformanceAnalysisKit';
@@ -22,6 +20,7 @@ import { LoggingModelClient } from './LoggingModelClient';
 import { ModelFactory } from './ModelFactory';
 import { AppCatalogPrompt } from './AppCatalogPrompt';
 import { AppRouteTargets } from './AppRouteTargets';
+import { PageLinkService } from './PageLinkService';
 import { MemoryStore } from './MemoryStore';
 import { SkillStore } from './SkillStore';
 
@@ -37,6 +36,7 @@ export class AgentRuntime {
   private bridge: BridgeClient;
   private accessibility: AccessibilityCapability;
   private background: BackgroundKeeper;
+  private pageLinks: PageLinkService;
 
   private batch: BatchRunner = new BatchRunner();
   private model: ModelClient | undefined = undefined;
@@ -58,7 +58,8 @@ export class AgentRuntime {
     browser: BrowserController,
     bridge: BridgeClient,
     accessibility: AccessibilityCapability,
-    background: BackgroundKeeper
+    background: BackgroundKeeper,
+    pageLinks: PageLinkService
   ) {
     this.executor = executor;
     this.memory = memory;
@@ -67,6 +68,7 @@ export class AgentRuntime {
     this.bridge = bridge;
     this.accessibility = accessibility;
     this.background = background;
+    this.pageLinks = pageLinks;
     this.appNames = AppRouteTargets.displayNames();
   }
 
@@ -144,11 +146,7 @@ export class AgentRuntime {
   }
 
   saveLastRunAsSkill(): Skill | undefined {
-    const draft: SkillDraft | undefined = SkillDrafter.draft(this.lastGoal, this.lastTranscript);
-    if (draft === undefined) {
-      return undefined;
-    }
-    return this.skills.add(draft.name, draft.trigger, draft.guidance);
+    return this.skills.draftFrom(this.lastGoal, this.lastTranscript);
   }
 
   async run(goal: string): Promise<string> {
@@ -175,6 +173,7 @@ export class AgentRuntime {
     this.lastGoal = goal;
     this.lastSuccess = false;
     this.lastTranscript = '';
+    this.pageLinks.clear();
     const matchedSkill: Skill | undefined = this.skills.match(goal);
     this.matchedSkillId = matchedSkill === undefined ? '' : matchedSkill.id;
     this.loop.setMemory(this.memory.toPrompt());
@@ -235,6 +234,7 @@ export class AgentRuntime {
     }
     const transcript: string = lines.join('\n');
     this.lastTranscript = transcript;
+    this.pageLinks.capture(outcomes, this.browser);
     this.lastSuccess = !this.loop.wasCancelled() && outcomes.every(
       (outcome: ActionOutcome) => outcome.executed && outcome.observation.success
     );

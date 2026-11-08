@@ -62,6 +62,9 @@ Before money moves, it stops and asks. Every time.
 The first two are real screenshots from the emulator. The WeChat image is a
 designed example of the app flow; the label says so.
 
+When HOPA reads a page, the chat keeps a link to that page; **Open** takes you
+back to it without retyping the address.
+
 ## What you can ask
 
 | Apps | The web |

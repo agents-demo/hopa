@@ -10,6 +10,7 @@ code.
 | Chat and reasoning | Works | Blue/grey bubbles, natural replies, no raw action logs; tokens and duration are recorded. |
 | Built-in browser | Works | Read a page, click, type; compact toolbar; one tab; the visible sandbox demo is gone. |
 | Website task from Chat | Works | One prompt opens the browser, reads the page and answers; verified with Bilibili. |
+| Chat page link | Works | After a web task the chat keeps the page URL and an Open button; verified with example.com. |
 | App control | With the PC bridge | Launch, read the screen, tap, type, scroll and go back. |
 | Untethered app control | Not on this image | The accessibility settings page is missing. A real phone with the service enabled is the untethered path. |
 | Approval sheet | Works | Human titles and labels instead of action kinds and refs; unit tested. |

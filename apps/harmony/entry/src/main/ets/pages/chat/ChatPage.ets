@@ -14,11 +14,15 @@ export struct ChatPage {
   ];
   @State draft: string = '';
   @State busy: boolean = false;
+  @State lastPageUrl: string = '';
+  @State lastPageTitle: string = '';
   private seenVersion: number = -1;
   private timer: number = -1;
 
   aboutToAppear(): void {
     const service = AgentService.get();
+    this.lastPageUrl = service.pageLinks.url();
+    this.lastPageTitle = service.pageLinks.title();
     const context = getContext(this) as Context;
     service.conversations.load(context).then(() => {
       this.render();
@@ -155,6 +159,8 @@ export struct ChatPage {
     this.sync();
 
     const reply: string = await service.run(text);
+    this.lastPageUrl = service.pageLinks.url();
+    this.lastPageTitle = service.pageLinks.title();
 
     const next: ResourceStr[] = this.messages.slice(0, this.messages.length - 1);
     next.push(`HOPA: ${reply}`);
@@ -192,6 +198,37 @@ export struct ChatPage {
       }
       .layoutWeight(1)
       .width('100%')
+      if (this.lastPageUrl.length > 0) {
+        Row({ space: 8 }) {
+          Column({ space: 2 }) {
+            Text(this.lastPageTitle.length > 0 ? this.lastPageTitle : 'Page HOPA read')
+              .fontSize(12)
+              .fontWeight(FontWeight.Medium)
+              .fontColor('#0A1B3A')
+              .maxLines(1)
+              .textOverflow({ overflow: TextOverflow.Ellipsis })
+            Text(this.lastPageUrl)
+              .fontSize(10)
+              .fontColor('#999999')
+              .maxLines(1)
+              .textOverflow({ overflow: TextOverflow.Ellipsis })
+          }
+          .layoutWeight(1)
+          .alignItems(HorizontalAlign.Start)
+          Button('Open')
+            .fontSize(12)
+            .height(28)
+            .backgroundColor('#E5E6E8')
+            .fontColor('#333333')
+            .onClick(() => {
+              AgentService.get().pageLinks.open(this.lastPageUrl);
+            })
+        }
+        .width('100%')
+        .padding(8)
+        .backgroundColor('#F7F9FF')
+        .borderRadius(8)
+      }
       Row({ space: 8 }) {
         TextInput({ placeholder: 'Ask HOPA...', text: this.draft })
           .layoutWeight(1)

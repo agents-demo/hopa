@@ -41,6 +41,11 @@ struct Index {
     const service = AgentService.get();
     service.setAbilityContext(getContext(this) as common.UIAbilityContext);
     service.setSiteOpener((url: string) => this.openSite(url));
+    service.pageLinks.setOpener((url: string) => {
+      service.browser.requestUrl(url);
+      this.activePage = 'browser';
+      this.menuOpen = false;
+    });
     this.initialize();
   }
 
@@ -53,7 +58,7 @@ struct Index {
     AgentService.get().browser.requestUrl(url);
     this.activePage = 'browser';
     this.menuOpen = false;
-    for (let attempt = 0; attempt < 150; attempt++) {
+    for (let attempt = 0; attempt < 300; attempt++) {
       if (AgentService.get().browser.isReady()) {
         return true;
       }

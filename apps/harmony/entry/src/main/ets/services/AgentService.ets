@@ -27,6 +27,7 @@ import { ScheduleService } from './ScheduleService';
 import { RunArchive } from './RunArchive';
 import { ExportService } from './ExportService';
 import { ConversationService } from './ConversationService';
+import { PageLinkService } from './PageLinkService';
 import { AgentRuntime } from './AgentRuntime';
 import { ToolRegistryDefaults } from './ToolRegistryDefaults';
 
@@ -52,6 +53,7 @@ export class AgentService {
   readonly system: SystemCapability;
   readonly runArchive: RunArchive;
   readonly conversations: ConversationService = new ConversationService();
+  readonly pageLinks: PageLinkService = new PageLinkService();
   readonly exportService: ExportService;
   readonly runtime: AgentRuntime;
 
@@ -90,7 +92,8 @@ export class AgentService {
       this.browser,
       this.bridge,
       this.accessibility,
-      this.background
+      this.background,
+      this.pageLinks
     );
     this.scheduleService.bindRunner(
       (goal: string): Promise<string> => this.run(goal),

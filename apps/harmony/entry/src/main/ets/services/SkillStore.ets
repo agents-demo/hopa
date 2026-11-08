@@ -1,6 +1,6 @@
 import { Context } from '@kit.AbilityKit';
 import { preferences } from '@kit.ArkData';
-import { Skill, SkillBook } from '@hopa/core';
+import { Skill, SkillBook, SkillDraft, SkillDrafter } from '@hopa/core';
 
 /** Persists user-authored skills. */
 export class SkillStore {
@@ -15,6 +15,15 @@ export class SkillStore {
 
   add(name: string, trigger: string, guidance: string): Skill | undefined {
     return this.book.add(name, trigger, guidance);
+  }
+
+  /** Draft a skill from a successful run and save it. */
+  draftFrom(goal: string, transcript: string): Skill | undefined {
+    const draft: SkillDraft | undefined = SkillDrafter.draft(goal, transcript);
+    if (draft === undefined) {
+      return undefined;
+    }
+    return this.add(draft.name, draft.trigger, draft.guidance);
   }
 
   remove(id: string): boolean {
