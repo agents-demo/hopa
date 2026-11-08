@@ -32,6 +32,7 @@ export class AppBoot {
       stored = await SettingsStore.load(context);
       service.setNetworkEnabled(stored.network);
       service.setAutonomous(stored.autonomous);
+      service.restoreLastUsage(stored.lastTokens, stored.lastDurationMs);
       Appearance.apply(context, stored.appearance);
       if (stored.bridgeUrl.length > 0 && stored.bridgeToken.length > 0) {
         service.configureBridge(stored.bridgeUrl, stored.bridgeToken);

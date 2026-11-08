@@ -30,6 +30,7 @@ import { ConversationService } from './ConversationService';
 import { PageLinkService } from './PageLinkService';
 import { AgentRuntime } from './AgentRuntime';
 import { ToolRegistryDefaults } from './ToolRegistryDefaults';
+import { SettingsStore, StoredSettings } from './SettingsStore';
 
 /** Process-wide composition root: policy + gate + capabilities + runtime. */
 export class AgentService {
@@ -60,6 +61,7 @@ export class AgentService {
   private networkEnabled: boolean = false;
   private autonomous: boolean = false;
   private runDone: (() => void) | undefined = undefined;
+  private context: Context | undefined = undefined;
 
   private constructor() {
     this.runs = new RunStore();
@@ -123,6 +125,23 @@ export class AgentService {
     return this.runtime.getModelLabel();
   }
 
+  hasModelKey(): boolean {
+    return this.runtime.hasModelKey();
+  }
+
+  lastRunSucceeded(): boolean {
+    return this.runtime.lastRunSucceeded();
+  }
+
+  lastRunHadActions(): boolean {
+    return this.runtime.lastRunHadActions();
+  }
+
+  /** Keeps the loaded key while changing provider, endpoint or model name. */
+  reconfigureModel(provider: string, endpoint: string, modelName: string): void {
+    this.runtime.reconfigureModel(provider, endpoint, modelName);
+  }
+
   hasModel(): boolean {
     return this.runtime.hasModel();
   }
@@ -174,8 +193,31 @@ export class AgentService {
   }
 
   setAbilityContext(context: common.UIAbilityContext): void {
+    this.context = context;
     this.background.setContext(context);
     this.scheduleService.setContext(context);
+  }
+
+  /** Restores last-run numbers saved at the end of the previous session. */
+  restoreLastUsage(tokens: number, durationMs: number): void {
+    this.runtime.restoreLastUsage(tokens, durationMs);
+  }
+
+  private persistUsage(): void {
+    if (this.context === undefined) {
+      return;
+    }
+    const context: Context = this.context;
+    this.saveRuns(context).catch(() => {
+      // Run history is best effort.
+    });
+    SettingsStore.load(context).then((stored: StoredSettings) => {
+      stored.lastTokens = this.runtime.getLastTokens();
+      stored.lastDurationMs = this.runtime.getLastDurationMs();
+      return SettingsStore.save(context, stored);
+    }).catch(() => {
+      // Usage persistence is best effort.
+    });
   }
 
   isBusy(): boolean {
@@ -239,6 +281,7 @@ export class AgentService {
     try {
       return await this.runtime.run(goal);
     } finally {
+      this.persistUsage();
       if (this.runDone !== undefined) {
         this.runDone();
       }

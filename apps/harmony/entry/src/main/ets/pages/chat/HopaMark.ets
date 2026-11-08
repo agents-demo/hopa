@@ -71,6 +71,9 @@ export struct HopaMark {
     if (this.state === 'thinking' || this.state === 'acting') {
       return this.markSize * 0.07;
     }
+    if (this.state === 'happy') {
+      return this.markSize * 0.035;
+    }
     if (this.state === 'error') {
       return this.markSize * 0.03;
     }
@@ -78,20 +81,36 @@ export struct HopaMark {
   }
 
   private armAngle(): number {
-    if (this.cheer || this.state === 'acting') {
+    if (this.cheer || this.state === 'acting' || this.state === 'happy') {
       return -38;
     }
     if (this.state === 'waiting') {
-      return -5;
+      return -22;
     }
     if (this.state === 'idle') {
-      return this.bob ? 18 : 8;
+      return this.bob ? -28 : -16;
     }
     return 12;
   }
 
   private armY(): number {
-    return this.cheer || this.state === 'acting' ? -this.markSize * 0.1 : this.markSize * 0.02;
+    if (this.cheer || this.state === 'acting' || this.state === 'happy') {
+      return -this.markSize * 0.1;
+    }
+    if (this.state === 'idle' || this.state === 'waiting') {
+      return -this.markSize * 0.06;
+    }
+    return this.markSize * 0.02;
+  }
+
+  /** A smile that reads at both 22 dp and 64 dp. */
+  private mouthPath(): string {
+    const w: number = this.markSize * 0.18;
+    const h: number = this.markSize * 0.08;
+    if (this.state === 'error') {
+      return `M 0 ${h} Q ${w / 2} 0 ${w} ${h}`;
+    }
+    return `M 0 0 Q ${w / 2} ${h} ${w} 0`;
   }
 
   private label(): string {
@@ -100,6 +119,9 @@ export struct HopaMark {
     }
     if (this.state === 'waiting') {
       return 'HOPA is waiting for your approval';
+    }
+    if (this.state === 'happy') {
+      return 'HOPA finished';
     }
     if (this.state === 'error') {
       return 'HOPA could not finish';
@@ -176,11 +198,14 @@ export struct HopaMark {
               .backgroundColor($r('app.color.text_primary'))
               .animation({ duration: 120, curve: Curve.EaseOut })
           }
-          Row()
-            .width(this.markSize * (this.state === 'waiting' ? 0.18 : 0.13))
-            .height(this.markSize * 0.025)
-            .borderRadius(this.markSize * 0.015)
-            .backgroundColor($r('app.color.text_primary'))
+          Path()
+            .width(this.markSize * 0.18)
+            .height(this.markSize * 0.08)
+            .commands(this.mouthPath())
+            .stroke($r('app.color.text_primary'))
+            .strokeWidth(this.markSize * 0.025)
+            .strokeLineCap(LineCapStyle.Round)
+            .fill(Color.Transparent)
             .opacity(this.state === 'error' ? 0.6 : 1)
         }
       }
@@ -195,7 +220,10 @@ export struct HopaMark {
     .width(this.markSize)
     .height(this.markSize)
     .opacity(this.state === 'error' ? 0.65 : (this.pulse ? 0.84 : 1))
-    .scale({ x: this.cheer ? 1.06 : 1, y: this.cheer ? 1.06 : 1 })
+    .scale({
+      x: this.cheer || this.state === 'happy' ? 1.06 : 1,
+      y: this.cheer || this.state === 'happy' ? 1.06 : 1
+    })
     .animation({ duration: 300, curve: Curve.EaseOut })
     .offset({
       y: this.state === 'idle' || this.state === 'waiting'

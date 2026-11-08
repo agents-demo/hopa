@@ -11,9 +11,11 @@ export struct ModelsPage {
   @State endpoint: string = '';
   @State model: string = '';
   @State label: string = '';
+  @State keyReady: boolean = false;
 
   aboutToAppear(): void {
     this.label = AgentService.get().getModelLabel();
+    this.keyReady = AgentService.get().hasModelKey();
     this.load();
   }
 
@@ -59,7 +61,7 @@ export struct ModelsPage {
             .fontSize(22)
             .fontWeight(FontWeight.Bold)
             .fontColor($r('app.color.text_primary'))
-          Text('Used for every new task.')
+          Text(this.keyReady ? 'Ready for every new task.' : 'Add an API key in Settings to use this model.')
             .fontSize(11)
             .fontColor($r('app.color.text_hint'))
         }
@@ -75,6 +77,8 @@ export struct ModelsPage {
           this.Line('Endpoint', this.endpoint)
           Divider().color($r('app.color.divider'))
           this.Line('Model', this.model)
+          Divider().color($r('app.color.divider'))
+          this.Line('Key', this.keyReady ? 'Loaded (hidden)' : 'Missing')
         }
         .width('100%')
         .padding({ left: 16, right: 16, top: 2, bottom: 2 })

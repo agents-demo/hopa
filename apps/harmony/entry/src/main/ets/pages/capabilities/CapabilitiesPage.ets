@@ -1,5 +1,6 @@
 import { AgentService } from '../../services/AgentService';
 import { APP_CATALOG } from '../../services/AppCatalog';
+import { HopaMark } from '../chat/HopaMark';
 
 /** Capabilities: what HOPA can use on this phone and what powers it. */
 @Component
@@ -33,6 +34,15 @@ export struct CapabilitiesPage {
 
   private memoryCount(): number {
     return AgentService.get().memory.all().length;
+  }
+
+  private actions(): number {
+    return AgentService.get().runs.all().length;
+  }
+
+  private actionCountLabel(): string {
+    const count: number = this.actions();
+    return `${count} ${count === 1 ? 'action' : 'actions'}`;
   }
 
   @Builder
@@ -74,22 +84,30 @@ export struct CapabilitiesPage {
     Scroll() {
       Column({ space: 8 }) {
         Column({ space: 6 }) {
-          Text(this.model())
-            .fontSize(16)
-            .fontWeight(FontWeight.Medium)
-            .fontColor($r('app.color.text_primary'))
-            .width('100%')
-          Row({ space: 6 }) {
-            Column()
-              .width(8)
-              .height(8)
-              .borderRadius(4)
-              .backgroundColor(this.ready()
-                ? $r('app.color.success')
-                : $r('app.color.warning'))
-            Text(`Phone control · ${this.control()}`)
-              .fontSize(11)
-              .fontColor($r('app.color.text_secondary'))
+          Row({ space: 12 }) {
+            HopaMark({ state: 'idle', markSize: 46 })
+            Column({ space: 6 }) {
+              Text(this.model())
+                .fontSize(16)
+                .fontWeight(FontWeight.Medium)
+                .fontColor($r('app.color.text_primary'))
+                .width('100%')
+              Row({ space: 6 }) {
+                Column()
+                  .width(8)
+                  .height(8)
+                  .borderRadius(4)
+                  .backgroundColor(this.ready()
+                    ? $r('app.color.success')
+                    : $r('app.color.warning'))
+                Text(`Phone control · ${this.control()}`)
+                  .fontSize(11)
+                  .fontColor($r('app.color.text_secondary'))
+              }
+              .width('100%')
+            }
+            .layoutWeight(1)
+            .alignItems(HorizontalAlign.Start)
           }
           .width('100%')
         }
@@ -110,17 +128,12 @@ export struct CapabilitiesPage {
         .width('100%')
         Row({ space: 8 }) {
           this.Tile('Memory', `${this.memoryCount()} facts`, 'memory')
-          this.Tile('Screens', 'Live phone screen', 'screens')
+          this.Tile('Runs', this.actionCountLabel(), 'runs')
         }
         .width('100%')
-        this.Section('POWER')
+        this.Section('MORE')
         Row({ space: 8 }) {
-          this.Tile('Models', 'Provider, endpoint and key', 'models')
-          this.Tile('Usage', 'Tokens and time spent', 'usage')
-        }
-        .width('100%')
-        Row({ space: 8 }) {
-          this.Tile('Phone access', 'Accessibility and bridge', 'phone')
+          this.Tile('Usage', `${this.actionCountLabel()} recorded`, 'usage')
           this.Tile('MCP servers', 'Phone and PC tools', 'mcpservers')
         }
         .width('100%')

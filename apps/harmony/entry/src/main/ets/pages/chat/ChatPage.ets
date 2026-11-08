@@ -5,7 +5,9 @@ import { AgentService } from '../../services/AgentService';
 import { ChatEmptyState } from './ChatEmptyState';
 import { ChatPageCard } from './ChatPageCard';
 import { ChatComposer } from './ChatComposer';
+import { ChatTyping } from './ChatTyping';
 import { HopaMark } from './HopaMark';
+import { Haptics } from '../../services/Haptics';
 
 /** Chat: the transcript, the empty state and the composer. */
 @Component
@@ -13,12 +15,12 @@ export struct ChatPage {
   @State messages: ResourceStr[] = [];
   @State draft: string = '';
   @State busy: boolean = false;
-  @State pulse: boolean = false;
+  @State reaction: string = '';
   @State lastPageUrl: string = '';
   @State lastPageTitle: string = '';
   private seenVersion: number = -1;
   private timer: number = -1;
-  private pulseTimer: number = -1;
+  private reactionTimer: number = -1;
   private listScroller: Scroller = new Scroller();
   private renderedCount: number = 0;
 
@@ -37,9 +39,6 @@ export struct ChatPage {
         this.sync();
       }
     }, 500);
-    this.pulseTimer = setInterval(() => {
-      this.pulse = !this.pulse;
-    }, 450);
   }
 
   aboutToDisappear(): void {
@@ -47,9 +46,9 @@ export struct ChatPage {
       clearInterval(this.timer);
       this.timer = -1;
     }
-    if (this.pulseTimer >= 0) {
-      clearInterval(this.pulseTimer);
-      this.pulseTimer = -1;
+    if (this.reactionTimer >= 0) {
+      clearTimeout(this.reactionTimer);
+      this.reactionTimer = -1;
     }
   }
 
@@ -203,6 +202,7 @@ export struct ChatPage {
 
     this.draft = '';
     this.busy = true;
+    this.reaction = '';
     this.messages = this.messages.concat([`You: ${text}`]);
     this.renderedCount = this.messages.length;
     this.scrollToEnd();
@@ -212,6 +212,9 @@ export struct ChatPage {
     const reply: string = await service.run(text);
     this.lastPageUrl = service.pageLinks.url();
     this.lastPageTitle = service.pageLinks.title();
+    if (service.lastRunHadActions()) {
+      this.react(service.lastRunSucceeded());
+    }
 
     this.messages = this.messages.concat([`HOPA: ${reply}`]);
     this.renderedCount = this.messages.length;
@@ -228,36 +231,19 @@ export struct ChatPage {
     AgentService.get().cancel();
   }
 
-  @Builder
-  Typing() {
-    Row({ space: 8 }) {
-      HopaMark({ state: 'thinking', markSize: 24 })
-      Row({ space: 4 }) {
-        Column()
-          .width(6)
-          .height(6)
-          .borderRadius(3)
-          .backgroundColor($r('app.color.text_hint'))
-          .opacity(this.pulse ? 1 : 0.3)
-          .animation({ duration: 380, curve: Curve.EaseInOut })
-        Column()
-          .width(6)
-          .height(6)
-          .borderRadius(3)
-          .backgroundColor($r('app.color.text_hint'))
-          .opacity(this.pulse ? 0.55 : 0.8)
-          .animation({ duration: 380, curve: Curve.EaseInOut })
-        Column()
-          .width(6)
-          .height(6)
-          .borderRadius(3)
-          .backgroundColor($r('app.color.text_hint'))
-          .opacity(this.pulse ? 0.3 : 1)
-          .animation({ duration: 380, curve: Curve.EaseInOut })
-      }
+  /** One small, earned reaction after a run: a hop or a softer face. */
+  private react(ok: boolean): void {
+    this.reaction = ok ? 'happy' : 'error';
+    if (ok) {
+      Haptics.tap();
     }
-    .width('100%')
-    .padding({ left: 4, top: 10, bottom: 10 })
+    if (this.reactionTimer >= 0) {
+      clearTimeout(this.reactionTimer);
+    }
+    this.reactionTimer = setTimeout(() => {
+      this.reaction = '';
+      this.reactionTimer = -1;
+    }, 2200);
   }
 
   build() {
@@ -310,7 +296,13 @@ export struct ChatPage {
                   .alignItems(HorizontalAlign.End)
                 } else {
                   Row({ space: 8 }) {
-                    HopaMark({ state: 'idle', markSize: 22, animate: index === this.lastAnswerIndex() })
+                    HopaMark({
+                      state: this.reaction.length > 0 && index === this.lastAnswerIndex()
+                        ? this.reaction
+                        : 'idle',
+                      markSize: 22,
+                      animate: index === this.lastAnswerIndex()
+                    })
                       .margin({ top: 4 })
                     Column({ space: 2 }) {
                       Text(this.bubbleText(item))
@@ -343,7 +335,7 @@ export struct ChatPage {
           }, (item: ResourceStr, index: number) => this.messageKey(item, index))
           if (this.busy) {
             ListItem() {
-              this.Typing()
+              ChatTyping()
             }
           }
         }

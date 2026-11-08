@@ -9,11 +9,13 @@ export struct ModelSettingsCard {
   @State endpoint: string = 'https://api.openai.com/v1';
   @State modelName: string = 'gpt-4o-mini';
   @State apiKey: string = '';
+  @State keyReady: boolean = false;
   @State modelLabel: string = '';
   @State status: string = '';
 
   aboutToAppear(): void {
     this.modelLabel = AgentService.get().getModelLabel();
+    this.keyReady = AgentService.get().hasModelKey();
     this.load();
   }
 
@@ -56,16 +58,30 @@ export struct ModelSettingsCard {
 
   private saveModel(): void {
     const service = AgentService.get();
+    const key: string = this.apiKey.trim();
+    if (key.length === 0 && !service.hasModelKey()) {
+      this.status = 'Enter an API key first.';
+      return;
+    }
+    if (key.length === 0) {
+      service.reconfigureModel(this.provider, this.endpoint.trim(), this.modelName.trim());
+      this.modelLabel = service.getModelLabel();
+      this.persist();
+      this.status = 'Model saved. The loaded key is still active.';
+      return;
+    }
     service.configureModel(
       this.provider,
       this.endpoint.trim(),
-      this.apiKey,
+      key,
       this.modelName.trim(),
       8
     );
+    this.keyReady = true;
+    this.apiKey = '';
     this.modelLabel = service.getModelLabel();
     this.persist();
-    this.status = `${this.provider} model set to ${this.modelLabel}. The key stays in memory.`;
+    this.status = 'Model saved. The key is loaded for this session.';
   }
 
   build() {
@@ -138,10 +154,15 @@ export struct ModelSettingsCard {
         .onChange((value: string) => {
           this.modelName = value;
         })
-      Text('API key (kept in memory only, never saved)')
+      Text(this.keyReady
+        ? 'API key (loaded; leave blank to keep it)'
+        : 'API key')
         .fontSize(12)
         .fontColor($r('app.color.text_secondary'))
-      TextInput({ text: this.apiKey, placeholder: 'sk-...' })
+      TextInput({
+        text: this.apiKey,
+        placeholder: this.keyReady ? 'Key is loaded - leave blank to keep it' : 'sk-...'
+      })
         .height(38)
         .fontSize(13)
         .backgroundColor($r('app.color.surface_muted'))

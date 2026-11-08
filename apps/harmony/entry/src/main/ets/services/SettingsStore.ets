@@ -11,6 +11,8 @@ export class StoredSettings {
   appearance: string = 'system';
   bridgeUrl: string = '';
   bridgeToken: string = '';
+  lastTokens: number = 0;
+  lastDurationMs: number = 0;
 }
 
 /**
@@ -58,6 +60,14 @@ export class SettingsStore {
     if (typeof bridgeToken === 'string') {
       settings.bridgeToken = bridgeToken;
     }
+    const lastTokens = await store.get('last_tokens', settings.lastTokens);
+    if (typeof lastTokens === 'number') {
+      settings.lastTokens = lastTokens;
+    }
+    const lastDurationMs = await store.get('last_duration_ms', settings.lastDurationMs);
+    if (typeof lastDurationMs === 'number') {
+      settings.lastDurationMs = lastDurationMs;
+    }
     return settings;
   }
 
@@ -71,6 +81,8 @@ export class SettingsStore {
     await store.put('appearance', settings.appearance);
     await store.put('bridge_url', settings.bridgeUrl);
     await store.put('bridge_token', settings.bridgeToken);
+    await store.put('last_tokens', settings.lastTokens);
+    await store.put('last_duration_ms', settings.lastDurationMs);
     await store.flush();
   }
 

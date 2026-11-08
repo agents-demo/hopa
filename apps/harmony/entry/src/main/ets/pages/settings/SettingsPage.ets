@@ -5,6 +5,7 @@ import { Appearance } from '../../services/Appearance';
 import { SettingsStore, StoredSettings } from '../../services/SettingsStore';
 import { AboutPage } from '../tools/AboutPage';
 import { SelfCheckPage } from '../tools/SelfCheckPage';
+import { ScreensPage } from '../tools/ScreensPage';
 import { AppAccessPage } from './AppAccessPage';
 import { ComputerAccessPage } from './ComputerAccessPage';
 import { DeveloperPage } from './DeveloperPage';
@@ -21,7 +22,6 @@ export struct SettingsPage {
   @State appearance: string = 'system';
   @State a11yAvailable: boolean = false;
   @State a11yInstalled: string = 'checking...';
-  @State accessibilityEnabled: boolean = false;
   @State subPage: string = '';
 
   aboutToAppear(): void {
@@ -39,11 +39,21 @@ export struct SettingsPage {
       this.bridgeUrl = stored.bridgeUrl;
       this.bridgeToken = stored.bridgeToken;
       if (this.bridgeUrl.length > 0 && this.bridgeToken.length > 0) {
-        this.bridgeStatus = 'connected (saved)';
+        await this.refreshBridge();
       }
     } catch (error) {
       // First run: keep the defaults.
     }
+  }
+
+  private async refreshBridge(): Promise<void> {
+    if (!AgentService.get().isBridgeConfigured()) {
+      this.bridgeStatus = 'not connected';
+      return;
+    }
+    this.bridgeStatus = 'checking...';
+    const ok: boolean = await AgentService.get().testBridge();
+    this.bridgeStatus = ok ? 'connected' : `unreachable: ${AgentService.get().bridgeFailure()}`;
   }
 
   private async loadA11yList(): Promise<void> {
@@ -100,6 +110,9 @@ export struct SettingsPage {
     if (this.subPage === 'selfcheck') {
       return 'Self-check';
     }
+    if (this.subPage === 'screens') {
+      return 'Live screen';
+    }
     return 'About';
   }
 
@@ -149,6 +162,8 @@ export struct SettingsPage {
           DeveloperPage()
         } else if (this.subPage === 'selfcheck') {
           SelfCheckPage()
+        } else if (this.subPage === 'screens') {
+          ScreensPage()
         } else {
           AboutPage()
         }
@@ -273,11 +288,12 @@ export struct SettingsPage {
               }
               .layoutWeight(1)
               .alignItems(HorizontalAlign.Start)
-              Toggle({ type: ToggleType.Switch, isOn: this.accessibilityEnabled })
-                .enabled(this.a11yAvailable)
-                .onChange((on: boolean) => {
-                  this.accessibilityEnabled = on;
-                })
+              Text(this.a11yAvailable ? 'Available' : 'Needs ACL')
+                .fontSize(11)
+                .fontWeight(FontWeight.Medium)
+                .fontColor(this.a11yAvailable
+                  ? $r('app.color.success')
+                  : $r('app.color.warning'))
             }
             .width('100%')
             Divider().color($r('app.color.divider'))
@@ -313,6 +329,9 @@ export struct SettingsPage {
               Text(this.bridgeStatus)
                 .fontSize(11)
                 .fontColor($r('app.color.text_secondary'))
+                .layoutWeight(1)
+                .maxLines(2)
+                .textOverflow({ overflow: TextOverflow.Ellipsis })
             }
             .width('100%')
             Text('Run "pc-agent bridge" on the PC. Used only when accessibility is unavailable.')
@@ -341,6 +360,7 @@ export struct SettingsPage {
             this.Row('App access', 'Which bundles may be launched', 'appaccess')
             this.Row('Computer access', 'PC bridge and MCP commands', 'computer')
             this.Row('Self-check', 'Verify the setup', 'selfcheck')
+            this.Row('Live screen', 'Debug mirror of this phone', 'screens')
             this.Row('Developer', 'Build and runtime details', 'developer')
             this.Row('About', 'Version, credits and licenses', 'about')
           }

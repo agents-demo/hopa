@@ -1,5 +1,6 @@
 import { RunRecord, RunStatus } from '@hopa/core';
 import { AgentService } from '../../services/AgentService';
+import { HopaMark } from '../chat/HopaMark';
 
 /** Activity: what HOPA is doing, what it did and what is scheduled. */
 @Component
@@ -82,6 +83,11 @@ export struct ActivityPage {
     return $r('app.color.danger');
   }
 
+  private actionCountLabel(): string {
+    const count: number = this.actions();
+    return `${count} ${count === 1 ? 'action' : 'actions'} recorded`;
+  }
+
   private ago(ms: number): string {
     const diff: number = Date.now() - ms;
     if (diff < 60000) {
@@ -127,27 +133,36 @@ export struct ActivityPage {
     Scroll() {
       Column({ space: 10 }) {
         Column({ space: 6 }) {
-          Row({ space: 8 }) {
-            Column()
-              .width(9)
-              .height(9)
-              .borderRadius(4.5)
-              .backgroundColor(this.isBusy()
-                ? $r('app.color.warning')
-                : $r('app.color.success'))
-            Text(this.isBusy() ? 'Working on something' : 'Ready')
-              .fontSize(17)
-              .fontWeight(FontWeight.Medium)
-              .fontColor($r('app.color.text_primary'))
+          Row({ space: 10 }) {
+            HopaMark({ state: this.isBusy() ? 'acting' : 'idle', markSize: 34 })
+            Column({ space: 6 }) {
+              Row({ space: 8 }) {
+                Column()
+                  .width(9)
+                  .height(9)
+                  .borderRadius(4.5)
+                  .backgroundColor(this.isBusy()
+                    ? $r('app.color.warning')
+                    : $r('app.color.success'))
+                Text(this.isBusy() ? 'Working on something' : 'Ready')
+                  .fontSize(17)
+                  .fontWeight(FontWeight.Medium)
+                  .fontColor($r('app.color.text_primary'))
+              }
+              Text(this.tokens() > 0
+                ? `Last run: ${this.tokens()} tokens · ${(this.duration() / 1000).toFixed(1)} s`
+                : 'No run yet.')
+                .fontSize(11)
+                .fontColor($r('app.color.text_hint'))
+              Text(this.actionCountLabel())
+                .fontSize(11)
+                .fontColor($r('app.color.text_hint'))
+            }
+            .layoutWeight(1)
+            .alignItems(HorizontalAlign.Start)
           }
-          Text(this.tokens() > 0
-            ? `Last run: ${this.tokens()} tokens · ${this.duration()} ms`
-            : 'No run in this session.')
-            .fontSize(11)
-            .fontColor($r('app.color.text_hint'))
-          Text(`${this.actions()} actions recorded`)
-            .fontSize(11)
-            .fontColor($r('app.color.text_hint'))
+          .width('100%')
+          .alignItems(VerticalAlign.Top)
         }
         .width('100%')
         .padding(14)
@@ -196,7 +211,7 @@ export struct ActivityPage {
           .width('100%')
           .padding({ top: 6 })
         this.Card('Runs and batches', 'Every action, approval and duration', 'runs')
-        this.Card('Screens', 'Live phone screen and tap targets', 'screens')
+        this.Card('Usage', 'Tokens and time spent', 'usage')
         Text('SCHEDULED')
           .fontSize(10)
           .fontColor($r('app.color.text_hint'))
