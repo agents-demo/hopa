@@ -11,14 +11,21 @@ import { Haptics } from '../../services/Haptics';
 export struct HopaMark {
   @Prop state: string = 'idle';
   @Prop markSize: number = 32;
+  /** Older transcript avatars stay still; only the live one breathes. */
+  @Prop animate: boolean = true;
   @State pulse: boolean = false;
   @State blink: boolean = false;
   @State cheer: boolean = false;
+  @State bob: boolean = false;
   private timer: number = -1;
   private blinkTimer: number = -1;
   private cheerTimer: number = -1;
+  private bobTimer: number = -1;
 
   aboutToAppear(): void {
+    if (!this.animate) {
+      return;
+    }
     if (this.state === 'thinking' || this.state === 'acting') {
       this.timer = setInterval(() => {
         this.pulse = !this.pulse;
@@ -30,6 +37,9 @@ export struct HopaMark {
         this.blink = false;
       }, 150);
     }, 4200);
+    this.bobTimer = setInterval(() => {
+      this.bob = !this.bob;
+    }, 2200);
   }
 
   aboutToDisappear(): void {
@@ -44,6 +54,10 @@ export struct HopaMark {
     if (this.cheerTimer >= 0) {
       clearTimeout(this.cheerTimer);
       this.cheerTimer = -1;
+    }
+    if (this.bobTimer >= 0) {
+      clearInterval(this.bobTimer);
+      this.bobTimer = -1;
     }
   }
 
@@ -69,6 +83,9 @@ export struct HopaMark {
     }
     if (this.state === 'waiting') {
       return -5;
+    }
+    if (this.state === 'idle') {
+      return this.bob ? 18 : 8;
     }
     return 12;
   }
@@ -180,6 +197,12 @@ export struct HopaMark {
     .opacity(this.state === 'error' ? 0.65 : (this.pulse ? 0.84 : 1))
     .scale({ x: this.cheer ? 1.06 : 1, y: this.cheer ? 1.06 : 1 })
     .animation({ duration: 300, curve: Curve.EaseOut })
+    .offset({
+      y: this.state === 'idle' || this.state === 'waiting'
+        ? (this.bob ? this.markSize * 0.025 : -this.markSize * 0.025)
+        : 0
+    })
+    .animation({ duration: 1100, curve: Curve.EaseInOut })
     .onClick(() => {
       Haptics.tap();
       this.cheer = true;
