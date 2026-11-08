@@ -82,6 +82,6 @@
     <rect x="26" y="338" width="290" height="52" rx="26" fill="#FFFFFF" stroke="#E4DED2" stroke-width="1.5"/>
     <text x="48" y="370" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#A39A8B">Ask HOPA…</text>
     <circle cx="292" cy="364" r="18" fill="#0A59F7"/>
-    <path d="M286 364h13M294 358l6 6-6 6" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M292 371V357M286 363l6-6 6 6" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
 </svg>
