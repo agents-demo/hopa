@@ -78,6 +78,8 @@ and runs work; HOPA cannot drive other apps until Huawei grants the ACL for a
 retail build. The full build stays in the repository for the emulator and for
 devices whose profile includes the ACL.
 
+To request it, follow [the ACL request walkthrough](acl-request.md).
+
 ## Verify the download
 
 ```text
