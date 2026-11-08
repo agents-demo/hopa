@@ -1,4 +1,6 @@
 import { AgentService } from '../services/AgentService';
+import { ActivityPage } from './activity/ActivityPage';
+import { CapabilitiesPage } from './capabilities/CapabilitiesPage';
 import { AppsPage } from './apps/AppsPage';
 import { ChatPage } from './chat/ChatPage';
 import { BrowserPage } from './browser/BrowserPage';
@@ -11,7 +13,6 @@ import { UsagePage } from './usage/UsagePage';
 import { RunsPage } from './runs/RunsPage';
 import { PlansPage } from './plans/PlansPage';
 import { SettingsPage } from './settings/SettingsPage';
-import { MoreToolsPage } from './tools/MoreToolsPage';
 import { ScreensPage } from './tools/ScreensPage';
 import { SelfCheckPage } from './tools/SelfCheckPage';
 import { FilesPage } from './tools/FilesPage';
@@ -26,7 +27,11 @@ export struct PageRouter {
   onNavigate: (key: string) => void = () => {};
 
   build() {
-    if (this.activePage === 'plans') {
+    if (this.activePage === 'activity') {
+      ActivityPage({ onNavigate: (key: string) => { this.onNavigate(key); } })
+    } else if (this.activePage === 'capabilities') {
+      CapabilitiesPage({ onNavigate: (key: string) => { this.onNavigate(key); } })
+    } else if (this.activePage === 'plans') {
       PlansPage()
     } else if (this.activePage === 'memory') {
       MemoryPage()
@@ -38,8 +43,6 @@ export struct PageRouter {
       SettingsPage()
     } else if (this.activePage === 'about') {
       AboutPage()
-    } else if (this.activePage === 'more') {
-      MoreToolsPage({ onNavigate: (key: string) => { this.onNavigate(key); } })
     } else if (this.activePage === 'source') {
       SourcePage()
     } else if (this.activePage === 'mcpservers') {

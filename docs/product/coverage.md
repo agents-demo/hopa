@@ -8,7 +8,7 @@ code.
 | Capability | Status | Notes |
 |---|---|---|
 | Chat and reasoning | Works | Blue/grey bubbles, natural replies, no raw action logs; tokens and duration are recorded. |
-| Navigation | Works | Bottom bar: Chat, Tools, Settings. A **History** sheet holds searchable, date-grouped chats; Tools is a searchable, grouped index. |
+| Navigation | Works | Bottom bar: Chat, Activity, Capabilities. **History** sheet with search, date groups and the active chat pinned; Activity = runs, screens and plans; Capabilities = apps, browser, memory, models, access and the app pages; Settings behind the gear. |
 | Appearance | Works | System/Light/Dark switch in Settings; semantic colour tokens with a dark palette. |
 | Built-in browser | Works | Read a page, click, type; compact toolbar; one tab; the visible sandbox demo is gone. |
 | Website task from Chat | Works | One prompt opens the browser, reads the page and answers; verified with Bilibili. |

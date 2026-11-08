@@ -59,6 +59,28 @@ export struct TabIcon {
       .width(22)
       .height(22)
       .justifyContent(FlexAlign.Center)
+    } else if (this.kind === 'activity') {
+      Stack({ alignContent: Alignment.Center }) {
+        Column()
+          .width(19)
+          .height(19)
+          .borderRadius(9.5)
+          .border({ width: 1.8, color: this.color() })
+        Column()
+          .width(1.8)
+          .height(5)
+          .borderRadius(0.9)
+          .backgroundColor(this.color())
+          .offset({ y: -2 })
+        Row()
+          .width(4.5)
+          .height(1.8)
+          .borderRadius(0.9)
+          .backgroundColor(this.color())
+          .offset({ x: 2, y: 0.5 })
+      }
+      .width(22)
+      .height(22)
     } else if (this.kind === 'settings') {
       Column({ space: 4 }) {
         Row({ space: 2 }) {

@@ -163,18 +163,26 @@ struct Index {
 
   private isTopLevel(): boolean {
     return this.activePage === 'chat' ||
-      this.activePage === 'more' ||
-      this.activePage === 'settings';
+      this.activePage === 'activity' ||
+      this.activePage === 'capabilities';
+  }
+
+  private activityChild(): boolean {
+    return this.activePage === 'runs' ||
+      this.activePage === 'screens' ||
+      this.activePage === 'plans';
   }
 
   private tabActive(key: string): boolean {
     if (key === 'chat') {
       return this.activePage === 'chat';
     }
-    if (key === 'settings') {
-      return this.activePage === 'settings';
+    if (key === 'activity') {
+      return this.activePage === 'activity' || this.activityChild();
     }
-    return this.activePage !== 'chat' && this.activePage !== 'settings';
+    return this.activePage !== 'chat' &&
+      this.activePage !== 'activity' &&
+      !this.activityChild();
   }
 
   @Builder
@@ -272,6 +280,16 @@ struct Index {
           .fontWeight(FontWeight.Medium)
           .fontColor($r('app.color.text_primary'))
           .layoutWeight(1)
+        if (this.activePage === 'capabilities') {
+          Stack({ alignContent: Alignment.Center }) {
+            TabIcon({ kind: 'settings', active: false })
+          }
+          .width(44)
+          .height(44)
+          .onClick(() => {
+            this.go('settings');
+          })
+        }
       }
     }
     .width('100%')
@@ -283,8 +301,8 @@ struct Index {
   BottomBar() {
     Row() {
       this.Tab('Chat', 'chat')
-      this.Tab('Tools', 'more')
-      this.Tab('Settings', 'settings')
+      this.Tab('Activity', 'activity')
+      this.Tab('Capabilities', 'capabilities')
     }
     .width('100%')
     .height(64)

@@ -1,5 +1,7 @@
 const TITLES: Map<string, string> = new Map<string, string>([
   ['chat', 'Chat'],
+  ['activity', 'Activity'],
+  ['capabilities', 'Capabilities'],
   ['plans', 'Plans'],
   ['memory', 'Memory'],
   ['browser', 'Browser'],
@@ -17,33 +19,11 @@ const TITLES: Map<string, string> = new Map<string, string>([
   ['usage', 'Usage'],
   ['phone', 'Phone setup'],
   ['source', 'Source'],
-  ['mcpservers', 'MCP servers'],
-  ['more', 'Tools']
+  ['mcpservers', 'MCP servers']
 ]);
 
 /** The header title for a page key. */
 export function pageTitle(key: string): string {
   const title: string | undefined = TITLES.get(key);
   return title === undefined ? 'HOPA' : title;
-}
-
-/** Pages opened from Tools get a back arrow instead of a tab. */
-export function isMoreChild(key: string): boolean {
-  return key === 'apps' ||
-    key === 'models' ||
-    key === 'usage' ||
-    key === 'phone' ||
-    key === 'source' ||
-    key === 'mcpservers' ||
-    key === 'files' ||
-    key === 'license' ||
-    key === 'runs' ||
-    key === 'selfcheck' ||
-    key === 'welcome' ||
-    key === 'memory' ||
-    key === 'screens' ||
-    key === 'settings' ||
-    key === 'about' ||
-    key === 'plans' ||
-    key === 'browser';
 }

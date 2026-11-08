@@ -344,7 +344,7 @@ Consequences:
 | `AboutPage`, `LicensePage` | `pages/settings/` |
 | `ModelsPage`, `UsagePage`, `PhonePage` | `pages/models/`, `pages/usage/`, `pages/phone/` |
 | `ScreensPage` | `pages/screens/ScreensPage.ets` |
-| `MoreToolsPage`, `SourcePage`, `McpServersPage`, `FilesPage`, `WelcomePage` | `pages/tools/` |
+| `ActivityPage`, `CapabilitiesPage`, `SourcePage`, `McpServersPage`, `FilesPage`, `WelcomePage` | `pages/activity/`, `pages/capabilities/`, `pages/tools/` |
 | `MemoryPage`, `FactsSection`, `SkillsSection` | `pages/memory/` |
 | `ChatsSheet`, `PageRouter`, `ToolCatalog`, `TabIcon`, `PageTitles` | `navigation/` |
 | `MoreRow`, `ToolRow`, `UsageLine`, `CheckLine`, `SourceLine`, `DevLine` | `components/MenuRow.ets`, `MetricRow.ets`, `StatusRow.ets` |
