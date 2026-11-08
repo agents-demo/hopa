@@ -27,8 +27,9 @@ export class AppBoot {
     service: AgentService,
     context: common.UIAbilityContext
   ): Promise<void> {
+    let stored: StoredSettings = new StoredSettings();
     try {
-      const stored: StoredSettings = await SettingsStore.load(context);
+      stored = await SettingsStore.load(context);
       service.setNetworkEnabled(stored.network);
       service.setAutonomous(stored.autonomous);
       Appearance.apply(context, stored.appearance);
@@ -49,6 +50,15 @@ export class AppBoot {
           'deepseek-v4-flash',
           6
         );
+        // Keep the Settings form in step with the model that is actually active.
+        if (stored.provider !== 'deepseek' ||
+          stored.endpoint !== 'https://api.deepseek.com/v1' ||
+          stored.model !== 'deepseek-v4-flash') {
+          stored.provider = 'deepseek';
+          stored.endpoint = 'https://api.deepseek.com/v1';
+          stored.model = 'deepseek-v4-flash';
+          await SettingsStore.save(context, stored);
+        }
       }
     } catch (error) {
       // No bundled key: a normal first run.
