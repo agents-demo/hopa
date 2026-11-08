@@ -8,6 +8,7 @@ import { pageTitle } from '../navigation/PageTitles';
 import { TabIcon } from '../navigation/TabIcon';
 import { ApprovalSheet } from './chat/ApprovalSheet';
 import { PageRouter } from './PageRouter';
+import { Haptics } from '../services/Haptics';
 
 /**
  * The app shell: one page at a time, a bottom bar for the four primary areas,
@@ -19,7 +20,7 @@ struct Index {
   @State activePage: string = 'chat';
   @State chatsOpen: boolean = false;
   @State chatSessions: ChatSession[] = [];
-  @State chatTitle: string = 'Chat';
+  @State chatTitle: string = '';
   @State approvalOpen: boolean = false;
   @State approvalTitle: string = '';
   @State approvalMessage: string = '';
@@ -66,7 +67,7 @@ struct Index {
 
   private syncTitle(): void {
     const session: ChatSession | undefined = AgentService.get().conversations.current();
-    let title: string = 'HOPA';
+    let title: string = '';
     if (session !== undefined &&
       session.entries.length > 0 &&
       session.title.length > 0 &&
@@ -106,6 +107,7 @@ struct Index {
     this.approvalTitle = content.title;
     this.approvalMessage = content.message;
     this.approvalPayment = content.payment;
+    Haptics.attention();
     this.getUIContext().animateTo({ duration: 220, curve: Curve.EaseOut }, () => {
       this.approvalOpen = true;
     });
@@ -257,13 +259,17 @@ struct Index {
         .onClick(() => {
           this.openChats();
         })
-        Text(this.chatTitle)
-          .fontSize(16)
-          .fontWeight(FontWeight.Medium)
-          .fontColor($r('app.color.text_primary'))
-          .maxLines(1)
-          .textOverflow({ overflow: TextOverflow.Ellipsis })
-          .layoutWeight(1)
+        if (this.chatTitle.length > 0) {
+          Text(this.chatTitle)
+            .fontSize(16)
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.text_primary'))
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+            .layoutWeight(1)
+        } else {
+          Row().layoutWeight(1)
+        }
         Stack({ alignContent: Alignment.Center }) {
           Row()
             .width(34)

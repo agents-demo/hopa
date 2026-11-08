@@ -8,15 +8,11 @@ import { SelfCheckPage } from '../tools/SelfCheckPage';
 import { AppAccessPage } from './AppAccessPage';
 import { ComputerAccessPage } from './ComputerAccessPage';
 import { DeveloperPage } from './DeveloperPage';
+import { ModelSettingsCard } from './ModelSettingsCard';
 
 /** Model, bridge, safety switches and the advanced sub-pages. */
 @Component
 export struct SettingsPage {
-  @State provider: string = 'openai';
-  @State modelEndpoint: string = 'https://api.openai.com/v1';
-  @State modelName: string = 'gpt-4o-mini';
-  @State apiKey: string = '';
-  @State modelLabel: string = '';
   @State networkEnabled: boolean = false;
   @State autonomous: boolean = false;
   @State bridgeUrl: string = '';
@@ -27,11 +23,9 @@ export struct SettingsPage {
   @State a11yInstalled: string = 'checking...';
   @State accessibilityEnabled: boolean = false;
   @State subPage: string = '';
-  @State status: string = '';
 
   aboutToAppear(): void {
     this.a11yAvailable = AgentService.get().isAccessibilityAvailable();
-    this.modelLabel = AgentService.get().getModelLabel();
     this.load();
     this.loadA11yList();
   }
@@ -39,9 +33,6 @@ export struct SettingsPage {
   private async load(): Promise<void> {
     try {
       const stored: StoredSettings = await SettingsStore.load(getContext(this) as Context);
-      this.provider = stored.provider;
-      this.modelEndpoint = stored.endpoint;
-      this.modelName = stored.model;
       this.networkEnabled = stored.network;
       this.autonomous = stored.autonomous;
       this.appearance = stored.appearance;
@@ -69,45 +60,17 @@ export struct SettingsPage {
   }
 
   private persist(): void {
-    const stored = new StoredSettings();
-    stored.provider = this.provider;
-    stored.endpoint = this.modelEndpoint;
-    stored.model = this.modelName;
-    stored.network = this.networkEnabled;
-    stored.autonomous = this.autonomous;
-    stored.appearance = this.appearance;
-    stored.bridgeUrl = this.bridgeUrl;
-    stored.bridgeToken = this.bridgeToken;
-    SettingsStore.save(getContext(this) as Context, stored).catch(() => {
+    const context = getContext(this) as Context;
+    SettingsStore.load(context).then((stored: StoredSettings) => {
+      stored.network = this.networkEnabled;
+      stored.autonomous = this.autonomous;
+      stored.appearance = this.appearance;
+      stored.bridgeUrl = this.bridgeUrl;
+      stored.bridgeToken = this.bridgeToken;
+      return SettingsStore.save(context, stored);
+    }).catch(() => {
       // Persistence is best effort; the in-memory settings still work.
     });
-  }
-
-  private saveModel(): void {
-    const service = AgentService.get();
-    service.configureModel(
-      this.provider,
-      this.modelEndpoint.trim(),
-      this.apiKey,
-      this.modelName.trim(),
-      8
-    );
-    this.modelLabel = service.getModelLabel();
-    this.persist();
-    this.status = `${this.provider} model set to ${this.modelLabel}. The key stays in memory.`;
-  }
-
-  private providerIndex(): number {
-    if (this.provider === 'anthropic') {
-      return 1;
-    }
-    if (this.provider === 'gemini') {
-      return 2;
-    }
-    if (this.provider === 'deepseek') {
-      return 3;
-    }
-    return 0;
   }
 
   private async connectBridge(): Promise<void> {
@@ -199,186 +162,199 @@ export struct SettingsPage {
     .alignItems(HorizontalAlign.Start)
   }
 
+  @Styles
+  cardStyle() {
+    .width('100%')
+    .padding(14)
+    .backgroundColor($r('app.color.surface'))
+    .border({ width: 1, color: $r('app.color.divider') })
+    .borderRadius(14)
+  }
+
+  @Builder
+  Label(text: string) {
+    Text(text)
+      .fontSize(10)
+      .fontColor($r('app.color.text_hint'))
+      .letterSpacing(0.6)
+      .width('100%')
+      .padding({ top: 4 })
+  }
+
   build() {
     if (this.subPage.length > 0) {
       this.SubPage()
     } else {
       Scroll() {
-        Column({ space: 16 }) {
-          Row() {
-            Text('Allow network for web tasks').layoutWeight(1)
-            Toggle({ type: ToggleType.Switch, isOn: this.networkEnabled })
-              .onChange((on: boolean) => {
-                this.networkEnabled = on;
-                AgentService.get().setNetworkEnabled(on);
-                this.persist();
-              })
-          }
-          .width('100%')
-          Row({ space: 10 }) {
-            Text('Appearance').layoutWeight(1)
-            Select([
-              { value: 'System' },
-              { value: 'Light' },
-              { value: 'Dark' }
-            ])
-              .selected(Appearance.indexOf(this.appearance))
-              .value(Appearance.MODES[Appearance.indexOf(this.appearance)])
-              .onSelect((index: number) => {
-                this.appearance = Appearance.modeAt(index);
-                Appearance.apply(
-                  getContext(this) as common.UIAbilityContext,
-                  this.appearance
-                );
-                this.persist();
-              })
-          }
-          .width('100%')
-          Row() {
-            Text(this.a11yAvailable
-              ? 'Accessibility service (available)'
-              : 'Accessibility service (requires ACL)')
-              .layoutWeight(1)
-            Toggle({ type: ToggleType.Switch, isOn: this.accessibilityEnabled })
-              .enabled(this.a11yAvailable)
-              .onChange((on: boolean) => {
-                this.accessibilityEnabled = on;
-              })
-          }
-          .width('100%')
-          Row() {
-            Text('Autonomous mode (never skips payment)').layoutWeight(1)
-            Toggle({ type: ToggleType.Switch, isOn: this.autonomous })
-              .onChange((on: boolean) => {
-                this.autonomous = on;
-                AgentService.get().setAutonomous(on);
-                this.persist();
-              })
-          }
-          .width('100%')
-          Text('PC bridge (fallback control)')
-            .fontSize(14)
-            .fontColor($r('app.color.text_secondary'))
-          TextInput({ text: this.bridgeUrl, placeholder: 'http://192.168.1.10:8765' })
-            .onChange((value: string) => {
-              this.bridgeUrl = value;
-            })
-          TextInput({ text: this.bridgeToken, placeholder: 'bridge token' })
-            .type(InputType.Password)
-            .onChange((value: string) => {
-              this.bridgeToken = value;
-            })
-          Row({ space: 8 }) {
-            Button('Connect')
-              .fontSize(12)
-              .onClick(() => {
-                this.connectBridge();
-              })
-            Text(this.bridgeStatus)
-              .fontSize(12)
-              .fontColor($r('app.color.text_secondary'))
-          }
-          .width('100%')
-          Text('Run "pc-agent bridge" on the PC. Used only when accessibility is unavailable.')
-            .fontSize(11)
-            .fontColor($r('app.color.text_hint'))
-          Text('Model provider')
-            .fontSize(14)
-            .fontColor($r('app.color.text_secondary'))
-          Select([
-            { value: 'openai' },
-            { value: 'anthropic' },
-            { value: 'gemini' },
-            { value: 'deepseek' }
-          ])
-            .selected(this.providerIndex())
-            .value(this.provider)
-            .onSelect((index: number, value: string) => {
-              this.provider = value;
-              if (value === 'anthropic') {
-                if (this.modelEndpoint === 'https://api.openai.com/v1') {
-                  this.modelEndpoint = 'https://api.anthropic.com';
-                }
-                if (this.modelName === 'gpt-4o-mini') {
-                  this.modelName = 'claude-3-5-sonnet-latest';
-                }
-              } else if (value === 'gemini') {
-                if (this.modelEndpoint === 'https://api.openai.com/v1' ||
-                  this.modelEndpoint === 'https://api.anthropic.com') {
-                  this.modelEndpoint = 'https://generativelanguage.googleapis.com';
-                }
-                if (this.modelName === 'gpt-4o-mini' || this.modelName === 'claude-3-5-sonnet-latest') {
-                  this.modelName = 'gemini-2.0-flash';
-                }
-              } else if (value === 'deepseek') {
-                this.modelEndpoint = 'https://api.deepseek.com/v1';
-                if (this.modelName === 'gpt-4o-mini' ||
-                  this.modelName === 'claude-3-5-sonnet-latest' ||
-                  this.modelName === 'gemini-2.0-flash') {
-                  this.modelName = 'deepseek-v4-flash';
-                }
-              } else {
-                if (this.modelEndpoint === 'https://api.anthropic.com' ||
-                  this.modelEndpoint === 'https://generativelanguage.googleapis.com') {
-                  this.modelEndpoint = 'https://api.openai.com/v1';
-                }
-                if (this.modelName === 'claude-3-5-sonnet-latest' || this.modelName === 'gemini-2.0-flash') {
-                  this.modelName = 'gpt-4o-mini';
-                }
+        Column({ space: 12 }) {
+          this.Label('AGENT')
+          Column({ space: 0 }) {
+            Row({ space: 10 }) {
+              Column({ space: 2 }) {
+                Text('Allow network for web tasks')
+                  .fontSize(14)
+                  .fontColor($r('app.color.text_primary'))
+                Text('Needed when HOPA opens a website.')
+                  .fontSize(10)
+                  .fontColor($r('app.color.text_hint'))
               }
-              this.persist();
-            })
-          Text('Model endpoint')
-            .fontSize(14)
-            .fontColor($r('app.color.text_secondary'))
-          TextInput({ text: this.modelEndpoint })
-            .onChange((value: string) => {
-              this.modelEndpoint = value;
-            })
-          Text('Model name')
-            .fontSize(14)
-            .fontColor($r('app.color.text_secondary'))
-          TextInput({ text: this.modelName })
-            .onChange((value: string) => {
-              this.modelName = value;
-            })
-          Text('API key (kept in memory only, never saved)')
-            .fontSize(14)
-            .fontColor($r('app.color.text_secondary'))
-          TextInput({ text: this.apiKey, placeholder: 'sk-...' })
-            .type(InputType.Password)
-            .onChange((value: string) => {
-              this.apiKey = value;
-            })
-          Button(this.modelLabel.length > 0 ? `Save (current: ${this.modelLabel})` : 'Save model settings')
-            .onClick(() => {
-              this.saveModel();
-            })
-          if (this.status.length > 0) {
-            Text(this.status)
-              .fontSize(11)
-              .fontColor($r('app.color.text_secondary'))
+              .layoutWeight(1)
+              .alignItems(HorizontalAlign.Start)
+              Toggle({ type: ToggleType.Switch, isOn: this.networkEnabled })
+                .onChange((on: boolean) => {
+                  this.networkEnabled = on;
+                  AgentService.get().setNetworkEnabled(on);
+                  this.persist();
+                })
+            }
+            .width('100%')
+            .padding({ top: 9, bottom: 9 })
+            Divider().color($r('app.color.divider'))
+            Row({ space: 10 }) {
+              Column({ space: 2 }) {
+                Text('Autonomous mode')
+                  .fontSize(14)
+                  .fontColor($r('app.color.text_primary'))
+                Text('Never skips a payment.')
+                  .fontSize(10)
+                  .fontColor($r('app.color.text_hint'))
+              }
+              .layoutWeight(1)
+              .alignItems(HorizontalAlign.Start)
+              Toggle({ type: ToggleType.Switch, isOn: this.autonomous })
+                .onChange((on: boolean) => {
+                  this.autonomous = on;
+                  AgentService.get().setAutonomous(on);
+                  this.persist();
+                })
+            }
+            .width('100%')
+            .padding({ top: 9, bottom: 9 })
+            Divider().color($r('app.color.divider'))
+            Row({ space: 10 }) {
+              Text('Appearance')
+                .fontSize(14)
+                .fontColor($r('app.color.text_primary'))
+                .layoutWeight(1)
+              Select([
+                { value: 'System' },
+                { value: 'Light' },
+                { value: 'Dark' }
+              ])
+                .selected(Appearance.indexOf(this.appearance))
+                .value(Appearance.MODES[Appearance.indexOf(this.appearance)])
+                .onSelect((index: number) => {
+                  this.appearance = Appearance.modeAt(index);
+                  Appearance.apply(
+                    getContext(this) as common.UIAbilityContext,
+                    this.appearance
+                  );
+                  this.persist();
+                })
+            }
+            .width('100%')
+            .padding({ top: 9, bottom: 9 })
           }
-          Text('Payment: always requires your confirmation. This cannot be changed.')
-            .fontSize(13)
-            .fontColor($r('app.color.danger'))
+          .cardStyle()
+          .alignItems(HorizontalAlign.Start)
+
+          this.Label('PHONE ACCESS')
+          Column({ space: 10 }) {
+            Row({ space: 10 }) {
+              Column({ space: 2 }) {
+                Text(this.a11yAvailable
+                  ? 'Accessibility service'
+                  : 'Accessibility service (requires ACL)')
+                  .fontSize(14)
+                  .fontColor($r('app.color.text_primary'))
+                Text('Lets HOPA read and tap other apps on this phone.')
+                  .fontSize(10)
+                  .fontColor($r('app.color.text_hint'))
+              }
+              .layoutWeight(1)
+              .alignItems(HorizontalAlign.Start)
+              Toggle({ type: ToggleType.Switch, isOn: this.accessibilityEnabled })
+                .enabled(this.a11yAvailable)
+                .onChange((on: boolean) => {
+                  this.accessibilityEnabled = on;
+                })
+            }
+            .width('100%')
+            Divider().color($r('app.color.divider'))
+            Text('PC bridge (fallback control)')
+              .fontSize(14)
+              .fontColor($r('app.color.text_primary'))
+            TextInput({ text: this.bridgeUrl, placeholder: 'http://192.168.1.10:8765' })
+              .height(38)
+              .fontSize(13)
+              .backgroundColor($r('app.color.surface_muted'))
+              .borderRadius(9)
+              .onChange((value: string) => {
+                this.bridgeUrl = value;
+              })
+            TextInput({ text: this.bridgeToken, placeholder: 'bridge token' })
+              .height(38)
+              .fontSize(13)
+              .backgroundColor($r('app.color.surface_muted'))
+              .borderRadius(9)
+              .type(InputType.Password)
+              .onChange((value: string) => {
+                this.bridgeToken = value;
+              })
+            Row({ space: 8 }) {
+              Button('Connect')
+                .fontSize(12)
+                .height(36)
+                .backgroundColor($r('app.color.primary'))
+                .fontColor($r('app.color.on_primary'))
+                .onClick(() => {
+                  this.connectBridge();
+                })
+              Text(this.bridgeStatus)
+                .fontSize(11)
+                .fontColor($r('app.color.text_secondary'))
+            }
+            .width('100%')
+            Text('Run "pc-agent bridge" on the PC. Used only when accessibility is unavailable.')
+              .fontSize(10)
+              .fontColor($r('app.color.text_hint'))
+          }
+          .cardStyle()
+          .alignItems(HorizontalAlign.Start)
+
+          this.Label('MODEL')
+          ModelSettingsCard()
+
+          Column({ space: 4 }) {
+            Text('Payment is always confirmed. This cannot be changed.')
+              .fontSize(12)
+              .fontColor($r('app.color.danger'))
+            Text('There is no account and no hosted backend; your key goes to the model you choose.')
+              .fontSize(10)
+              .fontColor($r('app.color.text_hint'))
+          }
+          .cardStyle()
+          .alignItems(HorizontalAlign.Start)
+
+          this.Label('ADVANCED')
+          Column({ space: 6 }) {
+            this.Row('App access', 'Which bundles may be launched', 'appaccess')
+            this.Row('Computer access', 'PC bridge and MCP commands', 'computer')
+            this.Row('Self-check', 'Verify the setup', 'selfcheck')
+            this.Row('Developer', 'Build and runtime details', 'developer')
+            this.Row('About', 'Version, credits and licenses', 'about')
+          }
+          .width('100%')
+
           Text(`Installed accessibility services: ${this.a11yInstalled}`)
-            .fontSize(11)
-            .fontColor($r('app.color.text_secondary'))
+            .fontSize(10)
+            .fontColor($r('app.color.text_hint'))
           Text('Sandbox: not bundled. Pyodide/QuickJS are optional WASM pages; there is no Linux sandbox.')
-            .fontSize(12)
-            .fontColor($r('app.color.text_secondary'))
+            .fontSize(10)
+            .fontColor($r('app.color.text_hint'))
           Text('Retention: last 100 runs and 50 remembered facts. Skills stay until you delete them.')
-            .fontSize(12)
-            .fontColor($r('app.color.text_secondary'))
-          Text('Advanced')
-            .fontSize(16)
-            .fontWeight(FontWeight.Bold)
-          this.Row('App access', 'Which bundles may be launched', 'appaccess')
-          this.Row('Computer access', 'PC bridge and MCP commands', 'computer')
-          this.Row('Self-check', 'Verify the setup', 'selfcheck')
-          this.Row('Developer', 'Build and runtime details', 'developer')
-          this.Row('About', 'Version, credits and licenses', 'about')
+            .fontSize(10)
+            .fontColor($r('app.color.text_hint'))
         }
         .width('100%')
         .padding(20)
@@ -386,6 +362,7 @@ export struct SettingsPage {
       }
       .width('100%')
       .height('100%')
+      .scrollBar(BarState.Off)
     }
   }
 }

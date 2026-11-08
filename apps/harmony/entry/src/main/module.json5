@@ -22,6 +22,9 @@
       },
       {
         "name": "ohos.permission.KEEP_BACKGROUND_RUNNING"
+      },
+      {
+        "name": "ohos.permission.VIBRATE"
       }
     ],
     "pages": "$profile:main_pages",
