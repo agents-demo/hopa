@@ -2,13 +2,10 @@ import { Context } from '@kit.AbilityKit';
 import { MemoryExtractor } from '@hopa/core';
 import { AgentService } from '../../services/AgentService';
 
-/** Chat: the transcript, the composer and the approval dialog. */
+/** Chat: the transcript, the empty state and the composer. */
 @Component
 export struct ChatPage {
-  @State messages: ResourceStr[] = [
-    $r('app.string.greeting_1'),
-    $r('app.string.greeting_2')
-  ];
+  @State messages: ResourceStr[] = [];
   @State draft: string = '';
   @State busy: boolean = false;
   @State lastPageUrl: string = '';
@@ -47,10 +44,7 @@ export struct ChatPage {
   }
 
   private render(): void {
-    const next: ResourceStr[] = [
-      $r('app.string.greeting_1'),
-      $r('app.string.greeting_2')
-    ];
+    const next: ResourceStr[] = [];
     for (const entry of AgentService.get().conversations.entries()) {
       next.push(entry.role === 'user' ? `You: ${entry.text}` : `HOPA: ${entry.text}`);
     }
@@ -107,6 +101,18 @@ export struct ChatPage {
     return clean;
   }
 
+  private suggestions(): string[] {
+    return [
+      'Summarize the hottest Bilibili videos',
+      'Open Settings and show me Wi-Fi',
+      'Draft a one-line message to my team'
+    ];
+  }
+
+  private canSend(): boolean {
+    return this.draft.trim().length > 0;
+  }
+
   private async send(): Promise<void> {
     const text: string = this.draft.trim();
     if (text.length === 0 || this.busy) {
@@ -161,81 +167,169 @@ export struct ChatPage {
     AgentService.get().cancel();
   }
 
-  build() {
-    Column({ space: 12 }) {
-      List({ space: 8, scroller: this.listScroller }) {
-        ForEach(this.messages, (item: ResourceStr, index: number) => {
-          ListItem() {
-            Row() {
-              Text(this.bubbleText(item))
-                .padding({ left: 14, right: 14, top: 10, bottom: 10 })
-                .backgroundColor(this.isUser(item) ? $r('app.color.primary') : $r('app.color.surface_muted'))
-                .fontColor(this.isUser(item) ? $r('app.color.on_primary') : $r('app.color.text_primary'))
-                .borderRadius(16)
-                .fontSize(15)
-                .constraintSize({ maxWidth: '84%' })
-            }
-            .width('100%')
-            .justifyContent(this.isUser(item) ? FlexAlign.End : FlexAlign.Start)
-          }
-        }, (item: ResourceStr, index: number) => this.messageKey(item, index))
-      }
-      .layoutWeight(1)
-      .width('100%')
-      if (this.lastPageUrl.length > 0) {
-        Row({ space: 8 }) {
-          Column({ space: 2 }) {
-            Text(this.lastPageTitle.length > 0 ? this.lastPageTitle : 'Page HOPA read')
-              .fontSize(12)
-              .fontWeight(FontWeight.Medium)
+  @Builder
+  EmptyState() {
+    Column({ space: 10 }) {
+      Text('HOPA')
+        .fontSize(30)
+        .fontWeight(FontWeight.Bold)
+        .fontColor($r('app.color.text_primary'))
+      Text('Your phone agent. Ask for something on this phone.')
+        .fontSize(14)
+        .fontColor($r('app.color.text_secondary'))
+        .textAlign(TextAlign.Center)
+      Text('I always ask before any payment.')
+        .fontSize(11)
+        .fontColor($r('app.color.text_hint'))
+      Column({ space: 6 }) {
+        ForEach(this.suggestions(), (suggestion: string) => {
+          Row() {
+            Text(suggestion)
+              .fontSize(12.5)
               .fontColor($r('app.color.text_primary'))
               .maxLines(1)
               .textOverflow({ overflow: TextOverflow.Ellipsis })
-            Text(this.lastPageUrl)
-              .fontSize(10)
-              .fontColor($r('app.color.text_hint'))
-              .maxLines(1)
-              .textOverflow({ overflow: TextOverflow.Ellipsis })
           }
-          .layoutWeight(1)
-          .alignItems(HorizontalAlign.Start)
-          Button('Open')
-            .fontSize(12)
-            .height(28)
-            .backgroundColor($r('app.color.divider'))
-            .fontColor($r('app.color.text_primary'))
-            .onClick(() => {
-              AgentService.get().pageLinks.open(this.lastPageUrl);
-            })
-        }
-        .width('100%')
-        .padding(8)
-        .backgroundColor($r('app.color.primary_soft'))
-        .borderRadius(8)
-      }
-      Row({ space: 8 }) {
-        TextInput({ placeholder: 'Ask HOPA...', text: this.draft })
-          .layoutWeight(1)
-          .onChange((value: string) => {
-            this.draft = value;
-          })
-          .onSubmit(() => {
-            this.send();
-          })
-        Button(this.busy ? $r('app.string.btn_stop') : $r('app.string.btn_send'))
-          .backgroundColor(this.busy ? $r('app.color.danger') : $r('app.color.primary'))
+          .width('100%')
+          .padding({ left: 12, right: 12, top: 10, bottom: 10 })
+          .backgroundColor($r('app.color.surface'))
+          .border({ width: 1, color: $r('app.color.divider') })
+          .borderRadius(10)
           .onClick(() => {
-            if (this.busy) {
-              this.stopRun();
-            } else {
-              this.send();
-            }
+            this.draft = suggestion;
           })
+        }, (suggestion: string) => suggestion)
       }
       .width('100%')
+      .margin({ top: 10 })
+    }
+    .layoutWeight(1)
+    .width('100%')
+    .justifyContent(FlexAlign.Center)
+  }
+
+  @Builder
+  Composer() {
+    Row({ space: 4 }) {
+      TextInput({ placeholder: 'Ask HOPA...', text: this.draft })
+        .layoutWeight(1)
+        .height(42)
+        .fontSize(15)
+        .backgroundColor(Color.Transparent)
+        .padding({ left: 8, right: 2 })
+        .onChange((value: string) => {
+          this.draft = value;
+        })
+        .onSubmit(() => {
+          this.send();
+        })
+      Stack({ alignContent: Alignment.Center }) {
+        if (this.busy) {
+          Column()
+            .width(11)
+            .height(11)
+            .borderRadius(2)
+            .backgroundColor($r('app.color.on_primary'))
+        } else {
+          Text('↑')
+            .fontSize(20)
+            .fontWeight(FontWeight.Medium)
+            .fontColor(this.canSend()
+              ? $r('app.color.on_primary')
+              : $r('app.color.text_hint'))
+        }
+      }
+      .width(36)
+      .height(36)
+      .borderRadius(18)
+      .backgroundColor(this.busy
+        ? $r('app.color.danger')
+        : (this.canSend() ? $r('app.color.primary') : $r('app.color.surface_muted')))
+      .onClick(() => {
+        if (this.busy) {
+          this.stopRun();
+        } else {
+          this.send();
+        }
+      })
+    }
+    .width('100%')
+    .padding({ left: 12, right: 4, top: 4, bottom: 4 })
+    .backgroundColor($r('app.color.surface'))
+    .border({ width: 1, color: $r('app.color.divider') })
+    .borderRadius(26)
+  }
+
+  @Builder
+  PageCard() {
+    Row({ space: 8 }) {
+      Column({ space: 2 }) {
+        Text(this.lastPageTitle.length > 0 ? this.lastPageTitle : 'Page HOPA read')
+          .fontSize(12)
+          .fontWeight(FontWeight.Medium)
+          .fontColor($r('app.color.text_primary'))
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+        Text(this.lastPageUrl)
+          .fontSize(10)
+          .fontColor($r('app.color.text_hint'))
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+      }
+      .layoutWeight(1)
+      .alignItems(HorizontalAlign.Start)
+      Text('Open')
+        .fontSize(12)
+        .fontColor($r('app.color.primary'))
+        .padding({ left: 10, right: 10, top: 6, bottom: 6 })
+        .backgroundColor($r('app.color.surface_muted'))
+        .borderRadius(8)
+        .onClick(() => {
+          AgentService.get().pageLinks.open(this.lastPageUrl);
+        })
+    }
+    .width('100%')
+    .padding(8)
+    .backgroundColor($r('app.color.primary_soft'))
+    .borderRadius(8)
+  }
+
+  build() {
+    Column({ space: 10 }) {
+      if (this.messages.length === 0) {
+        this.EmptyState()
+      } else {
+        List({ space: 8, scroller: this.listScroller }) {
+          ForEach(this.messages, (item: ResourceStr, index: number) => {
+            ListItem() {
+              Row() {
+                Text(this.bubbleText(item))
+                  .padding({ left: 14, right: 14, top: 10, bottom: 10 })
+                  .backgroundColor(this.isUser(item)
+                    ? $r('app.color.primary')
+                    : $r('app.color.surface_muted'))
+                  .fontColor(this.isUser(item)
+                    ? $r('app.color.on_primary')
+                    : $r('app.color.text_primary'))
+                  .borderRadius(16)
+                  .fontSize(15)
+                  .constraintSize({ maxWidth: '84%' })
+              }
+              .width('100%')
+              .justifyContent(this.isUser(item) ? FlexAlign.End : FlexAlign.Start)
+            }
+          }, (item: ResourceStr, index: number) => this.messageKey(item, index))
+        }
+        .layoutWeight(1)
+        .width('100%')
+      }
+      if (this.lastPageUrl.length > 0) {
+        this.PageCard()
+      }
+      this.Composer()
     }
     .width('100%')
     .height('100%')
-    .padding(16)
+    .padding({ left: 16, right: 16, top: 4, bottom: 10 })
   }
 }

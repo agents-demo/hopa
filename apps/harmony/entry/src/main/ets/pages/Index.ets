@@ -66,9 +66,13 @@ struct Index {
 
   private syncTitle(): void {
     const session: ChatSession | undefined = AgentService.get().conversations.current();
-    const title: string = session === undefined || session.title.length === 0
-      ? 'Chat'
-      : session.title;
+    let title: string = 'HOPA';
+    if (session !== undefined &&
+      session.entries.length > 0 &&
+      session.title.length > 0 &&
+      session.title !== 'New chat') {
+      title = session.title;
+    }
     if (title !== this.chatTitle) {
       this.chatTitle = title;
     }
@@ -215,22 +219,27 @@ struct Index {
           })
       }
       if (this.activePage === 'chat') {
-        Row({ space: 5 }) {
-          Column({ space: 2 }) {
-            Row().width(11).height(1.8).borderRadius(0.9).backgroundColor($r('app.color.primary'))
-            Row().width(8).height(1.8).borderRadius(0.9).backgroundColor($r('app.color.primary'))
-            Row().width(11).height(1.8).borderRadius(0.9).backgroundColor($r('app.color.primary'))
-          }
-          .width(11)
-          .height(9.4)
-          .justifyContent(FlexAlign.SpaceBetween)
-          Text('History')
-            .fontSize(12)
-            .fontColor($r('app.color.primary'))
+        Stack({ alignContent: Alignment.Center }) {
+          Column()
+            .width(19)
+            .height(19)
+            .borderRadius(9.5)
+            .border({ width: 1.8, color: $r('app.color.text_primary') })
+          Column()
+            .width(1.8)
+            .height(5)
+            .borderRadius(0.9)
+            .backgroundColor($r('app.color.text_primary'))
+            .offset({ y: -2 })
+          Row()
+            .width(4.5)
+            .height(1.8)
+            .borderRadius(0.9)
+            .backgroundColor($r('app.color.text_primary'))
+            .offset({ x: 2, y: 0.5 })
         }
-        .padding({ left: 9, right: 10, top: 6, bottom: 6 })
-        .borderRadius(8)
-        .backgroundColor($r('app.color.primary_soft'))
+        .width(44)
+        .height(44)
         .onClick(() => {
           this.openChats();
         })
@@ -303,8 +312,8 @@ struct Index {
         AgentService.get().conversations.delete(id);
         this.refreshChats();
       },
-      onNavigate: (key: string) => {
-        this.go(key);
+      onClose: () => {
+        this.chatsOpen = false;
       }
     })
   }

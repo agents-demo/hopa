@@ -1,41 +1,78 @@
 import { ChatSession } from '@hopa/core';
 import { ChatSection, searchSessions, sectionsOf } from './ChatSections';
-import { ToolEntry, ToolGroup, toolGroups } from './ToolCatalog';
 
 /**
- * The Chats sheet: history and search, opened from the Chat title.
+ * The History sheet: searchable conversations, nothing else.
  *
- * It is not the main menu. Primary navigation lives in the bottom bar; this
- * sheet is only about conversations; Settings is a bottom-bar tab.
+ * The active chat is pinned above the date groups so it is always visible.
+ * Empty sessions are not listed; a conversation appears after its first
+ * message. Settings and Tools stay in the bottom bar.
  */
 @Component
 export struct ChatsSheet {
   @Prop sessions: ChatSession[] = [];
   @Prop currentId: string = '';
   @State query: string = '';
+  @State searchOpen: boolean = false;
 
   onNewChat: () => void = () => {};
   onSelect: (id: string) => void = () => {};
   onDelete: (id: string) => void = () => {};
-  onNavigate: (key: string) => void = () => {};
+  onClose: () => void = () => {};
+
+  private real(): ChatSession[] {
+    const result: ChatSession[] = [];
+    for (const session of this.sessions) {
+      if (session.entries.length > 0) {
+        result.push(session);
+      }
+    }
+    return result;
+  }
+
+  private currentSession(): ChatSession | undefined {
+    for (const session of this.real()) {
+      if (session.id === this.currentId) {
+        return session;
+      }
+    }
+    return undefined;
+  }
+
+  private others(): ChatSession[] {
+    const current: ChatSession | undefined = this.currentSession();
+    const result: ChatSession[] = [];
+    for (const session of this.real()) {
+      if (current === undefined || session.id !== current.id) {
+        result.push(session);
+      }
+    }
+    return result;
+  }
 
   private searching(): boolean {
     return this.query.trim().length > 0;
   }
 
   private visibleSections(): ChatSection[] {
-    return sectionsOf(searchSessions(this.sessions, this.query), Date.now());
+    const base: ChatSession[] = this.searching() ? this.real() : this.others();
+    return sectionsOf(searchSessions(base, this.query), Date.now());
   }
 
-  private hasChatMatch(): boolean {
-    return searchSessions(this.sessions, this.query).length > 0;
+  private showCurrent(): boolean {
+    return !this.searching() && this.currentSession() !== undefined;
+  }
+
+  private hasResults(): boolean {
+    const base: ChatSession[] = this.searching() ? this.real() : this.others();
+    return searchSessions(base, this.query).length > 0;
   }
 
   private async confirmDelete(session: ChatSession): Promise<void> {
     try {
       const result = await this.getUIContext().getPromptAction().showDialog({
         title: 'Delete this chat?',
-        message: session.title.length > 0 ? session.title : 'New chat',
+        message: session.title.length > 0 ? session.title : 'Untitled chat',
         buttons: [
           { text: 'Cancel', color: $r('app.color.text_secondary') },
           { text: 'Delete', color: $r('app.color.danger') }
@@ -50,17 +87,87 @@ export struct ChatsSheet {
   }
 
   @Builder
+  IconButton(kind: string) {
+    Stack({ alignContent: Alignment.Center }) {
+      if (kind === 'search') {
+        Column()
+          .width(13)
+          .height(13)
+          .borderRadius(6.5)
+          .border({ width: 1.8, color: this.searchOpen
+            ? $r('app.color.primary')
+            : $r('app.color.text_secondary') })
+          .offset({ x: -2, y: -2 })
+        Row()
+          .width(1.8)
+          .height(7)
+          .borderRadius(0.9)
+          .backgroundColor(this.searchOpen
+            ? $r('app.color.primary')
+            : $r('app.color.text_secondary'))
+          .rotate({ angle: -45 })
+          .offset({ x: 5, y: 5 })
+      } else {
+        Text('✕')
+          .fontSize(18)
+          .fontColor($r('app.color.text_secondary'))
+      }
+    }
+    .width(40)
+    .height(40)
+    .onClick(() => {
+      if (kind === 'search') {
+        this.searchOpen = !this.searchOpen;
+        if (!this.searchOpen) {
+          this.query = '';
+        }
+      } else {
+        this.onClose();
+      }
+    })
+  }
+
+  @Builder
+  NewChatRow() {
+    Row({ space: 8 }) {
+      Stack({ alignContent: Alignment.Center }) {
+        Column()
+          .width(26)
+          .height(26)
+          .borderRadius(13)
+          .backgroundColor($r('app.color.primary_soft'))
+        Row().width(11).height(2).borderRadius(1).backgroundColor($r('app.color.primary'))
+        Row().width(2).height(11).borderRadius(1).backgroundColor($r('app.color.primary'))
+      }
+      .width(30)
+      .height(30)
+      Text('New chat')
+        .fontSize(14)
+        .fontColor($r('app.color.primary'))
+    }
+    .width('100%')
+    .height(46)
+    .padding({ left: 10, right: 10 })
+    .borderRadius(10)
+    .onClick(() => {
+      this.query = '';
+      this.searchOpen = false;
+      this.onNewChat();
+    })
+  }
+
+  @Builder
   ChatRow(session: ChatSession) {
     Row({ space: 6 }) {
-      Text(session.title.length > 0 ? session.title : 'New chat')
+      Text(session.title.length > 0 ? session.title : 'Untitled chat')
         .fontSize(14)
         .fontColor($r('app.color.text_primary'))
         .maxLines(1)
         .textOverflow({ overflow: TextOverflow.Ellipsis })
         .layoutWeight(1)
       if (session.id === this.currentId) {
-        Text('Current')
-          .fontSize(10)
+        Text('✓')
+          .fontSize(13)
           .fontColor($r('app.color.primary'))
       }
     }
@@ -68,9 +175,12 @@ export struct ChatsSheet {
     .height(46)
     .padding({ left: 12, right: 12 })
     .borderRadius(10)
-    .backgroundColor(session.id === this.currentId ? $r('app.color.primary_soft') : $r('app.color.surface'))
+    .backgroundColor(session.id === this.currentId
+      ? $r('app.color.primary_soft')
+      : $r('app.color.surface'))
     .onClick(() => {
       this.query = '';
+      this.searchOpen = false;
       this.onSelect(session.id);
     })
   }
@@ -92,106 +202,53 @@ export struct ChatsSheet {
     })
   }
 
-  @Builder
-  ToolRow(entry: ToolEntry) {
-    Row({ space: 8 }) {
-      Column({ space: 2 }) {
-        Text(entry.title)
-          .fontSize(14)
-          .fontColor($r('app.color.text_primary'))
-        Text(entry.subtitle)
-          .fontSize(11)
-          .fontColor($r('app.color.text_hint'))
-          .maxLines(1)
-          .textOverflow({ overflow: TextOverflow.Ellipsis })
-      }
-      .layoutWeight(1)
-      .alignItems(HorizontalAlign.Start)
-      Text('›')
-        .fontSize(16)
-        .fontColor($r('app.color.text_hint'))
-    }
-    .width('100%')
-    .height(48)
-    .padding({ left: 12, right: 12 })
-    .onClick(() => {
-      this.query = '';
-      this.onNavigate(entry.key);
-    })
-  }
-
   build() {
     Column() {
-      Row({ space: 8 }) {
+      Row({ space: 2 }) {
         Text('Chats')
           .fontSize(22)
           .fontWeight(FontWeight.Bold)
           .fontColor($r('app.color.text_primary'))
           .layoutWeight(1)
-        Button('+ New chat')
-          .fontSize(13)
-          .height(36)
-          .backgroundColor($r('app.color.primary'))
-          .fontColor($r('app.color.on_primary'))
-          .onClick(() => {
-            this.query = '';
-            this.onNewChat();
-          })
+        this.IconButton('search')
+        this.IconButton('close')
       }
       .width('100%')
-      .padding({ left: 16, right: 16, top: 4, bottom: 8 })
-      TextInput({ placeholder: 'Search chats and tools', text: this.query })
-        .height(38)
-        .fontSize(13)
-        .backgroundColor($r('app.color.surface_muted'))
-        .borderRadius(10)
-        .placeholderColor($r('app.color.text_hint'))
-        .margin({ left: 16, right: 16, bottom: 6 })
-        .onChange((value: string) => {
-          this.query = value;
-        })
+      .padding({ left: 16, right: 8, top: 2, bottom: 4 })
+      if (this.searchOpen) {
+        TextInput({ placeholder: 'Search chats', text: this.query })
+          .height(38)
+          .fontSize(13)
+          .backgroundColor($r('app.color.surface_muted'))
+          .borderRadius(10)
+          .placeholderColor($r('app.color.text_hint'))
+          .margin({ left: 16, right: 16, bottom: 6 })
+          .onChange((value: string) => {
+            this.query = value;
+          })
+      }
+      this.NewChatRow()
       List({ space: 2 }) {
-        if (this.searching()) {
-          ForEach(toolGroups(this.query), (group: ToolGroup) => {
-            ListItem() {
-              Text(`TOOLS · ${group.title}`)
-                .fontSize(10)
-                .fontColor($r('app.color.text_hint'))
-                .letterSpacing(0.6)
-                .padding({ left: 16, top: 10, bottom: 2 })
-            }
-            ForEach(group.entries, (entry: ToolEntry) => {
-              ListItem() {
-                this.ToolRow(entry)
-              }
-            }, (entry: ToolEntry) => `tool-${entry.key}`)
-          }, (group: ToolGroup) => `tg-${group.title}-${group.entries.length}-${this.query}`)
+        if (this.showCurrent()) {
+          ListItem() {
+            Text('Current')
+              .fontSize(10)
+              .fontColor($r('app.color.text_hint'))
+              .letterSpacing(0.6)
+              .padding({ left: 12, top: 10, bottom: 2 })
+          }
+          ListItem() {
+            this.ChatRow(this.currentSession() as ChatSession)
+          }
         }
-        if (!this.hasChatMatch() && !this.searching()) {
-          ListItem() {
-            Text(this.sessions.length === 0
-              ? 'No chats yet. Start one above.'
-              : 'No chats match your search.')
-              .fontSize(12)
-              .fontColor($r('app.color.text_hint'))
-              .padding({ left: 16, top: 12 })
-          }
-        } else if (this.searching() && !this.hasChatMatch() &&
-          toolGroups(this.query).length === 0) {
-          ListItem() {
-            Text('Nothing matches your search.')
-              .fontSize(12)
-              .fontColor($r('app.color.text_hint'))
-              .padding({ left: 16, top: 12 })
-          }
-        } else {
+        if (this.hasResults()) {
           ForEach(this.visibleSections(), (section: ChatSection) => {
             ListItem() {
               Text(section.label)
                 .fontSize(10)
                 .fontColor($r('app.color.text_hint'))
                 .letterSpacing(0.6)
-                .padding({ left: 16, top: 12, bottom: 4 })
+                .padding({ left: 12, top: 10, bottom: 2 })
             }
             ForEach(section.sessions, (session: ChatSession) => {
               ListItem() {
@@ -200,6 +257,13 @@ export struct ChatsSheet {
               .swipeAction({ end: () => { this.DeleteAction(session) } })
             }, (session: ChatSession) => `${session.id}-${session.updatedAt}`)
           }, (section: ChatSection) => `cs-${section.label}-${section.sessions.length}-${this.query}`)
+        } else if (!this.showCurrent()) {
+          ListItem() {
+            Text(this.searching() ? 'No chats match your search.' : 'No chats yet.')
+              .fontSize(12)
+              .fontColor($r('app.color.text_hint'))
+              .padding({ left: 12, top: 12 })
+          }
         }
       }
       .layoutWeight(1)
