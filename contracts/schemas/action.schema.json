@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/agents-demo/hopa/schemas/action.schema.json",
+  "title": "Action",
+  "description": "One device action. Unknown kinds are rejected by the executor.",
+  "type": "object",
+  "required": ["schemaVersion", "kind", "timeoutMs"],
+  "properties": {
+    "schemaVersion": { "const": "1" },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "ui.observe",
+        "ui.tap",
+        "ui.doubleTap",
+        "ui.longPress",
+        "ui.type",
+        "ui.swipe",
+        "ui.scroll",
+        "ui.back",
+        "ui.home",
+        "ui.launch",
+        "ui.stop",
+        "ui.wait",
+        "web.navigate",
+        "web.read",
+        "web.click",
+        "web.type",
+        "system.setAlarm",
+        "system.addEvent",
+        "system.openLink",
+        "system.share",
+        "system.sendMessage",
+        "system.call",
+        "system.delete",
+        "system.uninstall",
+        "system.reset",
+        "sandbox.run",
+        "payment.pay",
+        "payment.confirm",
+        "payment.checkout",
+        "payment.enterCard",
+        "payment.authorize"
+      ]
+    },
+    "ref": { "type": "string" },
+    "text": { "type": "string" },
+    "x": { "type": "integer" },
+    "y": { "type": "integer" },
+    "toX": { "type": "integer" },
+    "toY": { "type": "integer" },
+    "app": { "type": "string" },
+    "url": { "type": "string" },
+    "direction": { "type": "string", "enum": ["up", "down", "left", "right"] },
+    "timeoutMs": { "type": "integer", "minimum": 0 }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": { "properties": { "kind": { "enum": ["ui.tap", "ui.doubleTap", "ui.longPress"] } }, "required": ["kind"] },
+      "then": {
+        "anyOf": [
+          { "required": ["ref"] },
+          { "required": ["x", "y"] }
+        ]
+      }
+    },
+    {
+      "if": { "properties": { "kind": { "const": "ui.type" } }, "required": ["kind"] },
+      "then": { "required": ["text"] }
+    },
+    {
+      "if": { "properties": { "kind": { "enum": ["ui.launch", "ui.stop"] } }, "required": ["kind"] },
+      "then": { "required": ["app"] }
+    },
+    {
+      "if": { "properties": { "kind": { "const": "web.navigate" } }, "required": ["kind"] },
+      "then": { "required": ["url"] }
+    },
+    {
+      "if": { "properties": { "kind": { "enum": ["system.call", "system.sendMessage", "system.delete", "sandbox.run"] } }, "required": ["kind"] },
+      "then": { "required": ["text"] }
+    }
+  ]
+}

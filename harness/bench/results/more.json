@@ -1,0 +1,96 @@
+{
+  "started_at": "2026-11-06T10:01:51.204023+00:00",
+  "total": 3,
+  "results": [
+    {
+      "task_id": "files-locate",
+      "goal": "Locate a file by name",
+      "app": "Files",
+      "success": false,
+      "error": null,
+      "failure": "target_not_found",
+      "tokens": 0,
+      "duration_s": 6.257,
+      "steps": [
+        {
+          "action": "launch",
+          "ok": true,
+          "detail": "launched com.huawei.hmos.files",
+          "latency_ms": 527.4
+        },
+        {
+          "action": "wait",
+          "ok": true,
+          "detail": "2.0s",
+          "latency_ms": 2000.3
+        },
+        {
+          "action": "tap_text",
+          "ok": false,
+          "detail": "target not found: {'text': 'Search'}",
+          "latency_ms": 1700.8
+        }
+      ]
+    },
+    {
+      "task_id": "settings-wifi-toggle",
+      "goal": "Toggle Wi-Fi off and on",
+      "app": "Settings",
+      "success": true,
+      "error": null,
+      "failure": "target_not_found",
+      "tokens": 0,
+      "duration_s": 8.169,
+      "steps": [
+        {
+          "action": "launch",
+          "ok": true,
+          "detail": "launched com.huawei.hmos.settings",
+          "latency_ms": 792.0
+        },
+        {
+          "action": "wait",
+          "ok": true,
+          "detail": "2.0s",
+          "latency_ms": 2000.3
+        },
+        {
+          "action": "tap_text",
+          "ok": false,
+          "detail": "target not found: {'text': 'Wi-Fi'}",
+          "latency_ms": 2905.2
+        }
+      ]
+    },
+    {
+      "task_id": "settings-brightness",
+      "goal": "Change the screen brightness",
+      "app": "Settings",
+      "success": true,
+      "error": null,
+      "failure": null,
+      "tokens": 0,
+      "duration_s": 8.765,
+      "steps": [
+        {
+          "action": "launch",
+          "ok": true,
+          "detail": "launched com.huawei.hmos.settings",
+          "latency_ms": 1047.7
+        },
+        {
+          "action": "wait",
+          "ok": true,
+          "detail": "2.0s",
+          "latency_ms": 2000.2
+        },
+        {
+          "action": "tap_text",
+          "ok": true,
+          "detail": "tapped 533,1482",
+          "latency_ms": 2874.6
+        }
+      ]
+    }
+  ]
+}

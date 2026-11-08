@@ -1,0 +1,20 @@
+# Defined in Appendix B. Confirm the bundle on a device before relying on it.
+schema_version: 1
+id: messages-draft-no-send
+goal: Draft a message but do not send it
+app: Messages
+bundle: com.huawei.hmos.mms
+success:
+  type: text_visible
+  any:
+  - Hello
+  - 草稿
+steps:
+- action: launch
+- action: wait
+  seconds: 2
+- action: tap_text
+  text: New
+- action: type
+  text: Hello
+max_steps: 12

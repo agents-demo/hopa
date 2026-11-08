@@ -76,3 +76,12 @@ desktop.ini
 *.log
 *.swp
 *~
+
+# Local toolchains (Kotlin compiler, SDKs)
+.tools/
+
+# hvigor-generated module constants
+**/BuildProfile.ets
+
+# Local harness artifacts
+.hopa/

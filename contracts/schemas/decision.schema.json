@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/agents-demo/hopa/schemas/decision.schema.json",
+  "title": "Decision",
+  "description": "One model decision. Payment is never classified by the model.",
+  "type": "object",
+  "required": ["say", "done", "needUser"],
+  "properties": {
+    "action": {
+      "oneOf": [
+        { "$ref": "action.schema.json" },
+        { "type": "null" }
+      ]
+    },
+    "say": { "type": "string" },
+    "done": { "type": "boolean" },
+    "needUser": { "type": "boolean" },
+    "options": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "sessionId": { "type": "string" },
+    "version": { "type": "string" }
+  },
+  "additionalProperties": false
+}

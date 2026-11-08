@@ -1,116 +1,238 @@
-# HOPA — HarmonyOS On-device Phone Agent
+﻿<div align="center">
 
-HOPA is a GUI agent for **HarmonyOS NEXT / HarmonyOS 6+**. It operates other apps and
-websites much like a person would (read the screen, tap, type, scroll, navigate),
-runs user scripts inside an **on-device WebAssembly sandbox** (Pyodide + QuickJS,
-bundled and offline by default), and **always asks the user before any payment**.
+<img src="docs/media/banner.svg" alt="HOPA — Say it. HOPA does it." width="100%" />
 
-> **Design reference:** the open-source Android agent
-> [Mika](https://github.com/wangzan101/Mika) (Apache-2.0). No Mika source code is
-> copied into this repository; see [NOTICE](NOTICE). HOPA does **not** use Mika's
-> GPL sandbox components (e.g. proot).
+<br/><br/>
 
-## Status
+[![Status](https://img.shields.io/badge/status-working%20prototype-orange.svg)](docs/history/status-2026-11-07.md)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/HarmonyOS-6.1%20%2F%20API%2024-0A59F7.svg)](docs/guides/setup.md)
 
-Early scaffold / proof of concept. The first milestone is a PC-driven
-device-control proof of concept (`pc-agent` + `HOPA-Bench`).
-See [docs/roadmap.md](docs/roadmap.md).
+</div>
 
-| Area | State |
-| --- | --- |
-| Dev environment (DevEco Studio 26 / API 26) | see [docs/setup.md](docs/setup.md) |
-| `app/` ArkUI shell | scaffold |
-| `app/core/` agent loop, tool registry, action gate | scaffold + unit tests |
-| `app/capabilities/` web / sandbox / a11y / system | scaffold |
-| `pc-agent/` hdc + uitest CLI & MCP server | implemented |
-| `bench/` HOPA-Bench + 5 tasks | implemented |
+# HOPA
 
-## Safety model (non-negotiable)
+**You have better things to do than tap through menus.**
 
-Every action the agent proposes passes through **one** gate, `ActionExecutor`,
-in this order:
+HOPA is a phone assistant for HarmonyOS. You say what you want in your own
+words. It opens the app or the website, reads the screen, taps, types and
+scrolls — then tells you what happened.
 
+Before money moves, it stops and asks. Every time.
+
+HOPA has three places: **Chat** to ask, **Activity** to see what it did, and
+**Capabilities** to see and set up what it can use.
+
+> **Today:** a working prototype. Chat, the browser and website tasks are real.
+> On this emulator, app control uses a small PC companion; a real phone with the
+> accessibility service does not need it.
+> [The honest details →](docs/history/status-2026-11-07.md)
+
+## See it work
+
+> **You:** “Answer in Chinese: summarize the 2 hottest Bilibili videos today,
+> with titles and view counts.”
+>
+> **HOPA:** opens Bilibili, reads the page and answers in Chinese with the two
+> hottest videos. If it needs to post, send or pay, it asks first.
+
+<table>
+<tr>
+<td width="33%" align="center" valign="top">
+
+<img src="docs/media/chat.jpeg" alt="Real chat: HOPA answers in Chinese about the hottest Bilibili videos" height="560" />
+
+<br/><sub><b>Real: the answer.</b> Asked for the hottest Bilibili videos, HOPA opened the page, read it, and answered in Chinese with titles and view counts.</sub>
+
+</td>
+<td width="33%" align="center" valign="top">
+
+<img src="docs/media/capabilities.jpeg" alt="Real Capabilities screen: model, phone control, apps, browser, memory, screens" height="560" />
+
+<br/><sub><b>Real: what it can use.</b> The model, the working phone control path, and the apps, browser, memory and screen tools on one screen.</sub>
+
+</td>
+<td width="33%" align="center" valign="top">
+
+<img src="docs/media/activity.jpeg" alt="Real Activity screen: recent actions, runs and scheduled plans" height="560" />
+
+<br/><sub><b>Real: what it did.</b> Recent actions with their status, the full run history behind them, and scheduled plans.</sub>
+
+</td>
+</tr>
+</table>
+
+All three are real screenshots from the emulator.
+
+When HOPA reads a page, the chat keeps a link to that page; **Open** takes you
+back to it without retyping the address.
+
+## What you can ask
+
+| Apps | The web |
+|---|---|
+| “Send Alice ‘running 10 minutes late’ on WeChat.”<br/>“Check my messages on Feishu.”<br/>“Find a charger on Xianyu.” | “What are the top stories on Zhihu?”<br/>“What’s trending on Xiaohongshu?”<br/>“Summarize the top videos on Bilibili.” |
+
+<sub>Site examples run in the browser HOPA opens for you. App examples need
+that app installed; HOPA says when a bundle is missing instead of guessing.</sub>
+
+It also remembers facts and skills you choose to keep.
+
+**When money is involved**
+
+> “Order the cheapest one in my cart.”
+>
+> HOPA shows the item, the total and the seller. You choose **Deny** or
+> **Allow**. Nothing is paid without you.
+
+## What it can reach
+
+<table>
+<tr>
+<td width="50%" align="center" valign="top">
+
+<img src="docs/media/apps.jpeg" alt="HOPA app catalogue with verified HarmonyOS bundles" height="560" />
+
+<br/><sub><b>Real: the app catalogue.</b> 27 apps and 21 sites. Green rows are bundles verified on a device; where a HarmonyOS bundle is missing, HOPA says so instead of guessing.</sub>
+
+</td>
+<td width="50%" align="center" valign="top">
+
+<img src="docs/media/sites.jpeg" alt="HOPA site catalogue with Amazon, BOSS, Gmail and Uber" height="560" />
+
+<br/><sub><b>Real: the site catalogue.</b> Amazon, BOSS, Gmail, Uber and more open in the browser HOPA opens for you.</sub>
+
+</td>
+</tr>
+</table>
+
+## Why it feels different
+
+- **You talk normally.** No commands, no scripts. “What’s hot on Bilibili?”
+  “Send Alice a message.” “Find a charger under $30.”
+- **It uses your apps, not a new ecosystem.** It reads the screen and works the
+  app or site you already have.
+- **It shows its work.** Every action lands in **Activity**, with the full run
+  detail behind it.
+- **It stops for money.** Every payment waits for your yes — every time, in
+  every mode.
+- **Your key, your data.** There is no HOPA account and no hosted backend. Your
+  model key goes to the model you choose.
+
+It also remembers what you tell it and can turn a successful run into a skill,
+both editable in the app.
+
+## Get started
+
+**1. Put HOPA on your phone.**
+Today the app is built and signed from source. The two commands live in the
+[developer corner](#for-developers). On a real phone, start with
+[Install on a phone](docs/guides/install-phone.md) — HarmonyOS installs HAPs
+through AppGallery or `hdc`, not by tapping a download. A prebuilt package is
+on the [0.1.0 release](https://github.com/michaelatamuk/hopa/releases/tag/v0.1.0).
+
+**2. Connect a model.**
+Open **Capabilities** and tap the gear, then pick a provider (OpenAI-compatible,
+Anthropic, Gemini or DeepSeek), enter the endpoint, the model name and your key.
+The key stays in memory; it is not saved to preferences.
+
+**3. Give it hands.**
+On a real phone, enable the built-in screen control. On this emulator, start
+the small PC companion and connect it in the gear → **Settings → PC bridge**.
+
+Why a companion? On a real phone, the system has a built-in way to let an
+assistant see and tap. This emulator does not have that switch. The companion
+is a small program on your computer that lends HOPA its hands. It runs on your
+machine, not in the cloud.
+
+Then say: “What’s trending on Bilibili today?”
+
+## Good to know
+
+- HOPA sees the screen you see. It cannot work in the background.
+- It will not guess an app it does not know. Fifteen catalogue apps have no
+  HarmonyOS bundle yet, and five more have an unverified one.
+- Login, CAPTCHA and verification codes stay with you.
+- Some apps block automation; HOPA stops and hands over.
+- The PC companion is for a trusted network.
+- This emulator has no accessibility switch; a real phone with it enabled is
+  the untethered path.
+
+### Where it is today
+
+| Works | Needs a device or data |
+|---|---|
+| Chat, browser, memory, skills, plans, batch, runs and export | Untethered app control on this emulator |
+| App control through the PC companion | Speech |
+| A website task from Chat: open Bilibili, read it and summarize | System reminders |
+|  | 15 apps without a bundle; 5 unverified |
+|  | The retail AppGallery ACL |
+
+Read the dated, per-capability state in
+[docs/product/coverage.md](docs/product/coverage.md).
+
+## For developers
+
+<details>
+<summary>Build it, test it, or look under the hood</summary>
+
+<br/>
+
+**Build and install**
+
+```powershell
+.\tools\scripts\build.ps1
+.\tools\scripts\sign-app.ps1 -Install
 ```
-guards → payment approval → execute → verify → record
-```
-
-- **Guards** enforce capability boundaries, app allow-lists, and destructive-action
-  limits.
-- **Payment approval** is a hard stop. Any action classified as payment (or as a
-  step that can trigger payment) must be confirmed by the user. The gate must never
-  be weakened, bypassed, or made optional — not by a tool, a model, a script, or a
-  future refactor.
-- **Verify** compares the observed screen/state with the intended effect.
-- **Record** writes an immutable run record for audit and replay.
-
-## Repository layout
-
-```
-hopa/
-├── app/                      # DevEco Studio project (Stage model)
-│   ├── AppScope/
-│   ├── entry/                # ArkUI shell: chat, task progress, settings, memory
-│   ├── core/                 # HAR: agent loop, tool registry, ActionExecutor (no UI)
-│   └── capabilities/         # independent HAR modules
-│       ├── web/              # ArkWeb browser agent
-│       ├── sandbox/          # hidden ArkWeb + Pyodide/QuickJS (offline)
-│       ├── a11y/             # AccessibilityExtensionAbility skeleton (ACL)
-│       └── system/           # system intents (alarm, calendar, deep links)
-├── pc-agent/                 # Python: hdc + uitest control, CLI and MCP server
-├── bench/                    # HOPA-Bench tasks + runner
-├── docs/                     # setup, architecture, roadmap
-├── scripts/                  # build / install / test / bench (bash + PowerShell)
-├── .github/workflows/        # CI
-├── CLAUDE.md                 # conventions for future coding sessions
-├── NOTICE
-└── LICENSE                   # Apache-2.0
-```
-
-## Requirements
-
-- Windows 10/11 64-bit, or macOS; **DevEco Studio 26.0.0** with the bundled
-  **HarmonyOS SDK 26.0.0** (API 26).
-- **Command Line Tools 26.0.0.851** for headless builds and CI.
-- Python **3.11+** and Node **LTS** for `pc-agent/` and `bench/`.
-- Emulator: hardware virtualization (Hyper-V + Windows Hypervisor Platform +
-  Virtual Machine Platform on Windows), 16 GB+ RAM (32 GB recommended).
-
-Full, reproducible instructions: [docs/setup.md](docs/setup.md).
-
-## Quickstart
 
 ```bash
-# 1. Build the HAP from the command line
-./scripts/build.sh              # or .\scripts\build.ps1 on Windows
-
-# 2. Install on a running emulator/device
-./scripts/install-to-device.sh  # or .\scripts\install-to-device.ps1
-
-# 3. Run core unit tests + python checks
-./scripts/run-tests.sh          # or .\scripts\run-tests.ps1
-
-# 4. Run the benchmark against the stub model
-./scripts/run-bench.sh          # or .\scripts\run-bench.ps1
+./tools/scripts/build.sh
+./tools/scripts/sign-app.sh --install
 ```
 
-`pc-agent` can also be used directly:
+**Test**
+
+```powershell
+.\tools\scripts\run-tests.ps1
+```
 
 ```bash
-pc-agent devices
-pc-agent dump --out layout.json
-pc-agent tap 540 1200
-pc-agent type 540 900 "hello"
-pc-agent screenshot --out screen.jpeg
-pc-agent launch com.huawei.hmos.settings
-pc-agent mcp          # run as an MCP stdio server
+./tools/scripts/run-tests.sh
 ```
 
-## Documentation
+**What is where**
 
-- [docs/setup.md](docs/setup.md) — toolchain, SDK paths, emulator, device, env vars.
-- [docs/architecture.md](docs/architecture.md) — layers, the action gate,
-  capability boundaries, ACL/permission dependency list.
-- [docs/roadmap.md](docs/roadmap.md) — milestones G1–G4.
+- `apps/harmony/` — the shippable ArkTS app (UI, agent loop, gate, router).
+- `services/pc-agent/` — the PC companion: device control, CLI, MCP, bridge.
+- `services/brain/` — the Kotlin reference brain for routing and knowledge.
+- `harness/` — the reference loop and HOPA-Bench.
+- `docs/` — setup, architecture, contracts and the honest status.
+
+**A few useful links**
+
+- [Setup and toolchain](docs/guides/setup.md)
+- [Build, sign and install](docs/guides/build-and-sign.md)
+- [PC companion guide](docs/guides/pc-bridge.md)
+- [Architecture](docs/architecture/overview.md)
+- [App knowledge](docs/reference/knowledge.md)
+- [Bundles on a device](docs/reference/bundles.md)
+- [Safety model](docs/reference/safety.md)
+- [Current status](docs/history/status-2026-11-07.md)
+
+The app is ArkTS only. Python and Kotlin are development and PC-side tools;
+they are not packaged into the HAP. CI runs the Python and Kotlin suites, the
+structure and link checks, the generated-catalogue check, and a secret/license
+scan. The HAP and ArkTS jobs need a mirrored Huawei toolchain and are
+conditional; the workflow skips them with a warning rather than pretending.
+
+</details>
+
+## Contributing
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md). Run the tests before a pull request.
+Do not weaken the payment gate: a change that makes payment skippable, or moves
+it after execution, will not be accepted. Report security issues privately
+through [SECURITY.md](SECURITY.md).
 
 ## License
 

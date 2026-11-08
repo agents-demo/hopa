@@ -1,0 +1,19 @@
+# Defined in Appendix B. Confirm the bundle on a device before relying on it.
+schema_version: 1
+id: browser-fill-form-no-submit
+goal: Fill a form without submitting it
+app: Browser
+bundle: com.huawei.hmos.browser
+success:
+  type: text_visible
+  any:
+  - HOPA form
+steps:
+- action: launch
+- action: wait
+  seconds: 2
+- action: tap_text
+  text: Search
+- action: type
+  text: HOPA form
+max_steps: 12

@@ -1,0 +1,208 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "HOPA entry module"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "HOPA phone agent"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "HOPA"
+    },
+    {
+      "name": "tab_chat",
+      "value": "Chat"
+    },
+    {
+      "name": "greeting_1",
+      "value": "Hi - I am HOPA, your on-device phone agent."
+    },
+    {
+      "name": "greeting_2",
+      "value": "I always ask before any payment."
+    },
+    {
+      "name": "msg_working",
+      "value": "HOPA: working..."
+    },
+    {
+      "name": "msg_no_model",
+      "value": "HOPA: no model configured. Open Settings, fill in the endpoint, model and key, then Save."
+    },
+    {
+      "name": "msg_https_only",
+      "value": "HOPA: only https:// pages are allowed in the browser."
+    },
+    {
+      "name": "tab_web",
+      "value": "Browser"
+    },
+    {
+      "name": "tab_apps",
+      "value": "More"
+    },
+    {
+      "name": "tab_tasks",
+      "value": "Plans"
+    },
+    {
+      "name": "tab_settings",
+      "value": "Settings"
+    },
+    {
+      "name": "tab_memory",
+      "value": "Memory"
+    },
+    {
+      "name": "title_settings",
+      "value": "Settings"
+    },
+    {
+      "name": "title_tasks",
+      "value": "Task progress"
+    },
+    {
+      "name": "title_memory",
+      "value": "Memory & skills"
+    },
+    {
+      "name": "btn_send",
+      "value": "Send"
+    },
+    {
+      "name": "btn_stop",
+      "value": "Stop"
+    },
+    {
+      "name": "btn_add",
+      "value": "Add"
+    },
+    {
+      "name": "btn_delete",
+      "value": "Delete"
+    },
+    {
+      "name": "btn_open",
+      "value": "Open"
+    },
+    {
+      "name": "btn_back",
+      "value": "Back"
+    },
+    {
+      "name": "btn_forward",
+      "value": "Forward"
+    },
+    {
+      "name": "btn_reload",
+      "value": "Reload"
+    },
+    {
+      "name": "btn_save_skill",
+      "value": "Save skill"
+    },
+    {
+      "name": "btn_run_batch",
+      "value": "Run batch"
+    },
+    {
+      "name": "btn_clear",
+      "value": "Clear"
+    },
+    {
+      "name": "btn_export",
+      "value": "Export data"
+    },
+    {
+      "name": "btn_clear_facts",
+      "value": "Clear facts"
+    },
+    {
+      "name": "btn_draft_skill",
+      "value": "Save last run as skill"
+    },
+    {
+      "name": "label_facts",
+      "value": "Facts"
+    },
+    {
+      "name": "label_skills",
+      "value": "Skills"
+    },
+    {
+      "name": "label_network",
+      "value": "Allow network for web tasks"
+    },
+    {
+      "name": "label_autonomous",
+      "value": "Autonomous mode (never skips payment)"
+    },
+    {
+      "name": "label_provider",
+      "value": "Model provider"
+    },
+    {
+      "name": "label_endpoint",
+      "value": "Model endpoint"
+    },
+    {
+      "name": "label_model",
+      "value": "Model name"
+    },
+    {
+      "name": "label_api_key",
+      "value": "API key (kept in memory only, never saved)"
+    },
+    {
+      "name": "label_payment",
+      "value": "Payment: always requires your confirmation. This cannot be changed."
+    },
+    {
+      "name": "label_sandbox",
+      "value": "Sandbox: not bundled. Pyodide/QuickJS are optional WASM pages; there is no Linux sandbox."
+    },
+    {
+      "name": "label_retention",
+      "value": "Retention: last 100 runs and 50 remembered facts. Skills stay until you delete them."
+    },
+    {
+      "name": "label_batch",
+      "value": "Batch"
+    },
+    {
+      "name": "placeholder_ask",
+      "value": "Ask HOPA…"
+    },
+    {
+      "name": "placeholder_url",
+      "value": "https://…"
+    },
+    {
+      "name": "placeholder_memory",
+      "value": "e.g. I prefer aisle seats"
+    },
+    {
+      "name": "placeholder_skill_name",
+      "value": "Skill name, e.g. Book a table"
+    },
+    {
+      "name": "placeholder_trigger",
+      "value": "Trigger words, e.g. book a table"
+    },
+    {
+      "name": "placeholder_steps",
+      "value": "Steps to follow"
+    },
+    {
+      "name": "placeholder_batch",
+      "value": "One goal per line"
+    },
+    {
+      "name": "placeholder_key",
+      "value": "sk-…"
+    }
+  ]
+}

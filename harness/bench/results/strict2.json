@@ -1,0 +1,246 @@
+{
+  "started_at": "2026-11-06T10:27:04.764707+00:00",
+  "total": 7,
+  "results": [
+    {
+      "task_id": "settings-wlan",
+      "goal": "Open Settings and reach the WLAN screen",
+      "app": "Settings",
+      "success": true,
+      "error": null,
+      "failure": null,
+      "tokens": 0,
+      "duration_s": 103.283,
+      "steps": [
+        {
+          "action": "launch",
+          "ok": true,
+          "detail": "launched com.huawei.hmos.settings",
+          "latency_ms": 1159.1
+        },
+        {
+          "action": "wait",
+          "ok": true,
+          "detail": "2.0s",
+          "latency_ms": 2002.5
+        },
+        {
+          "action": "tap_text",
+          "ok": true,
+          "detail": "tapped 377,1074",
+          "latency_ms": 96106.0
+        },
+        {
+          "action": "wait",
+          "ok": true,
+          "detail": "1.0s",
+          "latency_ms": 1000.3
+        }
+      ]
+    },
+    {
+      "task_id": "calendar-new-event",
+      "goal": "Open Calendar and start creating a new event",
+      "app": "Calendar",
+      "success": true,
+      "error": null,
+      "failure": null,
+      "tokens": 0,
+      "duration_s": 14.14,
+      "steps": [
+        {
+          "action": "launch",
+          "ok": true,
+          "detail": "launched com.huawei.hmos.calendar",
+          "latency_ms": 237.7
+        },
+        {
+          "action": "wait",
+          "ok": true,
+          "detail": "6.0s",
+          "latency_ms": 6000.7
+        },
+        {
+          "action": "tap_id",
+          "ok": true,
+          "detail": "tapped 1026,231",
+          "latency_ms": 3140.7
+        },
+        {
+          "action": "wait",
+          "ok": true,
+          "detail": "1.0s",
+          "latency_ms": 1000.9
+        }
+      ]
+    },
+    {
+      "task_id": "browser-search-harmonyos",
+      "goal": "Open the browser and search for HarmonyOS",
+      "app": "Browser",
+      "success": true,
+      "error": null,
+      "failure": null,
+      "tokens": 0,
+      "duration_s": 19.926,
+      "steps": [
+        {
+          "action": "launch",
+          "ok": true,
+          "detail": "launched com.huawei.hmos.browser",
+          "latency_ms": 716.3
+        },
+        {
+          "action": "wait",
+          "ok": true,
+          "detail": "10.0s",
+          "latency_ms": 10000.4
+        },
+        {
+          "action": "tap_text",
+          "ok": true,
+          "detail": "tapped 653,1447",
+          "latency_ms": 2625.1
+        },
+        {
+          "action": "type",
+          "ok": true,
+          "detail": "HarmonyOS",
+          "latency_ms": 1358.6
+        },
+        {
+          "action": "key",
+          "ok": true,
+          "detail": "Enter",
+          "latency_ms": 521.3
+        },
+        {
+          "action": "wait",
+          "ok": true,
+          "detail": "2.0s",
+          "latency_ms": 2000.6
+        }
+      ]
+    },
+    {
+      "task_id": "contacts-find",
+      "goal": "Find a contact by name",
+      "app": "Contacts",
+      "success": false,
+      "error": null,
+      "failure": "target_not_found",
+      "tokens": 0,
+      "duration_s": 9.545,
+      "steps": [
+        {
+          "action": "launch",
+          "ok": true,
+          "detail": "launched com.ohos.contacts",
+          "latency_ms": 1356.6
+        },
+        {
+          "action": "wait",
+          "ok": true,
+          "detail": "2.0s",
+          "latency_ms": 2000.5
+        },
+        {
+          "action": "tap_text",
+          "ok": false,
+          "detail": "target not found: {'text': 'Search'}",
+          "latency_ms": 3449.4
+        }
+      ]
+    },
+    {
+      "task_id": "files-locate",
+      "goal": "Locate a file by name",
+      "app": "Files",
+      "success": false,
+      "error": null,
+      "failure": "target_not_found",
+      "tokens": 0,
+      "duration_s": 83.586,
+      "steps": [
+        {
+          "action": "launch",
+          "ok": true,
+          "detail": "launched com.huawei.hmos.files",
+          "latency_ms": 785.2
+        },
+        {
+          "action": "wait",
+          "ok": true,
+          "detail": "2.0s",
+          "latency_ms": 2000.3
+        },
+        {
+          "action": "tap_text",
+          "ok": false,
+          "detail": "target not found: {'text': 'Search'}",
+          "latency_ms": 78015.1
+        }
+      ]
+    },
+    {
+      "task_id": "settings-wifi-toggle",
+      "goal": "Open Settings and reach the WLAN screen",
+      "app": "Settings",
+      "success": true,
+      "error": null,
+      "failure": null,
+      "tokens": 0,
+      "duration_s": 8.987,
+      "steps": [
+        {
+          "action": "launch",
+          "ok": true,
+          "detail": "launched com.huawei.hmos.settings",
+          "latency_ms": 1653.3
+        },
+        {
+          "action": "wait",
+          "ok": true,
+          "detail": "2.0s",
+          "latency_ms": 2000.6
+        },
+        {
+          "action": "tap_text",
+          "ok": true,
+          "detail": "tapped 377,1074",
+          "latency_ms": 2906.5
+        }
+      ]
+    },
+    {
+      "task_id": "settings-brightness",
+      "goal": "Change the screen brightness",
+      "app": "Settings",
+      "success": true,
+      "error": null,
+      "failure": null,
+      "tokens": 0,
+      "duration_s": 9.298,
+      "steps": [
+        {
+          "action": "launch",
+          "ok": true,
+          "detail": "launched com.huawei.hmos.settings",
+          "latency_ms": 1549.3
+        },
+        {
+          "action": "wait",
+          "ok": true,
+          "detail": "2.0s",
+          "latency_ms": 2002.3
+        },
+        {
+          "action": "tap_text",
+          "ok": true,
+          "detail": "tapped 533,1482",
+          "latency_ms": 3420.6
+        }
+      ]
+    }
+  ]
+}

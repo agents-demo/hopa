@@ -1,0 +1,17 @@
+schema_version: 1
+id: calendar-new-event
+goal: "Open Calendar and start creating a new event"
+app: Calendar
+bundle: com.huawei.hmos.calendar
+success:
+  type: text_visible
+  any: ["New event", "Create event", "Event title"]
+steps:
+  - action: launch
+  - action: wait
+    seconds: 6
+  - action: tap_id
+    id: "phone_add_agenda"
+  - action: wait
+    seconds: 1
+max_steps: 10

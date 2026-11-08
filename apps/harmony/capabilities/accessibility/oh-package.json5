@@ -1,0 +1,11 @@
+{
+  "name": "@hopa/capability-accessibility",
+  "version": "0.1.0",
+  "description": "HOPA accessibility capability (restricted permission / ACL).",
+  "main": "Index.ets",
+  "author": "The HOPA Authors",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@hopa/core": "file:../../core"
+  }
+}

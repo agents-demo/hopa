@@ -1,0 +1,10 @@
+{
+  "module": {
+    "name": "capability_llm",
+    "type": "har",
+    "deviceTypes": [
+      "phone",
+      "tablet"
+    ]
+  }
+}

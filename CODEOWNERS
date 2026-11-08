@@ -1,0 +1,8 @@
+# Default owners. Replace with the real team as it forms.
+*                       @michaelatamuk
+
+# Core contracts and safety need a second reviewer.
+/agent/                 @michaelatamuk
+/schemas/               @michaelatamuk
+/docs/contracts/        @michaelatamuk
+/docs/rebuild-plan.md   @michaelatamuk

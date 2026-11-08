@@ -1,0 +1,21 @@
+schema_version: 1
+id: browser-search-harmonyos
+goal: "Open the browser and search for HarmonyOS"
+app: Browser
+bundle: com.huawei.hmos.browser
+success:
+  type: text_visible
+  any: ["HarmonyOS"]
+steps:
+  - action: launch
+  - action: wait
+    seconds: 10
+  - action: tap_text
+    text: "Search or type a URL"
+  - action: type
+    text: "HarmonyOS"
+  - action: key
+    name: "Enter"
+  - action: wait
+    seconds: 2
+max_steps: 12

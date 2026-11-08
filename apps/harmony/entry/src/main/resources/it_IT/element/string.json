@@ -1,0 +1,208 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "Modulo di ingresso HOPA"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "Agente telefonico HOPA"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "HOPA"
+    },
+    {
+      "name": "tab_chat",
+      "value": "Chat"
+    },
+    {
+      "name": "greeting_1",
+      "value": "Ciao, sono HOPA, il tuo agente sul telefono."
+    },
+    {
+      "name": "greeting_2",
+      "value": "Chiedo sempre prima di ogni pagamento."
+    },
+    {
+      "name": "msg_working",
+      "value": "HOPA: in corso..."
+    },
+    {
+      "name": "msg_no_model",
+      "value": "HOPA: nessun modello configurato. Apri Impostazioni, inserisci endpoint, modello e chiave, poi Salva."
+    },
+    {
+      "name": "msg_https_only",
+      "value": "HOPA: nel browser sono consentite solo pagine https://."
+    },
+    {
+      "name": "tab_web",
+      "value": "Browser"
+    },
+    {
+      "name": "tab_apps",
+      "value": "Altro"
+    },
+    {
+      "name": "tab_tasks",
+      "value": "Piani"
+    },
+    {
+      "name": "tab_settings",
+      "value": "Impostazioni"
+    },
+    {
+      "name": "tab_memory",
+      "value": "Memoria"
+    },
+    {
+      "name": "title_settings",
+      "value": "Impostazioni"
+    },
+    {
+      "name": "title_tasks",
+      "value": "Avanzamento attivita"
+    },
+    {
+      "name": "title_memory",
+      "value": "Memoria e abilita"
+    },
+    {
+      "name": "btn_send",
+      "value": "Invia"
+    },
+    {
+      "name": "btn_stop",
+      "value": "Ferma"
+    },
+    {
+      "name": "btn_add",
+      "value": "Aggiungi"
+    },
+    {
+      "name": "btn_delete",
+      "value": "Elimina"
+    },
+    {
+      "name": "btn_open",
+      "value": "Apri"
+    },
+    {
+      "name": "btn_back",
+      "value": "Indietro"
+    },
+    {
+      "name": "btn_forward",
+      "value": "Avanti"
+    },
+    {
+      "name": "btn_reload",
+      "value": "Ricarica"
+    },
+    {
+      "name": "btn_save_skill",
+      "value": "Salva abilita"
+    },
+    {
+      "name": "btn_run_batch",
+      "value": "Esegui lotto"
+    },
+    {
+      "name": "btn_clear",
+      "value": "Cancella"
+    },
+    {
+      "name": "btn_export",
+      "value": "Esporta dati"
+    },
+    {
+      "name": "btn_clear_facts",
+      "value": "Cancella fatti"
+    },
+    {
+      "name": "btn_draft_skill",
+      "value": "Salva l'ultima esecuzione come abilita"
+    },
+    {
+      "name": "label_facts",
+      "value": "Fatti"
+    },
+    {
+      "name": "label_skills",
+      "value": "Abilita"
+    },
+    {
+      "name": "label_network",
+      "value": "Consenti rete per le attivita web"
+    },
+    {
+      "name": "label_autonomous",
+      "value": "Modalita autonoma (non salta mai il pagamento)"
+    },
+    {
+      "name": "label_provider",
+      "value": "Provider del modello"
+    },
+    {
+      "name": "label_endpoint",
+      "value": "Endpoint del modello"
+    },
+    {
+      "name": "label_model",
+      "value": "Nome del modello"
+    },
+    {
+      "name": "label_api_key",
+      "value": "Chiave API (solo in memoria, mai salvata)"
+    },
+    {
+      "name": "label_payment",
+      "value": "Pagamento: richiede sempre la tua conferma. Non modificabile."
+    },
+    {
+      "name": "label_sandbox",
+      "value": "Sandbox: non inclusa. Pyodide/QuickJS sono pagine WASM opzionali; nessuna sandbox Linux."
+    },
+    {
+      "name": "label_retention",
+      "value": "Conservazione: ultime 100 esecuzioni e 50 fatti. Le abilita restano finche non le elimini."
+    },
+    {
+      "name": "label_batch",
+      "value": "Lotto"
+    },
+    {
+      "name": "placeholder_ask",
+      "value": "Chiedi a HOPA..."
+    },
+    {
+      "name": "placeholder_url",
+      "value": "https://..."
+    },
+    {
+      "name": "placeholder_memory",
+      "value": "es. preferisco il corridoio"
+    },
+    {
+      "name": "placeholder_skill_name",
+      "value": "Nome dell'abilita, es. Prenota un tavolo"
+    },
+    {
+      "name": "placeholder_trigger",
+      "value": "Parole di attivazione, es. prenota un tavolo"
+    },
+    {
+      "name": "placeholder_steps",
+      "value": "Passi da seguire"
+    },
+    {
+      "name": "placeholder_batch",
+      "value": "Un obiettivo per riga"
+    },
+    {
+      "name": "placeholder_key",
+      "value": "sk-..."
+    }
+  ]
+}

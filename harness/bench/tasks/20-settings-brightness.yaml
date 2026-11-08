@@ -1,0 +1,18 @@
+# Defined in Appendix B. Confirm the bundle on a device before relying on it.
+schema_version: 1
+id: settings-brightness
+goal: Change the screen brightness
+app: Settings
+bundle: com.huawei.hmos.settings
+success:
+  type: text_visible
+  any:
+  - Brightness
+  - 亮度
+steps:
+- action: launch
+- action: wait
+  seconds: 2
+- action: tap_text
+  text: Display
+max_steps: 12

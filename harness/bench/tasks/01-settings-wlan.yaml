@@ -1,0 +1,17 @@
+schema_version: 1
+id: settings-wlan
+goal: "Open Settings and reach the WLAN screen"
+app: Settings
+bundle: com.huawei.hmos.settings
+success:
+  type: text_visible
+  any: ["WLAN", "Wi-Fi"]
+steps:
+  - action: launch
+  - action: wait
+    seconds: 2
+  - action: tap_text
+    text: "WLAN"
+  - action: wait
+    seconds: 1
+max_steps: 10

@@ -1,0 +1,284 @@
+import { describe, expect, it } from '@ohos/hypium';
+import { Action, Observation, RunRecord } from '../main/ets/Types';
+import {
+  ActionCapability,
+  ActionExecutor,
+  ApprovalGateway,
+  RunRecorder
+} from '../main/ets/gate/ActionExecutor';
+import { ApprovalPolicy } from '../main/ets/gate/ApprovalPolicy';
+import { AgentLoop } from '../main/ets/agent/AgentLoop';
+import { ModelClient, ModelRequest, ModelResponse } from '../main/ets/model/ModelClient';
+import { Screen, ScreenSource } from '../main/ets/domain/Screen';
+
+class FixedApproval implements ApprovalGateway {
+  private answer: boolean;
+  requests: number = 0;
+
+  constructor(answer: boolean) {
+    this.answer = answer;
+  }
+
+  async requestApproval(action: Action): Promise<boolean> {
+    this.requests++;
+    return this.answer;
+  }
+}
+
+class MemoryRecorder implements RunRecorder {
+  records: RunRecord[] = [];
+
+  record(run: RunRecord): void {
+    this.records.push(run);
+  }
+}
+
+class RecordingCapability implements ActionCapability {
+  executions: number = 0;
+
+  canHandle(kind: string): boolean {
+    return true;
+  }
+
+  async execute(action: Action): Promise<Observation> {
+    this.executions++;
+    return Observation.ok('done');
+  }
+}
+
+class CapturingCapability implements ActionCapability {
+  action: Action | undefined = undefined;
+
+  canHandle(kind: string): boolean {
+    return true;
+  }
+
+  async execute(action: Action): Promise<Observation> {
+    this.action = action;
+    return Observation.ok('done');
+  }
+}
+
+class QueueModel implements ModelClient {
+  private replies: string[];
+  private index: number = 0;
+  private tokens: number;
+  requests: ModelRequest[] = [];
+  loop: AgentLoop | undefined = undefined;
+
+  constructor(replies: string[], tokens: number = 0) {
+    this.replies = replies;
+    this.tokens = tokens;
+  }
+
+  async complete(request: ModelRequest): Promise<ModelResponse> {
+    if (this.index >= 1 && this.loop !== undefined) {
+      this.loop.cancel();
+    }
+    const snapshot = new ModelRequest();
+    snapshot.messages = request.messages.slice();
+    this.requests.push(snapshot);
+    const position: number = Math.min(this.index, this.replies.length - 1);
+    const response = new ModelResponse();
+    response.text = this.replies[position];
+    response.tokens = this.tokens;
+    this.index++;
+    return response;
+  }
+}
+
+class FixedSource implements ScreenSource {
+  private screen: Screen;
+
+  constructor(screen: Screen) {
+    this.screen = screen;
+  }
+
+  async capture(): Promise<Screen> {
+    return this.screen;
+  }
+}
+
+/** A model that never cancels, so a test can follow three steps. */
+class PlainQueueModel implements ModelClient {
+  private replies: string[];
+  private position: number = 0;
+
+  constructor(replies: string[]) {
+    this.replies = replies;
+  }
+
+  async complete(request: ModelRequest): Promise<ModelResponse> {
+    const response = new ModelResponse();
+    const index: number = Math.min(this.position, this.replies.length - 1);
+    response.text = this.replies[index];
+    response.tokens = request.messages.length;
+    this.position++;
+    return response;
+  }
+}
+
+export default function agentLoopTest(): void {
+  describe('AgentLoop', () => {
+    it('feeds_screen_and_stops_on_denied_payment', 0, async (done: Function) => {
+      const source = new FixedSource(new Screen('Checkout\nTotal ¥9.99\nPay now'));
+      const model = new QueueModel(['{"kind":"ui.tap"}', '{"kind":"finish"}']);
+      const approval = new FixedApproval(false);
+      const recorder = new MemoryRecorder();
+      const capability = new RecordingCapability();
+      const executor = new ActionExecutor(new ApprovalPolicy(), approval, recorder);
+      executor.registerCapability(capability);
+      const loop = new AgentLoop(executor, model, 5, source);
+
+      const outcomes = await loop.run('pay the order');
+
+      expect(outcomes.length).assertEqual(1);
+      expect(outcomes[0].executed).assertFalse();
+      expect(approval.requests).assertEqual(1);
+      expect(model.requests[0].messages.length).assertEqual(2);
+      expect(model.requests[0].messages[1].content.includes('Checkout')).assertTrue();
+      done();
+    });
+
+    it('cancel_stops_before_the_next_action', 0, async (done: Function) => {
+      const source = new FixedSource(new Screen('Settings'));
+      const model = new QueueModel(['{"kind":"ui.tap"}', '{"kind":"ui.tap"}']);
+      const executor = new ActionExecutor(
+        new ApprovalPolicy(),
+        new FixedApproval(true),
+        new MemoryRecorder()
+      );
+      executor.registerCapability(new RecordingCapability());
+      const loop = new AgentLoop(executor, model, 5, source);
+      model.loop = loop;
+
+      const outcomes = await loop.run('tap twice');
+      expect(outcomes.length).assertEqual(1);
+      expect(loop.wasCancelled()).assertTrue();
+      done();
+    });
+
+    it('accumulates_tokens', 0, async (done: Function) => {
+      const source = new FixedSource(new Screen('Settings'));
+      const model = new QueueModel(['{"kind":"ui.tap"}', '{"kind":"finish"}'], 7);
+      const executor = new ActionExecutor(
+        new ApprovalPolicy(),
+        new FixedApproval(true),
+        new MemoryRecorder()
+      );
+      executor.registerCapability(new RecordingCapability());
+      const loop = new AgentLoop(executor, model, 5, source);
+
+      await loop.run('tap twice');
+      expect(loop.getTokens()).assertEqual(14);
+      done();
+    });
+
+    it('defaults_missing_action_fields', 0, async (done: Function) => {
+      const capability = new CapturingCapability();
+      const executor = new ActionExecutor(
+        new ApprovalPolicy(),
+        new FixedApproval(true),
+        new MemoryRecorder()
+      );
+      executor.registerCapability(capability);
+      const model = new QueueModel(['{"kind":"ui.launch"}', '{"kind":"finish"}']);
+      const loop = new AgentLoop(executor, model, 3, new FixedSource(new Screen('x')));
+
+      await loop.run('launch');
+      const parsed: Action | undefined = capability.action;
+      expect(parsed !== undefined).assertTrue();
+      if (parsed !== undefined) {
+        expect(parsed.app).assertEqual('');
+        expect(parsed.target).assertEqual('');
+      }
+      done();
+    });
+
+    it('keeps_the_launch_bundle', 0, async (done: Function) => {
+      const capability = new CapturingCapability();
+      const executor = new ActionExecutor(
+        new ApprovalPolicy(),
+        new FixedApproval(true),
+        new MemoryRecorder()
+      );
+      executor.registerCapability(capability);
+      const model = new QueueModel(
+        ['{"kind":"ui.launch","app":"com.huawei.hmos.settings"}', '{"kind":"finish"}']
+      );
+      const loop = new AgentLoop(executor, model, 3, new FixedSource(new Screen('x')));
+
+      await loop.run('launch');
+      const parsed: Action | undefined = capability.action;
+      expect(parsed !== undefined).assertTrue();
+      if (parsed !== undefined) {
+        expect(parsed.app).assertEqual('com.huawei.hmos.settings');
+      }
+      done();
+    });
+
+    it('launches_the_same_app_only_once_per_run', 0, async (done: Function) => {
+      const capability = new RecordingCapability();
+      const executor = new ActionExecutor(
+        new ApprovalPolicy(),
+        new FixedApproval(true),
+        new MemoryRecorder()
+      );
+      executor.registerCapability(capability);
+      const model = new PlainQueueModel([
+        '{"kind":"ui.launch","app":"com.huawei.hmos.settings"}',
+        '{"kind":"ui.launch","app":"com.huawei.hmos.settings"}',
+        'Settings is open.'
+      ]);
+      const loop = new AgentLoop(executor, model, 5, new FixedSource(new Screen('Chat')));
+
+      const outcomes = await loop.run('open settings');
+
+      expect(capability.executions).assertEqual(1);
+      expect(outcomes.length).assertEqual(2);
+      expect(outcomes[0].observation.success).assertTrue();
+      expect(outcomes[1].observation.success).assertTrue();
+      expect(outcomes[1].observation.summary.includes('already launched')).assertTrue();
+      done();
+    });
+
+    it('still_launches_a_different_app', 0, async (done: Function) => {
+      const capability = new RecordingCapability();
+      const executor = new ActionExecutor(
+        new ApprovalPolicy(),
+        new FixedApproval(true),
+        new MemoryRecorder()
+      );
+      executor.registerCapability(capability);
+      const model = new PlainQueueModel([
+        '{"kind":"ui.launch","app":"com.huawei.hmos.settings"}',
+        '{"kind":"ui.launch","app":"com.huawei.hmos.calendar"}',
+        'Both are open.'
+      ]);
+      const loop = new AgentLoop(executor, model, 5, new FixedSource(new Screen('Chat')));
+
+      const outcomes = await loop.run('open settings then calendar');
+
+      expect(capability.executions).assertEqual(2);
+      expect(outcomes.length).assertEqual(2);
+      done();
+    });
+
+    it('finish_stops_without_execution', 0, async (done: Function) => {
+      const source = new FixedSource(new Screen('Settings'));
+      const model = new QueueModel(['{"kind":"finish"}']);
+      const approval = new FixedApproval(true);
+      const recorder = new MemoryRecorder();
+      const capability = new RecordingCapability();
+      const executor = new ActionExecutor(new ApprovalPolicy(), approval, recorder);
+      executor.registerCapability(capability);
+      const loop = new AgentLoop(executor, model, 5, source);
+
+      const outcomes = await loop.run('do nothing');
+
+      expect(outcomes.length).assertEqual(0);
+      expect(capability.executions).assertEqual(0);
+      done();
+    });
+  });
+}

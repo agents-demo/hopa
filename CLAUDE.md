@@ -22,8 +22,8 @@ stricter safety check.
    not depend on a sibling capability.
 5. **`core/` is UI-free.** No ArkUI/`@ohos.arkui` imports, no `@Component`, no page
    code. `core/` must remain unit-testable on the host with local tests.
-6. **Credit ideas, never copy code.** Mika is an Apache-2.0 design reference. Any
-   reused idea/prompt gets a note in `NOTICE`. Never import Mika source or its GPL
+6. **Credit ideas, never copy code.** Any reused idea or prompt gets a note in
+   `NOTICE`. Never import third-party source without a compatible licence or its
    sandbox parts (proot). New third-party code needs a license check and a NOTICE
    entry.
 
@@ -40,12 +40,12 @@ stricter safety check.
 | Node (bundled) | 24.14.1 |
 | Python | 3.11+ (3.12 recommended) |
 
-Environment variables are documented in `docs/setup.md`. Do not hard-code absolute
+Environment variables are documented in `docs/guides/setup.md`. Do not hard-code absolute
 paths in tracked files; scripts should discover tools or read env vars.
 
 ## Build
 
-From `app/` (or through `scripts/build.*`):
+From `apps/harmony/` (or through `tools/scripts/build.*`):
 
 ```bash
 hvigorw assembleHap --no-daemon
@@ -63,7 +63,7 @@ hvigorw assembleHap --no-daemon
 
 ```bash
 # core/ local unit tests (host, no device; Windows/macOS only -- see CI note)
-cd app
+cd apps/harmony
 hvigorw test -p module=core@default --no-daemon -p coverage=false
 
 # pc-agent + bench
@@ -87,7 +87,7 @@ hdc shell aa start -a EntryAbility -b com.hopa.agent
 hdc shell uitest dumpLayout -p /data/local/tmp/layout.json
 ```
 
-Use `scripts/install-to-device.*` for the supported flow. Signing is done in
+Use `tools/scripts/install-to-device.*` for the supported flow. Signing is done in
 DevEco Studio (automatic signing) or CI secrets; never commit signing material.
 
 ## Module boundaries
@@ -103,11 +103,11 @@ capabilities/<name> (HAR)
 
 - `core/` defines: `Action`, `ActionExecutor`, `ToolRegistry`, `ApprovalPolicy`,
   `ModelClient`, `RunRecord`, capability interfaces.
-- `capabilities/web` implements browser actions via ArkWeb.
+- `capabilities/browser` implements browser actions via ArkWeb.
 - `capabilities/sandbox` hosts the hidden WebView + Pyodide/QuickJS. Offline by
   default; no network unless explicitly enabled by the user.
-- `capabilities/a11y` is an `AccessibilityExtensionAbility` skeleton. It depends on
-  **restricted permissions / an ACL request**; see `docs/architecture.md`. Do not
+- `capabilities/accessibility` is an `AccessibilityExtensionAbility` skeleton. It depends on
+  **restricted permissions / an ACL request**; see `docs/architecture/overview.md`. Do not
   claim it works until the ACL is approved and verified on a device.
 - `capabilities/system` uses system intents (alarm, calendar, deep links). Prefer
   public `startAbility` / want APIs over private ones.
@@ -124,17 +124,17 @@ capabilities/<name> (HAR)
 
 ## Adding a capability
 
-1. Add `app/capabilities/<name>/` as a HAR; add it to `app/build-profile.json5`.
+1. Add `apps/harmony/capabilities/<name>/` as a HAR; add it to `apps/harmony/build-profile.json5`.
 2. Implement the capability interface from `core/`; expose actions as `Action`
    descriptors registered with `ToolRegistry`.
 3. Classify each action's risk in `ApprovalPolicy` (payment conservatively).
 4. Add host unit tests where logic allows; device tests go in `ohosTest/`.
-5. Update `docs/architecture.md` (boundaries + permissions) and `NOTICE` if you
+5. Update `docs/architecture/overview.md` (boundaries + permissions) and `NOTICE` if you
    add third-party code.
 
 ## Benchmarks
 
-- Tasks live in `bench/tasks/*.yaml` and follow the schema in `bench/README.md`.
+- Tasks live in `harness/bench/tasks/*.yaml` and follow the schema in `harness/bench/README.md`.
 - A task must declare `goal`, `app` (and ideally `bundle`), and a `success` check.
 - Never make a benchmark task bypass the payment gate. Payment tasks assert that
   the gate *blocks* until confirmation.

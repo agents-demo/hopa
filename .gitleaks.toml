@@ -1,0 +1,17 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Test fixtures and documentation examples"
+paths = [
+  '''agent/tests/.*''',
+  '''scripts/test_plan_status\.py''',
+  '''docs/.*''',
+  '''README\.md''',
+  '''CHANGELOG\.md''',
+  '''bench/tasks/.*'''
+]
+regexes = [
+  '''harmony-clt-[0-9A-Za-z.\-]+''',
+  '''key: gitleaks-v[0-9.]+'''
+]

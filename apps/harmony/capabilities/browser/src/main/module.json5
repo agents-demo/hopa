@@ -1,0 +1,10 @@
+{
+  "module": {
+    "name": "capability_browser",
+    "type": "har",
+    "deviceTypes": [
+      "phone",
+      "tablet"
+    ]
+  }
+}

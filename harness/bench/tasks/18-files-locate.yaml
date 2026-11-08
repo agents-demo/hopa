@@ -1,0 +1,22 @@
+# Defined in Appendix B. Confirm the bundle on a device before relying on it.
+schema_version: 1
+id: files-locate
+goal: Locate a file by name
+app: Files
+bundle: com.huawei.hmos.files
+success:
+  type: text_visible
+  any:
+  - report
+  - Search
+steps:
+- action: launch
+- action: wait
+  seconds: 5
+- action: tap_id
+  id: top_search
+- action: wait
+  seconds: 1
+- action: type
+  text: report
+max_steps: 12

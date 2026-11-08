@@ -1,0 +1,20 @@
+# Defined in Appendix B. Confirm the bundle on a device before relying on it.
+schema_version: 1
+id: clock-create-alarm-0730
+goal: Create a 07:30 alarm
+app: Clock
+bundle: com.huawei.hmos.clock
+success:
+  type: text_visible
+  any:
+  - 07:30
+  - '7:30'
+steps:
+- action: launch
+- action: wait
+  seconds: 2
+- action: tap_text
+  text: Alarm
+- action: tap_text
+  text: Add
+max_steps: 12

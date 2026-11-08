@@ -1,0 +1,11 @@
+{
+  "name": "@hopa/capability-llm",
+  "version": "0.1.0",
+  "description": "HOPA HTTP clients for OpenAI-compatible, Anthropic and Gemini APIs.",
+  "main": "Index.ets",
+  "author": "The HOPA Authors",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@hopa/core": "file:../../core"
+  }
+}
