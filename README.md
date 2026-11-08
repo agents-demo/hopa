@@ -126,7 +126,9 @@ both editable in the app.
 
 **1. Put HOPA on your phone.**
 Today the app is built and signed from source. The two commands live in the
-[developer corner](#for-developers).
+[developer corner](#for-developers). On a real phone, start with
+[Install on a phone](docs/guides/install-phone.md) — HarmonyOS installs HAPs
+through AppGallery or `hdc`, not by tapping a download.
 
 **2. Connect a model.**
 Open **Capabilities** and tap the gear, then pick a provider (OpenAI-compatible,
