@@ -64,7 +64,7 @@ fun main(args: Array<String>) {
         Path.of("brain/knowledge/apps")
     }
     val loaded = KnowledgeLoader.load(directory)
-    check(loaded.size == 27, "27 app files (12 system + 15 catalogued)")
+    check(loaded.size == 27, "27 app files")
     check(loaded.all { it.platform == "harmonyos" }, "all harmonyos")
     check(loaded.all { it.pace.isNotEmpty() }, "all have a pace")
     check(loaded.any { it.entry.name == "clock" }, "clock present")
@@ -74,7 +74,12 @@ fun main(args: Array<String>) {
         loaded.first { it.entry.name == "wechat" }.entry.packages.isEmpty(),
         "wechat has no unverified bundle",
     )
-    check(loaded.count { it.entry.packages.isEmpty() } == 15, "15 unconfirmed bundles")
+    check(
+        loaded.first { it.entry.name == "weibo" }
+            .entry.packages.contains("com.sina.weibo.stage"),
+        "weibo uses the stage-model bundle",
+    )
+    check(loaded.count { it.entry.packages.isEmpty() } == 14, "14 unconfirmed bundles")
 
     println("KnowledgeLoaderTest: $passed assertions passed")
 }
