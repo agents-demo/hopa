@@ -1,26 +1,48 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 520" role="img" aria-label="HOPA — reads the screen, taps, types, and asks before money moves">
   <defs>
     <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#FBF8F2"/>
-      <stop offset="0.6" stop-color="#F7F4EE"/>
-      <stop offset="1" stop-color="#F1ECE2"/>
+      <stop offset="0" stop-color="#FCFAF5"/>
+      <stop offset="0.55" stop-color="#F7F2E9"/>
+      <stop offset="1" stop-color="#F0E8DB"/>
     </linearGradient>
+    <radialGradient id="warmGlow" cx="0.22" cy="0.42" r="0.55">
+      <stop offset="0" stop-color="#F4D4C2" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#F4D4C2" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="blueGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#CFE0FF" stop-opacity="0.75"/>
+      <stop offset="1" stop-color="#CFE0FF" stop-opacity="0"/>
+    </radialGradient>
     <linearGradient id="coral" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#F08A5B"/>
       <stop offset="1" stop-color="#E8703A"/>
     </linearGradient>
-    <filter id="phoneShadow" x="-30%" y="-30%" width="160%" height="160%">
-      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#8A6A4E" flood-opacity="0.18"/>
+    <linearGradient id="frame" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F5EFE5"/>
+    </linearGradient>
+    <pattern id="dots" width="26" height="26" patternUnits="userSpaceOnUse">
+      <circle cx="1.4" cy="1.4" r="1.4" fill="#B8A58E" opacity="0.22"/>
+    </pattern>
+    <filter id="phoneShadow" x="-35%" y="-35%" width="170%" height="170%">
+      <feDropShadow dx="0" dy="26" stdDeviation="28" flood-color="#6E4E36" flood-opacity="0.28"/>
     </filter>
-    <filter id="markShadow" x="-30%" y="-30%" width="160%" height="160%">
-      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#B65A32" flood-opacity="0.18"/>
+    <filter id="markShadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#B65A32" flood-opacity="0.22"/>
+    </filter>
+    <filter id="chipShadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#6E4E36" flood-opacity="0.20"/>
     </filter>
   </defs>
 
   <rect width="1600" height="520" fill="url(#paper)"/>
+  <ellipse cx="330" cy="230" rx="470" ry="330" fill="url(#warmGlow)"/>
+  <ellipse cx="1240" cy="260" rx="390" ry="330" fill="url(#blueGlow)"/>
+  <rect width="1600" height="520" fill="url(#dots)"/>
 
   <!-- Small mascot, left; top aligned with the HOPA wordmark -->
-  <g transform="translate(110 96) scale(0.34)" filter="url(#markShadow)">
+  <ellipse cx="196" cy="212" rx="112" ry="112" fill="#E8703A" opacity="0.08"/>
+  <g transform="translate(100 96) scale(0.34)" filter="url(#markShadow)">
     <path d="M 350 226 L 412 164" stroke="url(#coral)" stroke-width="32" stroke-linecap="round" fill="none"/>
     <rect x="180" y="422" width="44" height="44" rx="14" fill="url(#coral)"/>
     <rect x="266" y="422" width="44" height="44" rx="14" fill="url(#coral)"/>
@@ -31,20 +53,27 @@
     <path d="M 236 292 Q 261 312 286 292" stroke="#1C1B18" stroke-width="13" stroke-linecap="round" fill="none"/>
   </g>
 
+  <!-- Small sparkles around the waving hand -->
+  <path d="M 262 92 L 264 100 L 272 102 L 264 104 L 262 112 L 260 104 L 252 102 L 260 100 Z" fill="#E8703A" opacity="0.65"/>
+  <path d="M 300 126 L 301.5 131 L 307 133 L 301.5 135 L 300 140 L 298.5 135 L 293 133 L 298.5 131 Z" fill="#0A59F7" opacity="0.45"/>
+  <path d="M 248 168 L 249.2 172 L 253 173.2 L 249.2 174.4 L 248 178 L 246.8 174.4 L 243 173.2 L 246.8 172 Z" fill="#E8703A" opacity="0.4"/>
+
   <!-- Words -->
   <text x="278" y="200" font-family="'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
         font-size="104" font-weight="800" letter-spacing="-3" fill="#1C1B18">HOPA</text>
   <text x="282" y="252" font-family="'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
-        font-size="30" font-weight="500" fill="#322E28">Say it. HOPA does it.</text>
+        font-size="30" font-weight="500" fill="#2B2722">Say it. HOPA does it.</text>
   <text x="282" y="292" font-family="'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
-        font-size="20" fill="#3F3A32">The phone assistant for HarmonyOS.</text>
-  <text x="282" y="364" font-family="'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
+        font-size="20" fill="#4A443A">The phone assistant for HarmonyOS.</text>
+  <rect x="282" y="312" width="86" height="6" rx="3" fill="#E8703A" opacity="0.9"/>
+  <text x="282" y="374" font-family="'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
         font-size="23" font-weight="500" fill="#1C1B18">Reads the screen. Taps. Types. Asks before money moves.</text>
 
-  <!-- The app working, right -->
-  <g transform="translate(1000 34)" filter="url(#phoneShadow)">
-    <rect width="342" height="452" rx="48" fill="#FFFFFF" stroke="#E4DED2" stroke-width="2"/>
+  <!-- The app working, right; tilted for depth -->
+  <g transform="translate(986 24) rotate(3 171 226)" filter="url(#phoneShadow)">
+    <rect width="342" height="452" rx="48" fill="url(#frame)" stroke="#E1D8C9" stroke-width="2"/>
     <rect x="16" y="26" width="310" height="400" rx="34" fill="#F7F4EE"/>
+    <rect x="134" y="14" width="74" height="9" rx="4.5" fill="#CFC5B6"/>
 
     <text x="36" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="600" fill="#1C1B18">9:41</text>
     <circle cx="270" cy="53" r="4" fill="#B9B0A2"/>
@@ -80,5 +109,13 @@
     <text x="48" y="370" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#A39A8B">Ask HOPA…</text>
     <circle cx="292" cy="364" r="18" fill="#0A59F7"/>
     <path d="M292 371V357M286 363l6-6 6 6" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Floating success chip -->
+  <g transform="translate(1360 128)" filter="url(#chipShadow)">
+    <rect width="178" height="50" rx="25" fill="#FFFFFF" stroke="#E2D9CA" stroke-width="1.5"/>
+    <circle cx="25" cy="25" r="13" fill="#2E9E6B"/>
+    <path d="M18 25l5 5 8-9" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="48" y="31" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="600" fill="#1C1B18">WLAN is on</text>
   </g>
 </svg>
