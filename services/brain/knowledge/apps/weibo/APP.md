@@ -14,6 +14,7 @@ platform: harmonyos
 HarmonyOS bundle: `com.sina.weibo.stage` (verified on a Mate 80).
 
 - Feed, search, profile, comments, direct messages.
-- To post: tap the compose button, tap the editor, type the text, then tap ?? / Post.
+- To post: tap the orange + at the top right of the feed, then choose 写微博 (Write Weibo). Album is a photo picker, not the text composer. Tap the editor, type the text, then tap Send.
+- The composer is a full screen titled "New Weibo"; Send stays greyed out until there is text.
 - Posting, reposting, commenting and following are public: ask first.
 - Web fallback: https://weibo.com.
