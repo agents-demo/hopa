@@ -6,6 +6,7 @@ through **hdc** with Developer mode enabled. This page is the honest map.
 
 ## What the GitHub release contains
 
+- Release: https://github.com/michaelatamuk/hopa/releases/tag/v0.1.0
 - `HOPA-0.1.0-debug.hap` — the current app.
 - It is signed with the **OpenHarmony debug kit**, and its profile embeds the
   **emulator's UDID**. A retail Huawei phone rejects it, even over `hdc`.
