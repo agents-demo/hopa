@@ -195,7 +195,7 @@ export struct SettingsPage {
     }
     .width('100%')
     .height('100%')
-    .padding(16)
+    .padding(20)
     .alignItems(HorizontalAlign.Start)
   }
 
@@ -381,7 +381,7 @@ export struct SettingsPage {
           this.Row('About', 'Version, credits and licenses', 'about')
         }
         .width('100%')
-        .padding(16)
+        .padding(20)
         .alignItems(HorizontalAlign.Start)
       }
       .width('100%')

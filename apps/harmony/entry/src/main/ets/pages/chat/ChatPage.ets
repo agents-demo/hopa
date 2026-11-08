@@ -1,6 +1,10 @@
 import { Context } from '@kit.AbilityKit';
+import { pasteboard } from '@kit.BasicServicesKit';
 import { MemoryExtractor } from '@hopa/core';
 import { AgentService } from '../../services/AgentService';
+import { ChatEmptyState } from './ChatEmptyState';
+import { ChatPageCard } from './ChatPageCard';
+import { HopaMark } from './HopaMark';
 
 /** Chat: the transcript, the empty state and the composer. */
 @Component
@@ -83,6 +87,57 @@ export struct ChatPage {
     return `${index}-resource`;
   }
 
+  private textOf(item: ResourceStr): string {
+    const text: ResourceStr = this.bubbleText(item);
+    return typeof text === 'string' ? text : '';
+  }
+
+  private lastAnswerIndex(): number {
+    for (let index = this.messages.length - 1; index >= 0; index--) {
+      const item: ResourceStr = this.messages[index];
+      if (typeof item === 'string' && item.startsWith('HOPA: ')) {
+        return index;
+      }
+    }
+    return -1;
+  }
+
+  private lastUserText(): string {
+    for (let index = this.messages.length - 1; index >= 0; index--) {
+      const item: ResourceStr = this.messages[index];
+      if (typeof item === 'string' && item.startsWith('You: ')) {
+        return item.substring(5);
+      }
+    }
+    return '';
+  }
+
+  private retry(): void {
+    const text: string = this.lastUserText();
+    if (text.length === 0 || this.busy) {
+      return;
+    }
+    this.draft = text;
+    this.send();
+  }
+
+  /** Copy one message to the system clipboard. */
+  private copy(text: string): void {
+    if (text.length === 0) {
+      return;
+    }
+    try {
+      const data = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, text);
+      pasteboard.getSystemPasteboard().setData(data).then(() => {
+        this.getUIContext().getPromptAction().showToast({ message: 'Copied' });
+      }).catch(() => {
+        // The clipboard may be unavailable; long-press still allows selection.
+      });
+    } catch (error) {
+      // Copy is best effort.
+    }
+  }
+
   private isUser(item: ResourceStr): boolean {
     return typeof item === 'string' && item.startsWith('You: ');
   }
@@ -108,14 +163,6 @@ export struct ChatPage {
     clean = clean.replace(/^#{1,6}\s*/gm, '');
     clean = clean.replace(/^>\s?/gm, '');
     return clean;
-  }
-
-  private suggestions(): string[] {
-    return [
-      'Summarize the hottest Bilibili videos',
-      'Open Settings and show me Wi-Fi',
-      'Draft a one-line message to my team'
-    ];
   }
 
   private canSend(): boolean {
@@ -176,72 +223,34 @@ export struct ChatPage {
 
   @Builder
   Typing() {
-    Row({ space: 4 }) {
-      Column()
-        .width(6)
-        .height(6)
-        .borderRadius(3)
-        .backgroundColor($r('app.color.text_hint'))
-        .opacity(this.pulse ? 1 : 0.3)
-        .animation({ duration: 380, curve: Curve.EaseInOut })
-      Column()
-        .width(6)
-        .height(6)
-        .borderRadius(3)
-        .backgroundColor($r('app.color.text_hint'))
-        .opacity(this.pulse ? 0.55 : 0.8)
-        .animation({ duration: 380, curve: Curve.EaseInOut })
-      Column()
-        .width(6)
-        .height(6)
-        .borderRadius(3)
-        .backgroundColor($r('app.color.text_hint'))
-        .opacity(this.pulse ? 0.3 : 1)
-        .animation({ duration: 380, curve: Curve.EaseInOut })
+    Row({ space: 8 }) {
+      HopaMark({ state: 'thinking', markSize: 24 })
+      Row({ space: 4 }) {
+        Column()
+          .width(6)
+          .height(6)
+          .borderRadius(3)
+          .backgroundColor($r('app.color.text_hint'))
+          .opacity(this.pulse ? 1 : 0.3)
+          .animation({ duration: 380, curve: Curve.EaseInOut })
+        Column()
+          .width(6)
+          .height(6)
+          .borderRadius(3)
+          .backgroundColor($r('app.color.text_hint'))
+          .opacity(this.pulse ? 0.55 : 0.8)
+          .animation({ duration: 380, curve: Curve.EaseInOut })
+        Column()
+          .width(6)
+          .height(6)
+          .borderRadius(3)
+          .backgroundColor($r('app.color.text_hint'))
+          .opacity(this.pulse ? 0.3 : 1)
+          .animation({ duration: 380, curve: Curve.EaseInOut })
+      }
     }
     .width('100%')
     .padding({ left: 4, top: 10, bottom: 10 })
-  }
-
-  @Builder
-  EmptyState() {
-    Column({ space: 10 }) {
-      Text('HOPA')
-        .fontSize(30)
-        .fontWeight(FontWeight.Bold)
-        .fontColor($r('app.color.text_primary'))
-      Text('Your phone agent. Ask for something on this phone.')
-        .fontSize(14)
-        .fontColor($r('app.color.text_secondary'))
-        .textAlign(TextAlign.Center)
-      Text('I always ask before any payment.')
-        .fontSize(11)
-        .fontColor($r('app.color.text_hint'))
-      Column({ space: 6 }) {
-        ForEach(this.suggestions(), (suggestion: string) => {
-          Row() {
-            Text(suggestion)
-              .fontSize(12.5)
-              .fontColor($r('app.color.text_primary'))
-              .maxLines(1)
-              .textOverflow({ overflow: TextOverflow.Ellipsis })
-          }
-          .width('100%')
-          .padding({ left: 12, right: 12, top: 10, bottom: 10 })
-          .backgroundColor($r('app.color.surface'))
-          .border({ width: 1, color: $r('app.color.divider') })
-          .borderRadius(10)
-          .onClick(() => {
-            this.draft = suggestion;
-          })
-        }, (suggestion: string) => suggestion)
-      }
-      .width('100%')
-      .margin({ top: 10 })
-    }
-    .layoutWeight(1)
-    .width('100%')
-    .justifyContent(FlexAlign.Center)
   }
 
   @Builder
@@ -297,44 +306,18 @@ export struct ChatPage {
     .borderRadius(26)
   }
 
-  @Builder
-  PageCard() {
-    Row({ space: 8 }) {
-      Column({ space: 2 }) {
-        Text(this.lastPageTitle.length > 0 ? this.lastPageTitle : 'Page HOPA read')
-          .fontSize(12)
-          .fontWeight(FontWeight.Medium)
-          .fontColor($r('app.color.text_primary'))
-          .maxLines(1)
-          .textOverflow({ overflow: TextOverflow.Ellipsis })
-        Text(this.lastPageUrl)
-          .fontSize(10)
-          .fontColor($r('app.color.text_hint'))
-          .maxLines(1)
-          .textOverflow({ overflow: TextOverflow.Ellipsis })
-      }
-      .layoutWeight(1)
-      .alignItems(HorizontalAlign.Start)
-      Text('Open')
-        .fontSize(12)
-        .fontColor($r('app.color.primary'))
-        .padding({ left: 10, right: 10, top: 6, bottom: 6 })
-        .backgroundColor($r('app.color.surface_muted'))
-        .borderRadius(8)
-        .onClick(() => {
-          AgentService.get().pageLinks.open(this.lastPageUrl);
-        })
-    }
-    .width('100%')
-    .padding(8)
-    .backgroundColor($r('app.color.primary_soft'))
-    .borderRadius(8)
-  }
-
   build() {
     Column({ space: 10 }) {
       if (this.messages.length === 0) {
-        this.EmptyState()
+        Column() {
+          ChatEmptyState({
+            onPick: (text: string) => {
+              this.draft = text;
+            }
+          })
+        }
+        .layoutWeight(1)
+        .width('100%')
       } else {
         List({ space: 10, scroller: this.listScroller }) {
           ForEach(this.messages, (item: ResourceStr, index: number) => {
@@ -348,13 +331,38 @@ export struct ChatPage {
                     .borderRadius(18)
                     .fontSize(15)
                     .constraintSize({ maxWidth: '84%' })
+                    .copyOption(CopyOptions.LocalDevice)
                 } else {
-                  Text(this.bubbleText(item))
-                    .width('100%')
-                    .fontSize(15)
-                    .lineHeight(22)
-                    .fontColor($r('app.color.text_primary'))
-                    .padding({ left: 2, right: 2, top: 2, bottom: 2 })
+                  Column({ space: 2 }) {
+                    Text(this.bubbleText(item))
+                      .width('100%')
+                      .fontSize(15)
+                      .lineHeight(22)
+                      .fontColor($r('app.color.text_primary'))
+                      .padding({ left: 2, right: 2, top: 2, bottom: 2 })
+                      .copyOption(CopyOptions.LocalDevice)
+                    if (index === this.lastAnswerIndex() && !this.busy) {
+                      Row({ space: 14 }) {
+                        Text('Copy')
+                          .fontSize(11)
+                          .fontColor($r('app.color.primary'))
+                          .padding({ top: 2, bottom: 2 })
+                          .onClick(() => {
+                            this.copy(this.textOf(item));
+                          })
+                        Text('Retry')
+                          .fontSize(11)
+                          .fontColor($r('app.color.primary'))
+                          .padding({ top: 2, bottom: 2 })
+                          .onClick(() => {
+                            this.retry();
+                          })
+                      }
+                      .padding({ left: 2 })
+                    }
+                  }
+                  .width('100%')
+                  .alignItems(HorizontalAlign.Start)
                 }
               }
               .width('100%')
@@ -371,7 +379,13 @@ export struct ChatPage {
         .width('100%')
       }
       if (this.lastPageUrl.length > 0) {
-        this.PageCard()
+        ChatPageCard({
+          title: this.lastPageTitle,
+          url: this.lastPageUrl,
+          onOpen: () => {
+            AgentService.get().pageLinks.open(this.lastPageUrl);
+          }
+        })
       }
       this.Composer()
     }

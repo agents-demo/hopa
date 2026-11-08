@@ -106,14 +106,18 @@ struct Index {
     this.approvalTitle = content.title;
     this.approvalMessage = content.message;
     this.approvalPayment = content.payment;
-    this.approvalOpen = true;
+    this.getUIContext().animateTo({ duration: 220, curve: Curve.EaseOut }, () => {
+      this.approvalOpen = true;
+    });
     return new Promise<boolean>((resolve: (allow: boolean) => void) => {
       this.approvalResolve = resolve;
     });
   }
 
   private answerApproval(allow: boolean): void {
-    this.approvalOpen = false;
+    this.getUIContext().animateTo({ duration: 180, curve: Curve.EaseIn }, () => {
+      this.approvalOpen = false;
+    });
     const resolve: ((allow: boolean) => void) | undefined = this.approvalResolve;
     this.approvalResolve = undefined;
     if (resolve !== undefined) {
@@ -194,6 +198,7 @@ struct Index {
           .height(28)
           .borderRadius(14)
           .backgroundColor(this.tabActive(key) ? $r('app.color.primary_soft') : Color.Transparent)
+          .animation({ duration: 160, curve: Curve.EaseOut })
         TabIcon({ kind: key, active: this.tabActive(key) })
       }
       .width(48)
@@ -320,23 +325,10 @@ struct Index {
     ChatsSheet({
       sessions: this.chatSessions,
       currentId: AgentService.get().conversations.currentId(),
-      onNewChat: () => {
-        AgentService.get().conversations.newChat();
-        this.refreshChats();
-        this.go('chat');
-      },
-      onSelect: (id: string) => {
-        AgentService.get().conversations.select(id);
-        this.refreshChats();
-        this.go('chat');
-      },
-      onDelete: (id: string) => {
-        AgentService.get().conversations.delete(id);
-        this.refreshChats();
-      },
-      onClose: () => {
-        this.chatsOpen = false;
-      }
+      onNewChat: () => { AgentService.get().conversations.newChat(); this.refreshChats(); this.go('chat'); },
+      onSelect: (id: string) => { AgentService.get().conversations.select(id); this.refreshChats(); this.go('chat'); },
+      onDelete: (id: string) => { AgentService.get().conversations.delete(id); this.refreshChats(); },
+      onClose: () => { this.chatsOpen = false; }
     })
   }
 

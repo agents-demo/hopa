@@ -46,6 +46,7 @@ export struct UsagePage {
     }
     .width('100%')
     .height('100%')
+    .padding(20)
     .alignItems(HorizontalAlign.Start)
   }
 }

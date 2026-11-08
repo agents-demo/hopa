@@ -246,7 +246,7 @@ export struct MemoryPage {
     }
     .width('100%')
     .height('100%')
-    .padding(16)
+    .padding(20)
     .alignItems(HorizontalAlign.Start)
   }
 }
