@@ -48,7 +48,7 @@ export class AppBoot {
           'https://api.deepseek.com/v1',
           key,
           'deepseek-v4-flash',
-          6
+          8
         );
         // Keep the Settings form in step with the model that is actually active.
         if (stored.provider !== 'deepseek' ||

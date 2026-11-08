@@ -90,7 +90,7 @@ export struct SettingsPage {
       this.modelEndpoint.trim(),
       this.apiKey,
       this.modelName.trim(),
-      6
+      8
     );
     this.modelLabel = service.getModelLabel();
     this.persist();

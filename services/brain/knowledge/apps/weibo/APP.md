@@ -14,5 +14,6 @@ platform: harmonyos
 HarmonyOS bundle: `com.sina.weibo.stage` (verified on a Mate 80).
 
 - Feed, search, profile, comments, direct messages.
+- To post: tap the compose button, tap the editor, type the text, then tap ?? / Post.
 - Posting, reposting, commenting and following are public: ask first.
 - Web fallback: https://weibo.com.

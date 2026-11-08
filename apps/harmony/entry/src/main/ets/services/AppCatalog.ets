@@ -109,7 +109,7 @@ export const APP_CATALOG: CatalogApp[] = [
     verified: true,
     ability: "EntryAbility",
     purpose: "Feed, search, profile, comments, direct messages.",
-    actions: ["Posting, reposting, commenting and following are public: ask first.", "Web fallback: https://weibo.com."],
+    actions: ["To post: tap the compose button, tap the editor, type the text, then tap ?? / Post.", "Posting, reposting, commenting and following are public: ask first.", "Web fallback: https://weibo.com."],
   },
   {
     name: "camera",
