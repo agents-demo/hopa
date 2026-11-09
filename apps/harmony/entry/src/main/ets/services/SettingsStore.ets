@@ -10,6 +10,7 @@ export class StoredSettings {
   autonomous: boolean = false;
   appearance: string = 'system';
   showSteps: boolean = true;
+  reduceMotion: boolean = false;
   bridgeUrl: string = '';
   bridgeToken: string = '';
   lastTokens: number = 0;
@@ -57,6 +58,10 @@ export class SettingsStore {
     if (typeof showSteps === 'boolean') {
       settings.showSteps = showSteps;
     }
+    const reduceMotion = await store.get('reduce_motion', settings.reduceMotion);
+    if (typeof reduceMotion === 'boolean') {
+      settings.reduceMotion = reduceMotion;
+    }
     const bridgeUrl = await store.get('bridge_url', settings.bridgeUrl);
     if (typeof bridgeUrl === 'string') {
       settings.bridgeUrl = bridgeUrl;
@@ -85,6 +90,7 @@ export class SettingsStore {
     await store.put('autonomous', settings.autonomous);
     await store.put('appearance', settings.appearance);
     await store.put('show_steps', settings.showSteps);
+    await store.put('reduce_motion', settings.reduceMotion);
     await store.put('bridge_url', settings.bridgeUrl);
     await store.put('bridge_token', settings.bridgeToken);
     await store.put('last_tokens', settings.lastTokens);
