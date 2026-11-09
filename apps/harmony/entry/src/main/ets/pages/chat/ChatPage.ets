@@ -23,6 +23,8 @@ export struct ChatPage {
   @State reaction: string = '';
   @State resumeGoal: string = '';
   @State loaded: boolean = false;
+  @State diffText: string = '';
+  @State canUndo: boolean = false;
   @State runningGoal: string = '';
   @State failed: boolean = false;
   @State liveSteps: string[] = [];
@@ -368,6 +370,7 @@ export struct ChatPage {
     service.conversations.add('user', text);
     this.sync();
 
+    const beforeTitle: string = service.pageLinks.title();
     const reply: string = await service.run(text);
     const low: string = reply.toLowerCase();
     this.failed = low.includes("couldn't") || low.includes('failed') || low.includes('error');
@@ -408,6 +411,7 @@ export struct ChatPage {
     this.sync();
     this.busy = false;
     this.runningGoal = '';
+    this.canUndo = steps.length === 1 && steps[0].indexOf('Opened') > 0;
     service.skills.save(context).catch(() => {
       // Persistence is best effort.
     });
@@ -591,6 +595,42 @@ export struct ChatPage {
                         .backgroundColor($r('app.color.surface_alt'))
                         .borderRadius(10)
                       }
+                      if (index === this.lastAnswerIndex() && !this.busy && this.diffText.length > 0) {
+                        Row({ space: 6 }) {
+                          Text('Changed')
+                            .fontSize(9)
+                            .fontWeight(FontWeight.Bold)
+                            .fontColor($r('app.color.primary'))
+                            .letterSpacing(0.5)
+                          Text(this.diffText)
+                            .fontSize(10.5)
+                            .fontColor($r('app.color.text_secondary'))
+                            .maxLines(1)
+                            .textOverflow({ overflow: TextOverflow.Ellipsis })
+                            .layoutWeight(1)
+                        }
+                        .width('100%')
+                        .padding(8)
+                        .backgroundColor($r('app.color.surface_alt'))
+                        .borderRadius(8)
+                      }
+                      if (index === this.lastAnswerIndex() && !this.busy && this.canUndo) {
+                        Row() {
+                          Text('Undo')
+                            .fontSize(11)
+                            .fontWeight(FontWeight.Medium)
+                            .fontColor($r('app.color.primary'))
+                            .padding({ left: 8, right: 8, top: 4, bottom: 4 })
+                            .backgroundColor($r('app.color.primary_soft'))
+                            .borderRadius(8)
+                            .onClick(() => {
+                              AgentService.get().bridge.key('Home');
+                              this.canUndo = false;
+                              this.getUIContext().getPromptAction().showToast({ message: 'Back to the home screen' });
+                            })
+                        }
+                        .width('100%')
+                      }
                       if (index === this.lastAnswerIndex() && !this.busy && this.failed) {
                         Row({ space: 8 }) {
                           Text('Something went wrong.')
@@ -632,6 +672,7 @@ export struct ChatPage {
               }
               .width('100%')
               .justifyContent(this.isUser(item) ? FlexAlign.End : FlexAlign.Start)
+              .transition(TransitionEffect.OPACITY.combine(TransitionEffect.translate({ y: 8 })).animation({ duration: 220, curve: Curve.EaseOut }))
             }
           }, (item: ResourceStr, index: number) => this.messageKey(item, index))
           if (this.busy) {
