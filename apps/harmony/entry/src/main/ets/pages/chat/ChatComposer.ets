@@ -17,7 +17,29 @@ export struct ChatComposer {
     this.getUIContext().getFocusController().clearFocus();
   }
 
+  @Builder
+  Chip(label: string, text: string) {
+    Text(label)
+      .fontSize(11)
+      .fontColor($r('app.color.text_secondary'))
+      .padding({ left: 10, right: 10, top: 5, bottom: 5 })
+      .backgroundColor($r('app.color.surface_alt'))
+      .borderRadius(9)
+      .onClick(() => {
+        this.onDraft(text);
+      })
+  }
+
   build() {
+    Column({ space: 6 }) {
+      if (!this.busy && this.draft.trim().length === 0) {
+        Row({ space: 6 }) {
+          this.Chip('Bilibili top 3', 'Open Bilibili and show me the 3 most popular videos')
+          this.Chip('Post to Weibo', "Post 'Hello world' on Weibo. Ask me first.")
+        }
+        .width('100%')
+        .padding({ left: 10, right: 10 })
+      }
     Row({ space: 4 }) {
       TextInput({ placeholder: 'Ask HOPA...', text: this.draft })
         .layoutWeight(1)
@@ -67,5 +89,7 @@ export struct ChatComposer {
     .backgroundColor($r('app.color.surface'))
     .border({ width: 1, color: $r('app.color.divider') })
     .borderRadius(26)
+    }
+    .width('100%')
   }
 }
