@@ -6,14 +6,17 @@ import { SettingsStore } from '../../services/SettingsStore';
 import { ChatEmptyState } from './ChatEmptyState';
 import { ChatPageCard } from './ChatPageCard';
 import { ChatComposer } from './ChatComposer';
+import { ChatFormat } from './ChatFormat';
+import { ErrorLog } from '../../services/ErrorLog';
+import { RecapCard } from './RecapCard';
 import { ChatTyping } from './ChatTyping';
 import { MessageActions } from './MessageActions';
 import { HopaMark } from './HopaMark';
 import { Haptics } from '../../services/Haptics';
 import { VoiceController } from '../../services/VoiceController';
-import { HopaForeground } from '../../services/HopaForeground';
-import { ProfileService } from '../../services/ProfileService';
-import { StyleProfile } from '../../services/StyleProfile';
+import { AppFocus } from '../../services/AppFocus';
+import { ModeProfile } from '../../services/ModeProfile';
+import { VisualStyle } from '../../services/VisualStyle';
 import { fileIo as fs, fileUri } from '@kit.CoreFileKit';
 import { image } from '@kit.ImageKit';
 import { util } from '@kit.ArkTS';
@@ -158,8 +161,7 @@ export struct ChatPage {
   }
 
   private textOf(item: ResourceStr): string {
-    const text: ResourceStr = this.bubbleText(item);
-    return typeof text === 'string' ? text : '';
+    return ChatFormat.textOf(item);
   }
 
   private lastAnswerIndex(): number {
@@ -218,38 +220,20 @@ export struct ChatPage {
   }
 
   private isUser(item: ResourceStr): boolean {
-    return typeof item === 'string' && item.startsWith('You: ');
+    return ChatFormat.isUser(item);
   }
 
   /** One marker line at the top of a stored answer: steps and screenshot. */
   private metaLine(item: ResourceStr): string {
-    if (typeof item !== 'string') {
-      return '';
-    }
-    const body: string = item.startsWith('HOPA: ') ? item.substring(6) : item;
-    if (body.indexOf('\u27e6meta\u27e7') !== 0) {
-      return '';
-    }
-    const end: number = body.indexOf('\n');
-    return end < 0 ? body : body.substring(0, end);
+    return ChatFormat.metaLine(item);
   }
 
   private metaValue(item: ResourceStr, key: string): string {
-    const line: string = this.metaLine(item);
-    if (line.length === 0) {
-      return '';
-    }
-    for (const part of line.substring('\u27e6meta\u27e7'.length).split(';')) {
-      if (part.startsWith(`${key}=`)) {
-        return part.substring(key.length + 1);
-      }
-    }
-    return '';
+    return ChatFormat.metaValue(item, key);
   }
 
   private stepsOf(item: ResourceStr): string[] {
-    const list: string = this.metaValue(item, 'steps');
-    return list.length === 0 ? [] : list.split(' | ');
+    return ChatFormat.stepsOf(item);
   }
 
   /** Green for success, coral for a failed step. */
@@ -259,88 +243,30 @@ export struct ChatPage {
 
   /** Numbered items of an answer; empty when the text is prose. */
   private listItems(text: string): string[] {
-    const items: string[] = [];
-    for (const line of text.split('\n')) {
-      const match = line.trim().match(/^\d+[.)]\s+(.*)$/);
-      if (match !== null) {
-        items.push(match[1]);
-      }
-    }
-    return items.length >= 2 ? items : [];
+    return ChatFormat.listItems(text);
   }
 
   /** A short sentence that introduces the list, when the model wrote one. */
   private listLead(text: string): string {
-    for (const line of text.split('\n')) {
-      const trimmed: string = line.trim();
-      if (trimmed.length === 0) {
-        continue;
-      }
-      if (trimmed.match(/^\d+[.)]\s+/) !== null) {
-        return '';
-      }
-      return trimmed;
-    }
-    return '';
+    return ChatFormat.listLead(text);
   }
 
   private shotOf(item: ResourceStr): string {
-    return this.metaValue(item, 'shot');
+    return ChatFormat.shotOf(item);
   }
 
   private bubbleText(item: ResourceStr): ResourceStr {
-    if (typeof item !== 'string') {
-      return item;
-    }
-    const body: string = item.startsWith('HOPA: ') ? item.substring(6) : item;
-    if (body.indexOf('\u27e6meta\u27e7') === 0) {
-      const end: number = body.indexOf('\n');
-      return end < 0 ? '' : body.substring(end + 1);
-    }
-    if (item.startsWith('You: ')) {
-      return item.substring(5);
-    }
-    if (item.startsWith('HOPA: ')) {
-      return this.plainAnswer(item.substring(6));
-    }
-    return item;
+    return ChatFormat.bubbleText(item);
   }
 
   /** Hide raw tool-call markup a model may leak into its answer. */
   private stripToolMarkup(text: string): string {
-    const kept: string[] = [];
-    for (const line of text.split('\n')) {
-      if (/DSML|<\/?parameter|<\/?invoke|string="true"/i.test(line)) {
-        continue;
-      }
-      kept.push(line);
-    }
-    let clean: string = kept.join('\n');
-    clean = clean.replace(/<\|\s*[\s\S]*?\s*\|>/g, '');
-    clean = clean.replace(/<\/?\s*parameter[^>]*>/gi, '');
-    clean = clean.replace(/<\/?\s*invoke[^>]*>/gi, '');
-    return clean;
+    return ChatFormat.stripToolMarkup(text);
   }
 
   /** Chat bubbles are plain text; strip the Markdown a model may add. */
   private plainAnswer(text: string): string {
-    let clean: string = this.stripToolMarkup(text);
-    clean = clean.replace(/\*\*/g, '');
-    clean = clean.replace(/__/g, '');
-    clean = clean.replace(/`/g, '');
-    clean = clean.replace(/^#{1,6}\s*/gm, '');
-    clean = clean.replace(/^>\s?/gm, '');
-    // A tool failure can echo raw shell output; keep the chat readable.
-    clean = clean.replace(/\\n/g, '\n');
-    const kept: string[] = [];
-    for (const raw of clean.split('\n')) {
-      kept.push(raw.length > 220 ? `${raw.substring(0, 220)}\u2026` : raw);
-    }
-    clean = kept.join('\n');
-    if (clean.trim().length === 0) {
-      return 'I hit a formatting error. Please try again.';
-    }
-    return clean.trim();
+    return ChatFormat.plainAnswer(text);
   }
 
   /** The most recent goal, from this session or from the saved chats. */
@@ -370,12 +296,12 @@ export struct ChatPage {
     return goal;
   }
 
-  private profile(): ProfileService {
-    return ProfileService.of(this.profileName);
+  private profile(): ModeProfile {
+    return ModeProfile.of(this.profileName);
   }
 
-  private style(): StyleProfile {
-    return StyleProfile.of(this.styleName);
+  private style(): VisualStyle {
+    return VisualStyle.of(this.styleName);
   }
 
   /** Kid mode refuses money and public posting before the model sees it. */
@@ -477,7 +403,7 @@ export struct ChatPage {
     let shotPath: string = '';
     // Only keep a screenshot when the run touched another app. A text answer
     // would otherwise show HOPA's own chat under "What HOPA saw".
-    if (!HopaForeground.active && service.lastRunHadActions() && service.isBridgeConfigured()) {
+    if (!AppFocus.active && service.lastRunHadActions() && service.isBridgeConfigured()) {
       const foreground: string = await service.bridge.foregroundBundle();
       if (foreground.length > 0 && foreground !== 'com.hopa.agent') {
         const shot: string = await service.bridge.screenshot();
@@ -522,6 +448,9 @@ export struct ChatPage {
       (steps[0].indexOf('Opened') > 0 || steps[0].indexOf('Tapped') > 0);
     if (this.failed) {
       this.draft = text;
+      ErrorLog.record(context, reply).catch(() => {
+        // The log is best effort.
+      });
     }
     if (this.speakReplies && !this.failed) {
       this.speakReply(reply);
@@ -590,7 +519,7 @@ export struct ChatPage {
       // One frame so the hidden card is laid out before it is captured.
       await new Promise<void>((resolve) => setTimeout(() => resolve(), 80));
       const snapshot = await this.getUIContext().getComponentSnapshot().createFromBuilder(() => {
-        this.RecapCard();
+        RecapCard({ goal: this.recapGoal, answer: this.recapAnswer, steps: this.recapSteps });
       });
       const packer: image.ImagePacker = image.createImagePacker();
       const png: ArrayBuffer = await packer.packing(snapshot, { format: 'image/png', quality: 92 });
@@ -669,71 +598,6 @@ export struct ChatPage {
       }
     }
     return '';
-  }
-
-  @Builder
-  RecapCard() {
-    Column({ space: 12 }) {
-      Row({ space: 8 }) {
-        HopaMark({ state: 'idle', markSize: 26 })
-        Text('HOPA')
-          .fontSize(18)
-          .fontWeight(FontWeight.Bold)
-          .fontColor('#1C1B18')
-        Blank()
-        Text(new Date().toLocaleDateString())
-          .fontSize(10)
-          .fontColor('#6B6A63')
-      }
-      .width('100%')
-      Text(this.recapGoal.length > 0 ? this.recapGoal : 'A HOPA session')
-        .fontSize(15)
-        .fontWeight(FontWeight.Medium)
-        .fontColor('#1C1B18')
-        .width('100%')
-        .maxLines(3)
-      if (this.recapSteps.length > 0) {
-        Column({ space: 6 }) {
-          ForEach(this.recapSteps.slice(0, 5), (step: string, index: number) => {
-            Row({ space: 8 }) {
-              Text(`${index + 1}`)
-                .fontSize(9)
-                .fontWeight(FontWeight.Bold)
-                .fontColor('#E8703A')
-                .width(16)
-                .height(16)
-                .textAlign(TextAlign.Center)
-                .backgroundColor('#1AE8703A')
-                .borderRadius(8)
-              Text(step.substring(2))
-                .fontSize(11.5)
-                .fontColor('#3E3D38')
-                .layoutWeight(1)
-                .maxLines(2)
-            }
-            .width('100%')
-            .alignItems(VerticalAlign.Top)
-          }, (step: string, index: number) => `recap-${index}-${step}`)
-        }
-        .width('100%')
-      } else {
-        Text(this.recapAnswer)
-          .fontSize(12)
-          .fontColor('#3E3D38')
-          .width('100%')
-          .maxLines(4)
-      }
-      Divider().color('#141C1B18')
-      Text('HarmonyOS On-device Phone Agent')
-        .fontSize(9)
-        .fontColor('#6B6A63')
-        .letterSpacing(0.4)
-    }
-    .width(300)
-    .padding(18)
-    .backgroundColor('#FFFDFBF7')
-    .borderRadius(18)
-    .alignItems(HorizontalAlign.Start)
   }
 
   private async speakReply(text: string): Promise<void> {

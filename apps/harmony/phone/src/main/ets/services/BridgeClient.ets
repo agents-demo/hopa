@@ -45,6 +45,10 @@ class SpeakBody {
   audio: string = '';
 }
 
+class PairBody {
+  token: string = '';
+}
+
 /**
  * Client for `pc-agent bridge`.
  *
@@ -253,6 +257,38 @@ export class BridgeClient {
     } catch (error) {
       this.lastError = `${(error as Error).message}`;
       return '';
+    }
+  }
+
+  /** Trade the short pairing code shown by the PC for the full token. */
+  static async pair(url: string, code: string): Promise<string> {
+    let base: string = url.trim();
+    while (base.endsWith('/')) {
+      base = base.substring(0, base.length - 1);
+    }
+    if (base.length === 0 || code.trim().length === 0) {
+      return '';
+    }
+    const client = http.createHttp();
+    try {
+      const options: http.HttpRequestOptions = {
+        method: http.RequestMethod.POST,
+        header: { 'Content-Type': 'application/json' },
+        extraData: JSON.stringify({ code: code.trim() }),
+        expectDataType: http.HttpDataType.ARRAY_BUFFER,
+        connectTimeout: 8000,
+        readTimeout: 15000
+      };
+      const response = await client.request(`${base}/pair`, options);
+      if (response.responseCode !== 200) {
+        return '';
+      }
+      const raw: string = buffer.from(response.result as ArrayBuffer).toString('utf8');
+      return (JSON.parse(raw) as PairBody).token;
+    } catch (error) {
+      return '';
+    } finally {
+      client.destroy();
     }
   }
 

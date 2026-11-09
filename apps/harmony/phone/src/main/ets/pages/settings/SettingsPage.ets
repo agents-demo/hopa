@@ -3,9 +3,11 @@ import { Context, common } from '@kit.AbilityKit';
 import { AgentService } from '../../services/AgentService';
 import { Appearance } from '../../services/Appearance';
 import { SettingsStore, StoredSettings } from '../../services/SettingsStore';
-import { ProfileService } from '../../services/ProfileService';
+import { ModeProfile } from '../../services/ModeProfile';
+import { BridgeClient } from '../../services/BridgeClient';
 import { AboutPage } from '../tools/AboutPage';
 import { SelfCheckPage } from '../tools/SelfCheckPage';
+import { LogsView } from './LogsView';
 import { ScreensPage } from '../tools/ScreensPage';
 import { AppAccessPage } from './AppAccessPage';
 import { ComputerAccessPage } from './ComputerAccessPage';
@@ -20,6 +22,7 @@ export struct SettingsPage {
   @State bridgeUrl: string = '';
   @State bridgeToken: string = '';
   @State bridgeStatus: string = 'not connected';
+  @State pairCode: string = '';
   @State appearance: string = 'system';
   @State profile: string = 'everyday';
   @State showSteps: boolean = true;
@@ -43,7 +46,7 @@ export struct SettingsPage {
       this.autonomous = stored.autonomous;
       this.appearance = stored.appearance;
       this.profile = stored.profile;
-      AppStorage.setOrCreate<string>(ProfileService.KEY, stored.profile);
+      AppStorage.setOrCreate<string>(ModeProfile.KEY, stored.profile);
       AppStorage.setOrCreate<string>('hopa.style', stored.style);
       this.showSteps = stored.showSteps;
       this.reduceMotion = stored.reduceMotion;
@@ -87,9 +90,9 @@ export struct SettingsPage {
   /** One tap rewrites the switches this profile owns. */
   private async applyProfile(name: string): Promise<void> {
     const context = getContext(this) as Context;
-    const profile = ProfileService.of(name);
+    const profile = ModeProfile.of(name);
     this.profile = profile.name;
-    AppStorage.setOrCreate<string>(ProfileService.KEY, profile.name);
+    AppStorage.setOrCreate<string>(ModeProfile.KEY, profile.name);
     AppStorage.setOrCreate<string>('hopa.style', profile.style);
     try {
       const stored: StoredSettings = await SettingsStore.load(context);
@@ -106,7 +109,7 @@ export struct SettingsPage {
       AgentService.get().setAutonomous(stored.autonomous);
       AgentService.get().setNetworkEnabled(stored.network);
       this.getUIContext().getPromptAction().showToast({
-        message: `${ProfileService.labelOf(profile.name)} profile on`
+        message: `${ModeProfile.labelOf(profile.name)} profile on`
       });
     } catch (error) {
       // The in-memory profile still applies for this session.
@@ -132,6 +135,23 @@ export struct SettingsPage {
     }).catch(() => {
       // Persistence is best effort; the in-memory settings still work.
     });
+  }
+
+  private async pairBridge(): Promise<void> {
+    const code: string = this.pairCode.trim();
+    if (code.length === 0 || this.bridgeUrl.trim().length === 0) {
+      this.bridgeStatus = 'enter URL and code';
+      return;
+    }
+    this.bridgeStatus = 'pairing...';
+    const token: string = await BridgeClient.pair(this.bridgeUrl, code);
+    if (token.length === 0) {
+      this.bridgeStatus = 'wrong code or bridge offline';
+      return;
+    }
+    this.bridgeToken = token;
+    this.pairCode = '';
+    await this.connectBridge();
   }
 
   private async connectBridge(): Promise<void> {
@@ -163,6 +183,9 @@ export struct SettingsPage {
     }
     if (this.subPage === 'screens') {
       return 'Live screen';
+    }
+    if (this.subPage === 'logs') {
+      return 'Logs';
     }
     if (this.subPage === 'permissions') {
       return 'Permissions';
@@ -287,6 +310,8 @@ export struct SettingsPage {
           DeveloperPage()
         } else if (this.subPage === 'selfcheck') {
           SelfCheckPage()
+        } else if (this.subPage === 'logs') {
+          LogsView()
         } else if (this.subPage === 'permissions') {
           this.Permissions()
         } else if (this.subPage === 'screens') {
@@ -332,8 +357,8 @@ export struct SettingsPage {
           this.Label('PROFILE')
           Column({ space: 8 }) {
             Flex({ wrap: FlexWrap.Wrap }) {
-              ForEach(ProfileService.NAMES, (name: string) => {
-                Text(ProfileService.labelOf(name))
+              ForEach(ModeProfile.NAMES, (name: string) => {
+                Text(ModeProfile.labelOf(name))
                   .fontSize(11)
                   .fontColor(this.profile === name
                     ? $r('app.color.on_primary')
@@ -350,7 +375,7 @@ export struct SettingsPage {
               }, (name: string) => name)
             }
             .width('100%')
-            Text(ProfileService.describe(this.profile))
+            Text(ModeProfile.describe(this.profile))
               .fontSize(10)
               .fontColor($r('app.color.text_hint'))
               .width('100%')
@@ -546,6 +571,26 @@ export struct SettingsPage {
               .onChange((value: string) => {
                 this.bridgeUrl = value;
               })
+            Row({ space: 8 }) {
+              TextInput({ text: this.pairCode, placeholder: 'pair code from the PC' })
+                .layoutWeight(1)
+                .height(38)
+                .fontSize(13)
+                .backgroundColor($r('app.color.surface_muted'))
+                .borderRadius(9)
+                .onChange((value: string) => {
+                  this.pairCode = value;
+                })
+              Button('Pair')
+                .fontSize(12)
+                .height(36)
+                .backgroundColor($r('app.color.primary'))
+                .fontColor($r('app.color.on_primary'))
+                .onClick(() => {
+                  this.pairBridge();
+                })
+            }
+            .width('100%')
             TextInput({ text: this.bridgeToken, placeholder: 'bridge token' })
               .height(38)
               .fontSize(13)
@@ -599,6 +644,7 @@ export struct SettingsPage {
             this.Row('Computer access', 'PC bridge and MCP commands', 'computer')
             this.Row('Permissions', 'What HOPA can and cannot do', 'permissions')
             this.Row('Self-check', 'Verify the setup', 'selfcheck')
+            this.Row('Logs', 'Recent failures on this phone', 'logs')
             this.Row('Live screen', 'Debug mirror of this phone', 'screens')
             this.Row('Developer', 'Build and runtime details', 'developer')
             this.Row('About', 'Version, credits and licenses', 'about')

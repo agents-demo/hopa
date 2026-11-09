@@ -16,6 +16,7 @@ Endpoints (JSON):
     POST /screenshot           -> {"mime": "image/jpeg", "bytes": int, "image": "base64"}
     POST /transcribe           {"audio": base64 WAV} -> {"text": str}
     POST /speak                {"text": str} -> {"mime": "audio/wav", "audio": base64}
+    POST /pair                 {"code": str} -> {"token": str}   (no bearer needed)
 """
 
 from __future__ import annotations
@@ -273,6 +274,10 @@ class _Handler(BaseHTTPRequestHandler):
         self._send(200, {"ok": True})
 
     def do_POST(self) -> None:  # noqa: N802
+        # Pairing must work before the app holds a token.
+        if self.path == "/pair":
+            self._handle_pair()
+            return
         if not self._authorized():
             # Drain the body so the client does not see a connection reset.
             length = int(self.headers.get("Content-Length", "0"))
@@ -294,6 +299,27 @@ class _Handler(BaseHTTPRequestHandler):
             self._send(500, {"error": f"{type(exc).__name__}: {exc}"})
             return
         self._send(200, result)
+
+    def _handle_pair(self) -> None:
+        if not self.bridge.pair_code:
+            self.close_connection = True
+            self._send(403, {"error": "pairing is disabled"})
+            return
+        if not self.bridge.pair_allowed():
+            self.close_connection = True
+            self._send(429, {"error": "too many attempts, wait a minute"})
+            return
+        try:
+            data = self._read_json()
+        except BridgeError as exc:
+            self._send(400, {"error": str(exc)})
+            return
+        code = str(data.get("code", "")).strip()
+        if hmac.compare_digest(code, self.bridge.pair_code):
+            self.bridge.reset_pair_attempts()
+            self._send(200, {"token": self.bridge.token})
+        else:
+            self._send(401, {"error": "wrong code"})
 
     def _dispatch(self, data: dict[str, Any]) -> dict[str, Any]:
         device = self.bridge.device
@@ -369,15 +395,33 @@ class BridgeServer:
         *,
         host: str = "127.0.0.1",
         port: int = 8765,
+        pair_code: str = "",
     ) -> None:
         if not token:
             raise BridgeError("a token is required")
         self.device = device
         self.token = token
+        self.pair_code = pair_code.strip()
+        self.pair_attempts: list[float] = []
+        self.pair_lock = threading.Lock()
         self.lock = threading.Lock()
         self.httpd = ThreadingHTTPServer((host, port), _Handler)
         self.httpd.bridge = self  # type: ignore[attr-defined]
         self.thread: threading.Thread | None = None
+
+    def pair_allowed(self) -> bool:
+        """At most five attempts a minute, to keep a short code cheap to guess-proof."""
+        now = time.monotonic()
+        with self.pair_lock:
+            self.pair_attempts = [stamp for stamp in self.pair_attempts if now - stamp < 60.0]
+            if len(self.pair_attempts) >= 5:
+                return False
+            self.pair_attempts.append(now)
+            return True
+
+    def reset_pair_attempts(self) -> None:
+        with self.pair_lock:
+            self.pair_attempts.clear()
 
     @property
     def port(self) -> int:

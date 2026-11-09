@@ -73,7 +73,7 @@ class FakeDevice:
 @pytest.fixture()
 def bridge():
     device = FakeDevice()
-    server = BridgeServer(device, "secret", port=0)
+    server = BridgeServer(device, "secret", port=0, pair_code="123456")
     server.start()
     try:
         yield server, device
@@ -168,3 +168,15 @@ def test_bad_body(bridge) -> None:
 def test_token_is_required() -> None:
     with pytest.raises(BridgeError):
         BridgeServer(FakeDevice(), "")
+
+
+def test_pair_returns_token_for_the_right_code(bridge) -> None:
+    server, _ = bridge
+    assert _call(server, "/pair", {"code": "123456"}, token="") == {"token": "secret"}
+
+
+def test_pair_rejects_a_wrong_code(bridge) -> None:
+    server, _ = bridge
+    with pytest.raises(urllib.error.HTTPError) as error:
+        _call(server, "/pair", {"code": "000000"}, token="")
+    assert error.value.code == 401
