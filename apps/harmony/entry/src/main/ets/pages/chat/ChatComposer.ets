@@ -34,6 +34,11 @@ export struct ChatComposer {
   }
 
   private accent(): ResourceColor {
+    // Wallpaper colour is a playful-profile feature; the others keep the brand.
+    const profile = ProfileService.of(this.profileName);
+    if (profile.name !== 'social' && profile.name !== 'kid') {
+      return $r('app.color.primary');
+    }
     return this.accentColor.length > 0 ? this.accentColor : $r('app.color.primary');
   }
 

@@ -42,10 +42,18 @@ export struct ChatEmptyState {
   }
 
   private accent(): ResourceColor {
+    const profile = ProfileService.of(this.profileName);
+    if (profile.name !== 'social' && profile.name !== 'kid') {
+      return $r('app.color.primary');
+    }
     return this.accentColor.length > 0 ? this.accentColor : $r('app.color.primary');
   }
 
   private accentTint(alpha: string): string {
+    const profile = ProfileService.of(this.profileName);
+    if (profile.name !== 'social' && profile.name !== 'kid') {
+      return `#${alpha}0A59F7`;
+    }
     return this.accentColor.length > 0 ? `#${alpha}${this.accentColor.substring(1)}` : `#${alpha}E8703A`;
   }
 

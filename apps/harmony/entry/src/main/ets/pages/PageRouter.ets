@@ -19,15 +19,46 @@ import { FilesPage } from './tools/FilesPage';
 import { LicensePage } from './tools/LicensePage';
 import { AboutPage } from './tools/AboutPage';
 import { WelcomePage } from './tools/WelcomePage';
+import { EasyHome } from './home/EasyHome';
+import { PowerHome } from './home/PowerHome';
+import { SocialHome } from './home/SocialHome';
+import { KidHome } from './home/KidHome';
 
 /** Maps the active page key to one page; the shell owns navigation only. */
 @Component
 export struct PageRouter {
   @Prop activePage: string = 'chat';
+  @StorageLink('hopa.profile') profileName: string = 'everyday';
   onNavigate: (key: string) => void = () => {};
+  onOpenChat: (goal: string, voice: boolean) => void = () => {};
+  onOpenRuns: () => void = () => {};
 
   build() {
-    if (this.activePage === 'activity') {
+    if (this.activePage === 'home') {
+      if (this.profileName === 'easy') {
+        EasyHome({
+          onOpenChat: (goal: string, voice: boolean) => { this.onOpenChat(goal, voice); },
+          onOpenRuns: () => { this.onOpenRuns(); }
+        })
+      } else if (this.profileName === 'power') {
+        PowerHome({
+          onOpenChat: (goal: string, voice: boolean) => { this.onOpenChat(goal, voice); },
+          onOpenRuns: () => { this.onOpenRuns(); }
+        })
+      } else if (this.profileName === 'social') {
+        SocialHome({
+          onOpenChat: (goal: string, voice: boolean) => { this.onOpenChat(goal, voice); },
+          onOpenRuns: () => { this.onOpenRuns(); }
+        })
+      } else if (this.profileName === 'kid') {
+        KidHome({
+          onOpenChat: (goal: string, voice: boolean) => { this.onOpenChat(goal, voice); },
+          onOpenSettings: () => { this.onNavigate('capabilities'); }
+        })
+      } else {
+        ChatPage()
+      }
+    } else if (this.activePage === 'activity') {
       ActivityPage({ onNavigate: (key: string) => { this.onNavigate(key); } })
     } else if (this.activePage === 'capabilities') {
       CapabilitiesPage({ onNavigate: (key: string) => { this.onNavigate(key); } })

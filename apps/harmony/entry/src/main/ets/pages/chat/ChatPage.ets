@@ -69,6 +69,21 @@ export struct ChatPage {
       this.sync();
       this.resumeGoal = this.lastKnownGoal();
       this.loaded = true;
+      // A home tile can hand over a goal (and optionally the mic).
+      setTimeout(() => {
+        const pending: string = AppStorage.get<string>('hopa.pendingGoal') ?? '';
+        if (pending.length > 0) {
+          AppStorage.setOrCreate<string>('hopa.pendingGoal', '');
+          this.draft = pending;
+          this.send();
+          return;
+        }
+        const listen: boolean = AppStorage.get<boolean>('hopa.autovoice') ?? false;
+        if (listen) {
+          AppStorage.setOrCreate<boolean>('hopa.autovoice', false);
+          this.startVoice();
+        }
+      }, 350);
     });
     this.timer = setInterval(() => {
       if (!this.busy && service.conversations.version !== this.seenVersion) {
