@@ -5,6 +5,7 @@ import { Appearance } from '../../services/Appearance';
 import { SettingsStore, StoredSettings } from '../../services/SettingsStore';
 import { ModeProfile } from '../../services/ModeProfile';
 import { BridgeClient } from '../../services/BridgeClient';
+import { RunNotification } from '../../services/RunNotification';
 import { AboutPage } from '../tools/AboutPage';
 import { SelfCheckPage } from '../tools/SelfCheckPage';
 import { LogsView } from './LogsView';
@@ -645,6 +646,16 @@ export struct SettingsPage {
             this.Row('Permissions', 'What HOPA can and cannot do', 'permissions')
             this.Row('Self-check', 'Verify the setup', 'selfcheck')
             this.Row('Logs', 'Recent failures on this phone', 'logs')
+            Text('Send a test notification')
+              .fontSize(12)
+              .fontColor($r('app.color.primary'))
+              .padding({ top: 4, bottom: 4 })
+              .onClick(async () => {
+                const ok: boolean = await RunNotification.test(getContext(this) as common.UIAbilityContext);
+                this.getUIContext().getPromptAction().showToast({
+                  message: ok ? 'Notification sent' : 'Notifications are off for HOPA'
+                });
+              })
             this.Row('Live screen', 'Debug mirror of this phone', 'screens')
             this.Row('Developer', 'Build and runtime details', 'developer')
             this.Row('About', 'Version, credits and licenses', 'about')

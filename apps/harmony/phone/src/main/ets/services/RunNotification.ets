@@ -52,7 +52,7 @@ export class RunNotification {
     }
   }
 
-  private static async publish(title: string, text: string): Promise<void> {
+  private static async publish(title: string, text: string): Promise<boolean> {
     try {
       const request: notificationManager.NotificationRequest = {
         id: RunNotification.ID,
@@ -69,8 +69,19 @@ export class RunNotification {
         tapDismissed: false
       };
       await notificationManager.publish(request);
+      return true;
     } catch (error) {
       // A denied or unsupported notification must never stop a run.
+      return false;
     }
+  }
+
+  /** Self-check used by Settings; returns false when notifications are off. */
+  static async test(context: common.UIAbilityContext): Promise<boolean> {
+    await RunNotification.ensure(context);
+    if (!RunNotification.allowed) {
+      return false;
+    }
+    return RunNotification.publish('HOPA', 'Notifications are working');
   }
 }
