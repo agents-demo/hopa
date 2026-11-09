@@ -8,11 +8,11 @@ export struct ChatEmptyState {
   @Prop resume: string = '';
   @State entered: boolean = false;
   @State pressed: number = -1;
-  @State ready: string = 'Ready';
+  @State greeting: string = 'Hi';
 
   aboutToAppear(): void {
-    const service = AgentService.get();
-    this.ready = service.isBridgeConfigured() ? 'Bridge connected' : 'Ready';
+    const hour: number = new Date().getHours();
+    this.greeting = hour < 5 ? 'Still up?' : (hour < 12 ? 'Good morning' : (hour < 18 ? 'Good afternoon' : 'Good evening'));
     // A soft entrance: content lifts in instead of appearing fully formed.
     animateTo({ duration: 420, curve: Curve.EaseOut }, () => {
       this.entered = true;
@@ -38,6 +38,10 @@ export struct ChatEmptyState {
   build() {
     Column({ space: 12 }) {
       HopaMark({ state: 'idle', markSize: 64 })
+      Text(this.greeting)
+        .fontSize(11)
+        .fontColor($r('app.color.text_hint'))
+        .letterSpacing(0.4)
       Text('HOPA')
         .fontSize(27)
         .fontWeight(FontWeight.Bold)
