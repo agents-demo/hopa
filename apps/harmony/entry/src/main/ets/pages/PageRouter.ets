@@ -53,8 +53,7 @@ export struct PageRouter {
         })
       } else if (this.profileName === 'kid') {
         KidHome({
-          onOpenChat: (goal: string, voice: boolean) => { this.onOpenChat(goal, voice); },
-          onOpenSettings: () => { this.onNavigate('capabilities'); }
+          onOpenSettings: () => { this.onNavigate('settings'); }
         })
       } else {
         ChatPage()

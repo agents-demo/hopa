@@ -461,7 +461,7 @@ struct Index {
       Column() {
         // A custom home owns the whole screen: no clock, no "+", no Everyday
         // chat entry from here.
-        if (!this.focusMode && this.activePage !== 'home') {
+        if (!this.focusMode && this.activePage !== 'home' && this.activePage !== 'easyhistory') {
           this.TopBar()
         }
         Column() {
@@ -487,7 +487,7 @@ struct Index {
         .width('100%')
         // Easy is calm: no tab bar, just two quiet links on the home screen.
         if (this.activePage !== 'browser' && !this.keyboardVisible && !this.focusMode &&
-          this.profileName !== 'easy') {
+          this.profileName !== 'easy' && this.profileName !== 'kid') {
           this.BottomBar()
         }
       }

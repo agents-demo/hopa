@@ -1,7 +1,4 @@
 import { Context } from '@kit.AbilityKit';
-import { pasteboard } from '@kit.BasicServicesKit';
-import { AgentService } from '../../services/AgentService';
-import { APP_CATALOG } from '../../services/AppCatalog';
 import { EasyEntry, EasyLog } from '../../services/EasyLog';
 import { StyleProfile } from '../../services/StyleProfile';
 import { HopaMark } from '../chat/HopaMark';
@@ -31,44 +28,6 @@ export struct EasyHistory {
     AppStorage.setOrCreate<string>('hopa.easyDraft', entry.goal);
     AppStorage.setOrCreate<boolean>('hopa.easyOpenTask', true);
     this.onOpenHome();
-  }
-
-  private lastOpenedBundle(): string {
-    const runs = AgentService.get().runs.all();
-    for (let index = runs.length - 1; index >= 0; index--) {
-      const run = runs[index];
-      if (run.kind !== 'ui.launch' || run.detail.length === 0) {
-        continue;
-      }
-      let name: string = run.detail.startsWith('Opened ') ? run.detail.substring(7) : run.detail;
-      if (name.endsWith('.')) {
-        name = name.substring(0, name.length - 1);
-      }
-      for (const app of APP_CATALOG) {
-        if (app.display === name || app.name === name) {
-          return app.bundle;
-        }
-      }
-    }
-    return '';
-  }
-
-  private async sendAnswer(entry: EasyEntry): Promise<void> {
-    try {
-      const data = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, entry.answer);
-      await pasteboard.getSystemPasteboard().setData(data);
-    } catch (error) {
-      this.getUIContext().getPromptAction().showToast({ message: 'Could not copy the answer.' });
-      return;
-    }
-    const bundle: string = this.lastOpenedBundle();
-    const service = AgentService.get();
-    if (bundle.length > 0 && service.isBridgeConfigured()) {
-      service.bridge.launch(bundle);
-      this.getUIContext().getPromptAction().showToast({ message: 'Copied — paste it in the app.' });
-    } else {
-      this.getUIContext().getPromptAction().showToast({ message: 'Copied — paste it in a message.' });
-    }
   }
 
   @Builder
@@ -140,7 +99,7 @@ export struct EasyHistory {
       .width('100%')
       .layoutWeight(1)
       .scrollBar(BarState.Off)
-      Text('Send it')
+      Text('Edit this request')
         .fontSize(this.style().body + 1)
         .fontWeight(FontWeight.Bold)
         .fontColor($r('app.color.on_primary'))
@@ -148,18 +107,6 @@ export struct EasyHistory {
         .height(56)
         .textAlign(TextAlign.Center)
         .backgroundColor($r('app.color.primary'))
-        .borderRadius(this.style().cardRadius)
-        .onClick(() => {
-          this.sendAnswer(entry);
-        })
-      Text('Edit this request')
-        .fontSize(this.style().body + 1)
-        .fontWeight(FontWeight.Medium)
-        .fontColor($r('app.color.text_primary'))
-        .width('100%')
-        .height(56)
-        .textAlign(TextAlign.Center)
-        .backgroundColor($r('app.color.surface_alt'))
         .borderRadius(this.style().cardRadius)
         .onClick(() => {
           this.askAgain(entry);
@@ -179,11 +126,29 @@ export struct EasyHistory {
     } else {
       Scroll() {
         Column({ space: 10 }) {
-          Text(this.entries.length > 1 ? `What you asked · ${this.entries.length}` : 'What you asked')
-            .fontSize(this.style().body + 2)
-            .fontWeight(FontWeight.Bold)
-            .fontColor($r('app.color.text_primary'))
-            .width('100%')
+          Row({ space: 8 }) {
+            Text('←')
+              .fontSize(24)
+              .fontColor($r('app.color.text_primary'))
+              .width(44)
+              .height(44)
+              .textAlign(TextAlign.Center)
+              .onClick(() => {
+                this.onOpenHome();
+              })
+            Text('History')
+              .fontSize(this.style().body + 2)
+              .fontWeight(FontWeight.Bold)
+              .fontColor($r('app.color.text_primary'))
+              .layoutWeight(1)
+          }
+          .width('100%')
+          if (this.entries.length > 0) {
+            Text(`${this.entries.length} things you asked`)
+              .fontSize(this.style().body - 2)
+              .fontColor($r('app.color.text_hint'))
+              .width('100%')
+          }
           if (this.entries.length === 0) {
             Column({ space: 8 }) {
               HopaMark({ state: 'idle', markSize: 56, interactive: false })

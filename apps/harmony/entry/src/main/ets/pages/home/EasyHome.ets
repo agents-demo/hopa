@@ -1,8 +1,6 @@
 import { Context, Permissions, abilityAccessCtrl, common } from '@kit.AbilityKit';
 import { util } from '@kit.ArkTS';
-import { pasteboard } from '@kit.BasicServicesKit';
 import { AgentService } from '../../services/AgentService';
-import { APP_CATALOG } from '../../services/AppCatalog';
 import { StyleProfile } from '../../services/StyleProfile';
 import { VoiceService } from '../../services/VoiceService';
 import { Haptics } from '../../services/Haptics';
@@ -200,45 +198,6 @@ export struct EasyHome {
     }
   }
 
-  private lastOpenedBundle(): string {
-    const runs = AgentService.get().runs.all();
-    for (let index = runs.length - 1; index >= 0; index--) {
-      const run = runs[index];
-      if (run.kind !== 'ui.launch' || run.detail.length === 0) {
-        continue;
-      }
-      let name: string = run.detail.startsWith('Opened ') ? run.detail.substring(7) : run.detail;
-      if (name.endsWith('.')) {
-        name = name.substring(0, name.length - 1);
-      }
-      for (const app of APP_CATALOG) {
-        if (app.display === name || app.name === name) {
-          return app.bundle;
-        }
-      }
-    }
-    return '';
-  }
-
-  /** Copy the answer, then open the app it belongs to, ready to paste. */
-  private async sendAnswer(): Promise<void> {
-    try {
-      const data = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, this.result);
-      await pasteboard.getSystemPasteboard().setData(data);
-    } catch (error) {
-      this.toast('Could not copy the answer.');
-      return;
-    }
-    const bundle: string = this.lastOpenedBundle();
-    const service = AgentService.get();
-    if (bundle.length > 0 && service.isBridgeConfigured()) {
-      service.bridge.launch(bundle);
-      this.toast('Copied — paste it in the app.');
-    } else {
-      this.toast('Copied — paste it in a message.');
-    }
-  }
-
   private async runTask(): Promise<void> {
     const goal: string = this.draft.trim();
     if (goal.length === 0 || this.phase === 'working') {
@@ -298,25 +257,20 @@ export struct EasyHome {
     .justifyContent(FlexAlign.Center)
   }
 
+  /** Same shape as the talk button, so the two read as siblings. */
   @Builder
   Tile(label: string, action: () => void) {
-    Row({ space: 10 }) {
-      Text(label)
-        .fontSize(this.style().body + 3)
-        .fontWeight(FontWeight.Medium)
-        .fontColor($r('app.color.text_primary'))
-        .layoutWeight(1)
-      Text('›')
-        .fontSize(26)
-        .fontColor($r('app.color.text_hint'))
-    }
-    .width('100%')
-    .height(88)
-    .padding({ left: 22, right: 16 })
-    .backgroundColor($r('app.color.surface'))
-    .border({ width: 1, color: $r('app.color.divider') })
-    .borderRadius(this.style().cardRadius)
-    .onClick(action)
+    Text(label)
+      .fontSize(this.style().body + 3)
+      .fontWeight(FontWeight.Medium)
+      .fontColor($r('app.color.text_primary'))
+      .width('100%')
+      .height(68)
+      .textAlign(TextAlign.Center)
+      .backgroundColor($r('app.color.surface'))
+      .border({ width: 1, color: $r('app.color.divider') })
+      .borderRadius(this.style().cardRadius + 6)
+      .onClick(action)
   }
 
   @Builder
@@ -340,39 +294,37 @@ export struct EasyHome {
                 this.greet();
               })
           }
-          Text(this.hello ? "Hello! I'm HOPA." : this.greeting())
-            .fontSize(this.style().body)
+          Text(this.hello ? 'Nice to meet you!' : this.greeting())
+            .fontSize(this.style().body - 2)
             .fontColor(this.hello ? $r('app.color.primary') : $r('app.color.text_secondary'))
-          Text('What would you like to do?')
-            .fontSize(this.style().title - 6)
+          Text('I am HOPA')
+            .fontSize(this.style().body + 6)
             .fontWeight(FontWeight.Bold)
             .fontColor($r('app.color.text_primary'))
-            .textAlign(TextAlign.Center)
+            .letterSpacing(-0.3)
         }
         .width('100%')
         .padding({ top: 12 })
+        .margin({ bottom: 16 })
         .onClick(() => {
           this.greet();
         })
 
-        Row({ space: 12 }) {
-          this.MicWhite(24)
-          Text('Talk to HOPA')
-            .fontSize(this.style().body + 3)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(Color.White)
-        }
-        .width('100%')
-        .height(68)
-        .justifyContent(FlexAlign.Center)
-        .backgroundColor(this.accent())
-        .borderRadius(this.style().cardRadius + 6)
-        .shadow({ radius: 14, color: '#1F1C1B18', offsetY: 4 })
-        .onClick(() => {
-          this.openTask(true);
-        })
+        Text('Talk to me')
+          .fontSize(this.style().body + 3)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(Color.White)
+          .width('100%')
+          .height(68)
+          .textAlign(TextAlign.Center)
+          .backgroundColor(this.accent())
+          .borderRadius(this.style().cardRadius + 6)
+          .shadow({ radius: 14, color: '#1F1C1B18', offsetY: 4 })
+          .onClick(() => {
+            this.openTask(true);
+          })
 
-        this.Tile('Send a message', () => {
+        this.Tile('Send me a message', () => {
           this.draft = '';
           this.openTask(false);
         })
@@ -545,7 +497,7 @@ export struct EasyHome {
           .constraintSize({ maxHeight: 380 })
           .scrollBar(BarState.Off)
           Blank()
-          Text('Send it')
+          Text('Say something else')
             .fontSize(this.style().body + 1)
             .fontWeight(FontWeight.Bold)
             .fontColor($r('app.color.on_primary'))
@@ -555,21 +507,18 @@ export struct EasyHome {
             .backgroundColor(this.accent())
             .borderRadius(this.style().cardRadius)
             .onClick(() => {
-              this.sendAnswer();
-            })
-          Text('Say something else')
-            .fontSize(this.style().body + 1)
-            .fontWeight(FontWeight.Medium)
-            .fontColor($r('app.color.text_primary'))
-            .width('100%')
-            .height(56)
-            .textAlign(TextAlign.Center)
-            .backgroundColor($r('app.color.surface_alt'))
-            .borderRadius(this.style().cardRadius)
-            .onClick(() => {
               this.phase = 'input';
               this.draft = '';
               this.result = '';
+            })
+          Text('Close')
+            .fontSize(this.style().body)
+            .fontColor($r('app.color.text_secondary'))
+            .textAlign(TextAlign.Center)
+            .width('100%')
+            .padding({ top: 6 })
+            .onClick(() => {
+              this.taskOpen = false;
             })
         }
         .width('100%')
