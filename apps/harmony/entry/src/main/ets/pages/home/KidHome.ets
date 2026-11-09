@@ -76,7 +76,7 @@ export struct KidHome {
     }
     .width('100%')
     .height('100%')
-    .padding({ left: 18, right: 18, top: 26, bottom: 20 })
+    .padding({ left: 18, right: 18, top: 40, bottom: 20 })
     .alignItems(HorizontalAlign.Center)
   }
 }

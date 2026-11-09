@@ -34,6 +34,21 @@ export struct EasyHome {
     AppStorage.setOrCreate<boolean>('hopa.focus', this.taskOpen || this.helpOpen);
   }
 
+  aboutToAppear(): void {
+    // "Ask again" from History reopens the sheet with the old request.
+    if (AppStorage.get<boolean>('hopa.easyOpenTask') ?? false) {
+      const draft: string = AppStorage.get<string>('hopa.easyDraft') ?? '';
+      AppStorage.setOrCreate<boolean>('hopa.easyOpenTask', false);
+      AppStorage.setOrCreate<string>('hopa.easyDraft', '');
+      this.taskOpen = true;
+      this.phase = 'input';
+      this.draft = draft;
+      this.result = '';
+      this.stepText = '';
+      this.syncFocus();
+    }
+  }
+
   aboutToDisappear(): void {
     AppStorage.setOrCreate<boolean>('hopa.focus', false);
     if (this.helloTimer >= 0) {
@@ -347,7 +362,7 @@ export struct EasyHome {
 
       }
       .width('100%')
-      .padding({ left: 18, right: 18, top: 26, bottom: 24 })
+      .padding({ left: 18, right: 18, top: 44, bottom: 24 })
       .constraintSize({ minHeight: '100%' })
     }
     .width('100%')
@@ -488,7 +503,7 @@ export struct EasyHome {
     }
     .width('100%')
     .height('100%')
-    .padding({ left: 20, right: 20, top: 26, bottom: 20 })
+    .padding({ left: 20, right: 20, top: 40, bottom: 20 })
     .backgroundColor($r('app.color.bg'))
     .alignItems(HorizontalAlign.Start)
   }
@@ -554,7 +569,7 @@ export struct EasyHome {
     }
     .width('100%')
     .height('100%')
-    .padding({ left: 20, right: 20, top: 26, bottom: 20 })
+    .padding({ left: 20, right: 20, top: 40, bottom: 20 })
     .backgroundColor($r('app.color.bg'))
     .alignItems(HorizontalAlign.Start)
   }

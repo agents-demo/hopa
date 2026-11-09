@@ -3,11 +3,12 @@ import { EasyEntry, EasyLog } from '../../services/EasyLog';
 import { StyleProfile } from '../../services/StyleProfile';
 import { HopaMark } from '../chat/HopaMark';
 
-/** Easy history: what was asked, what HOPA answered, when. */
+/** Easy history: what was asked, what HOPA answered, when. Tap for detail. */
 @Component
 export struct EasyHistory {
+  onOpenHome: () => void = () => {};
   @State entries: EasyEntry[] = [];
-  @State expanded: number = -1;
+  @State selected: number = -1;
   @StorageLink('hopa.style') styleName: string = 'easy';
 
   aboutToAppear(): void {
@@ -23,25 +24,18 @@ export struct EasyHistory {
     return StyleProfile.of(this.styleName);
   }
 
+  private askAgain(entry: EasyEntry): void {
+    AppStorage.setOrCreate<string>('hopa.easyDraft', entry.goal);
+    AppStorage.setOrCreate<boolean>('hopa.easyOpenTask', true);
+    this.onOpenHome();
+  }
+
   @Builder
   Card(entry: EasyEntry, index: number) {
     Column({ space: 6 }) {
-      Row({ space: 8 }) {
-        Text(new Date(entry.at).toLocaleString())
-          .fontSize(10)
-          .fontColor($r('app.color.text_hint'))
-        Blank()
-        if (this.expanded === index) {
-          Text('Less')
-            .fontSize(10)
-            .fontColor($r('app.color.primary'))
-        } else {
-          Text('More')
-            .fontSize(10)
-            .fontColor($r('app.color.primary'))
-        }
-      }
-      .width('100%')
+      Text(new Date(entry.at).toLocaleString())
+        .fontSize(10)
+        .fontColor($r('app.color.text_hint'))
       Text(entry.goal)
         .fontSize(this.style().body + 1)
         .fontWeight(FontWeight.Medium)
@@ -50,11 +44,11 @@ export struct EasyHistory {
         .maxLines(2)
         .textOverflow({ overflow: TextOverflow.Ellipsis })
       Text(entry.answer)
-        .fontSize(this.style().body)
-        .lineHeight(this.style().body + 8)
+        .fontSize(this.style().body - 1)
+        .lineHeight(this.style().body + 5)
         .fontColor($r('app.color.text_secondary'))
         .width('100%')
-        .maxLines(this.expanded === index ? 60 : 3)
+        .maxLines(2)
         .textOverflow({ overflow: TextOverflow.Ellipsis })
     }
     .width('100%')
@@ -64,43 +58,110 @@ export struct EasyHistory {
     .borderRadius(this.style().cardRadius)
     .alignItems(HorizontalAlign.Start)
     .onClick(() => {
-      this.expanded = this.expanded === index ? -1 : index;
+      this.selected = index;
     })
   }
 
-  build() {
-    Scroll() {
-      Column({ space: 10 }) {
-        Text('What you asked')
+  @Builder
+  Detail(entry: EasyEntry) {
+    Column({ space: 14 }) {
+      Row({ space: 8 }) {
+        Text('←')
+          .fontSize(24)
+          .fontColor($r('app.color.text_primary'))
+          .width(44)
+          .height(44)
+          .textAlign(TextAlign.Center)
+          .onClick(() => {
+            this.selected = -1;
+          })
+        Text('Your request')
           .fontSize(this.style().body + 2)
           .fontWeight(FontWeight.Bold)
-          .fontColor($r('app.color.text_primary'))
-          .width('100%')
-        if (this.entries.length === 0) {
-          Column({ space: 8 }) {
-            HopaMark({ state: 'idle', markSize: 56, interactive: false })
-            Text('Nothing here yet')
-              .fontSize(this.style().body + 1)
-              .fontWeight(FontWeight.Medium)
-            Text('Tap Talk on the home screen and ask for something.')
-              .fontSize(this.style().body - 1)
-              .fontColor($r('app.color.text_secondary'))
-              .textAlign(TextAlign.Center)
-          }
-          .width('100%')
-          .padding({ top: 60 })
-        } else {
-          ForEach(this.entries, (entry: EasyEntry, index: number) => {
-            this.Card(entry, index)
-          }, (entry: EasyEntry, index: number) => `${entry.at}-${index}`)
-        }
+          .layoutWeight(1)
       }
       .width('100%')
-      .padding({ left: 18, right: 18, top: 18, bottom: 24 })
-      .alignItems(HorizontalAlign.Start)
+      Text(new Date(entry.at).toLocaleString())
+        .fontSize(10)
+        .fontColor($r('app.color.text_hint'))
+      Text(entry.goal)
+        .fontSize(this.style().body + 3)
+        .fontWeight(FontWeight.Medium)
+        .fontColor($r('app.color.text_primary'))
+        .width('100%')
+      Scroll() {
+        Text(entry.answer)
+          .fontSize(this.style().body + 2)
+          .lineHeight(this.style().body + 11)
+          .fontColor($r('app.color.text_primary'))
+          .width('100%')
+      }
+      .width('100%')
+      .layoutWeight(1)
+      .scrollBar(BarState.Off)
+      Text('Ask again')
+        .fontSize(this.style().body + 1)
+        .fontWeight(FontWeight.Bold)
+        .fontColor($r('app.color.on_primary'))
+        .width('100%')
+        .height(56)
+        .textAlign(TextAlign.Center)
+        .backgroundColor($r('app.color.primary'))
+        .borderRadius(this.style().cardRadius)
+        .onClick(() => {
+          this.askAgain(entry);
+        })
+      Text('Back to history')
+        .fontSize(this.style().body - 1)
+        .fontColor($r('app.color.primary'))
+        .onClick(() => {
+          this.selected = -1;
+        })
     }
     .width('100%')
     .height('100%')
-    .scrollBar(BarState.Off)
+    .padding({ left: 18, right: 18, top: 10, bottom: 20 })
+    .backgroundColor($r('app.color.bg'))
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  build() {
+    if (this.selected >= 0 && this.selected < this.entries.length) {
+      this.Detail(this.entries[this.selected])
+    } else {
+      Scroll() {
+        Column({ space: 10 }) {
+          Text(this.entries.length > 1 ? `What you asked · ${this.entries.length}` : 'What you asked')
+            .fontSize(this.style().body + 2)
+            .fontWeight(FontWeight.Bold)
+            .fontColor($r('app.color.text_primary'))
+            .width('100%')
+          if (this.entries.length === 0) {
+            Column({ space: 8 }) {
+              HopaMark({ state: 'idle', markSize: 56, interactive: false })
+              Text('Nothing here yet')
+                .fontSize(this.style().body + 1)
+                .fontWeight(FontWeight.Medium)
+              Text('Tap Talk on the home screen and ask for something.')
+                .fontSize(this.style().body - 1)
+                .fontColor($r('app.color.text_secondary'))
+                .textAlign(TextAlign.Center)
+            }
+            .width('100%')
+            .padding({ top: 60 })
+          } else {
+            ForEach(this.entries, (entry: EasyEntry, index: number) => {
+              this.Card(entry, index)
+            }, (entry: EasyEntry, index: number) => `${entry.at}-${index}`)
+          }
+        }
+        .width('100%')
+        .padding({ left: 18, right: 18, top: 18, bottom: 24 })
+        .alignItems(HorizontalAlign.Start)
+      }
+      .width('100%')
+      .height('100%')
+      .scrollBar(BarState.Off)
+    }
   }
 }

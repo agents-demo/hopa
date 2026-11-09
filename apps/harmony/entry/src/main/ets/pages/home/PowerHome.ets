@@ -178,7 +178,7 @@ export struct PowerHome {
     }
     .width('100%')
     .height('100%')
-    .padding({ left: 16, right: 16, top: 26, bottom: 16 })
+    .padding({ left: 16, right: 16, top: 30, bottom: 16 })
     .alignItems(HorizontalAlign.Start)
   }
 }

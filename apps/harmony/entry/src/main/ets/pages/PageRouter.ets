@@ -57,7 +57,7 @@ export struct PageRouter {
         ChatPage()
       }
     } else if (this.activePage === 'easyhistory') {
-      EasyHistory()
+      EasyHistory({ onOpenHome: () => { this.onNavigate('home'); } })
     } else if (this.activePage === 'activity') {
       ActivityPage({ onNavigate: (key: string) => { this.onNavigate(key); } })
     } else if (this.activePage === 'capabilities') {
