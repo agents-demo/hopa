@@ -2,6 +2,7 @@ import { Context } from '@kit.AbilityKit';
 import { pasteboard } from '@kit.BasicServicesKit';
 import { MemoryExtractor } from '@hopa/core';
 import { AgentService } from '../../services/AgentService';
+import { SettingsStore } from '../../services/SettingsStore';
 import { ChatEmptyState } from './ChatEmptyState';
 import { ChatPageCard } from './ChatPageCard';
 import { ChatComposer } from './ChatComposer';
@@ -18,6 +19,7 @@ export struct ChatPage {
   @State busy: boolean = false;
   @State reaction: string = '';
   @State resumeGoal: string = '';
+  @State showSteps: boolean = true;
   @State lastPageUrl: string = '';
   @State lastPageTitle: string = '';
   private seenVersion: number = -1;
@@ -31,6 +33,11 @@ export struct ChatPage {
     this.lastPageUrl = service.pageLinks.url();
     this.lastPageTitle = service.pageLinks.title();
     const context = getContext(this) as Context;
+    SettingsStore.load(context).then((stored) => {
+      this.showSteps = stored.showSteps;
+    }).catch(() => {
+      // Keep the default.
+    });
     service.conversations.load(context).then(() => {
       this.render();
       this.sync();
@@ -356,7 +363,7 @@ export struct ChatPage {
                     })
                       .margin({ top: 4 })
                     Column({ space: 4 }) {
-                      if (this.stepsOf(item).length > 0) {
+                      if (this.showSteps && this.stepsOf(item).length > 0) {
                         Flex({ wrap: FlexWrap.Wrap }) {
                           ForEach(this.stepsOf(item), (step: string) => {
                             Text(step)

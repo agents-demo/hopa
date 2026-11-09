@@ -9,6 +9,7 @@ export class StoredSettings {
   network: boolean = false;
   autonomous: boolean = false;
   appearance: string = 'system';
+  showSteps: boolean = true;
   bridgeUrl: string = '';
   bridgeToken: string = '';
   lastTokens: number = 0;
@@ -52,6 +53,10 @@ export class SettingsStore {
     if (typeof appearance === 'string') {
       settings.appearance = appearance;
     }
+    const showSteps = await store.get('show_steps', settings.showSteps);
+    if (typeof showSteps === 'boolean') {
+      settings.showSteps = showSteps;
+    }
     const bridgeUrl = await store.get('bridge_url', settings.bridgeUrl);
     if (typeof bridgeUrl === 'string') {
       settings.bridgeUrl = bridgeUrl;
@@ -79,6 +84,7 @@ export class SettingsStore {
     await store.put('network', settings.network);
     await store.put('autonomous', settings.autonomous);
     await store.put('appearance', settings.appearance);
+    await store.put('show_steps', settings.showSteps);
     await store.put('bridge_url', settings.bridgeUrl);
     await store.put('bridge_token', settings.bridgeToken);
     await store.put('last_tokens', settings.lastTokens);

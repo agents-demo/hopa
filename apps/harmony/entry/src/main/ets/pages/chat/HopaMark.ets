@@ -161,11 +161,11 @@ export struct HopaMark {
         // Tail first: a rotated square tucked into the bubble so only its
         // lower corner shows, reading as one connected speech bubble.
         Column()
-          .width(this.markSize * 0.18)
-          .height(this.markSize * 0.18)
+          .width(this.markSize * 0.26)
+          .height(this.markSize * 0.26)
           .backgroundColor('#E8703A')
           .rotate({ angle: 45 })
-          .position({ x: this.markSize * 0.72, y: -this.markSize * 0.70 })
+          .position({ x: this.markSize * 0.70, y: -this.markSize * 0.68 })
           .hitTestBehavior(HitTestMode.None)
 
         Column() {

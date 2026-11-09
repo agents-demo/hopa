@@ -20,6 +20,7 @@ export struct SettingsPage {
   @State bridgeToken: string = '';
   @State bridgeStatus: string = 'not connected';
   @State appearance: string = 'system';
+  @State showSteps: boolean = true;
   @State a11yAvailable: boolean = false;
   @State a11yInstalled: string = 'checking...';
   @State subPage: string = '';
@@ -36,6 +37,7 @@ export struct SettingsPage {
       this.networkEnabled = stored.network;
       this.autonomous = stored.autonomous;
       this.appearance = stored.appearance;
+      this.showSteps = stored.showSteps;
       this.bridgeUrl = stored.bridgeUrl;
       this.bridgeToken = stored.bridgeToken;
       if (this.bridgeUrl.length > 0 && this.bridgeToken.length > 0) {
@@ -75,6 +77,7 @@ export struct SettingsPage {
       stored.network = this.networkEnabled;
       stored.autonomous = this.autonomous;
       stored.appearance = this.appearance;
+      stored.showSteps = this.showSteps;
       stored.bridgeUrl = this.bridgeUrl;
       stored.bridgeToken = this.bridgeToken;
       return SettingsStore.save(context, stored);
@@ -219,6 +222,26 @@ export struct SettingsPage {
                 .onChange((on: boolean) => {
                   this.networkEnabled = on;
                   AgentService.get().setNetworkEnabled(on);
+                  this.persist();
+                })
+            }
+            .width('100%')
+            .padding({ top: 9, bottom: 9 })
+            Divider().color($r('app.color.divider'))
+            Row({ space: 10 }) {
+              Column({ space: 2 }) {
+                Text('Show what HOPA did')
+                  .fontSize(14)
+                  .fontColor($r('app.color.text_primary'))
+                Text('Step chips under each answer.')
+                  .fontSize(10)
+                  .fontColor($r('app.color.text_hint'))
+              }
+              .layoutWeight(1)
+              .alignItems(HorizontalAlign.Start)
+              Toggle({ type: ToggleType.Switch, isOn: this.showSteps })
+                .onChange((on: boolean) => {
+                  this.showSteps = on;
                   this.persist();
                 })
             }
