@@ -155,43 +155,40 @@ export struct HopaMark {
         .position({ x: this.markSize * 0.547, y: this.markSize * 0.398 })
         .opacity(this.blink ? 1 : 0)
 
-      // Greeting bubble: sits above the head, tail touching the top of it.
-      Column() {
-        Text("Hi, I'm HOPA 👋")
-          .fontSize(this.markSize * 0.215)
-          .fontWeight(FontWeight.Bold)
-          .fontColor(Color.White)
-          .textAlign(TextAlign.Center)
-          .maxLines(1)
-      }
-      .width(this.markSize * 2.30)
-      .padding({
-        left: this.markSize * 0.12,
-        right: this.markSize * 0.12,
-        top: this.markSize * 0.11,
-        bottom: this.markSize * 0.11
-      })
-      .backgroundColor('#E8703A')
-      .borderRadius(this.markSize * 0.29)
-      .shadow({ radius: this.markSize * 0.16, color: '#551C1B18', offsetY: this.markSize * 0.05 })
-      .rotate({ angle: this.bubble ? -3 : -12 })
-      .position({ x: this.markSize * 0.42, y: -this.markSize * 1.05 })
-      .opacity(this.bubble ? 1 : 0)
-      .scale({ x: this.bubble ? 1 : 0.5, y: this.bubble ? 1 : 0.5 })
-      .animation({ duration: 280, curve: Curve.EaseOut })
-      .hitTestBehavior(HitTestMode.None)
-
-      // Tail last so it sits on top of the bubble and points down at him.
-      Column()
-        .width(this.markSize * 0.17)
-        .height(this.markSize * 0.17)
+      // The bubble only exists while it is shown: a hidden Text node would
+      // still be picked up by observe and confuse the model.
+      if (this.bubble) {
+        Column() {
+          Text("Hi, I'm HOPA 👋")
+            .fontSize(this.markSize * 0.215)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(Color.White)
+            .textAlign(TextAlign.Center)
+            .maxLines(1)
+        }
+        .width(this.markSize * 2.30)
+        .padding({
+          left: this.markSize * 0.12,
+          right: this.markSize * 0.12,
+          top: this.markSize * 0.11,
+          bottom: this.markSize * 0.11
+        })
         .backgroundColor('#E8703A')
-        .rotate({ angle: 45 })
-        .position({ x: this.markSize * 0.62, y: -this.markSize * 0.56 })
-        .opacity(this.bubble ? 1 : 0)
-        .scale({ x: this.bubble ? 1 : 0.2, y: this.bubble ? 1 : 0.2 })
-        .animation({ duration: 260, curve: Curve.EaseOut })
+        .borderRadius(this.markSize * 0.29)
+        .shadow({ radius: this.markSize * 0.16, color: '#551C1B18', offsetY: this.markSize * 0.05 })
+        .rotate({ angle: -3 })
+        .position({ x: this.markSize * 0.42, y: -this.markSize * 1.05 })
+        .transition(TransitionEffect.OPACITY.combine(TransitionEffect.scale({ x: 0.6, y: 0.6 })))
         .hitTestBehavior(HitTestMode.None)
+
+        Column()
+          .width(this.markSize * 0.17)
+          .height(this.markSize * 0.17)
+          .backgroundColor('#E8703A')
+          .rotate({ angle: 45 })
+          .position({ x: this.markSize * 0.62, y: -this.markSize * 0.56 })
+          .hitTestBehavior(HitTestMode.None)
+      }
     }
     .width(this.markSize)
     .height(this.markSize)

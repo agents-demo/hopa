@@ -79,7 +79,7 @@ export class AgentRuntime {
     endpoint: string,
     apiKey: string,
     modelName: string,
-    maxSteps: number = 6
+    maxSteps: number = 14
   ): void {
     this.model = ModelFactory.create(provider, endpoint, apiKey, modelName);
     this.activeKey = apiKey;
@@ -116,7 +116,7 @@ export class AgentRuntime {
     provider: string,
     endpoint: string,
     modelName: string,
-    maxSteps: number = 8
+    maxSteps: number = 14
   ): void {
     this.configureModel(provider, endpoint, this.activeKey, modelName, maxSteps);
   }
