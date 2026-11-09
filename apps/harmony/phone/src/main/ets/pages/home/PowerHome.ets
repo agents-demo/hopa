@@ -1,4 +1,4 @@
-import { RunRecord } from '@hopa/core';
+import { BatchItemResult, RunRecord } from '@hopa/core';
 import { AgentService } from '../../services/AgentService';
 import { VisualStyle } from '../../services/VisualStyle';
 import { HopaMark } from '../chat/HopaMark';
@@ -9,6 +9,10 @@ export struct PowerHome {
   onOpenChat: (goal: string, voice: boolean) => void = () => {};
   onOpenRuns: () => void = () => {};
   @State command: string = '';
+  @State batchOpen: boolean = false;
+  @State batchText: string = '';
+  @State batchResults: BatchItemResult[] = [];
+  @State batchBusy: boolean = false;
   @State tick: number = 0;
   @StorageLink('hopa.style') styleName: string = 'calm';
   @StorageLink('hopa.accent') accentColor: string = '';
@@ -50,8 +54,7 @@ export struct PowerHome {
       this.command = '';
       const command: string = goal.toLowerCase().split(' ')[0];
       if (command === '/batch') {
-        AppStorage.setOrCreate<string>('hopa.runsFocus', 'batch');
-        this.onOpenRuns();
+        this.batchOpen = true;
         return;
       }
       if (command === '/replay') {
@@ -73,17 +76,115 @@ export struct PowerHome {
     this.onOpenChat(goal, false);
   }
 
+  private async runInlineBatch(): Promise<void> {
+    const goals: string[] = [];
+    for (const line of this.batchText.split('\n')) {
+      const goal: string = line.trim();
+      if (goal.length > 0) {
+        goals.push(goal);
+      }
+    }
+    if (goals.length === 0 || this.batchBusy) {
+      return;
+    }
+    this.batchBusy = true;
+    try {
+      this.batchResults = await AgentService.get().runBatch(goals);
+    } catch (error) {
+      this.getUIContext().getPromptAction().showToast({ message: 'Batch failed. Try fewer goals.' });
+    }
+    this.batchBusy = false;
+  }
+
+  private openLogs(): void {
+    AppStorage.setOrCreate<boolean>('hopa.openLogs', true);
+    AppStorage.setOrCreate<string>('hopa.goto', 'settings');
+  }
+
+  private openReplay(): void {
+    AppStorage.setOrCreate<string>('hopa.runsFocus', 'replay');
+    this.onOpenRuns();
+  }
+
   @Builder
-  Action(label: string) {
+  Action(label: string, action: () => void) {
     Text(label)
       .fontSize(11)
       .fontColor($r('app.color.text_secondary'))
       .padding({ left: 10, right: 10, top: 6, bottom: 6 })
       .backgroundColor($r('app.color.surface_alt'))
       .borderRadius(8)
-      .onClick(() => {
-        this.onOpenRuns();
-      })
+      .onClick(action)
+  }
+
+  @Builder
+  InlineBatch() {
+    Column({ space: 8 }) {
+      TextArea({ placeholder: 'One goal per line', text: this.batchText })
+        .width('100%')
+        .height(96)
+        .fontSize(13)
+        .backgroundColor($r('app.color.surface_muted'))
+        .borderRadius(10)
+        .onChange((value: string) => {
+          this.batchText = value;
+        })
+      Row({ space: 8 }) {
+        Text('Run batch')
+          .fontSize(12)
+          .fontWeight(FontWeight.Medium)
+          .fontColor($r('app.color.on_primary'))
+          .padding({ left: 12, right: 12, top: 7, bottom: 7 })
+          .backgroundColor(this.accent())
+          .borderRadius(9)
+          .onClick(() => {
+            this.runInlineBatch();
+          })
+        if (this.batchBusy) {
+          Text('Stop')
+            .fontSize(12)
+            .fontColor($r('app.color.danger'))
+            .padding({ left: 10, right: 10, top: 7, bottom: 7 })
+            .backgroundColor($r('app.color.surface_muted'))
+            .borderRadius(9)
+            .onClick(() => {
+              AgentService.get().cancel();
+            })
+        }
+        Blank()
+        Text(`${this.batchResults.length} done`)
+          .fontSize(10)
+          .fontColor($r('app.color.text_hint'))
+      }
+      .width('100%')
+      ForEach(this.batchResults, (item: BatchItemResult) => {
+        Column({ space: 2 }) {
+          Text(item.goal)
+            .fontSize(11.5)
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.text_primary'))
+            .width('100%')
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+          Text(item.output)
+            .fontSize(10.5)
+            .fontColor($r('app.color.text_secondary'))
+            .width('100%')
+            .maxLines(2)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+        }
+        .width('100%')
+        .padding({ left: 10, right: 10, top: 7, bottom: 7 })
+        .backgroundColor($r('app.color.surface_alt'))
+        .borderRadius(8)
+      }, (item: BatchItemResult, index: number) => `${index}-${item.goal}`)
+    }
+    .width('100%')
+    .padding(10)
+    .backgroundColor($r('app.color.surface'))
+    .border({ width: 1, color: $r('app.color.divider') })
+    .borderRadius(12)
+    .alignItems(HorizontalAlign.Start)
   }
 
   build() {
@@ -138,15 +239,25 @@ export struct PowerHome {
       .borderRadius(12)
 
       Row({ space: 6 }) {
-        this.Action('Batch')
-        this.Action('Replay')
-        this.Action('Logs')
+        this.Action('Batch', () => {
+          this.batchOpen = !this.batchOpen;
+        })
+        this.Action('Replay', () => {
+          this.openReplay();
+        })
+        this.Action('Logs', () => {
+          this.openLogs();
+        })
         Blank()
         Text(`${AgentService.get().runs.all().length} runs`)
           .fontSize(10)
           .fontColor($r('app.color.text_hint'))
       }
       .width('100%')
+
+      if (this.batchOpen) {
+        this.InlineBatch()
+      }
 
       Text('RECENT AUTOMATIONS')
         .fontSize(9)
