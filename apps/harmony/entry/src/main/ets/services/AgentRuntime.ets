@@ -220,6 +220,16 @@ export class AgentRuntime {
     }
   }
 
+  /** True when an executed UI action moved another app in front of HOPA. */
+  private leftHopa(outcomes: ActionOutcome[]): boolean {
+    for (const outcome of outcomes) {
+      if (outcome.executed && outcome.observation.success && outcome.action.kind.startsWith('ui.')) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private async runInner(goal: string): Promise<string> {
     if (this.loop === undefined) {
       return 'No model configured. Open Settings, enter an endpoint, a model and a key, then press Save.';
@@ -258,8 +268,23 @@ export class AgentRuntime {
     try {
       outcomes = await this.loop.run(goal);
     } catch (error) {
+      await this.background.returnToForeground();
       await this.background.end();
       return `Loop error: ${error}`;
+    }
+    // The loop may have left another app in front of HOPA. Bring HOPA back so
+    // the answer is visible when the run finishes. The system blocks a
+    // background app from starting its own UIAbility, so ask the PC bridge to
+    // run `aa start` for HOPA first; the local path is the fallback.
+    if (this.leftHopa(outcomes)) {
+      let returned: boolean = false;
+      if (this.bridge.isConfigured()) {
+        returned = await this.bridge.launch('com.hopa.agent');
+        hilog.info(0x0000, 'HOPA', `focus: bridge return ${returned}`);
+      }
+      if (!returned) {
+        await this.background.returnToForeground();
+      }
     }
     await this.background.end();
     hilog.info(0x0000, 'HOPA', `run: done outcomes=${outcomes.length} tokens=${this.loop.getTokens()}`);

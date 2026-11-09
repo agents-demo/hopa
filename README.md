@@ -267,6 +267,18 @@ Read the dated, per-capability state in
 
 **Build and install**
 
+One shot (build + sign + install + launch):
+
+```powershell
+.\tools\scripts\run-on-device.ps1
+```
+
+```bash
+./tools/scripts/run-on-device.sh
+```
+
+Or run the steps yourself:
+
 ```powershell
 .\tools\scripts\build.ps1
 .\tools\scripts\sign-app.ps1 -Install

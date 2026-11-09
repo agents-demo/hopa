@@ -120,7 +120,7 @@ export class AgentLoop {
         break;
       }
       if (response.error.length > 0) {
-        break;
+        throw new Error(`model request failed: ${response.error}`);
       }
       if (response.text.trim().length === 0) {
         break;

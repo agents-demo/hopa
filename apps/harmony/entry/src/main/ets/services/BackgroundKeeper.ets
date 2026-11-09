@@ -1,5 +1,6 @@
 import { backgroundTaskManager } from '@kit.BackgroundTasksKit';
 import { common, wantAgent, WantAgent } from '@kit.AbilityKit';
+import { BusinessError } from '@kit.BasicServicesKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 
 /**
@@ -16,6 +17,7 @@ import { hilog } from '@kit.PerformanceAnalysisKit';
 export class BackgroundKeeper {
   private context: common.UIAbilityContext | undefined = undefined;
   private running: boolean = false;
+  private agent: WantAgent | undefined = undefined;
 
   setContext(context: common.UIAbilityContext): void {
     this.context = context;
@@ -43,6 +45,7 @@ export class BackgroundKeeper {
         actionFlags: [wantAgent.WantAgentFlags.UPDATE_PRESENT_FLAG]
       };
       const agent: WantAgent = await wantAgent.getWantAgent(info);
+      this.agent = agent;
       await backgroundTaskManager.startBackgroundRunning(
         context,
         backgroundTaskManager.BackgroundMode.DATA_TRANSFER,
@@ -54,6 +57,53 @@ export class BackgroundKeeper {
       this.running = false;
       hilog.warn(0x0000, 'HOPA', `background: continuous task refused ${error}`);
     }
+  }
+
+  /**
+   * Brings HOPA back in front after the loop operated another app.
+   *
+   * `startAbility` is called while the continuous task still runs, which lets a
+   * background app start its own UIAbility. If the system still refuses it,
+   * trigger the continuous-task notification's WantAgent, which is allowed to
+   * start the ability from the notification.
+   */
+  async returnToForeground(): Promise<boolean> {
+    const context = this.context;
+    if (context === undefined) {
+      return false;
+    }
+    try {
+      await context.startAbility({
+        bundleName: context.abilityInfo.bundleName,
+        abilityName: context.abilityInfo.name
+      });
+      hilog.info(0x0000, 'HOPA', 'focus: returned to HOPA');
+      return true;
+    } catch (error) {
+      hilog.warn(0x0000, 'HOPA', `focus: startAbility failed ${error}`);
+    }
+    if (this.agent !== undefined) {
+      const agent: WantAgent = this.agent;
+      try {
+        const triggered: boolean = await new Promise<boolean>((resolve: (value: boolean) => void) => {
+          wantAgent.trigger(agent, { code: 0 }, (err: BusinessError) => {
+            if (err) {
+              hilog.warn(0x0000, 'HOPA', `focus: notification agent failed ${err.message}`);
+              resolve(false);
+            } else {
+              hilog.info(0x0000, 'HOPA', 'focus: triggered the notification agent');
+              resolve(true);
+            }
+          });
+        });
+        if (triggered) {
+          return true;
+        }
+      } catch (error) {
+        hilog.warn(0x0000, 'HOPA', `focus: wantAgent trigger failed ${error}`);
+      }
+    }
+    return false;
   }
 
   async end(): Promise<void> {

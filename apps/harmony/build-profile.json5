@@ -1,9 +1,24 @@
 {
   "app": {
-    "signingConfigs": [],
+    "signingConfigs": [
+      {
+        "name": "default",
+        "type": "HarmonyOS",
+        "material": {
+          "certpath": "C:\\Users\\a00644753\\.ohos\\config\\default_harmony_WSHzqq-fVFLZ03kU50j5u2g9XJGg-ml3ytZXIs0YXZo=.cer",
+          "keyAlias": "debugKey",
+          "keyPassword": "0000001BC92D654F07E3B0E3C157E6BFA4EE574E71B61C392BA00294B719EA5BB10242B9336D4DEC4E891D",
+          "profile": "C:\\Users\\a00644753\\.ohos\\config\\default_harmony_WSHzqq-fVFLZ03kU50j5u2g9XJGg-ml3ytZXIs0YXZo=.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "C:\\Users\\a00644753\\.ohos\\config\\default_harmony_WSHzqq-fVFLZ03kU50j5u2g9XJGg-ml3ytZXIs0YXZo=.p12",
+          "storePassword": "0000001BBB53CFB0C29CCC0417AD53E878E1466ACB2EC84B81665A51CBBD3E5DEEF0136C44A4B05FCD7B5E"
+        }
+      }
+    ],
     "products": [
       {
         "name": "default",
+        "signingConfig": "default",
         "compileSdkVersion": "6.1.1(24)",
         "compatibleSdkVersion": "5.0.0(12)",
         "targetSdkVersion": "5.0.0(12)",
@@ -11,8 +26,12 @@
       }
     ],
     "buildModeSet": [
-      { "name": "debug" },
-      { "name": "release" }
+      {
+        "name": "debug"
+      },
+      {
+        "name": "release"
+      }
     ]
   },
   "modules": [
@@ -20,14 +39,37 @@
       "name": "entry",
       "srcPath": "./entry",
       "targets": [
-        { "name": "default", "applyToProducts": ["default"] }
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
       ]
     },
-    { "name": "core", "srcPath": "./core" },
-    { "name": "capability_browser", "srcPath": "./capabilities/browser" },
-        { "name": "capability_llm", "srcPath": "./capabilities/llm" },
-    { "name": "capability_sandbox", "srcPath": "./capabilities/sandbox" },
-    { "name": "capability_accessibility", "srcPath": "./capabilities/accessibility" },
-    { "name": "capability_system", "srcPath": "./capabilities/system" }
+    {
+      "name": "core",
+      "srcPath": "./core"
+    },
+    {
+      "name": "capability_browser",
+      "srcPath": "./capabilities/browser"
+    },
+    {
+      "name": "capability_llm",
+      "srcPath": "./capabilities/llm"
+    },
+    {
+      "name": "capability_sandbox",
+      "srcPath": "./capabilities/sandbox"
+    },
+    {
+      "name": "capability_accessibility",
+      "srcPath": "./capabilities/accessibility"
+    },
+    {
+      "name": "capability_system",
+      "srcPath": "./capabilities/system"
+    }
   ]
 }
