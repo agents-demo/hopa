@@ -1,4 +1,4 @@
-import { Context, Permissions, Want, abilityAccessCtrl, common, wantConstant } from '@kit.AbilityKit';
+import { Context, Want, common, wantConstant } from '@kit.AbilityKit';
 import { pasteboard } from '@kit.BasicServicesKit';
 import { MemoryExtractor } from '@hopa/core';
 import { AgentService } from '../../services/AgentService';
@@ -10,7 +10,7 @@ import { ChatTyping } from './ChatTyping';
 import { MessageActions } from './MessageActions';
 import { HopaMark } from './HopaMark';
 import { Haptics } from '../../services/Haptics';
-import { VoiceService } from '../../services/VoiceService';
+import { VoiceController } from '../../services/VoiceController';
 import { HopaForeground } from '../../services/HopaForeground';
 import { ProfileService } from '../../services/ProfileService';
 import { StyleProfile } from '../../services/StyleProfile';
@@ -46,7 +46,7 @@ export struct ChatPage {
   @State recapGoal: string = '';
   @State recapAnswer: string = '';
   @State recapSteps: string[] = [];
-  private voice: VoiceService = new VoiceService();
+  private voice: VoiceController = new VoiceController();
   private seenVersion: number = -1;
   private timer: number = -1;
   private reactionTimer: number = -1;
@@ -118,7 +118,7 @@ export struct ChatPage {
       this.recording = false;
       this.voice.cancel();
     }
-    this.voice.releasePlayer();
+    this.voice.release();
   }
 
   private sync(): void {
@@ -539,35 +539,17 @@ export struct ChatPage {
     this.getUIContext().getPromptAction().showToast({ message: message });
   }
 
-  private async ensureMic(): Promise<boolean> {
-    try {
-      const manager = abilityAccessCtrl.createAtManager();
-      const permissions: Permissions[] = ['ohos.permission.MICROPHONE'];
-      const result = await manager.requestPermissionsFromUser(
-        getContext(this) as common.UIAbilityContext, permissions);
-      return result.authResults.length > 0 && result.authResults[0] === 0;
-    } catch (error) {
-      return false;
-    }
-  }
-
   private async startVoice(): Promise<void> {
     if (this.busy || this.recording) {
       return;
     }
-    const allowed: boolean = await this.ensureMic();
+    const allowed: boolean = await this.voice.start(getContext(this) as common.UIAbilityContext);
     if (!allowed) {
       this.toast('Microphone permission is needed for voice.');
       return;
     }
-    try {
-      await this.voice.start();
-      this.recording = true;
-      Haptics.tap();
-    } catch (error) {
-      this.recording = false;
-      this.toast('Could not start the microphone.');
-    }
+    this.recording = true;
+    Haptics.tap();
   }
 
   private async stopVoice(): Promise<void> {
@@ -575,34 +557,13 @@ export struct ChatPage {
       return;
     }
     this.recording = false;
-    let wav: ArrayBuffer = new ArrayBuffer(0);
-    try {
-      wav = await this.voice.stop();
-    } catch (error) {
-      wav = new ArrayBuffer(0);
-    }
-    if (wav.byteLength <= 44) {
+    const heard: string = await this.voice.stop();
+    if (heard.length === 0) {
       this.toast("Didn't catch that — tap and try again.");
       return;
     }
-    const service = AgentService.get();
-    if (!service.isBridgeConfigured()) {
-      this.toast('Voice needs the PC bridge.');
-      return;
-    }
-    try {
-      const helper: util.Base64Helper = new util.Base64Helper();
-      const encoded: string = helper.encodeToStringSync(new Uint8Array(wav));
-      const heard: string = (await service.bridge.transcribe(encoded)).trim();
-      if (heard.length === 0) {
-        this.toast("Didn't catch that — try again.");
-        return;
-      }
-      this.draft = heard;
-      Haptics.tap();
-    } catch (error) {
-      this.toast('Could not transcribe — is the bridge running?');
-    }
+    this.draft = heard;
+    Haptics.tap();
   }
 
   /** The request that produced the last answer. */
@@ -776,22 +737,7 @@ export struct ChatPage {
   }
 
   private async speakReply(text: string): Promise<void> {
-    const service = AgentService.get();
-    if (!service.isBridgeConfigured()) {
-      return;
-    }
-    try {
-      const audio: string = await service.bridge.speak(text.substring(0, 600));
-      if (audio.length === 0) {
-        return;
-      }
-      const helper: util.Base64Helper = new util.Base64Helper();
-      const bytes: Uint8Array = helper.decodeSync(audio);
-      const wav: ArrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
-      await this.voice.speak(wav, getContext(this) as Context);
-    } catch (error) {
-      // A missing speaker is not worth interrupting the answer.
-    }
+    await this.voice.speak(text, getContext(this) as common.UIAbilityContext);
   }
 
   /** One small, earned reaction after a run: a hop or a softer face. */

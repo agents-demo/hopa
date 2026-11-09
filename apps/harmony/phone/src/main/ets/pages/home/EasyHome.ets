@@ -1,8 +1,7 @@
-import { Context, Permissions, abilityAccessCtrl, common } from '@kit.AbilityKit';
-import { util } from '@kit.ArkTS';
-import { AgentService } from '../../services/AgentService';
+import { Context, common } from '@kit.AbilityKit';
 import { StyleProfile } from '../../services/StyleProfile';
-import { VoiceService } from '../../services/VoiceService';
+import { VoiceController } from '../../services/VoiceController';
+import { TaskRunner } from '../../services/TaskRunner';
 import { Haptics } from '../../services/Haptics';
 import { EasyLog } from '../../services/EasyLog';
 import { HopaMark } from '../chat/HopaMark';
@@ -27,9 +26,9 @@ export struct EasyHome {
   @State stepText: string = '';
   @State recording: boolean = false;
   @State hello: boolean = false;
-  private poll: number = -1;
   private helloTimer: number = -1;
-  private voice: VoiceService = new VoiceService();
+  private voice: VoiceController = new VoiceController();
+  private runner: TaskRunner = new TaskRunner();
 
   /** The sheet owns the whole screen: no shell bar, no tabs, no "+". */
   syncFocus(): void {
@@ -62,7 +61,7 @@ export struct EasyHome {
       this.recording = false;
       this.voice.cancel();
     }
-    this.voice.releasePlayer();
+    this.voice.release();
   }
 
   private style(): StyleProfile {
@@ -87,10 +86,7 @@ export struct EasyHome {
   }
 
   private clearPoll(): void {
-    if (this.poll >= 0) {
-      clearInterval(this.poll);
-      this.poll = -1;
-    }
+    this.runner.clear();
   }
 
   private toast(message: string): void {
@@ -112,7 +108,7 @@ export struct EasyHome {
 
   private closeTask(): void {
     this.clearPoll();
-    AgentService.get().cancel();
+    this.runner.cancel();
     if (this.recording) {
       this.recording = false;
       this.voice.cancel();
@@ -120,82 +116,27 @@ export struct EasyHome {
     this.taskOpen = false;
   }
 
-  private async ensureMic(): Promise<boolean> {
-    try {
-      const manager = abilityAccessCtrl.createAtManager();
-      const permissions: Permissions[] = ['ohos.permission.MICROPHONE'];
-      const result = await manager.requestPermissionsFromUser(
-        getContext(this) as common.UIAbilityContext, permissions);
-      return result.authResults.length > 0 && result.authResults[0] === 0;
-    } catch (error) {
-      return false;
-    }
-  }
-
   private async startVoice(): Promise<void> {
-    if (this.recording) {
-      return;
-    }
-    const allowed: boolean = await this.ensureMic();
+    const allowed: boolean = await this.voice.start(getContext(this) as common.UIAbilityContext);
     if (!allowed) {
-      this.toast('Microphone permission is needed for voice.');
+      this.toast('I need the microphone to listen.');
       return;
     }
-    try {
-      await this.voice.start();
-      this.recording = true;
-    } catch (error) {
-      this.recording = false;
-      this.toast('Could not start the microphone.');
-    }
+    this.recording = true;
   }
 
   private async stopVoice(): Promise<void> {
-    if (!this.recording) {
-      return;
-    }
     this.recording = false;
-    let wav: ArrayBuffer = new ArrayBuffer(0);
-    try {
-      wav = await this.voice.stop();
-    } catch (error) {
-      wav = new ArrayBuffer(0);
-    }
-    if (wav.byteLength <= 44) {
-      this.toast("Didn't catch that — tap the mic and try again.");
+    const heard: string = await this.voice.stop();
+    if (heard.length === 0) {
+      this.toast("I didn't catch that — try again.");
       return;
     }
-    try {
-      const helper: util.Base64Helper = new util.Base64Helper();
-      const heard: string = (await AgentService.get().bridge.transcribe(
-        helper.encodeToStringSync(new Uint8Array(wav)))).trim();
-      if (heard.length === 0) {
-        this.toast("Didn't catch that — try again.");
-        return;
-      }
-      this.draft = heard;
-    } catch (error) {
-      this.toast('Voice needs the PC bridge running.');
-    }
+    this.draft = heard;
   }
 
   private async speak(text: string): Promise<void> {
-    const service = AgentService.get();
-    if (!service.isBridgeConfigured() || text.length === 0) {
-      return;
-    }
-    try {
-      const audio: string = await service.bridge.speak(text.substring(0, 600));
-      if (audio.length === 0) {
-        return;
-      }
-      const helper: util.Base64Helper = new util.Base64Helper();
-      const bytes: Uint8Array = helper.decodeSync(audio);
-      const wav: ArrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
-      await this.voice.speak(wav, getContext(this) as Context);
-    } catch (error) {
-      // A missing speaker must not interrupt the answer.
-    }
+    await this.voice.speak(text, getContext(this) as common.UIAbilityContext);
   }
 
   private async runTask(): Promise<void> {
@@ -209,19 +150,14 @@ export struct EasyHome {
     }
     this.phase = 'working';
     this.stepText = 'Getting ready';
-    this.poll = setInterval(() => {
-      const steps: string[] = AgentService.get().runtime.lastSteps();
-      if (steps.length > 0) {
-        this.stepText = steps[steps.length - 1].substring(2);
-      }
-    }, 500);
     let reply: string = '';
     try {
-      reply = await AgentService.get().run(goal);
+      reply = await this.runner.run(goal, (line: string) => {
+        this.stepText = line;
+      });
     } catch (error) {
       reply = 'Something went wrong. Please try again.';
     }
-    this.clearPoll();
     this.result = reply;
     this.phase = 'done';
     EasyLog.add(getContext(this) as Context, goal, reply).catch(() => {
@@ -473,7 +409,7 @@ export struct EasyHome {
             .borderRadius(this.style().cardRadius)
             .margin({ top: 12 })
             .onClick(() => {
-              AgentService.get().cancel();
+              this.runner.cancel();
             })
         }
         .width('100%')
