@@ -27,7 +27,13 @@ export struct KidHome {
   private boopTimer: number = -1;
 
   private phrases(): string[] {
-    return ['Tap me!', 'Let’s play!', 'Boop!', 'I’m HOPA!', 'Pick one!', 'Wheee!'];
+    return [
+      "Tap me!", "Let's play!", "Boop!", "I'm HOPA!", "Pick one!", "Wheee!",
+      "Hello hello!", "Again!", "Yay!", "High five!", "Peekaboo!", "Ready?",
+      "Zoom zoom!", "Bounce!", "Silly me!", "You found me!", "Let's go!", "Hooray!",
+      "One more!", "Ta-da!", "Beep boop!", "I like you!", "What's this?", "Magic!",
+      "Spin spin!"
+    ];
   }
 
   private boopNow(): void {
@@ -44,7 +50,7 @@ export struct KidHome {
   }
 
   private tileColor(index: number): string {
-    const colors: string[] = ['#FFF1E8', '#EAF4FF', '#EEF8EC', '#F6EEFF'];
+    const colors: string[] = ['#FFF1E8', '#EAF4FF', '#EEF8EC', '#FFF4CC'];
     return colors[index % colors.length];
   }
   private poll: number = -1;
@@ -269,8 +275,9 @@ export struct KidHome {
     .height(140)
     .justifyContent(FlexAlign.Center)
     .backgroundColor(this.tileColor(index))
-    .border({ width: 1, color: $r('app.color.divider') })
+    .border({ width: 1, color: '#141C1B18' })
     .borderRadius(this.style().cardRadius)
+    .shadow({ radius: 10, color: '#0D1C1B18', offsetY: 2 })
     .scale({ x: this.pressed === index ? 0.95 : 1, y: this.pressed === index ? 0.95 : 1 })
     .animation({ duration: 110, curve: Curve.EaseOut })
     .onTouch((event: TouchEvent) => {
@@ -286,7 +293,7 @@ export struct KidHome {
   @Builder
   Home() {
     Column() {
-      Column({ space: 24 }) {
+      Column({ space: 34 }) {
         Column({ space: 6 }) {
           Stack({ alignContent: Alignment.Center }) {
             HopaMark({ state: 'idle', markSize: 104, animate: true, interactive: false })
@@ -309,6 +316,7 @@ export struct KidHome {
             .fontColor(this.accent())
         }
         .width('100%')
+        .offset({ y: -20 })
 
         Row({ space: 14 }) {
           this.Tile(0, '🎤', 'Talk', () => { this.openTask(true); })
