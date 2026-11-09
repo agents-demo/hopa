@@ -10,6 +10,8 @@ import { ChatTyping } from './ChatTyping';
 import { MessageActions } from './MessageActions';
 import { HopaMark } from './HopaMark';
 import { Haptics } from '../../services/Haptics';
+import { fileIo as fs } from '@kit.CoreFileKit';
+import { util } from '@kit.ArkTS';
 
 /** Chat: the transcript, the empty state and the composer. */
 @Component
@@ -22,7 +24,6 @@ export struct ChatPage {
   @State runningGoal: string = '';
   @State failed: boolean = false;
   @State liveSteps: string[] = [];
-  @State lastShot: string = '';
   @State showSteps: boolean = true;
   @State lastPageUrl: string = '';
   @State lastPageTitle: string = '';
@@ -59,9 +60,6 @@ export struct ChatPage {
         }
       }
       if (this.messages.length === 0) {
-        if (this.lastShot.length > 0) {
-          this.lastShot = '';
-        }
         const goal: string = this.lastKnownGoal();
         if (goal !== this.resumeGoal) {
           this.resumeGoal = goal;
@@ -181,22 +179,39 @@ export struct ChatPage {
     return typeof item === 'string' && item.startsWith('You: ');
   }
 
-  /** Step labels embedded at the start of a stored answer, if any. */
-  private stepsOf(item: ResourceStr): string[] {
+  /** One marker line at the top of a stored answer: steps and screenshot. */
+  private metaLine(item: ResourceStr): string {
     if (typeof item !== 'string') {
-      return [];
+      return '';
     }
     const body: string = item.startsWith('HOPA: ') ? item.substring(6) : item;
-    if (body.indexOf('\u27e6steps\u27e7') !== 0) {
-      return [];
+    if (body.indexOf('\u27e6meta\u27e7') !== 0) {
+      return '';
     }
     const end: number = body.indexOf('\n');
-    const head: string = end < 0 ? body : body.substring(0, end);
-    const list: string = head.substring('\u27e6steps\u27e7'.length);
-    if (list.length === 0) {
-      return [];
+    return end < 0 ? body : body.substring(0, end);
+  }
+
+  private metaValue(item: ResourceStr, key: string): string {
+    const line: string = this.metaLine(item);
+    if (line.length === 0) {
+      return '';
     }
-    return list.split(' | ');
+    for (const part of line.substring('\u27e6meta\u27e7'.length).split(';')) {
+      if (part.startsWith(`${key}=`)) {
+        return part.substring(key.length + 1);
+      }
+    }
+    return '';
+  }
+
+  private stepsOf(item: ResourceStr): string[] {
+    const list: string = this.metaValue(item, 'steps');
+    return list.length === 0 ? [] : list.split(' | ');
+  }
+
+  private shotOf(item: ResourceStr): string {
+    return this.metaValue(item, 'shot');
   }
 
   private bubbleText(item: ResourceStr): ResourceStr {
@@ -204,7 +219,7 @@ export struct ChatPage {
       return item;
     }
     const body: string = item.startsWith('HOPA: ') ? item.substring(6) : item;
-    if (body.indexOf('\u27e6steps\u27e7') === 0) {
+    if (body.indexOf('\u27e6meta\u27e7') === 0) {
       const end: number = body.indexOf('\n');
       return end < 0 ? '' : body.substring(end + 1);
     }
@@ -314,27 +329,33 @@ export struct ChatPage {
     const reply: string = await service.run(text);
     const low: string = reply.toLowerCase();
     this.failed = low.includes("couldn't") || low.includes('failed') || low.includes('error');
+    let shotPath: string = '';
     if (service.isBridgeConfigured()) {
       const shot: string = await service.bridge.screenshot();
-      if (shot.length > 0) {
-        this.lastShot = shot;
-      }
-    }
-    this.lastPageUrl = service.pageLinks.url();
-    this.lastPageTitle = service.pageLinks.title();
-    if (service.lastRunHadActions()) {
-      this.react(service.lastRunSucceeded());
-    }
-
-    if (service.isBridgeConfigured()) {
-      const shot: string = await service.bridge.screenshot();
-      if (shot.length > 0) {
-        this.lastShot = shot;
+      const marker: number = shot.indexOf('base64,');
+      if (marker > 0) {
+        try {
+          const helper: util.Base64Helper = new util.Base64Helper();
+          const bytes: Uint8Array = helper.decodeSync(shot.substring(marker + 7));
+          shotPath = `${context.filesDir}/shot-${Date.now()}.jpg`;
+          const file = fs.openSync(shotPath, fs.OpenMode.CREATE | fs.OpenMode.TRUNC | fs.OpenMode.READ_WRITE);
+          fs.writeSync(file.fd, bytes);
+          fs.closeSync(file);
+        } catch (error) {
+          shotPath = '';
+        }
       }
     }
     const steps: string[] = service.runtime.lastSteps();
-    const decorated: string = steps.length > 0
-      ? `\u27e6steps\u27e7${steps.join(' | ')}\n${reply}`
+    const meta: string[] = [];
+    if (steps.length > 0) {
+      meta.push(`steps=${steps.join(' | ')}`);
+    }
+    if (shotPath.length > 0) {
+      meta.push(`shot=${shotPath}`);
+    }
+    const decorated: string = meta.length > 0
+      ? `\u27e6meta\u27e7${meta.join(';')}\n${reply}`
       : reply;
     this.messages = this.messages.concat([`HOPA: ${decorated}`]);
     this.renderedCount = this.messages.length;
@@ -443,9 +464,9 @@ export struct ChatPage {
                         .fontColor($r('app.color.text_primary'))
                         .padding({ left: 2, right: 2, top: 2, bottom: 2 })
                         .copyOption(CopyOptions.LocalDevice)
-                      if (index === this.lastAnswerIndex() && !this.busy && this.lastShot.length > 0) {
+                      if (!this.busy && this.shotOf(item).length > 0) {
                         Row({ space: 10 }) {
-                          Image(this.lastShot)
+                          Image('file://' + this.shotOf(item))
                             .width(54)
                             .height(96)
                             .objectFit(ImageFit.Cover)
@@ -493,6 +514,7 @@ export struct ChatPage {
                       if (index === this.lastAnswerIndex() && !this.busy) {
                         MessageActions({
                           showRetry: false,
+                          muted: true,
                           onCopy: () => {
                             this.copy(this.textOf(item));
                           }

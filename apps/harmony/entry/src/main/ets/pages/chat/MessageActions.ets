@@ -2,6 +2,7 @@
 @Component
 export struct MessageActions {
   @Prop showRetry: boolean = false;
+  @Prop muted: boolean = false;
   onCopy: () => void = () => {};
   onRetry: () => void = () => {};
 
@@ -11,13 +12,13 @@ export struct MessageActions {
       Column()
         .width(8)
         .height(10)
-        .border({ width: 1.3, color: $r('app.color.primary') })
+        .border({ width: 1.3, color: this.muted ? $r('app.color.text_secondary') : $r('app.color.primary') })
         .borderRadius(2)
         .offset({ x: 3, y: 3 })
       Column()
         .width(8)
         .height(10)
-        .border({ width: 1.3, color: $r('app.color.primary') })
+        .border({ width: 1.3, color: this.muted ? $r('app.color.text_secondary') : $r('app.color.primary') })
         .borderRadius(2)
         .backgroundColor($r('app.color.bg'))
     }
@@ -30,23 +31,23 @@ export struct MessageActions {
     Stack({ alignContent: Alignment.TopStart }) {
       // Ring with a gap, drawn at the same stroke weight as the copy icon.
       Column()
-        .width(11)
-        .height(11)
-        .borderRadius(5.5)
-        .border({ width: 1.3, color: $r('app.color.primary') })
-        .offset({ x: 1.5, y: 1.5 })
+        .width(12)
+        .height(12)
+        .borderRadius(6)
+        .border({ width: 1.3, color: this.muted ? $r('app.color.text_secondary') : $r('app.color.primary') })
+        .offset({ x: 1, y: 1 })
       Column()
-        .width(5)
-        .height(5)
+        .width(5.5)
+        .height(5.5)
         .backgroundColor($r('app.color.bg'))
         .offset({ x: 9, y: 0 })
       // Arrowhead closing the gap.
       Column()
-        .width(4)
-        .height(4)
-        .backgroundColor($r('app.color.primary'))
+        .width(4.6)
+        .height(4.6)
+        .backgroundColor(this.muted ? $r('app.color.text_secondary') : $r('app.color.primary'))
         .rotate({ angle: 45 })
-        .offset({ x: 8.4, y: 0.6 })
+        .offset({ x: 8.2, y: 0.4 })
     }
     .width(14)
     .height(14)
