@@ -22,6 +22,7 @@ export struct ChatPage {
   @State runningGoal: string = '';
   @State failed: boolean = false;
   @State liveSteps: string[] = [];
+  @State lastShot: string = '';
   @State showSteps: boolean = true;
   @State lastPageUrl: string = '';
   @State lastPageTitle: string = '';
@@ -58,6 +59,9 @@ export struct ChatPage {
         }
       }
       if (this.messages.length === 0) {
+        if (this.lastShot.length > 0) {
+          this.lastShot = '';
+        }
         const goal: string = this.lastKnownGoal();
         if (goal !== this.resumeGoal) {
           this.resumeGoal = goal;
@@ -310,12 +314,24 @@ export struct ChatPage {
     const reply: string = await service.run(text);
     const low: string = reply.toLowerCase();
     this.failed = low.includes("couldn't") || low.includes('failed') || low.includes('error');
+    if (service.isBridgeConfigured()) {
+      const shot: string = await service.bridge.screenshot();
+      if (shot.length > 0) {
+        this.lastShot = shot;
+      }
+    }
     this.lastPageUrl = service.pageLinks.url();
     this.lastPageTitle = service.pageLinks.title();
     if (service.lastRunHadActions()) {
       this.react(service.lastRunSucceeded());
     }
 
+    if (service.isBridgeConfigured()) {
+      const shot: string = await service.bridge.screenshot();
+      if (shot.length > 0) {
+        this.lastShot = shot;
+      }
+    }
     const steps: string[] = service.runtime.lastSteps();
     const decorated: string = steps.length > 0
       ? `\u27e6steps\u27e7${steps.join(' | ')}\n${reply}`
@@ -427,6 +443,31 @@ export struct ChatPage {
                         .fontColor($r('app.color.text_primary'))
                         .padding({ left: 2, right: 2, top: 2, bottom: 2 })
                         .copyOption(CopyOptions.LocalDevice)
+                      if (index === this.lastAnswerIndex() && !this.busy && this.lastShot.length > 0) {
+                        Row({ space: 10 }) {
+                          Image(this.lastShot)
+                            .width(54)
+                            .height(96)
+                            .objectFit(ImageFit.Cover)
+                            .borderRadius(8)
+                            .border({ width: 1, color: '#141C1B18' })
+                          Column({ space: 2 }) {
+                            Text('What HOPA saw')
+                              .fontSize(10.5)
+                              .fontColor($r('app.color.text_secondary'))
+                            Text('The last screen it read before answering.')
+                              .fontSize(9.5)
+                              .fontColor($r('app.color.text_hint'))
+                              .maxLines(2)
+                          }
+                          .layoutWeight(1)
+                          .alignItems(HorizontalAlign.Start)
+                        }
+                        .width('100%')
+                        .padding(8)
+                        .backgroundColor($r('app.color.surface_alt'))
+                        .borderRadius(10)
+                      }
                       if (index === this.lastAnswerIndex() && !this.busy && this.failed) {
                         Row({ space: 8 }) {
                           Text('Something went wrong.')
