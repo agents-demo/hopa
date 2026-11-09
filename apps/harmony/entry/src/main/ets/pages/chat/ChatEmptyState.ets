@@ -55,7 +55,7 @@ export struct ChatEmptyState {
         .fontSize(11)
         .fontColor($r('app.color.text_hint'))
       Column({ space: 8 }) {
-        if (this.resume.length > 0) {
+        if (this.resume.length > 0 && !this.suggestions().includes(this.resume)) {
           Row({ space: 8 }) {
             Text('RESUME')
               .fontSize(9)
