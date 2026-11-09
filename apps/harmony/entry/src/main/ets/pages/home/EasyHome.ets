@@ -275,7 +275,9 @@ export struct EasyHome {
 
   @Builder
   Home() {
-    Column() {
+    // The footer floats, so the content centres against the full page height
+    // with the same gap above and below.
+    Stack({ alignContent: Alignment.Bottom }) {
       Scroll() {
         Column({ space: 20 }) {
         Column({ space: 8 }) {
@@ -337,7 +339,7 @@ export struct EasyHome {
         .justifyContent(FlexAlign.Center)
       }
       .width('100%')
-      .layoutWeight(1)
+      .height('100%')
       .scrollBar(BarState.Off)
       Row({ space: 6 }) {
         Text('Help')

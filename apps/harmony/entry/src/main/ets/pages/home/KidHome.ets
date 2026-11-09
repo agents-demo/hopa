@@ -292,7 +292,9 @@ export struct KidHome {
 
   @Builder
   Home() {
-    Column() {
+    // Footer floats so the play area is centred in the full page: equal top
+    // and bottom margins.
+    Stack({ alignContent: Alignment.Bottom }) {
       Column({ space: 34 }) {
         Column({ space: 6 }) {
           Stack({ alignContent: Alignment.Center }) {
@@ -316,7 +318,6 @@ export struct KidHome {
             .fontColor(this.accent())
         }
         .width('100%')
-        .offset({ y: -20 })
 
         Row({ space: 14 }) {
           this.Tile(0, '🎤', 'Talk', () => { this.openTask(true); })
@@ -330,22 +331,22 @@ export struct KidHome {
         .width('100%')
       }
       .width('100%')
-      .layoutWeight(1)
+      .height('100%')
       .justifyContent(FlexAlign.Center)
+      .padding({ left: 20, right: 20, top: 20, bottom: 20 })
 
       Text('A grown-up can tap here for Settings')
         .fontSize(11)
         .fontColor($r('app.color.text_hint'))
         .textAlign(TextAlign.Center)
         .width('100%')
-        .padding(10)
+        .padding({ top: 10, bottom: 16 })
         .onClick(() => {
           this.onOpenSettings();
         })
     }
     .width('100%')
     .height('100%')
-    .padding({ left: 20, right: 20, top: 20, bottom: 14 })
   }
 
   @Builder
