@@ -16,6 +16,7 @@ export class PromptBuilder {
       'A successful ui.launch already brings the app to the front; never launch the same app twice in one task. ' +
       'To tap a phone control use {"kind":"ui.tap","target":"<ref>"}; to type, ' +
       '{"kind":"ui.type","target":"<ref>","text":"..."}. ' +
+      'Tap a text field before typing into it, so the field has focus. ' +
       'On a phone screen use element refs from ELEMENTS. Never invent coordinates. ' +
       'On a web page use web.navigate, web.read, web.click or web.type; ' +
       'target is the visible link or button text, or a field placeholder. ' +

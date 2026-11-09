@@ -7,11 +7,25 @@ import { Context } from '@kit.AbilityKit';
 @Component
 export struct ChatEmptyState {
   onPick: (text: string) => void = () => {};
+  /** Opens the last conversation; Reuse is the only way to send it again. */
+  onResume: () => void = () => {};
   @Prop resume: string = '';
+  @Prop hasEarlier: boolean = false;
   @Prop listening: boolean = false;
   @State entered: boolean = false;
   @State pressed: number = -1;
   @State greeting: string = 'Hi';
+  /** With history the screen stays quiet; examples are one tap away. */
+  @State ideasOpen: boolean = false;
+  @StorageLink('hopa.accent') accentColor: string = '';
+
+  private accent(): ResourceColor {
+    return this.accentColor.length > 0 ? this.accentColor : $r('app.color.primary');
+  }
+
+  private accentTint(alpha: string): string {
+    return this.accentColor.length > 0 ? `#${alpha}${this.accentColor.substring(1)}` : `#${alpha}E8703A`;
+  }
 
   aboutToAppear(): void {
     const hour: number = new Date().getHours();
@@ -36,6 +50,10 @@ export struct ChatEmptyState {
       'Open Settings and show me Wi-Fi',
       'Draft a one-line message to my team'
     ];
+  }
+
+  private hasResume(): boolean {
+    return this.resume.length > 0 && this.hasEarlier && !this.suggestions().includes(this.resume);
   }
 
   private pick(index: number, text: string): void {
@@ -66,33 +84,62 @@ export struct ChatEmptyState {
         .fontSize(11)
         .fontColor($r('app.color.text_hint'))
       Column({ space: 8 }) {
-        if (this.resume.length > 0 && !this.suggestions().includes(this.resume)) {
-          Row({ space: 8 }) {
-            Text('RESUME')
-              .fontSize(9)
-              .fontWeight(FontWeight.Bold)
-              .fontColor($r('app.color.primary'))
-              .letterSpacing(0.6)
-              .padding({ left: 6, right: 6, top: 3, bottom: 3 })
-              .backgroundColor('#1AE8703A')
-              .borderRadius(6)
-            Text(this.resume)
-              .fontSize(12.5)
-              .fontColor($r('app.color.text_primary'))
-              .maxLines(1)
-              .textOverflow({ overflow: TextOverflow.Ellipsis })
-              .layoutWeight(1)
+        if (this.hasResume()) {
+          Row({ space: 10 }) {
+            Column({ space: 2 }) {
+              Text('Last conversation')
+                .fontSize(9)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(this.accent())
+                .letterSpacing(0.6)
+              Text(this.resume)
+                .fontSize(13)
+                .fontColor($r('app.color.text_primary'))
+                .maxLines(1)
+                .textOverflow({ overflow: TextOverflow.Ellipsis })
+              Text('Tap to open it')
+                .fontSize(10)
+                .fontColor($r('app.color.text_hint'))
+            }
+            .layoutWeight(1)
+            .alignItems(HorizontalAlign.Start)
+            Text('›')
+              .fontSize(18)
+              .fontColor(this.accent())
           }
           .width('100%')
-          .padding({ left: 10, right: 12, top: 9, bottom: 9 })
-          .border({ width: 1, color: '#26E8703A' })
+          .padding({ left: 12, right: 10, top: 9, bottom: 9 })
+          .border({ width: 1, color: this.accentTint('26') })
           .borderRadius(12)
           .opacity(this.pressed === -1 ? 1 : 0.62)
           .animation({ duration: 140, curve: Curve.EaseOut })
           .onClick(() => {
-            this.pick(-1, this.resume);
+            this.onResume();
           })
         }
+        if (this.hasResume()) {
+          Row({ space: 4 }) {
+            Text(this.ideasOpen ? 'Hide examples' : 'Try an example')
+              .fontSize(11)
+              .fontColor(this.accent())
+            Text(this.ideasOpen ? '↑' : '↓')
+              .fontSize(10)
+              .fontColor(this.accent())
+          }
+          .padding({ left: 2, top: 2, bottom: 2 })
+          .onClick(() => {
+            this.ideasOpen = !this.ideasOpen;
+          })
+        } else {
+          Text('TRY SOMETHING')
+            .fontSize(9)
+            .fontWeight(FontWeight.Bold)
+            .fontColor($r('app.color.text_hint'))
+            .letterSpacing(0.7)
+            .width('100%')
+            .padding({ left: 2, top: 2 })
+        }
+        if (!this.hasResume() || this.ideasOpen) {
         ForEach(this.suggestions(), (suggestion: string, index: number) => {
           Row() {
             Text(suggestion)
@@ -113,6 +160,7 @@ export struct ChatEmptyState {
             this.pick(index, suggestion);
           })
         }, (suggestion: string) => suggestion)
+        }
       }
       .width('100%')
       .margin({ top: 12 })

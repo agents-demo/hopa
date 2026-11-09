@@ -11,6 +11,7 @@ export class StoredSettings {
   appearance: string = 'system';
   showSteps: boolean = true;
   reduceMotion: boolean = false;
+  speakReplies: boolean = false;
   bridgeUrl: string = '';
   bridgeToken: string = '';
   lastTokens: number = 0;
@@ -62,6 +63,10 @@ export class SettingsStore {
     if (typeof reduceMotion === 'boolean') {
       settings.reduceMotion = reduceMotion;
     }
+    const speakReplies = await store.get('speak_replies', settings.speakReplies);
+    if (typeof speakReplies === 'boolean') {
+      settings.speakReplies = speakReplies;
+    }
     const bridgeUrl = await store.get('bridge_url', settings.bridgeUrl);
     if (typeof bridgeUrl === 'string') {
       settings.bridgeUrl = bridgeUrl;
@@ -91,6 +96,7 @@ export class SettingsStore {
     await store.put('appearance', settings.appearance);
     await store.put('show_steps', settings.showSteps);
     await store.put('reduce_motion', settings.reduceMotion);
+    await store.put('speak_replies', settings.speakReplies);
     await store.put('bridge_url', settings.bridgeUrl);
     await store.put('bridge_token', settings.bridgeToken);
     await store.put('last_tokens', settings.lastTokens);

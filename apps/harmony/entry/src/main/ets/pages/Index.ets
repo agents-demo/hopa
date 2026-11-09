@@ -105,8 +105,10 @@ struct Index {
 
   private go(key: string): void {
     if (key !== this.activePage) {
+      animateTo({ duration: 160, curve: Curve.EaseOut }, () => {
       this.previousPage = this.activePage;
       this.activePage = key;
+      });
     }
     this.chatsOpen = false;
   }

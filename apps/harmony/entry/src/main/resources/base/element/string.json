@@ -9,6 +9,14 @@
       "value": "HOPA phone agent"
     },
     {
+      "name": "mic_reason",
+      "value": "Record your voice so HOPA can turn it into a request."
+    },
+    {
+      "name": "photo_reason",
+      "value": "Save a picture of what HOPA did, so you can share it."
+    },
+    {
       "name": "EntryAbility_label",
       "value": "HOPA"
     },

@@ -139,11 +139,11 @@ class Device:
         )
 
     def type_text(self, text: str, *, x: int | None = None, y: int | None = None) -> None:
+        # Type into whatever field is focused. Re-tapping (x, y) is unsafe: once
+        # the keyboard opens the layout moves and the tap lands on a key ("V").
+        # Callers focus the field first with ui.tap.
         quoted = shlex.quote(text)
-        if x is not None and y is not None:
-            self.hdc.shell(f"uitest uiInput inputText {int(x)} {int(y)} {quoted}")
-        else:
-            self.hdc.shell(f"uitest uiInput text {quoted}")
+        self.hdc.shell(f"uitest uiInput text {quoted}")
 
     def press_key(self, key: str) -> None:
         self.hdc.shell(f"uitest uiInput keyEvent {shlex.quote(key)}")

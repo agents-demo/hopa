@@ -22,6 +22,7 @@ export struct SettingsPage {
   @State appearance: string = 'system';
   @State showSteps: boolean = true;
   @State reduceMotion: boolean = false;
+  @State speakReplies: boolean = false;
   @State quietMode: boolean = false;
   @State a11yAvailable: boolean = false;
   @State a11yInstalled: string = 'checking...';
@@ -41,6 +42,7 @@ export struct SettingsPage {
       this.appearance = stored.appearance;
       this.showSteps = stored.showSteps;
       this.reduceMotion = stored.reduceMotion;
+      this.speakReplies = stored.speakReplies;
       this.quietMode = !stored.showSteps && stored.reduceMotion;
       this.bridgeUrl = stored.bridgeUrl;
       this.bridgeToken = stored.bridgeToken;
@@ -84,6 +86,7 @@ export struct SettingsPage {
       stored.showSteps = this.showSteps;
       stored.reduceMotion = this.reduceMotion;
       stored.showSteps = this.showSteps;
+      stored.speakReplies = this.speakReplies;
       stored.bridgeUrl = this.bridgeUrl;
       stored.bridgeToken = this.bridgeToken;
       return SettingsStore.save(context, stored);
@@ -167,6 +170,22 @@ export struct SettingsPage {
     .borderRadius(8)
   }
 
+  private openedApps(): string[] {
+    const seen: Map<string, number> = new Map<string, number>();
+    for (const run of AgentService.get().runs.all()) {
+      if (run.kind !== 'ui.launch') {
+        continue;
+      }
+      const name: string = run.detail.length > 0 ? run.detail : 'an app';
+      seen.set(name, (seen.get(name) ?? 0) + 1);
+    }
+    const rows: string[] = [];
+    seen.forEach((count: number, name: string) => {
+      rows.push(`${name} ? ${count}`);
+    });
+    return rows.slice(0, 5);
+  }
+
   @Builder
   Permissions() {
     Column({ space: 8 }) {
@@ -179,6 +198,21 @@ export struct SettingsPage {
       this.Capability('Web access', this.networkEnabled ? 'on' : 'off', this.networkEnabled)
       this.Capability('Autonomous', this.autonomous ? 'on' : 'off', !this.autonomous)
       this.Capability('Saved runs', `${AgentService.get().runs.all().length}`, true)
+      Text('APPS HOPA OPENED')
+        .fontSize(10)
+        .fontColor($r('app.color.text_hint'))
+        .letterSpacing(0.6)
+        .padding({ top: 8 })
+      ForEach(this.openedApps(), (row: string) => {
+        Text(row)
+          .fontSize(12)
+          .fontColor($r('app.color.text_primary'))
+          .width('100%')
+          .padding({ left: 10, right: 10, top: 7, bottom: 7 })
+          .backgroundColor($r('app.color.surface'))
+          .border({ width: 1, color: $r('app.color.divider') })
+          .borderRadius(8)
+      }, (row: string) => row)
       Text('HOPA asks before anything public or any payment. That cannot be turned off.')
         .fontSize(10)
         .fontColor($r('app.color.text_hint'))
@@ -290,16 +324,6 @@ export struct SettingsPage {
               }
               .layoutWeight(1)
               .alignItems(HorizontalAlign.Start)
-              Column({ space: 2 }) {
-                Text('Show what HOPA did')
-                  .fontSize(14)
-                  .fontColor($r('app.color.text_primary'))
-                Text('Step chips under each answer.')
-                  .fontSize(10)
-                  .fontColor($r('app.color.text_hint'))
-              }
-              .layoutWeight(1)
-              .alignItems(HorizontalAlign.Start)
               Toggle({ type: ToggleType.Switch, isOn: this.quietMode })
                 .onChange((on: boolean) => {
                   this.quietMode = on;
@@ -345,6 +369,26 @@ export struct SettingsPage {
               Toggle({ type: ToggleType.Switch, isOn: this.reduceMotion })
                 .onChange((on: boolean) => {
                   this.reduceMotion = on;
+                  this.persist();
+                })
+            }
+            .width('100%')
+            .padding({ top: 9, bottom: 9 })
+            Divider().color($r('app.color.divider'))
+            Row({ space: 10 }) {
+              Column({ space: 2 }) {
+                Text('Read answers aloud')
+                  .fontSize(14)
+                  .fontColor($r('app.color.text_primary'))
+                Text('Speaks each reply through the PC bridge.')
+                  .fontSize(10)
+                  .fontColor($r('app.color.text_hint'))
+              }
+              .layoutWeight(1)
+              .alignItems(HorizontalAlign.Start)
+              Toggle({ type: ToggleType.Switch, isOn: this.speakReplies })
+                .onChange((on: boolean) => {
+                  this.speakReplies = on;
                   this.persist();
                 })
             }

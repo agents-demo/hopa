@@ -9,6 +9,7 @@ import {
 import { AccessibilityBridge } from '@hopa/capability-accessibility';
 import { BridgeClient, BridgeNode } from './BridgeClient';
 import { LaunchError } from './LaunchError';
+import { HopaForeground } from './HopaForeground';
 /** Feeds the loop with the PC bridge's layout instead of the local screen. */
 export class BridgeScreenSource implements ScreenSource {
   private bridge: BridgeClient;
@@ -18,6 +19,10 @@ export class BridgeScreenSource implements ScreenSource {
   }
 
   async capture(): Promise<Screen> {
+    if (HopaForeground.active) {
+      // Never describe HOPA's own chat as if it were the target app.
+      return new Screen('HOPA is the app in front. Answer the user; do not tap or type on this screen.');
+    }
     const ok: boolean = await this.bridge.observe();
     if (!ok) {
       return new Screen('');
@@ -80,6 +85,11 @@ export class BridgeUiCapability implements ActionCapability {
   }
 
   async execute(action: Action): Promise<Observation> {
+    // Launching is the way out; anything else on HOPA's own window is a bug.
+    if (HopaForeground.active && action.kind !== 'ui.launch' &&
+      action.kind !== 'ui.home' && action.kind !== 'ui.back') {
+      return Observation.fail('HOPA is the app in front; answer the user instead of acting');
+    }
     if (action.kind === 'ui.launch') {
       const bundle: string = action.app.length > 0
         ? action.app

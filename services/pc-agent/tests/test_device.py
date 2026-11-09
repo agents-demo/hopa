@@ -85,7 +85,7 @@ def test_double_tap_and_long_press() -> None:
 def test_type_at_point_quotes_spaces() -> None:
     hdc = FakeHdc()
     Device(hdc=hdc).type_text("hello world", x=5, y=6)  # type: ignore[arg-type]
-    assert hdc.calls == ["uitest uiInput inputText 5 6 'hello world'"]
+    assert hdc.calls == ["uitest uiInput text 'hello world'"]
 
 
 def test_type_at_focus() -> None:

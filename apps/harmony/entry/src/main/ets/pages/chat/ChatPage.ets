@@ -1,4 +1,4 @@
-import { Context } from '@kit.AbilityKit';
+import { Context, Permissions, Want, abilityAccessCtrl, common, wantConstant } from '@kit.AbilityKit';
 import { pasteboard } from '@kit.BasicServicesKit';
 import { MemoryExtractor } from '@hopa/core';
 import { AgentService } from '../../services/AgentService';
@@ -10,8 +10,12 @@ import { ChatTyping } from './ChatTyping';
 import { MessageActions } from './MessageActions';
 import { HopaMark } from './HopaMark';
 import { Haptics } from '../../services/Haptics';
-import { fileIo as fs } from '@kit.CoreFileKit';
+import { VoiceService } from '../../services/VoiceService';
+import { HopaForeground } from '../../services/HopaForeground';
+import { fileIo as fs, fileUri } from '@kit.CoreFileKit';
+import { image } from '@kit.ImageKit';
 import { util } from '@kit.ArkTS';
+import { APP_CATALOG } from '../../services/AppCatalog';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 
 /** Chat: the transcript, the empty state and the composer. */
@@ -25,12 +29,20 @@ export struct ChatPage {
   @State loaded: boolean = false;
   @State diffText: string = '';
   @State canUndo: boolean = false;
+  private undoSteps: string[] = [];
   @State runningGoal: string = '';
   @State failed: boolean = false;
   @State liveSteps: string[] = [];
   @State showSteps: boolean = true;
   @State lastPageUrl: string = '';
   @State lastPageTitle: string = '';
+  @State recording: boolean = false;
+  @State speakReplies: boolean = false;
+  /** Contents of the image rendered for "Share recap". */
+  @State recapGoal: string = '';
+  @State recapAnswer: string = '';
+  @State recapSteps: string[] = [];
+  private voice: VoiceService = new VoiceService();
   private seenVersion: number = -1;
   private timer: number = -1;
   private reactionTimer: number = -1;
@@ -44,6 +56,7 @@ export struct ChatPage {
     const context = getContext(this) as Context;
     SettingsStore.load(context).then((stored) => {
       this.showSteps = stored.showSteps;
+      this.speakReplies = stored.speakReplies;
     }).catch(() => {
       // Keep the default.
     });
@@ -82,6 +95,11 @@ export struct ChatPage {
       clearTimeout(this.reactionTimer);
       this.reactionTimer = -1;
     }
+    if (this.recording) {
+      this.recording = false;
+      this.voice.cancel();
+    }
+    this.voice.releasePlayer();
   }
 
   private sync(): void {
@@ -333,6 +351,43 @@ export struct ChatPage {
     return goal;
   }
 
+  private hasEarlierChat(): boolean {
+    const service = AgentService.get();
+    const currentId: string = service.conversations.currentId();
+    for (const session of service.conversations.all()) {
+      if (session.id !== currentId && session.entries.length > 0) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /** Bring back the most recently touched conversation, not a new prompt. */
+  private openLastChat(): void {
+    const service = AgentService.get();
+    const currentId: string = service.conversations.currentId();
+    let bestId: string = '';
+    let bestAt: number = -1;
+    for (const session of service.conversations.all()) {
+      if (session.id === currentId || session.entries.length === 0) {
+        continue;
+      }
+      if (session.updatedAt > bestAt) {
+        bestAt = session.updatedAt;
+        bestId = session.id;
+      }
+    }
+    if (bestId.length === 0) {
+      this.draft = this.resumeGoal;
+      return;
+    }
+    service.conversations.select(bestId);
+    this.render();
+    this.sync();
+    this.resumeGoal = '';
+    this.draft = '';
+  }
+
   private async send(): Promise<void> {
     const text: string = this.draft.trim();
     if (text.length === 0 || this.busy) {
@@ -374,26 +429,32 @@ export struct ChatPage {
     const reply: string = await service.run(text);
     const low: string = reply.toLowerCase();
     this.failed = low.includes("couldn't") || low.includes('failed') || low.includes('error');
+    const steps: string[] = service.runtime.lastSteps();
     let shotPath: string = '';
-    if (service.isBridgeConfigured()) {
-      const shot: string = await service.bridge.screenshot();
-      const marker: number = shot.indexOf('base64,');
-      if (marker > 0) {
-        try {
-          const helper: util.Base64Helper = new util.Base64Helper();
-          const bytes: Uint8Array = helper.decodeSync(shot.substring(marker + 7));
-          shotPath = `${context.filesDir}/shot-${Date.now()}.jpg`;
-          const file = fs.openSync(shotPath, fs.OpenMode.CREATE | fs.OpenMode.TRUNC | fs.OpenMode.READ_WRITE);
-          const buffer: ArrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
-          fs.writeSync(file.fd, buffer);
-          fs.closeSync(file);
-        } catch (error) {
-          shotPath = '';
-          hilog.warn(0x0000, 'HOPA', `shot save failed: ${error}`);
+    // Only keep a screenshot when the run touched another app. A text answer
+    // would otherwise show HOPA's own chat under "What HOPA saw".
+    if (!HopaForeground.active && service.lastRunHadActions() && service.isBridgeConfigured()) {
+      const foreground: string = await service.bridge.foregroundBundle();
+      if (foreground.length > 0 && foreground !== 'com.hopa.agent') {
+        const shot: string = await service.bridge.screenshot();
+        const marker: number = shot.indexOf('base64,');
+        if (marker > 0) {
+          try {
+            const helper: util.Base64Helper = new util.Base64Helper();
+            const bytes: Uint8Array = helper.decodeSync(shot.substring(marker + 7));
+            shotPath = `${context.filesDir}/shot-${Date.now()}.jpg`;
+            const file = fs.openSync(shotPath, fs.OpenMode.CREATE | fs.OpenMode.TRUNC | fs.OpenMode.READ_WRITE);
+            const buffer: ArrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+            fs.writeSync(file.fd, buffer);
+            fs.closeSync(file);
+          } catch (error) {
+            shotPath = '';
+            hilog.warn(0x0000, 'HOPA', `shot save failed: ${error}`);
+          }
         }
       }
     }
-    const steps: string[] = service.runtime.lastSteps();
+    this.undoSteps = steps.slice();
     const meta: string[] = [];
     if (steps.length > 0) {
       meta.push(`steps=${steps.join(' | ')}`);
@@ -411,9 +472,13 @@ export struct ChatPage {
     this.sync();
     this.busy = false;
     this.runningGoal = '';
-    this.canUndo = steps.length === 1 && steps[0].indexOf('Opened') > 0;
+    this.canUndo = steps.length === 1 &&
+      (steps[0].indexOf('Opened') > 0 || steps[0].indexOf('Tapped') > 0);
     if (this.failed) {
       this.draft = text;
+    }
+    if (this.speakReplies && !this.failed) {
+      this.speakReply(reply);
     }
     service.skills.save(context).catch(() => {
       // Persistence is best effort.
@@ -422,6 +487,265 @@ export struct ChatPage {
 
   private stopRun(): void {
     AgentService.get().cancel();
+  }
+
+  private toast(message: string): void {
+    this.getUIContext().getPromptAction().showToast({ message: message });
+  }
+
+  private async ensureMic(): Promise<boolean> {
+    try {
+      const manager = abilityAccessCtrl.createAtManager();
+      const permissions: Permissions[] = ['ohos.permission.MICROPHONE'];
+      const result = await manager.requestPermissionsFromUser(
+        getContext(this) as common.UIAbilityContext, permissions);
+      return result.authResults.length > 0 && result.authResults[0] === 0;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  private async startVoice(): Promise<void> {
+    if (this.busy || this.recording) {
+      return;
+    }
+    const allowed: boolean = await this.ensureMic();
+    if (!allowed) {
+      this.toast('Microphone permission is needed for voice.');
+      return;
+    }
+    try {
+      await this.voice.start();
+      this.recording = true;
+      Haptics.tap();
+    } catch (error) {
+      this.recording = false;
+      this.toast('Could not start the microphone.');
+    }
+  }
+
+  private async stopVoice(): Promise<void> {
+    if (!this.recording) {
+      return;
+    }
+    this.recording = false;
+    let wav: ArrayBuffer = new ArrayBuffer(0);
+    try {
+      wav = await this.voice.stop();
+    } catch (error) {
+      wav = new ArrayBuffer(0);
+    }
+    if (wav.byteLength <= 44) {
+      this.toast("Didn't catch that — tap and try again.");
+      return;
+    }
+    const service = AgentService.get();
+    if (!service.isBridgeConfigured()) {
+      this.toast('Voice needs the PC bridge.');
+      return;
+    }
+    try {
+      const helper: util.Base64Helper = new util.Base64Helper();
+      const encoded: string = helper.encodeToStringSync(new Uint8Array(wav));
+      const heard: string = (await service.bridge.transcribe(encoded)).trim();
+      if (heard.length === 0) {
+        this.toast("Didn't catch that — try again.");
+        return;
+      }
+      this.draft = heard;
+      Haptics.tap();
+    } catch (error) {
+      this.toast('Could not transcribe — is the bridge running?');
+    }
+  }
+
+  /** The request that produced the last answer. */
+  private lastUserGoal(): string {
+    const index: number = this.lastAnswerIndex();
+    for (let cursor = index - 1; cursor >= 0; cursor--) {
+      const item: ResourceStr = this.messages[cursor];
+      if (typeof item === 'string' && item.startsWith('You: ')) {
+        return item.substring(5);
+      }
+    }
+    return this.resumeGoal;
+  }
+
+  private async shareRecap(): Promise<void> {
+    const index: number = this.lastAnswerIndex();
+    if (index < 0) {
+      return;
+    }
+    this.recapGoal = this.lastUserGoal();
+    this.recapAnswer = this.textOf(this.messages[index]);
+    this.recapSteps = this.stepsOf(this.messages[index]);
+    try {
+      // One frame so the hidden card is laid out before it is captured.
+      await new Promise<void>((resolve) => setTimeout(() => resolve(), 80));
+      const snapshot = await this.getUIContext().getComponentSnapshot().createFromBuilder(() => {
+        this.RecapCard();
+      });
+      const packer: image.ImagePacker = image.createImagePacker();
+      const png: ArrayBuffer = await packer.packing(snapshot, { format: 'image/png', quality: 92 });
+      const shared: boolean = await this.shareRecapImage(png);
+      if (!shared) {
+        this.toast('Could not open the share sheet.');
+      }
+    } catch (error) {
+      this.toast('Could not build the recap image.');
+    }
+  }
+
+  /** Hand the PNG to the system share sheet; no album permission needed. */
+  private async shareRecapImage(png: ArrayBuffer): Promise<boolean> {
+    const context = getContext(this) as common.UIAbilityContext;
+    try {
+      const path: string = `${context.cacheDir}/hopa-recap-${Date.now()}.png`;
+      const file = fs.openSync(path, fs.OpenMode.CREATE | fs.OpenMode.TRUNC | fs.OpenMode.READ_WRITE);
+      try {
+        fs.writeSync(file.fd, png);
+      } finally {
+        fs.closeSync(file);
+      }
+      const want: Want = {
+        action: 'ohos.want.action.sendData',
+        type: 'image/png',
+        uri: fileUri.getUriFromPath(path),
+        flags: wantConstant.Flags.FLAG_AUTH_READ_URI_PERMISSION
+      };
+      await context.startAbility(want);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /** No-ACL path: put the answer on the clipboard, then open the app. */
+  private async copyAndOpen(): Promise<void> {
+    const index: number = this.lastAnswerIndex();
+    if (index < 0) {
+      return;
+    }
+    const answer: string = this.textOf(this.messages[index]);
+    try {
+      const data = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, answer);
+      await pasteboard.getSystemPasteboard().setData(data);
+    } catch (error) {
+      this.toast('Could not copy to the clipboard.');
+      return;
+    }
+    const bundle: string = this.lastOpenedBundle();
+    const service = AgentService.get();
+    if (bundle.length > 0 && service.isBridgeConfigured()) {
+      service.bridge.launch(bundle);
+      this.toast('Copied — paste it in the app.');
+    } else {
+      this.toast('Copied to the clipboard.');
+    }
+  }
+
+  private lastOpenedBundle(): string {
+    const runs = AgentService.get().runs.all();
+    for (let index = runs.length - 1; index >= 0; index--) {
+      const run = runs[index];
+      if (run.kind !== 'ui.launch' || run.detail.length === 0) {
+        continue;
+      }
+      let name: string = run.detail.startsWith('Opened ') ? run.detail.substring(7) : run.detail;
+      if (name.endsWith('.')) {
+        name = name.substring(0, name.length - 1);
+      }
+      for (const app of APP_CATALOG) {
+        if (app.display === name || app.name === name) {
+          return app.bundle;
+        }
+      }
+    }
+    return '';
+  }
+
+  @Builder
+  RecapCard() {
+    Column({ space: 12 }) {
+      Row({ space: 8 }) {
+        HopaMark({ state: 'idle', markSize: 26 })
+        Text('HOPA')
+          .fontSize(18)
+          .fontWeight(FontWeight.Bold)
+          .fontColor('#1C1B18')
+        Blank()
+        Text(new Date().toLocaleDateString())
+          .fontSize(10)
+          .fontColor('#6B6A63')
+      }
+      .width('100%')
+      Text(this.recapGoal.length > 0 ? this.recapGoal : 'A HOPA session')
+        .fontSize(15)
+        .fontWeight(FontWeight.Medium)
+        .fontColor('#1C1B18')
+        .width('100%')
+        .maxLines(3)
+      if (this.recapSteps.length > 0) {
+        Column({ space: 6 }) {
+          ForEach(this.recapSteps.slice(0, 5), (step: string, index: number) => {
+            Row({ space: 8 }) {
+              Text(`${index + 1}`)
+                .fontSize(9)
+                .fontWeight(FontWeight.Bold)
+                .fontColor('#E8703A')
+                .width(16)
+                .height(16)
+                .textAlign(TextAlign.Center)
+                .backgroundColor('#1AE8703A')
+                .borderRadius(8)
+              Text(step.substring(2))
+                .fontSize(11.5)
+                .fontColor('#3E3D38')
+                .layoutWeight(1)
+                .maxLines(2)
+            }
+            .width('100%')
+            .alignItems(VerticalAlign.Top)
+          }, (step: string, index: number) => `recap-${index}-${step}`)
+        }
+        .width('100%')
+      } else {
+        Text(this.recapAnswer)
+          .fontSize(12)
+          .fontColor('#3E3D38')
+          .width('100%')
+          .maxLines(4)
+      }
+      Divider().color('#141C1B18')
+      Text('HarmonyOS On-device Phone Agent')
+        .fontSize(9)
+        .fontColor('#6B6A63')
+        .letterSpacing(0.4)
+    }
+    .width(300)
+    .padding(18)
+    .backgroundColor('#FFFDFBF7')
+    .borderRadius(18)
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  private async speakReply(text: string): Promise<void> {
+    const service = AgentService.get();
+    if (!service.isBridgeConfigured()) {
+      return;
+    }
+    try {
+      const audio: string = await service.bridge.speak(text.substring(0, 600));
+      if (audio.length === 0) {
+        return;
+      }
+      const helper: util.Base64Helper = new util.Base64Helper();
+      const bytes: Uint8Array = helper.decodeSync(audio);
+      const wav: ArrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+      await this.voice.speak(wav, getContext(this) as Context);
+    } catch (error) {
+      // A missing speaker is not worth interrupting the answer.
+    }
   }
 
   /** One small, earned reaction after a run: a hop or a softer face. */
@@ -464,9 +788,13 @@ export struct ChatPage {
         Scroll() {
           ChatEmptyState({
             resume: this.resumeGoal,
+            hasEarlier: this.hasEarlierChat(),
             listening: this.draft.length > 0,
             onPick: (text: string) => {
               this.draft = text;
+            },
+            onResume: () => {
+              this.openLastChat();
             }
           })
         }
@@ -627,9 +955,37 @@ export struct ChatPage {
                             .backgroundColor($r('app.color.primary_soft'))
                             .borderRadius(8)
                             .onClick(() => {
-                              AgentService.get().bridge.key('Home');
+                              const undoKey: string = this.undoSteps.length > 0 && this.undoSteps[0].indexOf('Tapped') > 0
+                                ? 'Back'
+                                : 'Home';
+                              AgentService.get().bridge.key(undoKey);
                               this.canUndo = false;
-                              this.getUIContext().getPromptAction().showToast({ message: 'Back to the home screen' });
+                              this.getUIContext().getPromptAction().showToast({
+                                message: undoKey === 'Back' ? 'Went back one screen' : 'Back to the home screen'
+                              });
+                            })
+                        }
+                        .width('100%')
+                      }
+                      if (index === this.lastAnswerIndex() && !this.busy && !this.failed) {
+                        Row({ space: 6 }) {
+                          Text('Share recap')
+                            .fontSize(10.5)
+                            .fontColor($r('app.color.text_secondary'))
+                            .padding({ left: 8, right: 8, top: 4, bottom: 4 })
+                            .backgroundColor($r('app.color.surface_alt'))
+                            .borderRadius(8)
+                            .onClick(() => {
+                              this.shareRecap();
+                            })
+                          Text('Copy & open')
+                            .fontSize(10.5)
+                            .fontColor($r('app.color.text_secondary'))
+                            .padding({ left: 8, right: 8, top: 4, bottom: 4 })
+                            .backgroundColor($r('app.color.surface_alt'))
+                            .borderRadius(8)
+                            .onClick(() => {
+                              this.copyAndOpen();
                             })
                         }
                         .width('100%')
@@ -683,7 +1039,7 @@ export struct ChatPage {
               Column({ space: 4 }) {
                 if (this.runningGoal.length > 0) {
                   Row({ space: 6 }) {
-                    Text(`Working on ? ${this.runningGoal}`)
+                    Text(`Working on ${this.runningGoal}`)
                       .fontSize(11)
                       .fontColor($r('app.color.text_secondary'))
                       .maxLines(1)
@@ -746,6 +1102,7 @@ export struct ChatPage {
       ChatComposer({
         draft: this.draft,
         busy: this.busy,
+        recording: this.recording,
         onDraft: (value: string) => {
           this.draft = value;
         },
@@ -754,6 +1111,12 @@ export struct ChatPage {
         },
         onStop: () => {
           this.stopRun();
+        },
+        onVoiceStart: () => {
+          this.startVoice();
+        },
+        onVoiceStop: () => {
+          this.stopVoice();
         }
       })
     }

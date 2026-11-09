@@ -14,6 +14,8 @@ Endpoints (JSON):
     POST /key                  {"name": str}
     POST /swipe                {"from_x", "from_y", "to_x", "to_y", "velocity"?}
     POST /screenshot           -> {"mime": "image/jpeg", "bytes": int, "image": "base64"}
+    POST /transcribe           {"audio": base64 WAV} -> {"text": str}
+    POST /speak                {"text": str} -> {"mime": "audio/wav", "audio": base64}
 """
 
 from __future__ import annotations
@@ -21,6 +23,7 @@ from __future__ import annotations
 import base64
 import hmac
 import json
+import subprocess
 import sys
 import tempfile
 import threading
@@ -136,6 +139,93 @@ def _screenshot(device: Device) -> dict[str, Any]:
     }
 
 
+# No Speech Kit ships with this SDK, so voice borrows the PC's speak engine.
+# Both directions are WAV: the phone records 16 kHz mono PCM and plays the
+# reply back through its own speaker.
+_SPEECH_PS1 = r"""
+param(
+  [Parameter(Mandatory=$true)][ValidateSet('transcribe','speak')][string]$Mode,
+  [string]$Path = '',
+  [string]$Text = '',
+  [string]$Out = ''
+)
+Add-Type -AssemblyName System.Speech
+if ($Mode -eq 'transcribe') {
+  $engine = New-Object System.Speech.Recognition.SpeechRecognitionEngine
+  $engine.LoadGrammar((New-Object System.Speech.Recognition.DictationGrammar))
+  $engine.SetInputToWaveFile($Path)
+  $result = $null
+  try { $result = $engine.Recognize() } catch { $result = $null }
+  $engine.Dispose()
+  [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+  if ($null -ne $result) { Write-Output $result.Text }
+} else {
+  $synth = New-Object System.Speech.Synthesis.SpeechSynthesizer
+  $synth.Rate = 0
+  $synth.SetOutputToWaveFile($Out)
+  $synth.Speak($Text)
+  $synth.Dispose()
+}
+"""
+
+_speech_script: Path | None = None
+
+
+def _powershell(script: Path, args: list[str], timeout: float = 30.0) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [
+            "powershell.exe",
+            "-NoProfile",
+            "-NonInteractive",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            str(script),
+            *args,
+        ],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        timeout=timeout,
+    )
+
+
+def _speech_script_path() -> Path:
+    global _speech_script
+    if _speech_script is None or not _speech_script.exists():
+        handle = tempfile.NamedTemporaryFile(
+            "w", suffix=".ps1", prefix="hopa-speech-", delete=False, encoding="utf-8"
+        )
+        handle.write(_SPEECH_PS1)
+        handle.close()
+        _speech_script = Path(handle.name)
+    return _speech_script
+
+
+def transcribe_wav(wav: bytes) -> str:
+    """Offline ASR through the PC's System.Speech engine; '' when unclear."""
+    with tempfile.TemporaryDirectory(prefix="hopa-voice-") as tmp:
+        source = Path(tmp) / "speech.wav"
+        source.write_bytes(wav)
+        result = _powershell(_speech_script_path(), ["-Mode", "transcribe", "-Path", str(source)])
+    if result.returncode != 0:
+        raise BridgeError(f"speech engine failed: {result.stderr.strip()[:200]}")
+    return result.stdout.strip()
+
+
+def speak_wav(text: str) -> bytes:
+    """Render `text` to a WAV file with the PC's speech synthesiser."""
+    with tempfile.TemporaryDirectory(prefix="hopa-tts-") as tmp:
+        target = Path(tmp) / "reply.wav"
+        result = _powershell(
+            _speech_script_path(), ["-Mode", "speak", "-Text", text, "-Out", str(target)]
+        )
+        if result.returncode != 0 or not target.exists():
+            raise BridgeError(f"speech engine failed: {result.stderr.strip()[:200]}")
+        return target.read_bytes()
+
+
 class _Handler(BaseHTTPRequestHandler):
     server_version = "hopa-bridge/0.1"
 
@@ -243,6 +333,22 @@ class _Handler(BaseHTTPRequestHandler):
         if self.path == "/key":
             _retry(device.press_key, str(data["name"]))
             return {"ok": True}
+        if self.path == "/transcribe":
+            audio = str(data.get("audio", ""))
+            if not audio:
+                raise BridgeError("audio is required (base64 WAV)")
+            try:
+                wav = base64.b64decode(audio, validate=True)
+            except Exception as exc:  # noqa: BLE001
+                raise BridgeError("audio is not base64") from exc
+            return {"text": transcribe_wav(wav)}
+        if self.path == "/speak":
+            text = str(data.get("text", "")).strip()
+            if not text:
+                raise BridgeError("text is required")
+            if len(text) > 1200:
+                text = text[:1200]
+            return {"mime": "audio/wav", "audio": base64.b64encode(speak_wav(text)).decode("ascii")}
         if self.path == "/swipe":
             device.swipe(
                 int(data["from_x"]),
