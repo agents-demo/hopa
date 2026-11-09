@@ -20,6 +20,7 @@ export struct ChatPage {
   @State reaction: string = '';
   @State resumeGoal: string = '';
   @State runningGoal: string = '';
+  @State failed: boolean = false;
   @State showSteps: boolean = true;
   @State lastPageUrl: string = '';
   @State lastPageTitle: string = '';
@@ -299,6 +300,8 @@ export struct ChatPage {
     this.sync();
 
     const reply: string = await service.run(text);
+    const low: string = reply.toLowerCase();
+    this.failed = low.includes("couldn't") || low.includes('failed') || low.includes('error');
     this.lastPageUrl = service.pageLinks.url();
     this.lastPageTitle = service.pageLinks.title();
     if (service.lastRunHadActions()) {
@@ -416,6 +419,28 @@ export struct ChatPage {
                         .fontColor($r('app.color.text_primary'))
                         .padding({ left: 2, right: 2, top: 2, bottom: 2 })
                         .copyOption(CopyOptions.LocalDevice)
+                      if (index === this.lastAnswerIndex() && !this.busy && this.failed) {
+                        Row({ space: 8 }) {
+                          Text('Something went wrong.')
+                            .fontSize(11)
+                            .fontColor($r('app.color.danger'))
+                            .layoutWeight(1)
+                          Text('Try again')
+                            .fontSize(11)
+                            .fontWeight(FontWeight.Medium)
+                            .fontColor($r('app.color.primary'))
+                            .padding({ left: 8, right: 8, top: 4, bottom: 4 })
+                            .backgroundColor($r('app.color.primary_soft'))
+                            .borderRadius(8)
+                            .onClick(() => {
+                              this.retry();
+                            })
+                        }
+                        .width('100%')
+                        .padding(8)
+                        .backgroundColor('#0FD9342F')
+                        .borderRadius(10)
+                      }
                       if (index === this.lastAnswerIndex() && !this.busy) {
                         MessageActions({
                           showRetry: false,

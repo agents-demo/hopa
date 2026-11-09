@@ -350,6 +350,10 @@ struct Index {
       this.Tab('Capabilities', 'capabilities')
     }
     .width('100%')
+    .height(58)
+    .backgroundColor('#D9F7F4EE')
+    .backgroundBlurStyle(BlurStyle.Thin)
+    .width('100%')
     .height(64)
     .padding({ left: 6, right: 6, top: 4, bottom: 6 })
     .backgroundColor($r('app.color.surface'))
