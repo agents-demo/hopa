@@ -12,6 +12,7 @@ import { HopaMark } from './HopaMark';
 import { Haptics } from '../../services/Haptics';
 import { fileIo as fs } from '@kit.CoreFileKit';
 import { util } from '@kit.ArkTS';
+import { hilog } from '@kit.PerformanceAnalysisKit';
 
 /** Chat: the transcript, the empty state and the composer. */
 @Component
@@ -339,10 +340,12 @@ export struct ChatPage {
           const bytes: Uint8Array = helper.decodeSync(shot.substring(marker + 7));
           shotPath = `${context.filesDir}/shot-${Date.now()}.jpg`;
           const file = fs.openSync(shotPath, fs.OpenMode.CREATE | fs.OpenMode.TRUNC | fs.OpenMode.READ_WRITE);
-          fs.writeSync(file.fd, bytes);
+          const buffer: ArrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+          fs.writeSync(file.fd, buffer);
           fs.closeSync(file);
         } catch (error) {
           shotPath = '';
+          hilog.warn(0x0000, 'HOPA', `shot save failed: ${error}`);
         }
       }
     }
