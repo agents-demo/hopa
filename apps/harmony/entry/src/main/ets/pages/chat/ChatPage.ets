@@ -17,7 +17,7 @@ export struct ChatPage {
   @State draft: string = '';
   @State busy: boolean = false;
   @State reaction: string = '';
-  @State lastSteps: string[] = [];
+  @State resumeGoal: string = '';
   @State lastPageUrl: string = '';
   @State lastPageTitle: string = '';
   private seenVersion: number = -1;
@@ -39,6 +39,12 @@ export struct ChatPage {
       if (!this.busy && service.conversations.version !== this.seenVersion) {
         this.render();
         this.sync();
+      }
+      if (this.messages.length === 0) {
+        const goal: string = service.runtime.lastGoalText();
+        if (goal !== this.resumeGoal) {
+          this.resumeGoal = goal;
+        }
       }
     }, 500);
   }
@@ -154,9 +160,32 @@ export struct ChatPage {
     return typeof item === 'string' && item.startsWith('You: ');
   }
 
+  /** Step labels embedded at the start of a stored answer, if any. */
+  private stepsOf(item: ResourceStr): string[] {
+    if (typeof item !== 'string') {
+      return [];
+    }
+    const body: string = item.startsWith('HOPA: ') ? item.substring(6) : item;
+    if (body.indexOf('\u27e6steps\u27e7') !== 0) {
+      return [];
+    }
+    const end: number = body.indexOf('\n');
+    const head: string = end < 0 ? body : body.substring(0, end);
+    const list: string = head.substring('\u27e6steps\u27e7'.length);
+    if (list.length === 0) {
+      return [];
+    }
+    return list.split(' | ');
+  }
+
   private bubbleText(item: ResourceStr): ResourceStr {
     if (typeof item !== 'string') {
       return item;
+    }
+    const body: string = item.startsWith('HOPA: ') ? item.substring(6) : item;
+    if (body.indexOf('\u27e6steps\u27e7') === 0) {
+      const end: number = body.indexOf('\n');
+      return end < 0 ? '' : body.substring(end + 1);
     }
     if (item.startsWith('You: ')) {
       return item.substring(5);
@@ -237,12 +266,15 @@ export struct ChatPage {
     if (service.lastRunHadActions()) {
       this.react(service.lastRunSucceeded());
     }
-    this.lastSteps = service.runtime.lastSteps();
 
-    this.messages = this.messages.concat([`HOPA: ${reply}`]);
+    const steps: string[] = service.runtime.lastSteps();
+    const decorated: string = steps.length > 0
+      ? `\u27e6steps\u27e7${steps.join(' | ')}\n${reply}`
+      : reply;
+    this.messages = this.messages.concat([`HOPA: ${decorated}`]);
     this.renderedCount = this.messages.length;
     this.scrollToEnd();
-    service.conversations.add('assistant', reply);
+    service.conversations.add('assistant', decorated);
     this.sync();
     this.busy = false;
     service.skills.save(context).catch(() => {
@@ -274,6 +306,7 @@ export struct ChatPage {
       if (this.messages.length === 0) {
         Scroll() {
           ChatEmptyState({
+            resume: this.resumeGoal,
             onPick: (text: string) => {
               this.draft = text;
             }
@@ -323,9 +356,9 @@ export struct ChatPage {
                     })
                       .margin({ top: 4 })
                     Column({ space: 4 }) {
-                      if (index === this.lastAnswerIndex() && this.lastSteps.length > 0) {
+                      if (this.stepsOf(item).length > 0) {
                         Flex({ wrap: FlexWrap.Wrap }) {
-                          ForEach(this.lastSteps, (step: string) => {
+                          ForEach(this.stepsOf(item), (step: string) => {
                             Text(step)
                               .fontSize(11)
                               .fontColor($r('app.color.text_secondary'))

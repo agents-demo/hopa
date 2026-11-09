@@ -108,6 +108,11 @@ export class AgentRuntime {
   }
 
   /** Human labels for the steps of the last run, newest surface first. */
+  /** The goal of the last run, so a new chat can offer to resume it. */
+  lastGoalText(): string {
+    return this.lastGoal;
+  }
+
   lastSteps(): string[] {
     return this.lastStepLabels;
   }

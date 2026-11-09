@@ -4,13 +4,18 @@ import { HopaMark } from './HopaMark';
 @Component
 export struct ChatEmptyState {
   onPick: (text: string) => void = () => {};
+  @Prop resume: string = '';
 
   private suggestions(): string[] {
-    return [
+    const base: string[] = [
       'Open Bilibili and show me the 3 most popular videos',
       'Open Settings and show me Wi-Fi',
       'Draft a one-line message to my team'
     ];
+    if (this.resume.length > 0) {
+      base.unshift(`? ${this.resume}`);
+    }
+    return base;
   }
 
   build() {
@@ -42,7 +47,7 @@ export struct ChatEmptyState {
           .border({ width: 1, color: $r('app.color.divider') })
           .borderRadius(10)
           .onClick(() => {
-            this.onPick(suggestion);
+            this.onPick(suggestion.startsWith('? ') ? suggestion.substring(2) : suggestion);
           })
         }, (suggestion: string) => suggestion)
       }
