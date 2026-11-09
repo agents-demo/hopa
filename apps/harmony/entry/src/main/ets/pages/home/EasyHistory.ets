@@ -1,4 +1,7 @@
 import { Context } from '@kit.AbilityKit';
+import { pasteboard } from '@kit.BasicServicesKit';
+import { AgentService } from '../../services/AgentService';
+import { APP_CATALOG } from '../../services/AppCatalog';
 import { EasyEntry, EasyLog } from '../../services/EasyLog';
 import { StyleProfile } from '../../services/StyleProfile';
 import { HopaMark } from '../chat/HopaMark';
@@ -28,6 +31,44 @@ export struct EasyHistory {
     AppStorage.setOrCreate<string>('hopa.easyDraft', entry.goal);
     AppStorage.setOrCreate<boolean>('hopa.easyOpenTask', true);
     this.onOpenHome();
+  }
+
+  private lastOpenedBundle(): string {
+    const runs = AgentService.get().runs.all();
+    for (let index = runs.length - 1; index >= 0; index--) {
+      const run = runs[index];
+      if (run.kind !== 'ui.launch' || run.detail.length === 0) {
+        continue;
+      }
+      let name: string = run.detail.startsWith('Opened ') ? run.detail.substring(7) : run.detail;
+      if (name.endsWith('.')) {
+        name = name.substring(0, name.length - 1);
+      }
+      for (const app of APP_CATALOG) {
+        if (app.display === name || app.name === name) {
+          return app.bundle;
+        }
+      }
+    }
+    return '';
+  }
+
+  private async sendAnswer(entry: EasyEntry): Promise<void> {
+    try {
+      const data = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, entry.answer);
+      await pasteboard.getSystemPasteboard().setData(data);
+    } catch (error) {
+      this.getUIContext().getPromptAction().showToast({ message: 'Could not copy the answer.' });
+      return;
+    }
+    const bundle: string = this.lastOpenedBundle();
+    const service = AgentService.get();
+    if (bundle.length > 0 && service.isBridgeConfigured()) {
+      service.bridge.launch(bundle);
+      this.getUIContext().getPromptAction().showToast({ message: 'Copied — paste it in the app.' });
+    } else {
+      this.getUIContext().getPromptAction().showToast({ message: 'Copied — paste it in a message.' });
+    }
   }
 
   @Builder
@@ -75,7 +116,7 @@ export struct EasyHistory {
           .onClick(() => {
             this.selected = -1;
           })
-        Text('Your request')
+        Text('What you asked')
           .fontSize(this.style().body + 2)
           .fontWeight(FontWeight.Bold)
           .layoutWeight(1)
@@ -99,7 +140,7 @@ export struct EasyHistory {
       .width('100%')
       .layoutWeight(1)
       .scrollBar(BarState.Off)
-      Text('Ask again')
+      Text('Send it')
         .fontSize(this.style().body + 1)
         .fontWeight(FontWeight.Bold)
         .fontColor($r('app.color.on_primary'))
@@ -109,18 +150,25 @@ export struct EasyHistory {
         .backgroundColor($r('app.color.primary'))
         .borderRadius(this.style().cardRadius)
         .onClick(() => {
+          this.sendAnswer(entry);
+        })
+      Text('Edit this request')
+        .fontSize(this.style().body + 1)
+        .fontWeight(FontWeight.Medium)
+        .fontColor($r('app.color.text_primary'))
+        .width('100%')
+        .height(56)
+        .textAlign(TextAlign.Center)
+        .backgroundColor($r('app.color.surface_alt'))
+        .borderRadius(this.style().cardRadius)
+        .onClick(() => {
           this.askAgain(entry);
         })
-      Text('Back to history')
-        .fontSize(this.style().body - 1)
-        .fontColor($r('app.color.primary'))
-        .onClick(() => {
-          this.selected = -1;
-        })
+
     }
     .width('100%')
     .height('100%')
-    .padding({ left: 18, right: 18, top: 10, bottom: 20 })
+    .padding({ left: 18, right: 18, top: 10, bottom: 48 })
     .backgroundColor($r('app.color.bg'))
     .alignItems(HorizontalAlign.Start)
   }

@@ -1,6 +1,8 @@
 import { Context, Permissions, abilityAccessCtrl, common } from '@kit.AbilityKit';
 import { util } from '@kit.ArkTS';
+import { pasteboard } from '@kit.BasicServicesKit';
 import { AgentService } from '../../services/AgentService';
+import { APP_CATALOG } from '../../services/AppCatalog';
 import { StyleProfile } from '../../services/StyleProfile';
 import { VoiceService } from '../../services/VoiceService';
 import { Haptics } from '../../services/Haptics';
@@ -15,6 +17,8 @@ import { HopaMark } from '../chat/HopaMark';
  */
 @Component
 export struct EasyHome {
+  onOpenHistory: () => void = () => {};
+  onOpenSettings: () => void = () => {};
   @StorageLink('hopa.style') styleName: string = 'easy';
   @StorageLink('hopa.accent') accentColor: string = '';
   @State @Watch('syncFocus') taskOpen: boolean = false;
@@ -196,6 +200,45 @@ export struct EasyHome {
     }
   }
 
+  private lastOpenedBundle(): string {
+    const runs = AgentService.get().runs.all();
+    for (let index = runs.length - 1; index >= 0; index--) {
+      const run = runs[index];
+      if (run.kind !== 'ui.launch' || run.detail.length === 0) {
+        continue;
+      }
+      let name: string = run.detail.startsWith('Opened ') ? run.detail.substring(7) : run.detail;
+      if (name.endsWith('.')) {
+        name = name.substring(0, name.length - 1);
+      }
+      for (const app of APP_CATALOG) {
+        if (app.display === name || app.name === name) {
+          return app.bundle;
+        }
+      }
+    }
+    return '';
+  }
+
+  /** Copy the answer, then open the app it belongs to, ready to paste. */
+  private async sendAnswer(): Promise<void> {
+    try {
+      const data = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, this.result);
+      await pasteboard.getSystemPasteboard().setData(data);
+    } catch (error) {
+      this.toast('Could not copy the answer.');
+      return;
+    }
+    const bundle: string = this.lastOpenedBundle();
+    const service = AgentService.get();
+    if (bundle.length > 0 && service.isBridgeConfigured()) {
+      service.bridge.launch(bundle);
+      this.toast('Copied — paste it in the app.');
+    } else {
+      this.toast('Copied — paste it in a message.');
+    }
+  }
+
   private async runTask(): Promise<void> {
     const goal: string = this.draft.trim();
     if (goal.length === 0 || this.phase === 'working') {
@@ -228,22 +271,6 @@ export struct EasyHome {
     this.speak(reply);
   }
 
-  // ---- preset ----------------------------------------------------------
-
-  private openPhotos(): void {
-    const service = AgentService.get();
-    if (!service.isBridgeConfigured()) {
-      this.draft = 'Open my photos';
-      this.openTask(false);
-      return;
-    }
-    service.bridge.launch('com.huawei.hmos.photos');
-    EasyLog.add(getContext(this) as Context, 'Open my photos', 'Opened your photos.').catch(() => {
-      // Best effort.
-    });
-    this.toast('Opening your photos');
-  }
-
   // ---- builders --------------------------------------------------------
 
   private accent(): ResourceColor {
@@ -272,25 +299,20 @@ export struct EasyHome {
   }
 
   @Builder
-  Tile(label: string, hint: string, action: () => void) {
-    Row({ space: 12 }) {
-      Column({ space: 3 }) {
-        Text(label)
-          .fontSize(this.style().body + 1)
-          .fontWeight(FontWeight.Medium)
-          .fontColor($r('app.color.text_primary'))
-        Text(hint)
-          .fontSize(this.style().body - 3)
-          .fontColor($r('app.color.text_hint'))
-      }
-      .layoutWeight(1)
-      .alignItems(HorizontalAlign.Start)
+  Tile(label: string, action: () => void) {
+    Row({ space: 10 }) {
+      Text(label)
+        .fontSize(this.style().body + 3)
+        .fontWeight(FontWeight.Medium)
+        .fontColor($r('app.color.text_primary'))
+        .layoutWeight(1)
       Text('›')
-        .fontSize(24)
+        .fontSize(26)
         .fontColor($r('app.color.text_hint'))
     }
     .width('100%')
-    .padding({ left: 18, right: 16, top: 16, bottom: 16 })
+    .height(88)
+    .padding({ left: 22, right: 16 })
     .backgroundColor($r('app.color.surface'))
     .border({ width: 1, color: $r('app.color.divider') })
     .borderRadius(this.style().cardRadius)
@@ -299,9 +321,10 @@ export struct EasyHome {
 
   @Builder
   Home() {
-    Scroll() {
-      Column({ space: 14 }) {
-        Column({ space: 6 }) {
+    Column() {
+      Scroll() {
+        Column({ space: 20 }) {
+        Column({ space: 8 }) {
           Stack({ alignContent: Alignment.Center }) {
             HopaMark({
               state: 'idle',
@@ -349,25 +372,56 @@ export struct EasyHome {
           this.openTask(true);
         })
 
-        this.Tile('Send a message', 'Type it or say it — you check it before it goes', () => {
+        this.Tile('Send a message', () => {
           this.draft = '';
           this.openTask(false);
         })
-        this.Tile('Open my photos', 'Opens the gallery, no waiting', () => {
-          this.openPhotos();
-        })
-        this.Tile('What can you do?', 'A short list, right here', () => {
-          this.helpOpen = true;
-        })
 
+
+        }
+        .width('100%')
+        .padding({ left: 18, right: 18, top: 24, bottom: 24 })
+        .constraintSize({ minHeight: '100%' })
+        .justifyContent(FlexAlign.Center)
       }
       .width('100%')
-      .padding({ left: 18, right: 18, top: 44, bottom: 24 })
-      .constraintSize({ minHeight: '100%' })
+      .layoutWeight(1)
+      .scrollBar(BarState.Off)
+      Row({ space: 6 }) {
+        Text('Help')
+          .fontSize(this.style().body - 2)
+          .fontColor($r('app.color.text_secondary'))
+          .padding(8)
+          .onClick(() => {
+            this.helpOpen = true;
+          })
+        Text('·')
+          .fontSize(this.style().body - 2)
+          .fontColor($r('app.color.text_hint'))
+        Text('History')
+          .fontSize(this.style().body - 2)
+          .fontColor($r('app.color.text_secondary'))
+          .padding(8)
+          .onClick(() => {
+            this.onOpenHistory();
+          })
+        Text('·')
+          .fontSize(this.style().body - 2)
+          .fontColor($r('app.color.text_hint'))
+        Text('Settings')
+          .fontSize(this.style().body - 2)
+          .fontColor($r('app.color.text_secondary'))
+          .padding(8)
+          .onClick(() => {
+            this.onOpenSettings();
+          })
+      }
+      .width('100%')
+      .justifyContent(FlexAlign.Center)
+      .padding({ top: 2, bottom: 12 })
     }
     .width('100%')
     .height('100%')
-    .scrollBar(BarState.Off)
   }
 
   @Builder
@@ -383,7 +437,9 @@ export struct EasyHome {
           .onClick(() => {
             this.closeTask();
           })
-        Text(this.phase === 'done' ? 'Done' : 'What should I do?')
+        Text(this.phase === 'done'
+          ? "Here's what I did"
+          : (this.phase === 'working' ? 'Working' : 'What should I do?'))
           .fontSize(this.style().body + 2)
           .fontWeight(FontWeight.Bold)
           .layoutWeight(1)
@@ -440,32 +496,44 @@ export struct EasyHome {
           }
         })
       } else if (this.phase === 'working') {
-        Column({ space: 14 }) {
-          HopaMark({ state: 'acting', markSize: 72, interactive: false })
-          Text(this.stepText.length > 0 ? this.stepText : 'Working on it')
-            .fontSize(this.style().body + 2)
+        Column({ space: 20 }) {
+          HopaMark({ state: 'acting', markSize: 80, interactive: false })
+          Text(this.stepText.length > 0 ? this.stepText : 'Getting ready')
+            .fontSize(this.style().body + 3)
             .fontWeight(FontWeight.Medium)
             .fontColor($r('app.color.text_primary'))
+            .textAlign(TextAlign.Center)
           Text(this.draft)
             .fontSize(this.style().body)
             .fontColor($r('app.color.text_secondary'))
             .textAlign(TextAlign.Center)
-            .maxLines(2)
+            .maxLines(3)
           Text('Stop')
-            .fontSize(this.style().body)
+            .fontSize(this.style().body + 1)
+            .fontWeight(FontWeight.Medium)
             .fontColor(Color.White)
-            .padding({ left: 22, right: 22, top: 10, bottom: 10 })
+            .width('100%')
+            .height(56)
+            .textAlign(TextAlign.Center)
             .backgroundColor($r('app.color.danger'))
-            .borderRadius(10)
+            .borderRadius(this.style().cardRadius)
+            .margin({ top: 12 })
             .onClick(() => {
               AgentService.get().cancel();
             })
         }
         .width('100%')
-        .padding({ top: 30 })
+        .padding({ top: 32 })
+        .alignItems(HorizontalAlign.Center)
       } else {
-        Column({ space: 14 }) {
+        Column({ space: 16 }) {
           HopaMark({ state: 'happy', markSize: 64, interactive: false })
+          Text(this.draft)
+            .fontSize(this.style().body - 1)
+            .fontColor($r('app.color.text_secondary'))
+            .textAlign(TextAlign.Center)
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
           Scroll() {
             Text(this.result)
               .fontSize(this.style().body + 3)
@@ -474,9 +542,10 @@ export struct EasyHome {
               .width('100%')
           }
           .width('100%')
-          .layoutWeight(1)
+          .constraintSize({ maxHeight: 380 })
           .scrollBar(BarState.Off)
-          Text('Done')
+          Blank()
+          Text('Send it')
             .fontSize(this.style().body + 1)
             .fontWeight(FontWeight.Bold)
             .fontColor($r('app.color.on_primary'))
@@ -486,11 +555,17 @@ export struct EasyHome {
             .backgroundColor(this.accent())
             .borderRadius(this.style().cardRadius)
             .onClick(() => {
-              this.taskOpen = false;
+              this.sendAnswer();
             })
-          Text('Ask something else')
-            .fontSize(this.style().body - 1)
-            .fontColor($r('app.color.primary'))
+          Text('Say something else')
+            .fontSize(this.style().body + 1)
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.text_primary'))
+            .width('100%')
+            .height(56)
+            .textAlign(TextAlign.Center)
+            .backgroundColor($r('app.color.surface_alt'))
+            .borderRadius(this.style().cardRadius)
             .onClick(() => {
               this.phase = 'input';
               this.draft = '';
@@ -499,11 +574,13 @@ export struct EasyHome {
         }
         .width('100%')
         .height('100%')
+        .padding({ top: 24 })
+        .alignItems(HorizontalAlign.Center)
       }
     }
     .width('100%')
     .height('100%')
-    .padding({ left: 20, right: 20, top: 40, bottom: 20 })
+    .padding({ left: 20, right: 20, top: 40, bottom: 48 })
     .backgroundColor($r('app.color.bg'))
     .alignItems(HorizontalAlign.Start)
   }
@@ -536,7 +613,7 @@ export struct EasyHome {
         Text('Say things like:')
           .fontSize(this.style().body - 1)
           .fontColor($r('app.color.text_hint'))
-        Text('“Open my photos”')
+        Text('"Open the camera"')
           .fontSize(this.style().body + 1)
           .fontColor($r('app.color.text_primary'))
         Text('“Text my daughter that I am on my way”')
@@ -569,7 +646,7 @@ export struct EasyHome {
     }
     .width('100%')
     .height('100%')
-    .padding({ left: 20, right: 20, top: 40, bottom: 20 })
+    .padding({ left: 20, right: 20, top: 40, bottom: 48 })
     .backgroundColor($r('app.color.bg'))
     .alignItems(HorizontalAlign.Start)
   }

@@ -235,7 +235,6 @@ struct Index {
     }
     return this.activePage === 'home' ||
       this.activePage === 'activity' ||
-      this.activePage === 'easyhistory' ||
       this.activePage === 'capabilities';
   }
 
@@ -486,7 +485,9 @@ struct Index {
         }
         .layoutWeight(1)
         .width('100%')
-        if (this.activePage !== 'browser' && !this.keyboardVisible && !this.focusMode) {
+        // Easy is calm: no tab bar, just two quiet links on the home screen.
+        if (this.activePage !== 'browser' && !this.keyboardVisible && !this.focusMode &&
+          this.profileName !== 'easy') {
           this.BottomBar()
         }
       }

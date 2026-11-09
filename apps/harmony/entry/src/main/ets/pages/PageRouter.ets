@@ -37,7 +37,10 @@ export struct PageRouter {
   build() {
     if (this.activePage === 'home') {
       if (this.profileName === 'easy') {
-        EasyHome()
+        EasyHome({
+          onOpenHistory: () => { this.onNavigate('easyhistory'); },
+          onOpenSettings: () => { this.onNavigate('settings'); }
+        })
       } else if (this.profileName === 'power') {
         PowerHome({
           onOpenChat: (goal: string, voice: boolean) => { this.onOpenChat(goal, voice); },
