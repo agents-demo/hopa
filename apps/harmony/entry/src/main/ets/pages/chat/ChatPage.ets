@@ -412,6 +412,9 @@ export struct ChatPage {
     this.busy = false;
     this.runningGoal = '';
     this.canUndo = steps.length === 1 && steps[0].indexOf('Opened') > 0;
+    if (this.failed) {
+      this.draft = text;
+    }
     service.skills.save(context).catch(() => {
       // Persistence is best effort.
     });
