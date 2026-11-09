@@ -90,6 +90,9 @@ export class AgentRuntime {
       maxSteps,
       new CompositeScreenSource(this.browser, this.bridge)
     );
+    this.loop.onStep = (outcome: ActionOutcome) => {
+      this.lastStepLabels.push(this.stepLabel(outcome));
+    };
     this.loop.setMemory(this.memory.toPrompt());
     this.modelLabel = modelName;
   }
@@ -108,6 +111,21 @@ export class AgentRuntime {
   }
 
   /** Human labels for the steps of the last run, newest surface first. */
+  private stepLabel(outcome: ActionOutcome): string {
+    const stepApp: string = outcome.action.app.length > 0 ? outcome.action.app : outcome.action.target;
+    const stepKind: string = outcome.action.kind;
+    let stepName: string = stepKind.replace('ui.', '');
+    const label: string = this.appNames.get(stepApp) ?? stepApp;
+    if (stepKind === 'ui.launch') { stepName = `Opened ${label}`; }
+    else if (stepKind === 'ui.tap' || stepKind === 'ui.doubleTap' || stepKind === 'ui.longPress') { stepName = 'Tapped'; }
+    else if (stepKind === 'ui.type') { stepName = 'Typed'; }
+    else if (stepKind === 'ui.back') { stepName = 'Back'; }
+    else if (stepKind === 'ui.home') { stepName = 'Home'; }
+    else if (stepKind === 'ui.swipe' || stepKind === 'ui.scroll') { stepName = 'Scrolled'; }
+    const ok: boolean = outcome.executed && outcome.observation.success;
+    return `${ok ? '\u2713' : '\u2715'} ${stepName}`;
+  }
+
   /** The goal of the last run, so a new chat can offer to resume it. */
   lastGoalText(): string {
     return this.lastGoal;
@@ -245,20 +263,6 @@ export class AgentRuntime {
     }
     await this.background.end();
     hilog.info(0x0000, 'HOPA', `run: done outcomes=${outcomes.length} tokens=${this.loop.getTokens()}`);
-    for (const outcome of outcomes) {
-      const stepApp: string = outcome.action.app.length > 0 ? outcome.action.app : outcome.action.target;
-      const stepKind: string = outcome.action.kind;
-      let stepName: string = stepKind.replace('ui.', '');
-      const stepLabel: string = this.appNames.get(stepApp) ?? stepApp;
-      if (stepKind === 'ui.launch') { stepName = `Opened ${stepLabel}`; }
-      else if (stepKind === 'ui.tap' || stepKind === 'ui.doubleTap' || stepKind === 'ui.longPress') { stepName = 'Tapped'; }
-      else if (stepKind === 'ui.type') { stepName = 'Typed'; }
-      else if (stepKind === 'ui.back') { stepName = 'Back'; }
-      else if (stepKind === 'ui.home') { stepName = 'Home'; }
-      else if (stepKind === 'ui.swipe' || stepKind === 'ui.scroll') { stepName = 'Scrolled'; }
-      const stepOk: boolean = outcome.executed && outcome.observation.success;
-      this.lastStepLabels.push(`${stepOk ? '\u2713' : '\u2715'} ${stepName}`);
-    }
     for (const outcome of outcomes) {
       const target: string = outcome.action.app.length > 0
         ? outcome.action.app

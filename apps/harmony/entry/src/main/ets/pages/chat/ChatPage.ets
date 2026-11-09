@@ -21,6 +21,7 @@ export struct ChatPage {
   @State resumeGoal: string = '';
   @State runningGoal: string = '';
   @State failed: boolean = false;
+  @State liveSteps: string[] = [];
   @State showSteps: boolean = true;
   @State lastPageUrl: string = '';
   @State lastPageTitle: string = '';
@@ -49,6 +50,12 @@ export struct ChatPage {
       if (!this.busy && service.conversations.version !== this.seenVersion) {
         this.render();
         this.sync();
+      }
+      if (this.busy) {
+        const steps: string[] = service.runtime.lastSteps();
+        if (steps.length !== this.liveSteps.length) {
+          this.liveSteps = steps.slice();
+        }
       }
       if (this.messages.length === 0) {
         const goal: string = this.lastKnownGoal();
@@ -291,6 +298,7 @@ export struct ChatPage {
     this.draft = '';
     this.busy = true;
     this.reaction = '';
+    this.liveSteps = [];
     this.runningGoal = text;
     Haptics.tap();
     this.messages = this.messages.concat([`You: ${text}`]);
@@ -479,6 +487,21 @@ export struct ChatPage {
                       .onClick(() => {
                         this.stopRun();
                       })
+                  }
+                  .width('100%')
+                  .padding({ left: 4 })
+                }
+                if (this.liveSteps.length > 0) {
+                  Flex({ wrap: FlexWrap.Wrap }) {
+                    ForEach(this.liveSteps, (step: string) => {
+                      Text(step)
+                        .fontSize(10.5)
+                        .fontColor($r('app.color.text_secondary'))
+                        .padding({ left: 8, right: 8, top: 3, bottom: 3 })
+                        .backgroundColor($r('app.color.surface_alt'))
+                        .borderRadius(8)
+                        .margin({ right: 6, bottom: 4 })
+                    }, (step: string, i: number) => `${i}-${step}`)
                   }
                   .width('100%')
                   .padding({ left: 4 })
