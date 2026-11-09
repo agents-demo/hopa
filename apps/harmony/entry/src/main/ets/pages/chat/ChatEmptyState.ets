@@ -1,6 +1,8 @@
 /** The first screen of a new chat: brand, promise and three suggestions. */
 import { HopaMark } from './HopaMark';
 import { AgentService } from '../../services/AgentService';
+import { SettingsStore } from '../../services/SettingsStore';
+import { Context } from '@kit.AbilityKit';
 
 @Component
 export struct ChatEmptyState {
@@ -13,6 +15,14 @@ export struct ChatEmptyState {
   aboutToAppear(): void {
     const hour: number = new Date().getHours();
     this.greeting = hour < 5 ? 'Still up?' : (hour < 12 ? 'Good morning' : (hour < 18 ? 'Good afternoon' : 'Good evening'));
+    const context = getContext(this) as Context;
+    SettingsStore.load(context).then((stored) => {
+      if (stored.reduceMotion) {
+        this.entered = true;
+      }
+    }).catch(() => {
+      // Keep the default animation.
+    });
     // A soft entrance: content lifts in instead of appearing fully formed.
     animateTo({ duration: 420, curve: Curve.EaseOut }, () => {
       this.entered = true;

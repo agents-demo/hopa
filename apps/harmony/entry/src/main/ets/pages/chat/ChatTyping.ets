@@ -1,14 +1,25 @@
 import { HopaMark } from './HopaMark';
+import { SettingsStore } from '../../services/SettingsStore';
+import { Context } from '@kit.AbilityKit';
 
 /** The "HOPA is working" row with the living mark and three breathing dots. */
 @Component
 export struct ChatTyping {
   @State phase: number = 0;
+  @State calm: boolean = false;
   private timer: number = -1;
 
   aboutToAppear(): void {
+    const context = getContext(this) as Context;
+    SettingsStore.load(context).then((stored) => {
+      this.calm = stored.reduceMotion;
+    }).catch(() => {
+      // Animate by default.
+    });
     this.timer = setInterval(() => {
-      this.phase = (this.phase + 1) % 3;
+      if (!this.calm) {
+        this.phase = (this.phase + 1) % 3;
+      }
     }, 280);
   }
 
@@ -21,6 +32,9 @@ export struct ChatTyping {
 
   /** A wave: the active dot is brightest, the next one trails behind. */
   private dotOpacity(index: number): number {
+    if (this.calm) {
+      return 0.55;
+    }
     if (this.phase === index) {
       return 1;
     }
