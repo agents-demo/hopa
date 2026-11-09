@@ -11,7 +11,9 @@ import { HopaMark } from './chat/HopaMark';
 import { PageRouter } from './PageRouter';
 import { Haptics } from '../services/Haptics';
 import { SettingsStore } from '../services/SettingsStore';
-import { StyleProfile } from '../services/StyleProfile';
+import { VisualStyle } from '../services/VisualStyle';
+import { BridgeMonitor } from '../services/BridgeMonitor';
+import { IntentInbox } from '../services/IntentInbox';
 import { KeyboardAvoidMode as HostKeyboardAvoidMode } from '@ohos.arkui.UIContext';
 import { window } from '@kit.ArkUI';
 
@@ -33,6 +35,7 @@ struct Index {
   @State approvalPayment: boolean = false;
   /** Empty unless the last run (or setup) needs attention. */
   @StorageLink('hopa.problem') problem: string = '';
+  @StorageLink('hopa.bridgeOnline') bridgeOnline: boolean = true;
   /** Set by a home sheet: hide the shell chrome while it is focused. */
   @StorageLink('hopa.focus') focusMode: boolean = false;
   @StorageLink('hopa.style') styleName: string = 'calm';
@@ -75,11 +78,12 @@ struct Index {
       this.chatsOpen = false;
     });
     SettingsStore.load(getContext(this)).then((stored) => {
-      AppStorage.setOrCreate<string>(StyleProfile.KEY, stored.style);
+      AppStorage.setOrCreate<string>(VisualStyle.KEY, stored.style);
       AppStorage.setOrCreate<string>('hopa.profile', stored.profile);
     }).catch(() => {
       // The default look is fine when settings cannot be read.
     });
+    BridgeMonitor.start();
     this.refreshChats();
     this.titleTimer = setInterval(() => {
       this.syncTitle();
@@ -88,6 +92,7 @@ struct Index {
   }
 
   aboutToDisappear(): void {
+    BridgeMonitor.stop();
     if (this.titleTimer >= 0) {
       clearInterval(this.titleTimer);
       this.titleTimer = -1;
@@ -99,8 +104,8 @@ struct Index {
     this.syncTitle();
   }
 
-  private style(): StyleProfile {
-    return StyleProfile.of(this.styleName);
+  private style(): VisualStyle {
+    return VisualStyle.of(this.styleName);
   }
 
   /** Everyday keeps the chat as home; the other profiles get their own. */
@@ -127,6 +132,12 @@ struct Index {
       session.title.length > 0 &&
       session.title !== 'New chat') {
       title = session.title;
+    }
+    const incoming: string = IntentInbox.take();
+    if (incoming.length > 0) {
+      AppStorage.setOrCreate<string>('hopa.pendingGoal', incoming);
+      this.previousPage = this.activePage;
+      this.activePage = 'chat';
     }
     // @StorageLink + @Watch was not reliable here; poll the shell's copy.
     const profile: string = AppStorage.get<string>('hopa.profile') ?? 'everyday';
@@ -467,6 +478,23 @@ struct Index {
         // chat entry from here.
         if (!this.focusMode && this.activePage !== 'home' && this.activePage !== 'easyhistory') {
           this.TopBar()
+        }
+        if (!this.focusMode && !this.bridgeOnline && AgentService.get().isBridgeConfigured()) {
+          Row({ space: 8 }) {
+            Text('PC bridge offline')
+              .fontSize(11)
+              .fontColor($r('app.color.danger'))
+            Text('Retry')
+              .fontSize(11)
+              .fontColor($r('app.color.primary'))
+              .onClick(() => {
+                BridgeMonitor.checkNow();
+              })
+          }
+          .width('100%')
+          .height(28)
+          .justifyContent(FlexAlign.Center)
+          .backgroundColor('#14C0392B')
         }
         Column() {
           PageRouter({

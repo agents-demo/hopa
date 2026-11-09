@@ -3,21 +3,45 @@ import { hilog } from '@kit.PerformanceAnalysisKit';
 import { window } from '@kit.ArkUI';
 import { KeyboardAvoidMode } from '@ohos.arkui.UIContext';
 import { Appearance } from '../services/Appearance';
-import { HopaForeground } from '../services/HopaForeground';
+import { AppFocus } from '../services/AppFocus';
 import { AgentService } from '../services/AgentService';
 import { SettingsStore, StoredSettings } from '../services/SettingsStore';
+import { IntentInbox } from '../services/IntentInbox';
 
 const DOMAIN: number = 0x0000;
 const TAG: string = 'HOPA';
 
 export default class EntryAbility extends UIAbility {
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
+    this.acceptWant(want);
     this.applyLaunchConfig(want);
     hilog.info(DOMAIN, TAG, 'HOPA entry ability created');
   }
 
   onNewWant(want: Want, launchParam: AbilityConstant.LaunchParam): void {
+    this.acceptWant(want);
     this.applyLaunchConfig(want);
+  }
+
+  /** `hopa://ask?text=...` and shared text both land in the chat composer. */
+  private acceptWant(want: Want): void {
+    const uri: string = want.uri ?? '';
+    if (uri.startsWith('hopa://ask')) {
+      const marker: number = uri.indexOf('text=');
+      if (marker >= 0) {
+        let text: string = uri.substring(marker + 5);
+        try {
+          text = decodeURIComponent(text.replace(/\+/g, ' '));
+        } catch (error) {
+          // Keep the raw text when the encoding is odd.
+        }
+        IntentInbox.put(text);
+      }
+    }
+    const shared: string | undefined = want.parameters?.['hopa.sharedText'] as string | undefined;
+    if (typeof shared === 'string' && shared.length > 0) {
+      IntentInbox.put(shared);
+    }
   }
 
   /**
@@ -103,12 +127,12 @@ export default class EntryAbility extends UIAbility {
   }
 
   onForeground(): void {
-    HopaForeground.active = true;
+    AppFocus.active = true;
     hilog.info(DOMAIN, TAG, 'Foreground');
   }
 
   onBackground(): void {
-    HopaForeground.active = false;
+    AppFocus.active = false;
     hilog.info(DOMAIN, TAG, 'Background');
   }
 

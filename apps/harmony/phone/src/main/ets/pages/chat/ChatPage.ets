@@ -8,6 +8,7 @@ import { ChatPageCard } from './ChatPageCard';
 import { ChatComposer } from './ChatComposer';
 import { ChatFormat } from './ChatFormat';
 import { ErrorLog } from '../../services/ErrorLog';
+import { RunNotification } from '../../services/RunNotification';
 import { RecapCard } from './RecapCard';
 import { ChatTyping } from './ChatTyping';
 import { MessageActions } from './MessageActions';
@@ -89,6 +90,15 @@ export struct ChatPage {
       }, 350);
     });
     this.timer = setInterval(() => {
+      if (!this.busy) {
+        const pending: string = AppStorage.get<string>('hopa.pendingGoal') ?? '';
+        if (pending.length > 0) {
+          AppStorage.setOrCreate<string>('hopa.pendingGoal', '');
+          this.draft = pending;
+          this.send();
+          return;
+        }
+      }
       if (!this.busy && service.conversations.version !== this.seenVersion) {
         this.render();
         this.sync();
@@ -97,6 +107,10 @@ export struct ChatPage {
         const steps: string[] = service.runtime.lastSteps();
         if (steps.length !== this.liveSteps.length) {
           this.liveSteps = steps.slice();
+          const latest: string = steps.length > 0 ? steps[steps.length - 1] : '';
+          RunNotification.update(latest.length > 2 ? latest.substring(2) : latest).catch(() => {
+            // Best effort.
+          });
         }
       }
       if (this.messages.length === 0) {
@@ -385,6 +399,9 @@ export struct ChatPage {
 
     this.draft = '';
     this.busy = true;
+    RunNotification.start(getContext(this) as common.UIAbilityContext, text).catch(() => {
+      // Notifications are optional.
+    });
     this.reaction = '';
     this.liveSteps = [];
     this.runningGoal = text;
@@ -441,6 +458,9 @@ export struct ChatPage {
     service.conversations.add('assistant', decorated);
     this.sync();
     this.busy = false;
+    RunNotification.stop().catch(() => {
+      // Best effort.
+    });
     this.runningGoal = '';
     AppStorage.setOrCreate<string>('hopa.problem', this.failed ? 'Last run failed' : '');
     this.react(!this.failed);
