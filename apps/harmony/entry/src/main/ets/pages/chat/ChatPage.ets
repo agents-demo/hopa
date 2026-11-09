@@ -19,6 +19,7 @@ export struct ChatPage {
   @State busy: boolean = false;
   @State reaction: string = '';
   @State resumeGoal: string = '';
+  @State runningGoal: string = '';
   @State showSteps: boolean = true;
   @State lastPageUrl: string = '';
   @State lastPageTitle: string = '';
@@ -289,6 +290,7 @@ export struct ChatPage {
     this.draft = '';
     this.busy = true;
     this.reaction = '';
+    this.runningGoal = text;
     Haptics.tap();
     this.messages = this.messages.concat([`You: ${text}`]);
     this.renderedCount = this.messages.length;
@@ -313,6 +315,7 @@ export struct ChatPage {
     service.conversations.add('assistant', decorated);
     this.sync();
     this.busy = false;
+    this.runningGoal = '';
     service.skills.save(context).catch(() => {
       // Persistence is best effort.
     });
@@ -435,7 +438,18 @@ export struct ChatPage {
           }, (item: ResourceStr, index: number) => this.messageKey(item, index))
           if (this.busy) {
             ListItem() {
-              ChatTyping()
+              Column({ space: 2 }) {
+                if (this.runningGoal.length > 0) {
+                  Text(`Working on ? ${this.runningGoal}`)
+                    .fontSize(11)
+                    .fontColor($r('app.color.text_secondary'))
+                    .maxLines(1)
+                    .textOverflow({ overflow: TextOverflow.Ellipsis })
+                    .width('100%')
+                    .padding({ left: 4 })
+                }
+                ChatTyping()
+              }
             }
           }
         }
