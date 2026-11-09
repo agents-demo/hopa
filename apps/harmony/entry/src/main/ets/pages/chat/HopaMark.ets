@@ -158,16 +158,6 @@ export struct HopaMark {
       // The bubble only exists while it is shown: a hidden Text node would
       // still be picked up by observe and confuse the model.
       if (this.bubble) {
-        // Tail first: a rotated square tucked into the bubble so only its
-        // lower corner shows, reading as one connected speech bubble.
-        Column()
-          .width(this.markSize * 0.26)
-          .height(this.markSize * 0.26)
-          .backgroundColor('#E8703A')
-          .rotate({ angle: 45 })
-          .position({ x: this.markSize * 0.70, y: -this.markSize * 0.68 })
-          .hitTestBehavior(HitTestMode.None)
-
         Column() {
           Text("Hi, I'm HOPA 👋")
             .fontSize(this.markSize * 0.215)
@@ -186,7 +176,7 @@ export struct HopaMark {
         .backgroundColor('#E8703A')
         .borderRadius(this.markSize * 0.29)
         .shadow({ radius: this.markSize * 0.16, color: '#551C1B18', offsetY: this.markSize * 0.05 })
-        .rotate({ angle: -3 })
+        
         .position({ x: this.markSize * 0.42, y: -this.markSize * 1.05 })
         .transition(TransitionEffect.OPACITY.combine(TransitionEffect.scale({ x: 0.6, y: 0.6 })))
         .hitTestBehavior(HitTestMode.None)
