@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="108" viewBox="0 0 240 108">
+  <!-- One continuous shape: rounded bubble with a long curved tail to the left. -->
+  <path fill="#E8703A" d="
+    M 36 2
+    H 204
+    A 34 34 0 0 1 238 36
+    V 44
+    A 34 34 0 0 1 204 78
+    H 118
+    C 104 90 80 100 44 106
+    C 68 94 78 86 80 78
+    H 36
+    A 34 34 0 0 1 2 44
+    V 36
+    A 34 34 0 0 1 36 2
+    Z" />
+</svg>

@@ -158,27 +158,40 @@ export struct HopaMark {
       // The bubble only exists while it is shown: a hidden Text node would
       // still be picked up by observe and confuse the model.
       if (this.bubble) {
-        Column() {
+        // One SVG shape: rounded bubble with a curved tail flowing toward the
+        // head. Drawn as a single outline so there is no seam to look pasted on.
+        Stack({ alignContent: Alignment.TopStart }) {
+          // Soft, shape-following shadow: the same outline, offset in layers.
+          Image($r('app.media.hopa_bubble_shadow'))
+            .width(this.markSize * 2.30)
+            .height(this.markSize * 1.04)
+            .objectFit(ImageFit.Fill)
+            .opacity(0.10)
+            .offset({ x: this.markSize * 0.01, y: this.markSize * 0.05 })
+          Image($r('app.media.hopa_bubble_shadow'))
+            .width(this.markSize * 2.30)
+            .height(this.markSize * 1.04)
+            .objectFit(ImageFit.Fill)
+            .opacity(0.06)
+            .offset({ x: this.markSize * 0.02, y: this.markSize * 0.09 })
+          Image($r('app.media.hopa_bubble'))
+            .width(this.markSize * 2.30)
+            .height(this.markSize * 1.04)
+            .objectFit(ImageFit.Fill)
           Text("Hi, I'm HOPA 👋")
+            .width(this.markSize * 2.30)
+            .padding({ top: this.markSize * 0.21 })
+            .textAlign(TextAlign.Center)
             .fontSize(this.markSize * 0.215)
             .fontWeight(FontWeight.Bold)
             .fontColor(Color.White)
-            .textAlign(TextAlign.Center)
             .maxLines(1)
         }
         .width(this.markSize * 2.30)
-        .padding({
-          left: this.markSize * 0.12,
-          right: this.markSize * 0.12,
-          top: this.markSize * 0.11,
-          bottom: this.markSize * 0.11
-        })
-        .backgroundColor('#E8703A')
-        .borderRadius(this.markSize * 0.29)
-        .shadow({ radius: this.markSize * 0.16, color: '#551C1B18', offsetY: this.markSize * 0.05 })
-        
-        .position({ x: this.markSize * 0.42, y: -this.markSize * 1.05 })
-        .transition(TransitionEffect.OPACITY.combine(TransitionEffect.scale({ x: 0.6, y: 0.6 })))
+        .height(this.markSize * 1.04)
+        .clip(false)
+        .rotate({ angle: -3 })
+        .position({ x: this.markSize * 0.38, y: -this.markSize * 1.16 })
         .hitTestBehavior(HitTestMode.None)
       }
     }
