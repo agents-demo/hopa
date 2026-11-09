@@ -1,6 +1,7 @@
 const TITLES: Map<string, string> = new Map<string, string>([
   ['chat', 'Chat'],
   ['activity', 'Activity'],
+  ['easyhistory', 'History'],
   ['capabilities', 'Capabilities'],
   ['plans', 'Plans'],
   ['memory', 'Memory'],

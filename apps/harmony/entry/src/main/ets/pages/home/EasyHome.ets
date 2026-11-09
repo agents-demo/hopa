@@ -4,6 +4,7 @@ import { AgentService } from '../../services/AgentService';
 import { StyleProfile } from '../../services/StyleProfile';
 import { VoiceService } from '../../services/VoiceService';
 import { Haptics } from '../../services/Haptics';
+import { EasyLog } from '../../services/EasyLog';
 import { HopaMark } from '../chat/HopaMark';
 
 /**
@@ -206,6 +207,9 @@ export struct EasyHome {
     this.clearPoll();
     this.result = reply;
     this.phase = 'done';
+    EasyLog.add(getContext(this) as Context, goal, reply).catch(() => {
+      // History is best effort; the answer is already on screen.
+    });
     this.speak(reply);
   }
 
@@ -219,6 +223,9 @@ export struct EasyHome {
       return;
     }
     service.bridge.launch('com.huawei.hmos.photos');
+    EasyLog.add(getContext(this) as Context, 'Open my photos', 'Opened your photos.').catch(() => {
+      // Best effort.
+    });
     this.toast('Opening your photos');
   }
 

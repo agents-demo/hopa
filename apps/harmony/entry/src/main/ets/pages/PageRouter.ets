@@ -23,6 +23,7 @@ import { EasyHome } from './home/EasyHome';
 import { PowerHome } from './home/PowerHome';
 import { SocialHome } from './home/SocialHome';
 import { KidHome } from './home/KidHome';
+import { EasyHistory } from './home/EasyHistory';
 
 /** Maps the active page key to one page; the shell owns navigation only. */
 @Component
@@ -55,6 +56,8 @@ export struct PageRouter {
       } else {
         ChatPage()
       }
+    } else if (this.activePage === 'easyhistory') {
+      EasyHistory()
     } else if (this.activePage === 'activity') {
       ActivityPage({ onNavigate: (key: string) => { this.onNavigate(key); } })
     } else if (this.activePage === 'capabilities') {

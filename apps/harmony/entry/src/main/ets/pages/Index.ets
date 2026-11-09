@@ -235,6 +235,7 @@ struct Index {
     }
     return this.activePage === 'home' ||
       this.activePage === 'activity' ||
+      this.activePage === 'easyhistory' ||
       this.activePage === 'capabilities';
   }
 
@@ -250,6 +251,12 @@ struct Index {
     }
     if (key === 'chat') {
       return this.activePage === 'chat';
+    }
+    if (key === 'easyhistory') {
+      return this.activePage === 'easyhistory';
+    }
+    if (key === 'settings') {
+      return this.activePage === 'settings';
     }
     if (key === 'activity') {
       return this.activePage === 'activity' || this.activityChild();
@@ -410,8 +417,8 @@ struct Index {
         this.Tab('Home', 'home', 'chat')
       } else if (this.profileName === 'easy') {
         this.Tab('Talk', 'home', 'chat')
-        this.Tab('History', 'activity')
-        this.Tab('Settings', 'capabilities')
+        this.Tab('History', 'easyhistory')
+        this.Tab('Settings', 'settings')
       } else {
         this.Tab(this.customHome() ? 'Home' : 'Chat', this.customHome() ? 'home' : 'chat', 'chat')
         this.Tab('Activity', 'activity')
