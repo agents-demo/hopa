@@ -22,6 +22,7 @@ export struct ChatPage {
   @State busy: boolean = false;
   @State reaction: string = '';
   @State resumeGoal: string = '';
+  @State loaded: boolean = false;
   @State runningGoal: string = '';
   @State failed: boolean = false;
   @State liveSteps: string[] = [];
@@ -48,6 +49,7 @@ export struct ChatPage {
       this.render();
       this.sync();
       this.resumeGoal = this.lastKnownGoal();
+      this.loaded = true;
     });
     this.timer = setInterval(() => {
       if (!this.busy && service.conversations.version !== this.seenVersion) {
@@ -432,10 +434,30 @@ export struct ChatPage {
 
   build() {
     Column({ space: 10 }) {
-      if (this.messages.length === 0) {
+      if (!this.loaded) {
+        Column({ space: 12 }) {
+          ForEach([0, 1, 2], (item: number) => {
+            Row() {
+              Column()
+                .width('68%')
+                .height(38)
+                .borderRadius(14)
+                .backgroundColor($r('app.color.surface_alt'))
+                .opacity(0.7 - item * 0.15)
+                .margin({ left: item % 2 === 0 ? 0 : 18 })
+            }
+            .width('100%')
+            .justifyContent(item % 2 === 0 ? FlexAlign.Start : FlexAlign.End)
+          }, (item: number) => `${item}`)
+        }
+        .width('100%')
+        .padding({ top: 24, left: 16, right: 16 })
+        .layoutWeight(1)
+      } else if (this.messages.length === 0) {
         Scroll() {
           ChatEmptyState({
             resume: this.resumeGoal,
+            listening: this.draft.length > 0,
             onPick: (text: string) => {
               this.draft = text;
             }

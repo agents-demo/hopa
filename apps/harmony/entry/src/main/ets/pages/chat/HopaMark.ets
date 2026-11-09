@@ -113,6 +113,9 @@ export struct HopaMark {
     if (this.state === 'waiting') {
       return 'HOPA is waiting for your approval';
     }
+    if (this.state === 'listening') {
+      return 'HOPA is listening';
+    }
     if (this.state === 'happy') {
       return 'HOPA finished';
     }
@@ -203,7 +206,7 @@ export struct HopaMark {
       x: this.cheer || this.state === 'happy' ? 1.06 : 1,
       y: this.cheer || this.state === 'happy' ? 1.06 : 1
     })
-    .rotate({ angle: this.state === 'acting' ? -4 : 0 })
+    .rotate({ angle: this.state === 'acting' ? -4 : (this.state === 'listening' ? -2 : 0) })
     .offset({
       y: this.state === 'idle' || this.state === 'waiting'
         ? (this.bob ? this.markSize * 0.025 : -this.markSize * 0.025)

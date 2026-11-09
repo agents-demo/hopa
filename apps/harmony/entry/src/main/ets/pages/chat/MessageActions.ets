@@ -3,6 +3,7 @@
 export struct MessageActions {
   @Prop showRetry: boolean = false;
   @Prop muted: boolean = false;
+  @State pressed: boolean = false;
   onCopy: () => void = () => {};
   onRetry: () => void = () => {};
 
@@ -81,5 +82,14 @@ export struct MessageActions {
       }
     }
     .alignItems(VerticalAlign.Center)
+    .scale({ x: this.pressed ? 0.9 : 1, y: this.pressed ? 0.9 : 1 })
+    .animation({ duration: 110, curve: Curve.EaseOut })
+    .onTouch((event: TouchEvent) => {
+      if (event.type === TouchType.Down) {
+        this.pressed = true;
+      } else if (event.type === TouchType.Up || event.type === TouchType.Cancel) {
+        this.pressed = false;
+      }
+    })
   }
 }

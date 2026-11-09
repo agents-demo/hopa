@@ -8,6 +8,7 @@ import { Context } from '@kit.AbilityKit';
 export struct ChatEmptyState {
   onPick: (text: string) => void = () => {};
   @Prop resume: string = '';
+  @Prop listening: boolean = false;
   @State entered: boolean = false;
   @State pressed: number = -1;
   @State greeting: string = 'Hi';
@@ -47,7 +48,7 @@ export struct ChatEmptyState {
 
   build() {
     Column({ space: 12 }) {
-      HopaMark({ state: 'idle', markSize: 64 })
+      HopaMark({ state: this.listening ? 'listening' : 'idle', markSize: 64 })
       Text(this.greeting)
         .fontSize(11)
         .fontColor($r('app.color.text_hint'))
