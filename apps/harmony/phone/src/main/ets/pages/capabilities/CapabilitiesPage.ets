@@ -46,9 +46,10 @@ export struct CapabilitiesPage {
 
   @Builder
   Tile(title: string, subtitle: string, key: string) {
-    Column({ space: 3 }) {
+    Column({ space: 4 }) {
       Text(title)
-        .fontSize(15)
+        .fontSize(15.5)
+        .fontWeight(FontWeight.Medium)
         .fontColor($r('app.color.text_primary'))
       Text(subtitle)
         .fontSize(11)
@@ -57,13 +58,15 @@ export struct CapabilitiesPage {
         .textOverflow({ overflow: TextOverflow.Ellipsis })
     }
     .layoutWeight(1)
-    .height(78)
-    .padding(12)
+    .height(88)
+    .padding(14)
     .backgroundColor($r('app.color.surface'))
-    .border({ width: 1, color: $r('app.color.divider') })
-    .borderRadius(12)
+    .border({ width: 1, color: '#0F1C1B18' })
+    .borderRadius(16)
+    .shadow({ radius: 10, color: '#091C1B18', offsetY: 2 })
     .alignItems(HorizontalAlign.Start)
     .justifyContent(FlexAlign.Center)
+    .accessibilityText(`${title}. ${subtitle}`)
     .onClick(() => {
       this.onNavigate(key);
     })
@@ -86,8 +89,8 @@ export struct CapabilitiesPage {
           Row({ space: 12 }) {
             HopaMark({ state: 'idle', markSize: 46 })
             Column({ space: 6 }) {
-              Text(this.model())
-                .fontSize(16)
+              Text(this.ready() ? 'Ready on this phone' : 'Finish setup')
+                .fontSize(17)
                 .fontWeight(FontWeight.Medium)
                 .fontColor($r('app.color.text_primary'))
                 .width('100%')
@@ -99,7 +102,7 @@ export struct CapabilitiesPage {
                   .backgroundColor(this.ready()
                     ? $r('app.color.success')
                     : $r('app.color.warning'))
-                Text(`Phone control · ${this.control()}`)
+                Text(`${this.model()} · ${this.control()}`)
                   .fontSize(11)
                   .fontColor($r('app.color.text_secondary'))
               }
@@ -130,31 +133,17 @@ export struct CapabilitiesPage {
           this.Tile('Runs', this.actionCountLabel(), 'runs')
         }
         .width('100%')
-        this.Section('MORE')
+        this.Section('TOOLS')
         Row({ space: 8 }) {
           this.Tile('Usage', `${this.actionCountLabel()} recorded`, 'usage')
           this.Tile('MCP servers', 'Phone and PC tools', 'mcpservers')
         }
         .width('100%')
-        this.Section('APP')
-        Row({ space: 8 }) {
-          this.Tile('Files', 'Exported data', 'files')
-          this.Tile('Source', 'Model and backend', 'source')
-        }
-        .width('100%')
-        Row({ space: 8 }) {
-          this.Tile('Welcome', 'The first-run tour', 'welcome')
-          this.Tile('About', 'Version and links', 'about')
-        }
-        .width('100%')
-        Row({ space: 8 }) {
-          this.Tile('License', 'Apache-2.0 and notices', 'license')
-          this.Tile('Self-check', 'What works here', 'selfcheck')
-        }
-        .width('100%')
       }
       .width('100%')
       .padding(20)
+      .constraintSize({ minHeight: '100%' })
+      .justifyContent(FlexAlign.Start)
       .alignItems(HorizontalAlign.Start)
     }
     .width('100%')

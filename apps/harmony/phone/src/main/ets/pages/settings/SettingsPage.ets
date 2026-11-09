@@ -203,15 +203,29 @@ export struct SettingsPage {
       }
       .layoutWeight(1)
       .alignItems(HorizontalAlign.Start)
-      Text('>').fontSize(14).fontColor($r('app.color.text_hint'))
+      Text('?').fontSize(16).fontColor($r('app.color.text_hint'))
     }
     .width('100%')
-    .padding(12)
-    .backgroundColor($r('app.color.surface_alt'))
-    .borderRadius(8)
+    .padding({ left: 2, right: 2, top: 11, bottom: 11 })
     .onClick(() => {
       this.subPage = key;
     })
+  }
+
+  @Builder
+  ActionRow(title: string, subtitle: string, action: () => void) {
+    Row({ space: 10 }) {
+      Column({ space: 2 }) {
+        Text(title).fontSize(14)
+        Text(subtitle).fontSize(10).fontColor($r('app.color.text_hint'))
+      }
+      .layoutWeight(1)
+      .alignItems(HorizontalAlign.Start)
+      Text('?').fontSize(16).fontColor($r('app.color.text_hint'))
+    }
+    .width('100%')
+    .padding({ left: 2, right: 2, top: 11, bottom: 11 })
+    .onClick(action)
   }
 
   @Builder
@@ -621,6 +635,9 @@ export struct SettingsPage {
             Text('Run "pc-agent bridge" on the PC. Used only when accessibility is unavailable.')
               .fontSize(10)
               .fontColor($r('app.color.text_hint'))
+            Divider().color($r('app.color.divider'))
+            this.Row('App access', 'Which bundles may be launched', 'appaccess')
+            this.Row('Permissions', 'What HOPA can and cannot do', 'permissions')
           }
           .cardStyle()
           .alignItems(HorizontalAlign.Start)
@@ -639,28 +656,30 @@ export struct SettingsPage {
           .cardStyle()
           .alignItems(HorizontalAlign.Start)
 
-          this.Label('ADVANCED')
-          Column({ space: 6 }) {
-            this.Row('App access', 'Which bundles may be launched', 'appaccess')
-            this.Row('Computer access', 'PC bridge and MCP commands', 'computer')
-            this.Row('Permissions', 'What HOPA can and cannot do', 'permissions')
+          this.Label('DATA')
+          Column({ space: 0 }) {
+            this.Row('Files', 'Exported data and screenshots', 'files')
+          }
+          .cardStyle()
+
+          this.Label('SUPPORT')
+          Column({ space: 0 }) {
             this.Row('Self-check', 'Verify the setup', 'selfcheck')
             this.Row('Logs', 'Recent failures on this phone', 'logs')
-            Text('Send a test notification')
-              .fontSize(12)
-              .fontColor($r('app.color.primary'))
-              .padding({ top: 4, bottom: 4 })
-              .onClick(async () => {
-                const ok: boolean = await RunNotification.test(getContext(this) as common.UIAbilityContext);
-                this.getUIContext().getPromptAction().showToast({
-                  message: ok ? 'Notification sent' : 'Notifications are off for HOPA'
-                });
-              })
+            this.ActionRow('Test notification', 'Check banners and the run card', async () => {
+              const ok: boolean = await RunNotification.test(getContext(this) as common.UIAbilityContext);
+              this.getUIContext().getPromptAction().showToast({
+                message: ok ? 'Notification sent' : 'Notifications are off for HOPA'
+              });
+            })
+            this.Row('Computer access', 'Bridge and MCP commands', 'computer')
             this.Row('Live screen', 'Debug mirror of this phone', 'screens')
+            this.Row('Welcome', 'The first-run tour', 'welcome')
             this.Row('Developer', 'Build and runtime details', 'developer')
-            this.Row('About', 'Version, credits and licenses', 'about')
+            this.Row('About', 'Version and credits', 'about')
+            this.Row('License', 'Apache-2.0 and notices', 'license')
           }
-          .width('100%')
+          .cardStyle()
 
           Text(`Installed accessibility services: ${this.a11yInstalled}`)
             .fontSize(10)
