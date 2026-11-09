@@ -1,6 +1,7 @@
 import { AbilityConstant, UIAbility, Want } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { window } from '@kit.ArkUI';
+import { KeyboardAvoidMode } from '@ohos.arkui.UIContext';
 
 const DOMAIN: number = 0x0000;
 const TAG: string = 'HOPA';
@@ -17,6 +18,16 @@ export default class EntryAbility extends UIAbility {
         return;
       }
       hilog.info(DOMAIN, TAG, 'Content loaded');
+      // The page is alive only from here on, so this is the reliable place to
+      // switch the window to RESIZE. Left at the default OFFSET, the whole page
+      // (header included) is pushed up when the keyboard opens.
+      try {
+        const mainWindow: window.Window = windowStage.getMainWindowSync();
+        mainWindow.getUIContext().setKeyboardAvoidMode(KeyboardAvoidMode.RESIZE);
+        hilog.info(DOMAIN, TAG, 'keyboard avoid mode: RESIZE');
+      } catch (error) {
+        hilog.warn(DOMAIN, TAG, `keyboard avoid mode failed: ${error}`);
+      }
     });
   }
 
