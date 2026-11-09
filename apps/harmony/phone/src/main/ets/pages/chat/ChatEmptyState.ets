@@ -4,6 +4,7 @@ import { AgentService } from '../../services/AgentService';
 import { SettingsStore } from '../../services/SettingsStore';
 import { VisualStyle } from '../../services/VisualStyle';
 import { ModeProfile } from '../../services/ModeProfile';
+import { Character } from '../../services/Character';
 import { APP_CATALOG } from '../../services/AppCatalog';
 import { Context } from '@kit.AbilityKit';
 
@@ -34,13 +35,7 @@ export struct ChatEmptyState {
   }
 
   private tagline(): string {
-    if (this.profile().language === 'plain') {
-      return 'Type or say what you need. I will do it on this phone.';
-    }
-    if (this.profile().language === 'playful') {
-      return 'What are we doing today?';
-    }
-    return 'Your phone agent. Ask for something on this phone.';
+    return Character.tagline(this.profile().name);
   }
 
   private accent(): ResourceColor {
@@ -67,7 +62,7 @@ export struct ChatEmptyState {
 
   aboutToAppear(): void {
     const hour: number = new Date().getHours();
-    this.greeting = hour < 5 ? 'Still up?' : (hour < 12 ? 'Good morning' : (hour < 18 ? 'Good afternoon' : 'Good evening'));
+    this.greeting = Character.greeting(hour);
     const context = getContext(this) as Context;
     SettingsStore.load(context).then((stored) => {
       if (stored.reduceMotion || !this.style().motion) {

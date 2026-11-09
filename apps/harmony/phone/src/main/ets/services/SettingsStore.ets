@@ -14,6 +14,10 @@ export class StoredSettings {
   showSteps: boolean = true;
   reduceMotion: boolean = false;
   speakReplies: boolean = false;
+  tone: string = 'warm';
+  chattiness: string = 'balanced';
+  quips: boolean = true;
+  tactile: boolean = true;
   bridgeUrl: string = '';
   bridgeToken: string = '';
   lastTokens: number = 0;
@@ -77,6 +81,22 @@ export class SettingsStore {
     if (typeof speakReplies === 'boolean') {
       settings.speakReplies = speakReplies;
     }
+    const tone = await store.get('tone', settings.tone);
+    if (typeof tone === 'string') {
+      settings.tone = tone;
+    }
+    const chattiness = await store.get('chattiness', settings.chattiness);
+    if (typeof chattiness === 'string') {
+      settings.chattiness = chattiness;
+    }
+    const quips = await store.get('quips', settings.quips);
+    if (typeof quips === 'boolean') {
+      settings.quips = quips;
+    }
+    const tactile = await store.get('tactile', settings.tactile);
+    if (typeof tactile === 'boolean') {
+      settings.tactile = tactile;
+    }
     const bridgeUrl = await store.get('bridge_url', settings.bridgeUrl);
     if (typeof bridgeUrl === 'string') {
       settings.bridgeUrl = bridgeUrl;
@@ -109,6 +129,10 @@ export class SettingsStore {
     await store.put('show_steps', settings.showSteps);
     await store.put('reduce_motion', settings.reduceMotion);
     await store.put('speak_replies', settings.speakReplies);
+    await store.put('tone', settings.tone);
+    await store.put('chattiness', settings.chattiness);
+    await store.put('quips', settings.quips);
+    await store.put('tactile', settings.tactile);
     await store.put('bridge_url', settings.bridgeUrl);
     await store.put('bridge_token', settings.bridgeToken);
     await store.put('last_tokens', settings.lastTokens);

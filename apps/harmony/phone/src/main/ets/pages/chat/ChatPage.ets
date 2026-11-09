@@ -17,6 +17,7 @@ import { Haptics } from '../../services/Haptics';
 import { VoiceController } from '../../services/VoiceController';
 import { AppFocus } from '../../services/AppFocus';
 import { ModeProfile } from '../../services/ModeProfile';
+import { Character } from '../../services/Character';
 import { VisualStyle } from '../../services/VisualStyle';
 import { fileIo as fs, fileUri } from '@kit.CoreFileKit';
 import { image } from '@kit.ImageKit';
@@ -38,6 +39,7 @@ export struct ChatPage {
   private undoSteps: string[] = [];
   @State runningGoal: string = '';
   @State failed: boolean = false;
+  @State characterLine: string = '';
   @State liveSteps: string[] = [];
   @StorageLink('hopa.showSteps') showSteps: boolean = true;
   @State lastPageUrl: string = '';
@@ -403,6 +405,7 @@ export struct ChatPage {
       // Notifications are optional.
     });
     this.reaction = '';
+    this.characterLine = '';
     this.liveSteps = [];
     this.runningGoal = text;
     Haptics.tap();
@@ -449,9 +452,11 @@ export struct ChatPage {
     if (shotPath.length > 0) {
       meta.push(`shot=${shotPath}`);
     }
+    const shown: string = this.failed ? Character.failure(reply) : reply;
+    this.characterLine = Character.quip(!this.failed, steps.length);
     const decorated: string = meta.length > 0
-      ? `\u27e6meta\u27e7${meta.join(';')}\n${reply}`
-      : reply;
+      ? `\u27e6meta\u27e7${meta.join(';')}\n${shown}`
+      : shown;
     this.messages = this.messages.concat([`HOPA: ${decorated}`]);
     this.renderedCount = this.messages.length;
     this.scrollToEnd();
@@ -628,7 +633,9 @@ export struct ChatPage {
   private react(ok: boolean): void {
     this.reaction = ok ? 'happy' : 'error';
     if (ok) {
-      Haptics.tap();
+      Haptics.success();
+    } else {
+      Haptics.error();
     }
     if (this.reactionTimer >= 0) {
       clearTimeout(this.reactionTimer);
@@ -783,6 +790,14 @@ export struct ChatPage {
                           .fontColor($r('app.color.text_primary'))
                           .padding({ left: 2, right: 2, top: 2, bottom: 2 })
                           .copyOption(CopyOptions.LocalDevice)
+                      }
+                      if (index === this.lastAnswerIndex() && !this.busy &&
+                        this.characterLine.length > 0) {
+                        Text(this.characterLine)
+                          .fontSize(10.5)
+                          .fontColor($r('app.color.text_hint'))
+                          .width('100%')
+                          .padding({ left: 2, top: 2 })
                       }
                       if (!this.busy && this.shotOf(item).length > 0) {
                         Row({ space: 10 }) {

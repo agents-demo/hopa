@@ -16,6 +16,7 @@ import { DeveloperPage } from './DeveloperPage';
 import { ModelSettingsCard } from './ModelSettingsCard';
 import { BridgeMonitor } from '../../services/BridgeMonitor';
 import { TrustedApps } from '../../services/TrustedApps';
+import { CharacterPage } from './CharacterPage';
 
 /** Model, bridge, safety switches and the advanced sub-pages. */
 @Component
@@ -202,6 +203,9 @@ export struct SettingsPage {
     if (this.subPage === 'permissions') {
       return 'Permissions';
     }
+    if (this.subPage === 'character') {
+      return 'Character';
+    }
     return 'About';
   }
 
@@ -374,6 +378,8 @@ export struct SettingsPage {
           LogsView()
         } else if (this.subPage === 'permissions') {
           this.Permissions()
+        } else if (this.subPage === 'character') {
+          CharacterPage()
         } else if (this.subPage === 'screens') {
           ScreensPage()
         } else {
@@ -442,6 +448,12 @@ export struct SettingsPage {
           }
           .cardStyle()
           .alignItems(HorizontalAlign.Start)
+
+          this.Label('CHARACTER')
+          Column({ space: 0 }) {
+            this.Row('Voice and tone', 'Persona, warmth, chattiness', 'character')
+          }
+          .cardStyle()
 
           this.Label('AGENT')
           Column({ space: 0 }) {

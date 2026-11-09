@@ -8,6 +8,7 @@ import { AgentService } from '../services/AgentService';
 import { SettingsStore, StoredSettings } from '../services/SettingsStore';
 import { IntentInbox } from '../services/IntentInbox';
 import { TrustedApps } from '../services/TrustedApps';
+import { Character } from '../services/Character';
 
 const DOMAIN: number = 0x0000;
 const TAG: string = 'HOPA';
@@ -77,6 +78,11 @@ export default class EntryAbility extends UIAbility {
     if (bridgeUrl.length > 0 && bridgeToken.length > 0) {
       AgentService.get().configureBridge(bridgeUrl, bridgeToken);
     }
+    SettingsStore.load(this.context).then((stored: StoredSettings) => {
+      Character.configure(stored);
+    }).catch(() => {
+      // The default voice is fine.
+    });
     TrustedApps.load(this.context).then((apps: string[]) => {
       AgentService.get().policy.setTrustedApps(apps);
     }).catch(() => {
