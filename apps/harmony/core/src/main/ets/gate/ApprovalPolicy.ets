@@ -43,27 +43,31 @@ export class ApprovalPolicy {
   ]);
 
   private paymentWords: string[] = [
-    'pay',
-    'payment',
     'checkout',
-    'confirm order',
-    'place order',
-    'buy now',
+    'order',
+    'pay',
     'purchase',
-    'subscribe',
-    'amount',
-    'total',
-    'merchant',
-    'currency',
-    'card number',
     '支付',
     '付款',
     '结算',
-    '确认订单',
+    '订单',
+    '商户'
+  ];
+
+  private paymentActions: string[] = [
+    'pay now',
+    'confirm payment',
+    'place order',
+    'buy now',
+    'subscribe',
+    'checkout',
+    '立即支付',
+    '确认支付',
     '立即购买',
-    '金额',
-    '商户',
-    '银行卡'
+    '提交订单',
+    '去支付',
+    '付款',
+    '结算'
   ];
 
   private interactiveKinds: Set<string> = new Set<string>([
@@ -111,11 +115,44 @@ export class ApprovalPolicy {
     'sandbox.run'
   ]);
 
+  /**
+   * A payment screen must show a real checkout signal: an amount together
+   * with checkout/order language, or an exact pay-action label. Prose such as
+   * "I always ask before any payment" is not a payment.
+   */
   isPaymentScreen(screen?: Screen): boolean {
     if (screen === undefined) {
       return false;
     }
-    return screen.containsAny(this.paymentWords);
+    const text: string = screen.text;
+    if (this.hasPaymentAction(text)) {
+      return true;
+    }
+    return this.hasAmount(text) && screen.containsAny(this.paymentWords);
+  }
+
+  private hasPaymentAction(text: string): boolean {
+    for (const line of text.split('\n')) {
+      const trimmed: string = line.trim().toLowerCase();
+      if (trimmed.length === 0 || trimmed.length > 24) {
+        continue;
+      }
+      for (const label of this.paymentActions) {
+        if (trimmed === label) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  private hasAmount(text: string): boolean {
+    const currency: RegExp = /(?:[¥$€£]|CNY|USD|EUR|GBP)\s?\d[\d,]*(?:\.\d{1,2})?/i;
+    if (currency.test(text)) {
+      return true;
+    }
+    const total: RegExp = /(?:total|amount|order total|合计|金额|应付|实付|总计)[^\d]{0,8}\d/i;
+    return total.test(text);
   }
 
   classify(action: Action, screen?: Screen): RiskLevel {

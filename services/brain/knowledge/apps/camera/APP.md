@@ -1,11 +1,14 @@
 ---
+
 name: camera
 display: Camera
 bundle: com.huawei.hmos.camera
 aliases: [相机, 拍照]
 pace: careful
-validated: pending
+validated: verified
 platform: harmonyos
+ability: com.huawei.hmos.camera.MainAbility
+bundle_verified: Mate 80, 2026-11-08
 ---
 # Camera
 

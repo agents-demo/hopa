@@ -42,11 +42,13 @@ export class AgentRuntime {
   private model: ModelClient | undefined = undefined;
   private loop: AgentLoop | undefined = undefined;
   private modelLabel: string = '';
+  private activeKey: string = '';
   private lastTokens: number = 0;
   private lastDurationMs: number = 0;
   private lastGoal: string = '';
   private lastTranscript: string = '';
   private lastSuccess: boolean = false;
+  private lastActionCount: number = 0;
   private matchedSkillId: string = '';
   private activeRuns: number = 0;
   private appNames: Map<string, string> = new Map<string, string>();
@@ -80,6 +82,7 @@ export class AgentRuntime {
     maxSteps: number = 6
   ): void {
     this.model = ModelFactory.create(provider, endpoint, apiKey, modelName);
+    this.activeKey = apiKey;
     this.loop = new AgentLoop(
       this.executor,
       new LoggingModelClient(this.model),
@@ -92,6 +95,36 @@ export class AgentRuntime {
 
   getModelLabel(): string {
     return this.modelLabel;
+  }
+
+  hasModelKey(): boolean {
+    return this.activeKey.length > 0;
+  }
+
+  /** True when the last run completed without a failed or denied action. */
+  lastRunSucceeded(): boolean {
+    return this.lastSuccess;
+  }
+
+  /** True when the last run actually changed something on the phone. */
+  lastRunHadActions(): boolean {
+    return this.lastActionCount > 0;
+  }
+
+  /** Changes provider/endpoint/model but keeps the key already loaded. */
+  reconfigureModel(
+    provider: string,
+    endpoint: string,
+    modelName: string,
+    maxSteps: number = 8
+  ): void {
+    this.configureModel(provider, endpoint, this.activeKey, modelName, maxSteps);
+  }
+
+  /** Restores the last-run numbers after a restart, so Usage is not all zeroes. */
+  restoreLastUsage(tokens: number, durationMs: number): void {
+    this.lastTokens = tokens;
+    this.lastDurationMs = durationMs;
   }
 
   hasModel(): boolean {
@@ -172,6 +205,7 @@ export class AgentRuntime {
     const startedAt: number = Date.now();
     this.lastGoal = goal;
     this.lastSuccess = false;
+    this.lastActionCount = 0;
     this.lastTranscript = '';
     this.pageLinks.clear();
     const matchedSkill: Skill | undefined = this.skills.match(goal);
@@ -210,6 +244,7 @@ export class AgentRuntime {
     }
     this.lastTokens = this.loop.getTokens();
     this.lastDurationMs = Date.now() - startedAt;
+    this.lastActionCount = outcomes.length;
 
     if (this.loop.wasCancelled() && outcomes.length === 0) {
       return 'Stopped before any action.';

@@ -62,6 +62,24 @@ Use the release HAP as-is: the profile UDID is the emulator's.
 hdc install HOPA-0.1.0-debug.hap
 ```
 
+## The accessibility permission on a retail phone
+
+Huawei's automatic debug profile does **not** grant
+`ohos.permission.ACCESSIBILITY_EXTENSION_ABILITY`. A build that requests it
+fails at install with:
+
+```text
+install failed due to grant request permissions failed.
+PermissionName: ohos.permission.ACCESSIBILITY_EXTENSION_ABILITY
+```
+
+Removing that permission lets the app install. Chat, the browser, memory, plans
+and runs work; HOPA cannot drive other apps until Huawei grants the ACL for a
+retail build. The full build stays in the repository for the emulator and for
+devices whose profile includes the ACL.
+
+To request it, follow [the ACL request walkthrough](acl-request.md).
+
 ## Verify the download
 
 ```text

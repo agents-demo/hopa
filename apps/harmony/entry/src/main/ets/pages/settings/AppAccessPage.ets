@@ -15,7 +15,7 @@ export struct AppAccessPage {
 
   build() {
     Column({ space: 10 }) {
-      Text('Verified bundles open from the Apps tab.')
+      Text('Verified bundles open from the Launchpad.')
         .fontSize(14)
         .fontWeight(FontWeight.Bold)
       Text('A confirmed bundle without a device check may still be tried by the agent. Unconfirmed catalogue entries never launch a guessed bundle. This is the app access policy; there is no per-app toggle.')

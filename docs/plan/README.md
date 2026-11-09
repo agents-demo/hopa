@@ -113,7 +113,7 @@ it, not at the end.
 | `bench` | 20 task files; 5/7 tasks pass on the emulator (strict: a failed step cannot pass) | `harness/bench/tasks`, `docs/product/bench-results-v0.md` |
 | Brain | Kotlin router + HTTP service + knowledge + prompts + skills + sites (98 assertions + schema contract) | `services/brain/src`, `docs/reference/brain.md` |
 | HAP | builds with DevEco 6.1.1 / API 24; signed with the SDK local debug kit; installed with the ACL permission on the Pura 90 emulator | `tools/scripts/sign-app.ps1` |
-| Knowledge | 27 apps (12 system + 15 catalogued), 21 sites, 6 skills | `services/brain/knowledge`, `docs/history/knowledge-triage.md` |
+| Knowledge | 35 apps (12 system + 23 catalogued), 21 sites, 6 skills | `services/brain/knowledge`, `docs/history/knowledge-triage.md` |
 | CI | Python tests + ruff; HAP build and core Local Tests skip with a warning when the mirrored toolchain secret is absent | `.github/workflows/ci.yml` |
 | Tests baseline | 277 Python tests, 98 Kotlin assertions, ArkTS Local Tests pass; 20 bench tasks validate; device bench 5/7 | local run 2026-11-06 |
 

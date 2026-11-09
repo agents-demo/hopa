@@ -1,11 +1,14 @@
 ---
+
 name: clock
 display: Clock
 bundle: com.huawei.hmos.clock
 aliases: [闹钟, 时钟, alarm]
 pace: careful
-validated: pending
+validated: verified
 platform: harmonyos
+ability: com.huawei.hmos.clock.phone
+bundle_verified: Mate 80, 2026-11-08
 ---
 # Clock
 

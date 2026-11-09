@@ -1,5 +1,5 @@
 import { AgentService } from '../../services/AgentService';
-import { APP_CATALOG } from '../../services/AppCatalog';
+import { HopaMark } from '../chat/HopaMark';
 
 /** Capabilities: what HOPA can use on this phone and what powers it. */
 @Component
@@ -35,6 +35,15 @@ export struct CapabilitiesPage {
     return AgentService.get().memory.all().length;
   }
 
+  private actions(): number {
+    return AgentService.get().runs.all().length;
+  }
+
+  private actionCountLabel(): string {
+    const count: number = this.actions();
+    return `${count} ${count === 1 ? 'action' : 'actions'}`;
+  }
+
   @Builder
   Tile(title: string, subtitle: string, key: string) {
     Column({ space: 3 }) {
@@ -51,6 +60,7 @@ export struct CapabilitiesPage {
     .height(78)
     .padding(12)
     .backgroundColor($r('app.color.surface'))
+    .border({ width: 1, color: $r('app.color.divider') })
     .borderRadius(12)
     .alignItems(HorizontalAlign.Start)
     .justifyContent(FlexAlign.Center)
@@ -73,28 +83,37 @@ export struct CapabilitiesPage {
     Scroll() {
       Column({ space: 8 }) {
         Column({ space: 6 }) {
-          Text(this.model())
-            .fontSize(16)
-            .fontWeight(FontWeight.Medium)
-            .fontColor($r('app.color.text_primary'))
-            .width('100%')
-          Row({ space: 6 }) {
-            Column()
-              .width(8)
-              .height(8)
-              .borderRadius(4)
-              .backgroundColor(this.ready()
-                ? $r('app.color.success')
-                : $r('app.color.warning'))
-            Text(`Phone control · ${this.control()}`)
-              .fontSize(11)
-              .fontColor($r('app.color.text_secondary'))
+          Row({ space: 12 }) {
+            HopaMark({ state: 'idle', markSize: 46 })
+            Column({ space: 6 }) {
+              Text(this.model())
+                .fontSize(16)
+                .fontWeight(FontWeight.Medium)
+                .fontColor($r('app.color.text_primary'))
+                .width('100%')
+              Row({ space: 6 }) {
+                Column()
+                  .width(8)
+                  .height(8)
+                  .borderRadius(4)
+                  .backgroundColor(this.ready()
+                    ? $r('app.color.success')
+                    : $r('app.color.warning'))
+                Text(`Phone control · ${this.control()}`)
+                  .fontSize(11)
+                  .fontColor($r('app.color.text_secondary'))
+              }
+              .width('100%')
+            }
+            .layoutWeight(1)
+            .alignItems(HorizontalAlign.Start)
           }
           .width('100%')
         }
         .width('100%')
         .padding(14)
         .backgroundColor($r('app.color.surface'))
+        .border({ width: 1, color: $r('app.color.divider') })
         .borderRadius(14)
         .alignItems(HorizontalAlign.Start)
         .onClick(() => {
@@ -102,23 +121,18 @@ export struct CapabilitiesPage {
         })
         this.Section('WHAT HOPA CAN USE')
         Row({ space: 8 }) {
-          this.Tile('Apps', `${APP_CATALOG.length} apps to open`, 'apps')
+          this.Tile('Launchpad', 'Apps and sites to open', 'apps')
           this.Tile('Browser', 'Read, click and type', 'browser')
         }
         .width('100%')
         Row({ space: 8 }) {
           this.Tile('Memory', `${this.memoryCount()} facts`, 'memory')
-          this.Tile('Screens', 'Live phone screen', 'screens')
+          this.Tile('Runs', this.actionCountLabel(), 'runs')
         }
         .width('100%')
-        this.Section('POWER')
+        this.Section('MORE')
         Row({ space: 8 }) {
-          this.Tile('Models', 'Provider, endpoint and key', 'models')
-          this.Tile('Usage', 'Tokens and time spent', 'usage')
-        }
-        .width('100%')
-        Row({ space: 8 }) {
-          this.Tile('Phone access', 'Accessibility and bridge', 'phone')
+          this.Tile('Usage', `${this.actionCountLabel()} recorded`, 'usage')
           this.Tile('MCP servers', 'Phone and PC tools', 'mcpservers')
         }
         .width('100%')
@@ -140,7 +154,7 @@ export struct CapabilitiesPage {
         .width('100%')
       }
       .width('100%')
-      .padding(16)
+      .padding(20)
       .alignItems(HorizontalAlign.Start)
     }
     .width('100%')

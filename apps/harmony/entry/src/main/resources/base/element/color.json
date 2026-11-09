@@ -2,11 +2,11 @@
   "color": [
     {
       "name": "start_window_background",
-      "value": "#FFFFFF"
+      "value": "#F7F4EE"
     },
     {
       "name": "bg",
-      "value": "#F7F8FA"
+      "value": "#F7F4EE"
     },
     {
       "name": "surface",
@@ -14,23 +14,23 @@
     },
     {
       "name": "surface_alt",
-      "value": "#F7F8FA"
+      "value": "#F3EFE7"
     },
     {
       "name": "surface_muted",
-      "value": "#F2F3F5"
+      "value": "#F1ECE3"
     },
     {
       "name": "text_primary",
-      "value": "#0A1B3A"
+      "value": "#1C1B18"
     },
     {
       "name": "text_secondary",
-      "value": "#666666"
+      "value": "#6B665C"
     },
     {
       "name": "text_hint",
-      "value": "#999999"
+      "value": "#9A9488"
     },
     {
       "name": "primary",
@@ -38,19 +38,23 @@
     },
     {
       "name": "primary_soft",
-      "value": "#EAF1FF"
+      "value": "#E8F0FF"
     },
     {
       "name": "on_primary",
       "value": "#FFFFFF"
     },
     {
+      "name": "accent",
+      "value": "#E8703A"
+    },
+    {
       "name": "danger",
-      "value": "#B42318"
+      "value": "#C0392B"
     },
     {
       "name": "success",
-      "value": "#0A7F3F"
+      "value": "#2E7D5B"
     },
     {
       "name": "warning",
@@ -58,7 +62,7 @@
     },
     {
       "name": "divider",
-      "value": "#E5E6E8"
+      "value": "#E9E4DA"
     },
     {
       "name": "scrim",

@@ -60,6 +60,19 @@ export default function approvalPolicyTest(): void {
       expect(policy.requiresApproval(action, screen)).assertFalse();
     });
 
+    it('payment_prose_is_not_a_payment', 0, () => {
+      const policy = new ApprovalPolicy();
+      const screen = new Screen(
+        'I always ask before any payment.\n' +
+        'Payment is always confirmed. This cannot be changed.\n' +
+        'Never skips a payment.'
+      );
+      const action = new Action('ui.tap');
+      expect(policy.isPaymentScreen(screen)).assertFalse();
+      expect(policy.isPayment(action, screen)).assertFalse();
+      expect(policy.requiresApproval(action, screen)).assertFalse();
+    });
+
     it('model_flag_cannot_clear_screen_payment', 0, () => {
       const policy = new ApprovalPolicy();
       const screen = new Screen('Checkout Total ¥9.99');

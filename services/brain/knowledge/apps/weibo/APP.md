@@ -1,16 +1,20 @@
 ---
 name: weibo
 display: Weibo
-bundle: UNCONFIRMED
+bundle: com.sina.weibo.stage
+ability: EntryAbility
+bundle_verified: Mate 80, 2026-11-08
 aliases: [Weibo, 微博, sina weibo]
 pace: careful
-validated: pending
+validated: verified
 platform: harmonyos
 ---
 # Weibo
 
-Android package: `com.sina.weibo`. No HarmonyOS bundle has been confirmed.
+HarmonyOS bundle: `com.sina.weibo.stage` (verified on a Mate 80).
 
 - Feed, search, profile, comments, direct messages.
+- To post: tap Skip if an ad shows, then tap Home. The orange + exists only on the Home feed, top-right near 1210,200.
+- The + has no label. Tap it, choose 写微博 (not Album), then type and tap Send. Send greys out until there is text.
 - Posting, reposting, commenting and following are public: ask first.
 - Web fallback: https://weibo.com.

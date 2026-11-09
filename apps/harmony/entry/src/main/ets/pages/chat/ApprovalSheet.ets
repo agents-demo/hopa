@@ -4,6 +4,8 @@
  * It lives in the shell, not in Chat, so a run that moves to the Browser can
  * still ask before a sensitive action.
  */
+import { HopaMark } from './HopaMark';
+
 @Component
 export struct ApprovalSheet {
   @Prop title: string = '';
@@ -20,6 +22,7 @@ export struct ApprovalSheet {
         .backgroundColor($r('app.color.scrim'))
       Column({ space: 12 }) {
         Row({ space: 8 }) {
+          HopaMark({ state: 'waiting', markSize: 28 })
           Text('HOPA')
             .fontSize(12)
             .fontWeight(FontWeight.Medium)
@@ -79,5 +82,6 @@ export struct ApprovalSheet {
     }
     .width('100%')
     .height('100%')
+    .transition(TransitionEffect.OPACITY.combine(TransitionEffect.translate({ y: 420 })))
   }
 }

@@ -37,7 +37,7 @@ def test_front_matter_and_catalogue() -> None:
     fields = module.parse_front_matter(sample)
     assert fields["bundle"] == "com.huawei.hmos.settings"
     apps = module.load_apps()
-    assert len(apps) == 27
+    assert len(apps) == 35
     settings = next(app for app in apps if app["name"] == "settings")
     assert settings["bundle"] == "com.huawei.hmos.settings"
     assert settings["verified"]

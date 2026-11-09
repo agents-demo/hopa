@@ -9,19 +9,30 @@ import { ActionOutcome } from '../Types';
 export class RunNarrator {
   static summarize(outcomes: ActionOutcome[], names: Map<string, string>): string {
     const done: string[] = [];
+    let taps: number = 0;
+    const flushTaps = (): void => {
+      if (taps > 0) {
+        done.push(taps === 1 ? 'Tapped a control.' : `Tapped ${taps} controls.`);
+        taps = 0;
+      }
+    };
     for (const outcome of outcomes) {
       if (!outcome.executed || !outcome.observation.success) {
         return RunNarrator.failure(outcome, names);
       }
+      const kind: string = outcome.action.kind;
+      if (kind === 'ui.tap' || kind === 'ui.doubleTap' || kind === 'ui.longPress') {
+        taps += 1;
+        continue;
+      }
+      flushTaps();
       done.push(RunNarrator.line(outcome, names));
     }
+    flushTaps();
     if (done.length === 0) {
       return 'Done.';
     }
-    if (done.length === 1) {
-      return done[0];
-    }
-    return `Done — ${done.join(' ')}`;
+    return done.join(' ');
   }
 
   private static line(outcome: ActionOutcome, names: Map<string, string>): string {
@@ -29,11 +40,13 @@ export class RunNarrator {
     if (kind === 'ui.launch') {
       return `Opened ${RunNarrator.displayName(outcome.action.app, names)}.`;
     }
-    if (kind === 'ui.tap' || kind === 'ui.doubleTap' || kind === 'ui.longPress') {
-      return 'Tapped the control you asked for.';
-    }
     if (kind === 'ui.type') {
-      return 'Typed the text.';
+      const text: string = outcome.action.text.trim();
+      if (text.length === 0) {
+        return 'Typed the text.';
+      }
+      const shown: string = text.length > 40 ? `${text.substring(0, 40)}...` : text;
+      return `Typed “${shown}”.`;
     }
     if (kind === 'ui.swipe' || kind === 'ui.scroll') {
       return 'Scrolled the screen.';

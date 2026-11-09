@@ -59,8 +59,8 @@ export struct ScreensPage {
   build() {
     Column({ space: 10 }) {
       Text(AgentService.get().isBridgeConfigured()
-        ? 'Live view of the phone through pc-agent bridge.'
-        : 'Connect the PC bridge in Settings to see the phone screen here.')
+        ? 'A debug mirror of this phone through the PC bridge. Useful to check what HOPA captured, not needed for normal use.'
+        : 'Connect the PC bridge in Settings if you want this diagnostic mirror. Normal tasks do not need it.')
         .fontSize(12)
         .fontColor($r('app.color.text_secondary'))
       if (this.screenImage.length > 0) {
@@ -101,7 +101,7 @@ export struct ScreensPage {
     }
     .width('100%')
     .height('100%')
-    .padding(16)
+    .padding(20)
     .alignItems(HorizontalAlign.Start)
   }
 }

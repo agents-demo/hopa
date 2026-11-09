@@ -8,6 +8,9 @@ import { pageTitle } from '../navigation/PageTitles';
 import { TabIcon } from '../navigation/TabIcon';
 import { ApprovalSheet } from './chat/ApprovalSheet';
 import { PageRouter } from './PageRouter';
+import { Haptics } from '../services/Haptics';
+import { KeyboardAvoidMode as HostKeyboardAvoidMode } from '@ohos.arkui.UIContext';
+import { window } from '@kit.ArkUI';
 
 /**
  * The app shell: one page at a time, a bottom bar for the four primary areas,
@@ -17,9 +20,10 @@ import { PageRouter } from './PageRouter';
 @Component
 struct Index {
   @State activePage: string = 'chat';
+  @State keyboardVisible: boolean = false;
   @State chatsOpen: boolean = false;
   @State chatSessions: ChatSession[] = [];
-  @State chatTitle: string = 'Chat';
+  @State chatTitle: string = '';
   @State approvalOpen: boolean = false;
   @State approvalTitle: string = '';
   @State approvalMessage: string = '';
@@ -30,6 +34,22 @@ struct Index {
   private approvalResolve: ((allow: boolean) => void) | undefined = undefined;
 
   aboutToAppear(): void {
+    try {
+      this.getUIContext().setKeyboardAvoidMode(HostKeyboardAvoidMode.RESIZE);
+    } catch (error) {
+      // Older runtimes use the default avoidance mode.
+    }
+    try {
+      window.getLastWindow(getContext(this)).then((win: window.Window) => {
+        win.on('keyboardHeightChange', (height: number) => {
+          this.keyboardVisible = height > 0;
+        });
+      }).catch(() => {
+        // Keyboard state is cosmetic; the page still works.
+      });
+    } catch (error) {
+      // Best effort.
+    }
     const service = AgentService.get();
     service.setAbilityContext(getContext(this) as common.UIAbilityContext);
     service.setSiteOpener((url: string) => this.openSite(url));
@@ -66,7 +86,7 @@ struct Index {
 
   private syncTitle(): void {
     const session: ChatSession | undefined = AgentService.get().conversations.current();
-    let title: string = 'HOPA';
+    let title: string = '';
     if (session !== undefined &&
       session.entries.length > 0 &&
       session.title.length > 0 &&
@@ -106,14 +126,19 @@ struct Index {
     this.approvalTitle = content.title;
     this.approvalMessage = content.message;
     this.approvalPayment = content.payment;
-    this.approvalOpen = true;
+    Haptics.attention();
+    this.getUIContext().animateTo({ duration: 220, curve: Curve.EaseOut }, () => {
+      this.approvalOpen = true;
+    });
     return new Promise<boolean>((resolve: (allow: boolean) => void) => {
       this.approvalResolve = resolve;
     });
   }
 
   private answerApproval(allow: boolean): void {
-    this.approvalOpen = false;
+    this.getUIContext().animateTo({ duration: 180, curve: Curve.EaseIn }, () => {
+      this.approvalOpen = false;
+    });
     const resolve: ((allow: boolean) => void) | undefined = this.approvalResolve;
     this.approvalResolve = undefined;
     if (resolve !== undefined) {
@@ -194,6 +219,7 @@ struct Index {
           .height(28)
           .borderRadius(14)
           .backgroundColor(this.tabActive(key) ? $r('app.color.primary_soft') : Color.Transparent)
+          .animation({ duration: 160, curve: Curve.EaseOut })
         TabIcon({ kind: key, active: this.tabActive(key) })
       }
       .width(48)
@@ -252,13 +278,17 @@ struct Index {
         .onClick(() => {
           this.openChats();
         })
-        Text(this.chatTitle)
-          .fontSize(16)
-          .fontWeight(FontWeight.Medium)
-          .fontColor($r('app.color.text_primary'))
-          .maxLines(1)
-          .textOverflow({ overflow: TextOverflow.Ellipsis })
-          .layoutWeight(1)
+        if (this.chatTitle.length > 0) {
+          Text(this.chatTitle)
+            .fontSize(16)
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.text_primary'))
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+            .layoutWeight(1)
+        } else {
+          Row().layoutWeight(1)
+        }
         Stack({ alignContent: Alignment.Center }) {
           Row()
             .width(34)
@@ -283,15 +313,16 @@ struct Index {
           .fontColor($r('app.color.text_primary'))
           .layoutWeight(1)
         if (this.activePage === 'capabilities') {
-          Stack({ alignContent: Alignment.Center }) {
-            TabIcon({ kind: 'settings', active: false })
-          }
-          .width(44)
-          .height(44)
-          .accessibilityText('Settings')
-          .onClick(() => {
-            this.go('settings');
-          })
+          Text('Settings')
+            .fontSize(12)
+            .fontColor($r('app.color.primary'))
+            .padding({ left: 10, right: 10, top: 6, bottom: 6 })
+            .backgroundColor($r('app.color.primary_soft'))
+            .borderRadius(8)
+            .accessibilityText('Settings')
+            .onClick(() => {
+              this.go('settings');
+            })
         }
       }
     }
@@ -319,23 +350,10 @@ struct Index {
     ChatsSheet({
       sessions: this.chatSessions,
       currentId: AgentService.get().conversations.currentId(),
-      onNewChat: () => {
-        AgentService.get().conversations.newChat();
-        this.refreshChats();
-        this.go('chat');
-      },
-      onSelect: (id: string) => {
-        AgentService.get().conversations.select(id);
-        this.refreshChats();
-        this.go('chat');
-      },
-      onDelete: (id: string) => {
-        AgentService.get().conversations.delete(id);
-        this.refreshChats();
-      },
-      onClose: () => {
-        this.chatsOpen = false;
-      }
+      onNewChat: () => { AgentService.get().conversations.newChat(); this.refreshChats(); this.go('chat'); },
+      onSelect: (id: string) => { AgentService.get().conversations.select(id); this.refreshChats(); this.go('chat'); },
+      onDelete: (id: string) => { AgentService.get().conversations.delete(id); this.refreshChats(); },
+      onClose: () => { this.chatsOpen = false; }
     })
   }
 
@@ -362,7 +380,9 @@ struct Index {
         }
         .layoutWeight(1)
         .width('100%')
-        this.BottomBar()
+        if (this.activePage !== 'browser' && !this.keyboardVisible) {
+          this.BottomBar()
+        }
       }
       .width('100%')
       .height('100%')

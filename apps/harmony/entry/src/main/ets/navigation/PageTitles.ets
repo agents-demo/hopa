@@ -13,7 +13,7 @@ const TITLES: Map<string, string> = new Map<string, string>([
   ['files', 'Files'],
   ['license', 'License'],
   ['welcome', 'Welcome'],
-  ['apps', 'Apps'],
+  ['apps', 'Launchpad'],
   ['runs', 'Runs and batches'],
   ['models', 'Models'],
   ['usage', 'Usage'],

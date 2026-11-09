@@ -64,17 +64,30 @@ fun main(args: Array<String>) {
         Path.of("brain/knowledge/apps")
     }
     val loaded = KnowledgeLoader.load(directory)
-    check(loaded.size == 27, "27 app files (12 system + 15 catalogued)")
+    check(loaded.size == 35, "35 app files")
     check(loaded.all { it.platform == "harmonyos" }, "all harmonyos")
     check(loaded.all { it.pace.isNotEmpty() }, "all have a pace")
     check(loaded.any { it.entry.name == "clock" }, "clock present")
     check(loaded.any { it.entry.name == "browser" }, "browser present")
     check(loaded.any { it.entry.name == "wechat" }, "wechat present")
     check(
-        loaded.first { it.entry.name == "wechat" }.entry.packages.isEmpty(),
-        "wechat has no unverified bundle",
+        loaded.first { it.entry.name == "wechat" }.entry.packages.contains("com.tencent.wechat"),
+        "wechat uses the verified HarmonyOS bundle",
     )
-    check(loaded.count { it.entry.packages.isEmpty() } == 15, "15 unconfirmed bundles")
+    check(
+        loaded.first { it.entry.name == "bilibili" }.entry.packages.contains("yylx.danmaku.bili"),
+        "bilibili uses the verified HarmonyOS bundle",
+    )
+    check(
+        loaded.first { it.entry.name == "douyin" }.entry.packages.contains("com.ss.hm.ugc.aweme"),
+        "douyin uses the verified HarmonyOS bundle",
+    )
+    check(
+        loaded.first { it.entry.name == "weibo" }
+            .entry.packages.contains("com.sina.weibo.stage"),
+        "weibo uses the stage-model bundle",
+    )
+    check(loaded.count { it.entry.packages.isEmpty() } == 9, "9 unconfirmed bundles")
 
     println("KnowledgeLoaderTest: $passed assertions passed")
 }

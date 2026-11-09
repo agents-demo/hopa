@@ -27,8 +27,9 @@ export default function runNarratorTest(): void {
         catalogue()
       );
       expect(text.includes('Opened Settings')).assertTrue();
-      expect(text.includes('Tapped the control')).assertTrue();
+      expect(text.includes('Tapped a control')).assertTrue();
       expect(text.includes('ui.launch')).assertFalse();
+      expect(text.startsWith('Done')).assertFalse();
     });
 
     it('uses_the_display_name_when_the_launch_fails', 0, () => {
@@ -50,6 +51,28 @@ export default function runNarratorTest(): void {
         catalogue()
       );
       expect(text.startsWith('I stopped')).assertTrue();
+    });
+
+    it('groups_repeated_taps', 0, () => {
+      const outcomes: ActionOutcome[] = [];
+      for (let index = 0; index < 5; index++) {
+        const tap = new Action('ui.tap');
+        tap.target = `e${index}`;
+        outcomes.push(outcome(tap, Observation.ok('tapped')));
+      }
+      const text: string = RunNarrator.summarize(outcomes, catalogue());
+      expect(text.includes('Tapped 5 controls.')).assertTrue();
+      expect(text.includes('Done')).assertFalse();
+    });
+
+    it('shows_the_typed_text', 0, () => {
+      const type = new Action('ui.type');
+      type.text = 'Hello World';
+      const text: string = RunNarrator.summarize(
+        [outcome(type, Observation.ok('typed'))],
+        catalogue()
+      );
+      expect(text.includes('Hello World')).assertTrue();
     });
 
     it('falls_back_to_the_bundle', 0, () => {

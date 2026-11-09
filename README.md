@@ -1,6 +1,6 @@
 ﻿<div align="center">
 
-<img src="docs/media/banner.svg" alt="HOPA — Say it. HOPA does it." width="100%" />
+<img src="docs/media/banner-2026.svg" alt="HOPA - Say it. HOPA does it." width="100%" />
 
 <br/><br/>
 
@@ -14,58 +14,74 @@
 
 **You have better things to do than tap through menus.**
 
-HOPA is a phone assistant for HarmonyOS. You say what you want in your own
-words. It opens the app or the website, reads the screen, taps, types and
-scrolls — then tells you what happened.
+<sub>HOPA — the HarmonyOS On-device Phone Agent.</sub>
+
+HOPA is a phone agent for HarmonyOS. Say what you want in your own words. It
+opens the app or the website, reads the screen, taps, types and scrolls — then
+tells you what happened.
 
 Before money moves, it stops and asks. Every time.
 
 HOPA has three places: **Chat** to ask, **Activity** to see what it did, and
-**Capabilities** to see and set up what it can use.
+**Capabilities** to see what it can use.
 
-> **Today:** a working prototype. Chat, the browser and website tasks are real.
-> On this emulator, app control uses a small PC companion; a real phone with the
-> accessibility service does not need it.
+> **Today:** a working prototype on a Huawei Mate 80. Chat, the browser, app
+> control through the PC companion and the payment gate are real. Fully
+> on-device app control waits for Huawei's accessibility ACL.
 > [The honest details →](docs/history/status-2026-11-07.md)
 
-## See it work
-
-> **You:** “Answer in Chinese: summarize the 2 hottest Bilibili videos today,
-> with titles and view counts.”
->
-> **HOPA:** opens Bilibili, reads the page and answers in Chinese with the two
-> hottest videos. If it needs to post, send or pay, it asks first.
+## Meet HOPA
 
 <table>
 <tr>
-<td width="33%" align="center" valign="top">
+<td width="30%" align="center" valign="middle">
 
-<img src="docs/media/chat.jpeg" alt="Real chat: HOPA answers in Chinese about the hottest Bilibili videos" height="560" />
-
-<br/><sub><b>Real: the answer.</b> Asked for the hottest Bilibili videos, HOPA opened the page, read it, and answered in Chinese with titles and view counts.</sub>
+<img src="docs/media/mascot.svg" alt="HOPA, the little coral phone with feet" width="220" />
 
 </td>
-<td width="33%" align="center" valign="top">
+<td valign="middle">
 
-<img src="docs/media/capabilities.jpeg" alt="Real Capabilities screen: model, phone control, apps, browser, memory, screens" height="560" />
+**The little phone with feet.**
 
-<br/><sub><b>Real: what it can use.</b> The model, the working phone control path, and the apps, browser, memory and screen tools on one screen.</sub>
+**HOPA** stands for **HarmonyOS On-device Phone Agent**.
 
-</td>
-<td width="33%" align="center" valign="top">
+It blinks while it waits. It taps while it works. It hops when something
+actually gets done. HOPA is not a chatbot in a box; it is the part of the phone
+that does the tapping — and it stays out of the way when there is nothing to do.
 
-<img src="docs/media/activity.jpeg" alt="Real Activity screen: recent actions, runs and scheduled plans" height="560" />
-
-<br/><sub><b>Real: what it did.</b> Recent actions with their status, the full run history behind them, and scheduled plans.</sub>
+In Chinese, the idea is simple: **动口不动手** — speak, don’t tap.
 
 </td>
 </tr>
 </table>
 
-All three are real screenshots from the emulator.
+## A first look
 
-When HOPA reads a page, the chat keeps a link to that page; **Open** takes you
-back to it without retyping the address.
+<table>
+<tr>
+<td width="33%" align="center" valign="top">
+
+<img src="docs/media/home-2026.jpeg" alt="HOPA home: the smiling living-phone mascot and three example asks" height="560" />
+
+<br/><sub><b>Home.</b> One sentence, three gentle suggestions, and a mascot that smiles back.</sub>
+
+</td>
+<td width="33%" align="center" valign="top">
+
+<img src="docs/media/chat-bilibili-2026.jpeg" alt="HOPA chat: the most popular Bilibili videos with play counts" height="560" />
+
+<br/><sub><b>Bilibili.</b> HOPA reads the feed and answers with the most popular videos, play counts and comments.</sub>
+
+</td>
+<td width="33%" align="center" valign="top">
+
+<img src="docs/media/chat-weibo-2026.jpeg" alt="HOPA chat: a Weibo post confirmation before publishing" height="560" />
+
+<br/><sub><b>Weibo.</b> HOPA drafts the post and asks before publishing. Nothing public happens without your yes.</sub>
+
+</td>
+</tr>
+</table>
 
 ## What you can ask
 
@@ -73,100 +89,169 @@ back to it without retyping the address.
 |---|---|
 | “Send Alice ‘running 10 minutes late’ on WeChat.”<br/>“Check my messages on Feishu.”<br/>“Find a charger on Xianyu.” | “What are the top stories on Zhihu?”<br/>“What’s trending on Xiaohongshu?”<br/>“Summarize the top videos on Bilibili.” |
 
-<sub>Site examples run in the browser HOPA opens for you. App examples need
-that app installed; HOPA says when a bundle is missing instead of guessing.</sub>
+<sub>Site examples run in the browser HOPA opens for you. App examples need that
+app installed; HOPA says when a bundle is missing instead of guessing.</sub>
 
 It also remembers facts and skills you choose to keep.
 
-**When money is involved**
+## Money is different
 
 > “Order the cheapest one in my cart.”
->
-> HOPA shows the item, the total and the seller. You choose **Deny** or
-> **Allow**. Nothing is paid without you.
 
-## What it can reach
+HOPA shows the item, the total and the seller. You choose **Deny** or **Allow**.
+Nothing is paid without you, and a payment is never remembered as a yes.
+
+The approval is written in your language — “Confirm payment?” — never in raw
+action names.
+
+## Launchpad: apps and sites
 
 <table>
 <tr>
 <td width="50%" align="center" valign="top">
 
-<img src="docs/media/apps.jpeg" alt="HOPA app catalogue with verified HarmonyOS bundles" height="560" />
+<img src="docs/media/launchpad-top-2026.jpeg" alt="HOPA Launchpad showing Alipay, Baidu and Bilibili verified" height="560" />
 
-<br/><sub><b>Real: the app catalogue.</b> 27 apps and 21 sites. Green rows are bundles verified on a device; where a HarmonyOS bundle is missing, HOPA says so instead of guessing.</sub>
+<br/><sub><b>Launchpad.</b> 35 apps, 26 verified on the test phone. Alipay, Baidu and Bilibili are now openable.</sub>
 
 </td>
 <td width="50%" align="center" valign="top">
 
-<img src="docs/media/sites.jpeg" alt="HOPA site catalogue with Amazon, BOSS, Gmail and Uber" height="560" />
+<img src="docs/media/launchpad-sites-2026.jpeg" alt="HOPA Launchpad sites: 小红书, 微博, 抖音, 知乎 and 豆瓣" height="560" />
 
-<br/><sub><b>Real: the site catalogue.</b> Amazon, BOSS, Gmail, Uber and more open in the browser HOPA opens for you.</sub>
+<br/><sub><b>Chinese sites.</b> 小红书, 微博, 抖音, 知乎, 豆瓣 and more open in the browser HOPA controls.</sub>
+
+</td>
+</tr>
+<tr>
+<td width="50%" align="center" valign="top">
+
+<img src="docs/media/launchpad-douyin-2026.jpeg" alt="HOPA Launchpad showing Camera, Clock and Douyin verified" height="560" />
+
+<br/><sub><b>Chinese apps.</b> Camera, Clock and Douyin are real, verified entries now.</sub>
+
+</td>
+<td width="50%" align="center" valign="top">
+
+<img src="docs/media/launchpad-music-2026.jpeg" alt="HOPA Launchpad showing JD, Kuaishou, Music, Notes and Petal Maps" height="560" />
+
+<br/><sub><b>More Chinese apps.</b> JD, Kuaishou, Music, Notes and Petal Maps are verified too.</sub>
 
 </td>
 </tr>
 </table>
 
-## Why it feels different
+## What it did
 
-- **You talk normally.** No commands, no scripts. “What’s hot on Bilibili?”
-  “Send Alice a message.” “Find a charger under $30.”
-- **It uses your apps, not a new ecosystem.** It reads the screen and works the
-  app or site you already have.
-- **It shows its work.** Every action lands in **Activity**, with the full run
-  detail behind it.
-- **It stops for money.** Every payment waits for your yes — every time, in
-  every mode.
-- **Your key, your data.** There is no HOPA account and no hosted backend. Your
-  model key goes to the model you choose.
+<table>
+<tr>
+<td width="50%" align="center" valign="top">
 
-It also remembers what you tell it and can turn a successful run into a skill,
-both editable in the app.
+<img src="docs/media/activity-2026.jpeg" alt="HOPA Activity: recent actions, runs, usage and scheduled plans" height="560" />
+
+</td>
+<td valign="middle">
+
+**A receipt for every action.**
+
+**Activity** shows what HOPA just did, the full run behind it, and what is
+scheduled next. Payment decisions are listed as decisions, not hidden in a log.
+The mascot sits at the top and tells you whether HOPA is ready or still working.
+
+</td>
+</tr>
+</table>
+
+## Settings that tell the truth
+
+<table>
+<tr>
+<td width="33%" align="center" valign="top">
+
+<img src="docs/media/settings-2026.jpeg" alt="HOPA Settings: model, phone access and the PC bridge" height="560" />
+
+<br/><sub><b>Settings.</b> The model, the phone access path and the bridge state, all in one place.</sub>
+
+</td>
+<td width="33%" align="center" valign="top">
+
+<img src="docs/media/model-2026.jpeg" alt="HOPA model card: provider, endpoint, model and a loaded hidden key" height="560" />
+
+<br/><sub><b>Model.</b> A loaded key is hidden. The field stays blank; leave it blank to keep the key.</sub>
+
+</td>
+<td width="33%" align="center" valign="top">
+
+<img src="docs/media/phone-2026.jpeg" alt="HOPA Phone access: on-device control and PC bridge status" height="560" />
+
+<br/><sub><b>Phone access.</b> On-device control says “not granted” instead of pretending. The bridge shows its real state.</sub>
+
+</td>
+</tr>
+</table>
+
+A loaded model key is **hidden on purpose**. The field is blank, the label says
+the key is loaded, and leaving it blank keeps it. Enter a new key only when you
+want to replace it.
+
+Usage is stored across restarts: actions, decisions, tokens and time. It shows a
+friendly empty state until there is something real to report, instead of a wall
+of zeroes.
 
 ## Get started
 
 **1. Put HOPA on your phone.**
-Today the app is built and signed from source. The two commands live in the
-[developer corner](#for-developers). On a real phone, start with
-[Install on a phone](docs/guides/install-phone.md) — HarmonyOS installs HAPs
-through AppGallery or `hdc`, not by tapping a download. A prebuilt package is
-on the [0.1.0 release](https://github.com/michaelatamuk/hopa/releases/tag/v0.1.0).
+
+Today the app is built and signed from source. On a retail Huawei phone, start
+with [Install on a phone](docs/guides/install-phone.md) — HarmonyOS installs HAPs
+through AppGallery or `hdc`, not by tapping a download.
+
+<sub>The prebuilt [0.1.0 release](https://github.com/michaelatamuk/hopa/releases/tag/v0.1.0)
+is signed for the emulator, not for a retail phone. Rebuild and sign with your
+Huawei profile to install it on a Mate 80.</sub>
 
 **2. Connect a model.**
-Open **Capabilities** and tap the gear, then pick a provider (OpenAI-compatible,
-Anthropic, Gemini or DeepSeek), enter the endpoint, the model name and your key.
-The key stays in memory; it is not saved to preferences.
+
+Open **Capabilities → Settings**, pick a provider (OpenAI-compatible, Anthropic,
+Gemini or DeepSeek), enter the endpoint, the model name and your key. If a key
+is already loaded, leave the field blank to keep it.
 
 **3. Give it hands.**
-On a real phone, enable the built-in screen control. On this emulator, start
-the small PC companion and connect it in the gear → **Settings → PC bridge**.
 
-Why a companion? On a real phone, the system has a built-in way to let an
-assistant see and tap. This emulator does not have that switch. The companion
-is a small program on your computer that lends HOPA its hands. It runs on your
+On a phone that allows it, enable the accessibility service. On the current test
+phone Huawei's ACL is still pending, so app control uses the small PC companion:
+start `pc-agent bridge`, forward the port, then connect it in **Settings → PC
+bridge**. The companion lends HOPA its hands from your computer; it runs on your
 machine, not in the cloud.
 
-Then say: “What’s trending on Bilibili today?”
+**4. Ask.**
+
+> “What’s trending on Bilibili today?”
+>
+> “Open Settings and show me Wi-Fi.”
+>
+> “Draft a one-line message to my team.”
 
 ## Good to know
 
-- HOPA sees the screen you see. It cannot work in the background.
-- It will not guess an app it does not know. Fifteen catalogue apps have no
-  HarmonyOS bundle yet, and five more have an unverified one.
+- HOPA sees the screen you see. It cannot work while it is fully closed.
+- It will not guess an app it does not know. 9 of the 35 catalogue apps do not
+  have a verified HarmonyOS bundle yet.
 - Login, CAPTCHA and verification codes stay with you.
 - Some apps block automation; HOPA stops and hands over.
 - The PC companion is for a trusted network.
-- This emulator has no accessibility switch; a real phone with it enabled is
-  the untethered path.
+- The little mascot is not decoration: it shows thinking, waiting, success and
+  failure, and it celebrates only when an action actually completed.
 
 ### Where it is today
 
 | Works | Needs a device or data |
 |---|---|
-| Chat, browser, memory, skills, plans, batch, runs and export | Untethered app control on this emulator |
+| Chat, browser, memory, skills, plans, batch, runs and export | Untethered app control until Huawei grants the ACL |
 | App control through the PC companion | Speech |
 | A website task from Chat: open Bilibili, read it and summarize | System reminders |
-|  | 15 apps without a bundle; 5 unverified |
-|  | The retail AppGallery ACL |
+| Payment approval with a plain-language sheet | Verified bundles for 9 other apps |
+| Usage that survives a restart | |
 
 Read the dated, per-capability state in
 [docs/product/coverage.md](docs/product/coverage.md).

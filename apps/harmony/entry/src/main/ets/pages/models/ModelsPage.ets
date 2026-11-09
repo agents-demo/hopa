@@ -11,9 +11,11 @@ export struct ModelsPage {
   @State endpoint: string = '';
   @State model: string = '';
   @State label: string = '';
+  @State keyReady: boolean = false;
 
   aboutToAppear(): void {
     this.label = AgentService.get().getModelLabel();
+    this.keyReady = AgentService.get().hasModelKey();
     this.load();
   }
 
@@ -28,35 +30,89 @@ export struct ModelsPage {
     }
   }
 
-  build() {
-    Column({ space: 12 }) {
-      Text('Current model')
+  @Builder
+  Line(label: string, value: string) {
+    Row({ space: 12 }) {
+      Text(label)
         .fontSize(12)
         .fontColor($r('app.color.text_secondary'))
-      Text(this.label.length > 0 ? this.label : 'not configured')
-        .fontSize(20)
-        .fontWeight(FontWeight.Bold)
-      Text(`Provider: ${this.provider}`)
+        .width(78)
+      Text(value.length > 0 ? value : 'not set')
         .fontSize(12)
-      Text(`Endpoint: ${this.endpoint}`)
-        .fontSize(12)
+        .fontColor($r('app.color.text_primary'))
         .maxLines(1)
-      Text(`Model: ${this.model}`)
-        .fontSize(12)
-      Text('Presets')
-        .fontSize(16)
-        .fontWeight(FontWeight.Bold)
-      Text('OpenAI-compatible (OpenAI, DeepSeek, local), Anthropic and Gemini use the same fields. Speech models are not available in this SDK.')
-        .fontSize(11)
-        .fontColor($r('app.color.text_hint'))
-      Button('Open Settings')
-        .fontSize(12)
-        .onClick(() => {
-          this.onOpenSettings();
-        })
+        .textOverflow({ overflow: TextOverflow.Ellipsis })
+        .textAlign(TextAlign.End)
+        .layoutWeight(1)
+    }
+    .width('100%')
+    .padding({ top: 11, bottom: 11 })
+  }
+
+  build() {
+    Scroll() {
+      Column({ space: 12 }) {
+        Column({ space: 4 }) {
+          Text('CURRENT MODEL')
+            .fontSize(10)
+            .fontColor($r('app.color.text_hint'))
+            .letterSpacing(0.6)
+          Text(this.label.length > 0 ? this.label : 'Not configured')
+            .fontSize(22)
+            .fontWeight(FontWeight.Bold)
+            .fontColor($r('app.color.text_primary'))
+          Text(this.keyReady ? 'Ready for every new task.' : 'Add an API key in Settings to use this model.')
+            .fontSize(11)
+            .fontColor($r('app.color.text_hint'))
+        }
+        .width('100%')
+        .padding(16)
+        .backgroundColor($r('app.color.surface'))
+        .border({ width: 1, color: $r('app.color.divider') })
+        .borderRadius(14)
+        .alignItems(HorizontalAlign.Start)
+        Column({ space: 0 }) {
+          this.Line('Provider', this.provider)
+          Divider().color($r('app.color.divider'))
+          this.Line('Endpoint', this.endpoint)
+          Divider().color($r('app.color.divider'))
+          this.Line('Model', this.model)
+          Divider().color($r('app.color.divider'))
+          this.Line('Key', this.keyReady ? 'Loaded (hidden)' : 'Missing')
+        }
+        .width('100%')
+        .padding({ left: 16, right: 16, top: 2, bottom: 2 })
+        .backgroundColor($r('app.color.surface'))
+        .border({ width: 1, color: $r('app.color.divider') })
+        .borderRadius(14)
+        Column({ space: 6 }) {
+          Text('Presets')
+            .fontSize(15)
+            .fontColor($r('app.color.text_primary'))
+          Text('OpenAI-compatible (OpenAI, DeepSeek, local), Anthropic and Gemini use the same fields. Speech models are not available in this SDK.')
+            .fontSize(11)
+            .fontColor($r('app.color.text_hint'))
+            .lineHeight(17)
+        }
+        .width('100%')
+        .alignItems(HorizontalAlign.Start)
+        .padding({ top: 4 })
+        Button('Open Settings')
+          .width('100%')
+          .height(44)
+          .fontSize(14)
+          .backgroundColor($r('app.color.primary'))
+          .fontColor($r('app.color.on_primary'))
+          .onClick(() => {
+            this.onOpenSettings();
+          })
+      }
+      .width('100%')
+      .padding(20)
+      .alignItems(HorizontalAlign.Start)
     }
     .width('100%')
     .height('100%')
-    .alignItems(HorizontalAlign.Start)
+    .scrollBar(BarState.Off)
   }
 }

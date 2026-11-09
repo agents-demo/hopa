@@ -1,15 +1,18 @@
 ---
+
 name: bilibili
 display: Bilibili
-bundle: UNCONFIRMED
+bundle: yylx.danmaku.bili
 aliases: [Bilibili, B站, 哔哩哔哩, bili]
 pace: careful
-validated: pending
+validated: verified
 platform: harmonyos
+ability: EntryAbility
+bundle_verified: Mate 80, 2026-11-08
 ---
 # Bilibili
 
-Android package: `tv.danmaku.bili`. No HarmonyOS bundle has been confirmed.
+HarmonyOS bundle: `yylx.danmaku.bili` (verified on a Mate 80).
 
 - Video, search, comments, favourites, downloads.
 - Watching is safe; posting, commenting and following are public actions: ask.

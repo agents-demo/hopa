@@ -57,6 +57,7 @@ export struct FilesPage {
     }
     .width('100%')
     .height('100%')
+    .padding(20)
     .alignItems(HorizontalAlign.Start)
   }
 }
