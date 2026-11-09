@@ -31,10 +31,8 @@ struct Index {
   @State approvalTitle: string = '';
   @State approvalMessage: string = '';
   @State approvalPayment: boolean = false;
-  @State agentBusy: boolean = false;
-  /** Set by the chat page: hide the header mascot on the empty screen. */
-  @StorageLink('hopa.chatEmpty') chatEmpty: boolean = true;
-  @StorageLink('hopa.listening') listening: boolean = false;
+  /** Empty unless the last run (or setup) needs attention. */
+  @StorageLink('hopa.problem') problem: string = '';
   @StorageLink('hopa.style') styleName: string = 'calm';
   @State profileName: string = 'everyday';
   private agentOpenedBrowser: boolean = false;
@@ -127,10 +125,6 @@ struct Index {
       session.title.length > 0 &&
       session.title !== 'New chat') {
       title = session.title;
-    }
-    const busy: boolean = AgentService.get().isBusy();
-    if (busy !== this.agentBusy) {
-      this.agentBusy = busy;
     }
     // @StorageLink + @Watch was not reliable here; poll the shell's copy.
     const profile: string = AppStorage.get<string>('hopa.profile') ?? 'everyday';
@@ -348,29 +342,23 @@ struct Index {
         } else {
           Row().layoutWeight(1)
         }
-        Row({ space: 5 }) {
-          if (this.chatEmpty) {
-            Circle({ width: 5, height: 5 })
-              .fill($r('app.color.success'))
-          } else {
-            HopaMark({
-              state: this.listening
-                ? 'listening'
-                : (this.approvalOpen ? 'waiting' : (this.agentBusy ? 'acting' : 'idle')),
-              markSize: 20,
-              interactive: false
-            })
+        // Chat stays clean; the only header signal is a real problem.
+        if (this.problem.length > 0) {
+          Row({ space: 5 }) {
+            HopaMark({ state: 'error', markSize: 20, interactive: false })
+            Text('Problem')
+              .fontSize(10)
+              .fontWeight(FontWeight.Medium)
+              .fontColor($r('app.color.danger'))
           }
-          Text(this.listening
-            ? 'Listening'
-            : (this.approvalOpen ? 'Waiting' : (this.agentBusy ? 'Working' : 'Ready')))
-            .fontSize(10)
-            .fontColor($r('app.color.text_hint'))
+          .padding({ left: 8, right: 8, top: 4, bottom: 4 })
+          .backgroundColor('#14C0392B')
+          .borderRadius(10)
+          .margin({ right: 6 })
+          .onClick(() => {
+            this.go('runs');
+          })
         }
-        .padding({ left: 8, right: 8, top: 4, bottom: 4 })
-        .backgroundColor('#0FFFFFFF')
-        .borderRadius(10)
-        .margin({ right: 6 })
         Stack({ alignContent: Alignment.Center }) {
           Row()
             .width(34)

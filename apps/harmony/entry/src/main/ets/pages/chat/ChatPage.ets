@@ -118,7 +118,6 @@ export struct ChatPage {
       this.recording = false;
       this.voice.cancel();
     }
-    AppStorage.setOrCreate<boolean>('hopa.listening', false);
     this.voice.releasePlayer();
   }
 
@@ -134,9 +133,6 @@ export struct ChatPage {
     const grew: boolean = next.length > this.renderedCount;
     this.renderedCount = next.length;
     this.messages = next;
-    // The header keeps the mascot only once a conversation exists, so the
-    // empty screen has one character, not two.
-    AppStorage.setOrCreate<boolean>('hopa.chatEmpty', next.length === 0);
     if (grew) {
       this.scrollToEnd();
     }
@@ -455,6 +451,7 @@ export struct ChatPage {
       ]);
       service.conversations.add('user', text);
       service.conversations.add('assistant', 'No model configured.');
+      AppStorage.setOrCreate<string>('hopa.problem', 'Model not configured');
       this.sync();
       this.draft = '';
       return;
@@ -519,6 +516,7 @@ export struct ChatPage {
     this.sync();
     this.busy = false;
     this.runningGoal = '';
+    AppStorage.setOrCreate<string>('hopa.problem', this.failed ? 'Last run failed' : '');
     this.react(!this.failed);
     this.canUndo = steps.length === 1 &&
       (steps[0].indexOf('Opened') > 0 || steps[0].indexOf('Tapped') > 0);
@@ -565,7 +563,6 @@ export struct ChatPage {
     try {
       await this.voice.start();
       this.recording = true;
-      AppStorage.setOrCreate<boolean>('hopa.listening', true);
       Haptics.tap();
     } catch (error) {
       this.recording = false;
@@ -578,7 +575,6 @@ export struct ChatPage {
       return;
     }
     this.recording = false;
-    AppStorage.setOrCreate<boolean>('hopa.listening', false);
     let wav: ArrayBuffer = new ArrayBuffer(0);
     try {
       wav = await this.voice.stop();

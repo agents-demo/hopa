@@ -57,6 +57,12 @@ export struct ChatEmptyState {
     return this.accentColor.length > 0 ? `#${alpha}${this.accentColor.substring(1)}` : `#${alpha}E8703A`;
   }
 
+  /** The last-conversation card is a quiet reminder, not a primary action. */
+  private quietCard(): boolean {
+    const name: string = this.profile().name;
+    return name === 'everyday' || name === 'power';
+  }
+
   aboutToAppear(): void {
     const hour: number = new Date().getHours();
     this.greeting = hour < 5 ? 'Still up?' : (hour < 12 ? 'Good morning' : (hour < 18 ? 'Good afternoon' : 'Good evening'));
@@ -126,7 +132,7 @@ export struct ChatEmptyState {
               Text('Last conversation')
                 .fontSize(9)
                 .fontWeight(FontWeight.Bold)
-                .fontColor(this.accent())
+                .fontColor(this.quietCard() ? $r('app.color.text_hint') : this.accent())
                 .letterSpacing(0.6)
               Text(this.resume)
                 .fontSize(13)
@@ -141,11 +147,14 @@ export struct ChatEmptyState {
             .alignItems(HorizontalAlign.Start)
             Text('›')
               .fontSize(18)
-              .fontColor(this.accent())
+              .fontColor(this.quietCard() ? $r('app.color.text_secondary') : this.accent())
           }
           .width('100%')
           .padding({ left: 12, right: 10, top: 9, bottom: 9 })
-          .border({ width: 1, color: this.accentTint('26') })
+          .border({
+            width: 1,
+            color: this.quietCard() ? $r('app.color.divider') : this.accentTint('26')
+          })
           .borderRadius(12)
           .opacity(this.pressed === -1 ? 1 : 0.62)
           .animation({ duration: 140, curve: Curve.EaseOut })
