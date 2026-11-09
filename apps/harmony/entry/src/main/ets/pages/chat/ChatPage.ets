@@ -41,6 +41,7 @@ export struct ChatPage {
     service.conversations.load(context).then(() => {
       this.render();
       this.sync();
+      this.resumeGoal = this.lastKnownGoal();
     });
     this.timer = setInterval(() => {
       if (!this.busy && service.conversations.version !== this.seenVersion) {
@@ -48,7 +49,7 @@ export struct ChatPage {
         this.sync();
       }
       if (this.messages.length === 0) {
-        const goal: string = service.runtime.lastGoalText();
+        const goal: string = this.lastKnownGoal();
         if (goal !== this.resumeGoal) {
           this.resumeGoal = goal;
         }
@@ -231,6 +232,33 @@ export struct ChatPage {
       return 'I hit a formatting error. Please try again.';
     }
     return clean.trim();
+  }
+
+  /** The most recent goal, from this session or from the saved chats. */
+  private lastKnownGoal(): string {
+    const service = AgentService.get();
+    const live: string = service.runtime.lastGoalText();
+    if (live.length > 0) {
+      return live;
+    }
+    const sessions = service.conversations.all();
+    let best: number = -1;
+    let goal: string = '';
+    for (let i = 0; i < sessions.length; i++) {
+      const session = sessions[i];
+      if (session.updatedAt < best) {
+        continue;
+      }
+      for (let j = session.entries.length - 1; j >= 0; j--) {
+        const entry = session.entries[j];
+        if (entry.role === 'user' && entry.text.length > 0) {
+          best = session.updatedAt;
+          goal = entry.text;
+          break;
+        }
+      }
+    }
+    return goal;
   }
 
   private async send(): Promise<void> {
