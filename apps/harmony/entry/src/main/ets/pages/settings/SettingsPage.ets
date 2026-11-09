@@ -3,6 +3,7 @@ import { Context, common } from '@kit.AbilityKit';
 import { AgentService } from '../../services/AgentService';
 import { Appearance } from '../../services/Appearance';
 import { SettingsStore, StoredSettings } from '../../services/SettingsStore';
+import { ProfileService } from '../../services/ProfileService';
 import { AboutPage } from '../tools/AboutPage';
 import { SelfCheckPage } from '../tools/SelfCheckPage';
 import { ScreensPage } from '../tools/ScreensPage';
@@ -20,6 +21,7 @@ export struct SettingsPage {
   @State bridgeToken: string = '';
   @State bridgeStatus: string = 'not connected';
   @State appearance: string = 'system';
+  @State profile: string = 'everyday';
   @State showSteps: boolean = true;
   @State reduceMotion: boolean = false;
   @State speakReplies: boolean = false;
@@ -40,9 +42,14 @@ export struct SettingsPage {
       this.networkEnabled = stored.network;
       this.autonomous = stored.autonomous;
       this.appearance = stored.appearance;
+      this.profile = stored.profile;
+      AppStorage.setOrCreate<string>(ProfileService.KEY, stored.profile);
+      AppStorage.setOrCreate<string>('hopa.style', stored.style);
       this.showSteps = stored.showSteps;
       this.reduceMotion = stored.reduceMotion;
       this.speakReplies = stored.speakReplies;
+      AppStorage.setOrCreate<boolean>('hopa.showSteps', stored.showSteps);
+      AppStorage.setOrCreate<boolean>('hopa.speak', stored.speakReplies);
       this.quietMode = !stored.showSteps && stored.reduceMotion;
       this.bridgeUrl = stored.bridgeUrl;
       this.bridgeToken = stored.bridgeToken;
@@ -77,18 +84,50 @@ export struct SettingsPage {
     }
   }
 
+  /** One tap rewrites the switches this profile owns. */
+  private async applyProfile(name: string): Promise<void> {
+    const context = getContext(this) as Context;
+    const profile = ProfileService.of(name);
+    this.profile = profile.name;
+    AppStorage.setOrCreate<string>(ProfileService.KEY, profile.name);
+    AppStorage.setOrCreate<string>('hopa.style', profile.style);
+    try {
+      const stored: StoredSettings = await SettingsStore.load(context);
+      profile.applyTo(stored);
+      await SettingsStore.save(context, stored);
+      this.networkEnabled = stored.network;
+      this.autonomous = stored.autonomous;
+      this.showSteps = stored.showSteps;
+      this.reduceMotion = stored.reduceMotion;
+      this.speakReplies = stored.speakReplies;
+      AppStorage.setOrCreate<boolean>('hopa.showSteps', stored.showSteps);
+      AppStorage.setOrCreate<boolean>('hopa.speak', stored.speakReplies);
+      this.quietMode = !stored.showSteps && stored.reduceMotion;
+      AgentService.get().setAutonomous(stored.autonomous);
+      AgentService.get().setNetworkEnabled(stored.network);
+      this.getUIContext().getPromptAction().showToast({
+        message: `${ProfileService.labelOf(profile.name)} profile on`
+      });
+    } catch (error) {
+      // The in-memory profile still applies for this session.
+    }
+  }
+
   private persist(): void {
     const context = getContext(this) as Context;
     SettingsStore.load(context).then((stored: StoredSettings) => {
+      stored.profile = this.profile;
+      stored.style = AppStorage.get<string>('hopa.style') ?? stored.style;
       stored.network = this.networkEnabled;
       stored.autonomous = this.autonomous;
       stored.appearance = this.appearance;
       stored.showSteps = this.showSteps;
       stored.reduceMotion = this.reduceMotion;
-      stored.showSteps = this.showSteps;
       stored.speakReplies = this.speakReplies;
       stored.bridgeUrl = this.bridgeUrl;
       stored.bridgeToken = this.bridgeToken;
+      AppStorage.setOrCreate<boolean>('hopa.showSteps', this.showSteps);
+      AppStorage.setOrCreate<boolean>('hopa.speak', this.speakReplies);
       return SettingsStore.save(context, stored);
     }).catch(() => {
       // Persistence is best effort; the in-memory settings still work.
@@ -290,6 +329,35 @@ export struct SettingsPage {
     } else {
       Scroll() {
         Column({ space: 12 }) {
+          this.Label('PROFILE')
+          Column({ space: 8 }) {
+            Flex({ wrap: FlexWrap.Wrap }) {
+              ForEach(ProfileService.NAMES, (name: string) => {
+                Text(ProfileService.labelOf(name))
+                  .fontSize(11)
+                  .fontColor(this.profile === name
+                    ? $r('app.color.on_primary')
+                    : $r('app.color.text_secondary'))
+                  .backgroundColor(this.profile === name
+                    ? $r('app.color.primary')
+                    : $r('app.color.surface_alt'))
+                  .padding({ left: 10, right: 10, top: 5, bottom: 5 })
+                  .borderRadius(9)
+                  .margin({ right: 6, bottom: 6 })
+                  .onClick(() => {
+                    this.applyProfile(name);
+                  })
+              }, (name: string) => name)
+            }
+            .width('100%')
+            Text(ProfileService.describe(this.profile))
+              .fontSize(10)
+              .fontColor($r('app.color.text_hint'))
+              .width('100%')
+          }
+          .cardStyle()
+          .alignItems(HorizontalAlign.Start)
+
           this.Label('AGENT')
           Column({ space: 0 }) {
             Row({ space: 10 }) {

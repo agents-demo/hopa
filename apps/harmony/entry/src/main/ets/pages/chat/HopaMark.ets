@@ -11,6 +11,8 @@ export struct HopaMark {
   @Prop markSize: number = 32;
   /** Older transcript avatars stay still; only the live one breathes. */
   @Prop animate: boolean = true;
+  /** The header mark is a status light, not a button. */
+  @Prop interactive: boolean = true;
   @State pulse: boolean = false;
   @State blink: boolean = false;
   @State cheer: boolean = false;
@@ -214,6 +216,9 @@ export struct HopaMark {
     })
     .animation({ duration: 900, curve: Curve.EaseInOut })
     .onClick(() => {
+      if (!this.interactive) {
+        return;
+      }
       Haptics.tap();
       this.wave();
       this.cheer = true;

@@ -7,8 +7,11 @@ import { ChatsSheet } from '../navigation/ChatsSheet';
 import { pageTitle } from '../navigation/PageTitles';
 import { TabIcon } from '../navigation/TabIcon';
 import { ApprovalSheet } from './chat/ApprovalSheet';
+import { HopaMark } from './chat/HopaMark';
 import { PageRouter } from './PageRouter';
 import { Haptics } from '../services/Haptics';
+import { SettingsStore } from '../services/SettingsStore';
+import { StyleProfile } from '../services/StyleProfile';
 import { KeyboardAvoidMode as HostKeyboardAvoidMode } from '@ohos.arkui.UIContext';
 import { window } from '@kit.ArkUI';
 
@@ -28,6 +31,11 @@ struct Index {
   @State approvalTitle: string = '';
   @State approvalMessage: string = '';
   @State approvalPayment: boolean = false;
+  @State agentBusy: boolean = false;
+  /** Set by the chat page: hide the header mascot on the empty screen. */
+  @StorageLink('hopa.chatEmpty') chatEmpty: boolean = true;
+  @StorageLink('hopa.listening') listening: boolean = false;
+  @StorageLink('hopa.style') styleName: string = 'calm';
   private agentOpenedBrowser: boolean = false;
   private titleTimer: number = -1;
   private previousPage: string = 'chat';
@@ -65,6 +73,12 @@ struct Index {
       this.activePage = 'browser';
       this.chatsOpen = false;
     });
+    SettingsStore.load(getContext(this)).then((stored) => {
+      AppStorage.setOrCreate<string>(StyleProfile.KEY, stored.style);
+      AppStorage.setOrCreate<string>('hopa.profile', stored.profile);
+    }).catch(() => {
+      // The default look is fine when settings cannot be read.
+    });
     this.refreshChats();
     this.titleTimer = setInterval(() => {
       this.syncTitle();
@@ -84,6 +98,10 @@ struct Index {
     this.syncTitle();
   }
 
+  private style(): StyleProfile {
+    return StyleProfile.of(this.styleName);
+  }
+
   private syncTitle(): void {
     const session: ChatSession | undefined = AgentService.get().conversations.current();
     let title: string = '';
@@ -92,6 +110,10 @@ struct Index {
       session.title.length > 0 &&
       session.title !== 'New chat') {
       title = session.title;
+    }
+    const busy: boolean = AgentService.get().isBusy();
+    if (busy !== this.agentBusy) {
+      this.agentBusy = busy;
     }
     if (title !== this.chatTitle) {
       this.chatTitle = title;
@@ -292,9 +314,21 @@ struct Index {
           Row().layoutWeight(1)
         }
         Row({ space: 5 }) {
-          Circle({ width: 5, height: 5 })
-            .fill($r('app.color.success'))
-          Text('Ready')
+          if (this.chatEmpty) {
+            Circle({ width: 5, height: 5 })
+              .fill($r('app.color.success'))
+          } else {
+            HopaMark({
+              state: this.listening
+                ? 'listening'
+                : (this.approvalOpen ? 'waiting' : (this.agentBusy ? 'acting' : 'idle')),
+              markSize: 20,
+              interactive: false
+            })
+          }
+          Text(this.listening
+            ? 'Listening'
+            : (this.approvalOpen ? 'Waiting' : (this.agentBusy ? 'Working' : 'Ready')))
             .fontSize(10)
             .fontColor($r('app.color.text_hint'))
         }
@@ -403,7 +437,7 @@ struct Index {
       }
       .width('100%')
       .height('100%')
-      .backgroundColor($r('app.color.bg'))
+      .backgroundColor(this.style().bg)
 
       if (this.approvalOpen) {
         ApprovalSheet({

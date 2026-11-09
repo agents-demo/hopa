@@ -12,6 +12,8 @@ import { HopaMark } from './HopaMark';
 import { Haptics } from '../../services/Haptics';
 import { VoiceService } from '../../services/VoiceService';
 import { HopaForeground } from '../../services/HopaForeground';
+import { ProfileService } from '../../services/ProfileService';
+import { StyleProfile } from '../../services/StyleProfile';
 import { fileIo as fs, fileUri } from '@kit.CoreFileKit';
 import { image } from '@kit.ImageKit';
 import { util } from '@kit.ArkTS';
@@ -33,11 +35,13 @@ export struct ChatPage {
   @State runningGoal: string = '';
   @State failed: boolean = false;
   @State liveSteps: string[] = [];
-  @State showSteps: boolean = true;
+  @StorageLink('hopa.showSteps') showSteps: boolean = true;
   @State lastPageUrl: string = '';
   @State lastPageTitle: string = '';
   @State recording: boolean = false;
-  @State speakReplies: boolean = false;
+  @StorageLink('hopa.speak') speakReplies: boolean = false;
+  @StorageLink('hopa.profile') profileName: string = 'everyday';
+  @StorageLink('hopa.style') styleName: string = 'calm';
   /** Contents of the image rendered for "Share recap". */
   @State recapGoal: string = '';
   @State recapAnswer: string = '';
@@ -99,6 +103,7 @@ export struct ChatPage {
       this.recording = false;
       this.voice.cancel();
     }
+    AppStorage.setOrCreate<boolean>('hopa.listening', false);
     this.voice.releasePlayer();
   }
 
@@ -114,6 +119,9 @@ export struct ChatPage {
     const grew: boolean = next.length > this.renderedCount;
     this.renderedCount = next.length;
     this.messages = next;
+    // The header keeps the mascot only once a conversation exists, so the
+    // empty screen has one character, not two.
+    AppStorage.setOrCreate<boolean>('hopa.chatEmpty', next.length === 0);
     if (grew) {
       this.scrollToEnd();
     }
@@ -351,6 +359,19 @@ export struct ChatPage {
     return goal;
   }
 
+  private profile(): ProfileService {
+    return ProfileService.of(this.profileName);
+  }
+
+  private style(): StyleProfile {
+    return StyleProfile.of(this.styleName);
+  }
+
+  /** Kid mode refuses money and public posting before the model sees it. */
+  private guardianBlocked(text: string): boolean {
+    return /(^|\s)(pay|buy|order|checkout|transfer|tweet|post|publish|subscribe)(\s|$)|send money|weibo|instagram|tiktok|facebook/i.test(text);
+  }
+
   private hasEarlierChat(): boolean {
     const service = AgentService.get();
     const currentId: string = service.conversations.currentId();
@@ -395,6 +416,17 @@ export struct ChatPage {
     }
     const service = AgentService.get();
     const context = getContext(this) as Context;
+    if (this.profile().guardian && this.guardianBlocked(text)) {
+      this.messages = this.messages.concat([
+        `You: ${text}`,
+        'HOPA: This phone is in Kid mode, so I can\'t buy things or post publicly. A grown-up can switch profiles in Settings.'
+      ]);
+      service.conversations.add('user', text);
+      service.conversations.add('assistant', 'Kid mode: payments and public posts are off.');
+      this.sync();
+      this.draft = '';
+      return;
+    }
     const fact: string | undefined = MemoryExtractor.extract(text);
     if (fact !== undefined && service.memory.add(fact) !== undefined) {
       service.memory.save(context).catch(() => {
@@ -472,6 +504,7 @@ export struct ChatPage {
     this.sync();
     this.busy = false;
     this.runningGoal = '';
+    this.react(!this.failed);
     this.canUndo = steps.length === 1 &&
       (steps[0].indexOf('Opened') > 0 || steps[0].indexOf('Tapped') > 0);
     if (this.failed) {
@@ -517,6 +550,7 @@ export struct ChatPage {
     try {
       await this.voice.start();
       this.recording = true;
+      AppStorage.setOrCreate<boolean>('hopa.listening', true);
       Haptics.tap();
     } catch (error) {
       this.recording = false;
@@ -529,6 +563,7 @@ export struct ChatPage {
       return;
     }
     this.recording = false;
+    AppStorage.setOrCreate<boolean>('hopa.listening', false);
     let wav: ArrayBuffer = new ArrayBuffer(0);
     try {
       wav = await this.voice.stop();
@@ -803,7 +838,7 @@ export struct ChatPage {
         .scrollBar(BarState.Off)
         .clip(true)
       } else {
-        List({ space: 10, scroller: this.listScroller }) {
+        List({ space: this.profile().density === 'compact' ? 6 : 10, scroller: this.listScroller }) {
           ForEach(this.messages, (item: ResourceStr, index: number) => {
             ListItem() {
               Row() {
@@ -813,8 +848,8 @@ export struct ChatPage {
                       .padding({ left: 14, right: 14, top: 10, bottom: 10 })
                       .backgroundColor($r('app.color.primary'))
                       .fontColor($r('app.color.on_primary'))
-                      .borderRadius(18)
-                      .fontSize(15)
+                      .borderRadius(this.style().bubbleRadius)
+                      .fontSize(this.style().body)
                       .constraintSize({ maxWidth: '84%' })
                       .copyOption(CopyOptions.LocalDevice)
                     if (index === this.lastUserIndex() && !this.busy) {
@@ -833,14 +868,17 @@ export struct ChatPage {
                   .alignItems(HorizontalAlign.End)
                 } else {
                   Row({ space: 8 }) {
-                    HopaMark({
-                      state: this.reaction.length > 0 && index === this.lastAnswerIndex()
-                        ? this.reaction
-                        : 'idle',
-                      markSize: 22,
-                      animate: index === this.lastAnswerIndex()
-                    })
-                      .margin({ top: 4 })
+                    if (index === this.lastAnswerIndex()) {
+                      HopaMark({
+                        state: this.reaction.length > 0 ? this.reaction : 'idle',
+                        markSize: 26
+                      })
+                        .margin({ top: 4 })
+                    } else {
+                      // Keep the text column aligned without repeating the
+                      // character on every answer.
+                      Row().width(26).height(1)
+                    }
                     Column({ space: 4 }) {
                       if (this.showSteps && this.stepsOf(item).length > 0) {
                         Flex({ wrap: FlexWrap.Wrap }) {
@@ -895,8 +933,8 @@ export struct ChatPage {
                       } else {
                         Text(this.bubbleText(item))
                           .width('100%')
-                          .fontSize(15)
-                          .lineHeight(22)
+                          .fontSize(this.style().body)
+                          .lineHeight(this.style().body + 7)
                           .fontColor($r('app.color.text_primary'))
                           .padding({ left: 2, right: 2, top: 2, bottom: 2 })
                           .copyOption(CopyOptions.LocalDevice)
@@ -967,17 +1005,20 @@ export struct ChatPage {
                         }
                         .width('100%')
                       }
-                      if (index === this.lastAnswerIndex() && !this.busy && !this.failed) {
+                      if (index === this.lastAnswerIndex() && !this.busy && !this.failed &&
+                        this.profile().sharing !== 'minimal') {
                         Row({ space: 6 }) {
-                          Text('Share recap')
-                            .fontSize(10.5)
-                            .fontColor($r('app.color.text_secondary'))
-                            .padding({ left: 8, right: 8, top: 4, bottom: 4 })
-                            .backgroundColor($r('app.color.surface_alt'))
-                            .borderRadius(8)
-                            .onClick(() => {
-                              this.shareRecap();
-                            })
+                          if (this.profile().sharing === 'recap') {
+                            Text('Share recap')
+                              .fontSize(10.5)
+                              .fontColor($r('app.color.text_secondary'))
+                              .padding({ left: 8, right: 8, top: 4, bottom: 4 })
+                              .backgroundColor($r('app.color.surface_alt'))
+                              .borderRadius(8)
+                              .onClick(() => {
+                                this.shareRecap();
+                              })
+                          }
                           Text('Copy & open')
                             .fontSize(10.5)
                             .fontColor($r('app.color.text_secondary'))

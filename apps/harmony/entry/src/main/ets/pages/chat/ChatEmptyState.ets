@@ -2,6 +2,8 @@
 import { HopaMark } from './HopaMark';
 import { AgentService } from '../../services/AgentService';
 import { SettingsStore } from '../../services/SettingsStore';
+import { StyleProfile } from '../../services/StyleProfile';
+import { ProfileService } from '../../services/ProfileService';
 import { Context } from '@kit.AbilityKit';
 
 @Component
@@ -18,6 +20,26 @@ export struct ChatEmptyState {
   /** With history the screen stays quiet; examples are one tap away. */
   @State ideasOpen: boolean = false;
   @StorageLink('hopa.accent') accentColor: string = '';
+  @StorageLink('hopa.style') styleName: string = 'calm';
+  @StorageLink('hopa.profile') profileName: string = 'everyday';
+
+  private style(): StyleProfile {
+    return StyleProfile.of(this.styleName);
+  }
+
+  private profile(): ProfileService {
+    return ProfileService.of(this.profileName);
+  }
+
+  private tagline(): string {
+    if (this.profile().language === 'plain') {
+      return 'Type or say what you need. I will do it on this phone.';
+    }
+    if (this.profile().language === 'playful') {
+      return 'What are we doing today?';
+    }
+    return 'Your phone agent. Ask for something on this phone.';
+  }
 
   private accent(): ResourceColor {
     return this.accentColor.length > 0 ? this.accentColor : $r('app.color.primary');
@@ -32,7 +54,7 @@ export struct ChatEmptyState {
     this.greeting = hour < 5 ? 'Still up?' : (hour < 12 ? 'Good morning' : (hour < 18 ? 'Good afternoon' : 'Good evening'));
     const context = getContext(this) as Context;
     SettingsStore.load(context).then((stored) => {
-      if (stored.reduceMotion) {
+      if (stored.reduceMotion || !this.style().motion) {
         this.entered = true;
       }
     }).catch(() => {
@@ -66,22 +88,26 @@ export struct ChatEmptyState {
 
   build() {
     Column({ space: 12 }) {
-      HopaMark({ state: this.listening ? 'listening' : 'idle', markSize: 64 })
+      HopaMark({
+        state: this.listening ? 'listening' : 'idle',
+        markSize: this.style().mascot,
+        animate: this.style().motion
+      })
       Text(this.greeting)
         .fontSize(11)
         .fontColor($r('app.color.text_hint'))
         .letterSpacing(0.4)
       Text('HOPA')
-        .fontSize(27)
+        .fontSize(this.style().title)
         .fontWeight(FontWeight.Bold)
         .fontColor($r('app.color.text_primary'))
         .letterSpacing(-0.4)
-      Text('Your phone agent. Ask for something on this phone.')
-        .fontSize(14)
+      Text(this.tagline())
+        .fontSize(this.style().body)
         .fontColor($r('app.color.text_secondary'))
         .textAlign(TextAlign.Center)
       Text('I always ask before any payment.')
-        .fontSize(11)
+        .fontSize(this.style().body - 4)
         .fontColor($r('app.color.text_hint'))
       Column({ space: 8 }) {
         if (this.hasResume()) {
@@ -117,7 +143,7 @@ export struct ChatEmptyState {
             this.onResume();
           })
         }
-        if (this.hasResume()) {
+        if (this.hasResume() && this.profile().discovery === 'guided') {
           Row({ space: 4 }) {
             Text(this.ideasOpen ? 'Hide examples' : 'Try an example')
               .fontSize(11)
@@ -130,7 +156,7 @@ export struct ChatEmptyState {
           .onClick(() => {
             this.ideasOpen = !this.ideasOpen;
           })
-        } else {
+        } else if (!this.hasResume()) {
           Text('TRY SOMETHING')
             .fontSize(9)
             .fontWeight(FontWeight.Bold)
@@ -143,16 +169,16 @@ export struct ChatEmptyState {
         ForEach(this.suggestions(), (suggestion: string, index: number) => {
           Row() {
             Text(suggestion)
-              .fontSize(12.5)
+              .fontSize(this.style().body - 2.5)
               .fontColor($r('app.color.text_primary'))
               .maxLines(1)
               .textOverflow({ overflow: TextOverflow.Ellipsis })
           }
           .width('100%')
-          .padding({ left: 14, right: 14, top: 12, bottom: 12 })
+          .padding({ left: 14, right: 14, top: this.style().motion ? 12 : 14, bottom: this.style().motion ? 12 : 14 })
           .backgroundColor($r('app.color.surface'))
           .border({ width: 1, color: '#0F1C1B18' })
-          .borderRadius(12)
+          .borderRadius(this.style().cardRadius)
           .shadow({ radius: 10, color: '#0A1C1B18', offsetY: 2 })
           .scale({ x: this.pressed === index ? 0.985 : 1, y: this.pressed === index ? 0.985 : 1 })
           .animation({ duration: 140, curve: Curve.EaseOut })

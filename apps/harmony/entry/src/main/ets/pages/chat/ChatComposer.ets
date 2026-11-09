@@ -1,3 +1,6 @@
+import { StyleProfile } from '../../services/StyleProfile';
+import { ProfileService } from '../../services/ProfileService';
+
 /** The chat composer: one rounded field and a send/stop/voice button. */
 @Component
 export struct ChatComposer {
@@ -12,7 +15,19 @@ export struct ChatComposer {
   @State pulse: boolean = false;
   /** Set from the wallpaper at startup; the brand colour is the fallback. */
   @StorageLink('hopa.accent') accentColor: string = '';
+  @StorageLink('hopa.style') styleName: string = 'calm';
+  @StorageLink('hopa.profile') profileName: string = 'everyday';
   private pulseTimer: number = -1;
+
+  private style(): StyleProfile {
+    return StyleProfile.of(this.styleName);
+  }
+
+  private placeholder(): string {
+    return ProfileService.of(this.profileName).input === 'voice'
+      ? 'Tap the mic or type'
+      : 'Ask HOPA...';
+  }
 
   private canSend(): boolean {
     return this.draft.trim().length > 0;
@@ -89,10 +104,10 @@ export struct ChatComposer {
           .height(42)
           .padding({ left: 10 })
         } else {
-          TextInput({ placeholder: 'Ask HOPA...', text: this.draft })
+          TextInput({ placeholder: this.placeholder(), text: this.draft })
             .layoutWeight(1)
-            .height(42)
-            .fontSize(15)
+            .height(this.style().composerHeight)
+            .fontSize(this.style().composerFont)
             .backgroundColor(Color.Transparent)
             .padding({ left: 8, right: 2 })
             .onChange((value: string) => {

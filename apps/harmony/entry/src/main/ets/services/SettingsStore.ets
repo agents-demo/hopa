@@ -9,6 +9,8 @@ export class StoredSettings {
   network: boolean = false;
   autonomous: boolean = false;
   appearance: string = 'system';
+  profile: string = 'everyday';
+  style: string = 'calm';
   showSteps: boolean = true;
   reduceMotion: boolean = false;
   speakReplies: boolean = false;
@@ -55,6 +57,14 @@ export class SettingsStore {
     if (typeof appearance === 'string') {
       settings.appearance = appearance;
     }
+    const profile = await store.get('profile', settings.profile);
+    if (typeof profile === 'string') {
+      settings.profile = profile;
+    }
+    const style = await store.get('style', settings.style);
+    if (typeof style === 'string') {
+      settings.style = style;
+    }
     const showSteps = await store.get('show_steps', settings.showSteps);
     if (typeof showSteps === 'boolean') {
       settings.showSteps = showSteps;
@@ -94,6 +104,8 @@ export class SettingsStore {
     await store.put('network', settings.network);
     await store.put('autonomous', settings.autonomous);
     await store.put('appearance', settings.appearance);
+    await store.put('profile', settings.profile);
+    await store.put('style', settings.style);
     await store.put('show_steps', settings.showSteps);
     await store.put('reduce_motion', settings.reduceMotion);
     await store.put('speak_replies', settings.speakReplies);
