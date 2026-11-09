@@ -9,6 +9,10 @@ $bundle = 'com.hopa.agent'
 $ability = 'EntryAbility'
 
 function Resolve-Hdc {
+    # The Command Line Tools hdc 3.2.0d crashes on `install` (missing DLL), so
+    # prefer DevEco's bundled copy when it exists.
+    $devHdc = 'C:\Program Files\Huawei\DevEco Studio\sdk\default\openharmony\toolchains\hdc.exe'
+    if (Test-Path $devHdc) { return $devHdc }
     if ($env:HOPA_CLT_HOME) {
         foreach ($name in @('hdc.exe', 'hdc')) {
             $candidate = Join-Path $env:HOPA_CLT_HOME "sdk\default\openharmony\toolchains\$name"

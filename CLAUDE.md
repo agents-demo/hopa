@@ -87,8 +87,9 @@ hdc shell aa start -a EntryAbility -b com.hopa.agent
 hdc shell uitest dumpLayout -p /data/local/tmp/layout.json
 ```
 
-Use `tools/scripts/install-to-device.*` for the supported flow. Signing is done in
-DevEco Studio (automatic signing) or CI secrets; never commit signing material.
+Use `tools/scripts/run-on-device.*` for the supported one-shot flow (build,
+sign with the SDK debug kit, install and launch). Signing material stays in
+`tools/signing/` and must never be committed.
 
 ## Module boundaries
 

@@ -22,6 +22,21 @@ must still have its UDID in the profile before it will install the HAP.
 
 ## Run it
 
+One shot on a connected emulator/device (build, sign, install, launch):
+
+```powershell
+.\tools\scripts\run-on-device.ps1
+```
+
+```bash
+./tools/scripts/run-on-device.sh
+```
+
+Useful flags: `-SkipBuild` / `--skip-build`, `-SkipSign` / `--skip-sign`,
+`-Target <id>` / `--target <id>`.
+
+Or run each step:
+
 ```powershell
 .\tools\scripts\build.ps1
 .\tools\scripts\sign-app.ps1 -Install

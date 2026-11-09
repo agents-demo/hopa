@@ -86,11 +86,13 @@ function Resolve-Keytool {
 }
 
 function Resolve-Hdc {
+    # The Command Line Tools hdc 3.2.0d crashes on `install` (missing DLL), so
+    # prefer DevEco's bundled copy when it exists.
     $candidates = @()
+    $candidates += 'C:\Program Files\Huawei\DevEco Studio\sdk\default\openharmony\toolchains\hdc.exe'
     if ($env:HOPA_CLT_HOME) {
         $candidates += Join-Path $env:HOPA_CLT_HOME 'sdk\default\openharmony\toolchains\hdc.exe'
     }
-    $candidates += 'C:\Program Files\Huawei\DevEco Studio\sdk\default\openharmony\toolchains\hdc.exe'
     foreach ($candidate in $candidates) {
         if (Test-Path $candidate) { return $candidate }
     }

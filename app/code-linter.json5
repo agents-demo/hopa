@@ -1,0 +1,20 @@
+{
+  "files": [
+    "**/*.ets",
+    "**/*.ts"
+  ],
+  "ignore": [
+    "**/ohosTest/**/*",
+    "**/node_modules/**/*",
+    "**/oh_modules/**/*",
+    "**/build/**/*",
+    "**/.preview/**/*",
+    "**/hvigorfile.ts",
+    "**/src/test/**/*"
+  ],
+  "ruleSet": [
+    "plugin:@performance/recommended"
+  ],
+  "rules": {},
+  "overrides": []
+}
