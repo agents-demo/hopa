@@ -164,7 +164,7 @@ export struct ActivityPage {
       Column({ space: 10 }) {
         Column({ space: 6 }) {
           Row({ space: 10 }) {
-            HopaMark({ state: this.isBusy() ? 'acting' : 'idle', markSize: 34 })
+            HopaMark({ state: this.isBusy() ? 'acting' : 'idle', markSize: 34, interactive: false })
             Column({ space: 6 }) {
               Row({ space: 8 }) {
                 Column()

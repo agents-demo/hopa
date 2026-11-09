@@ -36,10 +36,7 @@ export struct PageRouter {
   build() {
     if (this.activePage === 'home') {
       if (this.profileName === 'easy') {
-        EasyHome({
-          onOpenChat: (goal: string, voice: boolean) => { this.onOpenChat(goal, voice); },
-          onOpenRuns: () => { this.onOpenRuns(); }
-        })
+        EasyHome()
       } else if (this.profileName === 'power') {
         PowerHome({
           onOpenChat: (goal: string, voice: boolean) => { this.onOpenChat(goal, voice); },

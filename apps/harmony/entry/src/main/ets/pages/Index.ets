@@ -33,6 +33,8 @@ struct Index {
   @State approvalPayment: boolean = false;
   /** Empty unless the last run (or setup) needs attention. */
   @StorageLink('hopa.problem') problem: string = '';
+  /** Set by a home sheet: hide the shell chrome while it is focused. */
+  @StorageLink('hopa.focus') focusMode: boolean = false;
   @StorageLink('hopa.style') styleName: string = 'calm';
   @State profileName: string = 'everyday';
   private agentOpenedBrowser: boolean = false;
@@ -451,7 +453,11 @@ struct Index {
   build() {
     Stack({ alignContent: Alignment.Bottom }) {
       Column() {
-        this.TopBar()
+        // A custom home owns the whole screen: no clock, no "+", no Everyday
+        // chat entry from here.
+        if (!this.focusMode && this.activePage !== 'home') {
+          this.TopBar()
+        }
         Column() {
           PageRouter({
             activePage: this.activePage,
@@ -473,7 +479,7 @@ struct Index {
         }
         .layoutWeight(1)
         .width('100%')
-        if (this.activePage !== 'browser' && !this.keyboardVisible) {
+        if (this.activePage !== 'browser' && !this.keyboardVisible && !this.focusMode) {
           this.BottomBar()
         }
       }

@@ -42,7 +42,7 @@ export struct KidHome {
   build() {
     Column({ space: 16 }) {
       Column({ space: 6 }) {
-        HopaMark({ state: 'idle', markSize: 96, animate: true })
+        HopaMark({ state: 'idle', markSize: 96, animate: true, interactive: false })
         Text('What shall we do?')
           .fontSize(this.style().title - 4)
           .fontWeight(FontWeight.Bold)
@@ -76,7 +76,7 @@ export struct KidHome {
     }
     .width('100%')
     .height('100%')
-    .padding({ left: 18, right: 18, top: 10, bottom: 20 })
+    .padding({ left: 18, right: 18, top: 26, bottom: 20 })
     .alignItems(HorizontalAlign.Center)
   }
 }
