@@ -113,14 +113,21 @@ struct Index {
     return this.profileName !== 'everyday';
   }
 
+  /** The first tab of the current profile. */
+  private homeKey(): string {
+    return this.customHome() ? 'home' : 'chat';
+  }
+
   /** Profiles with a custom home land there; Everyday lands in the chat. */
   onProfileChange(): void {
     if (this.customHome()) {
-      if (this.activePage === 'chat') {
+      if (this.activePage === 'chat' || this.activePage === 'capabilities') {
         this.activePage = 'home';
+        this.previousPage = 'home';
       }
     } else if (this.activePage === 'home') {
       this.activePage = 'chat';
+      this.previousPage = 'chat';
     }
   }
 
@@ -166,10 +173,14 @@ struct Index {
   }
 
   private back(): void {
-    const target: string = this.previousPage === this.activePage
-      ? 'chat'
+    let target: string = this.previousPage === this.activePage
+      ? this.homeKey()
       : this.previousPage;
-    this.previousPage = 'chat';
+    // Easy/Kid have no tab bar: never land on a page with no way out.
+    if (this.customHome() && (target === 'capabilities' || target === 'chat')) {
+      target = 'home';
+    }
+    this.previousPage = this.homeKey();
     this.activePage = target;
   }
 
@@ -244,9 +255,11 @@ struct Index {
     if (this.activePage === 'chat') {
       return !this.customHome();
     }
+    if (this.activePage === 'capabilities') {
+      return !this.customHome();
+    }
     return this.activePage === 'home' ||
-      this.activePage === 'activity' ||
-      this.activePage === 'capabilities';
+      this.activePage === 'activity';
   }
 
   private activityChild(): boolean {
@@ -407,11 +420,14 @@ struct Index {
           .layoutWeight(1)
         if (this.activePage === 'capabilities') {
           Text('Settings')
-            .fontSize(12)
+            .fontSize(14)
+            .fontWeight(FontWeight.Medium)
             .fontColor($r('app.color.primary'))
-            .padding({ left: 10, right: 10, top: 6, bottom: 6 })
+            .height(40)
+            .padding({ left: 16, right: 16 })
+            .textAlign(TextAlign.Center)
             .backgroundColor($r('app.color.primary_soft'))
-            .borderRadius(8)
+            .borderRadius(20)
             .accessibilityText('Settings')
             .onClick(() => {
               this.go('settings');
