@@ -11,6 +11,8 @@ export struct HopaMark {
   @Prop markSize: number = 32;
   /** Older transcript avatars stay still; only the live one breathes. */
   @Prop animate: boolean = true;
+  /** The header mark is a status light, not a button. */
+  @Prop interactive: boolean = true;
   @State pulse: boolean = false;
   @State blink: boolean = false;
   @State cheer: boolean = false;
@@ -113,6 +115,9 @@ export struct HopaMark {
     if (this.state === 'waiting') {
       return 'HOPA is waiting for your approval';
     }
+    if (this.state === 'listening') {
+      return 'HOPA is listening';
+    }
     if (this.state === 'happy') {
       return 'HOPA finished';
     }
@@ -155,43 +160,45 @@ export struct HopaMark {
         .position({ x: this.markSize * 0.547, y: this.markSize * 0.398 })
         .opacity(this.blink ? 1 : 0)
 
-      // Greeting bubble: sits above the head, tail touching the top of it.
-      Column() {
-        Text("Hi, I'm HOPA 👋")
-          .fontSize(this.markSize * 0.215)
-          .fontWeight(FontWeight.Bold)
-          .fontColor(Color.White)
-          .textAlign(TextAlign.Center)
-          .maxLines(1)
-      }
-      .width(this.markSize * 2.30)
-      .padding({
-        left: this.markSize * 0.12,
-        right: this.markSize * 0.12,
-        top: this.markSize * 0.11,
-        bottom: this.markSize * 0.11
-      })
-      .backgroundColor('#E8703A')
-      .borderRadius(this.markSize * 0.29)
-      .shadow({ radius: this.markSize * 0.16, color: '#551C1B18', offsetY: this.markSize * 0.05 })
-      .rotate({ angle: this.bubble ? -3 : -12 })
-      .position({ x: this.markSize * 0.42, y: -this.markSize * 1.05 })
-      .opacity(this.bubble ? 1 : 0)
-      .scale({ x: this.bubble ? 1 : 0.5, y: this.bubble ? 1 : 0.5 })
-      .animation({ duration: 280, curve: Curve.EaseOut })
-      .hitTestBehavior(HitTestMode.None)
-
-      // Tail last so it sits on top of the bubble and points down at him.
-      Column()
-        .width(this.markSize * 0.17)
-        .height(this.markSize * 0.17)
-        .backgroundColor('#E8703A')
-        .rotate({ angle: 45 })
-        .position({ x: this.markSize * 0.62, y: -this.markSize * 0.56 })
-        .opacity(this.bubble ? 1 : 0)
-        .scale({ x: this.bubble ? 1 : 0.2, y: this.bubble ? 1 : 0.2 })
-        .animation({ duration: 260, curve: Curve.EaseOut })
+      // The bubble only exists while it is shown: a hidden Text node would
+      // still be picked up by observe and confuse the model.
+      if (this.bubble) {
+        // One SVG shape: rounded bubble with a curved tail flowing toward the
+        // head. Drawn as a single outline so there is no seam to look pasted on.
+        Stack({ alignContent: Alignment.TopStart }) {
+          // Soft, shape-following shadow: the same outline, offset in layers.
+          Image($r('app.media.hopa_bubble_shadow'))
+            .width(this.markSize * 2.20)
+            .height(this.markSize * 0.99)
+            .objectFit(ImageFit.Fill)
+            .opacity(0.10)
+            .offset({ x: this.markSize * 0.01, y: this.markSize * 0.05 })
+          Image($r('app.media.hopa_bubble_shadow'))
+            .width(this.markSize * 2.20)
+            .height(this.markSize * 0.99)
+            .objectFit(ImageFit.Fill)
+            .opacity(0.06)
+            .offset({ x: this.markSize * 0.02, y: this.markSize * 0.09 })
+          Image($r('app.media.hopa_bubble'))
+            .width(this.markSize * 2.20)
+            .height(this.markSize * 0.99)
+            .objectFit(ImageFit.Fill)
+          Text("Hi, I'm HOPA 👋")
+            .width(this.markSize * 2.20)
+            .padding({ top: this.markSize * 0.20 })
+            .textAlign(TextAlign.Center)
+            .fontSize(this.markSize * 0.205)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(Color.White)
+            .maxLines(1)
+        }
+        .width(this.markSize * 2.20)
+        .height(this.markSize * 0.99)
+        .clip(false)
+        .rotate({ angle: -3 })
+        .position({ x: this.markSize * 0.42, y: -this.markSize * 1.12 })
         .hitTestBehavior(HitTestMode.None)
+      }
     }
     .width(this.markSize)
     .height(this.markSize)
@@ -201,7 +208,7 @@ export struct HopaMark {
       x: this.cheer || this.state === 'happy' ? 1.06 : 1,
       y: this.cheer || this.state === 'happy' ? 1.06 : 1
     })
-    .rotate({ angle: this.state === 'acting' ? -4 : 0 })
+    .rotate({ angle: this.state === 'acting' ? -4 : (this.state === 'listening' ? -2 : 0) })
     .offset({
       y: this.state === 'idle' || this.state === 'waiting'
         ? (this.bob ? this.markSize * 0.025 : -this.markSize * 0.025)
@@ -209,6 +216,9 @@ export struct HopaMark {
     })
     .animation({ duration: 900, curve: Curve.EaseInOut })
     .onClick(() => {
+      if (!this.interactive) {
+        return;
+      }
       Haptics.tap();
       this.wave();
       this.cheer = true;

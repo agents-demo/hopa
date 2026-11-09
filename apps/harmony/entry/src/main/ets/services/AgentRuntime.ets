@@ -49,6 +49,7 @@ export class AgentRuntime {
   private lastTranscript: string = '';
   private lastSuccess: boolean = false;
   private lastActionCount: number = 0;
+  private lastStepLabels: string[] = [];
   private matchedSkillId: string = '';
   private activeRuns: number = 0;
   private appNames: Map<string, string> = new Map<string, string>();
@@ -79,7 +80,7 @@ export class AgentRuntime {
     endpoint: string,
     apiKey: string,
     modelName: string,
-    maxSteps: number = 6
+    maxSteps: number = 14
   ): void {
     this.model = ModelFactory.create(provider, endpoint, apiKey, modelName);
     this.activeKey = apiKey;
@@ -89,6 +90,9 @@ export class AgentRuntime {
       maxSteps,
       new CompositeScreenSource(this.browser, this.bridge)
     );
+    this.loop.onStep = (outcome: ActionOutcome) => {
+      this.lastStepLabels.push(this.stepLabel(outcome));
+    };
     this.loop.setMemory(this.memory.toPrompt());
     this.modelLabel = modelName;
   }
@@ -106,6 +110,31 @@ export class AgentRuntime {
     return this.lastSuccess;
   }
 
+  /** Human labels for the steps of the last run, newest surface first. */
+  private stepLabel(outcome: ActionOutcome): string {
+    const stepApp: string = outcome.action.app.length > 0 ? outcome.action.app : outcome.action.target;
+    const stepKind: string = outcome.action.kind;
+    let stepName: string = stepKind.replace('ui.', '');
+    const label: string = this.appNames.get(stepApp) ?? stepApp;
+    if (stepKind === 'ui.launch') { stepName = `Opened ${label}`; }
+    else if (stepKind === 'ui.tap' || stepKind === 'ui.doubleTap' || stepKind === 'ui.longPress') { stepName = 'Tapped'; }
+    else if (stepKind === 'ui.type') { stepName = 'Typed'; }
+    else if (stepKind === 'ui.back') { stepName = 'Back'; }
+    else if (stepKind === 'ui.home') { stepName = 'Home'; }
+    else if (stepKind === 'ui.swipe' || stepKind === 'ui.scroll') { stepName = 'Scrolled'; }
+    const ok: boolean = outcome.executed && outcome.observation.success;
+    return `${ok ? '\u2713' : '\u2715'} ${stepName}`;
+  }
+
+  /** The goal of the last run, so a new chat can offer to resume it. */
+  lastGoalText(): string {
+    return this.lastGoal;
+  }
+
+  lastSteps(): string[] {
+    return this.lastStepLabels;
+  }
+
   /** True when the last run actually changed something on the phone. */
   lastRunHadActions(): boolean {
     return this.lastActionCount > 0;
@@ -116,7 +145,7 @@ export class AgentRuntime {
     provider: string,
     endpoint: string,
     modelName: string,
-    maxSteps: number = 8
+    maxSteps: number = 14
   ): void {
     this.configureModel(provider, endpoint, this.activeKey, modelName, maxSteps);
   }
@@ -216,6 +245,7 @@ export class AgentRuntime {
     this.lastGoal = goal;
     this.lastSuccess = false;
     this.lastActionCount = 0;
+    this.lastStepLabels = [];
     this.lastTranscript = '';
     this.pageLinks.clear();
     const matchedSkill: Skill | undefined = this.skills.match(goal);

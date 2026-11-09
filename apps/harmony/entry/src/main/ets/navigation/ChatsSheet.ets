@@ -12,6 +12,7 @@ import { ChatSection, searchSessions, sectionsOf } from './ChatSections';
 export struct ChatsSheet {
   @Prop sessions: ChatSession[] = [];
   @Prop currentId: string = '';
+  @StorageLink('hopa.profile') profileName: string = 'everyday';
   @State query: string = '';
   @State searchOpen: boolean = false;
 
@@ -228,7 +229,10 @@ export struct ChatsSheet {
             this.query = value;
           })
       }
-      this.NewChatRow()
+      // Easy and Kid never open a chat session, so "New chat" is noise there.
+      if (this.profileName !== 'easy' && this.profileName !== 'kid') {
+        this.NewChatRow()
+      }
       List({ space: 2 }) {
         if (this.showCurrent()) {
           ListItem() {

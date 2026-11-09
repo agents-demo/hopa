@@ -11,7 +11,12 @@ export struct RunsPage {
   @State status: string = 'Idle';
   @State busy: boolean = false;
   @State selectedId: string = '';
+  @State filter: string = 'all';
+  @State replaying: boolean = false;
+  @State replayIndex: number = 0;
+  @State replayRuns: RunRecord[] = [];
   private timer: number = -1;
+  private replayTimer: number = -1;
 
   aboutToAppear(): void {
     this.refresh();
@@ -25,6 +30,54 @@ export struct RunsPage {
       clearInterval(this.timer);
       this.timer = -1;
     }
+    this.stopReplay();
+  }
+
+  /** Runs closer together than ten minutes belong to the same session. */
+  private lastSession(): RunRecord[] {
+    const all: RunRecord[] = this.runs;
+    if (all.length === 0) {
+      return [];
+    }
+    const session: RunRecord[] = [all[all.length - 1]];
+    for (let index = all.length - 2; index >= 0; index--) {
+      const gap: number = session[0].startedAt - all[index].finishedAt;
+      if (gap > 10 * 60 * 1000) {
+        break;
+      }
+      session.unshift(all[index]);
+    }
+    return session;
+  }
+
+  private playReplay(): void {
+    if (this.replaying) {
+      this.stopReplay();
+      return;
+    }
+    const session: RunRecord[] = this.lastSession();
+    if (session.length === 0) {
+      this.status = 'No runs to replay yet';
+      return;
+    }
+    this.replayRuns = session;
+    this.replayIndex = session.length > 0 ? 1 : 0;
+    this.replaying = true;
+    this.replayTimer = setInterval(() => {
+      if (this.replayIndex >= this.replayRuns.length) {
+        this.stopReplay();
+        return;
+      }
+      this.replayIndex += 1;
+    }, 850);
+  }
+
+  private stopReplay(): void {
+    if (this.replayTimer >= 0) {
+      clearInterval(this.replayTimer);
+      this.replayTimer = -1;
+    }
+    this.replaying = false;
   }
 
   private refresh(): void {
@@ -77,6 +130,29 @@ export struct RunsPage {
     this.refresh();
   }
 
+  private shownRuns(): RunRecord[] {
+    if (this.filter === 'payments') {
+      return this.runs.filter((run: RunRecord) => run.isPayment);
+    }
+    if (this.filter === 'failed') {
+      return this.runs.filter((run: RunRecord) => run.status !== 'executed');
+    }
+    return this.runs;
+  }
+
+  @Builder
+  FilterChip(label: string, key: string) {
+    Text(label)
+      .fontSize(11)
+      .fontColor(this.filter === key ? $r('app.color.on_primary') : $r('app.color.text_secondary'))
+      .backgroundColor(this.filter === key ? $r('app.color.primary') : $r('app.color.surface_alt'))
+      .padding({ left: 10, right: 10, top: 5, bottom: 5 })
+      .borderRadius(9)
+      .onClick(() => {
+        this.filter = key;
+      })
+  }
+
   private selectedRuns(): RunRecord[] {
     const found: RunRecord[] = [];
     for (const run of this.runs) {
@@ -99,6 +175,70 @@ export struct RunsPage {
         .layoutWeight(1)
     }
     .width('100%')
+  }
+
+  @Builder
+  Replay() {
+    Column({ space: 8 }) {
+      Row({ space: 8 }) {
+        Column({ space: 2 }) {
+          Text('Session replay')
+            .fontSize(14)
+            .fontWeight(FontWeight.Bold)
+          Text(`${this.lastSession().length} actions from the last session`)
+            .fontSize(10)
+            .fontColor($r('app.color.text_hint'))
+        }
+        .layoutWeight(1)
+        .alignItems(HorizontalAlign.Start)
+        Button(this.replaying ? 'Stop' : 'Play')
+          .fontSize(12)
+          .height(28)
+          .backgroundColor(this.replaying ? $r('app.color.danger') : $r('app.color.primary'))
+          .onClick(() => {
+            this.playReplay();
+          })
+      }
+      .width('100%')
+      ForEach(this.replayRuns.slice(0, this.replayIndex), (run: RunRecord, index: number) => {
+        Row({ space: 8 }) {
+          Text(`${index + 1}`)
+            .fontSize(10)
+            .fontWeight(FontWeight.Bold)
+            .fontColor($r('app.color.primary'))
+            .width(18)
+            .height(18)
+            .textAlign(TextAlign.Center)
+            .backgroundColor($r('app.color.primary_soft'))
+            .borderRadius(9)
+          Column({ space: 1 }) {
+            Text(run.kind)
+              .fontSize(12)
+              .fontWeight(FontWeight.Medium)
+            Text(run.detail.length > 0 ? run.detail : '(no detail)')
+              .fontSize(10.5)
+              .fontColor($r('app.color.text_secondary'))
+              .maxLines(1)
+              .textOverflow({ overflow: TextOverflow.Ellipsis })
+          }
+          .layoutWeight(1)
+          .alignItems(HorizontalAlign.Start)
+          Text(`${Math.round((run.startedAt - this.replayRuns[0].startedAt) / 1000)}s`)
+            .fontSize(10)
+            .fontColor($r('app.color.text_hint'))
+        }
+        .width('100%')
+        .padding(8)
+        .backgroundColor($r('app.color.surface_alt'))
+        .borderRadius(8)
+      }, (run: RunRecord) => `replay-${run.id}`)
+    }
+    .width('100%')
+    .padding(10)
+    .backgroundColor($r('app.color.surface'))
+    .border({ width: 1, color: $r('app.color.divider') })
+    .borderRadius(10)
+    .alignItems(HorizontalAlign.Start)
   }
 
   @Builder
@@ -254,8 +394,15 @@ export struct RunsPage {
               this.resume();
             })
         }
+        this.Replay()
+        Row({ space: 6 }) {
+          this.FilterChip('All', 'all')
+          this.FilterChip('Payments', 'payments')
+          this.FilterChip('Failed', 'failed')
+        }
+        .width('100%')
         List({ space: 8 }) {
-          ForEach(this.runs, (run: RunRecord, index: number) => {
+          ForEach(this.shownRuns(), (run: RunRecord, index: number) => {
             ListItem() {
               Column({ space: 2 }) {
                 Row({ space: 8 }) {

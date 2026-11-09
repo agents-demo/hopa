@@ -116,7 +116,7 @@ export class AgentService {
     endpoint: string,
     apiKey: string,
     modelName: string,
-    maxSteps: number = 6
+    maxSteps: number = 14
   ): void {
     this.runtime.configureModel(provider, endpoint, apiKey, modelName, maxSteps);
   }

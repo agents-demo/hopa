@@ -7,8 +7,11 @@ import { ChatsSheet } from '../navigation/ChatsSheet';
 import { pageTitle } from '../navigation/PageTitles';
 import { TabIcon } from '../navigation/TabIcon';
 import { ApprovalSheet } from './chat/ApprovalSheet';
+import { HopaMark } from './chat/HopaMark';
 import { PageRouter } from './PageRouter';
 import { Haptics } from '../services/Haptics';
+import { SettingsStore } from '../services/SettingsStore';
+import { StyleProfile } from '../services/StyleProfile';
 import { KeyboardAvoidMode as HostKeyboardAvoidMode } from '@ohos.arkui.UIContext';
 import { window } from '@kit.ArkUI';
 
@@ -28,6 +31,12 @@ struct Index {
   @State approvalTitle: string = '';
   @State approvalMessage: string = '';
   @State approvalPayment: boolean = false;
+  /** Empty unless the last run (or setup) needs attention. */
+  @StorageLink('hopa.problem') problem: string = '';
+  /** Set by a home sheet: hide the shell chrome while it is focused. */
+  @StorageLink('hopa.focus') focusMode: boolean = false;
+  @StorageLink('hopa.style') styleName: string = 'calm';
+  @State profileName: string = 'everyday';
   private agentOpenedBrowser: boolean = false;
   private titleTimer: number = -1;
   private previousPage: string = 'chat';
@@ -65,6 +74,12 @@ struct Index {
       this.activePage = 'browser';
       this.chatsOpen = false;
     });
+    SettingsStore.load(getContext(this)).then((stored) => {
+      AppStorage.setOrCreate<string>(StyleProfile.KEY, stored.style);
+      AppStorage.setOrCreate<string>('hopa.profile', stored.profile);
+    }).catch(() => {
+      // The default look is fine when settings cannot be read.
+    });
     this.refreshChats();
     this.titleTimer = setInterval(() => {
       this.syncTitle();
@@ -84,6 +99,26 @@ struct Index {
     this.syncTitle();
   }
 
+  private style(): StyleProfile {
+    return StyleProfile.of(this.styleName);
+  }
+
+  /** Everyday keeps the chat as home; the other profiles get their own. */
+  private customHome(): boolean {
+    return this.profileName !== 'everyday';
+  }
+
+  /** Profiles with a custom home land there; Everyday lands in the chat. */
+  onProfileChange(): void {
+    if (this.customHome()) {
+      if (this.activePage === 'chat') {
+        this.activePage = 'home';
+      }
+    } else if (this.activePage === 'home') {
+      this.activePage = 'chat';
+    }
+  }
+
   private syncTitle(): void {
     const session: ChatSession | undefined = AgentService.get().conversations.current();
     let title: string = '';
@@ -92,6 +127,12 @@ struct Index {
       session.title.length > 0 &&
       session.title !== 'New chat') {
       title = session.title;
+    }
+    // @StorageLink + @Watch was not reliable here; poll the shell's copy.
+    const profile: string = AppStorage.get<string>('hopa.profile') ?? 'everyday';
+    if (profile !== this.profileName) {
+      this.profileName = profile;
+      this.onProfileChange();
     }
     if (title !== this.chatTitle) {
       this.chatTitle = title;
@@ -105,8 +146,10 @@ struct Index {
 
   private go(key: string): void {
     if (key !== this.activePage) {
+      animateTo({ duration: 160, curve: Curve.EaseOut }, () => {
       this.previousPage = this.activePage;
       this.activePage = key;
+      });
     }
     this.chatsOpen = false;
   }
@@ -187,7 +230,10 @@ struct Index {
   }
 
   private isTopLevel(): boolean {
-    return this.activePage === 'chat' ||
+    if (this.activePage === 'chat') {
+      return !this.customHome();
+    }
+    return this.activePage === 'home' ||
       this.activePage === 'activity' ||
       this.activePage === 'capabilities';
   }
@@ -199,19 +245,34 @@ struct Index {
   }
 
   private tabActive(key: string): boolean {
+    if (key === 'home') {
+      return this.activePage === 'home' || this.activePage === 'chat';
+    }
     if (key === 'chat') {
       return this.activePage === 'chat';
+    }
+    if (key === 'easyhistory') {
+      return this.activePage === 'easyhistory';
+    }
+    if (key === 'settings') {
+      return this.activePage === 'settings';
     }
     if (key === 'activity') {
       return this.activePage === 'activity' || this.activityChild();
     }
-    return this.activePage !== 'chat' &&
-      this.activePage !== 'activity' &&
-      !this.activityChild();
+    if (key === 'capabilities') {
+      const otherTop: boolean = this.activePage === 'chat' ||
+        this.activePage === 'home' ||
+        this.activePage === 'activity' ||
+        this.activePage === 'browser' ||
+        this.activityChild();
+      return !otherTop;
+    }
+    return false;
   }
 
   @Builder
-  Tab(label: string, key: string) {
+  Tab(label: string, key: string, iconKey: string = key) {
     Column({ space: 3 }) {
       Stack({ alignContent: Alignment.Center }) {
         Row()
@@ -220,7 +281,7 @@ struct Index {
           .borderRadius(14)
           .backgroundColor(this.tabActive(key) ? $r('app.color.primary_soft') : Color.Transparent)
           .animation({ duration: 160, curve: Curve.EaseOut })
-        TabIcon({ kind: key, active: this.tabActive(key) })
+        TabIcon({ kind: iconKey, active: this.tabActive(key) })
       }
       .width(48)
       .height(28)
@@ -252,7 +313,8 @@ struct Index {
             this.back();
           })
       }
-      if (this.activePage === 'chat') {
+      if (this.activePage === 'chat' || this.activePage === 'home') {
+        if (this.profileName === 'everyday') {
         Stack({ alignContent: Alignment.Center }) {
           Column()
             .width(19)
@@ -278,7 +340,8 @@ struct Index {
         .onClick(() => {
           this.openChats();
         })
-        if (this.chatTitle.length > 0) {
+        }
+        if (this.chatTitle.length > 0 && this.activePage === 'chat') {
           Text(this.chatTitle)
             .fontSize(16)
             .fontWeight(FontWeight.Medium)
@@ -289,6 +352,24 @@ struct Index {
         } else {
           Row().layoutWeight(1)
         }
+        // Chat stays clean; the only header signal is a real problem.
+        if (this.problem.length > 0) {
+          Row({ space: 5 }) {
+            HopaMark({ state: 'error', markSize: 20, interactive: false })
+            Text('Problem')
+              .fontSize(10)
+              .fontWeight(FontWeight.Medium)
+              .fontColor($r('app.color.danger'))
+          }
+          .padding({ left: 8, right: 8, top: 4, bottom: 4 })
+          .backgroundColor('#14C0392B')
+          .borderRadius(10)
+          .margin({ right: 6 })
+          .onClick(() => {
+            this.go('runs');
+          })
+        }
+        if (this.profileName === 'everyday') {
         Stack({ alignContent: Alignment.Center }) {
           Row()
             .width(34)
@@ -306,6 +387,7 @@ struct Index {
           this.refreshChats();
           this.go('chat');
         })
+        }
       } else {
         Text(pageTitle(this.activePage))
           .fontSize(18)
@@ -334,10 +416,22 @@ struct Index {
   @Builder
   BottomBar() {
     Row() {
-      this.Tab('Chat', 'chat')
-      this.Tab('Activity', 'activity')
-      this.Tab('Capabilities', 'capabilities')
+      if (this.profileName === 'kid') {
+        this.Tab('Home', 'home', 'chat')
+      } else if (this.profileName === 'easy') {
+        this.Tab('Talk', 'home', 'chat')
+        this.Tab('History', 'easyhistory')
+        this.Tab('Settings', 'settings')
+      } else {
+        this.Tab(this.customHome() ? 'Home' : 'Chat', this.customHome() ? 'home' : 'chat', 'chat')
+        this.Tab('Activity', 'activity')
+        this.Tab('Capabilities', 'capabilities')
+      }
     }
+    .width('100%')
+    .height(58)
+    .backgroundColor(`#D9${this.style().bg.substring(1)}`)
+    .backgroundBlurStyle(BlurStyle.Thin)
     .width('100%')
     .height(64)
     .padding({ left: 6, right: 6, top: 4, bottom: 6 })
@@ -369,24 +463,41 @@ struct Index {
   build() {
     Stack({ alignContent: Alignment.Bottom }) {
       Column() {
-        this.TopBar()
+        // A custom home owns the whole screen: no clock, no "+", no Everyday
+        // chat entry from here.
+        if (!this.focusMode && this.activePage !== 'home' && this.activePage !== 'easyhistory') {
+          this.TopBar()
+        }
         Column() {
           PageRouter({
             activePage: this.activePage,
             onNavigate: (key: string) => {
               this.go(key);
+            },
+            onOpenChat: (goal: string, voice: boolean) => {
+              if (goal.length > 0) {
+                AppStorage.setOrCreate<string>('hopa.pendingGoal', goal);
+              }
+              AppStorage.setOrCreate<boolean>('hopa.autovoice', voice);
+              this.previousPage = this.activePage;
+              this.activePage = 'chat';
+            },
+            onOpenRuns: () => {
+              this.go('runs');
             }
           })
         }
         .layoutWeight(1)
         .width('100%')
-        if (this.activePage !== 'browser' && !this.keyboardVisible) {
+        // Easy is calm: no tab bar, just two quiet links on the home screen.
+        if (this.activePage !== 'browser' && !this.keyboardVisible && !this.focusMode &&
+          this.profileName !== 'easy' && this.profileName !== 'kid') {
           this.BottomBar()
         }
       }
       .width('100%')
       .height('100%')
-      .backgroundColor($r('app.color.bg'))
+      .backgroundColor(this.style().bg)
 
       if (this.approvalOpen) {
         ApprovalSheet({

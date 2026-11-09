@@ -23,6 +23,36 @@ export struct ActivityPage {
     return AgentService.get().getLastDurationMs();
   }
 
+  private lastGoal(): string {
+    const service = AgentService.get();
+    const live: string = service.runtime.lastGoalText();
+    if (live.length > 0) {
+      return live;
+    }
+    const sessions = service.conversations.all();
+    let best: number = -1;
+    let goal: string = '';
+    for (let i = 0; i < sessions.length; i++) {
+      const session = sessions[i];
+      if (session.updatedAt < best) {
+        continue;
+      }
+      for (let j = session.entries.length - 1; j >= 0; j--) {
+        const entry = session.entries[j];
+        if (entry.role === 'user' && entry.text.length > 0) {
+          best = session.updatedAt;
+          goal = entry.text;
+          break;
+        }
+      }
+    }
+    return goal;
+  }
+
+  private lastSteps(): string[] {
+    return AgentService.get().runtime.lastSteps();
+  }
+
   private recentActions(): RunRecord[] {
     const all: RunRecord[] = AgentService.get().runs.all();
     const result: RunRecord[] = [];
@@ -134,7 +164,7 @@ export struct ActivityPage {
       Column({ space: 10 }) {
         Column({ space: 6 }) {
           Row({ space: 10 }) {
-            HopaMark({ state: this.isBusy() ? 'acting' : 'idle', markSize: 34 })
+            HopaMark({ state: this.isBusy() ? 'acting' : 'idle', markSize: 34, interactive: false })
             Column({ space: 6 }) {
               Row({ space: 8 }) {
                 Column()
@@ -170,6 +200,42 @@ export struct ActivityPage {
         .border({ width: 1, color: $r('app.color.divider') })
         .borderRadius(14)
         .alignItems(HorizontalAlign.Start)
+        if (this.lastGoal().length > 0) {
+          Text('LAST RUN')
+            .fontSize(10)
+            .fontColor($r('app.color.text_hint'))
+            .letterSpacing(0.6)
+            .width('100%')
+            .padding({ top: 6 })
+          Column({ space: 8 }) {
+            Text(this.lastGoal())
+              .fontSize(13)
+              .fontColor($r('app.color.text_primary'))
+              .maxLines(2)
+              .textOverflow({ overflow: TextOverflow.Ellipsis })
+              .width('100%')
+            if (this.lastSteps().length > 0) {
+              Flex({ wrap: FlexWrap.Wrap }) {
+                ForEach(this.lastSteps(), (step: string) => {
+                  Text(step)
+                    .fontSize(10.5)
+                    .fontColor($r('app.color.text_secondary'))
+                    .padding({ left: 8, right: 8, top: 3, bottom: 3 })
+                    .backgroundColor($r('app.color.surface_alt'))
+                    .borderRadius(8)
+                    .margin({ right: 6, bottom: 4 })
+                }, (step: string, i: number) => `${i}-${step}`)
+              }
+              .width('100%')
+            }
+          }
+          .width('100%')
+          .padding(14)
+          .backgroundColor($r('app.color.surface'))
+          .border({ width: 1, color: $r('app.color.divider') })
+          .borderRadius(14)
+          .alignItems(HorizontalAlign.Start)
+        }
         if (this.recentActions().length > 0) {
           Text('RECENT ACTIONS')
             .fontSize(10)

@@ -9,6 +9,11 @@ export class StoredSettings {
   network: boolean = false;
   autonomous: boolean = false;
   appearance: string = 'system';
+  profile: string = 'everyday';
+  style: string = 'calm';
+  showSteps: boolean = true;
+  reduceMotion: boolean = false;
+  speakReplies: boolean = false;
   bridgeUrl: string = '';
   bridgeToken: string = '';
   lastTokens: number = 0;
@@ -52,6 +57,26 @@ export class SettingsStore {
     if (typeof appearance === 'string') {
       settings.appearance = appearance;
     }
+    const profile = await store.get('profile', settings.profile);
+    if (typeof profile === 'string') {
+      settings.profile = profile;
+    }
+    const style = await store.get('style', settings.style);
+    if (typeof style === 'string') {
+      settings.style = style;
+    }
+    const showSteps = await store.get('show_steps', settings.showSteps);
+    if (typeof showSteps === 'boolean') {
+      settings.showSteps = showSteps;
+    }
+    const reduceMotion = await store.get('reduce_motion', settings.reduceMotion);
+    if (typeof reduceMotion === 'boolean') {
+      settings.reduceMotion = reduceMotion;
+    }
+    const speakReplies = await store.get('speak_replies', settings.speakReplies);
+    if (typeof speakReplies === 'boolean') {
+      settings.speakReplies = speakReplies;
+    }
     const bridgeUrl = await store.get('bridge_url', settings.bridgeUrl);
     if (typeof bridgeUrl === 'string') {
       settings.bridgeUrl = bridgeUrl;
@@ -79,6 +104,11 @@ export class SettingsStore {
     await store.put('network', settings.network);
     await store.put('autonomous', settings.autonomous);
     await store.put('appearance', settings.appearance);
+    await store.put('profile', settings.profile);
+    await store.put('style', settings.style);
+    await store.put('show_steps', settings.showSteps);
+    await store.put('reduce_motion', settings.reduceMotion);
+    await store.put('speak_replies', settings.speakReplies);
     await store.put('bridge_url', settings.bridgeUrl);
     await store.put('bridge_token', settings.bridgeToken);
     await store.put('last_tokens', settings.lastTokens);

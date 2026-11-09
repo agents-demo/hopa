@@ -26,10 +26,23 @@ class BridgeLaunchBody {
   foreground: string = '';
 }
 
+class BridgeForegroundBody {
+  bundle: string = '';
+}
+
 class ScreenshotBody {
   image: string = '';
   mime: string = 'image/jpeg';
   bytes: number = 0;
+}
+
+class TranscribeBody {
+  text: string = '';
+}
+
+class SpeakBody {
+  mime: string = 'audio/wav';
+  audio: string = '';
 }
 
 /**
@@ -210,6 +223,17 @@ export class BridgeClient {
     return this.foreground;
   }
 
+  /** Ask the phone which app is in front right now; '' when unreachable. */
+  async foregroundBundle(): Promise<string> {
+    try {
+      const raw: string = await this.call('/foreground', '{}');
+      const parsed = JSON.parse(raw) as BridgeForegroundBody;
+      return parsed.bundle;
+    } catch (error) {
+      return '';
+    }
+  }
+
   async key(name: string): Promise<boolean> {
     try {
       await this.call('/key', JSON.stringify({ name: name }));
@@ -230,6 +254,20 @@ export class BridgeClient {
       this.lastError = `${(error as Error).message}`;
       return '';
     }
+  }
+
+  /** Speech-to-text on the PC; '' when it did not catch anything. */
+  async transcribe(wavBase64: string): Promise<string> {
+    const raw: string = await this.call('/transcribe', JSON.stringify({ audio: wavBase64 }));
+    const parsed = JSON.parse(raw) as TranscribeBody;
+    return parsed.text;
+  }
+
+  /** A spoken WAV reply from the PC, base64 encoded. */
+  async speak(text: string): Promise<string> {
+    const raw: string = await this.call('/speak', JSON.stringify({ text: text }));
+    const parsed = JSON.parse(raw) as SpeakBody;
+    return parsed.audio;
   }
 
   async swipe(fromX: number, fromY: number, toX: number, toY: number): Promise<boolean> {

@@ -57,6 +57,8 @@ In Chinese, the idea is simple: **动口不动手** — speak, don’t tap.
 
 ## A first look
 
+**▶ [Watch the 62-second demo](docs/media/HOPA-demo-2026.mp4)** — the banner, HOPA saying hello, then the real Bilibili app and a real Weibo post, end to end.
+
 <table>
 <tr>
 <td width="33%" align="center" valign="top">

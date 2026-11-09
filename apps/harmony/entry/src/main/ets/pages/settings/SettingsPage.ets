@@ -3,6 +3,7 @@ import { Context, common } from '@kit.AbilityKit';
 import { AgentService } from '../../services/AgentService';
 import { Appearance } from '../../services/Appearance';
 import { SettingsStore, StoredSettings } from '../../services/SettingsStore';
+import { ProfileService } from '../../services/ProfileService';
 import { AboutPage } from '../tools/AboutPage';
 import { SelfCheckPage } from '../tools/SelfCheckPage';
 import { ScreensPage } from '../tools/ScreensPage';
@@ -20,6 +21,11 @@ export struct SettingsPage {
   @State bridgeToken: string = '';
   @State bridgeStatus: string = 'not connected';
   @State appearance: string = 'system';
+  @State profile: string = 'everyday';
+  @State showSteps: boolean = true;
+  @State reduceMotion: boolean = false;
+  @State speakReplies: boolean = false;
+  @State quietMode: boolean = false;
   @State a11yAvailable: boolean = false;
   @State a11yInstalled: string = 'checking...';
   @State subPage: string = '';
@@ -36,6 +42,15 @@ export struct SettingsPage {
       this.networkEnabled = stored.network;
       this.autonomous = stored.autonomous;
       this.appearance = stored.appearance;
+      this.profile = stored.profile;
+      AppStorage.setOrCreate<string>(ProfileService.KEY, stored.profile);
+      AppStorage.setOrCreate<string>('hopa.style', stored.style);
+      this.showSteps = stored.showSteps;
+      this.reduceMotion = stored.reduceMotion;
+      this.speakReplies = stored.speakReplies;
+      AppStorage.setOrCreate<boolean>('hopa.showSteps', stored.showSteps);
+      AppStorage.setOrCreate<boolean>('hopa.speak', stored.speakReplies);
+      this.quietMode = !stored.showSteps && stored.reduceMotion;
       this.bridgeUrl = stored.bridgeUrl;
       this.bridgeToken = stored.bridgeToken;
       if (this.bridgeUrl.length > 0 && this.bridgeToken.length > 0) {
@@ -69,14 +84,50 @@ export struct SettingsPage {
     }
   }
 
+  /** One tap rewrites the switches this profile owns. */
+  private async applyProfile(name: string): Promise<void> {
+    const context = getContext(this) as Context;
+    const profile = ProfileService.of(name);
+    this.profile = profile.name;
+    AppStorage.setOrCreate<string>(ProfileService.KEY, profile.name);
+    AppStorage.setOrCreate<string>('hopa.style', profile.style);
+    try {
+      const stored: StoredSettings = await SettingsStore.load(context);
+      profile.applyTo(stored);
+      await SettingsStore.save(context, stored);
+      this.networkEnabled = stored.network;
+      this.autonomous = stored.autonomous;
+      this.showSteps = stored.showSteps;
+      this.reduceMotion = stored.reduceMotion;
+      this.speakReplies = stored.speakReplies;
+      AppStorage.setOrCreate<boolean>('hopa.showSteps', stored.showSteps);
+      AppStorage.setOrCreate<boolean>('hopa.speak', stored.speakReplies);
+      this.quietMode = !stored.showSteps && stored.reduceMotion;
+      AgentService.get().setAutonomous(stored.autonomous);
+      AgentService.get().setNetworkEnabled(stored.network);
+      this.getUIContext().getPromptAction().showToast({
+        message: `${ProfileService.labelOf(profile.name)} profile on`
+      });
+    } catch (error) {
+      // The in-memory profile still applies for this session.
+    }
+  }
+
   private persist(): void {
     const context = getContext(this) as Context;
     SettingsStore.load(context).then((stored: StoredSettings) => {
+      stored.profile = this.profile;
+      stored.style = AppStorage.get<string>('hopa.style') ?? stored.style;
       stored.network = this.networkEnabled;
       stored.autonomous = this.autonomous;
       stored.appearance = this.appearance;
+      stored.showSteps = this.showSteps;
+      stored.reduceMotion = this.reduceMotion;
+      stored.speakReplies = this.speakReplies;
       stored.bridgeUrl = this.bridgeUrl;
       stored.bridgeToken = this.bridgeToken;
+      AppStorage.setOrCreate<boolean>('hopa.showSteps', this.showSteps);
+      AppStorage.setOrCreate<boolean>('hopa.speak', this.speakReplies);
       return SettingsStore.save(context, stored);
     }).catch(() => {
       // Persistence is best effort; the in-memory settings still work.
@@ -113,6 +164,9 @@ export struct SettingsPage {
     if (this.subPage === 'screens') {
       return 'Live screen';
     }
+    if (this.subPage === 'permissions') {
+      return 'Permissions';
+    }
     return 'About';
   }
 
@@ -134,6 +188,77 @@ export struct SettingsPage {
     .onClick(() => {
       this.subPage = key;
     })
+  }
+
+  @Builder
+  Capability(label: string, value: string, ok: boolean) {
+    Row({ space: 8 }) {
+      Circle({ width: 7, height: 7 })
+        .fill(ok ? $r('app.color.success') : $r('app.color.warning'))
+      Text(label)
+        .fontSize(13)
+        .fontColor($r('app.color.text_primary'))
+        .layoutWeight(1)
+      Text(value)
+        .fontSize(11)
+        .fontColor($r('app.color.text_hint'))
+    }
+    .width('100%')
+    .padding(10)
+    .backgroundColor($r('app.color.surface_alt'))
+    .borderRadius(8)
+  }
+
+  private openedApps(): string[] {
+    const seen: Map<string, number> = new Map<string, number>();
+    for (const run of AgentService.get().runs.all()) {
+      if (run.kind !== 'ui.launch') {
+        continue;
+      }
+      const name: string = run.detail.length > 0 ? run.detail : 'an app';
+      seen.set(name, (seen.get(name) ?? 0) + 1);
+    }
+    const rows: string[] = [];
+    seen.forEach((count: number, name: string) => {
+      rows.push(`${name} ? ${count}`);
+    });
+    return rows.slice(0, 5);
+  }
+
+  @Builder
+  Permissions() {
+    Column({ space: 8 }) {
+      this.Capability('Model', AgentService.get().hasModelKey() ? AgentService.get().getModelLabel() : 'not configured',
+        AgentService.get().hasModelKey())
+      this.Capability('PC bridge', AgentService.get().isBridgeConfigured() ? 'configured' : 'off',
+        AgentService.get().isBridgeConfigured())
+      this.Capability('Accessibility', AgentService.get().isAccessibilityAvailable() ? 'on' : 'needs ACL',
+        AgentService.get().isAccessibilityAvailable())
+      this.Capability('Web access', this.networkEnabled ? 'on' : 'off', this.networkEnabled)
+      this.Capability('Autonomous', this.autonomous ? 'on' : 'off', !this.autonomous)
+      this.Capability('Saved runs', `${AgentService.get().runs.all().length}`, true)
+      Text('APPS HOPA OPENED')
+        .fontSize(10)
+        .fontColor($r('app.color.text_hint'))
+        .letterSpacing(0.6)
+        .padding({ top: 8 })
+      ForEach(this.openedApps(), (row: string) => {
+        Text(row)
+          .fontSize(12)
+          .fontColor($r('app.color.text_primary'))
+          .width('100%')
+          .padding({ left: 10, right: 10, top: 7, bottom: 7 })
+          .backgroundColor($r('app.color.surface'))
+          .border({ width: 1, color: $r('app.color.divider') })
+          .borderRadius(8)
+      }, (row: string) => row)
+      Text('HOPA asks before anything public or any payment. That cannot be turned off.')
+        .fontSize(10)
+        .fontColor($r('app.color.text_hint'))
+        .padding({ top: 4 })
+    }
+    .width('100%')
+    .alignItems(HorizontalAlign.Start)
   }
 
   @Builder
@@ -162,6 +287,8 @@ export struct SettingsPage {
           DeveloperPage()
         } else if (this.subPage === 'selfcheck') {
           SelfCheckPage()
+        } else if (this.subPage === 'permissions') {
+          this.Permissions()
         } else if (this.subPage === 'screens') {
           ScreensPage()
         } else {
@@ -202,6 +329,35 @@ export struct SettingsPage {
     } else {
       Scroll() {
         Column({ space: 12 }) {
+          this.Label('PROFILE')
+          Column({ space: 8 }) {
+            Flex({ wrap: FlexWrap.Wrap }) {
+              ForEach(ProfileService.NAMES, (name: string) => {
+                Text(ProfileService.labelOf(name))
+                  .fontSize(11)
+                  .fontColor(this.profile === name
+                    ? $r('app.color.on_primary')
+                    : $r('app.color.text_secondary'))
+                  .backgroundColor(this.profile === name
+                    ? $r('app.color.primary')
+                    : $r('app.color.surface_alt'))
+                  .padding({ left: 10, right: 10, top: 5, bottom: 5 })
+                  .borderRadius(9)
+                  .margin({ right: 6, bottom: 6 })
+                  .onClick(() => {
+                    this.applyProfile(name);
+                  })
+              }, (name: string) => name)
+            }
+            .width('100%')
+            Text(ProfileService.describe(this.profile))
+              .fontSize(10)
+              .fontColor($r('app.color.text_hint'))
+              .width('100%')
+          }
+          .cardStyle()
+          .alignItems(HorizontalAlign.Start)
+
           this.Label('AGENT')
           Column({ space: 0 }) {
             Row({ space: 10 }) {
@@ -219,6 +375,88 @@ export struct SettingsPage {
                 .onChange((on: boolean) => {
                   this.networkEnabled = on;
                   AgentService.get().setNetworkEnabled(on);
+                  this.persist();
+                })
+            }
+            .width('100%')
+            .padding({ top: 9, bottom: 9 })
+            Divider().color($r('app.color.divider'))
+            Row({ space: 10 }) {
+              Column({ space: 2 }) {
+                Text('Quiet mode')
+                  .fontSize(14)
+                  .fontColor($r('app.color.text_primary'))
+                Text('No chips, no motion.')
+                  .fontSize(10)
+                  .fontColor($r('app.color.text_hint'))
+              }
+              .layoutWeight(1)
+              .alignItems(HorizontalAlign.Start)
+              Toggle({ type: ToggleType.Switch, isOn: this.quietMode })
+                .onChange((on: boolean) => {
+                  this.quietMode = on;
+                  this.showSteps = !on;
+                  this.reduceMotion = on;
+                  this.persist();
+                })
+            }
+            .width('100%')
+            .padding({ top: 9, bottom: 9 })
+            Divider().color($r('app.color.divider'))
+            Row({ space: 10 }) {
+              Column({ space: 2 }) {
+                Text('Show what HOPA did')
+                  .fontSize(14)
+                  .fontColor($r('app.color.text_primary'))
+                Text('Step chips under each answer.')
+                  .fontSize(10)
+                  .fontColor($r('app.color.text_hint'))
+              }
+              .layoutWeight(1)
+              .alignItems(HorizontalAlign.Start)
+            Toggle({ type: ToggleType.Switch, isOn: this.showSteps })
+                .onChange((on: boolean) => {
+                  this.showSteps = on;
+                  this.persist();
+                })
+            }
+            .width('100%')
+            .padding({ top: 9, bottom: 9 })
+            Divider().color($r('app.color.divider'))
+            Row({ space: 10 }) {
+              Column({ space: 2 }) {
+                Text('Reduce motion')
+                  .fontSize(14)
+                  .fontColor($r('app.color.text_primary'))
+                Text('Quieter transitions and typing.')
+                  .fontSize(10)
+                  .fontColor($r('app.color.text_hint'))
+              }
+              .layoutWeight(1)
+              .alignItems(HorizontalAlign.Start)
+              Toggle({ type: ToggleType.Switch, isOn: this.reduceMotion })
+                .onChange((on: boolean) => {
+                  this.reduceMotion = on;
+                  this.persist();
+                })
+            }
+            .width('100%')
+            .padding({ top: 9, bottom: 9 })
+            Divider().color($r('app.color.divider'))
+            Row({ space: 10 }) {
+              Column({ space: 2 }) {
+                Text('Read answers aloud')
+                  .fontSize(14)
+                  .fontColor($r('app.color.text_primary'))
+                Text('Speaks each reply through the PC bridge.')
+                  .fontSize(10)
+                  .fontColor($r('app.color.text_hint'))
+              }
+              .layoutWeight(1)
+              .alignItems(HorizontalAlign.Start)
+              Toggle({ type: ToggleType.Switch, isOn: this.speakReplies })
+                .onChange((on: boolean) => {
+                  this.speakReplies = on;
                   this.persist();
                 })
             }
@@ -359,6 +597,7 @@ export struct SettingsPage {
           Column({ space: 6 }) {
             this.Row('App access', 'Which bundles may be launched', 'appaccess')
             this.Row('Computer access', 'PC bridge and MCP commands', 'computer')
+            this.Row('Permissions', 'What HOPA can and cannot do', 'permissions')
             this.Row('Self-check', 'Verify the setup', 'selfcheck')
             this.Row('Live screen', 'Debug mirror of this phone', 'screens')
             this.Row('Developer', 'Build and runtime details', 'developer')
