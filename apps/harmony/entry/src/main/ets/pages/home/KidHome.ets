@@ -482,14 +482,7 @@ export struct KidHome {
               this.draft = '';
               this.result = '';
             })
-          Text('Close')
-            .fontSize(this.style().body - 1)
-            .fontColor($r('app.color.text_secondary'))
-            .textAlign(TextAlign.Center)
-            .width('100%')
-            .onClick(() => {
-              this.closeTask();
-            })
+
         }
         .width('100%')
         .height('100%')

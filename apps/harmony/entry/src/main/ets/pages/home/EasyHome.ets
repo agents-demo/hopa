@@ -513,15 +513,7 @@ export struct EasyHome {
               this.draft = '';
               this.result = '';
             })
-          Text('Close')
-            .fontSize(this.style().body)
-            .fontColor($r('app.color.text_secondary'))
-            .textAlign(TextAlign.Center)
-            .width('100%')
-            .padding({ top: 6 })
-            .onClick(() => {
-              this.taskOpen = false;
-            })
+
         }
         .width('100%')
         .height('100%')

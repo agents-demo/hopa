@@ -11,6 +11,7 @@ export struct SocialHome {
   onOpenRuns: () => void = () => {};
   @StorageLink('hopa.style') styleName: string = 'vivid';
   @StorageLink('hopa.accent') accentColor: string = '';
+  @State selected: number = -1;
   @State tick: number = 0;
   private ticker: number = -1;
 
@@ -100,7 +101,7 @@ export struct SocialHome {
   }
 
   @Builder
-  FeedCard(run: RunRecord) {
+  FeedCard(run: RunRecord, index: number) {
     Column({ space: 8 }) {
       Row({ space: 8 }) {
         Text(this.badge(run))
@@ -153,9 +154,100 @@ export struct SocialHome {
     .border({ width: 1, color: $r('app.color.divider') })
     .borderRadius(this.style().cardRadius)
     .alignItems(HorizontalAlign.Start)
+    .onClick(() => {
+      this.selected = index;
+    })
+  }
+
+  @Builder
+  Detail(run: RunRecord) {
+    Column({ space: 16 }) {
+      Row({ space: 8 }) {
+        Text('←')
+          .fontSize(24)
+          .fontColor($r('app.color.text_primary'))
+          .width(44)
+          .height(44)
+          .textAlign(TextAlign.Center)
+          .onClick(() => {
+            this.selected = -1;
+          })
+        Text('What HOPA did')
+          .fontSize(this.style().body + 2)
+          .fontWeight(FontWeight.Bold)
+          .layoutWeight(1)
+      }
+      .width('100%')
+      Text(new Date(run.startedAt).toLocaleString())
+        .fontSize(10)
+        .fontColor($r('app.color.text_hint'))
+      Column({ space: 10 }) {
+        Text(this.badge(run))
+          .fontSize(11)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(this.accent())
+          .padding({ left: 8, right: 8, top: 3, bottom: 3 })
+          .backgroundColor($r('app.color.surface_alt'))
+          .borderRadius(7)
+        Text(this.title(run))
+          .fontSize(this.style().body + 5)
+          .fontWeight(FontWeight.Medium)
+          .fontColor($r('app.color.text_primary'))
+          .width('100%')
+        Text(run.status === 'executed'
+          ? `Finished in ${run.durationMs} ms`
+          : 'This one did not finish')
+          .fontSize(this.style().body - 1)
+          .fontColor(run.status === 'executed'
+            ? $r('app.color.success')
+            : $r('app.color.danger'))
+      }
+      .width('100%')
+      .padding(16)
+      .backgroundColor($r('app.color.surface'))
+      .border({ width: 1, color: $r('app.color.divider') })
+      .borderRadius(this.style().cardRadius)
+      .alignItems(HorizontalAlign.Start)
+      Blank()
+      Row({ space: 10 }) {
+        Text('Share')
+          .fontSize(this.style().body)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(this.accent())
+          .layoutWeight(1)
+          .height(50)
+          .textAlign(TextAlign.Center)
+          .backgroundColor($r('app.color.surface_alt'))
+          .borderRadius(this.style().cardRadius)
+          .onClick(() => {
+            this.share(run);
+          })
+        Text('Replay')
+          .fontSize(this.style().body)
+          .fontWeight(FontWeight.Medium)
+          .fontColor($r('app.color.on_primary'))
+          .layoutWeight(1)
+          .height(50)
+          .textAlign(TextAlign.Center)
+          .backgroundColor(this.accent())
+          .borderRadius(this.style().cardRadius)
+          .onClick(() => {
+            this.onOpenRuns();
+          })
+      }
+      .width('100%')
+    }
+    .width('100%')
+    .height('100%')
+    .padding({ left: 16, right: 16, top: 30, bottom: 20 })
+    .backgroundColor($r('app.color.bg'))
+    .alignItems(HorizontalAlign.Start)
   }
 
   build() {
+    if (this.selected >= 0 && this.selected < this.feed().length) {
+      this.Detail(this.feed()[this.selected])
+    } else {
     Column({ space: 12 }) {
       Row({ space: 8 }) {
         HopaMark({ state: 'idle', markSize: 34, interactive: false })
@@ -188,8 +280,8 @@ export struct SocialHome {
       } else {
         Scroll() {
           Column({ space: 10 }) {
-            ForEach(this.feed(), (run: RunRecord) => {
-              this.FeedCard(run)
+            ForEach(this.feed(), (run: RunRecord, index: number) => {
+              this.FeedCard(run, index)
             }, (run: RunRecord) => run.id)
           }
           .width('100%')
@@ -214,6 +306,8 @@ export struct SocialHome {
       .backgroundColor(this.accent())
       .borderRadius(this.style().cardRadius)
       .onClick(() => {
+        // A feed action starts a fresh conversation, never appends to the last.
+        AgentService.get().conversations.newChat();
         this.onOpenChat('', false);
       })
     }
@@ -221,5 +315,6 @@ export struct SocialHome {
     .height('100%')
     .padding({ left: 16, right: 16, top: 30, bottom: 16 })
     .alignItems(HorizontalAlign.Start)
+    }
   }
 }

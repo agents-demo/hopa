@@ -314,6 +314,7 @@ struct Index {
           })
       }
       if (this.activePage === 'chat' || this.activePage === 'home') {
+        if (this.profileName === 'everyday') {
         Stack({ alignContent: Alignment.Center }) {
           Column()
             .width(19)
@@ -339,6 +340,7 @@ struct Index {
         .onClick(() => {
           this.openChats();
         })
+        }
         if (this.chatTitle.length > 0 && this.activePage === 'chat') {
           Text(this.chatTitle)
             .fontSize(16)
@@ -367,6 +369,7 @@ struct Index {
             this.go('runs');
           })
         }
+        if (this.profileName === 'everyday') {
         Stack({ alignContent: Alignment.Center }) {
           Row()
             .width(34)
@@ -384,6 +387,7 @@ struct Index {
           this.refreshChats();
           this.go('chat');
         })
+        }
       } else {
         Text(pageTitle(this.activePage))
           .fontSize(18)
