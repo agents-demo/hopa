@@ -19,7 +19,7 @@ import { Context, common } from '@kit.AbilityKit';
 import { BrowserController } from './BrowserController';
 import { BackgroundKeeper } from './BackgroundKeeper';
 import { BridgeClient } from './BridgeClient';
-import { BridgeUiCapability } from './BridgeUiCapability';
+import { RemoteUiCapability } from './RemoteUiCapability';
 import { MemoryStore } from './MemoryStore';
 import { SkillStore } from './SkillStore';
 import { UiApprovalGateway } from './ApprovalPromptGateway';
@@ -82,7 +82,7 @@ export class AgentService {
     this.executor.registerCapability(this.accessibility);
     this.executor.registerCapability(this.ui);
     this.executor.registerCapability(this.system);
-    this.executor.registerCapability(new BridgeUiCapability(this.bridge));
+    this.executor.registerCapability(new RemoteUiCapability(this.bridge));
 
     this.tools = ToolRegistryDefaults.create();
 

@@ -1,7 +1,7 @@
 import { RunRecord } from '@hopa/core';
 import { pasteboard } from '@kit.BasicServicesKit';
 import { AgentService } from '../../services/AgentService';
-import { StyleProfile } from '../../services/StyleProfile';
+import { VisualStyle } from '../../services/VisualStyle';
 import { HopaMark } from '../chat/HopaMark';
 
 /** Gen Z home: a feed of what HOPA did, made to share. */
@@ -28,8 +28,8 @@ export struct SocialHome {
     }
   }
 
-  private style(): StyleProfile {
-    return StyleProfile.of(this.styleName);
+  private style(): VisualStyle {
+    return VisualStyle.of(this.styleName);
   }
 
   private accent(): ResourceColor {
@@ -154,6 +154,7 @@ export struct SocialHome {
     .border({ width: 1, color: $r('app.color.divider') })
     .borderRadius(this.style().cardRadius)
     .alignItems(HorizontalAlign.Start)
+    .accessibilityText(`Open ${this.title(run)}`)
     .onClick(() => {
       this.selected = index;
     })

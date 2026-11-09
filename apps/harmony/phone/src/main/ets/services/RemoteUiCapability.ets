@@ -9,7 +9,7 @@ import {
 import { AccessibilityBridge } from '@hopa/capability-accessibility';
 import { BridgeClient, BridgeNode } from './BridgeClient';
 import { LaunchError } from './LaunchError';
-import { HopaForeground } from './HopaForeground';
+import { AppFocus } from './AppFocus';
 /** Feeds the loop with the PC bridge's layout instead of the local screen. */
 export class BridgeScreenSource implements ScreenSource {
   private bridge: BridgeClient;
@@ -19,7 +19,7 @@ export class BridgeScreenSource implements ScreenSource {
   }
 
   async capture(): Promise<Screen> {
-    if (HopaForeground.active) {
+    if (AppFocus.active) {
       // Never describe HOPA's own chat as if it were the target app.
       return new Screen('HOPA is the app in front. Answer the user; do not tap or type on this screen.');
     }
@@ -47,7 +47,7 @@ export class BridgeScreenSource implements ScreenSource {
  * It only handles actions when the bridge is configured and the local
  * accessibility service is not available, so the on-device path always wins.
  */
-export class BridgeUiCapability implements ActionCapability {
+export class RemoteUiCapability implements ActionCapability {
   private bridge: BridgeClient;
 
   constructor(bridge: BridgeClient) {
@@ -86,7 +86,7 @@ export class BridgeUiCapability implements ActionCapability {
 
   async execute(action: Action): Promise<Observation> {
     // Launching is the way out; anything else on HOPA's own window is a bug.
-    if (HopaForeground.active && action.kind !== 'ui.launch' &&
+    if (AppFocus.active && action.kind !== 'ui.launch' &&
       action.kind !== 'ui.home' && action.kind !== 'ui.back') {
       return Observation.fail('HOPA is the app in front; answer the user instead of acting');
     }

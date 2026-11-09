@@ -1,5 +1,5 @@
-import { StyleProfile } from '../../services/StyleProfile';
-import { ProfileService } from '../../services/ProfileService';
+import { VisualStyle } from '../../services/VisualStyle';
+import { ModeProfile } from '../../services/ModeProfile';
 
 /** The chat composer: one rounded field and a send/stop/voice button. */
 @Component
@@ -19,12 +19,12 @@ export struct ChatComposer {
   @StorageLink('hopa.profile') profileName: string = 'everyday';
   private pulseTimer: number = -1;
 
-  private style(): StyleProfile {
-    return StyleProfile.of(this.styleName);
+  private style(): VisualStyle {
+    return VisualStyle.of(this.styleName);
   }
 
   private placeholder(): string {
-    return ProfileService.of(this.profileName).input === 'voice'
+    return ModeProfile.of(this.profileName).input === 'voice'
       ? 'Tap the mic or type'
       : 'Ask HOPA...';
   }
@@ -35,7 +35,7 @@ export struct ChatComposer {
 
   private accent(): ResourceColor {
     // Wallpaper colour is a playful-profile feature; the others keep the brand.
-    const profile = ProfileService.of(this.profileName);
+    const profile = ModeProfile.of(this.profileName);
     if (profile.name !== 'social' && profile.name !== 'kid') {
       return $r('app.color.primary');
     }

@@ -5,6 +5,6 @@
  * composer and screenshot itself. Lifecycle callbacks are the reliable signal;
  * they also stay correct when the front-app query is slow or stale.
  */
-export class HopaForeground {
+export class AppFocus {
   static active: boolean = true;
 }

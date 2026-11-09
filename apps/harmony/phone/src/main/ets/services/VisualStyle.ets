@@ -5,7 +5,7 @@
  * Vivid leans into the mascot and rounder shapes. Each profile only changes
  * tokens the app already uses, so switching never needs a restart.
  */
-export class StyleProfile {
+export class VisualStyle {
   static readonly KEY: string = 'hopa.style';
   static readonly NAMES: string[] = ['calm', 'easy', 'vivid'];
   static readonly LABELS: string[] = ['Calm', 'Easy', 'Vivid'];
@@ -22,8 +22,8 @@ export class StyleProfile {
   buttonSize: number = 36;
   motion: boolean = true;
 
-  static of(name: string): StyleProfile {
-    const style = new StyleProfile();
+  static of(name: string): VisualStyle {
+    const style = new VisualStyle();
     style.name = name;
     if (name === 'easy') {
       style.bg = '#FFFCF3';

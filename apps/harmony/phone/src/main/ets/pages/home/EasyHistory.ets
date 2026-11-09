@@ -1,37 +1,37 @@
 import { Context } from '@kit.AbilityKit';
-import { EasyEntry, EasyLog } from '../../services/EasyLog';
-import { StyleProfile } from '../../services/StyleProfile';
+import { TaskLogEntry, TaskLog } from '../../services/TaskLog';
+import { VisualStyle } from '../../services/VisualStyle';
 import { HopaMark } from '../chat/HopaMark';
 
 /** Easy history: what was asked, what HOPA answered, when. Tap for detail. */
 @Component
 export struct EasyHistory {
   onOpenHome: () => void = () => {};
-  @State entries: EasyEntry[] = [];
+  @State entries: TaskLogEntry[] = [];
   @State selected: number = -1;
   @StorageLink('hopa.style') styleName: string = 'easy';
 
   aboutToAppear(): void {
     const context = getContext(this) as Context;
-    EasyLog.load(context).then(() => {
-      this.entries = EasyLog.all().slice();
+    TaskLog.load(context).then(() => {
+      this.entries = TaskLog.all().slice();
     }).catch(() => {
       this.entries = [];
     });
   }
 
-  private style(): StyleProfile {
-    return StyleProfile.of(this.styleName);
+  private style(): VisualStyle {
+    return VisualStyle.of(this.styleName);
   }
 
-  private askAgain(entry: EasyEntry): void {
+  private askAgain(entry: TaskLogEntry): void {
     AppStorage.setOrCreate<string>('hopa.easyDraft', entry.goal);
     AppStorage.setOrCreate<boolean>('hopa.easyOpenTask', true);
     this.onOpenHome();
   }
 
   @Builder
-  Card(entry: EasyEntry, index: number) {
+  Card(entry: TaskLogEntry, index: number) {
     Column({ space: 6 }) {
       Text(new Date(entry.at).toLocaleString())
         .fontSize(10)
@@ -63,7 +63,7 @@ export struct EasyHistory {
   }
 
   @Builder
-  Detail(entry: EasyEntry) {
+  Detail(entry: TaskLogEntry) {
     Column({ space: 14 }) {
       Row({ space: 8 }) {
         Text('←')
@@ -163,9 +163,9 @@ export struct EasyHistory {
             .width('100%')
             .padding({ top: 60 })
           } else {
-            ForEach(this.entries, (entry: EasyEntry, index: number) => {
+            ForEach(this.entries, (entry: TaskLogEntry, index: number) => {
               this.Card(entry, index)
-            }, (entry: EasyEntry, index: number) => `${entry.at}-${index}`)
+            }, (entry: TaskLogEntry, index: number) => `${entry.at}-${index}`)
           }
         }
         .width('100%')

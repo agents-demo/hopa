@@ -8,7 +8,7 @@ import { StoredSettings } from './SettingsStore';
  * and the guardian guard. Applying one always leaves payments on the
  * confirmation path.
  */
-export class ProfileService {
+export class ModeProfile {
   static readonly KEY: string = 'hopa.profile';
   static readonly NAMES: string[] = ['everyday', 'easy', 'power', 'social', 'kid'];
   static readonly LABELS: string[] = ['Everyday', 'Easy', 'Power', 'Social', 'Kid'];
@@ -24,9 +24,9 @@ export class ProfileService {
   sharing: string = 'receipt';
   guardian: boolean = false;
 
-  static of(name: string): ProfileService {
-    const profile = new ProfileService();
-    profile.name = ProfileService.NAMES.indexOf(name) >= 0 ? name : 'everyday';
+  static of(name: string): ModeProfile {
+    const profile = new ModeProfile();
+    profile.name = ModeProfile.NAMES.indexOf(name) >= 0 ? name : 'everyday';
     if (profile.name === 'easy') {
       profile.style = 'easy';
       profile.input = 'voice';
@@ -67,8 +67,8 @@ export class ProfileService {
   }
 
   static labelOf(name: string): string {
-    const index: number = ProfileService.NAMES.indexOf(name);
-    return index >= 0 ? ProfileService.LABELS[index] : ProfileService.LABELS[0];
+    const index: number = ModeProfile.NAMES.indexOf(name);
+    return index >= 0 ? ModeProfile.LABELS[index] : ModeProfile.LABELS[0];
   }
 
   static describe(name: string): string {

@@ -3,7 +3,7 @@ import { AccessibilityBridge } from '@hopa/capability-accessibility';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { BrowserController } from './BrowserController';
 import { BridgeClient } from './BridgeClient';
-import { BridgeScreenSource } from './BridgeUiCapability';
+import { BridgeScreenSource } from './RemoteUiCapability';
 
 /**
  * Prefers the PC bridge, then the accessibility tree, then the built-in

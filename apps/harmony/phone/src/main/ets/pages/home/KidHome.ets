@@ -1,7 +1,7 @@
 import { Context, common } from '@kit.AbilityKit';
 import { AgentService } from '../../services/AgentService';
 import { Haptics } from '../../services/Haptics';
-import { StyleProfile } from '../../services/StyleProfile';
+import { VisualStyle } from '../../services/VisualStyle';
 import { VoiceController } from '../../services/VoiceController';
 import { TaskRunner } from '../../services/TaskRunner';
 import { HopaMark } from '../chat/HopaMark';
@@ -74,8 +74,8 @@ export struct KidHome {
     this.voice.release();
   }
 
-  private style(): StyleProfile {
-    return StyleProfile.of(this.styleName);
+  private style(): VisualStyle {
+    return VisualStyle.of(this.styleName);
   }
 
   private accent(): ResourceColor {
@@ -224,6 +224,7 @@ export struct KidHome {
         this.pressed = -1;
       }
     })
+    .accessibilityText(label)
     .onClick(action)
   }
 

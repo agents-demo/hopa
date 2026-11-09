@@ -2,7 +2,7 @@ import { Context } from '@kit.AbilityKit';
 import { preferences } from '@kit.ArkData';
 
 /** One thing an Easy user asked, and what HOPA answered. */
-export class EasyEntry {
+export class TaskLogEntry {
   goal: string = '';
   answer: string = '';
   at: number = 0;
@@ -14,42 +14,42 @@ export class EasyEntry {
  * Easy runs do not create chat sessions (that was the point), so this is the
  * user's history: goal, answer, time — newest first, capped at 30.
  */
-export class EasyLog {
+export class TaskLog {
   private static readonly STORE: string = 'hopa_settings';
   private static readonly KEY: string = 'easy_log_v1';
-  private static entries: EasyEntry[] = [];
+  private static entries: TaskLogEntry[] = [];
   private static loaded: boolean = false;
 
   static async load(context: Context): Promise<void> {
     try {
-      const store = await preferences.getPreferences(context, EasyLog.STORE);
-      const raw = await store.get(EasyLog.KEY, '');
+      const store = await preferences.getPreferences(context, TaskLog.STORE);
+      const raw = await store.get(TaskLog.KEY, '');
       if (typeof raw === 'string' && raw.length > 0) {
-        const parsed = JSON.parse(raw) as EasyEntry[];
-        EasyLog.entries = Array.isArray(parsed) ? parsed : [];
+        const parsed = JSON.parse(raw) as TaskLogEntry[];
+        TaskLog.entries = Array.isArray(parsed) ? parsed : [];
       }
     } catch (error) {
-      EasyLog.entries = [];
+      TaskLog.entries = [];
     }
-    EasyLog.loaded = true;
+    TaskLog.loaded = true;
   }
 
-  static all(): EasyEntry[] {
-    return EasyLog.entries;
+  static all(): TaskLogEntry[] {
+    return TaskLog.entries;
   }
 
   static async add(context: Context, goal: string, answer: string): Promise<void> {
-    if (!EasyLog.loaded) {
-      await EasyLog.load(context);
+    if (!TaskLog.loaded) {
+      await TaskLog.load(context);
     }
-    const entry = new EasyEntry();
+    const entry = new TaskLogEntry();
     entry.goal = goal;
     entry.answer = answer;
     entry.at = Date.now();
-    EasyLog.entries = [entry].concat(EasyLog.entries).slice(0, 30);
+    TaskLog.entries = [entry].concat(TaskLog.entries).slice(0, 30);
     try {
-      const store = await preferences.getPreferences(context, EasyLog.STORE);
-      await store.put(EasyLog.KEY, JSON.stringify(EasyLog.entries));
+      const store = await preferences.getPreferences(context, TaskLog.STORE);
+      await store.put(TaskLog.KEY, JSON.stringify(TaskLog.entries));
       await store.flush();
     } catch (error) {
       // The in-memory list still serves this session.
@@ -57,10 +57,10 @@ export class EasyLog {
   }
 
   static async clear(context: Context): Promise<void> {
-    EasyLog.entries = [];
+    TaskLog.entries = [];
     try {
-      const store = await preferences.getPreferences(context, EasyLog.STORE);
-      await store.put(EasyLog.KEY, '[]');
+      const store = await preferences.getPreferences(context, TaskLog.STORE);
+      await store.put(TaskLog.KEY, '[]');
       await store.flush();
     } catch (error) {
       // Best effort.

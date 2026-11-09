@@ -1,6 +1,6 @@
 import { RunRecord } from '@hopa/core';
 import { AgentService } from '../../services/AgentService';
-import { StyleProfile } from '../../services/StyleProfile';
+import { VisualStyle } from '../../services/VisualStyle';
 import { HopaMark } from '../chat/HopaMark';
 
 /** Millennial/power home: command bar, recent automations, batch and logs. */
@@ -27,8 +27,8 @@ export struct PowerHome {
     }
   }
 
-  private style(): StyleProfile {
-    return StyleProfile.of(this.styleName);
+  private style(): VisualStyle {
+    return VisualStyle.of(this.styleName);
   }
 
   private accent(): ResourceColor {

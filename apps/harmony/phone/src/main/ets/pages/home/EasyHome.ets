@@ -1,9 +1,9 @@
 import { Context, common } from '@kit.AbilityKit';
-import { StyleProfile } from '../../services/StyleProfile';
+import { VisualStyle } from '../../services/VisualStyle';
 import { VoiceController } from '../../services/VoiceController';
 import { TaskRunner } from '../../services/TaskRunner';
 import { Haptics } from '../../services/Haptics';
-import { EasyLog } from '../../services/EasyLog';
+import { TaskLog } from '../../services/TaskLog';
 import { HopaMark } from '../chat/HopaMark';
 
 /**
@@ -64,8 +64,8 @@ export struct EasyHome {
     this.voice.release();
   }
 
-  private style(): StyleProfile {
-    return StyleProfile.of(this.styleName);
+  private style(): VisualStyle {
+    return VisualStyle.of(this.styleName);
   }
 
   private greet(): void {
@@ -160,7 +160,7 @@ export struct EasyHome {
     }
     this.result = reply;
     this.phase = 'done';
-    EasyLog.add(getContext(this) as Context, goal, reply).catch(() => {
+    TaskLog.add(getContext(this) as Context, goal, reply).catch(() => {
       // History is best effort; the answer is already on screen.
     });
     this.speak(reply);
@@ -206,6 +206,7 @@ export struct EasyHome {
       .backgroundColor($r('app.color.surface'))
       .border({ width: 1, color: $r('app.color.divider') })
       .borderRadius(this.style().cardRadius + 6)
+      .accessibilityText(label)
       .onClick(action)
   }
 
@@ -258,6 +259,7 @@ export struct EasyHome {
           .backgroundColor(this.accent())
           .borderRadius(this.style().cardRadius + 6)
           .shadow({ radius: 14, color: '#1F1C1B18', offsetY: 4 })
+          .accessibilityText('Talk to HOPA')
           .onClick(() => {
             this.openTask(true);
           })
