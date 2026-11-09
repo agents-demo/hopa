@@ -111,7 +111,9 @@ export struct ChatEmptyState {
         .fontColor($r('app.color.text_primary'))
         .letterSpacing(-0.4)
       Text(this.tagline())
-        .fontSize(this.style().body)
+        // One line in Calm, as before the profile work; bigger only where the
+        // profile asks for larger text.
+        .fontSize(this.style().body - 1)
         .fontColor($r('app.color.text_secondary'))
         .textAlign(TextAlign.Center)
       Text('I always ask before any payment.')
