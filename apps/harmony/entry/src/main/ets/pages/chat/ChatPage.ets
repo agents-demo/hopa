@@ -438,15 +438,25 @@ export struct ChatPage {
           }, (item: ResourceStr, index: number) => this.messageKey(item, index))
           if (this.busy) {
             ListItem() {
-              Column({ space: 2 }) {
+              Column({ space: 4 }) {
                 if (this.runningGoal.length > 0) {
-                  Text(`Working on ? ${this.runningGoal}`)
-                    .fontSize(11)
-                    .fontColor($r('app.color.text_secondary'))
-                    .maxLines(1)
-                    .textOverflow({ overflow: TextOverflow.Ellipsis })
-                    .width('100%')
-                    .padding({ left: 4 })
+                  Row({ space: 6 }) {
+                    Text(`Working on ? ${this.runningGoal}`)
+                      .fontSize(11)
+                      .fontColor($r('app.color.text_secondary'))
+                      .maxLines(1)
+                      .textOverflow({ overflow: TextOverflow.Ellipsis })
+                      .layoutWeight(1)
+                    Text('Cancel')
+                      .fontSize(11)
+                      .fontColor($r('app.color.primary'))
+                      .padding({ left: 8, right: 4, top: 2, bottom: 2 })
+                      .onClick(() => {
+                        this.stopRun();
+                      })
+                  }
+                  .width('100%')
+                  .padding({ left: 4 })
                 }
                 ChatTyping()
               }

@@ -21,12 +21,27 @@ export struct ApprovalSheet {
         .height('100%')
         .backgroundColor($r('app.color.scrim'))
       Column({ space: 12 }) {
+        Row()
+          .width(36)
+          .height(4)
+          .borderRadius(2)
+          .backgroundColor($r('app.color.divider'))
+          .margin({ bottom: 2 })
         Row({ space: 8 }) {
           HopaMark({ state: 'waiting', markSize: 28 })
           Text('HOPA')
             .fontSize(12)
             .fontWeight(FontWeight.Medium)
             .fontColor($r('app.color.primary'))
+          if (!this.payment) {
+            Text('PUBLIC')
+              .fontSize(9)
+              .fontWeight(FontWeight.Bold)
+              .fontColor($r('app.color.primary'))
+              .backgroundColor($r('app.color.primary_soft'))
+              .borderRadius(4)
+              .padding({ left: 6, right: 6, top: 2, bottom: 2 })
+          }
           if (this.payment) {
             Text('PAYMENT')
               .fontSize(9)
@@ -54,7 +69,7 @@ export struct ApprovalSheet {
         .width('100%')
         .scrollBar(BarState.Off)
         Row({ space: 10 }) {
-          Button('Deny')
+          Button('Not now')
             .layoutWeight(1)
             .height(44)
             .fontSize(15)
@@ -63,7 +78,7 @@ export struct ApprovalSheet {
             .onClick(() => {
               this.onDeny();
             })
-          Button('Allow')
+          Button('Go ahead')
             .layoutWeight(1)
             .height(44)
             .fontSize(15)
