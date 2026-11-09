@@ -119,6 +119,9 @@ export struct SettingsPage {
     if (this.subPage === 'screens') {
       return 'Live screen';
     }
+    if (this.subPage === 'permissions') {
+      return 'Permissions';
+    }
     return 'About';
   }
 
@@ -140,6 +143,46 @@ export struct SettingsPage {
     .onClick(() => {
       this.subPage = key;
     })
+  }
+
+  @Builder
+  Capability(label: string, value: string, ok: boolean) {
+    Row({ space: 8 }) {
+      Circle({ width: 7, height: 7 })
+        .fill(ok ? $r('app.color.success') : $r('app.color.warning'))
+      Text(label)
+        .fontSize(13)
+        .fontColor($r('app.color.text_primary'))
+        .layoutWeight(1)
+      Text(value)
+        .fontSize(11)
+        .fontColor($r('app.color.text_hint'))
+    }
+    .width('100%')
+    .padding(10)
+    .backgroundColor($r('app.color.surface_alt'))
+    .borderRadius(8)
+  }
+
+  @Builder
+  Permissions() {
+    Column({ space: 8 }) {
+      this.Capability('Model', AgentService.get().hasModelKey() ? AgentService.get().getModelLabel() : 'not configured',
+        AgentService.get().hasModelKey())
+      this.Capability('PC bridge', AgentService.get().isBridgeConfigured() ? 'configured' : 'off',
+        AgentService.get().isBridgeConfigured())
+      this.Capability('Accessibility', AgentService.get().isAccessibilityAvailable() ? 'on' : 'needs ACL',
+        AgentService.get().isAccessibilityAvailable())
+      this.Capability('Web access', this.networkEnabled ? 'on' : 'off', this.networkEnabled)
+      this.Capability('Autonomous', this.autonomous ? 'on' : 'off', !this.autonomous)
+      this.Capability('Saved runs', `${AgentService.get().runs.all().length}`, true)
+      Text('HOPA asks before anything public or any payment. That cannot be turned off.')
+        .fontSize(10)
+        .fontColor($r('app.color.text_hint'))
+        .padding({ top: 4 })
+    }
+    .width('100%')
+    .alignItems(HorizontalAlign.Start)
   }
 
   @Builder
@@ -168,6 +211,8 @@ export struct SettingsPage {
           DeveloperPage()
         } else if (this.subPage === 'selfcheck') {
           SelfCheckPage()
+        } else if (this.subPage === 'permissions') {
+          this.Permissions()
         } else if (this.subPage === 'screens') {
           ScreensPage()
         } else {
@@ -405,6 +450,7 @@ export struct SettingsPage {
           Column({ space: 6 }) {
             this.Row('App access', 'Which bundles may be launched', 'appaccess')
             this.Row('Computer access', 'PC bridge and MCP commands', 'computer')
+            this.Row('Permissions', 'What HOPA can and cannot do', 'permissions')
             this.Row('Self-check', 'Verify the setup', 'selfcheck')
             this.Row('Live screen', 'Debug mirror of this phone', 'screens')
             this.Row('Developer', 'Build and runtime details', 'developer')
