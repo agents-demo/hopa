@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "HOPA laptop shell"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "HOPA laptop agent"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "HOPA"
+    }
+  ]
+}

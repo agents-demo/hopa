@@ -111,7 +111,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: hopa-hap
-          path: apps/harmony/entry/build/default/outputs/default/*.hap
+          path: apps/harmony/phone/build/default/outputs/default/*.hap
           if-no-files-found: error
 
   brain:

@@ -60,9 +60,14 @@ try {
     & $hvigorw assembleHap --no-daemon
     if ($LASTEXITCODE -ne 0) { throw "hvigorw failed with exit code $LASTEXITCODE" }
 
-    $out = Join-Path $app 'entry\build\default\outputs\default'
-    if (Test-Path $out) {
-        Get-ChildItem $out -Filter '*.hap' | ForEach-Object { Write-Host "Built: $($_.FullName)" }
+    $outs = @(
+        (Join-Path $app 'phone\build\default\outputs\default'),
+        (Join-Path $app 'laptop\build\default\outputs\default')
+    )
+    foreach ($out in $outs) {
+        if (Test-Path $out) {
+            Get-ChildItem $out -Filter '*.hap' | ForEach-Object { Write-Host "Built: $($_.FullName)" }
+        }
     }
 } finally {
     $ErrorActionPreference = $previous

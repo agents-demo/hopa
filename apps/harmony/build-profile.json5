@@ -37,7 +37,19 @@
   "modules": [
     {
       "name": "entry",
-      "srcPath": "./entry",
+      "srcPath": "./phone",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "laptop",
+      "srcPath": "./laptop",
       "targets": [
         {
           "name": "default",
