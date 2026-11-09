@@ -671,6 +671,10 @@ export struct ChatPage {
             },
             onResume: () => {
               this.openLastChat();
+            },
+            onTrust: () => {
+              AppStorage.setOrCreate<boolean>('hopa.openPermissions', true);
+              AppStorage.setOrCreate<string>('hopa.goto', 'settings');
             }
           })
         }

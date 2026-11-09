@@ -14,6 +14,8 @@ import { AppAccessPage } from './AppAccessPage';
 import { ComputerAccessPage } from './ComputerAccessPage';
 import { DeveloperPage } from './DeveloperPage';
 import { ModelSettingsCard } from './ModelSettingsCard';
+import { BridgeMonitor } from '../../services/BridgeMonitor';
+import { TrustedApps } from '../../services/TrustedApps';
 
 /** Model, bridge, safety switches and the advanced sub-pages. */
 @Component
@@ -33,9 +35,18 @@ export struct SettingsPage {
   @State a11yAvailable: boolean = false;
   @State a11yInstalled: string = 'checking...';
   @State subPage: string = '';
+  @State trustVersion: number = 0;
+  @StorageLink('hopa.bridgeOnline') bridgeLive: boolean = true;
 
   aboutToAppear(): void {
+    if (AppStorage.get<boolean>('hopa.openPermissions') ?? false) {
+      AppStorage.setOrCreate<boolean>('hopa.openPermissions', false);
+      this.subPage = 'permissions';
+    }
     this.a11yAvailable = AgentService.get().isAccessibilityAvailable();
+    if (AgentService.get().isBridgeConfigured()) {
+      BridgeMonitor.checkNow();
+    }
     this.load();
     this.loadA11yList();
   }
@@ -268,13 +279,47 @@ export struct SettingsPage {
     Column({ space: 8 }) {
       this.Capability('Model', AgentService.get().hasModelKey() ? AgentService.get().getModelLabel() : 'not configured',
         AgentService.get().hasModelKey())
-      this.Capability('PC bridge', AgentService.get().isBridgeConfigured() ? 'configured' : 'off',
-        AgentService.get().isBridgeConfigured())
+      this.Capability('PC bridge',
+        AgentService.get().isBridgeConfigured()
+          ? (this.bridgeLive ? 'reachable' : 'no answer')
+          : 'off',
+        AgentService.get().isBridgeConfigured() && this.bridgeLive)
       this.Capability('Accessibility', AgentService.get().isAccessibilityAvailable() ? 'on' : 'needs ACL',
         AgentService.get().isAccessibilityAvailable())
       this.Capability('Web access', this.networkEnabled ? 'on' : 'off', this.networkEnabled)
       this.Capability('Autonomous', this.autonomous ? 'on' : 'off', !this.autonomous)
       this.Capability('Saved runs', `${AgentService.get().runs.all().length}`, true)
+      Text('TRUSTED FOR MESSAGES')
+        .fontSize(10)
+        .fontColor($r('app.color.text_hint'))
+        .letterSpacing(0.6)
+        .padding({ top: 8 })
+      if (TrustedApps.all().length === 0) {
+        Text('None. HOPA asks before it sends a message.')
+          .fontSize(11)
+          .fontColor($r('app.color.text_secondary'))
+      }
+      ForEach(TrustedApps.all(), (bundle: string) => {
+        Row({ space: 8 }) {
+          Text(bundle)
+            .fontSize(12)
+            .fontColor($r('app.color.text_primary'))
+            .layoutWeight(1)
+          Text('Revoke')
+            .fontSize(11)
+            .fontColor($r('app.color.primary'))
+            .onClick(() => {
+              TrustedApps.remove(getContext(this) as common.UIAbilityContext, bundle);
+              AgentService.get().policy.setTrustedApps(TrustedApps.all());
+              this.trustVersion += 1;
+            })
+        }
+        .width('100%')
+        .padding({ left: 10, right: 10, top: 7, bottom: 7 })
+        .backgroundColor($r('app.color.surface'))
+        .border({ width: 1, color: $r('app.color.divider') })
+        .borderRadius(8)
+      }, (bundle: string) => `${bundle}-${this.trustVersion}`)
       Text('APPS HOPA OPENED')
         .fontSize(10)
         .fontColor($r('app.color.text_hint'))
@@ -575,9 +620,20 @@ export struct SettingsPage {
             }
             .width('100%')
             Divider().color($r('app.color.divider'))
-            Text('PC bridge (fallback control)')
-              .fontSize(14)
-              .fontColor($r('app.color.text_primary'))
+            Row({ space: 8 }) {
+              Text('PC bridge (fallback control)')
+                .fontSize(14)
+                .fontColor($r('app.color.text_primary'))
+                .layoutWeight(1)
+              if (AgentService.get().isBridgeConfigured()) {
+                Text(this.bridgeLive ? 'Reachable' : 'No answer')
+                  .fontSize(11)
+                  .fontColor(this.bridgeLive
+                    ? $r('app.color.success')
+                    : $r('app.color.warning'))
+              }
+            }
+            .width('100%')
             TextInput({ text: this.bridgeUrl, placeholder: 'http://192.168.1.10:8765' })
               .height(38)
               .fontSize(13)

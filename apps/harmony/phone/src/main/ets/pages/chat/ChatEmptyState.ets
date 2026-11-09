@@ -2,8 +2,9 @@
 import { HopaMark } from './HopaMark';
 import { AgentService } from '../../services/AgentService';
 import { SettingsStore } from '../../services/SettingsStore';
-import { StyleProfile } from '../../services/StyleProfile';
-import { ProfileService } from '../../services/ProfileService';
+import { VisualStyle } from '../../services/VisualStyle';
+import { ModeProfile } from '../../services/ModeProfile';
+import { APP_CATALOG } from '../../services/AppCatalog';
 import { Context } from '@kit.AbilityKit';
 
 @Component
@@ -11,6 +12,7 @@ export struct ChatEmptyState {
   onPick: (text: string) => void = () => {};
   /** Opens the last conversation; Reuse is the only way to send it again. */
   onResume: () => void = () => {};
+  onTrust: () => void = () => {};
   @Prop resume: string = '';
   @Prop hasEarlier: boolean = false;
   @Prop listening: boolean = false;
@@ -23,12 +25,12 @@ export struct ChatEmptyState {
   @StorageLink('hopa.style') styleName: string = 'calm';
   @StorageLink('hopa.profile') profileName: string = 'everyday';
 
-  private style(): StyleProfile {
-    return StyleProfile.of(this.styleName);
+  private style(): VisualStyle {
+    return VisualStyle.of(this.styleName);
   }
 
-  private profile(): ProfileService {
-    return ProfileService.of(this.profileName);
+  private profile(): ModeProfile {
+    return ModeProfile.of(this.profileName);
   }
 
   private tagline(): string {
@@ -42,7 +44,7 @@ export struct ChatEmptyState {
   }
 
   private accent(): ResourceColor {
-    const profile = ProfileService.of(this.profileName);
+    const profile = ModeProfile.of(this.profileName);
     if (profile.name !== 'social' && profile.name !== 'kid') {
       return $r('app.color.primary');
     }
@@ -50,7 +52,7 @@ export struct ChatEmptyState {
   }
 
   private accentTint(alpha: string): string {
-    const profile = ProfileService.of(this.profileName);
+    const profile = ModeProfile.of(this.profileName);
     if (profile.name !== 'social' && profile.name !== 'kid') {
       return `#${alpha}0A59F7`;
     }
@@ -100,6 +102,20 @@ export struct ChatEmptyState {
     this.onPick(text);
   }
 
+  private appCount(): number {
+    let count: number = 0;
+    for (const app of APP_CATALOG) {
+      if (app.confirmed) {
+        count += 1;
+      }
+    }
+    return count;
+  }
+
+  private factCount(): number {
+    return AgentService.get().memory.all().length;
+  }
+
   build() {
     Column({ space: 12 }) {
       HopaMark({
@@ -126,6 +142,22 @@ export struct ChatEmptyState {
         .fontSize(this.style().body - 4)
         .fontColor($r('app.color.text_hint'))
       Column({ space: 8 }) {
+        Row({ space: 6 }) {
+          Text('HOPA can use')
+            .fontSize(10)
+            .fontColor($r('app.color.text_hint'))
+          Text(`${this.appCount()} apps, ${this.factCount()} facts`)
+            .fontSize(10)
+            .fontColor(this.accent())
+          Text('Review')
+            .fontSize(10)
+            .fontWeight(FontWeight.Medium)
+            .fontColor(this.accent())
+        }
+        .padding({ left: 2, top: 2 })
+        .onClick(() => {
+          this.onTrust();
+        })
         if (this.hasResume()) {
           Row({ space: 10 }) {
             Column({ space: 2 }) {

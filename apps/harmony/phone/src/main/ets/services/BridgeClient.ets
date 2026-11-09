@@ -65,12 +65,24 @@ export class BridgeClient {
   private lastError: string = '';
   private foreground: string = '';
 
-  configure(url: string, token: string): void {
+  /**
+   * A bare host and `localhost` are normalised here: a reverse port listens on
+   * 127.0.0.1, while `localhost` can resolve to ::1 and be refused.
+   */
+  private static normalize(url: string): string {
     let clean: string = url.trim();
+    if (clean.length > 0 && !clean.startsWith('http://') && !clean.startsWith('https://')) {
+      clean = `http://${clean}`;
+    }
+    clean = clean.replace('://localhost', '://127.0.0.1');
     while (clean.endsWith('/')) {
       clean = clean.substring(0, clean.length - 1);
     }
-    this.baseUrl = clean;
+    return clean;
+  }
+
+  configure(url: string, token: string): void {
+    this.baseUrl = BridgeClient.normalize(url);
     this.token = token.trim();
   }
 
@@ -141,15 +153,23 @@ export class BridgeClient {
   }
 
   async health(): Promise<boolean> {
-    try {
-      const raw: string = await this.get('/health');
-      const parsed = JSON.parse(raw) as BridgeOkBody;
-      this.lastError = parsed.ok ? '' : 'bridge said not ok';
-      return parsed.ok;
-    } catch (error) {
-      this.lastError = `${(error as Error).message}`;
-      return false;
+    // One retry: a socket can be refused while the reverse port reconnects.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const raw: string = await this.get('/health');
+        const parsed = JSON.parse(raw) as BridgeOkBody;
+        this.lastError = parsed.ok ? '' : 'bridge said not ok';
+        return parsed.ok;
+      } catch (error) {
+        this.lastError = `${(error as Error).message}`;
+        if (attempt === 0) {
+          await new Promise<void>((resolve: () => void) => {
+            setTimeout(resolve, 400);
+          });
+        }
+      }
     }
+    return false;
   }
 
   async observe(): Promise<boolean> {

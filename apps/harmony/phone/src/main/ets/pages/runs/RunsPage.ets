@@ -1,5 +1,6 @@
 import { BatchItemResult, RunRecord, Skill } from '@hopa/core';
 import { Context } from '@kit.AbilityKit';
+import { pasteboard } from '@kit.BasicServicesKit';
 import { AgentService } from '../../services/AgentService';
 
 /** Batch goals, the run history and one run's timeline. */
@@ -241,6 +242,64 @@ export struct RunsPage {
     .alignItems(HorizontalAlign.Start)
   }
 
+  /** One plain-text summary that can leave the app as it is. */
+  private receiptText(run: RunRecord): string {
+    const when: string = `${new Date(run.startedAt).toLocaleDateString()} ` +
+      `${new Date(run.startedAt).toLocaleTimeString()}`;
+    const outcome: string = run.status === 'executed' ? 'Done' : `${run.status}`;
+    return `HOPA receipt\n` +
+      `${outcome}: ${run.kind}\n` +
+      `When: ${when}\n` +
+      `Took: ${run.durationMs} ms\n` +
+      `Approval: ${run.approved ? 'you approved' : 'not needed'}\n` +
+      `Payment: ${run.isPayment ? 'yes' : 'no'}\n` +
+      `Detail: ${run.detail.length > 0 ? run.detail : '(none)'}`;
+  }
+
+  private copyReceipt(run: RunRecord): void {
+    try {
+      const data = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, this.receiptText(run));
+      pasteboard.getSystemPasteboard().setData(data).then(() => {
+        this.status = 'Receipt copied';
+      }).catch(() => {
+        this.status = 'Could not copy the receipt';
+      });
+    } catch (error) {
+      this.status = 'Could not copy the receipt';
+    }
+  }
+
+  @Builder
+  Receipt(run: RunRecord) {
+    Column({ space: 6 }) {
+      Row({ space: 8 }) {
+        Text('RECEIPT')
+          .fontSize(10)
+          .fontColor($r('app.color.text_hint'))
+          .letterSpacing(0.6)
+          .layoutWeight(1)
+        Text('Copy')
+          .fontSize(11)
+          .fontWeight(FontWeight.Medium)
+          .fontColor($r('app.color.primary'))
+          .onClick(() => {
+            this.copyReceipt(run);
+          })
+      }
+      .width('100%')
+      Text(this.receiptText(run))
+        .fontSize(11)
+        .lineHeight(17)
+        .fontColor($r('app.color.text_secondary'))
+        .width('100%')
+    }
+    .width('100%')
+    .padding(10)
+    .backgroundColor($r('app.color.surface'))
+    .borderRadius(10)
+    .alignItems(HorizontalAlign.Start)
+  }
+
   @Builder
   Detail() {
     Column({ space: 12 }) {
@@ -273,6 +332,7 @@ export struct RunsPage {
           this.TimelineRow('Approval', run.approved ? 'approved' : 'not required')
           this.TimelineRow('Payment', run.isPayment ? 'yes' : 'no')
           Divider()
+          this.Receipt(run)
           Text(run.detail.length > 0 ? run.detail : '(no detail)')
             .fontSize(13)
             .fontColor($r('app.color.text_secondary'))

@@ -34,6 +34,23 @@ export class ApprovalPolicy {
   isAutonomous(): boolean {
     return this.autonomous;
   }
+
+  /** Apps the user trusts for outgoing messages. Never for payments. */
+  private trustedApps: Set<string> = new Set<string>();
+
+  setTrustedApps(apps: string[]): void {
+    this.trustedApps.clear();
+    for (const app of apps) {
+      const key: string = app.trim().toLowerCase();
+      if (key.length > 0) {
+        this.trustedApps.add(key);
+      }
+    }
+  }
+
+  isTrustedApp(bundle: string): boolean {
+    return this.trustedApps.has(bundle.trim().toLowerCase());
+  }
   private paymentKinds: Set<string> = new Set<string>([
     'payment.pay',
     'payment.confirm',
@@ -161,6 +178,12 @@ export class ApprovalPolicy {
     }
     if (this.isPaymentScreen(screen) && this.interactiveKinds.has(action.kind)) {
       return RiskLevel.Payment;
+    }
+    // A remembered app skips the message prompt only. Delete, call, payment and
+    // unknown kinds keep asking.
+    if (action.kind === 'ui.sendMessage' && action.app.length > 0 &&
+      this.trustedApps.has(action.app.toLowerCase())) {
+      return RiskLevel.Read;
     }
     if (this.sensitiveKinds.has(action.kind)) {
       return RiskLevel.Sensitive;

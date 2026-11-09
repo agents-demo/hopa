@@ -13,6 +13,7 @@ import { Haptics } from '../services/Haptics';
 import { SettingsStore } from '../services/SettingsStore';
 import { VisualStyle } from '../services/VisualStyle';
 import { BridgeMonitor } from '../services/BridgeMonitor';
+import { TrustedApps } from '../services/TrustedApps';
 import { IntentInbox } from '../services/IntentInbox';
 import { KeyboardAvoidMode as HostKeyboardAvoidMode } from '@ohos.arkui.UIContext';
 import { window } from '@kit.ArkUI';
@@ -33,6 +34,15 @@ struct Index {
   @State approvalTitle: string = '';
   @State approvalMessage: string = '';
   @State approvalPayment: boolean = false;
+  @State approvalX1: number = 0;
+  @State approvalY1: number = 0;
+  @State approvalX2: number = 0;
+  @State approvalY2: number = 0;
+  @State approvalFrameW: number = 0;
+  @State approvalFrameH: number = 0;
+  @State approvalLabel: string = '';
+  @State approvalRememberLabel: string = '';
+  private approvalRememberBundle: string = '';
   /** Empty unless the last run (or setup) needs attention. */
   @StorageLink('hopa.problem') problem: string = '';
   @StorageLink('hopa.bridgeOnline') bridgeOnline: boolean = true;
@@ -91,6 +101,11 @@ struct Index {
     this.initialize();
   }
 
+  onPageShow(): void {
+    // Returning to the app is a good moment to re-check a reverse port.
+    BridgeMonitor.checkNow();
+  }
+
   aboutToDisappear(): void {
     BridgeMonitor.stop();
     if (this.titleTimer >= 0) {
@@ -139,6 +154,11 @@ struct Index {
       session.title.length > 0 &&
       session.title !== 'New chat') {
       title = session.title;
+    }
+    const gotoPage: string = AppStorage.get<string>('hopa.goto') ?? '';
+    if (gotoPage.length > 0) {
+      AppStorage.setOrCreate<string>('hopa.goto', '');
+      this.go(gotoPage);
     }
     const incoming: string = IntentInbox.take();
     if (incoming.length > 0) {
@@ -191,6 +211,15 @@ struct Index {
     this.approvalTitle = content.title;
     this.approvalMessage = content.message;
     this.approvalPayment = content.payment;
+    this.approvalX1 = content.highlightX1;
+    this.approvalY1 = content.highlightY1;
+    this.approvalX2 = content.highlightX2;
+    this.approvalY2 = content.highlightY2;
+    this.approvalFrameW = content.frameWidth;
+    this.approvalFrameH = content.frameHeight;
+    this.approvalLabel = content.highlightLabel;
+    this.approvalRememberLabel = content.rememberLabel;
+    this.approvalRememberBundle = content.rememberBundle;
     Haptics.attention();
     this.getUIContext().animateTo({ duration: 220, curve: Curve.EaseOut }, () => {
       this.approvalOpen = true;
@@ -548,7 +577,22 @@ struct Index {
           title: this.approvalTitle,
           message: this.approvalMessage,
           payment: this.approvalPayment,
-          onAllow: () => {
+          highlightX1: this.approvalX1,
+          highlightY1: this.approvalY1,
+          highlightX2: this.approvalX2,
+          highlightY2: this.approvalY2,
+          frameWidth: this.approvalFrameW,
+          frameHeight: this.approvalFrameH,
+          highlightLabel: this.approvalLabel,
+          rememberLabel: this.approvalRememberLabel,
+          onAllow: (remember: boolean) => {
+            if (remember && this.approvalRememberBundle.length > 0) {
+              TrustedApps.add(
+                getContext(this) as common.UIAbilityContext,
+                this.approvalRememberBundle
+              );
+              AgentService.get().policy.setTrustedApps(TrustedApps.all());
+            }
             this.answerApproval(true);
           },
           onDeny: () => {

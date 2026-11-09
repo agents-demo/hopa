@@ -7,6 +7,7 @@ import { AppFocus } from '../services/AppFocus';
 import { AgentService } from '../services/AgentService';
 import { SettingsStore, StoredSettings } from '../services/SettingsStore';
 import { IntentInbox } from '../services/IntentInbox';
+import { TrustedApps } from '../services/TrustedApps';
 
 const DOMAIN: number = 0x0000;
 const TAG: string = 'HOPA';
@@ -76,6 +77,11 @@ export default class EntryAbility extends UIAbility {
     if (bridgeUrl.length > 0 && bridgeToken.length > 0) {
       AgentService.get().configureBridge(bridgeUrl, bridgeToken);
     }
+    TrustedApps.load(this.context).then((apps: string[]) => {
+      AgentService.get().policy.setTrustedApps(apps);
+    }).catch(() => {
+      // The trust list is optional.
+    });
 
     SettingsStore.load(this.context).then((stored: StoredSettings) => {
       if (provider.length > 0) {

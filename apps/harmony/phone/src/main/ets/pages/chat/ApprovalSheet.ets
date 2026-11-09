@@ -11,8 +11,77 @@ export struct ApprovalSheet {
   @Prop title: string = '';
   @Prop message: string = '';
   @Prop payment: boolean = false;
-  onAllow: () => void = () => {};
+  /** Where the target sits in the captured screen, in device pixels. */
+  @Prop highlightX1: number = 0;
+  @Prop highlightY1: number = 0;
+  @Prop highlightX2: number = 0;
+  @Prop highlightY2: number = 0;
+  @Prop frameWidth: number = 0;
+  @Prop frameHeight: number = 0;
+  @Prop highlightLabel: string = '';
+  /** Non-empty when the app can be remembered for outgoing messages. */
+  @Prop rememberLabel: string = '';
+  @State understood: boolean = false;
+  @State remember: boolean = false;
+  onAllow: (remember: boolean) => void = () => {};
   onDeny: () => void = () => {};
+
+  private hasCue(): boolean {
+    return this.highlightX2 > this.highlightX1 &&
+      this.frameWidth > 0 && this.frameHeight > 0;
+  }
+
+  private left(): string {
+    return `${Math.max(0, this.highlightX1 / this.frameWidth * 100)}%`;
+  }
+
+  private top(): string {
+    return `${Math.max(0, this.highlightY1 / this.frameHeight * 100)}%`;
+  }
+
+  private cueWidth(): string {
+    const share: number = (this.highlightX2 - this.highlightX1) / this.frameWidth * 100;
+    return `${Math.min(100, Math.max(5, share))}%`;
+  }
+
+  private cueHeight(): string {
+    const share: number = (this.highlightY2 - this.highlightY1) / this.frameHeight * 100;
+    return `${Math.min(100, Math.max(4, share))}%`;
+  }
+
+  @Builder
+  Cue() {
+    Column({ space: 6 }) {
+      Stack({ alignContent: Alignment.TopStart }) {
+        Column()
+          .width('100%')
+          .height('100%')
+          .backgroundColor($r('app.color.surface_muted'))
+          .borderRadius(10)
+        Column()
+          .width(this.cueWidth())
+          .height(this.cueHeight())
+          .position({ x: this.left(), y: this.top() })
+          .border({ width: 2, color: $r('app.color.primary') })
+          .borderRadius(7)
+          .backgroundColor('#222F6FEB')
+      }
+      .width('100%')
+      .height(92)
+      .clip(true)
+
+      if (this.highlightLabel.length > 0) {
+        Text(`Highlighted: ${this.highlightLabel}`)
+          .fontSize(10)
+          .fontColor($r('app.color.text_hint'))
+          .width('100%')
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+      }
+    }
+    .width('100%')
+    .alignItems(HorizontalAlign.Start)
+  }
 
   build() {
     Stack({ alignContent: Alignment.Bottom }) {
@@ -58,6 +127,9 @@ export struct ApprovalSheet {
           .fontWeight(FontWeight.Bold)
           .fontColor($r('app.color.text_primary'))
           .width('100%')
+        if (this.hasCue()) {
+          this.Cue()
+        }
         Scroll() {
           Text(this.message)
             .fontSize(13)
@@ -65,9 +137,39 @@ export struct ApprovalSheet {
             .fontColor($r('app.color.text_secondary'))
             .width('100%')
         }
-        .constraintSize({ maxHeight: 260 })
+        .constraintSize({ maxHeight: 220 })
         .width('100%')
         .scrollBar(BarState.Off)
+        if (this.payment) {
+          Row({ space: 10 }) {
+            Toggle({ type: ToggleType.Checkbox, isOn: this.understood })
+              .onChange((on: boolean) => {
+                this.understood = on;
+              })
+            Text('I understand this spends money')
+              .fontSize(12)
+              .fontColor($r('app.color.text_secondary'))
+              .layoutWeight(1)
+          }
+          .width('100%')
+          .padding({ top: 4, bottom: 4 })
+          .alignItems(VerticalAlign.Center)
+        }
+        if (this.rememberLabel.length > 0) {
+          Row({ space: 10 }) {
+            Toggle({ type: ToggleType.Checkbox, isOn: this.remember })
+              .onChange((on: boolean) => {
+                this.remember = on;
+              })
+            Text(`Always allow messages from ${this.rememberLabel}`)
+              .fontSize(12)
+              .fontColor($r('app.color.text_secondary'))
+              .layoutWeight(1)
+          }
+          .width('100%')
+          .padding({ top: 4, bottom: 4 })
+          .alignItems(VerticalAlign.Center)
+        }
         Row({ space: 10 }) {
           Button('Not now')
             .layoutWeight(1)
@@ -82,10 +184,18 @@ export struct ApprovalSheet {
             .layoutWeight(1)
             .height(44)
             .fontSize(15)
-            .backgroundColor(this.payment ? $r('app.color.danger') : $r('app.color.primary'))
-            .fontColor($r('app.color.on_primary'))
+            .enabled(!this.payment || this.understood)
+            .backgroundColor(this.payment
+              ? (this.understood ? $r('app.color.danger') : $r('app.color.surface_muted'))
+              : $r('app.color.primary'))
+            .fontColor(this.payment && !this.understood
+              ? $r('app.color.text_hint')
+              : $r('app.color.on_primary'))
             .onClick(() => {
-              this.onAllow();
+              if (this.payment && !this.understood) {
+                return;
+              }
+              this.onAllow(this.remember);
             })
         }
         .width('100%')
