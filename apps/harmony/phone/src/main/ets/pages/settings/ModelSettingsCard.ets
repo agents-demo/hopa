@@ -1,6 +1,7 @@
 import { Context } from '@kit.AbilityKit';
 import { AgentService } from '../../services/AgentService';
 import { SettingsStore, StoredSettings } from '../../services/SettingsStore';
+import { KeyStore } from '../../services/KeyStore';
 
 /** The model card on the Settings page. Owns the model fields and the key. */
 @Component
@@ -81,7 +82,14 @@ export struct ModelSettingsCard {
     this.apiKey = '';
     this.modelLabel = service.getModelLabel();
     this.persist();
-    this.status = 'Model saved. The key is loaded for this session.';
+    this.status = 'Saving the key on this phone...';
+    KeyStore.save(key).then((saved: boolean) => {
+      this.status = saved
+        ? 'Model saved. The key is stored securely on this phone.'
+        : 'Model saved for this session (secure storage unavailable).';
+    }).catch(() => {
+      this.status = 'Model saved for this session.';
+    });
   }
 
   build() {

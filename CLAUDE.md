@@ -91,6 +91,13 @@ Use `tools/scripts/run-on-device.*` for the supported one-shot flow (build,
 sign with the SDK debug kit, install and launch). Signing material stays in
 `tools/signing/` and must never be committed.
 
+## Model key
+
+The HAP no longer bundles a model key. On first run the user pastes their own
+key in Settings; it is stored in HarmonyOS Asset Store (`services/KeyStore.ets`)
+and loaded by `AppBoot`. A leftover `resources/rawfile/deepseek.key` is migrated
+into secure storage on first boot, then it should be deleted. Never commit a key.
+
 ## Module boundaries
 
 ```

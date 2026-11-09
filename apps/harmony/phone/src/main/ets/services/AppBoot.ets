@@ -4,6 +4,7 @@ import { AppLauncher } from './AppLauncher';
 import { AgentService } from './AgentService';
 import { Appearance } from './Appearance';
 import { SettingsStore, StoredSettings } from './SettingsStore';
+import { KeyStore } from './KeyStore';
 
 /**
  * App startup: saved settings, the bundled development key, and the stores.
@@ -40,29 +41,43 @@ export class AppBoot {
     } catch (error) {
       // First run or an unreadable store: keep the defaults.
     }
+    let key: string = '';
     try {
-      const data = await context.resourceManager.getRawFileContent('deepseek.key');
-      const key = buffer.from(data).toString('utf8').trim();
-      if (key.length >= 10) {
-        service.configureModel(
-          'deepseek',
-          'https://api.deepseek.com/v1',
-          key,
-          'deepseek-v4-flash',
-          14
-        );
-        // Keep the Settings form in step with the model that is actually active.
-        if (stored.provider !== 'deepseek' ||
-          stored.endpoint !== 'https://api.deepseek.com/v1' ||
-          stored.model !== 'deepseek-v4-flash') {
-          stored.provider = 'deepseek';
-          stored.endpoint = 'https://api.deepseek.com/v1';
-          stored.model = 'deepseek-v4-flash';
-          await SettingsStore.save(context, stored);
-        }
-      }
+      key = await KeyStore.load();
     } catch (error) {
-      // No bundled key: a normal first run.
+      key = '';
+    }
+    if (key.length < 10) {
+      // Migration path: a dev build may still carry the bundled key. Move it
+      // into secure storage so later builds can ship without it.
+      try {
+        const data = await context.resourceManager.getRawFileContent('deepseek.key');
+        const bundled = buffer.from(data).toString('utf8').trim();
+        if (bundled.length >= 10) {
+          key = bundled;
+          await KeyStore.save(key);
+        }
+      } catch (error) {
+        // No bundled key: a normal first run.
+      }
+    }
+    if (key.length >= 10) {
+      service.configureModel(
+        'deepseek',
+        'https://api.deepseek.com/v1',
+        key,
+        'deepseek-v4-flash',
+        14
+      );
+      // Keep the Settings form in step with the model that is actually active.
+      if (stored.provider !== 'deepseek' ||
+        stored.endpoint !== 'https://api.deepseek.com/v1' ||
+        stored.model !== 'deepseek-v4-flash') {
+        stored.provider = 'deepseek';
+        stored.endpoint = 'https://api.deepseek.com/v1';
+        stored.model = 'deepseek-v4-flash';
+        await SettingsStore.save(context, stored);
+      }
     }
   }
 
