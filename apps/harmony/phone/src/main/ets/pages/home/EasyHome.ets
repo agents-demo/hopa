@@ -5,6 +5,7 @@ import { TaskRunner } from '../../services/TaskRunner';
 import { Haptics } from '../../services/Haptics';
 import { TaskLog } from '../../services/TaskLog';
 import { HopaMark } from '../chat/HopaMark';
+import { Character } from '../../services/Character';
 
 /**
  * Easy home: big choices, one task sheet, no Everyday chat screen.
@@ -116,6 +117,14 @@ export struct EasyHome {
     this.taskOpen = false;
   }
 
+  private openTaskWith(draft: string): void {
+    this.taskOpen = true;
+    this.phase = 'input';
+    this.result = '';
+    this.stepText = '';
+    this.draft = draft;
+  }
+
   private async startVoice(): Promise<void> {
     const allowed: boolean = await this.voice.start(getContext(this) as common.UIAbilityContext);
     if (!allowed) {
@@ -156,7 +165,7 @@ export struct EasyHome {
         this.stepText = line;
       });
     } catch (error) {
-      reply = 'Something went wrong. Please try again.';
+      reply = Character.failure(reply, 'easy');
     }
     this.result = reply;
     this.phase = 'done';
@@ -264,9 +273,12 @@ export struct EasyHome {
             this.openTask(true);
           })
 
-        this.Tile('Send me a message', () => {
-          this.draft = '';
-          this.openTask(false);
+        this.Tile('Send a message', () => {
+          this.openTaskWith('Send a message to ');
+        })
+
+        this.Tile('Call someone', () => {
+          this.openTaskWith('Call ');
         })
 
 
@@ -437,6 +449,19 @@ export struct EasyHome {
           .constraintSize({ maxHeight: 380 })
           .scrollBar(BarState.Off)
           Blank()
+          Text('Read it again')
+            .fontSize(this.style().body)
+            .fontWeight(FontWeight.Medium)
+            .fontColor(this.accent())
+            .width('100%')
+            .height(52)
+            .textAlign(TextAlign.Center)
+            .backgroundColor($r('app.color.surface'))
+            .border({ width: 1, color: $r('app.color.divider') })
+            .borderRadius(this.style().cardRadius)
+            .onClick(() => {
+              this.speak(this.result);
+            })
           Text('Say something else')
             .fontSize(this.style().body + 1)
             .fontWeight(FontWeight.Bold)

@@ -46,6 +46,29 @@ export struct PowerHome {
     if (goal.length === 0) {
       return;
     }
+    if (goal.startsWith('/')) {
+      this.command = '';
+      const command: string = goal.toLowerCase().split(' ')[0];
+      if (command === '/batch') {
+        AppStorage.setOrCreate<string>('hopa.runsFocus', 'batch');
+        this.onOpenRuns();
+        return;
+      }
+      if (command === '/replay') {
+        AppStorage.setOrCreate<string>('hopa.runsFocus', 'replay');
+        this.onOpenRuns();
+        return;
+      }
+      if (command === '/logs') {
+        AppStorage.setOrCreate<boolean>('hopa.openLogs', true);
+        AppStorage.setOrCreate<string>('hopa.goto', 'settings');
+        return;
+      }
+      this.getUIContext().getPromptAction().showToast({
+        message: 'Unknown command. Try /batch, /replay or /logs.'
+      });
+      return;
+    }
     this.command = '';
     this.onOpenChat(goal, false);
   }

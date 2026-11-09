@@ -40,6 +40,10 @@ export struct SettingsPage {
   @StorageLink('hopa.bridgeOnline') bridgeLive: boolean = true;
 
   aboutToAppear(): void {
+    if (AppStorage.get<boolean>('hopa.openLogs') ?? false) {
+      AppStorage.setOrCreate<boolean>('hopa.openLogs', false);
+      this.subPage = 'logs';
+    }
     if (AppStorage.get<boolean>('hopa.openPermissions') ?? false) {
       AppStorage.setOrCreate<boolean>('hopa.openPermissions', false);
       this.subPage = 'permissions';

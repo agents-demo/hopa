@@ -21,6 +21,17 @@ export struct RunsPage {
 
   aboutToAppear(): void {
     this.refresh();
+    const focus: string = AppStorage.get<string>('hopa.runsFocus') ?? '';
+    if (focus.length > 0) {
+      AppStorage.setOrCreate<string>('hopa.runsFocus', '');
+      if (focus === 'replay') {
+        setTimeout(() => {
+          this.playReplay();
+        }, 350);
+      } else if (focus === 'batch') {
+        this.status = 'Batch: one goal per line, then Run batch.';
+      }
+    }
     this.timer = setInterval(() => {
       this.refresh();
     }, 2000);
