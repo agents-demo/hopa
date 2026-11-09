@@ -5,7 +5,7 @@ Pura 90 emulator image has no UI to enable it.**
 
 What was verified on 2026-11-06:
 
-- the extension is declared in `apps/harmony/entry/src/main/module.json5`;
+- the extension is declared in `apps/harmony/phone/src/main/module.json5`;
 - the debug profile carries the ACL entry, and `atm dump -t -b com.hopa.agent`
   reports `grantStatus: 0` (granted) for
   `ohos.permission.ACCESSIBILITY_EXTENSION_ABILITY`;

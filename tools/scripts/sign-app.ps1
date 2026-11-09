@@ -26,8 +26,8 @@ $profileKeyAlias = 'openharmony application profile debug'
 $appChain = Join-Path $signing 'app-chain.cer'
 $profileJson = Join-Path $signing 'profile.json'
 $profileP7b = Join-Path $signing 'profile.p7b'
-$unsigned = Join-Path $root 'apps\harmony\entry\build\default\outputs\default\entry-default-unsigned.hap'
-$signed = Join-Path $root 'apps\harmony\entry\build\default\outputs\default\entry-default-signed.hap'
+$unsigned = Join-Path $root 'apps\harmony\phone\build\default\outputs\default\entry-default-unsigned.hap'
+$signed = Join-Path $root 'apps\harmony\phone\build\default\outputs\default\entry-default-signed.hap'
 
 # The Java tools log INFO to stderr. With $ErrorActionPreference = 'Stop' that
 # would abort the run, so native calls go through this wrapper.

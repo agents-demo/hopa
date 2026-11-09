@@ -49,8 +49,8 @@ From `apps/harmony/` (or through `tools/scripts/build.*`):
 
 ```bash
 hvigorw assembleHap --no-daemon
-# output: entry/build/default/outputs/default/entry-default-signed.hap (signed)
-#         entry/build/default/outputs/default/entry-default-unsigned.hap (unsigned)
+# output: phone/build/default/outputs/default/entry-default-signed.hap (signed)
+#         phone/build/default/outputs/default/entry-default-unsigned.hap (unsigned)
 ```
 
 - Use the **Command Line Tools** `hvigorw` together with the **Command Line Tools**
@@ -82,7 +82,7 @@ ruff check pc-agent bench
 
 ```bash
 hdc list targets                     # must show the emulator/device
-hdc install entry/build/default/outputs/default/entry-default-signed.hap
+hdc install phone/build/default/outputs/default/entry-default-signed.hap
 hdc shell aa start -a EntryAbility -b com.hopa.agent
 hdc shell uitest dumpLayout -p /data/local/tmp/layout.json
 ```
@@ -94,13 +94,20 @@ sign with the SDK debug kit, install and launch). Signing material stays in
 ## Module boundaries
 
 ```
-entry (ArkUI shell)
+phone/entry (ArkUI shell, entry HAP)
   └─ imports core, capabilities/*          (UI may depend on everything)
+laptop/entry (2-in-1 shell, entry HAP)
+  └─ imports core only for now             (workbench lands later)
 core (HAR, plain ArkTS)
   └─ imports nothing in app/               (defines contracts + ActionExecutor)
 capabilities/<name> (HAR)
   └─ imports core only                     (never a sibling capability)
 ```
+
+The app project has two entry modules: `phone` (folder `phone`, module name `entry`,
+`deviceTypes: phone/tablet`) and `laptop` (folder `laptop`, module name `laptop`,
+`deviceTypes: 2in1`). The module name stays `entry` for the phone so in-place
+updates keep working; platform identity lives at the module level.
 
 - `core/` defines: `Action`, `ActionExecutor`, `ToolRegistry`, `ApprovalPolicy`,
   `ModelClient`, `RunRecord`, capability interfaces.
