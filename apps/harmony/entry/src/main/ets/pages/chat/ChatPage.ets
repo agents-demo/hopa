@@ -289,6 +289,7 @@ export struct ChatPage {
     this.draft = '';
     this.busy = true;
     this.reaction = '';
+    Haptics.tap();
     this.messages = this.messages.concat([`You: ${text}`]);
     this.renderedCount = this.messages.length;
     this.scrollToEnd();
