@@ -18,6 +18,7 @@ export class StoredSettings {
   chattiness: string = 'balanced';
   quips: boolean = true;
   tactile: boolean = true;
+  address: string = '';
   bridgeUrl: string = '';
   bridgeToken: string = '';
   lastTokens: number = 0;
@@ -97,6 +98,10 @@ export class SettingsStore {
     if (typeof tactile === 'boolean') {
       settings.tactile = tactile;
     }
+    const address = await store.get('address', settings.address);
+    if (typeof address === 'string') {
+      settings.address = address;
+    }
     const bridgeUrl = await store.get('bridge_url', settings.bridgeUrl);
     if (typeof bridgeUrl === 'string') {
       settings.bridgeUrl = bridgeUrl;
@@ -133,6 +138,7 @@ export class SettingsStore {
     await store.put('chattiness', settings.chattiness);
     await store.put('quips', settings.quips);
     await store.put('tactile', settings.tactile);
+    await store.put('address', settings.address);
     await store.put('bridge_url', settings.bridgeUrl);
     await store.put('bridge_token', settings.bridgeToken);
     await store.put('last_tokens', settings.lastTokens);

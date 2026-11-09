@@ -452,8 +452,8 @@ export struct ChatPage {
     if (shotPath.length > 0) {
       meta.push(`shot=${shotPath}`);
     }
-    const shown: string = this.failed ? Character.failure(reply) : reply;
-    this.characterLine = Character.quip(!this.failed, steps.length);
+    const shown: string = this.failed ? Character.failure(reply, this.profileName) : reply;
+    this.characterLine = Character.quip(!this.failed, steps.length, this.profileName);
     const decorated: string = meta.length > 0
       ? `\u27e6meta\u27e7${meta.join(';')}\n${shown}`
       : shown;

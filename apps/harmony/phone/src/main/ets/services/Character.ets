@@ -25,6 +25,8 @@ export class Character {
   static chattiness: string = 'balanced';
   static quips: boolean = true;
   static tactile: boolean = true;
+  /** What HOPA calls the user; empty means no name. */
+  static address: string = '';
 
   static configure(stored: StoredSettings): void {
     Character.tone = Character.TONES.indexOf(stored.tone) >= 0 ? stored.tone : 'warm';
@@ -33,6 +35,7 @@ export class Character {
       : 'balanced';
     Character.quips = stored.quips;
     Character.tactile = stored.tactile;
+    Character.address = stored.address.trim();
   }
 
   static label(tone: string): string {
@@ -46,16 +49,15 @@ export class Character {
   }
 
   static greeting(hour: number): string {
+    const name: string = Character.address.trim();
     if (Character.tone === 'direct') {
       return hour < 5 ? 'Late.' : (hour < 12 ? 'Morning.' : (hour < 18 ? 'Afternoon.' : 'Evening.'));
     }
     if (hour < 5) {
-      return 'Still up?';
+      return name.length > 0 ? `Still up, ${name}?` : 'Still up?';
     }
-    if (hour < 12) {
-      return 'Good morning';
-    }
-    return hour < 18 ? 'Good afternoon' : 'Good evening';
+    const base: string = hour < 12 ? 'Good morning' : (hour < 18 ? 'Good afternoon' : 'Good evening');
+    return Character.tone === 'warm' && name.length > 0 ? `${base}, ${name}` : base;
   }
 
   /** Keeps the promise line, but lets the tone tighten it. */
@@ -76,7 +78,7 @@ export class Character {
    * One honest sentence for a failure, chosen from the real cause.
    * The raw error still goes to Settings, Logs.
    */
-  static failure(raw: string): string {
+  static failure(raw: string, profile: string = 'everyday'): string {
     const low: string = raw.toLowerCase();
     if (low.includes('network') || low.includes('dns') || low.includes('unreachable') ||
       low.includes('no sim')) {
@@ -92,11 +94,17 @@ export class Character {
     if (low.includes('timeout') || low.includes('timed out') || low.includes('too long')) {
       return 'That took too long, so I stopped. Try a smaller ask.';
     }
+    if (profile === 'power' || Character.tone === 'direct') {
+      return 'That did not work. Details in Settings, Logs.';
+    }
     return 'That did not work. The details are in Settings, Logs.';
   }
 
   /** A dry line after a run, or '' when the user asked for quiet. */
-  static quip(ok: boolean, steps: number): string {
+  static quip(ok: boolean, steps: number, profile: string = 'everyday'): string {
+    if (profile === 'easy' || profile === 'kid') {
+      return '';
+    }
     if (!Character.quips || Character.chattiness === 'quiet' || !ok) {
       return '';
     }

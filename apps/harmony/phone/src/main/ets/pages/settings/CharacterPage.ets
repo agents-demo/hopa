@@ -9,6 +9,7 @@ export struct CharacterPage {
   @State chattiness: string = 'balanced';
   @State quips: boolean = true;
   @State tactile: boolean = true;
+  @State address: string = '';
   @State loaded: boolean = false;
 
   aboutToAppear(): void {
@@ -18,6 +19,7 @@ export struct CharacterPage {
       this.chattiness = stored.chattiness;
       this.quips = stored.quips;
       this.tactile = stored.tactile;
+      this.address = stored.address;
       this.loaded = true;
     }).catch(() => {
       this.loaded = true;
@@ -29,12 +31,14 @@ export struct CharacterPage {
     Character.chattiness = this.chattiness;
     Character.quips = this.quips;
     Character.tactile = this.tactile;
+    Character.address = this.address.trim();
     const context = getContext(this) as Context;
     SettingsStore.load(context).then((stored: StoredSettings) => {
       stored.tone = this.tone;
       stored.chattiness = this.chattiness;
       stored.quips = this.quips;
       stored.tactile = this.tactile;
+      stored.address = this.address.trim();
       return SettingsStore.save(context, stored);
     }).catch(() => {
       // In-memory persona still applies this session.
@@ -127,6 +131,23 @@ export struct CharacterPage {
       .border({ width: 1, color: $r('app.color.divider') })
       .borderRadius(16)
       .alignItems(HorizontalAlign.Start)
+
+      Text('WHAT HOPA CALLS YOU')
+        .fontSize(10)
+        .fontColor($r('app.color.text_hint'))
+        .letterSpacing(0.6)
+        .padding({ top: 2 })
+      TextInput({ text: this.address, placeholder: 'Optional. Leave empty for no name.' })
+        .height(40)
+        .fontSize(13)
+        .backgroundColor($r('app.color.surface_muted'))
+        .borderRadius(12)
+        .onChange((value: string) => {
+          this.address = value;
+        })
+        .onSubmit(() => {
+          this.save();
+        })
 
       Text('TONE')
         .fontSize(10)
