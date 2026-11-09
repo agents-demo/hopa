@@ -150,17 +150,31 @@ class Device:
 
     # -- app lifecycle -------------------------------------------------------
 
+    def main_ability(self, bundle: str, dump: str | None = None) -> str:
+        """The ability the launcher would start, read from the manifest."""
+        if dump is None:
+            try:
+                dump = self.hdc.shell(f"bm dump -n {shlex.quote(bundle)}", check=False)
+            except Exception:  # noqa: BLE001
+                return ""
+        match = re.search(r'"mainElement"\s*:\s*"([^"]+)"', dump)
+        return match.group(1) if match else ""
+
     def launch(self, bundle: str, ability: str = "") -> None:
-        candidates = (
-            [ability]
-            if ability
-            else [
-                "MainAbility",
-                "EntryAbility",
-                f"{bundle}.MainAbility",
-                f"{bundle}.EntryAbility",
-            ]
-        )
+        # The catalogue ability can be device-specific; always keep a fallback
+        # list and a bundle-only start, so one stale name cannot block a launch.
+        probe = self.hdc.shell(f"bm dump -n {shlex.quote(bundle)}", check=False)
+        if "error:" in probe.lower():
+            raise DeviceError(f"{bundle} is not installed on this phone")
+        candidates: list[str] = []
+        resolved = self.main_ability(bundle, probe)
+        if resolved:
+            candidates.append(resolved)
+        if ability:
+            candidates.append(ability)
+        for name in ("EntryAbility", "MainAbility", f"{bundle}.EntryAbility", f"{bundle}.MainAbility"):
+            if name not in candidates:
+                candidates.append(name)
         errors: list[str] = []
         for attempt in range(2):
             for name in candidates:

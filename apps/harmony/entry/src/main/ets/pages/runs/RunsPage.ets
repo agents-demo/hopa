@@ -11,6 +11,7 @@ export struct RunsPage {
   @State status: string = 'Idle';
   @State busy: boolean = false;
   @State selectedId: string = '';
+  @State filter: string = 'all';
   private timer: number = -1;
 
   aboutToAppear(): void {
@@ -75,6 +76,29 @@ export struct RunsPage {
     const reply: string = await AgentService.get().continueLast();
     this.status = reply.length > 80 ? reply.substring(0, 80) : reply;
     this.refresh();
+  }
+
+  private shownRuns(): RunRecord[] {
+    if (this.filter === 'payments') {
+      return this.runs.filter((run: RunRecord) => run.isPayment);
+    }
+    if (this.filter === 'failed') {
+      return this.runs.filter((run: RunRecord) => run.status !== 'executed');
+    }
+    return this.runs;
+  }
+
+  @Builder
+  FilterChip(label: string, key: string) {
+    Text(label)
+      .fontSize(11)
+      .fontColor(this.filter === key ? $r('app.color.on_primary') : $r('app.color.text_secondary'))
+      .backgroundColor(this.filter === key ? $r('app.color.primary') : $r('app.color.surface_alt'))
+      .padding({ left: 10, right: 10, top: 5, bottom: 5 })
+      .borderRadius(9)
+      .onClick(() => {
+        this.filter = key;
+      })
   }
 
   private selectedRuns(): RunRecord[] {
@@ -254,8 +278,14 @@ export struct RunsPage {
               this.resume();
             })
         }
+        Row({ space: 6 }) {
+          this.FilterChip('All', 'all')
+          this.FilterChip('Payments', 'payments')
+          this.FilterChip('Failed', 'failed')
+        }
+        .width('100%')
         List({ space: 8 }) {
-          ForEach(this.runs, (run: RunRecord, index: number) => {
+          ForEach(this.shownRuns(), (run: RunRecord, index: number) => {
             ListItem() {
               Column({ space: 2 }) {
                 Row({ space: 8 }) {

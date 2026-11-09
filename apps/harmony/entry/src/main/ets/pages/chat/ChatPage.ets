@@ -211,6 +211,38 @@ export struct ChatPage {
     return list.length === 0 ? [] : list.split(' | ');
   }
 
+  /** Green for success, coral for a failed step. */
+  private stepColor(step: string): ResourceColor {
+    return step.startsWith('✓') ? $r('app.color.success') : $r('app.color.danger');
+  }
+
+  /** Numbered items of an answer; empty when the text is prose. */
+  private listItems(text: string): string[] {
+    const items: string[] = [];
+    for (const line of text.split('\n')) {
+      const match = line.trim().match(/^\d+[.)]\s+(.*)$/);
+      if (match !== null) {
+        items.push(match[1]);
+      }
+    }
+    return items.length >= 2 ? items : [];
+  }
+
+  /** A short sentence that introduces the list, when the model wrote one. */
+  private listLead(text: string): string {
+    for (const line of text.split('\n')) {
+      const trimmed: string = line.trim();
+      if (trimmed.length === 0) {
+        continue;
+      }
+      if (trimmed.match(/^\d+[.)]\s+/) !== null) {
+        return '';
+      }
+      return trimmed;
+    }
+    return '';
+  }
+
   private shotOf(item: ResourceStr): string {
     return this.metaValue(item, 'shot');
   }
@@ -257,6 +289,13 @@ export struct ChatPage {
     clean = clean.replace(/`/g, '');
     clean = clean.replace(/^#{1,6}\s*/gm, '');
     clean = clean.replace(/^>\s?/gm, '');
+    // A tool failure can echo raw shell output; keep the chat readable.
+    clean = clean.replace(/\\n/g, '\n');
+    const kept: string[] = [];
+    for (const raw of clean.split('\n')) {
+      kept.push(raw.length > 220 ? `${raw.substring(0, 220)}\u2026` : raw);
+    }
+    clean = kept.join('\n');
     if (clean.trim().length === 0) {
       return 'I hit a formatting error. Please try again.';
     }
@@ -449,24 +488,62 @@ export struct ChatPage {
                       if (this.showSteps && this.stepsOf(item).length > 0) {
                         Flex({ wrap: FlexWrap.Wrap }) {
                           ForEach(this.stepsOf(item), (step: string) => {
-                            Text(step)
-                              .fontSize(11)
-                              .fontColor($r('app.color.text_secondary'))
-                              .padding({ left: 8, right: 8, top: 3, bottom: 3 })
-                              .backgroundColor($r('app.color.surface_alt'))
-                              .borderRadius(9)
-                              .margin({ right: 6, bottom: 4 })
+                            Row({ space: 5 }) {
+                              Circle({ width: 4, height: 4 })
+                                .fill(this.stepColor(step))
+                              Text(step.substring(2))
+                                .fontSize(11)
+                                .fontColor($r('app.color.text_secondary'))
+                            }
+                            .padding({ left: 8, right: 9, top: 3, bottom: 3 })
+                            .backgroundColor($r('app.color.surface_alt'))
+                            .borderRadius(9)
+                            .margin({ right: 6, bottom: 4 })
                           }, (step: string, i: number) => `${i}-${step}`)
                         }
                         .width('100%')
                       }
-                      Text(this.bubbleText(item))
+                      if (this.listItems(this.textOf(item)).length > 0) {
+                        Column({ space: 8 }) {
+                          if (this.listLead(this.textOf(item)).length > 0) {
+                            Text(this.listLead(this.textOf(item)))
+                              .fontSize(14)
+                              .fontColor($r('app.color.text_primary'))
+                              .width('100%')
+                          }
+                          ForEach(this.listItems(this.textOf(item)), (line: string, i: number) => {
+                            Row({ space: 10 }) {
+                              Text(`${i + 1}`)
+                                .fontSize(10)
+                                .fontWeight(FontWeight.Bold)
+                                .fontColor($r('app.color.primary'))
+                                .width(20)
+                                .height(20)
+                                .textAlign(TextAlign.Center)
+                                .backgroundColor($r('app.color.primary_soft'))
+                                .borderRadius(10)
+                              Text(line)
+                                .fontSize(13.5)
+                                .lineHeight(20)
+                                .fontColor($r('app.color.text_primary'))
+                                .layoutWeight(1)
+                                .copyOption(CopyOptions.LocalDevice)
+                            }
+                            .width('100%')
+                            .alignItems(VerticalAlign.Top)
+                          }, (line: string, i: number) => `${i}-${line}`)
+                        }
                         .width('100%')
-                        .fontSize(15)
-                        .lineHeight(22)
-                        .fontColor($r('app.color.text_primary'))
-                        .padding({ left: 2, right: 2, top: 2, bottom: 2 })
-                        .copyOption(CopyOptions.LocalDevice)
+                        .padding({ top: 2, bottom: 2 })
+                      } else {
+                        Text(this.bubbleText(item))
+                          .width('100%')
+                          .fontSize(15)
+                          .lineHeight(22)
+                          .fontColor($r('app.color.text_primary'))
+                          .padding({ left: 2, right: 2, top: 2, bottom: 2 })
+                          .copyOption(CopyOptions.LocalDevice)
+                      }
                       if (!this.busy && this.shotOf(item).length > 0) {
                         Row({ space: 10 }) {
                           Image('file://' + this.shotOf(item))
@@ -560,13 +637,17 @@ export struct ChatPage {
                 if (this.liveSteps.length > 0) {
                   Flex({ wrap: FlexWrap.Wrap }) {
                     ForEach(this.liveSteps, (step: string) => {
-                      Text(step)
-                        .fontSize(10.5)
-                        .fontColor($r('app.color.text_secondary'))
-                        .padding({ left: 8, right: 8, top: 3, bottom: 3 })
-                        .backgroundColor($r('app.color.surface_alt'))
-                        .borderRadius(8)
-                        .margin({ right: 6, bottom: 4 })
+                      Row({ space: 5 }) {
+                        Circle({ width: 4, height: 4 })
+                          .fill(this.stepColor(step))
+                        Text(step.substring(2))
+                          .fontSize(10.5)
+                          .fontColor($r('app.color.text_secondary'))
+                      }
+                      .padding({ left: 8, right: 9, top: 3, bottom: 3 })
+                      .backgroundColor($r('app.color.surface_alt'))
+                      .borderRadius(8)
+                      .margin({ right: 6, bottom: 4 })
                     }, (step: string, i: number) => `${i}-${step}`)
                   }
                   .width('100%')

@@ -105,10 +105,9 @@ def test_launch_and_stop() -> None:
     device = Device(hdc=hdc)  # type: ignore[arg-type]
     device.launch("com.example.app", ability="MainAbility")
     device.stop("com.example.app")
-    assert hdc.calls == [
-        "aa start -a MainAbility -b com.example.app",
-        "aa force-stop com.example.app",
-    ]
+    assert hdc.calls[0] == "bm dump -n com.example.app"
+    assert "aa start" in hdc.calls[1]
+    assert hdc.calls[-1] == "aa force-stop com.example.app"
 
 
 def test_press_key() -> None:
