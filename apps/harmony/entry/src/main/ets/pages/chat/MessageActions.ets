@@ -25,6 +25,33 @@ export struct MessageActions {
     .height(14)
   }
 
+  @Builder
+  RetryIcon() {
+    Stack({ alignContent: Alignment.TopStart }) {
+      // Ring with a gap, drawn at the same stroke weight as the copy icon.
+      Column()
+        .width(11)
+        .height(11)
+        .borderRadius(5.5)
+        .border({ width: 1.3, color: $r('app.color.primary') })
+        .offset({ x: 1.5, y: 1.5 })
+      Column()
+        .width(5)
+        .height(5)
+        .backgroundColor($r('app.color.bg'))
+        .offset({ x: 9, y: 0 })
+      // Arrowhead closing the gap.
+      Column()
+        .width(4)
+        .height(4)
+        .backgroundColor($r('app.color.primary'))
+        .rotate({ angle: 45 })
+        .offset({ x: 8.4, y: 0.6 })
+    }
+    .width(14)
+    .height(14)
+  }
+
   build() {
     Row({ space: 4 }) {
       Row() {
@@ -40,10 +67,7 @@ export struct MessageActions {
       })
       if (this.showRetry) {
         Row() {
-          Text('↻')
-            .fontSize(18)
-            .fontWeight(FontWeight.Medium)
-            .fontColor($r('app.color.primary'))
+          this.RetryIcon()
         }
         .width(26)
         .height(26)
