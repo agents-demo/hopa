@@ -372,6 +372,13 @@ export struct ChatPage {
         }
         .layoutWeight(1)
         .width('100%')
+        .onAreaChange((_old: Area, now: Area) => {
+          // The keyboard shrinking the list must not leave the newest message
+          // off-screen; re-anchor to the end whenever the height changes.
+          if (String(now.height) !== String(_old.height)) {
+            this.scrollToEnd();
+          }
+        })
       }
       if (this.lastPageUrl.length > 0) {
         ChatPageCard({
