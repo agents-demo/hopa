@@ -285,7 +285,7 @@ export const APP_CATALOG: CatalogApp[] = [
     verified: true,
     ability: "EntryAbility",
     purpose: "Feed, search, profile, comments, direct messages.",
-    actions: ["To post: if an ad covers the app tap Skip, then tap Home in the bottom bar. The orange + only exists on the Home feed,…", "The composer is a full screen titled \"New Weibo\"; Send stays greyed out until there is text.", "Posting, reposting, commenting and following are public: ask first.", "Web fallback: https://weibo.com."],
+    actions: ["To post: tap Skip if an ad shows, then tap Home. The orange + exists only on the Home feed, top-right near 1210,200.", "The + has no label. Tap it, choose 写微博 (not Album), then type and tap Send. Send greys out until there is text.", "Posting, reposting, commenting and following are public: ask first.", "Web fallback: https://weibo.com."],
   },
   {
     name: "wps",

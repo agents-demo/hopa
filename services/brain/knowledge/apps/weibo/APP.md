@@ -14,7 +14,7 @@ platform: harmonyos
 HarmonyOS bundle: `com.sina.weibo.stage` (verified on a Mate 80).
 
 - Feed, search, profile, comments, direct messages.
-- To post: if an ad covers the app tap Skip, then tap Home in the bottom bar. The orange + only exists on the Home feed, never on another tab. Tap the +, choose 写微博 (Write Weibo) - Album is a photo picker, not the text composer - tap the editor, type, then tap Send.
-- The composer is a full screen titled "New Weibo"; Send stays greyed out until there is text.
+- To post: tap Skip if an ad shows, then tap Home. The orange + exists only on the Home feed, top-right near 1210,200.
+- The + has no label. Tap it, choose 写微博 (not Album), then type and tap Send. Send greys out until there is text.
 - Posting, reposting, commenting and following are public: ask first.
 - Web fallback: https://weibo.com.

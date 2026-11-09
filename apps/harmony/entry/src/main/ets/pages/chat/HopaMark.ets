@@ -16,11 +16,13 @@ export struct HopaMark {
   @State cheer: boolean = false;
   @State bob: boolean = false;
   @State waveStep: number = 0;
+  @State bubble: boolean = false;
   private timer: number = -1;
   private blinkTimer: number = -1;
   private cheerTimer: number = -1;
   private bobTimer: number = -1;
   private waveTimer: number = -1;
+  private bubbleTimer: number = -1;
 
   aboutToAppear(): void {
     if (!this.animate) {
@@ -63,6 +65,22 @@ export struct HopaMark {
       clearInterval(this.waveTimer);
       this.waveTimer = -1;
     }
+    if (this.bubbleTimer >= 0) {
+      clearTimeout(this.bubbleTimer);
+      this.bubbleTimer = -1;
+    }
+  }
+
+  /** A short, warm greeting that appears beside the mascot, not a toast. */
+  private speak(): void {
+    this.bubble = true;
+    if (this.bubbleTimer >= 0) {
+      clearTimeout(this.bubbleTimer);
+    }
+    this.bubbleTimer = setTimeout(() => {
+      this.bubble = false;
+      this.bubbleTimer = -1;
+    }, 2200);
   }
 
   private armAngle(): number {
@@ -136,9 +154,48 @@ export struct HopaMark {
         .backgroundColor('#FFF9F0')
         .position({ x: this.markSize * 0.547, y: this.markSize * 0.398 })
         .opacity(this.blink ? 1 : 0)
+
+      // Greeting bubble: sits above the head, tail touching the top of it.
+      Column() {
+        Text("Hi, I'm HOPA 👋")
+          .fontSize(this.markSize * 0.215)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(Color.White)
+          .textAlign(TextAlign.Center)
+          .maxLines(1)
+      }
+      .width(this.markSize * 2.30)
+      .padding({
+        left: this.markSize * 0.12,
+        right: this.markSize * 0.12,
+        top: this.markSize * 0.11,
+        bottom: this.markSize * 0.11
+      })
+      .backgroundColor('#E8703A')
+      .borderRadius(this.markSize * 0.29)
+      .shadow({ radius: this.markSize * 0.16, color: '#551C1B18', offsetY: this.markSize * 0.05 })
+      .rotate({ angle: this.bubble ? -3 : -12 })
+      .position({ x: this.markSize * 0.42, y: -this.markSize * 1.05 })
+      .opacity(this.bubble ? 1 : 0)
+      .scale({ x: this.bubble ? 1 : 0.5, y: this.bubble ? 1 : 0.5 })
+      .animation({ duration: 280, curve: Curve.EaseOut })
+      .hitTestBehavior(HitTestMode.None)
+
+      // Tail last so it sits on top of the bubble and points down at him.
+      Column()
+        .width(this.markSize * 0.17)
+        .height(this.markSize * 0.17)
+        .backgroundColor('#E8703A')
+        .rotate({ angle: 45 })
+        .position({ x: this.markSize * 0.62, y: -this.markSize * 0.56 })
+        .opacity(this.bubble ? 1 : 0)
+        .scale({ x: this.bubble ? 1 : 0.2, y: this.bubble ? 1 : 0.2 })
+        .animation({ duration: 260, curve: Curve.EaseOut })
+        .hitTestBehavior(HitTestMode.None)
     }
     .width(this.markSize)
     .height(this.markSize)
+    .clip(false)
     .opacity(this.state === 'error' ? 0.65 : (this.pulse ? 0.88 : 1))
     .scale({
       x: this.cheer || this.state === 'happy' ? 1.06 : 1,
@@ -162,7 +219,7 @@ export struct HopaMark {
         this.cheer = false;
       }, 260);
       if (this.state === 'idle') {
-        this.getUIContext().getPromptAction().showToast({ message: "Hi, I'm HOPA." });
+        this.speak();
       }
     })
     .accessibilityText(this.label())

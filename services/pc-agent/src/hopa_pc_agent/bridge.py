@@ -36,34 +36,70 @@ class BridgeError(Exception):
     pass
 
 
-def _node_payload(node: Any, ref: str) -> dict[str, Any]:
+def _retry(fn: Any, *args: Any) -> Any:
+    """Run a device call twice: one stalled hdc call must not fail a whole turn."""
+    try:
+        return fn(*args)
+    except Exception:  # noqa: BLE001 - retried once, then surfaced
+        time.sleep(0.4)
+        return fn(*args)
+
+
+def _position_hint(bounds: list[int], width: int, height: int) -> str:
+    """Describe an unlabeled clickable node so the model can aim at it.
+
+    Icon-only buttons (Weibo's orange +, toolbars) expose no text, description
+    or id. Without a hint they are indistinguishable refs, so the agent guesses.
+    The centre coordinates are included so a known hit area ("the + is near
+    x=1210, y=200") can be matched exactly.
+    """
+    if width <= 0 or height <= 0 or len(bounds) != 4:
+        return "unlabeled button"
+    cx = (bounds[0] + bounds[2]) // 2
+    cy = (bounds[1] + bounds[3]) // 2
+    horizontal = "left" if cx < width * 0.33 else ("right" if cx > width * 0.66 else "centre")
+    vertical = "top" if cy < height * 0.15 else ("bottom" if cy > height * 0.85 else "middle")
+    corner = ""
+    if vertical == "top" and horizontal in ("left", "right"):
+        corner = f", {horizontal}-most corner"
+    return f"unlabeled icon button at ({cx},{cy}) - {horizontal} {vertical}{corner}"
+
+
+def _node_payload(node: Any, ref: str, width: int = 0, height: int = 0) -> dict[str, Any]:
+    bounds: list[int] = list(node.bounds) if node.bounds else []
+    description: str = node.description
+    if not description and not node.text and node.clickable and bounds:
+        description = _position_hint(bounds, width, height)
     return {
         "ref": ref,
         "text": node.text,
-        "description": node.description,
+        "description": description,
+        "id": node.id,
         "type": node.type,
-        "bounds": list(node.bounds) if node.bounds else [],
+        "bounds": bounds,
         "clickable": bool(node.clickable),
     }
 
 
 def _observe(device: Device) -> dict[str, Any]:
     layout = device.dump_layout()
-    nodes: list[dict[str, Any]] = []
-    refs: dict[str, Any] = {}
     width = 0
     height = 0
-    index = 0
     for node in layout.walk():
         if node.bounds:
             width = max(width, node.bounds[2])
             height = max(height, node.bounds[3])
+
+    nodes: list[dict[str, Any]] = []
+    refs: dict[str, Any] = {}
+    index = 0
+    for node in layout.walk():
         if not (node.text or node.description or node.clickable):
             continue
         index += 1
         ref = f"e{index}"
         refs[ref] = node
-        nodes.append(_node_payload(node, ref))
+        nodes.append(_node_payload(node, ref, width, height))
     return {
         "text": "\n".join(layout.texts()),
         "nodes": nodes,
@@ -181,7 +217,8 @@ class _Handler(BaseHTTPRequestHandler):
         if self.path == "/foreground":
             return {"bundle": device.foreground()}
         if self.path == "/tap":
-            device.tap(int(data["x"]), int(data["y"]))
+            print(f"tap {data.get('x')},{data.get('y')}", file=sys.stderr, flush=True)
+            _retry(device.tap, int(data["x"]), int(data["y"]))
             return {"ok": True}
         if self.path == "/screenshot":
             started = time.perf_counter()
@@ -191,10 +228,12 @@ class _Handler(BaseHTTPRequestHandler):
         if self.path == "/type":
             x = data.get("x")
             y = data.get("y")
-            device.type_text(
-                str(data["text"]),
-                x=int(x) if x is not None else None,
-                y=int(y) if y is not None else None,
+            _retry(
+                lambda: device.type_text(
+                    str(data["text"]),
+                    x=int(x) if x is not None else None,
+                    y=int(y) if y is not None else None,
+                )
             )
             return {"ok": True}
         if self.path == "/launch":
@@ -202,7 +241,7 @@ class _Handler(BaseHTTPRequestHandler):
             device.launch(bundle, ability=str(data.get("ability", "")))
             return {"ok": True, "foreground": _wait_for_foreground(device, bundle)}
         if self.path == "/key":
-            device.press_key(str(data["name"]))
+            _retry(device.press_key, str(data["name"]))
             return {"ok": True}
         if self.path == "/swipe":
             device.swipe(
