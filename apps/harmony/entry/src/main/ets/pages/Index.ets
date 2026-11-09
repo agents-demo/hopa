@@ -289,6 +289,17 @@ struct Index {
         } else {
           Row().layoutWeight(1)
         }
+        Row({ space: 5 }) {
+          Circle({ width: 5, height: 5 })
+            .fill($r('app.color.success'))
+          Text('Ready')
+            .fontSize(10)
+            .fontColor($r('app.color.text_hint'))
+        }
+        .padding({ left: 8, right: 8, top: 4, bottom: 4 })
+        .backgroundColor('#0FFFFFFF')
+        .borderRadius(10)
+        .margin({ right: 6 })
         Stack({ alignContent: Alignment.Center }) {
           Row()
             .width(34)

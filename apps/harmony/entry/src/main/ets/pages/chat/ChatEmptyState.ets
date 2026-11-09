@@ -47,17 +47,6 @@ export struct ChatEmptyState {
         .fontSize(14)
         .fontColor($r('app.color.text_secondary'))
         .textAlign(TextAlign.Center)
-      Row({ space: 5 }) {
-        Circle({ width: 5, height: 5 })
-          .fill($r('app.color.success'))
-        Text(this.ready)
-          .fontSize(10.5)
-          .fontColor($r('app.color.text_hint'))
-      }
-      .width('100%')
-      .justifyContent(FlexAlign.Start)
-      .padding({ left: 4 })
-      .margin({ top: 1 })
       Text('I always ask before any payment.')
         .fontSize(11)
         .fontColor($r('app.color.text_hint'))
@@ -80,7 +69,9 @@ export struct ChatEmptyState {
               .layoutWeight(1)
           }
           .width('100%')
-          .padding({ left: 4, right: 4, top: 4, bottom: 10 })
+          .padding({ left: 10, right: 12, top: 9, bottom: 9 })
+          .border({ width: 1, color: '#26E8703A' })
+          .borderRadius(12)
           .opacity(this.pressed === -1 ? 1 : 0.62)
           .animation({ duration: 140, curve: Curve.EaseOut })
           .onClick(() => {
@@ -114,10 +105,6 @@ export struct ChatEmptyState {
     .width('100%')
     .constraintSize({ minHeight: '100%' })
     .justifyContent(FlexAlign.Center)
-    .linearGradient({
-      angle: 165,
-      colors: [['#F7F4EE', 0.0], ['#FFF6EC', 0.45], ['#F7F4EE', 1.0]]
-    })
     .opacity(this.entered ? 1 : 0)
     .translate({ y: this.entered ? 0 : 10 })
     .animation({ duration: 420, curve: Curve.EaseOut })
