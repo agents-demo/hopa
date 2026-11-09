@@ -49,6 +49,7 @@ export class AgentRuntime {
   private lastTranscript: string = '';
   private lastSuccess: boolean = false;
   private lastActionCount: number = 0;
+  private lastStepLabels: string[] = [];
   private matchedSkillId: string = '';
   private activeRuns: number = 0;
   private appNames: Map<string, string> = new Map<string, string>();
@@ -104,6 +105,11 @@ export class AgentRuntime {
   /** True when the last run completed without a failed or denied action. */
   lastRunSucceeded(): boolean {
     return this.lastSuccess;
+  }
+
+  /** Human labels for the steps of the last run, newest surface first. */
+  lastSteps(): string[] {
+    return this.lastStepLabels;
   }
 
   /** True when the last run actually changed something on the phone. */
@@ -206,6 +212,7 @@ export class AgentRuntime {
     this.lastGoal = goal;
     this.lastSuccess = false;
     this.lastActionCount = 0;
+    this.lastStepLabels = [];
     this.lastTranscript = '';
     this.pageLinks.clear();
     const matchedSkill: Skill | undefined = this.skills.match(goal);
@@ -233,6 +240,20 @@ export class AgentRuntime {
     }
     await this.background.end();
     hilog.info(0x0000, 'HOPA', `run: done outcomes=${outcomes.length} tokens=${this.loop.getTokens()}`);
+    for (const outcome of outcomes) {
+      const stepApp: string = outcome.action.app.length > 0 ? outcome.action.app : outcome.action.target;
+      const stepKind: string = outcome.action.kind;
+      let stepName: string = stepKind.replace('ui.', '');
+      const stepLabel: string = this.appNames.get(stepApp) ?? stepApp;
+      if (stepKind === 'ui.launch') { stepName = `Opened ${stepLabel}`; }
+      else if (stepKind === 'ui.tap' || stepKind === 'ui.doubleTap' || stepKind === 'ui.longPress') { stepName = 'Tapped'; }
+      else if (stepKind === 'ui.type') { stepName = 'Typed'; }
+      else if (stepKind === 'ui.back') { stepName = 'Back'; }
+      else if (stepKind === 'ui.home') { stepName = 'Home'; }
+      else if (stepKind === 'ui.swipe' || stepKind === 'ui.scroll') { stepName = 'Scrolled'; }
+      const stepOk: boolean = outcome.executed && outcome.observation.success;
+      this.lastStepLabels.push(`${stepOk ? '\u2713' : '\u2715'} ${stepName}`);
+    }
     for (const outcome of outcomes) {
       const target: string = outcome.action.app.length > 0
         ? outcome.action.app

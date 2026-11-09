@@ -17,6 +17,7 @@ export struct ChatPage {
   @State draft: string = '';
   @State busy: boolean = false;
   @State reaction: string = '';
+  @State lastSteps: string[] = [];
   @State lastPageUrl: string = '';
   @State lastPageTitle: string = '';
   private seenVersion: number = -1;
@@ -236,6 +237,7 @@ export struct ChatPage {
     if (service.lastRunHadActions()) {
       this.react(service.lastRunSucceeded());
     }
+    this.lastSteps = service.runtime.lastSteps();
 
     this.messages = this.messages.concat([`HOPA: ${reply}`]);
     this.renderedCount = this.messages.length;
@@ -320,7 +322,21 @@ export struct ChatPage {
                       animate: index === this.lastAnswerIndex()
                     })
                       .margin({ top: 4 })
-                    Column({ space: 2 }) {
+                    Column({ space: 4 }) {
+                      if (index === this.lastAnswerIndex() && this.lastSteps.length > 0) {
+                        Flex({ wrap: FlexWrap.Wrap }) {
+                          ForEach(this.lastSteps, (step: string) => {
+                            Text(step)
+                              .fontSize(11)
+                              .fontColor($r('app.color.text_secondary'))
+                              .padding({ left: 8, right: 8, top: 3, bottom: 3 })
+                              .backgroundColor($r('app.color.surface_alt'))
+                              .borderRadius(9)
+                              .margin({ right: 6, bottom: 4 })
+                          }, (step: string, i: number) => `${i}-${step}`)
+                        }
+                        .width('100%')
+                      }
                       Text(this.bubbleText(item))
                         .width('100%')
                         .fontSize(15)
