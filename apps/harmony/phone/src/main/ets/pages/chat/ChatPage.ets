@@ -12,6 +12,7 @@ import { RunNotification } from '../../services/RunNotification';
 import { RecapCard } from './RecapCard';
 import { ChatTyping } from './ChatTyping';
 import { MessageActions } from './MessageActions';
+import { ResultActions } from './ResultActions';
 import { HopaMark } from './HopaMark';
 import { Haptics } from '../../services/Haptics';
 import { VoiceController } from '../../services/VoiceController';
@@ -557,6 +558,40 @@ export struct ChatPage {
     }
   }
 
+  /** Share one answer as a plain text file; no album permission needed. */
+  private async shareResult(text: string): Promise<void> {
+    const context = getContext(this) as common.UIAbilityContext;
+    try {
+      const path: string = `${context.cacheDir}/hopa-result-${Date.now()}.txt`;
+      const file = fs.openSync(path, fs.OpenMode.CREATE | fs.OpenMode.TRUNC | fs.OpenMode.READ_WRITE);
+      try {
+        fs.writeSync(file.fd, text);
+      } finally {
+        fs.closeSync(file);
+      }
+      const want: Want = {
+        action: 'ohos.want.action.sendData',
+        type: 'text/plain',
+        uri: fileUri.getUriFromPath(path),
+        flags: wantConstant.Flags.FLAG_AUTH_READ_URI_PERMISSION
+      };
+      await context.startAbility(want);
+    } catch (error) {
+      this.toast('Could not open the share sheet.');
+    }
+  }
+
+  /** Keep one answer as a memory fact the user can see and delete. */
+  private async rememberResult(text: string): Promise<void> {
+    const service = AgentService.get();
+    const item = service.memory.add(text);
+    if (item === undefined) {
+      return;
+    }
+    await service.memory.save(getContext(this) as common.UIAbilityContext);
+    this.toast('Remembered');
+  }
+
   /** Hand the PNG to the system share sheet; no album permission needed. */
   private async shareRecapImage(png: ArrayBuffer): Promise<boolean> {
     const context = getContext(this) as common.UIAbilityContext;
@@ -879,21 +914,12 @@ export struct ChatPage {
                                 this.shareRecap();
                               })
                           }
-                          Text('Copy & open')
-                            .fontSize(10.5)
-                            .fontColor($r('app.color.text_secondary'))
-                            .padding({ left: 8, right: 8, top: 4, bottom: 4 })
-                            .backgroundColor($r('app.color.surface_alt'))
-                            .borderRadius(8)
-                            .onClick(() => {
-                              this.copyAndOpen();
-                            })
                         }
                         .width('100%')
                       }
                       if (index === this.lastAnswerIndex() && !this.busy && this.failed) {
                         Row({ space: 8 }) {
-                          Text('Something went wrong.')
+                          Text('That did not work.')
                             .fontSize(11)
                             .fontColor($r('app.color.danger'))
                             .layoutWeight(1)
@@ -914,11 +940,15 @@ export struct ChatPage {
                         .borderRadius(10)
                       }
                       if (index === this.lastAnswerIndex() && !this.busy) {
-                        MessageActions({
-                          showRetry: false,
-                          muted: true,
+                        ResultActions({
                           onCopy: () => {
                             this.copy(this.textOf(item));
+                          },
+                          onShare: () => {
+                            this.shareResult(this.textOf(item));
+                          },
+                          onRemember: () => {
+                            this.rememberResult(this.textOf(item));
                           }
                         })
                       }
