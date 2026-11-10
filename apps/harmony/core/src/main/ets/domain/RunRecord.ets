@@ -10,6 +10,8 @@ export class RunRecord {
   approved: boolean = false;
   /** The executor re-observed the screen and saw a change. */
   verified: boolean = false;
+  /** Sandbox path of the step thumbnail, or ''. */
+  shot: string = '';
   status: RunStatus;
   detail: string = '';
   startedAt: number;

@@ -12,6 +12,7 @@ export struct SocialHome {
   @StorageLink('hopa.style') styleName: string = 'vivid';
   @StorageLink('hopa.accent') accentColor: string = '';
   @State selected: number = -1;
+  @State showFailures: boolean = false;
   @State tick: number = 0;
   private ticker: number = -1;
 
@@ -38,7 +39,13 @@ export struct SocialHome {
 
   private feed(): RunRecord[] {
     const all: RunRecord[] = AgentService.get().runs.all();
-    return all.slice(Math.max(0, all.length - 6)).reverse();
+    const kept: RunRecord[] = [];
+    for (const run of all) {
+      if (this.showFailures || run.status === 'executed') {
+        kept.push(run);
+      }
+    }
+    return kept.slice(Math.max(0, kept.length - 6)).reverse();
   }
 
   private todayCount(): number {
@@ -144,6 +151,14 @@ export struct SocialHome {
         .fontColor($r('app.color.text_primary'))
         .width('100%')
         .maxLines(2)
+      if (run.shot.length > 0) {
+        Image('file://' + run.shot)
+          .width(100)
+          .height(170)
+          .objectFit(ImageFit.Cover)
+          .borderRadius(10)
+          .border({ width: 1, color: $r('app.color.divider') })
+      }
       Row({ space: 8 }) {
         Text('Share')
           .fontSize(11)
@@ -295,6 +310,16 @@ export struct SocialHome {
             .fontColor(this.accent())
             .letterSpacing(0.7)
             .layoutWeight(1)
+          Text(this.showFailures ? 'Hide failures' : 'Show failures')
+            .fontSize(10)
+            .fontColor($r('app.color.text_secondary'))
+            .padding({ left: 8, right: 8, top: 5, bottom: 5 })
+            .backgroundColor($r('app.color.surface_alt'))
+            .borderRadius(8)
+            .margin({ right: 6 })
+            .onClick(() => {
+              this.showFailures = !this.showFailures;
+            })
           Text('Ask HOPA')
             .fontSize(10.5)
             .fontWeight(FontWeight.Medium)

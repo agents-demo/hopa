@@ -85,7 +85,7 @@ export class AgentLoop {
   }
 
   /** Called after each action so the UI can show steps as they happen. */
-  onStep: (outcome: ActionOutcome) => void = () => {};
+  onStep: (outcome: ActionOutcome) => void | Promise<void> = () => {};
 
   async run(goal: string): Promise<ActionOutcome[]> {
     const outcomes: ActionOutcome[] = [];
@@ -149,7 +149,7 @@ export class AgentLoop {
         repeated.approved = true;
         repeated.verified = true;
         outcomes.push(repeated);
-        this.onStep(repeated);
+        await this.onStep(repeated);
         messages.push(new ModelMessage('assistant', response.text));
         messages.push(
           new ModelMessage(
@@ -164,7 +164,7 @@ export class AgentLoop {
 
       const outcome: ActionOutcome = await this.executor.execute(action, screen);
       outcomes.push(outcome);
-      this.onStep(outcome);
+      await this.onStep(outcome);
       if (launch.length > 0 && outcome.executed && outcome.observation.success) {
         launched.push(launch);
       }

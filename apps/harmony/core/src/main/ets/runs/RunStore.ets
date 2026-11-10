@@ -13,6 +13,17 @@ export class RunStore implements RunRecorder {
     return this.records.slice();
   }
 
+  /** Attaches a step thumbnail to an existing record. */
+  attachShot(id: string, shot: string): boolean {
+    for (const run of this.records) {
+      if (run.id === id) {
+        run.shot = shot;
+        return true;
+      }
+    }
+    return false;
+  }
+
   /** Replaces the store from persisted records (startup restore). */
   replace(records: RunRecord[]): void {
     this.records = records.slice();

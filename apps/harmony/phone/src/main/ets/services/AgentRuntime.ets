@@ -51,6 +51,8 @@ export class AgentRuntime {
   private lastActionCount: number = 0;
   private lastStepLabels: string[] = [];
   private lastTypedLength: number = 0;
+  private lastStepShots: string[] = [];
+  private lastStepShotIds: string[] = [];
   private matchedSkillId: string = '';
   private activeRuns: number = 0;
   private appNames: Map<string, string> = new Map<string, string>();
@@ -91,8 +93,8 @@ export class AgentRuntime {
       maxSteps,
       new CompositeScreenSource(this.browser, this.bridge)
     );
-    this.loop.onStep = (outcome: ActionOutcome) => {
-      this.lastStepLabels.push(this.stepLabel(outcome));
+    this.loop.onStep = (outcome: ActionOutcome): Promise<void> => {
+      return this.recordStep(outcome);
     };
     this.loop.setMemory(this.memory.toPrompt());
     this.modelLabel = modelName;
@@ -109,6 +111,44 @@ export class AgentRuntime {
   /** True when the last run completed without a failed or denied action. */
   lastRunSucceeded(): boolean {
     return this.lastSuccess;
+  }
+
+  /**
+   * Records a step and, when another app is in front, one frame of it.
+   * The frame is only a thumbnail source; the service downscales and persists.
+   */
+  private async recordStep(outcome: ActionOutcome): Promise<void> {
+    this.lastStepLabels.push(this.stepLabel(outcome));
+    if (!outcome.executed || !outcome.observation.success) {
+      return;
+    }
+    if (!this.bridge.isConfigured() || this.lastStepShots.length >= 6) {
+      return;
+    }
+    if (!outcome.action.kind.startsWith('ui.') && !outcome.action.kind.startsWith('web.')) {
+      return;
+    }
+    try {
+      const foreground: string = await this.bridge.foregroundBundle();
+      if (foreground.length === 0 || foreground === 'com.hopa.agent') {
+        return;
+      }
+      const shot: string = await this.bridge.screenshot();
+      if (shot.length > 0) {
+        this.lastStepShots.push(shot);
+        this.lastStepShotIds.push(outcome.recordId);
+      }
+    } catch (error) {
+      // A frame is optional; never fail a run for it.
+    }
+  }
+
+  stepShots(): string[] {
+    return this.lastStepShots;
+  }
+
+  stepShotIds(): string[] {
+    return this.lastStepShotIds;
   }
 
   /** Human labels for the steps of the last run, newest surface first. */
@@ -257,6 +297,8 @@ export class AgentRuntime {
     this.lastSuccess = false;
     this.lastActionCount = 0;
     this.lastStepLabels = [];
+    this.lastStepShots = [];
+    this.lastStepShotIds = [];
     this.lastTypedLength = 0;
     this.lastTranscript = '';
     this.pageLinks.clear();

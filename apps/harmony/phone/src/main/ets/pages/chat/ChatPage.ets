@@ -439,6 +439,9 @@ export struct ChatPage {
     const beforeTitle: string = service.pageLinks.title();
     const beforeUrl: string = service.pageLinks.url();
     const reply: string = await service.run(text);
+    await service.persistStepShots(context).catch(() => {
+      // Thumbnails are optional.
+    });
     const afterTitle: string = service.pageLinks.title();
     const afterUrl: string = service.pageLinks.url();
     this.diffText = afterUrl !== beforeUrl

@@ -189,6 +189,20 @@ export struct RunsPage {
     .width('100%')
   }
 
+  private hasShots(): boolean {
+    for (const run of this.replayRuns) {
+      if (run.shot.length > 0) {
+        return true;
+      }
+    }
+    for (const run of this.lastSession()) {
+      if (run.shot.length > 0) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   @Builder
   Replay() {
     Column({ space: 8 }) {
@@ -212,6 +226,37 @@ export struct RunsPage {
           })
       }
       .width('100%')
+      if (this.hasShots()) {
+        Scroll() {
+          Row({ space: 6 }) {
+            ForEach(this.replayRuns.length > 0 ? this.replayRuns : this.lastSession(),
+              (run: RunRecord, index: number) => {
+                if (run.shot.length > 0) {
+                  Image('file://' + run.shot)
+                    .width(46)
+                    .height(82)
+                    .objectFit(ImageFit.Cover)
+                    .borderRadius(6)
+                    .border({
+                      width: this.replayRuns.length > 0 && index < this.replayIndex ? 2 : 1,
+                      color: this.replayRuns.length > 0 && index < this.replayIndex
+                        ? $r('app.color.primary')
+                        : $r('app.color.divider')
+                    })
+                    .onClick(() => {
+                      if (this.replayRuns.length > 0) {
+                        this.replayIndex = index + 1;
+                      }
+                    })
+                }
+              }, (run: RunRecord) => `film-${run.id}`)
+          }
+          .padding({ top: 2, bottom: 2 })
+        }
+        .width('100%')
+        .scrollable(ScrollDirection.Horizontal)
+        .scrollBar(BarState.Off)
+      }
       ForEach(this.replayRuns.slice(0, this.replayIndex), (run: RunRecord, index: number) => {
         Row({ space: 8 }) {
           Text(`${index + 1}`)
@@ -336,6 +381,14 @@ export struct RunsPage {
           Text(run.status)
             .fontSize(13)
             .fontColor(run.status === 'executed' ? $r('app.color.success') : $r('app.color.danger'))
+          if (run.shot.length > 0) {
+            Image('file://' + run.shot)
+              .width(82)
+              .height(150)
+              .objectFit(ImageFit.Cover)
+              .borderRadius(8)
+              .border({ width: 1, color: $r('app.color.divider') })
+          }
           Divider()
           this.TimelineRow('Started', new Date(run.startedAt).toLocaleTimeString())
           this.TimelineRow('Finished', new Date(run.finishedAt).toLocaleTimeString())

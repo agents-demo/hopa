@@ -21,6 +21,14 @@ export class RunArchive {
     }
     try {
       const parsed = JSON.parse(raw) as RunRecord[];
+      for (const run of parsed) {
+        if (typeof run.shot !== 'string') {
+          run.shot = '';
+        }
+        if (typeof run.verified !== 'boolean') {
+          run.verified = false;
+        }
+      }
       this.runs.replace(parsed);
     } catch (error) {
       // Unreadable history: keep the empty store.

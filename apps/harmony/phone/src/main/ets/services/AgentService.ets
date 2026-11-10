@@ -16,6 +16,9 @@ import {
 } from '@hopa/capability-accessibility';
 import { SystemCapability } from '@hopa/capability-system';
 import { Context, common } from '@kit.AbilityKit';
+import { fileIo as fs } from '@kit.CoreFileKit';
+import { util } from '@kit.ArkTS';
+import { image } from '@kit.ImageKit';
 import { BrowserController } from './BrowserController';
 import { BackgroundKeeper } from './BackgroundKeeper';
 import { BridgeClient } from './BridgeClient';
@@ -222,6 +225,63 @@ export class AgentService {
 
   isBusy(): boolean {
     return this.runtime.isBusy();
+  }
+
+  /** Downscales and saves the frames captured during the last run. */
+  async persistStepShots(context: Context): Promise<void> {
+    const shots: string[] = this.runtime.stepShots();
+    const ids: string[] = this.runtime.stepShotIds();
+    if (shots.length === 0 || ids.length === 0) {
+      return;
+    }
+    const dir: string = `${context.filesDir}/steps`;
+    try {
+      fs.mkdirSync(dir);
+    } catch (error) {
+      // The directory already exists.
+    }
+    let attached: number = 0;
+    for (let index = 0; index < shots.length && index < ids.length; index++) {
+      const marker: number = shots[index].indexOf('base64,');
+      if (marker < 0) {
+        continue;
+      }
+      try {
+        const helper: util.Base64Helper = new util.Base64Helper();
+        const bytes: Uint8Array = helper.decodeSync(shots[index].substring(marker + 7));
+        const buffer: ArrayBuffer = bytes.buffer.slice(
+          bytes.byteOffset,
+          bytes.byteOffset + bytes.byteLength
+        );
+        let jpeg: ArrayBuffer = buffer;
+        try {
+          const source = image.createImageSource(buffer);
+          const pixel = await source.createPixelMap();
+          await pixel.scale(0.35, 0.35);
+          const packer: image.ImagePacker = image.createImagePacker();
+          jpeg = await packer.packing(pixel, { format: 'image/jpeg', quality: 55 });
+          pixel.release();
+          source.release();
+        } catch (error) {
+          // Fall back to the original frame when scaling is unavailable.
+        }
+        const path: string = `${dir}/${ids[index]}.jpg`;
+        const file = fs.openSync(path, fs.OpenMode.CREATE | fs.OpenMode.TRUNC | fs.OpenMode.READ_WRITE);
+        try {
+          fs.writeSync(file.fd, jpeg);
+        } finally {
+          fs.closeSync(file);
+        }
+        if (this.runs.attachShot(ids[index], path)) {
+          attached += 1;
+        }
+      } catch (error) {
+        // One frame is optional.
+      }
+    }
+    if (attached > 0) {
+      await this.saveRuns(context);
+    }
   }
 
   setAutonomous(enabled: boolean): void {
