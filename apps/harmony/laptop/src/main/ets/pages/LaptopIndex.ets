@@ -546,20 +546,22 @@ struct LaptopIndex {
   @Builder
   SettingsPanel() {
     Column({ space: 22 }) {
-      Row({ space: 10 }) {
-        Text('\u2190')
-          .fontSize(17)
-          .fontColor($r('app.color.text_secondary'))
-          .width(28)
-          .height(28)
-          .textAlign(TextAlign.Center)
-          .onClick(() => {
-            this.settingsOpen = false;
-          })
+      Row() {
         Text('Settings')
           .fontSize(17)
           .fontWeight(FontWeight.Bold)
           .fontColor($r('app.color.text_primary'))
+        Blank()
+        Text('\u00d7')
+          .fontSize(18)
+          .fontColor($r('app.color.text_secondary'))
+          .width(30)
+          .height(30)
+          .textAlign(TextAlign.Center)
+          .borderRadius(8)
+          .onClick(() => {
+            this.settingsOpen = false;
+          })
       }
       .width('100%')
       .alignItems(VerticalAlign.Center)
@@ -957,8 +959,8 @@ struct LaptopIndex {
         }
       }
       .width('100%')
-      .padding({ left: 12, right: 12, top: 6, bottom: 10 })
-      .border({ width: { top: 1 }, color: '#DCD5C7' })
+      .padding({ left: 12, right: 12, top: 10, bottom: 10 })
+      .border({ width: { top: 1 }, color: $r('app.color.divider') })
     }
     .width(212)
     .height('100%')
