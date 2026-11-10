@@ -104,31 +104,31 @@ export struct HopaMark {
   }
 
   private armX(): number {
-    return this.markSize * (this.isLaptop() ? 0.826 : 0.713);
+    return this.markSize * (this.isLaptop() ? 0.838 : 0.713);
   }
 
   private armY(): number {
-    return this.markSize * (this.isLaptop() ? 0.235 : 0.281);
+    return this.markSize * (this.isLaptop() ? 0.295 : 0.281);
   }
 
   private lidX(): number {
-    return this.markSize * (this.isLaptop() ? 0.4023 : 0.414);
+    return this.markSize * (this.isLaptop() ? 0.3945 : 0.414);
   }
 
   private lidRight(): number {
-    return this.markSize * (this.isLaptop() ? 0.539 : 0.547);
+    return this.markSize * (this.isLaptop() ? 0.543 : 0.547);
   }
 
   private lidY(): number {
-    return this.markSize * (this.isLaptop() ? 0.3047 : 0.398);
+    return this.markSize * (this.isLaptop() ? 0.3125 : 0.398);
   }
 
   private lidWidth(): number {
-    return this.markSize * (this.isLaptop() ? 0.0586 : 0.051);
+    return this.markSize * (this.isLaptop() ? 0.0625 : 0.051);
   }
 
   private lidHeight(): number {
-    return this.markSize * (this.isLaptop() ? 0.1211 : 0.113);
+    return this.markSize * (this.isLaptop() ? 0.125 : 0.113);
   }
 
   private armAngle(): number {
