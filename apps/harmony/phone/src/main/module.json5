@@ -88,6 +88,38 @@
     ],
     "extensionAbilities": [
       {
+        "name": "HopaShareExtension",
+        "srcEntry": "./ets/extension/HopaShareExtension.ets",
+        "type": "share",
+        "icon": "$media:startIcon",
+        "label": "$string:EntryAbility_label",
+        "exported": true,
+        "skills": [
+          {
+            "actions": [
+              "ohos.want.action.sendData"
+            ],
+            "uris": [
+              {
+                "scheme": "file",
+                "utd": "general.text",
+                "maxFileSupported": 1
+              },
+              {
+                "scheme": "file",
+                "utd": "general.image",
+                "maxFileSupported": 1
+              },
+              {
+                "scheme": "file",
+                "utd": "general.file",
+                "maxFileSupported": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
         "name": "HopaAccessibilityExtension",
         "srcEntry": "./ets/extension/HopaAccessibilityExtension.ets",
         "type": "accessibility",
