@@ -99,6 +99,10 @@ export default class LaptopAbility extends UIAbility {
       if (typeof linkKey === 'string' && linkKey.length > 0) {
         AppStorage.setOrCreate<string>('hopa.laptop.linkKey', linkKey);
       }
+      const pageAsk = params['hopa.page_ask'];
+      if (typeof pageAsk === 'string' && pageAsk.trim().length > 0) {
+        AppStorage.setOrCreate<string>('hopa.laptop.pageAsk', pageAsk.trim());
+      }
       const bridgeUrl = params['hopa.bridge_url'];
       const bridgeKey = params['hopa.bridge_key'];
       if (typeof bridgeUrl === 'string' && bridgeUrl.length > 0) {

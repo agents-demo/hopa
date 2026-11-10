@@ -52,12 +52,13 @@ struct LaptopIndex {
   @State view: string = 'chat';
   @State runs: RunRecord[] = [];
   @State openRunId: string = '';
-  @State address: string = '';
-  @State pageUrl: string = 'https://example.com';
+  @State address: string = LaptopIndex.START_URL;
+  private static readonly START_URL: string = 'https://example.com';
   @State pageTitle: string = '';
   @State pageQuestion: string = '';
   private web: webview.WebviewController = new webview.WebviewController();
   @State speakReplies: boolean = false;
+  @State notifyAnswers: boolean = true;
   @State profileName: string = 'everyday';
   @State kidPin: string = '';
   @State pinPrompt: boolean = false;
@@ -135,6 +136,7 @@ struct LaptopIndex {
       this.modelName = stored.model;
       this.provider = stored.provider;
       this.speakReplies = stored.speakReplies;
+      this.notifyAnswers = stored.notifyAnswers;
       this.profileName = stored.profile;
       this.kidPin = stored.kidPin;
       this.bridgeUrl = stored.bridgeUrl;
@@ -162,6 +164,17 @@ struct LaptopIndex {
     // fires on later changes, so read it once here.
     if (this.pending.length > 0) {
       this.onPending();
+    }
+    const pageAsk: string = AppStorage.get<string>('hopa.laptop.pageAsk') ?? '';
+    if (pageAsk.length > 0) {
+      AppStorage.setOrCreate<string>('hopa.laptop.pageAsk', '');
+      this.view = 'browser';
+      this.agent.browser.attach(this.web);
+      // Let the page settle, then ask about it in place.
+      setTimeout(() => {
+        this.pageQuestion = pageAsk;
+        this.askAboutPage();
+      }, 7000);
     }
     if ((AppStorage.get<string>('hopa.laptop.demoApproval') ?? '') === '1') {
       AppStorage.setOrCreate<string>('hopa.laptop.demoApproval', '');
@@ -563,6 +576,14 @@ struct LaptopIndex {
   }
 
   /** Speaking replies is a preference, not a model setting. */
+  private async saveNotify(value: boolean): Promise<void> {
+    this.notifyAnswers = value;
+    const context = getContext(this) as common.UIAbilityContext;
+    const stored: StoredSettings = await SettingsStore.load(context);
+    stored.notifyAnswers = value;
+    await SettingsStore.save(context, stored);
+  }
+
   private async saveSpeak(value: boolean): Promise<void> {
     this.speakReplies = value;
     const context = getContext(this) as common.UIAbilityContext;
@@ -573,6 +594,9 @@ struct LaptopIndex {
 
   /** A system notification only when the window is not the one in front. */
   private notifyAnswer(question: string): void {
+    if (!this.notifyAnswers) {
+      return;
+    }
     try {
       const request: notificationManager.NotificationRequest = {
         id: 1,
@@ -842,6 +866,26 @@ struct LaptopIndex {
         .width('100%')
         .padding({ top: 6 })
 
+        Row({ space: 10 }) {
+          Column({ space: 2 }) {
+            Text('Tell me when an answer is ready')
+              .fontSize(12.5)
+              .fontColor($r('app.color.text_primary'))
+            Text('Only when HOPA is not the window in front.')
+              .fontSize(10.5)
+              .fontColor($r('app.color.text_hint'))
+          }
+          .alignItems(HorizontalAlign.Start)
+          .layoutWeight(1)
+          Toggle({ type: ToggleType.Switch, isOn: this.notifyAnswers })
+            .selectedColor($r('app.color.primary'))
+            .onChange((value: boolean) => {
+              this.saveNotify(value);
+            })
+        }
+        .width('100%')
+        .padding({ top: 2 })
+
         Text('Changes save when you leave a field. The key lives in Asset Store on this laptop, never in the app package.')
           .fontSize(10.5)
           .lineHeight(16)
@@ -967,16 +1011,18 @@ struct LaptopIndex {
       }
       .width('100%')
 
-      Web({ src: this.pageUrl, controller: this.web })
+      Web({ src: LaptopIndex.START_URL, controller: this.web })
         .layoutWeight(1)
         .width('100%')
         .domStorageAccess(true)
         .onPageEnd(() => {
-          this.pageUrl = this.web.getUrl();
-          this.address = this.pageUrl;
-          this.agent.browser.attach(this.web);
-          this.agent.browser.note(this.pageUrl, this.web.getTitle());
+          // Reading a new src from state re-created the Web view and dropped the
+          // shell back to chat; navigation now goes through loadUrl only.
+          const url: string = this.web.getUrl();
+          this.address = url;
           this.pageTitle = this.web.getTitle();
+          this.agent.browser.attach(this.web);
+          this.agent.browser.note(url, this.pageTitle);
         })
 
       Row({ space: 8 }) {
@@ -1032,7 +1078,7 @@ struct LaptopIndex {
         ? `https://${target}`
         : `https://duckduckgo.com/?q=${encodeURIComponent(target)}`;
     }
-    this.pageUrl = target;
+    this.address = target;
     this.agent.browser.attach(this.web);
     try {
       this.web.loadUrl(target);

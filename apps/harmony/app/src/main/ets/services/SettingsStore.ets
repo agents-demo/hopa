@@ -14,6 +14,8 @@ export class StoredSettings {
   showSteps: boolean = true;
   reduceMotion: boolean = false;
   speakReplies: boolean = false;
+  /** Ask the system to tell you when an answer is ready while HOPA is behind. */
+  notifyAnswers: boolean = true;
   tone: string = 'warm';
   chattiness: string = 'balanced';
   quips: boolean = true;
