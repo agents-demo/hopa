@@ -29,8 +29,35 @@ export default class LaptopAbility extends UIAbility {
       if (typeof model === 'string' && model.length > 0) {
         AppStorage.setOrCreate<string>('hopa.laptop.model', model);
       }
+      const ask = params['hopa.ask'];
+      if (typeof ask === 'string' && ask.trim().length > 0) {
+        AppStorage.setOrCreate<string>('hopa.laptop.pending', ask.trim());
+      }
+    }
+    const uri: string = want.uri ?? '';
+    if (uri.startsWith('hopa://ask')) {
+      const marker: number = uri.indexOf('text=');
+      if (marker >= 0) {
+        let text: string = uri.substring(marker + 5);
+        try {
+          text = decodeURIComponent(text.replace(/\+/g, ' '));
+        } catch (error) {
+          // Keep the raw text when the encoding is odd.
+        }
+        if (text.trim().length > 0) {
+          AppStorage.setOrCreate<string>('hopa.laptop.pending', text.trim());
+        }
+      }
     }
     hilog.info(DOMAIN, TAG, 'laptop ability created');
+  }
+
+  onNewWant(want: Want, launchParam: AbilityConstant.LaunchParam): void {
+    const params = want.parameters;
+    const ask = params !== undefined ? params['hopa.ask'] : undefined;
+    if (typeof ask === 'string' && ask.trim().length > 0) {
+      AppStorage.setOrCreate<string>('hopa.laptop.pending', ask.trim());
+    }
   }
 
   onWindowStageCreate(windowStage: window.WindowStage): void {

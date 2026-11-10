@@ -22,6 +22,8 @@ struct LaptopIndex {
   @State settingsOpen: boolean = false;
   @State keyDraft: string = '';
   @State saved: string = '';
+  @StorageLink('hopa.laptop.pending') @Watch('onPending') pending: string = '';
+  private deferredAsk: string = '';
   private chat: LaptopChat = new LaptopChat();
   private scroller: Scroller = new Scroller();
 
@@ -33,14 +35,42 @@ struct LaptopIndex {
       LaptopKeyStore.load().then((key: string) => {
         this.keyPresent = key.length > 0;
         this.chat.configure(this.endpoint, this.modelName, key);
-        this.applyInjected();
+        this.applyInjected().then(() => {
+          this.runDeferredAsk();
+        });
       }).catch(() => {
         // No key yet: the Model panel asks for one.
-        this.applyInjected();
+        this.applyInjected().then(() => {
+          this.runDeferredAsk();
+        });
       });
     }).catch(() => {
       // Defaults are fine.
     });
+  }
+
+  /** `aa start --ps hopa.ask`, or a hopa://ask link, asks without typing. */
+  onPending(): void {
+    const text: string = this.pending;
+    if (text.length === 0) {
+      return;
+    }
+    AppStorage.setOrCreate<string>('hopa.laptop.pending', '');
+    this.draft = text;
+    if (this.chat.isReady()) {
+      this.send();
+    } else {
+      this.deferredAsk = text;
+    }
+  }
+
+  private runDeferredAsk(): void {
+    if (this.deferredAsk.length === 0) {
+      return;
+    }
+    this.draft = this.deferredAsk;
+    this.deferredAsk = '';
+    this.send();
   }
 
   /** A scripted first run can pass the key once; it lands in Asset Store and is forgotten. */
