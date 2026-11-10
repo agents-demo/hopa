@@ -72,6 +72,7 @@ struct LaptopIndex {
   @State pageQuestion: string = '';
   private web: webview.WebviewController = new webview.WebviewController();
   @State speakReplies: boolean = false;
+  @State settingsTab: string = 'model';
   @State notifyAnswers: boolean = true;
   @State profileName: string = 'everyday';
   @State kidPin: string = '';
@@ -853,31 +854,26 @@ struct LaptopIndex {
       .width('100%')
       .alignItems(VerticalAlign.Center)
 
-      Column({ space: 8 }) {
-        Text('MODE')
-          .fontSize(9)
-          .fontWeight(FontWeight.Bold)
-          .fontColor($r('app.color.text_hint'))
-          .letterSpacing(0.8)
-          .width('100%')
-        Row({ space: 6 }) {
-          ForEach(['everyday', 'easy', 'power'], (mode: string) => {
-            this.ModeChip(mode)
-          }, (mode: string) => 'mode-a-' + mode + (this.profileName === mode))
-        }
-        .width('100%')
-        Row({ space: 6 }) {
-          ForEach(['social', 'kid'], (mode: string) => {
-            this.ModeChip(mode)
-          }, (mode: string) => 'mode-b-' + mode + (this.profileName === mode))
-        }
-        .width('100%')
+      Row({ space: 6 }) {
+        ForEach(['model', 'bridge', 'modes', 'about'], (tab: string) => {
+          Text(tab.charAt(0).toUpperCase() + tab.substring(1))
+            .fontSize(11.5)
+            .fontColor(this.settingsTab === tab
+              ? $r('app.color.on_primary')
+              : $r('app.color.text_secondary'))
+            .padding({ left: 11, right: 11, top: 5, bottom: 5 })
+            .backgroundColor(this.settingsTab === tab
+              ? $r('app.color.primary')
+              : $r('app.color.surface'))
+            .borderRadius(11)
+            .onClick(() => {
+              this.settingsTab = tab;
+            })
+        }, (tab: string) => 'tab-' + tab + this.settingsTab)
       }
       .width('100%')
-      .alignItems(HorizontalAlign.Start)
 
-      Divider().color($r('app.color.divider'))
-
+      if (this.settingsTab === 'model') {
       Column({ space: 8 }) {
         Text('MODEL')
           .fontSize(9)
@@ -986,9 +982,9 @@ struct LaptopIndex {
       }
       .width('100%')
       .alignItems(HorizontalAlign.Start)
+      }
 
-      Divider().color($r('app.color.divider'))
-
+      if (this.settingsTab === 'bridge') {
       Column({ space: 8 }) {
         Text('PC BRIDGE')
           .fontSize(9)
@@ -1057,11 +1053,52 @@ struct LaptopIndex {
       }
       .width('100%')
       .alignItems(HorizontalAlign.Start)
+      }
 
-      Text('HOPA runs here, on this laptop. Payments always ask first.')
-        .fontSize(10.5)
-        .fontColor($r('app.color.text_hint'))
+      if (this.settingsTab === 'modes') {
+      Column({ space: 8 }) {
+        Text('MODE')
+          .fontSize(9)
+          .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_hint'))
+          .letterSpacing(0.8)
+          .width('100%')
+        Row({ space: 6 }) {
+          ForEach(['everyday', 'easy', 'power'], (mode: string) => {
+            this.ModeChip(mode)
+          }, (mode: string) => 'mode-a-' + mode + (this.profileName === mode))
+        }
         .width('100%')
+        Row({ space: 6 }) {
+          ForEach(['social', 'kid'], (mode: string) => {
+            this.ModeChip(mode)
+          }, (mode: string) => 'mode-b-' + mode + (this.profileName === mode))
+        }
+        .width('100%')
+      }
+      .width('100%')
+      .alignItems(HorizontalAlign.Start)
+      }
+
+      if (this.settingsTab === 'about') {
+        Column({ space: 6 }) {
+          Text('HOPA 0.1.0')
+            .fontSize(12.5)
+            .fontColor($r('app.color.text_primary'))
+            .width('100%')
+          Text('Runs on this laptop: chat, the shared conversation store, approvals, voice over the PC bridge, and its own browser.')
+            .fontSize(11)
+            .lineHeight(17)
+            .fontColor($r('app.color.text_secondary'))
+            .width('100%')
+          Text('HOPA runs here, on this laptop. Payments always ask first.')
+            .fontSize(10.5)
+            .fontColor($r('app.color.text_hint'))
+            .width('100%')
+        }
+        .width('100%')
+        .alignItems(HorizontalAlign.Start)
+      }
     }
     .width('100%')
     .padding({ left: 22, right: 22, top: 18, bottom: 28 })
