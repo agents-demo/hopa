@@ -1,4 +1,5 @@
 import { common } from '@kit.AbilityKit';
+import { window } from '@kit.ArkUI';
 import { HopaMark, EmptyHero, KeyStore, SettingsStore, StoredSettings } from '@hopa/app';
 import { LaptopChat, LaptopTurn } from '../services/LaptopChat';
 
@@ -31,6 +32,10 @@ struct LaptopIndex {
   @State sessions: LaptopSession[] = [];
   @State currentId: string = '';
   private store: LaptopSessions = new LaptopSessions();
+  private win: window.Window | undefined = undefined;
+  @State maximized: boolean = false;
+  @StorageProp('hopa.decorHidden') decorHidden: boolean = false;
+  @State currentTitle: string = 'HOPA';
   @State lastLatency: number = 0;
   @State lastTokens: number = 0;
   @State winWidth: number = 1280;
@@ -41,6 +46,11 @@ struct LaptopIndex {
 
   aboutToAppear(): void {
     const context = getContext(this) as common.UIAbilityContext;
+    window.getLastWindow(context).then((win: window.Window) => {
+      this.win = win;
+    }).catch(() => {
+      // The system bar remains if the window cannot be reached.
+    });
     LaptopSessions.load(context).then((store: LaptopSessions) => {
       this.store = store;
       const session: LaptopSession = store.current();
@@ -90,6 +100,39 @@ struct LaptopIndex {
   private refreshSessions(): void {
     this.sessions = this.store.list.slice();
     this.currentId = this.store.currentId;
+    for (const session of this.sessions) {
+      if (session.id === this.currentId) {
+        this.currentTitle = session.turns.length > 0 ? session.title : 'HOPA';
+        break;
+      }
+    }
+  }
+
+  private minimizeWindow(): void {
+    if (this.win !== undefined) {
+      this.win.minimize().catch(() => {});
+    }
+  }
+
+  private toggleMaximize(): void {
+    if (this.win === undefined) {
+      return;
+    }
+    if (this.maximized) {
+      this.win.recover().then(() => {
+        this.maximized = false;
+      }).catch(() => {});
+    } else {
+      this.win.maximize().then(() => {
+        this.maximized = true;
+      }).catch(() => {});
+    }
+  }
+
+  private closeWindow(): void {
+    if (this.win !== undefined) {
+      this.win.destroyWindow().catch(() => {});
+    }
   }
 
   private newChat(): void {
@@ -274,17 +317,30 @@ struct LaptopIndex {
     Row({ space: 12 }) {
       HopaMark({ state: 'idle', markSize: 26, interactive: false })
       Column({ space: 1 }) {
-        Text('HOPA')
-          .fontSize(17)
-          .fontWeight(FontWeight.Bold)
+        Text(this.currentTitle)
+          .fontSize(15)
+          .fontWeight(FontWeight.Medium)
           .fontColor($r('app.color.text_primary'))
           .letterSpacing(-0.2)
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+          .constraintSize({ maxWidth: 320 })
         Text('Running on this laptop')
           .fontSize(10)
           .fontColor($r('app.color.text_hint'))
       }
       .alignItems(HorizontalAlign.Start)
-      Blank()
+      Row()
+        .layoutWeight(1)
+        .height('100%')
+        .onTouch((event: TouchEvent) => {
+          if (event.type === TouchType.Down && this.win !== undefined) {
+            this.win.startMoving().catch(() => {});
+          }
+        })
+        .gesture(TapGesture({ count: 2 }).onAction(() => {
+          this.toggleMaximize();
+        }))
       Text('Ctrl K')
         .fontSize(11)
         .fontColor($r('app.color.text_hint'))
@@ -316,6 +372,41 @@ struct LaptopIndex {
         .onClick(() => {
           this.settingsOpen = !this.settingsOpen;
         })
+      if (this.decorHidden) {
+        Row({ space: 2 }) {
+          Text('\u2013')
+            .fontSize(14)
+            .fontColor($r('app.color.text_secondary'))
+            .width(30)
+            .height(28)
+            .textAlign(TextAlign.Center)
+            .borderRadius(6)
+            .onClick(() => {
+              this.minimizeWindow();
+            })
+          Text(this.maximized ? '\u2750' : '\u25a1')
+            .fontSize(12)
+            .fontColor($r('app.color.text_secondary'))
+            .width(30)
+            .height(28)
+            .textAlign(TextAlign.Center)
+            .borderRadius(6)
+            .onClick(() => {
+              this.toggleMaximize();
+            })
+          Text('\u00d7')
+            .fontSize(14)
+            .fontColor($r('app.color.text_secondary'))
+            .width(30)
+            .height(28)
+            .textAlign(TextAlign.Center)
+            .borderRadius(6)
+            .onClick(() => {
+              this.closeWindow();
+            })
+        }
+        .padding({ left: 4, right: 4 })
+      }
     }
     .width('100%')
     .height(56)
@@ -397,13 +488,13 @@ struct LaptopIndex {
     EmptyHero({
       greeting: '',
       tagline: 'Your agent. Ask for anything.',
-      promise: 'Payments always ask first.',
+      promise: this.showRail() ? '' : 'Payments always ask first.',
       note: this.keyPresent
         ? 'Running here, on this machine. It cannot drive other laptop apps yet.'
         : 'Add a model key to start. The key stays on this laptop.',
-      titleSize: 30,
-      bodySize: 15,
-      markSize: 48,
+      titleSize: 34,
+      bodySize: 16,
+      markSize: this.heroMark(),
       animate: true,
       interactive: true
     })
@@ -446,6 +537,11 @@ struct LaptopIndex {
       .width('100%')
       .alignItems(VerticalAlign.Top)
     }
+  }
+
+  /** The hero scales with the pane: readable on a desk, sane when narrow. */
+  private heroMark(): number {
+    return Math.min(108, Math.max(64, this.winWidth * 0.085));
   }
 
   private showSidebar(): boolean {
@@ -580,40 +676,20 @@ struct LaptopIndex {
         .fontColor($r('app.color.text_hint'))
         .letterSpacing(0.7)
         .width('100%')
-      Text('Your words only. This build does not read the screen or drive other apps, so there is no capture to show.')
+      Text(this.turns.length > 0
+        ? 'The conversation only. This build does not read the screen or other apps.'
+        : 'Your words only. No screen capture, no app control on this machine yet.')
         .fontSize(11)
         .lineHeight(17)
         .fontColor($r('app.color.text_secondary'))
         .width('100%')
 
-      Divider().color($r('app.color.divider'))
+      Blank()
 
-      Text('LIMITS')
-        .fontSize(9)
-        .fontWeight(FontWeight.Bold)
+      Text('Payments always ask first.')
+        .fontSize(10)
         .fontColor($r('app.color.text_hint'))
-        .letterSpacing(0.7)
         .width('100%')
-      Text('\u2022 No app control on this machine yet\n\u2022 No files or screen access\n\u2022 Payments always ask first')
-        .fontSize(11)
-        .lineHeight(18)
-        .fontColor($r('app.color.text_secondary'))
-        .width('100%')
-
-      Divider().color($r('app.color.divider'))
-
-      Text('PHONE')
-        .fontSize(9)
-        .fontWeight(FontWeight.Bold)
-        .fontColor($r('app.color.text_hint'))
-        .letterSpacing(0.7)
-        .width('100%')
-      Text('The phone runs its own HOPA with its own key. The two do not share a session yet.')
-        .fontSize(11)
-        .lineHeight(17)
-        .fontColor($r('app.color.text_secondary'))
-        .width('100%')
-
       Blank()
     }
     .width(258)

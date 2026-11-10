@@ -65,12 +65,29 @@ export default class LaptopAbility extends UIAbility {
   }
 
   onWindowStageCreate(windowStage: window.WindowStage): void {
+    try {
+      const early: window.Window = windowStage.getMainWindowSync();
+      early.setWindowDecorVisible(false);
+    } catch (error) {
+      hilog.warn(DOMAIN, TAG, 'early decor call failed');
+    }
     windowStage.loadContent('pages/LaptopIndex', (err) => {
       if (err.code) {
         hilog.error(DOMAIN, TAG, 'Failed to load content: %{public}s', JSON.stringify(err));
         return;
       }
       hilog.info(DOMAIN, TAG, 'content loaded');
+      try {
+        const mainWindow: window.Window = windowStage.getMainWindowSync();
+        // The app draws its own title strip: one HOPA, not two.
+        mainWindow.setWindowDecorVisible(false);
+        mainWindow.setWindowBackgroundColor('#F7F4EE');
+        const height: number = mainWindow.getWindowDecorHeight();
+        AppStorage.setOrCreate<boolean>('hopa.decorHidden', height === 0);
+        hilog.info(DOMAIN, TAG, 'decor height: %{public}d', height);
+      } catch (error) {
+        hilog.warn(DOMAIN, TAG, 'custom title bar unavailable');
+      }
     });
   }
 }
