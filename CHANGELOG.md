@@ -23,6 +23,9 @@ All notable changes are recorded here. Versions follow `docs/versioning.md`.
   device, and `/sessions` resolves to the phone unless `X-Hopa-Read` asks for
   the other side. hdc only allows one device per device-side port, so the phone
   tunnels 8768 and the 2in1 8766.
+- Voice on the 2in1: the mic records 16 kHz mono here, the PC bridge
+  transcribes it (`/transcribe`) and speaks replies (`/speak`) when “Speak
+  replies” is on. Without a bridge the button says so instead of pretending.
 - Conversations now live on the bridge (`/chats`), one store for both devices:
   append-only turns with ids, last-writer-wins titles, delete tombstones and a
   revision. Each shell pushes on launch and after an edit and adopts the merged

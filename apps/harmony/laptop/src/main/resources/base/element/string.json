@@ -11,6 +11,10 @@
     {
       "name": "EntryAbility_label",
       "value": "HOPA"
+    },
+    {
+      "name": "mic_reason",
+      "value": "So you can talk to HOPA instead of typing"
     }
   ]
 }

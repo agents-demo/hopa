@@ -6,6 +6,7 @@ import { LaptopChat, LaptopTurn } from '../services/LaptopChat';
 import { LaptopAgent, demoApproval } from '../services/LaptopAgent';
 
 import { LaptopSessions, LaptopSession } from '../services/LaptopSessions';
+import { LaptopVoice } from '../services/LaptopVoice';
 import { ChatRail } from '../components/ChatRail';
 import { CommandPalette } from '../components/CommandPalette';
 import { LaptopFirstRun } from '../services/LaptopFirstRun';
@@ -43,6 +44,9 @@ struct LaptopIndex {
   @State approvalDetail: string = '';
   @State approvalKind: string = '';
   @State approvalFrame: string = '';
+  @State listening: boolean = false;
+  @State speakReplies: boolean = false;
+  private voice: LaptopVoice = new LaptopVoice();
   @State currentId: string = '';
   private store: LaptopSessions = new LaptopSessions();
   private win: window.Window | undefined = undefined;
@@ -105,6 +109,7 @@ struct LaptopIndex {
       this.endpoint = stored.endpoint;
       this.modelName = stored.model;
       this.provider = stored.provider;
+      this.speakReplies = stored.speakReplies;
       this.bridgeUrl = stored.bridgeUrl;
       this.bridgeToken = stored.bridgeToken;
       if (stored.bridgeUrl.length > 0 && stored.bridgeToken.length > 0) {
@@ -134,6 +139,38 @@ struct LaptopIndex {
     if ((AppStorage.get<string>('hopa.laptop.demoApproval') ?? '') === '1') {
       AppStorage.setOrCreate<string>('hopa.laptop.demoApproval', '');
       demoApproval(this.agent);
+    }
+  }
+
+  /** One button: tap to talk, tap again to send what was heard. */
+  private async toggleMic(): Promise<void> {
+    if (this.busy) {
+      return;
+    }
+    const context = getContext(this) as common.UIAbilityContext;
+    if (this.listening) {
+      this.listening = false;
+      const heard: string = await this.voice.stop(this.agent);
+      if (heard.length > 0) {
+        this.draft = heard;
+        await this.send();
+      } else {
+        this.error = this.agent.isBridgeConfigured()
+          ? 'I did not catch that. Try again, a little closer.'
+          : 'Voice needs the PC bridge: start it, then connect in Settings.';
+      }
+      return;
+    }
+    if (!this.agent.isBridgeConfigured()) {
+      this.error = 'Voice needs the PC bridge: start it, then connect in Settings.';
+      return;
+    }
+    const started: boolean = await this.voice.start(context);
+    this.listening = started;
+    if (!started) {
+      this.error = 'The microphone is not available.';
+    } else {
+      this.error = '';
     }
   }
 
@@ -386,6 +423,12 @@ struct LaptopIndex {
     this.busy = false;
     this.scrollToEnd();
     const context = getContext(this) as common.UIAbilityContext;
+    if (this.speakReplies && this.chat.turns.length > 0) {
+      const last = this.chat.turns[this.chat.turns.length - 1];
+      if (last.role === 'assistant') {
+        this.voice.speak(this.agent, last.text, context);
+      }
+    }
     this.store.commit(this.chat.turns, this.chat.lastLatencyMs, this.chat.lastTokens);
     await this.store.save(context);
     this.refreshSessions();
@@ -470,6 +513,15 @@ struct LaptopIndex {
     if (ok) {
       this.syncChats();
     }
+  }
+
+  /** Speaking replies is a preference, not a model setting. */
+  private async saveSpeak(value: boolean): Promise<void> {
+    this.speakReplies = value;
+    const context = getContext(this) as common.UIAbilityContext;
+    const stored: StoredSettings = await SettingsStore.load(context);
+    stored.speakReplies = value;
+    await SettingsStore.save(context, stored);
   }
 
   private async saveSettings(): Promise<void> {
@@ -661,6 +713,26 @@ struct LaptopIndex {
           .onSubmit(() => {
             this.saveSettings();
           })
+
+        Row({ space: 10 }) {
+          Column({ space: 2 }) {
+            Text('Speak replies')
+              .fontSize(12.5)
+              .fontColor($r('app.color.text_primary'))
+            Text('Uses the PC voice over the bridge.')
+              .fontSize(10.5)
+              .fontColor($r('app.color.text_hint'))
+          }
+          .alignItems(HorizontalAlign.Start)
+          .layoutWeight(1)
+          Toggle({ type: ToggleType.Switch, isOn: this.speakReplies })
+            .selectedColor($r('app.color.primary'))
+            .onChange((value: boolean) => {
+              this.saveSpeak(value);
+            })
+        }
+        .width('100%')
+        .padding({ top: 6 })
 
         Text('Changes save when you leave a field. The key lives in Asset Store on this laptop, never in the app package.')
           .fontSize(10.5)
@@ -1155,6 +1227,33 @@ struct LaptopIndex {
               this.send();
               return true;
             })
+          Stack({ alignContent: Alignment.Center }) {
+            Column()
+              .width(7)
+              .height(13)
+              .borderRadius(4)
+              .backgroundColor(this.listening ? $r('app.color.danger') : $r('app.color.text_secondary'))
+              .offset({ y: -2 })
+            Row()
+              .width(13)
+              .height(1.6)
+              .borderRadius(1)
+              .backgroundColor(this.listening ? $r('app.color.danger') : $r('app.color.text_secondary'))
+              .offset({ y: 6 })
+            Row()
+              .width(1.6)
+              .height(3)
+              .backgroundColor(this.listening ? $r('app.color.danger') : $r('app.color.text_secondary'))
+              .offset({ y: 9 })
+          }
+          .width(44)
+          .height(44)
+          .borderRadius(22)
+          .backgroundColor(this.listening ? $r('app.color.surface_alt') : $r('app.color.surface_muted'))
+          .accessibilityText(this.listening ? 'Stop listening' : 'Talk to HOPA')
+          .onClick(() => {
+            this.toggleMic();
+          })
           Button(this.busy ? 'Stop' : 'Send')
             .height(44)
             .fontSize(13)
