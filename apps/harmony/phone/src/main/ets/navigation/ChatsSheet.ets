@@ -24,6 +24,8 @@ export struct ChatsSheet {
   onSelect: (id: string) => void = () => {};
   onDelete: (id: string) => void = () => {};
   onClose: () => void = () => {};
+  /** Fork a laptop thread into a chat on this phone. */
+  onContinueLaptop: (session: LaptopSessionView) => void = () => {};
 
   private real(): ChatSession[] {
     const result: ChatSession[] = [];
@@ -108,6 +110,16 @@ export struct ChatsSheet {
         }
         .alignItems(HorizontalAlign.Start)
         .layoutWeight(1)
+        Text('Continue')
+          .fontSize(12.5)
+          .fontWeight(FontWeight.Medium)
+          .fontColor($r('app.color.on_primary'))
+          .padding({ left: 14, right: 14, top: 7, bottom: 7 })
+          .backgroundColor($r('app.color.primary'))
+          .borderRadius(14)
+          .onClick(() => {
+            this.onContinueLaptop(session);
+          })
       }
       .width('100%')
       .padding({ left: 6, right: 12, top: 4, bottom: 8 })

@@ -95,6 +95,12 @@ with a small body mark for origin; the phone shows a “From your laptop” grou
 inside Chats that opens a read-only thread. Nothing writes across, and there is
 no merge: the other copy stays owned by the machine it lives on.
 
+**Continue here** is the escape hatch: it copies the other side's thread into a
+local conversation (marked with the local body) and leaves the original alone.
+Both directions have it — the laptop's read-only viewer and the phone's
+read-only thread header — so you can pick up a thread anywhere without the two
+copies ever fighting.
+
 `hdc` allows only one device to own a given *device-side* port, so the two
 shells cannot both listen on 8766 locally. Current mapping:
 

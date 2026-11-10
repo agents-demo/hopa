@@ -203,6 +203,31 @@ struct LaptopIndex {
     return shown;
   }
 
+  /** Copy a phone thread here and carry on; the phone keeps its own copy. */
+  private async continueRemote(): Promise<void> {
+    if (!this.remoteOpen) {
+      return;
+    }
+    const remote: RemoteSession | undefined = this.remoteSessionById(this.remoteId);
+    if (remote === undefined) {
+      return;
+    }
+    const turns: LaptopTurn[] = [];
+    for (const turn of remote.turns) {
+      const local = new LaptopTurn();
+      local.role = turn.role;
+      local.text = this.cleanRemote(turn.text);
+      turns.push(local);
+    }
+    const session: LaptopSession = this.store.createFrom(remote.title, turns);
+    const context = getContext(this) as common.UIAbilityContext;
+    await this.store.save(context);
+    await this.pushOwnSessions();
+    this.remoteOpen = false;
+    this.remoteId = '';
+    this.openSession(session.id);
+  }
+
   /** The laptop's own conversations, for the phone to read back. */
   private async pushOwnSessions(): Promise<void> {
     if (!this.agent.isBridgeConfigured()) {
@@ -252,6 +277,15 @@ struct LaptopIndex {
     }
     rows.sort((a: LaptopListRow, b: LaptopListRow) => b.updated - a.updated);
     this.rows = rows;
+  }
+
+  private remoteSessionById(id: string): RemoteSession | undefined {
+    for (const session of this.remoteSessions) {
+      if (session.id === id) {
+        return session;
+      }
+    }
+    return undefined;
   }
 
   private refreshSessions(): void {
@@ -1373,10 +1407,20 @@ struct LaptopIndex {
             .height(0)
         } else if (this.remoteOpen) {
           Row({ space: 10 }) {
-            Text('Read-only copy from your phone. Reply there.')
+            Text('Read-only copy from your phone.')
               .fontSize(11.5)
               .fontColor($r('app.color.text_secondary'))
               .layoutWeight(1)
+            Text('Continue here')
+              .fontSize(12)
+              .fontWeight(FontWeight.Medium)
+              .fontColor($r('app.color.on_primary'))
+              .padding({ left: 14, right: 14, top: 8, bottom: 8 })
+              .backgroundColor($r('app.color.primary'))
+              .borderRadius(14)
+              .onClick(() => {
+                this.continueRemote();
+              })
             Text('Close')
               .fontSize(12)
               .fontColor($r('app.color.primary'))

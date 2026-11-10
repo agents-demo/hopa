@@ -577,7 +577,18 @@ struct Index {
       onNewChat: () => { AgentService.get().conversations.newChat(); this.refreshChats(); this.go('chat'); },
       onSelect: (id: string) => { AgentService.get().conversations.select(id); this.refreshChats(); this.go('chat'); },
       onDelete: (id: string) => { AgentService.get().conversations.delete(id); this.refreshChats(); },
-      onClose: () => { this.chatsOpen = false; }
+      onClose: () => { this.chatsOpen = false; },
+      onContinueLaptop: (session: LaptopSessionView) => {
+        // A fork: the laptop keeps its copy, this phone owns the new one.
+        const conversations = AgentService.get().conversations;
+        conversations.newChat();
+        for (const turn of session.turns) {
+          conversations.add(turn.role, turn.text);
+        }
+        this.refreshChats();
+        this.chatsOpen = false;
+        this.activePage = 'chat';
+      }
     })
   }
 

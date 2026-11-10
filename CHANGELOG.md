@@ -23,6 +23,9 @@ All notable changes are recorded here. Versions follow `docs/versioning.md`.
   device, and `/sessions` resolves to the phone unless `X-Hopa-Read` asks for
   the other side. hdc only allows one device per device-side port, so the phone
   tunnels 8768 and the 2in1 8766.
+- **Continue here** forks a thread from the other device into a local
+  conversation, in both directions, so you can carry on where you like; the
+  original stays with its owner.
 - Sessions are visible both ways, read-only: the laptop pushes its own threads
   and shows one merged, newest-first list with a body mark for origin; the phone
   shows a “From your laptop” group in Chats with a read-only thread view. No

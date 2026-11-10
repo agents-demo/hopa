@@ -66,6 +66,23 @@ export class LaptopSessions {
   list: LaptopSession[] = [];
   currentId: string = '';
 
+  /**
+   * A local copy of a thread that lives elsewhere.
+   *
+   * It is a fork on purpose: the other machine keeps its copy and stays the
+   * owner, so nothing has to be merged later.
+   */
+  createFrom(title: string, turns: LaptopTurn[]): LaptopSession {
+    const session = new LaptopSession();
+    session.id = `fork\u00b7${Date.now()}`;
+    session.title = title.length > 0 ? title : 'Continued from your phone';
+    session.updated = Date.now();
+    session.turns = turns.slice();
+    this.list.unshift(session);
+    this.currentId = session.id;
+    return session;
+  }
+
   /** The same shape the phone and the bridge already speak. */
   snapshot(): SessionWire[] {
     const out: SessionWire[] = [];
