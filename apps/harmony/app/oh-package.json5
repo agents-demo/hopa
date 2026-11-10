@@ -5,7 +5,9 @@
   "main": "Index.ets",
   "author": "The HOPA Authors",
   "license": "Apache-2.0",
-  "dependencies": {},
+  "dependencies": {
+    "@hopa/core": "file:../core"
+  },
   "devDependencies": {
     "@ohos/hypium": "1.0.28"
   }

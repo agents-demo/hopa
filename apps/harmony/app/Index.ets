@@ -4,3 +4,4 @@ export { KeyStore } from './src/main/ets/services/KeyStore';
 export { SettingsStore, StoredSettings } from './src/main/ets/services/SettingsStore';
 export { TrustedApps } from './src/main/ets/services/TrustedApps';
 export { Character } from './src/main/ets/services/Character';
+export { ConversationService } from './src/main/ets/services/ConversationService';

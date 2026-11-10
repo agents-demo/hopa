@@ -655,60 +655,70 @@ struct LaptopIndex {
   }
 
   @Builder
+  RailLabel(text: string) {
+    Text(text)
+      .fontSize(9)
+      .fontWeight(FontWeight.Bold)
+      .fontColor($r('app.color.text_hint'))
+      .letterSpacing(0.8)
+      .width('100%')
+  }
+
+  @Builder
   Rail() {
-    Column({ space: 10 }) {
-      Text('THIS CONVERSATION')
-        .fontSize(9)
-        .fontWeight(FontWeight.Bold)
-        .fontColor($r('app.color.text_hint'))
-        .letterSpacing(0.7)
+    Column() {
+      Column({ space: 14 }) {
+        Column({ space: 6 }) {
+          this.RailLabel('THIS CONVERSATION')
+          Text(this.lastQuestion.length > 0 ? this.lastQuestion : 'No question yet.')
+            .fontSize(12.5)
+            .lineHeight(18)
+            .fontColor(this.lastQuestion.length > 0
+              ? $r('app.color.text_primary')
+              : $r('app.color.text_hint'))
+            .maxLines(3)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+            .width('100%')
+          Text(this.lastLatency > 0
+            ? `${this.lastLatency} ms  \u00b7  ${this.lastTokens} tokens`
+            : 'No answer yet')
+            .fontSize(10.5)
+            .fontColor($r('app.color.text_hint'))
+            .width('100%')
+        }
         .width('100%')
-      Text(this.lastQuestion.length > 0 ? this.lastQuestion : 'No question yet.')
-        .fontSize(12)
-        .lineHeight(18)
-        .fontColor($r('app.color.text_primary'))
-        .maxLines(3)
-        .textOverflow({ overflow: TextOverflow.Ellipsis })
+        .alignItems(HorizontalAlign.Start)
+
+        Divider().color($r('app.color.divider'))
+
+        Column({ space: 6 }) {
+          this.RailLabel('WHAT HOPA SEES')
+          Text(this.turns.length > 0
+            ? 'The conversation only. HOPA runs here, on this machine; it does not read the screen or drive other apps yet.'
+            : 'Your words only. HOPA runs here, on this machine; it cannot drive other laptop apps yet.')
+            .fontSize(11)
+            .lineHeight(17)
+            .fontColor($r('app.color.text_secondary'))
+            .width('100%')
+        }
         .width('100%')
-      Row({ space: 12 }) {
-        Text(this.lastLatency > 0 ? `${this.lastLatency} ms` : '\u2014')
-          .fontSize(10.5)
-          .fontColor($r('app.color.text_secondary'))
-        Text(this.lastTokens > 0 ? `${this.lastTokens} tokens` : 'no tokens yet')
-          .fontSize(10.5)
-          .fontColor($r('app.color.text_hint'))
+        .alignItems(HorizontalAlign.Start)
       }
       .width('100%')
-
-      Divider().color($r('app.color.divider'))
-
-      Text('WHAT HOPA SEES')
-        .fontSize(9)
-        .fontWeight(FontWeight.Bold)
-        .fontColor($r('app.color.text_hint'))
-        .letterSpacing(0.7)
-        .width('100%')
-      Text(this.turns.length > 0
-        ? 'The conversation only. HOPA runs here, on this machine; it does not read the screen or drive other apps yet.'
-        : 'Your words only. HOPA runs here, on this machine; it cannot drive other laptop apps yet.')
-        .fontSize(11)
-        .lineHeight(17)
-        .fontColor($r('app.color.text_secondary'))
-        .width('100%')
-
-      Blank()
+      .alignItems(HorizontalAlign.Start)
 
       Text('Payments always ask first.')
         .fontSize(10)
         .fontColor($r('app.color.text_hint'))
         .width('100%')
-      Blank()
+        .padding({ bottom: 2 })
     }
     .width(258)
     .height('100%')
-    .padding({ left: 16, right: 16, top: 16, bottom: 12 })
+    .padding({ left: 18, right: 18, top: 18, bottom: 14 })
     .backgroundColor($r('app.color.surface_alt'))
     .border({ width: { left: 1 }, color: $r('app.color.divider') })
+    .justifyContent(FlexAlign.SpaceBetween)
     .alignItems(HorizontalAlign.Start)
   }
 
