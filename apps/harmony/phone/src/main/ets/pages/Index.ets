@@ -50,6 +50,7 @@ struct Index {
   @StorageLink('hopa.focus') focusMode: boolean = false;
   @StorageLink('hopa.style') styleName: string = 'calm';
   @State profileName: string = 'everyday';
+  @StorageLink('hopa.wide') wide: boolean = false;
   private agentOpenedBrowser: boolean = false;
   private titleTimer: number = -1;
   private previousPage: string = 'chat';
@@ -65,6 +66,10 @@ struct Index {
       window.getLastWindow(getContext(this)).then((win: window.Window) => {
         win.on('keyboardHeightChange', (height: number) => {
           this.keyboardVisible = height > 0;
+        });
+        this.applyWidth(win.getWindowProperties().windowRect.width);
+        win.on('windowSizeChange', (size: window.Size) => {
+          this.applyWidth(size.width);
         });
       }).catch(() => {
         // Keyboard state is cosmetic; the page still works.
@@ -174,6 +179,16 @@ struct Index {
     }
     if (title !== this.chatTitle) {
       this.chatTitle = title;
+    }
+  }
+
+  /** Wide windows (tablets, 2in1) get a centred canvas, not a stretched phone. */
+  private applyWidth(pxWidth: number): void {
+    try {
+      const vp: number = this.getUIContext().px2vp(pxWidth);
+      AppStorage.setOrCreate<boolean>('hopa.wide', vp >= 840);
+    } catch (error) {
+      AppStorage.setOrCreate<boolean>('hopa.wide', false);
     }
   }
 
@@ -542,6 +557,7 @@ struct Index {
           .backgroundColor('#14C0392B')
         }
         Column() {
+          Column() {
           PageRouter({
             activePage: this.activePage,
             onNavigate: (key: string) => {
@@ -559,9 +575,14 @@ struct Index {
               this.go('runs');
             }
           })
+          }
+          .width('100%')
+          .height('100%')
+          .constraintSize({ maxWidth: this.wide ? 980 : 10000 })
         }
         .layoutWeight(1)
         .width('100%')
+        .alignItems(HorizontalAlign.Center)
         // Easy is calm: no tab bar, just two quiet links on the home screen.
         if (this.activePage !== 'browser' && !this.keyboardVisible && !this.focusMode &&
           this.profileName !== 'easy' && this.profileName !== 'kid') {

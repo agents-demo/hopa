@@ -38,6 +38,7 @@ export struct SettingsPage {
   @State a11yInstalled: string = 'checking...';
   @State subPage: string = '';
   @State trustVersion: number = 0;
+  @StorageLink('hopa.wide') wide: boolean = false;
   @StorageLink('hopa.bridgeOnline') bridgeLive: boolean = true;
 
   aboutToAppear(): void {
