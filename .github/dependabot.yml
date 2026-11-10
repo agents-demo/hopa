@@ -16,3 +16,6 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
+    # The default limit of 5 used up every slot on one batch, so older
+    # actions (for example actions/cache) silently got no PR.
+    open-pull-requests-limit: 10
