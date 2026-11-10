@@ -3,6 +3,7 @@ import { window } from '@kit.ArkUI';
 import { pasteboard } from '@kit.BasicServicesKit';
 import { HopaMark, EmptyHero, ResultActions, KeyStore, SettingsStore, StoredSettings } from '@hopa/app';
 import { LaptopChat, LaptopTurn } from '../services/LaptopChat';
+import { LaptopAgent } from '../services/LaptopAgent';
 
 import { LaptopSessions, LaptopSession } from '../services/LaptopSessions';
 import { LaptopPhoneLink, RemoteSession, RemoteTurn } from '../services/LaptopPhoneLink';
@@ -57,10 +58,12 @@ struct LaptopIndex {
   @StorageLink('hopa.laptop.pending') @Watch('onPending') pending: string = '';
   private deferredAsk: string = '';
   private chat: LaptopChat = new LaptopChat();
+  private agent: LaptopAgent = new LaptopAgent();
   private scroller: Scroller = new Scroller();
 
   aboutToAppear(): void {
     const context = getContext(this) as common.UIAbilityContext;
+    this.chat.useRuntime(this.agent.runtime);
     LaptopPhoneLink.load(context).then((link: LaptopPhoneLink) => {
       this.link = link;
       const injectedUrl: string = AppStorage.get<string>('hopa.laptop.linkUrl') ?? '';

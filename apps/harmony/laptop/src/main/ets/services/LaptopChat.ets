@@ -1,20 +1,17 @@
-import { ModelClient, ModelMessage, ModelRequest, ModelResponse } from '@hopa/core';
-import { ModelFactory } from '@hopa/app';
+import { AgentRuntime } from '@hopa/app';
 
 export class LaptopTurn {
   role: string = 'user';
   text: string = '';
 }
 
-/** One conversation on the laptop: model in, words out, no phone involved. */
+/**
+ * A thin presenter over the shared runtime.
+ *
+ * The laptop no longer owns a model client or a prompt: it calls the same
+ * AgentRuntime the phone uses, with a host that cannot drive this machine.
+ */
 export class LaptopChat {
-  private static readonly SYSTEM: string =
-    'You are HOPA, a HarmonyOS on-device agent running on this laptop. ' +
-    'Be brief, warm and dry: answer in one to three sentences unless asked for more. ' +
-    'Never claim you did something you did not do. This build cannot control other ' +
-    'laptop apps yet; if asked, say so plainly instead of pretending. ' +
-    'Payments and irreversible actions always ask first.';
-
   turns: LaptopTurn[] = [];
   busy: boolean = false;
   error: string = '';
@@ -23,20 +20,32 @@ export class LaptopChat {
   totalTokens: number = 0;
   lastQuestion: string = '';
 
+  private runtime: AgentRuntime | undefined = undefined;
   private provider: string = 'deepseek';
   private endpoint: string = '';
   private model: string = '';
   private key: string = '';
+
+  useRuntime(runtime: AgentRuntime): void {
+    this.runtime = runtime;
+    if (this.key.length > 0) {
+      runtime.configureModel(this.provider, this.endpoint, this.key, this.model);
+    }
+  }
 
   configure(provider: string, endpoint: string, model: string, key: string): void {
     this.provider = provider.length > 0 ? provider : 'deepseek';
     this.endpoint = endpoint;
     this.model = model;
     this.key = key;
+    if (this.runtime !== undefined && this.isReady()) {
+      this.runtime.configureModel(this.provider, this.endpoint, this.key, this.model);
+    }
   }
 
   isReady(): boolean {
-    return this.key.length > 0 && this.endpoint.length > 0 && this.model.length > 0;
+    return this.runtime !== undefined && this.key.length > 0 &&
+      this.endpoint.length > 0 && this.model.length > 0;
   }
 
   async send(text: string): Promise<void> {
@@ -51,36 +60,23 @@ export class LaptopChat {
     this.busy = true;
     this.error = '';
     this.lastQuestion = prompt;
-    const started: number = Date.now();
     try {
-      if (!this.isReady()) {
+      if (this.runtime === undefined || !this.isReady()) {
         throw new Error('no model key yet');
       }
-      const client: ModelClient = ModelFactory.create(
-        this.provider, this.endpoint, this.key, this.model);
-      const request = new ModelRequest();
-      request.model = this.model;
-      request.temperature = 0.4;
-      request.messages.push(new ModelMessage('system', LaptopChat.SYSTEM));
-      for (const turn of this.turns) {
-        request.messages.push(new ModelMessage(turn.role, turn.text));
-      }
-      const response: ModelResponse = await client.complete(request);
-      this.lastLatencyMs = Date.now() - started;
-      this.lastTokens = response.tokens;
-      this.totalTokens += response.tokens;
-      if (response.error.length > 0 && response.text.length === 0) {
-        throw new Error(response.error);
-      }
+      const replyText: string = await this.runtime.run(prompt);
+      this.lastLatencyMs = this.runtime.getLastDurationMs();
+      this.lastTokens = this.runtime.getLastTokens();
+      this.totalTokens += this.lastTokens;
       const reply = new LaptopTurn();
       reply.role = 'assistant';
-      reply.text = response.text;
+      reply.text = replyText;
       this.turns.push(reply);
     } catch (error) {
       this.error = `${(error as Error).message}`;
       const reply = new LaptopTurn();
       reply.role = 'assistant';
-      reply.text = 'I could not reach the model. Check the key and endpoint under Model.';
+      reply.text = 'I could not reach the model. Check the key and endpoint under Settings.';
       this.turns.push(reply);
     }
     this.busy = false;
