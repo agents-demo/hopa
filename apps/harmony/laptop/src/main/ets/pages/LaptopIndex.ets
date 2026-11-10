@@ -427,6 +427,10 @@ struct LaptopIndex {
         this.settingsOpen = false;
         return true;
       }
+      if (this.busy) {
+        this.chat.cancel();
+        return true;
+      }
       return false;
     }
     const key: string = event.keyText.toLowerCase();
@@ -1220,14 +1224,18 @@ struct LaptopIndex {
               this.send();
               return true;
             })
-          Button('Send')
+          Button(this.busy ? 'Stop' : 'Send')
             .height(44)
             .fontSize(13)
-            .backgroundColor($r('app.color.primary'))
-            .fontColor($r('app.color.on_primary'))
-            .enabled(!this.busy && this.draft.trim().length > 0)
+            .backgroundColor(this.busy ? $r('app.color.surface_muted') : $r('app.color.primary'))
+            .fontColor(this.busy ? $r('app.color.text_primary') : $r('app.color.on_primary'))
+            .enabled(this.busy || this.draft.trim().length > 0)
             .onClick(() => {
-              this.send();
+              if (this.busy) {
+                this.chat.cancel();
+              } else {
+                this.send();
+              }
             })
         }
         .width('100%')

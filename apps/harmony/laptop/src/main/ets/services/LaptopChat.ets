@@ -84,6 +84,13 @@ export class LaptopChat {
     this.busy = false;
   }
 
+  /** Stop the run; the loop closes out and the reply is whatever it reached. */
+  cancel(): void {
+    if (this.runtime !== undefined) {
+      this.runtime.cancel();
+    }
+  }
+
   clear(): void {
     this.turns = [];
     this.error = '';
