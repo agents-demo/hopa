@@ -65,4 +65,7 @@ foreach ($t in $targets) {
     if (Test-Path $local) { Write-Host "  screenshot: $local" }
 }
 
+# A restarted bridge no longer costs a re-pair: the pair is kept in ~/.hopa.
+& powershell -ExecutionPolicy Bypass -File (Join-Path $root 'tools\scripts\bridges.ps1')
+
 Write-Host "done"

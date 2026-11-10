@@ -30,6 +30,7 @@ from __future__ import annotations
 import base64
 import hmac
 import json
+import os
 import secrets
 import subprocess
 import sys
@@ -493,6 +494,7 @@ class BridgeServer:
         pair_code: str = "",
         token_ttl: float = 12 * 60 * 60,
         sessions_key: str = "",
+        state_path: str | Path | None = None,
     ) -> None:
         if not token:
             raise BridgeError("a token is required")
@@ -511,10 +513,76 @@ class BridgeServer:
         # Read-only key for other devices: it can read the session snapshot
         # and nothing else, so a laptop never needs the token that can tap.
         self.sessions_key = sessions_key or secrets.token_urlsafe(24)
+        # A pair must survive a restart: otherwise every `Ctrl+C` on the PC
+        # forces the phone to pair again and looks like "bridge offline".
+        self._explicit_sessions_key = bool(sessions_key)
+        self._base_token = token
+        self._state_path = Path(state_path) if state_path is not None else None
+        self.restored = False
         self.lock = threading.Lock()
+        if self._state_path is not None:
+            self._restore_state()
+            self._save_state()
         self.httpd = ThreadingHTTPServer((host, port), _Handler)
         self.httpd.bridge = self  # type: ignore[attr-defined]
         self.thread: threading.Thread | None = None
+
+    def _state(self) -> dict[str, Any]:
+        return {
+            "base": self._base_token,
+            "token": self.token,
+            "refresh": self.refresh_token,
+            "issued_at": time.time() - (time.monotonic() - self.token_issued_at),
+            "sessions_key": self.sessions_key,
+        }
+
+    def _save_state(self) -> None:
+        """Write the pair and the read-only key for the next process.
+
+        Best effort: a bridge with no writable state still works, it just
+        asks clients to pair again after a restart.
+        """
+        if self._state_path is None:
+            return
+        try:
+            self._state_path.parent.mkdir(parents=True, exist_ok=True)
+            tmp = self._state_path.with_suffix(".tmp")
+            tmp.write_text(json.dumps(self._state()), encoding="utf-8")
+            try:
+                os.chmod(tmp, 0o600)
+            except OSError:
+                pass
+            tmp.replace(self._state_path)
+        except OSError:
+            pass
+
+    def _restore_state(self) -> None:
+        """Adopt a live pair from the previous process, never an expired one."""
+        if self._state_path is None or not self._state_path.exists():
+            return
+        try:
+            data = json.loads(self._state_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return
+        if not isinstance(data, dict) or data.get("base") != self._base_token:
+            return
+        token = str(data.get("token", ""))
+        refresh = str(data.get("refresh", ""))
+        try:
+            issued = float(data.get("issued_at", 0.0))
+        except (TypeError, ValueError):
+            return
+        age = time.time() - issued
+        if not token or not refresh or age < 0 or age >= self.token_ttl:
+            return
+        self.token = token
+        self.refresh_token = refresh
+        self.token_issued_at = time.monotonic() - age
+        if not self._explicit_sessions_key:
+            key = str(data.get("sessions_key", ""))
+            if key:
+                self.sessions_key = key
+        self.restored = True
 
     def token_live(self) -> bool:
         return time.monotonic() - self.token_issued_at < self.token_ttl
@@ -525,6 +593,7 @@ class BridgeServer:
             self.token = secrets.token_urlsafe(32)
             self.refresh_token = secrets.token_urlsafe(32)
             self.token_issued_at = time.monotonic()
+            self._save_state()
             return {
                 "token": self.token,
                 "refresh": self.refresh_token,

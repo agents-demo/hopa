@@ -18,6 +18,14 @@ All notable changes are recorded here. Versions follow `docs/versioning.md`.
 - The laptop approval card shows the last frame the bridge captured, labelled
   **WHAT HOPA SAW**, so the consent is given against evidence rather than a
   description.
+- The bridge persists its token pair and read-only sessions key in
+  `~/.hopa/bridge-<port>.json`, so a restart inside the TTL no longer forces a
+  re-pair (`--state`, `--no-state`). `tools\scripts\bridges.ps1` starts,
+  reports or stops one bridge per device (8766 phone, 8767 2in1) and
+  `deploy.ps1` calls it.
+- The 2in1 package is now honest about its target: `2in1` and `tablet` only,
+  a laptop-bodied launcher icon in the module, and a 960x620 minimum window so
+  the sidebar, rail and composer cannot be crushed.
 
 ## 0.1.0 — 2026-11-06
 

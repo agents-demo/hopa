@@ -107,6 +107,16 @@ def build_parser() -> argparse.ArgumentParser:
         help="read-only key another device can use to read /sessions",
     )
     bridge.add_argument(
+        "--state",
+        default="",
+        help="file that keeps the token pair across restarts (default ~/.hopa/bridge-<port>.json)",
+    )
+    bridge.add_argument(
+        "--no-state",
+        action="store_true",
+        help="do not persist the pair: every restart needs a fresh pairing",
+    )
+    bridge.add_argument(
         "--token-ttl-hours",
         type=float,
         default=float(os.environ.get("HOPA_TOKEN_TTL_HOURS", "12")),
@@ -145,6 +155,9 @@ def _cmd_bridge(args: argparse.Namespace, device: Device) -> int:
     token = args.token or secrets.token_urlsafe(24)
     pair_code = args.pair_code or f"{secrets.randbelow(1_000_000):06d}"
     ttl_hours = max(0.05, args.token_ttl_hours)
+    state_path = None
+    if not args.no_state and args.port > 0:
+        state_path = args.state or str(Path.home() / ".hopa" / f"bridge-{args.port}.json")
     try:
         server = BridgeServer(
             device,
@@ -154,6 +167,7 @@ def _cmd_bridge(args: argparse.Namespace, device: Device) -> int:
             pair_code=pair_code,
             token_ttl=ttl_hours * 3600,
             sessions_key=args.sessions_key,
+            state_path=state_path,
         )
     except BridgeError as exc:
         print(f"pc-agent: {exc}", file=sys.stderr)
@@ -163,6 +177,9 @@ def _cmd_bridge(args: argparse.Namespace, device: Device) -> int:
     print(f"token: {token}", flush=True)
     print(f"pair code: {pair_code}", flush=True)
     print(f"token ttl: {ttl_hours:g} h", flush=True)
+    if state_path is not None:
+        kept = "kept a live pair" if server.restored else "new pair"
+        print(f"state: {state_path} ({kept})", flush=True)
     print(f"sessions key (read-only): {server.sessions_key}", flush=True)
     try:
         while True:

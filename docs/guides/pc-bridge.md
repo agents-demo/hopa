@@ -69,6 +69,10 @@ py -3 -m hopa_pc_agent --target 3QC0225821000268 bridge \
 hdc -t 3QC0225821000268 rport tcp:8767 tcp:8767
 ```
 
+`tools\scripts\bridges.ps1` does both devices at once (start, `-Status`,
+`-Stop`), and `deploy.ps1` calls it, so a bridge that died does not silently
+turn into "PC bridge offline" after an install.
+
 Then in the laptop app: **Settings -> PC BRIDGE**, address
 `http://127.0.0.1:8767`, the key the bridge printed, **Connect**. The status
 reads `Connected.` only after a real `/health` answer; otherwise it shows the
@@ -103,6 +107,17 @@ accessibility path stands down even if the extension reports itself connected
 reason, e.g. `unreachable: bridge HTTP 401`. The URL stays in preferences; the
 token pair lives in Asset Store and is sent nowhere except to the configured
 bridge.
+
+### The pair survives a restart
+
+The bridge keeps `~/.hopa/bridge-<port>.json` (mode 0600) with the access
+token, the refresh token, its issue time and the read-only sessions key. On
+startup it adopts that pair only when it is still inside the TTL and was
+issued for the same base token; otherwise the file is replaced and clients
+pair again. This is why `Ctrl+C` on the PC no longer looks like a lost phone.
+
+Override the path with `--state <file>`, or disable it with `--no-state` so
+every restart requires a fresh pair. A port of `0` (tests) never writes state.
 
 ## Security
 

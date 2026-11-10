@@ -71,6 +71,42 @@ class FakeDevice:
         self.calls.append(("swipe", *args, velocity))
 
 
+def test_pair_survives_a_restart(tmp_path):
+    state = tmp_path / "bridge.json"
+    first = BridgeServer(FakeDevice(), "secret", port=0, state_path=state)
+    pair = first.issue_tokens()
+    first.stop()
+    second = BridgeServer(FakeDevice(), "secret", port=0, state_path=state)
+    assert second.restored is True
+    assert second.token == pair["token"]
+    assert second.token_live() is True
+    second.stop()
+
+
+def test_a_different_token_starts_a_new_pair(tmp_path):
+    state = tmp_path / "bridge.json"
+    first = BridgeServer(FakeDevice(), "secret", port=0, state_path=state)
+    pair = first.issue_tokens()
+    first.stop()
+    second = BridgeServer(FakeDevice(), "other", port=0, state_path=state)
+    assert second.restored is False
+    assert second.token != pair["token"]
+    second.stop()
+
+
+def test_an_expired_pair_is_not_restored(tmp_path):
+    state = tmp_path / "bridge.json"
+    first = BridgeServer(FakeDevice(), "secret", port=0, state_path=state)
+    first.issue_tokens()
+    first.stop()
+    data = json.loads(state.read_text(encoding="utf-8"))
+    data["issued_at"] = time.time() - 24 * 3600
+    state.write_text(json.dumps(data), encoding="utf-8")
+    second = BridgeServer(FakeDevice(), "secret", port=0, state_path=state)
+    assert second.restored is False
+    second.stop()
+
+
 @pytest.fixture()
 def bridge():
     device = FakeDevice()

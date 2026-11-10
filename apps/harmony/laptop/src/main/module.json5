@@ -4,12 +4,11 @@
     "type": "entry",
     "description": "$string:module_desc",
     "mainElement": "LaptopAbility",
-    // 2in1 is the target. Tablet and phone are here so the shell can be
-    // installed and smoke-tested when no 2-in-1 is available.
+    // The laptop shell ships for 2in1 and tablet. It is not a phone app:
+    // installing it there would show a desktop layout on a handset.
     "deviceTypes": [
       "2in1",
-      "tablet",
-      "phone"
+      "tablet"
     ],
     "deliveryWithInstall": true,
     "installationFree": false,
@@ -37,6 +36,9 @@
           "split",
           "floating"
         ],
+        // Below this the sidebar, rail and composer stop fitting honestly.
+        "minWindowWidth": 960,
+        "minWindowHeight": 620,
         "exported": true,
         "skills": [
           {
