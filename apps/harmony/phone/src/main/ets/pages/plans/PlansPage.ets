@@ -11,6 +11,7 @@ export struct PlansPage {
   @State goal: string = '';
   @State items: ScheduledTask[] = [];
   @State status: string = 'Idle';
+  @State suggestions: string[] = [];
   private timer: number = -1;
 
   aboutToAppear(): void {
@@ -29,11 +30,79 @@ export struct PlansPage {
 
   private refresh(): void {
     this.items = AgentService.get().scheduleService.book.all().slice();
+    this.suggestions = this.detect();
     if (AgentService.get().isBusy()) {
       this.status = 'Scheduled goal running';
     } else if (this.status === 'Scheduled goal running') {
       this.status = 'Idle';
     }
+  }
+
+  /** Goals the user has asked more than once and has not planned yet. */
+  private detect(): string[] {
+    const goals: string[] = [];
+    const counts: number[] = [];
+    for (const session of AgentService.get().conversations.all()) {
+      for (const entry of session.entries) {
+        if (entry.role !== 'user') {
+          continue;
+        }
+        const goal: string = entry.text.trim();
+        if (goal.length < 4 || goal.length > 90) {
+          continue;
+        }
+        let found: number = -1;
+        for (let i = 0; i < goals.length; i++) {
+          if (goals[i].toLowerCase() === goal.toLowerCase()) {
+            found = i;
+            break;
+          }
+        }
+        if (found >= 0) {
+          counts[found] += 1;
+        } else {
+          goals.push(goal);
+          counts.push(1);
+        }
+      }
+    }
+    const result: string[] = [];
+    for (let i = 0; i < goals.length; i++) {
+      if (counts[i] < 2) {
+        continue;
+      }
+      let planned: boolean = false;
+      for (const item of this.items) {
+        if (item.goal.toLowerCase() === goals[i].toLowerCase()) {
+          planned = true;
+          break;
+        }
+      }
+      if (!planned) {
+        result.push(goals[i]);
+      }
+      if (result.length >= 3) {
+        break;
+      }
+    }
+    return result;
+  }
+
+  /** One tap turns a repeated goal into a daily 9:00 routine. */
+  private async makeRoutine(goal: string): Promise<void> {
+    const now: Date = new Date();
+    const next: Date = new Date();
+    next.setHours(9, 0, 0, 0);
+    if (next.getTime() <= now.getTime()) {
+      next.setDate(next.getDate() + 1);
+    }
+    const ok: boolean = await AgentService.get().scheduleService.add(
+      goal,
+      86400000,
+      next.getTime() - now.getTime()
+    );
+    this.status = ok ? 'Routine added for 9:00' : 'Could not add the routine';
+    this.refresh();
   }
 
   private async add(intervalMs: number, delayMs: number): Promise<void> {
@@ -72,6 +141,46 @@ export struct PlansPage {
       Text(this.status)
         .fontSize(12)
         .fontColor($r('app.color.text_hint'))
+      if (this.suggestions.length > 0) {
+        Text('SUGGESTED ROUTINES')
+          .fontSize(10)
+          .fontColor($r('app.color.text_hint'))
+          .letterSpacing(0.6)
+          .padding({ top: 4 })
+        Column({ space: 6 }) {
+          ForEach(this.suggestions, (goal: string) => {
+            Row({ space: 8 }) {
+              Text(goal)
+                .fontSize(12.5)
+                .fontColor($r('app.color.text_primary'))
+                .layoutWeight(1)
+                .maxLines(2)
+                .textOverflow({ overflow: TextOverflow.Ellipsis })
+              Text('Daily at 9:00')
+                .fontSize(10.5)
+                .fontWeight(FontWeight.Medium)
+                .fontColor($r('app.color.on_primary'))
+                .padding({ left: 10, right: 10, top: 5, bottom: 5 })
+                .backgroundColor($r('app.color.primary'))
+                .borderRadius(9)
+                .onClick(() => {
+                  this.makeRoutine(goal);
+                })
+            }
+            .width('100%')
+            .padding(10)
+            .backgroundColor($r('app.color.surface'))
+            .border({ width: 1, color: $r('app.color.divider') })
+            .borderRadius(10)
+            .alignItems(VerticalAlign.Center)
+          }, (goal: string) => goal)
+        }
+        .width('100%')
+        Text('You have asked these more than once. A routine still passes the same approval gate.')
+          .fontSize(10)
+          .fontColor($r('app.color.text_hint'))
+      }
+
       Row({ space: 6 }) {
         Button('Every 5 min')
           .fontSize(10)
