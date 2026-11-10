@@ -1,9 +1,20 @@
 import { common, Want } from '@kit.AbilityKit';
+import { fileIo } from '@kit.CoreFileKit';
 
 interface ShareWant {
   uri?: string;
   parameters?: Record<string, Object>;
 }
+
+interface ShareRecord {
+  text?: string;
+  uri?: string;
+  title?: string;
+  debug?: string;
+  raw?: string;
+}
+
+const RECORD_FILE: string = 'share_record.json';
 
 /**
  * The share sheet another app shows when the user picks HOPA.
@@ -14,12 +25,43 @@ interface ShareWant {
 @Entry
 @Component
 struct ShareSheet {
-  @StorageProp('hopa.share.text') sharedText: string = '';
-  @StorageProp('hopa.share.uri') sharedUri: string = '';
-  @StorageProp('hopa.share.title') sharedTitle: string = '';
-  @StorageProp('hopa.share.debug') debug: string = '';
-  @StorageProp('hopa.share.raw') rawWant: string = '';
+  @State sharedText: string = '';
+  @State sharedUri: string = '';
+  @State sharedTitle: string = '';
+  @State debug: string = '';
+  @State rawWant: string = '';
   @State status: string = '';
+
+  aboutToAppear(): void {
+    this.sharedText = AppStorage.get<string>('hopa.share.text') ?? '';
+    this.sharedUri = AppStorage.get<string>('hopa.share.uri') ?? '';
+    this.sharedTitle = AppStorage.get<string>('hopa.share.title') ?? '';
+    this.debug = AppStorage.get<string>('hopa.share.debug') ?? '';
+    this.rawWant = AppStorage.get<string>('hopa.share.raw') ?? '';
+    if (this.sharedText.length === 0 && this.sharedUri.length === 0 && this.sharedTitle.length === 0) {
+      this.loadFromFile();
+    }
+  }
+
+  /** The state handoff is not guaranteed; the sandbox record is. */
+  private loadFromFile(): void {
+    try {
+      const context = getContext(this) as common.UIExtensionContext;
+      const path: string = `${context.filesDir}/${RECORD_FILE}`;
+      if (!fileIo.accessSync(path)) {
+        return;
+      }
+      const raw: string = fileIo.readTextSync(path);
+      const record = JSON.parse(raw) as ShareRecord;
+      this.sharedText = record.text ?? '';
+      this.sharedUri = record.uri ?? '';
+      this.sharedTitle = record.title ?? '';
+      this.debug = record.debug ?? '';
+      this.rawWant = record.raw ?? '';
+    } catch (error) {
+      this.debug = 'record unreadable';
+    }
+  }
 
   /** Systems that do not answer ShareKit still pass a URI in the want. */
   private uriFromWant(): string {
@@ -35,13 +77,13 @@ struct ShareSheet {
       const keys: string[] = Object.keys(params);
       for (const key of keys) {
         const value: Object = params[key];
-        if (typeof value === 'string' && (value as string).startsWith('file://')) {
+        if (typeof value === 'string' && this.isUri(value as string)) {
           return value as string;
         }
         if (Array.isArray(value)) {
           const list: Object[] = value as Object[];
           for (const item of list) {
-            if (typeof item === 'string' && (item as string).startsWith('file://')) {
+            if (typeof item === 'string' && this.isUri(item as string)) {
               return item as string;
             }
           }
@@ -51,6 +93,11 @@ struct ShareSheet {
       return '';
     }
     return '';
+  }
+
+  private isUri(value: string): boolean {
+    return value.startsWith('file://') || value.startsWith('datashare://') ||
+      value.startsWith('content://') || value.startsWith('http');
   }
 
   private resolvedUri(): string {
