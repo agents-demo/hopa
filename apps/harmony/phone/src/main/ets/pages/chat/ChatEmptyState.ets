@@ -207,6 +207,16 @@ export struct ChatEmptyState {
     return this.promptKind() === 'ritual' ? this.ritualGoal() : this.repeatGoal();
   }
 
+  /** One natural-language chip, the way assistants suggest an action. */
+  private chipLabel(): string {
+    if (this.promptKind() === 'ritual') {
+      return this.promptTitle() === 'Morning brief'
+        ? 'Give me a morning brief'
+        : 'Close out my day';
+    }
+    return `Again: ${this.promptGoal()}`;
+  }
+
   private hasResume(): boolean {
     return this.resume.length > 0 && this.hasEarlier && !this.suggestions().includes(this.resume);
   }
@@ -256,6 +266,10 @@ export struct ChatEmptyState {
         .fontSize(this.style().body - 1)
         .fontColor($r('app.color.text_secondary'))
         .textAlign(TextAlign.Center)
+      }
+      .width('100%')
+      .padding({ top: 72 })
+      Scroll() {
       Column({ space: 8 }) {
         if (this.hasResume()) {
           Row({ space: 10 }) {
@@ -344,41 +358,36 @@ export struct ChatEmptyState {
       }
       .width('100%')
       .layoutWeight(1)
-      .justifyContent(FlexAlign.Center)
-
+      .scrollBar(BarState.Off)
+      .align(Alignment.Top)
       if (this.promptKind().length > 0) {
-        Row({ space: 8 }) {
-          Column({ space: 1 }) {
-            Text(this.promptTitle())
-              .fontSize(10)
-              .fontColor($r('app.color.text_hint'))
-            Text(this.promptGoal())
-              .fontSize(12.5)
-              .fontColor($r('app.color.text_secondary'))
-              .maxLines(2)
-          }
-          .layoutWeight(1)
-          .alignItems(HorizontalAlign.Start)
-          Text('Start')
-            .fontSize(11)
-            .fontColor($r('app.color.text_secondary'))
+        Row({ space: 6 }) {
+          Text(this.chipLabel())
+            .fontSize(12.5)
+            .fontColor($r('app.color.text_primary'))
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+            .layoutWeight(1)
           Text('\u00d7')
             .fontSize(12)
             .fontColor($r('app.color.text_hint'))
-            .padding({ left: 4 })
+            .padding({ left: 2 })
             .onClick(() => {
               this.dismiss(this.promptKind());
             })
         }
         .width('100%')
-        .padding({ left: 4, right: 4, top: 8, bottom: 4 })
+        .padding({ left: 14, right: 12, top: 9, bottom: 9 })
+        .backgroundColor($r('app.color.surface_alt'))
+        .border({ width: 1, color: $r('app.color.divider') })
+        .borderRadius(18)
         .onClick(() => {
           this.onPick(this.promptGoal());
         })
       }
     }
     .width('100%')
-    .constraintSize({ minHeight: '100%' })
+    .height('100%')
     .opacity(this.entered ? 1 : 0)
     .translate({ y: this.entered ? 0 : 10 })
     .animation({ duration: 420, curve: Curve.EaseOut })

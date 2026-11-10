@@ -485,6 +485,7 @@ export struct RunsPage {
         }
         .height(120)
         .width('100%')
+        .scrollBar(BarState.Off)
         Row({ space: 8 }) {
           Text(`Recent actions (${this.runs.length})`)
             .fontSize(14)
@@ -565,6 +566,7 @@ export struct RunsPage {
         }
         .height(520)
         .width('100%')
+        .scrollBar(BarState.Off)
       }
       .width('100%')
       .padding(20)

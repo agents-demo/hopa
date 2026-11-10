@@ -252,6 +252,7 @@ export struct PlansPage {
         }
         .layoutWeight(1)
         .width('100%')
+        .scrollBar(BarState.Off)
       } else {
         Text('No plans yet. Type a goal above, then choose how often it should run.')
           .fontSize(12)

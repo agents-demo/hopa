@@ -213,12 +213,14 @@ export struct HopaMark {
     })
     .rotate({ angle: this.state === 'acting' ? -4 : (this.state === 'listening' ? -2 : 0) })
     .offset({
-      x: this.bubble ? -this.markSize * 0.55 : 0,
       y: this.state === 'idle' || this.state === 'waiting'
         ? (this.bob ? this.markSize * 0.025 : -this.markSize * 0.025)
         : 0
     })
     .animation({ duration: 900, curve: Curve.EaseInOut })
+    // The nudge is instant: an animated x shift would leave the bubble
+    // hanging outside the screen for the first frames.
+    .translate({ x: this.bubble ? -this.markSize * 0.55 : 0 })
     .onClick(() => {
       if (!this.interactive) {
         return;
@@ -232,7 +234,7 @@ export struct HopaMark {
       this.cheerTimer = setTimeout(() => {
         this.cheer = false;
       }, 260);
-      if (this.state === 'idle') {
+      if (this.state !== 'thinking' && this.state !== 'acting') {
         this.speak();
       }
     })

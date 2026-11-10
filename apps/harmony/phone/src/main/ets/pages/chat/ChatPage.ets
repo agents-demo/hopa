@@ -1089,6 +1089,7 @@ export struct ChatPage {
         }
         .layoutWeight(1)
         .width('100%')
+        .scrollBar(BarState.Off)
         .onAreaChange((_old: Area, now: Area) => {
           // The keyboard shrinking the list must not leave the newest message
           // off-screen; re-anchor to the end whenever the height changes.
