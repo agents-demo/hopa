@@ -90,18 +90,24 @@ export class Appearance {
   }
 
   static apply(context: common.UIAbilityContext, mode: string): void {
+    let dark: boolean = false;
     try {
       const application = context.getApplicationContext();
       if (mode === 'dark') {
+        dark = true;
         application.setColorMode(ConfigurationConstant.ColorMode.COLOR_MODE_DARK);
       } else if (mode === 'light') {
+        dark = false;
         application.setColorMode(ConfigurationConstant.ColorMode.COLOR_MODE_LIGHT);
       } else {
+        dark = context.config.colorMode === ConfigurationConstant.ColorMode.COLOR_MODE_DARK;
         application.setColorMode(ConfigurationConstant.ColorMode.COLOR_MODE_NOT_SET);
       }
     } catch (error) {
       // The system default remains if the platform rejects the mode.
     }
+    // Page tints are strings, not resources, so they need the resolved mode.
+    AppStorage.setOrCreate<boolean>('hopa.dark', dark);
   }
 
   static indexOf(mode: string): number {

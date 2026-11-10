@@ -80,8 +80,9 @@ export default class EntryAbility extends UIAbility {
     }
     SettingsStore.load(this.context).then((stored: StoredSettings) => {
       Character.configure(stored);
+      Appearance.apply(this.context, stored.appearance);
     }).catch(() => {
-      // The default voice is fine.
+      // The default voice and system look are fine.
     });
     TrustedApps.load(this.context).then((apps: string[]) => {
       AgentService.get().policy.setTrustedApps(apps);
