@@ -43,6 +43,7 @@ export class ConversationService {
       this.history = new ChatHistory();
     }
     this.history.ensureCurrent(Date.now());
+    this.pruneEmpty();
     this.loaded = true;
     this.version += 1;
     await this.save();
@@ -79,10 +80,31 @@ export class ConversationService {
   }
 
   newChat(): void {
+    const current: ChatSession | undefined = this.history.current();
+    if (current !== undefined && current.entries.length === 0) {
+      // An empty draft is already open: reuse it instead of stacking another.
+      this.notify();
+      return;
+    }
     this.history.newSession(Date.now());
     this.version += 1;
     this.save();
     this.notify();
+  }
+
+  /** A chat with no messages is not history: keep only the open draft. */
+  private pruneEmpty(): void {
+    const currentId: string = this.history.currentId();
+    const empties: string[] = [];
+    for (const session of this.history.all()) {
+      if (session.entries.length === 0 && session.id !== currentId) {
+        empties.push(session.id);
+      }
+    }
+    for (const id of empties) {
+      this.history.remove(id);
+    }
+    this.history.ensureCurrent(Date.now());
   }
 
   select(id: string): boolean {

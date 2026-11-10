@@ -29,6 +29,14 @@ export default class LaptopAbility extends UIAbility {
       if (typeof model === 'string' && model.length > 0) {
         AppStorage.setOrCreate<string>('hopa.laptop.model', model);
       }
+      const linkUrl = params['hopa.link_url'];
+      const linkKey = params['hopa.link_key'];
+      if (typeof linkUrl === 'string' && linkUrl.length > 0) {
+        AppStorage.setOrCreate<string>('hopa.laptop.linkUrl', linkUrl);
+      }
+      if (typeof linkKey === 'string' && linkKey.length > 0) {
+        AppStorage.setOrCreate<string>('hopa.laptop.linkKey', linkKey);
+      }
       const fresh = params['hopa.new'];
       if (typeof fresh === 'string' && fresh === '1') {
         AppStorage.setOrCreate<string>('hopa.laptop.new', '1');

@@ -219,6 +219,9 @@ export class AgentService {
   private sessionsSnapshot(): SessionSnapshot[] {
     const snapshots: SessionSnapshot[] = [];
     for (const session of this.conversations.all()) {
+      if (session.entries.length === 0) {
+        continue;
+      }
       const snapshot = new SessionSnapshot();
       snapshot.id = session.id;
       snapshot.title = session.title;

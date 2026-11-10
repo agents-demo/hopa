@@ -4,6 +4,7 @@ import { HopaMark, EmptyHero, KeyStore, SettingsStore, StoredSettings } from '@h
 import { LaptopChat, LaptopTurn } from '../services/LaptopChat';
 
 import { LaptopSessions, LaptopSession } from '../services/LaptopSessions';
+import { LaptopPhoneLink, RemoteSession, RemoteTurn } from '../services/LaptopPhoneLink';
 import { LaptopFirstRun } from '../services/LaptopFirstRun';
 
 const LAPTOP_KEY_ALIAS: string = 'hopa_laptop_key';
@@ -30,6 +31,15 @@ struct LaptopIndex {
   @State paletteOpen: boolean = false;
   @State lastQuestion: string = '';
   @State sessions: LaptopSession[] = [];
+  @State remoteSessions: RemoteSession[] = [];
+  @State remoteOpen: boolean = false;
+  @State remoteTitle: string = '';
+  @State remoteTurns: RemoteTurn[] = [];
+  @State linkUrl: string = '';
+  @State linkKey: string = '';
+  @State linkStatus: string = '';
+  @State linkConfigured: boolean = false;
+  private link: LaptopPhoneLink = new LaptopPhoneLink();
   @State currentId: string = '';
   private store: LaptopSessions = new LaptopSessions();
   private win: window.Window | undefined = undefined;
@@ -46,6 +56,26 @@ struct LaptopIndex {
 
   aboutToAppear(): void {
     const context = getContext(this) as common.UIAbilityContext;
+    LaptopPhoneLink.load(context).then((link: LaptopPhoneLink) => {
+      this.link = link;
+      const injectedUrl: string = AppStorage.get<string>('hopa.laptop.linkUrl') ?? '';
+      const injectedKey: string = AppStorage.get<string>('hopa.laptop.linkKey') ?? '';
+      if (injectedUrl.length > 0 || injectedKey.length > 0) {
+        this.link.url = injectedUrl.length > 0 ? injectedUrl : link.url;
+        this.link.key = injectedKey.length > 0 ? injectedKey : link.key;
+        AppStorage.setOrCreate<string>('hopa.laptop.linkUrl', '');
+        AppStorage.setOrCreate<string>('hopa.laptop.linkKey', '');
+        this.link.save(context);
+      }
+      this.linkUrl = this.link.url;
+      this.linkKey = this.link.key;
+      this.linkConfigured = this.link.isConfigured();
+      if (this.linkConfigured) {
+        this.fetchPhone();
+      }
+    }).catch(() => {
+      // No phone link yet.
+    });
     window.getLastWindow(context).then((win: window.Window) => {
       this.win = win;
     }).catch(() => {
@@ -137,6 +167,47 @@ struct LaptopIndex {
     }
   }
 
+  private async fetchPhone(): Promise<void> {
+    this.linkStatus = 'Reading?';
+    const ok: boolean = await this.link.fetch();
+    if (ok) {
+      const withTurns: RemoteSession[] = [];
+      for (const session of this.link.sessions) {
+        if (session.turns.length > 0) {
+          withTurns.push(session);
+        }
+      }
+      withTurns.sort((a: RemoteSession, b: RemoteSession) => b.updated - a.updated);
+      this.remoteSessions = withTurns;
+      this.linkStatus = `${withTurns.length} threads`;
+    } else {
+      this.remoteSessions = [];
+      this.linkStatus = this.link.error;
+    }
+  }
+
+  private async savePhoneLink(): Promise<void> {
+    const context = getContext(this) as common.UIAbilityContext;
+    this.link.url = this.linkUrl;
+    this.link.key = this.linkKey;
+    await this.link.save(context);
+    this.linkConfigured = this.link.isConfigured();
+    await this.fetchPhone();
+  }
+
+  private openRemote(session: RemoteSession): void {
+    this.remoteOpen = true;
+    this.remoteTitle = session.title;
+    this.remoteTurns = session.turns;
+    this.paletteOpen = false;
+  }
+
+  private closeRemote(): void {
+    this.remoteOpen = false;
+    this.remoteTurns = [];
+    this.remoteTitle = '';
+  }
+
   private newChat(): void {
     const context = getContext(this) as common.UIAbilityContext;
     const current: LaptopSession = this.store.current();
@@ -164,6 +235,7 @@ struct LaptopIndex {
 
   private openSession(id: string): void {
     const context = getContext(this) as common.UIAbilityContext;
+    this.closeRemote();
     this.store.select(id);
     this.store.save(context);
     const session: LaptopSession = this.store.current();
@@ -331,7 +403,7 @@ struct LaptopIndex {
     Row({ space: 12 }) {
       HopaMark({ state: 'idle', markSize: 26, interactive: false })
       Column({ space: 1 }) {
-        Text(this.currentTitle)
+        Text(this.remoteOpen ? this.remoteTitle : this.currentTitle)
           .fontSize(15)
           .fontWeight(FontWeight.Medium)
           .fontColor($r('app.color.text_primary'))
@@ -474,6 +546,53 @@ struct LaptopIndex {
         .onChange((value: string) => {
           this.keyDraft = value;
         })
+      Divider().color($r('app.color.divider'))
+      Text('PHONE LINK')
+        .fontSize(9)
+        .fontWeight(FontWeight.Bold)
+        .fontColor($r('app.color.text_hint'))
+        .letterSpacing(0.8)
+        .width('100%')
+      Text('Read-only copy of the phone threads, through the PC bridge. The key only allows reading; it cannot tap or type on the phone.')
+        .fontSize(10.5)
+        .lineHeight(16)
+        .fontColor($r('app.color.text_secondary'))
+        .width('100%')
+      TextInput({ text: this.linkUrl, placeholder: 'bridge address, e.g. http://192.168.1.10:8766' })
+        .height(38)
+        .fontSize(12.5)
+        .backgroundColor($r('app.color.surface_muted'))
+        .borderRadius(9)
+        .onChange((value: string) => {
+          this.linkUrl = value;
+        })
+      TextInput({ text: this.linkKey, placeholder: 'read-only sessions key' })
+        .height(38)
+        .fontSize(12.5)
+        .type(InputType.Password)
+        .backgroundColor($r('app.color.surface_muted'))
+        .borderRadius(9)
+        .onChange((value: string) => {
+          this.linkKey = value;
+        })
+      Row({ space: 10 }) {
+        Button('Link')
+          .height(36)
+          .fontSize(12.5)
+          .backgroundColor($r('app.color.primary'))
+          .fontColor($r('app.color.on_primary'))
+          .onClick(() => {
+            this.savePhoneLink();
+          })
+        if (this.linkStatus.length > 0) {
+          Text(this.linkStatus)
+            .fontSize(11)
+            .fontColor($r('app.color.text_hint'))
+            .maxLines(2)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+        }
+      }
+      .width('100%')
       Row({ space: 10 }) {
         Button('Save')
           .height(36)
@@ -627,6 +746,42 @@ struct LaptopIndex {
           this.openSession(session.id);
         })
       }, (session: LaptopSession) => `${session.id}-${session.title}`)
+
+      if (this.remoteSessions.length > 0) {
+        Text('FROM YOUR PHONE')
+          .fontSize(9)
+          .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_hint'))
+          .letterSpacing(0.7)
+          .width('100%')
+          .padding({ left: 4, top: 14 })
+        ForEach(this.remoteSessions.slice(0, 20), (session: RemoteSession) => {
+          Row({ space: 6 }) {
+            Text(session.title)
+              .fontSize(12)
+              .fontColor($r('app.color.text_secondary'))
+              .maxLines(1)
+              .textOverflow({ overflow: TextOverflow.Ellipsis })
+              .layoutWeight(1)
+            Text('\u2192')
+              .fontSize(10)
+              .fontColor($r('app.color.text_hint'))
+          }
+          .width('100%')
+          .padding({ left: 8, right: 8, top: 6, bottom: 6 })
+          .borderRadius(8)
+          .onClick(() => {
+            this.openRemote(session);
+          })
+        }, (session: RemoteSession) => `phone-${session.id}-${session.title}`)
+        if (this.remoteSessions.length > 20) {
+          Text(`+${this.remoteSessions.length - 20} more on the phone`)
+            .fontSize(10)
+            .fontColor($r('app.color.text_hint'))
+            .width('100%')
+            .padding({ left: 8, top: 4 })
+        }
+      }
 
       Blank()
 
@@ -789,7 +944,47 @@ struct LaptopIndex {
         if (this.settingsOpen) {
           this.SettingsPanel()
         }
-        if (this.turns.length === 0) {
+        if (this.remoteOpen) {
+          List() {
+            ForEach(this.remoteTurns, (turn: RemoteTurn, index: number) => {
+              ListItem() {
+                if (turn.role === 'user') {
+                  Row() {
+                    Blank()
+                    Text(turn.text)
+                      .fontSize(13.5)
+                      .lineHeight(21)
+                      .fontColor($r('app.color.on_primary'))
+                      .padding({ left: 14, right: 14, top: 10, bottom: 10 })
+                      .backgroundColor($r('app.color.primary'))
+                      .borderRadius(14)
+                      .constraintSize({ maxWidth: '62%' })
+                      .copyOption(CopyOptions.LocalDevice)
+                  }
+                  .width('100%')
+                } else {
+                  Row({ space: 12 }) {
+                    HopaMark({ state: 'idle', markSize: 22, animate: false, interactive: false })
+                    Text(turn.text)
+                      .fontSize(13.5)
+                      .lineHeight(22)
+                      .fontColor($r('app.color.text_primary'))
+                      .layoutWeight(1)
+                      .copyOption(CopyOptions.LocalDevice)
+                  }
+                  .width('100%')
+                  .alignItems(VerticalAlign.Top)
+                  .padding({ right: 40 })
+                }
+              }
+              .padding({ top: 10, bottom: 10 })
+            }, (turn: RemoteTurn, index: number) => `remote-${index}-${turn.role}`)
+          }
+          .layoutWeight(1)
+          .width('100%')
+          .padding({ left: 22, right: 22 })
+          .scrollBar(BarState.Off)
+        } else if (this.turns.length === 0) {
           Column() {
             this.Empty()
           }
@@ -829,6 +1024,25 @@ struct LaptopIndex {
             .width('100%')
             .padding({ left: 22, right: 22, bottom: 4 })
         }
+        if (this.remoteOpen) {
+          Row({ space: 10 }) {
+            Text('Read-only copy from your phone. Reply there.')
+              .fontSize(11.5)
+              .fontColor($r('app.color.text_secondary'))
+              .layoutWeight(1)
+            Text('Close')
+              .fontSize(12)
+              .fontColor($r('app.color.primary'))
+              .padding({ left: 14, right: 14, top: 8, bottom: 8 })
+              .backgroundColor($r('app.color.primary_soft'))
+              .borderRadius(14)
+              .onClick(() => {
+                this.closeRemote();
+              })
+          }
+          .width('100%')
+          .padding({ left: 22, right: 22, top: 8, bottom: 16 })
+        } else {
         Row({ space: 10 }) {
           TextArea({ text: this.draft, placeholder: 'Ask HOPA\u2026' })
             .layoutWeight(1)
@@ -868,6 +1082,7 @@ struct LaptopIndex {
         }
         .width('100%')
         .padding({ left: 22, right: 22, top: 8, bottom: 16 })
+        }
       }
       .layoutWeight(1)
       .height('100%')
