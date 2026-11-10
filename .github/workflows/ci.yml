@@ -27,7 +27,7 @@ jobs:
     name: pc-agent + bench (Linux)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -65,7 +65,7 @@ jobs:
       CLT_URL: ${{ secrets.HARMONY_CLI_TOOLS_URL }}
       CLT_SHA256: ${{ secrets.HARMONY_CLI_TOOLS_SHA256 }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Toolchain availability
         run: |
@@ -118,7 +118,7 @@ jobs:
     name: brain (JDK 17 + Kotlin 2.1.0)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -144,7 +144,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Set up Go
@@ -174,7 +174,7 @@ jobs:
       CLT_URL: ${{ secrets.HARMONY_CLI_TOOLS_URL_MACOS }}
       CLT_SHA256: ${{ secrets.HARMONY_CLI_TOOLS_SHA256_MACOS }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Toolchain availability
         run: |
