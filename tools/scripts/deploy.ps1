@@ -47,6 +47,10 @@ foreach ($t in $targets) {
 
     # install drops the reverse tunnel; the bridge is unreachable without it
     & $hdc -t $serial rport tcp:8766 tcp:8766 2>&1 | Out-Null
+    if ($isLaptop) {
+        # the laptop has its own bridge instance: the phone's is single-device
+        & $hdc -t $serial rport tcp:8767 tcp:8767 2>&1 | Out-Null
+    }
 
     if (-not $NoLaunch) {
         & $hdc -t $serial shell "aa force-stop com.hopa.agent" 2>&1 | Out-Null

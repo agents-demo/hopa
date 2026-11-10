@@ -45,9 +45,14 @@ struct LaptopIndex {
   @State linkKey: string = '';
   @State linkStatus: string = '';
   @State linkConfigured: boolean = false;
+  @State bridgeUrl: string = '';
+  @State bridgeToken: string = '';
+  @State bridgeStatus: string = '';
+  @State bridgeLive: boolean = false;
   @State approvalOpen: boolean = false;
   @State approvalDetail: string = '';
   @State approvalKind: string = '';
+  @State approvalFrame: string = '';
   private link: LaptopPhoneLink = new LaptopPhoneLink();
   @State currentId: string = '';
   private store: LaptopSessions = new LaptopSessions();
@@ -70,6 +75,9 @@ struct LaptopIndex {
     this.agent.approvals.onAsk = (kind: string, detail: string) => {
       this.approvalKind = kind;
       this.approvalDetail = detail;
+      // A frame the run already captured: proof of what the step was about.
+      const shots: string[] = this.agent.runtime.stepShots();
+      this.approvalFrame = shots.length > 0 ? shots[shots.length - 1] : '';
       this.approvalOpen = true;
     };
     LaptopPhoneLink.load(context).then((link: LaptopPhoneLink) => {
@@ -124,6 +132,12 @@ struct LaptopIndex {
       this.endpoint = stored.endpoint;
       this.modelName = stored.model;
       this.provider = stored.provider;
+      this.bridgeUrl = stored.bridgeUrl;
+      this.bridgeToken = stored.bridgeToken;
+      if (stored.bridgeUrl.length > 0 && stored.bridgeToken.length > 0) {
+        this.agent.configureBridge(stored.bridgeUrl, stored.bridgeToken);
+        this.checkBridge();
+      }
       KeyStore.load(LAPTOP_KEY_ALIAS).then((key: string) => {
         this.keyPresent = key.length > 0;
         this.chat.configure(this.provider, this.endpoint, this.modelName, key);
@@ -372,7 +386,10 @@ struct LaptopIndex {
     const injectedKey: string = AppStorage.get<string>('hopa.laptop.key') ?? '';
     const injectedEndpoint: string = AppStorage.get<string>('hopa.laptop.endpoint') ?? '';
     const injectedModel: string = AppStorage.get<string>('hopa.laptop.model') ?? '';
-    if (injectedEndpoint.length === 0 && injectedModel.length === 0 && injectedKey.length === 0) {
+    const injectedBridgeUrl: string = AppStorage.get<string>('hopa.laptop.bridgeUrl') ?? '';
+    const injectedBridgeToken: string = AppStorage.get<string>('hopa.laptop.bridgeToken') ?? '';
+    if (injectedEndpoint.length === 0 && injectedModel.length === 0 && injectedKey.length === 0 &&
+      injectedBridgeUrl.length === 0 && injectedBridgeToken.length === 0) {
       return;
     }
     const context = getContext(this) as common.UIAbilityContext;
@@ -393,6 +410,20 @@ struct LaptopIndex {
       this.keyPresent = key.length > 0;
       this.saved = this.keyPresent ? 'Key saved.' : 'Key store unavailable.';
       this.chat.configure(this.provider, this.endpoint, this.modelName, key);
+    }
+    if (injectedBridgeUrl.length > 0 || injectedBridgeToken.length > 0) {
+      const stored: StoredSettings = await SettingsStore.load(context);
+      stored.bridgeUrl = injectedBridgeUrl.length > 0 ? injectedBridgeUrl : stored.bridgeUrl;
+      stored.bridgeToken = injectedBridgeToken.length > 0 ? injectedBridgeToken : stored.bridgeToken;
+      await SettingsStore.save(context, stored);
+      AppStorage.setOrCreate<string>('hopa.laptop.bridgeUrl', '');
+      AppStorage.setOrCreate<string>('hopa.laptop.bridgeToken', '');
+      this.bridgeUrl = stored.bridgeUrl;
+      this.bridgeToken = stored.bridgeToken;
+      if (stored.bridgeUrl.length > 0 && stored.bridgeToken.length > 0) {
+        this.agent.configureBridge(stored.bridgeUrl, stored.bridgeToken);
+        this.checkBridge();
+      }
     }
   }
 
@@ -465,6 +496,37 @@ struct LaptopIndex {
     setTimeout(() => {
       this.scroller.scrollEdge(Edge.Bottom);
     }, 220);
+  }
+
+  /** Save the bridge pair, then ask it a real question: are you there? */
+  private async saveBridge(): Promise<void> {
+    const url: string = this.bridgeUrl.trim();
+    const token: string = this.bridgeToken.trim();
+    const context = getContext(this) as common.UIAbilityContext;
+    const stored: StoredSettings = await SettingsStore.load(context);
+    stored.bridgeUrl = url;
+    stored.bridgeToken = token;
+    await SettingsStore.save(context, stored);
+    if (url.length === 0 || token.length === 0) {
+      this.bridgeLive = false;
+      this.bridgeStatus = 'Not connected.';
+      return;
+    }
+    this.agent.configureBridge(url, token);
+    await this.checkBridge();
+  }
+
+  /** A real request, so the bridge line reports the truth rather than the config. */
+  private async checkBridge(): Promise<void> {
+    if (!this.agent.isBridgeConfigured()) {
+      this.bridgeLive = false;
+      this.bridgeStatus = '';
+      return;
+    }
+    this.bridgeStatus = 'Checking\u2026';
+    const ok: boolean = await this.agent.testBridge();
+    this.bridgeLive = ok;
+    this.bridgeStatus = ok ? 'Connected.' : `No answer from the bridge. ${this.agent.bridgeFailure()}`;
   }
 
   private async saveSettings(): Promise<void> {
@@ -722,6 +784,77 @@ struct LaptopIndex {
             })
           if (this.linkStatus.length > 0) {
             Text(this.linkStatus)
+              .fontSize(11)
+              .fontColor($r('app.color.text_hint'))
+              .maxLines(2)
+              .textOverflow({ overflow: TextOverflow.Ellipsis })
+              .layoutWeight(1)
+          }
+        }
+        .width('100%')
+      }
+      .width('100%')
+      .alignItems(HorizontalAlign.Start)
+
+      Divider().color($r('app.color.divider'))
+
+      Column({ space: 8 }) {
+        Text('PC BRIDGE')
+          .fontSize(9)
+          .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_hint'))
+          .letterSpacing(0.8)
+          .width('100%')
+
+        Text('Gives HOPA eyes and hands on this laptop: it reads the screen and taps, types or opens apps through a bridge running on a PC connected by USB. Every action still asks you first, and nothing happens while the tunnel is down.')
+          .fontSize(11)
+          .lineHeight(17)
+          .fontColor($r('app.color.text_secondary'))
+          .width('100%')
+
+        this.FieldLabel('Bridge address')
+        TextInput({ text: this.bridgeUrl, placeholder: 'http://127.0.0.1:8767' })
+          .height(38)
+          .fontSize(12.5)
+          .backgroundColor($r('app.color.surface'))
+          .borderRadius(9)
+          .onChange((value: string) => {
+            this.bridgeUrl = value;
+          })
+          .onSubmit(() => {
+            this.saveBridge();
+          })
+          .onBlur(() => {
+            this.saveBridge();
+          })
+
+        this.FieldLabel('Bridge key')
+        TextInput({ text: this.bridgeToken, placeholder: 'from the bridge output' })
+          .height(38)
+          .fontSize(12.5)
+          .type(InputType.Password)
+          .backgroundColor($r('app.color.surface'))
+          .borderRadius(9)
+          .onChange((value: string) => {
+            this.bridgeToken = value;
+          })
+          .onSubmit(() => {
+            this.saveBridge();
+          })
+
+        Row({ space: 12 }) {
+          Text('Connect')
+            .fontSize(12.5)
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.primary'))
+            .padding({ left: 14, right: 14, top: 7, bottom: 7 })
+            .backgroundColor($r('app.color.primary_soft'))
+            .borderRadius(14)
+            .onClick(() => {
+              this.saveBridge();
+            })
+          if (this.bridgeStatus.length > 0) {
+            Text(this.bridgeStatus)
               .fontSize(11)
               .fontColor($r('app.color.text_hint'))
               .maxLines(2)
@@ -1266,8 +1399,10 @@ struct LaptopIndex {
           lastLatency: this.lastLatency,
           lastTokens: this.lastTokens,
           hasTurns: this.turns.length > 0,
+          bridgeLive: this.bridgeLive,
           approvalOpen: this.approvalOpen,
           approvalDetail: this.approvalDetail,
+          approvalFrame: this.approvalFrame,
           onAllow: () => {
             this.approvalOpen = false;
             this.agent.approvals.answer(true);

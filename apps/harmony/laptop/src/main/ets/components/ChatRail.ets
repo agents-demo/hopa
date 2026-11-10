@@ -10,8 +10,12 @@ export struct ChatRail {
   @Prop lastLatency: number = 0;
   @Prop lastTokens: number = 0;
   @Prop hasTurns: boolean = false;
+  /** True when a PC bridge is configured, so the screen is really readable. */
+  @Prop bridgeLive: boolean = false;
   @Prop approvalOpen: boolean = false;
   @Prop approvalDetail: string = '';
+  /** The last frame the bridge captured before this step: evidence, not decoration. */
+  @Prop approvalFrame: string = '';
   onAllow: () => void = () => {};
   onDeny: () => void = () => {};
 
@@ -31,6 +35,19 @@ export struct ChatRail {
         if (this.approvalOpen) {
           Column({ space: 8 }) {
             this.Label('YOUR OK')
+            if (this.approvalFrame.length > 0) {
+              Column({ space: 4 }) {
+                this.Label('WHAT HOPA SAW')
+                Image(this.approvalFrame)
+                  .width('100%')
+                  .height(88)
+                  .objectFit(ImageFit.Cover)
+                  .borderRadius(7)
+                  .border({ width: 1, color: $r('app.color.divider') })
+              }
+              .width('100%')
+              .alignItems(HorizontalAlign.Start)
+            }
             Text(this.approvalDetail)
               .fontSize(12.5)
               .lineHeight(18)
@@ -94,9 +111,11 @@ export struct ChatRail {
 
         Column({ space: 6 }) {
           this.Label('WHAT HOPA SEES')
-          Text(this.hasTurns
-            ? 'The conversation only. HOPA runs here, on this machine; it does not read the screen or drive other apps yet.'
-            : 'Your words only. HOPA runs here, on this machine; it cannot drive other laptop apps yet.')
+          Text(this.bridgeLive
+            ? 'The screen of this laptop, through the PC bridge, and only what it reads when you ask. Every action asks first.'
+            : (this.hasTurns
+              ? 'The conversation only. Connect the PC bridge in Settings to let HOPA read the screen and act on this laptop.'
+              : 'Your words only. Connect the PC bridge in Settings to let HOPA see the screen.'))
             .fontSize(11)
             .lineHeight(17)
             .fontColor($r('app.color.text_secondary'))

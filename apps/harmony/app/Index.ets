@@ -16,6 +16,7 @@ export { ModelFactory } from './src/main/ets/services/ModelFactory';
 export { LoggingModelClient } from './src/main/ets/services/LoggingModelClient';
 export { RuntimeBrowser, RuntimeBridge, RuntimeBackground, RuntimeAccessibility, RuntimePageLinks } from './src/main/ets/services/RuntimeDeps';
 export { BridgeClient, BridgeNode, BridgeSession, BridgeSessionSink } from './src/main/ets/services/BridgeClient';
+export { BridgeScreenSource, RemoteUiCapability, RemoteUiGates } from './src/main/ets/services/RemoteUi';
 export { APP_CATALOG, SITE_CATALOG, CatalogApp, CatalogSite } from './src/main/ets/services/AppCatalog';
 export { AppCatalogPrompt } from './src/main/ets/services/AppCatalogPrompt';
 export { AppRouteTargets } from './src/main/ets/services/AppRouteTargets';

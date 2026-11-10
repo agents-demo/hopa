@@ -10,6 +10,14 @@ All notable changes are recorded here. Versions follow `docs/versioning.md`.
   and `expires_in`; every pair or refresh rotates both. The phone stores the
   pair in Asset Store and renews silently when a request comes back
   `401 token expired`.
+- The 2in1 shell drives its own machine through a second `pc-agent bridge`
+  (port 8767, `rport` restored by `deploy.ps1`): observe, screenshot, tap,
+  type, swipe, key and launch, registered as the shared `RemoteUiCapability`,
+  with the bridge as its screen source. Settings gains a **PC bridge** section
+  that reports `Connected.` only after a real `/health` answer.
+- The laptop approval card shows the last frame the bridge captured, labelled
+  **WHAT HOPA SAW**, so the consent is given against evidence rather than a
+  description.
 
 ## 0.1.0 — 2026-11-06
 

@@ -57,6 +57,46 @@ Settings -> **Bridge setup** (guided, three steps):
 The older inline URL + token fields still work for a bootstrap token, but the
 wizard is the path that stores a rotating pair.
 
+## The 2in1 as a second device
+
+A HarmonyOS laptop (`const.product.devicetype` = `2in1`) is an `hdc` device
+like the phone, so it gets the same treatment — with one difference: a bridge
+process serves **one** device, so the laptop needs its own instance and port.
+
+```bash
+py -3 -m hopa_pc_agent --target 3QC0225821000268 bridge \
+    --port 8767 --token hopalaptop --pair-code 135790
+hdc -t 3QC0225821000268 rport tcp:8767 tcp:8767
+```
+
+Then in the laptop app: **Settings -> PC BRIDGE**, address
+`http://127.0.0.1:8767`, the key the bridge printed, **Connect**. The status
+reads `Connected.` only after a real `/health` answer; otherwise it shows the
+transport error.
+
+Scripted first runs can inject the pair instead:
+
+```bash
+aa start -a LaptopAbility -b com.hopa.agent \
+  --ps hopa.bridge_url http://127.0.0.1:8767 \
+  --ps hopa.bridge_key hopalaptop
+```
+
+What this buys on the laptop, all through the same endpoints:
+
+- `/observe` and `/screenshot` — the agent reads what is on the screen;
+- `/tap`, `/type`, `/swipe`, `/key` — it acts, still behind the approval gate;
+- `/launch` and `/foreground` — it opens an app and confirms it is in front,
+  and uses the same call to bring HOPA back afterwards.
+
+`deploy.ps1` restores `tcp:8766` for the phone and `tcp:8767` for the 2in1,
+because `hdc install` drops reverse ports.
+
+Limits, stated honestly: no PC, no bridge. The bridge is a foreground process
+on the PC; when it stops, the laptop says "connect the PC bridge" instead of
+pretending it can see. The bridge token is still a static key on this path —
+the rotating pair is the phone wizard.
+
 When a bridge is configured, it becomes the single control backend: the
 accessibility path stands down even if the extension reports itself connected
 (a declared-but-disabled service can leave capture pending). Failures show the

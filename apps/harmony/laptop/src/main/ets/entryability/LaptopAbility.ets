@@ -18,7 +18,7 @@ class SavedWindow {
  *
  * Optional launch parameters, for a scripted first run:
  *   --ps hopa.laptop_key <key> --ps hopa.laptop_endpoint <url>
- *   --ps hopa.laptop_model <name>
+ *   --ps hopa.laptop_model <name> --ps hopa.bridge_url <url> --ps hopa.bridge_key <key>
  * The page writes the key straight into Asset Store and then forgets it.
  */
 export default class LaptopAbility extends UIAbility {
@@ -90,6 +90,14 @@ export default class LaptopAbility extends UIAbility {
       }
       if (typeof linkKey === 'string' && linkKey.length > 0) {
         AppStorage.setOrCreate<string>('hopa.laptop.linkKey', linkKey);
+      }
+      const bridgeUrl = params['hopa.bridge_url'];
+      const bridgeKey = params['hopa.bridge_key'];
+      if (typeof bridgeUrl === 'string' && bridgeUrl.length > 0) {
+        AppStorage.setOrCreate<string>('hopa.laptop.bridgeUrl', bridgeUrl);
+      }
+      if (typeof bridgeKey === 'string' && bridgeKey.length > 0) {
+        AppStorage.setOrCreate<string>('hopa.laptop.bridgeToken', bridgeKey);
       }
       const demo = params['hopa.approval_demo'];
       if (typeof demo === 'string' && demo === '1') {
