@@ -6,6 +6,8 @@ import { LaptopChat, LaptopTurn } from '../services/LaptopChat';
 
 import { LaptopSessions, LaptopSession } from '../services/LaptopSessions';
 import { LaptopPhoneLink, RemoteSession, RemoteTurn } from '../services/LaptopPhoneLink';
+import { ChatRail } from '../components/ChatRail';
+import { CommandPalette } from '../components/CommandPalette';
 import { LaptopFirstRun } from '../services/LaptopFirstRun';
 
 const LAPTOP_KEY_ALIAS: string = 'hopa_laptop_key';
@@ -891,130 +893,6 @@ struct LaptopIndex {
     .alignItems(HorizontalAlign.Start)
   }
 
-  @Builder
-  RailLabel(text: string) {
-    Text(text)
-      .fontSize(9)
-      .fontWeight(FontWeight.Bold)
-      .fontColor($r('app.color.text_hint'))
-      .letterSpacing(0.8)
-      .width('100%')
-  }
-
-  @Builder
-  Rail() {
-    Column() {
-      Column({ space: 14 }) {
-        Column({ space: 6 }) {
-          this.RailLabel('THIS CONVERSATION')
-          Text(this.lastQuestion.length > 0 ? this.lastQuestion : 'No question yet.')
-            .fontSize(12.5)
-            .lineHeight(18)
-            .fontColor(this.lastQuestion.length > 0
-              ? $r('app.color.text_primary')
-              : $r('app.color.text_hint'))
-            .maxLines(3)
-            .textOverflow({ overflow: TextOverflow.Ellipsis })
-            .width('100%')
-          Text(this.lastLatency > 0
-            ? `${this.lastLatency} ms  \u00b7  ${this.lastTokens} tokens`
-            : 'No answer yet')
-            .fontSize(10.5)
-            .fontColor($r('app.color.text_hint'))
-            .width('100%')
-        }
-        .width('100%')
-        .alignItems(HorizontalAlign.Start)
-
-        Divider().color($r('app.color.divider'))
-
-        Column({ space: 6 }) {
-          this.RailLabel('WHAT HOPA SEES')
-          Text(this.turns.length > 0
-            ? 'The conversation only. HOPA runs here, on this machine; it does not read the screen or drive other apps yet.'
-            : 'Your words only. HOPA runs here, on this machine; it cannot drive other laptop apps yet.')
-            .fontSize(11)
-            .lineHeight(17)
-            .fontColor($r('app.color.text_secondary'))
-            .width('100%')
-        }
-        .width('100%')
-        .alignItems(HorizontalAlign.Start)
-      }
-      .width('100%')
-      .alignItems(HorizontalAlign.Start)
-
-      Text('Payments always ask first.')
-        .fontSize(10)
-        .fontColor($r('app.color.text_hint'))
-        .width('100%')
-        .padding({ bottom: 2 })
-    }
-    .width(258)
-    .height('100%')
-    .padding({ left: 18, right: 18, top: 18, bottom: 14 })
-    .backgroundColor($r('app.color.surface_alt'))
-    .border({ width: { left: 1 }, color: $r('app.color.divider') })
-    .justifyContent(FlexAlign.SpaceBetween)
-    .alignItems(HorizontalAlign.Start)
-  }
-
-  @Builder
-  Palette() {
-    Stack({ alignContent: Alignment.Center }) {
-      Column()
-        .width('100%')
-        .height('100%')
-        .backgroundColor('#33000000')
-        .onClick(() => {
-          this.paletteOpen = false;
-        })
-      Column({ space: 2 }) {
-        Text('Commands')
-          .fontSize(11)
-          .fontWeight(FontWeight.Bold)
-          .fontColor($r('app.color.text_hint'))
-          .letterSpacing(0.7)
-          .width('100%')
-          .padding({ left: 12, bottom: 6 })
-        this.PaletteRow('New chat', () => {
-          this.newChat();
-        })
-        this.PaletteRow('Model and key', () => {
-          this.settingsOpen = true;
-        })
-        this.PaletteRow('Clear conversation', () => {
-          this.newChat();
-        })
-        this.PaletteRow('Close', () => {})
-      }
-      .width(420)
-      .padding(10)
-      .backgroundColor($r('app.color.surface'))
-      .borderRadius(14)
-      .shadow({ radius: 24, color: '#33000000', offsetY: 8 })
-    }
-    .width('100%')
-    .height('100%')
-  }
-
-  @Builder
-  PaletteRow(label: string, action: () => void) {
-    Row() {
-      Text(label)
-        .fontSize(13)
-        .fontColor($r('app.color.text_primary'))
-      Blank()
-    }
-    .width('100%')
-    .padding({ left: 12, right: 12, top: 11, bottom: 11 })
-    .borderRadius(9)
-    .onClick(() => {
-      action();
-      this.paletteOpen = false;
-    })
-  }
-
   build() {
     Stack({ alignContent: Alignment.Center }) {
     Row() {
@@ -1170,7 +1048,12 @@ struct LaptopIndex {
       .layoutWeight(1)
       .height('100%')
       if (this.showRail()) {
-        this.Rail()
+        ChatRail({
+          lastQuestion: this.lastQuestion,
+          lastLatency: this.lastLatency,
+          lastTokens: this.lastTokens,
+          hasTurns: this.turns.length > 0
+        })
       }
     }
     .width('100%')
@@ -1180,7 +1063,18 @@ struct LaptopIndex {
       this.winWidth = Number(newValue.width.toString());
     })
       if (this.paletteOpen) {
-        this.Palette()
+        CommandPalette({
+          onNewChat: () => {
+            this.newChat();
+          },
+          onSettings: () => {
+            this.settingsOpen = true;
+          },
+          onClose: () => {
+            this.paletteOpen = false;
+            this.focusRoot();
+          }
+        })
       }
     }
     .width('100%')
