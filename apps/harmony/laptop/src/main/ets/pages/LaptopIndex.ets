@@ -53,6 +53,12 @@ struct LaptopIndex {
   @State openRunId: string = '';
   @State speakReplies: boolean = false;
   @State profileName: string = 'everyday';
+  @State kidPin: string = '';
+  @State pinPrompt: boolean = false;
+  @State pinSetMode: boolean = false;
+  @State pinDraft: string = '';
+  @State pinError: string = '';
+  @State pinIntent: string = '';
   private voice: LaptopVoice = new LaptopVoice();
   @State currentId: string = '';
   private store: LaptopSessions = new LaptopSessions();
@@ -124,6 +130,7 @@ struct LaptopIndex {
       this.provider = stored.provider;
       this.speakReplies = stored.speakReplies;
       this.profileName = stored.profile;
+      this.kidPin = stored.kidPin;
       this.bridgeUrl = stored.bridgeUrl;
       this.bridgeToken = stored.bridgeToken;
       if (stored.bridgeUrl.length > 0 && stored.bridgeToken.length > 0) {
@@ -1151,12 +1158,86 @@ struct LaptopIndex {
     return this.profileName === 'easy' || this.profileName === 'kid' ? 15 : 13.5;
   }
 
+  /**
+   * Kid is a lock, not wallpaper: leaving it needs the parent PIN, and the
+   * first visit asks for one. Without that the mode would be a lie.
+   */
   private async setProfile(name: string): Promise<void> {
+    if (this.profileName === 'kid' && name !== 'kid') {
+      this.askPin(`mode:${name}`);
+      return;
+    }
+    if (name === 'kid' && this.kidPin.length === 0) {
+      this.pinSetMode = true;
+      this.pinPrompt = true;
+      this.pinDraft = '';
+      this.pinError = '';
+      this.pinIntent = 'mode:kid';
+      return;
+    }
+    await this.writeProfile(name);
+  }
+
+  private async writeProfile(name: string): Promise<void> {
     this.profileName = name;
     const context = getContext(this) as common.UIAbilityContext;
     const stored: StoredSettings = await SettingsStore.load(context);
     stored.profile = name;
     await SettingsStore.save(context, stored);
+  }
+
+  private async saveKidPin(pin: string): Promise<void> {
+    this.kidPin = pin;
+    const context = getContext(this) as common.UIAbilityContext;
+    const stored: StoredSettings = await SettingsStore.load(context);
+    stored.kidPin = pin;
+    await SettingsStore.save(context, stored);
+  }
+
+  private askPin(intent: string): void {
+    this.pinSetMode = false;
+    this.pinIntent = intent;
+    this.pinDraft = '';
+    this.pinError = '';
+    this.pinPrompt = true;
+  }
+
+  private async confirmPin(): Promise<void> {
+    const pin: string = this.pinDraft.trim();
+    if (pin.length < 4) {
+      this.pinError = 'Use at least four digits.';
+      return;
+    }
+    if (this.pinSetMode) {
+      await this.saveKidPin(pin);
+      const intent: string = this.pinIntent;
+      this.pinPrompt = false;
+      this.pinSetMode = false;
+      if (intent.startsWith('mode:')) {
+        await this.writeProfile(intent.substring(5));
+      }
+      return;
+    }
+    if (pin !== this.kidPin) {
+      this.pinError = 'That PIN is not right.';
+      return;
+    }
+    const intent: string = this.pinIntent;
+    this.pinPrompt = false;
+    if (intent === 'settings') {
+      this.settingsOpen = true;
+      this.view = 'chat';
+    } else if (intent.startsWith('mode:')) {
+      await this.writeProfile(intent.substring(5));
+    }
+  }
+
+  private openSettings(): void {
+    if (this.profileName === 'kid') {
+      this.askPin('settings');
+      return;
+    }
+    this.settingsOpen = !this.settingsOpen;
   }
 
   @Builder
@@ -1310,7 +1391,7 @@ struct LaptopIndex {
         .width('100%')
         .padding({ left: 8, right: 8, top: 6, bottom: 6 })
         .onClick(() => {
-          this.settingsOpen = !this.settingsOpen;
+          this.openSettings();
         })
         if (!this.keyPresent) {
           Text('Add a model key')
@@ -1546,6 +1627,76 @@ struct LaptopIndex {
     .onAreaChange((oldValue: Area, newValue: Area) => {
       this.winWidth = Number(newValue.width.toString());
     })
+      if (this.pinPrompt) {
+        Column()
+          .width('100%')
+          .height('100%')
+          .backgroundColor('#66000000')
+          .onClick(() => {
+            // A scrim that swallows taps: leaving Kid is deliberate.
+          })
+        Column({ space: 10 }) {
+          Text(this.pinSetMode ? 'Choose a parent PIN' : 'Grown-ups only')
+            .fontSize(15)
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.text_primary'))
+          Text(this.pinSetMode
+            ? 'Leaving Kid later will ask for this PIN.'
+            : 'Enter the parent PIN to carry on.')
+            .fontSize(11.5)
+            .lineHeight(16)
+            .fontColor($r('app.color.text_secondary'))
+            .width('100%')
+          TextInput({ text: this.pinDraft, placeholder: 'PIN' })
+            .type(InputType.Number)
+            .maxLength(8)
+            .height(38)
+            .fontSize(14)
+            .backgroundColor($r('app.color.surface_muted'))
+            .borderRadius(9)
+            .onChange((value: string) => {
+              this.pinDraft = value;
+            })
+            .onSubmit(() => {
+              this.confirmPin();
+            })
+          if (this.pinError.length > 0) {
+            Text(this.pinError)
+              .fontSize(11)
+              .fontColor($r('app.color.danger'))
+              .width('100%')
+          }
+          Row({ space: 8 }) {
+            Text('Cancel')
+              .fontSize(12.5)
+              .fontColor($r('app.color.text_primary'))
+              .padding({ left: 14, right: 14, top: 7, bottom: 7 })
+              .backgroundColor($r('app.color.surface_muted'))
+              .borderRadius(12)
+              .onClick(() => {
+                this.pinPrompt = false;
+                this.pinSetMode = false;
+              })
+            Text('Okay')
+              .fontSize(12.5)
+              .fontWeight(FontWeight.Medium)
+              .fontColor($r('app.color.on_primary'))
+              .padding({ left: 16, right: 16, top: 7, bottom: 7 })
+              .backgroundColor($r('app.color.primary'))
+              .borderRadius(12)
+              .onClick(() => {
+                this.confirmPin();
+              })
+          }
+          .width('100%')
+        }
+        .width(300)
+        .padding(18)
+        .backgroundColor($r('app.color.surface'))
+        .borderRadius(14)
+        .border({ width: 1, color: $r('app.color.divider') })
+        .alignItems(HorizontalAlign.Start)
+      }
       if (this.paletteOpen) {
         CommandPalette({
           onNewChat: () => {
