@@ -1,3 +1,4 @@
+import { RuntimeBrowser, RuntimePageLinks } from '@hopa/app';
 import { ActionOutcome } from '@hopa/core';
 import { BrowserController } from './BrowserController';
 
@@ -7,7 +8,7 @@ import { BrowserController } from './BrowserController';
  * The runtime records the URL/title; the UI supplies the opener that switches
  * to the Browser page. One concern, one file.
  */
-export class PageLinkService {
+export class PageLinkService implements RuntimePageLinks {
   private lastUrl: string = '';
   private lastTitle: string = '';
   private opener: ((url: string) => void) | undefined = undefined;
@@ -36,7 +37,7 @@ export class PageLinkService {
   }
 
   /** Reads the URL and the page title from the run's web actions. */
-  capture(outcomes: ActionOutcome[], browser: BrowserController): void {
+  capture(outcomes: ActionOutcome[], browser: RuntimeBrowser): void {
     for (const outcome of outcomes) {
       if (!outcome.executed || !outcome.observation.success) {
         continue;

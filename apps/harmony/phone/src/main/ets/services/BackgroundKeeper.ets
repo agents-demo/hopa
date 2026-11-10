@@ -1,3 +1,4 @@
+import { RuntimeBackground } from '@hopa/app';
 import { backgroundTaskManager } from '@kit.BackgroundTasksKit';
 import { common, wantAgent, WantAgent } from '@kit.AbilityKit';
 import { BusinessError } from '@kit.BasicServicesKit';
@@ -14,7 +15,7 @@ import { hilog } from '@kit.PerformanceAnalysisKit';
  * This is best effort. If the permission is denied, the run still works while
  * HOPA is foreground; it simply may not survive the switch.
  */
-export class BackgroundKeeper {
+export class BackgroundKeeper implements RuntimeBackground {
   private context: common.UIAbilityContext | undefined = undefined;
   private running: boolean = false;
   private agent: WantAgent | undefined = undefined;

@@ -1,3 +1,4 @@
+import { RuntimeBrowser, RuntimeBridge } from '@hopa/app';
 import { Screen, ScreenSource } from '@hopa/core';
 import { AccessibilityBridge } from '@hopa/capability-accessibility';
 import { hilog } from '@kit.PerformanceAnalysisKit';
@@ -10,10 +11,10 @@ import { BridgeScreenSource } from './RemoteUiCapability';
  * browser text. It never pretends there is a screen when there is none.
  */
 export class CompositeScreenSource implements ScreenSource {
-  private browser: BrowserController;
+  private browser: RuntimeBrowser;
   private bridge: BridgeClient;
 
-  constructor(browser: BrowserController, bridge: BridgeClient) {
+  constructor(browser: RuntimeBrowser, bridge: BridgeClient) {
     this.browser = browser;
     this.bridge = bridge;
   }

@@ -787,7 +787,7 @@ struct LaptopIndex {
             Row({ space: 6 }) {
               Text(session.title)
                 .fontSize(12)
-                .fontColor(session.id === this.currentId
+                .fontColor(session.id === this.currentId && !this.remoteOpen
                   ? $r('app.color.text_primary')
                   : $r('app.color.text_secondary'))
                 .maxLines(1)
@@ -805,7 +805,7 @@ struct LaptopIndex {
             }
             .width('100%')
             .padding({ left: 8, right: 8, top: 7, bottom: 7 })
-            .backgroundColor(session.id === this.currentId
+            .backgroundColor(session.id === this.currentId && !this.remoteOpen
               ? $r('app.color.surface')
               : Color.Transparent)
             .borderRadius(9)

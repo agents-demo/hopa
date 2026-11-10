@@ -1,5 +1,6 @@
 export { HopaMark, setMascotTapFeedback } from './src/main/ets/components/HopaMark';
 export { EmptyHero } from './src/main/ets/components/EmptyHero';
+export { ResultActions } from './src/main/ets/components/ResultActions';
 export { KeyStore } from './src/main/ets/services/KeyStore';
 export { SettingsStore, StoredSettings } from './src/main/ets/services/SettingsStore';
 export { TrustedApps } from './src/main/ets/services/TrustedApps';
@@ -10,3 +11,4 @@ export { SkillStore } from './src/main/ets/services/SkillStore';
 export { RunArchive } from './src/main/ets/services/RunArchive';
 export { ModelFactory } from './src/main/ets/services/ModelFactory';
 export { LoggingModelClient } from './src/main/ets/services/LoggingModelClient';
+export { RuntimeBrowser, RuntimeBridge, RuntimeBackground, RuntimeAccessibility, RuntimePageLinks } from './src/main/ets/services/RuntimeDeps';

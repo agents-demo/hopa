@@ -11,6 +11,7 @@ import {
   Skill
 } from '@hopa/core';
 import { AccessibilityCapability } from '@hopa/capability-accessibility';
+import { RuntimeBrowser, RuntimeBridge, RuntimeBackground, RuntimeAccessibility, RuntimePageLinks } from '@hopa/app';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { BrowserController } from './BrowserController';
 import { BridgeClient } from './BridgeClient';
@@ -32,11 +33,11 @@ export class AgentRuntime {
   private executor: ActionExecutor;
   private memory: MemoryStore;
   private skills: SkillStore;
-  private browser: BrowserController;
+  private browser: RuntimeBrowser;
   private bridge: BridgeClient;
-  private accessibility: AccessibilityCapability;
-  private background: BackgroundKeeper;
-  private pageLinks: PageLinkService;
+  private accessibility: RuntimeAccessibility;
+  private background: RuntimeBackground;
+  private pageLinks: RuntimePageLinks;
 
   private batch: BatchRunner = new BatchRunner();
   private model: ModelClient | undefined = undefined;
@@ -61,11 +62,11 @@ export class AgentRuntime {
     executor: ActionExecutor,
     memory: MemoryStore,
     skills: SkillStore,
-    browser: BrowserController,
+    browser: RuntimeBrowser,
     bridge: BridgeClient,
-    accessibility: AccessibilityCapability,
-    background: BackgroundKeeper,
-    pageLinks: PageLinkService
+    accessibility: RuntimeAccessibility,
+    background: RuntimeBackground,
+    pageLinks: RuntimePageLinks
   ) {
     this.executor = executor;
     this.memory = memory;

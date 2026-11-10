@@ -1,3 +1,4 @@
+import { RuntimeBrowser } from '@hopa/app';
 import { webview } from '@kit.ArkWeb';
 import { WebController } from '@hopa/capability-browser';
 
@@ -9,7 +10,7 @@ import { WebController } from '@hopa/capability-browser';
  * cannot blow the model context. The page text is also used as the screen for
  * the payment gate when the accessibility extension is unavailable.
  */
-export class BrowserController implements WebController {
+export class BrowserController implements WebController, RuntimeBrowser {
   private controller: webview.WebviewController | undefined = undefined;
   private loaded: boolean = false;
   private url: string = '';
