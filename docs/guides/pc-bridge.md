@@ -10,13 +10,30 @@ token-authenticated HTTP API.
 ## Run
 
 ```bash
-pc-agent bridge --port 8765
+pc-agent bridge --port 8765 --pair-code 246810
 # prints:
 # bridge listening on http://127.0.0.1:8765
 # token: <generated>
+# pair code: 246810
+# token ttl: 12 h
 ```
 
-Set `HOPA_BRIDGE_TOKEN` to choose the token instead of generating one.
+Set `HOPA_BRIDGE_TOKEN` to choose the bootstrap token instead of generating one,
+and `HOPA_PAIR_CODE` to fix the six-digit code. `--token-ttl-hours` (or
+`HOPA_TOKEN_TTL_HOURS`) sets how long an access token lives; 12 hours is the
+default.
+
+## Tokens
+
+- `/pair` with the six-digit code returns an access token, a refresh token and
+  `expires_in`. Both are rotated on every pair and every refresh, so a leaked
+  token stops working at the next rotation.
+- The app keeps the pair in HarmonyOS Asset Store, not in preferences, and
+  refreshes on its own when a request comes back `401` with `token expired`.
+- `pair` and `refresh` are limited to five attempts a minute each; the six-digit
+  code is therefore not guessable in practice.
+- Restarting the bridge issues a new refresh token; the phone then needs to pair
+  again from **Settings -> Bridge setup**.
 
 ### Reaching the PC from the phone
 
@@ -30,27 +47,34 @@ Set `HOPA_BRIDGE_TOKEN` to choose the token instead of generating one.
 
 ## App setup
 
-Settings tab -> **PC bridge (fallback control)**:
+Settings -> **Bridge setup** (guided, three steps):
 
-1. `http://10.0.2.2:8765` (or the LAN address).
-2. The bridge token.
-3. **Connect**; the status must read `connected`.
+1. Connect the phone by USB and confirm the PC sees it: `hdc list targets`.
+2. The address the bridge listens on (`http://127.0.0.1:8766` with a reverse
+   port) and the six-digit code the bridge printed.
+3. **Pair**; the status must read **Connected**.
+
+The older inline URL + token fields still work for a bootstrap token, but the
+wizard is the path that stores a rotating pair.
 
 When a bridge is configured, it becomes the single control backend: the
 accessibility path stands down even if the extension reports itself connected
 (a declared-but-disabled service can leave capture pending). Failures show the
-reason, e.g. `unreachable: bridge HTTP 401`. The URL and token are saved in the
-app preferences so the connection survives a restart; they are not sent
-anywhere except to the configured bridge.
+reason, e.g. `unreachable: bridge HTTP 401`. The URL stays in preferences; the
+token pair lives in Asset Store and is sent nowhere except to the configured
+bridge.
 
 ## Security
 
 - Every `POST` requires `Authorization: Bearer <token>`; comparison is
-  constant-time.
+  constant-time. `/pair` and `/refresh` are the only unauthenticated writes and
+  are rate-limited.
+- Access tokens expire (12 h by default) and both tokens rotate on every pair or
+  refresh.
 - Default bind is `127.0.0.1`. There is **no TLS**; do not expose the port to an
   untrusted network.
-- The bridge can tap and type anything the device shows. Treat the token like a
-  password.
+- The bridge can tap and type anything the device shows. Treat the tokens like
+  passwords.
 - `/health` is unauthenticated and reveals only that the server is alive.
 
 ## Protocol
@@ -58,6 +82,8 @@ anywhere except to the configured bridge.
 | Method | Path | Body | Result |
 |---|---|---|---|
 | GET | `/health` | — | `{"ok":true}` |
+| POST | `/pair` | `{"code":"123456"}` | `{"token","refresh","expires_in"}` |
+| POST | `/refresh` | `{"refresh":"<token>"}` | `{"token","refresh","expires_in"}` |
 | POST | `/observe` | `{}` | `{"text","nodes":[{"ref","text","description","type","bounds","clickable"}],"width","height"}` |
 | POST | `/foreground` | `{}` | `{"bundle"}` (the bundle in front, or `""`) |
 | POST | `/screenshot` | `{}` | `{"mime":"image/jpeg","bytes":int,"image":"<base64>"}` |

@@ -1,7 +1,8 @@
 import { Context } from '@kit.AbilityKit';
 import { pasteboard } from '@kit.BasicServicesKit';
 import { AgentService } from '../../services/AgentService';
-import { BridgeClient } from '../../services/BridgeClient';
+import { BridgeClient, BridgeSession } from '../../services/BridgeClient';
+import { BridgeSessionStore } from '../../services/BridgeSessionStore';
 import { SettingsStore, StoredSettings } from '../../services/SettingsStore';
 
 /** Three steps from "nothing" to a paired PC bridge. */
@@ -26,11 +27,19 @@ export struct BridgeWizard {
       if (stored.bridgeUrl.length > 0) {
         this.url = stored.bridgeUrl;
       }
-      if (stored.bridgeToken.length > 0) {
-        this.token = stored.bridgeToken;
-        this.bridge.configure(this.url, this.token);
-        this.check();
-      }
+      BridgeSessionStore.load().then((session) => {
+        if (session.token.length > 0) {
+          this.token = session.token;
+          this.bridge.configureSession(this.url, session.token, session.refresh);
+          this.check();
+        } else if (stored.bridgeToken.length > 0) {
+          this.token = stored.bridgeToken;
+          this.bridge.configure(this.url, this.token);
+          this.check();
+        }
+      }).catch(() => {
+        // No stored session: stay on step 1.
+      });
     }).catch(() => {
       // Defaults are fine.
     });
@@ -62,15 +71,21 @@ export struct BridgeWizard {
     this.busy = true;
     this.status = 'Pairing...';
     try {
-      const token: string = await BridgeClient.pair(this.url, this.code.trim());
-      this.token = token;
-      AgentService.get().configureBridge(this.url, token);
+      const session: BridgeSession = await BridgeClient.pair(this.url, this.code.trim());
+      if (session.token.length === 0 || session.refresh.length === 0) {
+        this.status = 'That code did not work. Check it on the PC and try again.';
+        this.busy = false;
+        return;
+      }
+      this.token = session.token;
+      AgentService.get().configureBridgeSession(this.url, session.token, session.refresh);
+      await new BridgeSessionStore().save(session.token, session.refresh);
       const context = getContext(this) as Context;
       const stored: StoredSettings = await SettingsStore.load(context);
       stored.bridgeUrl = this.url;
-      stored.bridgeToken = token;
+      stored.bridgeToken = session.token;
       await SettingsStore.save(context, stored);
-      this.bridge.configure(this.url, token);
+      this.bridge.configureSession(this.url, session.token, session.refresh);
       this.status = '';
       this.reachable = true;
       this.step = 3;

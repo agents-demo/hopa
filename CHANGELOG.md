@@ -2,6 +2,15 @@
 
 All notable changes are recorded here. Versions follow `docs/versioning.md`.
 
+## Unreleased
+
+### Added
+
+- Bridge token rotation: `/pair` returns an access token plus a refresh token
+  and `expires_in`; every pair or refresh rotates both. The phone stores the
+  pair in Asset Store and renews silently when a request comes back
+  `401 token expired`.
+
 ## 0.1.0 — 2026-11-06
 
 ### Added

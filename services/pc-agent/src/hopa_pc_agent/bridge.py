@@ -16,7 +16,11 @@ Endpoints (JSON):
     POST /screenshot           -> {"mime": "image/jpeg", "bytes": int, "image": "base64"}
     POST /transcribe           {"audio": base64 WAV} -> {"text": str}
     POST /speak                {"text": str} -> {"mime": "audio/wav", "audio": base64}
-    POST /pair                 {"code": str} -> {"token": str}   (no bearer needed)
+    POST /pair                 {"code": str} -> {"token", "refresh", "expires_in"}
+    POST /refresh              {"refresh": str} -> {"token", "refresh", "expires_in"}
+
+Access tokens expire (12 h by default) and every pair or refresh rotates both
+tokens, so a leaked token stops working once the phone refreshes.
 """
 
 from __future__ import annotations
@@ -24,6 +28,7 @@ from __future__ import annotations
 import base64
 import hmac
 import json
+import secrets
 import subprocess
 import sys
 import tempfile
@@ -270,10 +275,16 @@ class _Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def _authorized(self) -> bool:
+    def _presented_token(self) -> str:
         header = self.headers.get("Authorization", "")
-        expected = f"Bearer {self.bridge.token}"
-        return hmac.compare_digest(header, expected)
+        prefix = "Bearer "
+        return header[len(prefix):] if header.startswith(prefix) else ""
+
+    def _authorized(self) -> bool:
+        presented = self._presented_token()
+        if not hmac.compare_digest(presented, self.bridge.token):
+            return False
+        return self.bridge.token_live()
 
     def _read_json(self) -> dict[str, Any]:
         length = int(self.headers.get("Content-Length", "0"))
@@ -295,9 +306,12 @@ class _Handler(BaseHTTPRequestHandler):
         self._send(200, {"ok": True})
 
     def do_POST(self) -> None:  # noqa: N802
-        # Pairing must work before the app holds a token.
+        # Pairing and refresh must work before the app holds a live token.
         if self.path == "/pair":
             self._handle_pair()
+            return
+        if self.path == "/refresh":
+            self._handle_refresh()
             return
         if not self._authorized():
             # Drain the body so the client does not see a connection reset.
@@ -305,7 +319,8 @@ class _Handler(BaseHTTPRequestHandler):
             if length:
                 self.rfile.read(length)
             self.close_connection = True
-            self._send(401, {"error": "unauthorized"})
+            expired = hmac.compare_digest(self._presented_token(), self.bridge.token)
+            self._send(401, {"error": "token expired" if expired else "unauthorized"})
             return
         try:
             data = self._read_json()
@@ -338,9 +353,26 @@ class _Handler(BaseHTTPRequestHandler):
         code = str(data.get("code", "")).strip()
         if hmac.compare_digest(code, self.bridge.pair_code):
             self.bridge.reset_pair_attempts()
-            self._send(200, {"token": self.bridge.token})
+            self._send(200, self.bridge.issue_tokens())
         else:
             self._send(401, {"error": "wrong code"})
+
+    def _handle_refresh(self) -> None:
+        if not self.bridge.refresh_allowed():
+            self.close_connection = True
+            self._send(429, {"error": "too many attempts, wait a minute"})
+            return
+        try:
+            data = self._read_json()
+        except BridgeError as exc:
+            self._send(400, {"error": str(exc)})
+            return
+        refresh = str(data.get("refresh", "")).strip()
+        if not refresh or not hmac.compare_digest(refresh, self.bridge.refresh_token):
+            self.close_connection = True
+            self._send(401, {"error": "refresh rejected"})
+            return
+        self._send(200, self.bridge.issue_tokens())
 
     def _dispatch(self, data: dict[str, Any]) -> dict[str, Any]:
         device = self.bridge.device
@@ -427,18 +459,49 @@ class BridgeServer:
         host: str = "127.0.0.1",
         port: int = 8765,
         pair_code: str = "",
+        token_ttl: float = 12 * 60 * 60,
     ) -> None:
         if not token:
             raise BridgeError("a token is required")
         self.device = device
         self.token = token
+        self.refresh_token = secrets.token_urlsafe(32)
+        self.token_ttl = token_ttl
+        self.token_issued_at = time.monotonic()
         self.pair_code = pair_code.strip()
         self.pair_attempts: list[float] = []
         self.pair_lock = threading.Lock()
+        self.refresh_attempts: list[float] = []
+        self.refresh_lock = threading.Lock()
         self.lock = threading.Lock()
         self.httpd = ThreadingHTTPServer((host, port), _Handler)
         self.httpd.bridge = self  # type: ignore[attr-defined]
         self.thread: threading.Thread | None = None
+
+    def token_live(self) -> bool:
+        return time.monotonic() - self.token_issued_at < self.token_ttl
+
+    def issue_tokens(self) -> dict[str, Any]:
+        """Rotate both tokens; the previous pair stops working immediately."""
+        with self.pair_lock:
+            self.token = secrets.token_urlsafe(32)
+            self.refresh_token = secrets.token_urlsafe(32)
+            self.token_issued_at = time.monotonic()
+            return {
+                "token": self.token,
+                "refresh": self.refresh_token,
+                "expires_in": int(self.token_ttl),
+            }
+
+    def refresh_allowed(self) -> bool:
+        """Five refreshes a minute: a leaked token cannot be churned."""
+        now = time.monotonic()
+        with self.refresh_lock:
+            self.refresh_attempts = [stamp for stamp in self.refresh_attempts if now - stamp < 60.0]
+            if len(self.refresh_attempts) >= 5:
+                return False
+            self.refresh_attempts.append(now)
+            return True
 
     def pair_allowed(self) -> bool:
         """At most five attempts a minute, to keep a short code cheap to guess-proof."""

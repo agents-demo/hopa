@@ -5,6 +5,7 @@ import { AgentService } from './AgentService';
 import { Appearance } from './Appearance';
 import { SettingsStore, StoredSettings } from './SettingsStore';
 import { KeyStore } from './KeyStore';
+import { BridgeSessionStore } from './BridgeSessionStore';
 
 /**
  * App startup: saved settings, the bundled development key, and the stores.
@@ -35,8 +36,19 @@ export class AppBoot {
       service.setAutonomous(stored.autonomous);
       service.restoreLastUsage(stored.lastTokens, stored.lastDurationMs);
       Appearance.apply(context, stored.appearance);
-      if (stored.bridgeUrl.length > 0 && stored.bridgeToken.length > 0) {
-        service.configureBridge(stored.bridgeUrl, stored.bridgeToken);
+      if (stored.bridgeUrl.length > 0) {
+        const session = await BridgeSessionStore.load();
+        if (session.token.length > 0) {
+          if (session.refresh.length > 0) {
+            service.configureBridgeSession(stored.bridgeUrl, session.token, session.refresh);
+          } else {
+            service.configureBridge(stored.bridgeUrl, session.token);
+          }
+        } else if (stored.bridgeToken.length > 0) {
+          // A pre-rotation install: works until that token expires, then the
+          // setup wizard issues a paired session.
+          service.configureBridge(stored.bridgeUrl, stored.bridgeToken);
+        }
       }
     } catch (error) {
       // First run or an unreadable store: keep the defaults.

@@ -22,6 +22,7 @@ import { image } from '@kit.ImageKit';
 import { BrowserController } from './BrowserController';
 import { BackgroundKeeper } from './BackgroundKeeper';
 import { BridgeClient } from './BridgeClient';
+import { BridgeSessionStore } from './BridgeSessionStore';
 import { RemoteUiCapability } from './RemoteUiCapability';
 import { MemoryStore } from './MemoryStore';
 import { SkillStore } from './SkillStore';
@@ -88,6 +89,7 @@ export class AgentService {
     this.executor.registerCapability(new RemoteUiCapability(this.bridge));
 
     this.tools = ToolRegistryDefaults.create();
+    this.bridge.setSessionSink(new BridgeSessionStore());
 
     this.runArchive = new RunArchive(this.runs);
     this.exportService = new ExportService(this.memory, this.skills, this.runs);
@@ -180,6 +182,12 @@ export class AgentService {
   /** Points the bridge capability at a running `pc-agent bridge`. */
   configureBridge(url: string, token: string): void {
     this.bridge.configure(url, token);
+    AccessibilityBridge.get().setBridgePreferred(this.bridge.isConfigured());
+  }
+
+  /** A paired session: access token plus the token that renews it. */
+  configureBridgeSession(url: string, token: string, refresh: string): void {
+    this.bridge.configureSession(url, token, refresh);
     AccessibilityBridge.get().setBridgePreferred(this.bridge.isConfigured());
   }
 

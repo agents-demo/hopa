@@ -47,6 +47,24 @@ class SpeakBody {
 
 class PairBody {
   token: string = '';
+  refresh: string = '';
+  expires_in: number = 0;
+}
+
+class HttpAnswer {
+  status: number = 0;
+  body: string = '';
+}
+
+/** The pairing result the wizard hands to the store. */
+export class BridgeSession {
+  token: string = '';
+  refresh: string = '';
+}
+
+/** Lets the client persist a rotated token without importing storage. */
+export interface BridgeSessionSink {
+  save(token: string, refresh: string): Promise<void>;
 }
 
 class VoicesBody {
@@ -62,6 +80,9 @@ class VoicesBody {
 export class BridgeClient {
   private baseUrl: string = '';
   private token: string = '';
+  private refresh: string = '';
+  private renewing: boolean = false;
+  private sessionSink: BridgeSessionSink | null = null;
   private lastText: string = '';
   private lastNodes: BridgeNode[] = [];
   private width: number = 0;
@@ -88,6 +109,18 @@ export class BridgeClient {
   configure(url: string, token: string): void {
     this.baseUrl = BridgeClient.normalize(url);
     this.token = token.trim();
+    this.refresh = '';
+  }
+
+  /** A paired session: the access token plus the token that renews it. */
+  configureSession(url: string, token: string, refresh: string): void {
+    this.baseUrl = BridgeClient.normalize(url);
+    this.token = token.trim();
+    this.refresh = refresh.trim();
+  }
+
+  setSessionSink(sink: BridgeSessionSink): void {
+    this.sessionSink = sink;
   }
 
   isConfigured(): boolean {
@@ -102,58 +135,106 @@ export class BridgeClient {
     return this.lastError;
   }
 
-  private async call(path: string, payload: string): Promise<string> {
-    if (!this.isConfigured()) {
-      throw new Error('bridge is not configured');
-    }
+  private async request(path: string, payload: string, method: http.RequestMethod): Promise<HttpAnswer> {
     const client = http.createHttp();
     try {
-      const options: http.HttpRequestOptions = {
-        method: http.RequestMethod.POST,
-        header: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.token}`
-        },
-        extraData: payload,
-        expectDataType: http.HttpDataType.ARRAY_BUFFER,
-        connectTimeout: 8000,
-        readTimeout: 45000
-      };
-      const response = await client.request(`${this.baseUrl}${path}`, options);
-      if (response.responseCode !== 200) {
-        const body: string = buffer.from(response.result as ArrayBuffer).toString('utf8');
-        throw new Error(`bridge HTTP ${response.responseCode}: ${body}`);
+      let options: http.HttpRequestOptions;
+      if (method === http.RequestMethod.POST) {
+        options = {
+          method: method,
+          header: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.token}`
+          },
+          extraData: payload,
+          expectDataType: http.HttpDataType.ARRAY_BUFFER,
+          connectTimeout: 8000,
+          readTimeout: 45000
+        };
+      } else {
+        options = {
+          method: method,
+          header: {
+            'Authorization': `Bearer ${this.token}`
+          },
+          expectDataType: http.HttpDataType.ARRAY_BUFFER,
+          connectTimeout: 8000,
+          readTimeout: 20000
+        };
       }
-      return buffer.from(response.result as ArrayBuffer).toString('utf8');
+      const response = await client.request(`${this.baseUrl}${path}`, options);
+      const answer = new HttpAnswer();
+      answer.status = response.responseCode;
+      answer.body = buffer.from(response.result as ArrayBuffer).toString('utf8');
+      return answer;
     } finally {
       client.destroy();
     }
   }
 
-  private async get(path: string): Promise<string> {
-    if (!this.isConfigured()) {
-      throw new Error('bridge is not configured');
+  /** Trade the refresh token for a fresh pair; the old pair dies on the PC. */
+  private async renew(): Promise<boolean> {
+    if (this.refresh.length === 0 || this.renewing) {
+      return false;
     }
+    this.renewing = true;
     const client = http.createHttp();
     try {
       const options: http.HttpRequestOptions = {
-        method: http.RequestMethod.GET,
-        header: {
-          'Authorization': `Bearer ${this.token}`
-        },
+        method: http.RequestMethod.POST,
+        header: { 'Content-Type': 'application/json' },
+        extraData: JSON.stringify({ refresh: this.refresh }),
         expectDataType: http.HttpDataType.ARRAY_BUFFER,
         connectTimeout: 8000,
-        readTimeout: 20000
+        readTimeout: 15000
       };
-      const response = await client.request(`${this.baseUrl}${path}`, options);
+      const response = await client.request(`${this.baseUrl}/refresh`, options);
       if (response.responseCode !== 200) {
-        const body: string = buffer.from(response.result as ArrayBuffer).toString('utf8');
-        throw new Error(`bridge HTTP ${response.responseCode}: ${body}`);
+        return false;
       }
-      return buffer.from(response.result as ArrayBuffer).toString('utf8');
+      const raw: string = buffer.from(response.result as ArrayBuffer).toString('utf8');
+      const parsed = JSON.parse(raw) as PairBody;
+      if (parsed.token.length === 0 || parsed.refresh.length === 0) {
+        return false;
+      }
+      this.token = parsed.token;
+      this.refresh = parsed.refresh;
+      if (this.sessionSink !== null) {
+        await this.sessionSink.save(this.token, this.refresh);
+      }
+      return true;
+    } catch (error) {
+      return false;
     } finally {
+      this.renewing = false;
       client.destroy();
     }
+  }
+
+  /** One retry after a refresh: an expired token is an expected state. */
+  private async send(path: string, payload: string, method: http.RequestMethod): Promise<string> {
+    if (!this.isConfigured()) {
+      throw new Error('bridge is not configured');
+    }
+    let answer: HttpAnswer = await this.request(path, payload, method);
+    if (answer.status === 401) {
+      const renewed: boolean = await this.renew();
+      if (renewed) {
+        answer = await this.request(path, payload, method);
+      }
+    }
+    if (answer.status !== 200) {
+      throw new Error(`bridge HTTP ${answer.status}: ${answer.body}`);
+    }
+    return answer.body;
+  }
+
+  private async call(path: string, payload: string): Promise<string> {
+    return this.send(path, payload, http.RequestMethod.POST);
+  }
+
+  private async get(path: string): Promise<string> {
+    return this.send(path, '', http.RequestMethod.GET);
   }
 
   async health(): Promise<boolean> {
@@ -284,14 +365,15 @@ export class BridgeClient {
     }
   }
 
-  /** Trade the short pairing code shown by the PC for the full token. */
-  static async pair(url: string, code: string): Promise<string> {
+  /** Trade the short pairing code shown by the PC for a token pair. */
+  static async pair(url: string, code: string): Promise<BridgeSession> {
+    const session = new BridgeSession();
     let base: string = url.trim();
     while (base.endsWith('/')) {
       base = base.substring(0, base.length - 1);
     }
     if (base.length === 0 || code.trim().length === 0) {
-      return '';
+      return session;
     }
     const client = http.createHttp();
     try {
@@ -305,12 +387,15 @@ export class BridgeClient {
       };
       const response = await client.request(`${base}/pair`, options);
       if (response.responseCode !== 200) {
-        return '';
+        return session;
       }
       const raw: string = buffer.from(response.result as ArrayBuffer).toString('utf8');
-      return (JSON.parse(raw) as PairBody).token;
+      const parsed = JSON.parse(raw) as PairBody;
+      session.token = parsed.token;
+      session.refresh = parsed.refresh;
+      return session;
     } catch (error) {
-      return '';
+      return session;
     } finally {
       client.destroy();
     }

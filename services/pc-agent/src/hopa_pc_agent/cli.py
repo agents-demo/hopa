@@ -101,6 +101,12 @@ def build_parser() -> argparse.ArgumentParser:
     bridge.add_argument("--port", type=int, default=8765)
     bridge.add_argument("--token", default=os.environ.get("HOPA_BRIDGE_TOKEN", ""))
     bridge.add_argument("--pair-code", default=os.environ.get("HOPA_PAIR_CODE", ""))
+    bridge.add_argument(
+        "--token-ttl-hours",
+        type=float,
+        default=float(os.environ.get("HOPA_TOKEN_TTL_HOURS", "12")),
+        help="hours an access token stays valid before the phone refreshes it",
+    )
 
     return parser
 
@@ -133,8 +139,16 @@ def _cmd_bridge(args: argparse.Namespace, device: Device) -> int:
 
     token = args.token or secrets.token_urlsafe(24)
     pair_code = args.pair_code or f"{secrets.randbelow(1_000_000):06d}"
+    ttl_hours = max(0.05, args.token_ttl_hours)
     try:
-        server = BridgeServer(device, token, host=args.host, port=args.port, pair_code=pair_code)
+        server = BridgeServer(
+            device,
+            token,
+            host=args.host,
+            port=args.port,
+            pair_code=pair_code,
+            token_ttl=ttl_hours * 3600,
+        )
     except BridgeError as exc:
         print(f"pc-agent: {exc}", file=sys.stderr)
         return 2
@@ -142,6 +156,7 @@ def _cmd_bridge(args: argparse.Namespace, device: Device) -> int:
     print(f"bridge listening on http://{args.host}:{server.port}", flush=True)
     print(f"token: {token}", flush=True)
     print(f"pair code: {pair_code}", flush=True)
+    print(f"token ttl: {ttl_hours:g} h", flush=True)
     try:
         while True:
             time.sleep(3600)

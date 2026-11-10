@@ -4,7 +4,8 @@ import { AgentService } from '../../services/AgentService';
 import { Appearance } from '../../services/Appearance';
 import { SettingsStore, StoredSettings } from '../../services/SettingsStore';
 import { ModeProfile } from '../../services/ModeProfile';
-import { BridgeClient } from '../../services/BridgeClient';
+import { BridgeClient, BridgeSession } from '../../services/BridgeClient';
+import { BridgeSessionStore } from '../../services/BridgeSessionStore';
 import { RunNotification } from '../../services/RunNotification';
 import { AboutPage } from '../tools/AboutPage';
 import { SelfCheckPage } from '../tools/SelfCheckPage';
@@ -168,18 +169,24 @@ export struct SettingsPage {
       return;
     }
     this.bridgeStatus = 'pairing...';
-    const token: string = await BridgeClient.pair(this.bridgeUrl, code);
-    if (token.length === 0) {
+    const session: BridgeSession = await BridgeClient.pair(this.bridgeUrl, code);
+    if (session.token.length === 0 || session.refresh.length === 0) {
       this.bridgeStatus = 'wrong code or bridge offline';
       return;
     }
-    this.bridgeToken = token;
+    this.bridgeToken = session.token;
+    await new BridgeSessionStore().save(session.token, session.refresh);
     this.pairCode = '';
     await this.connectBridge();
   }
 
   private async connectBridge(): Promise<void> {
-    AgentService.get().configureBridge(this.bridgeUrl, this.bridgeToken);
+    const session = await BridgeSessionStore.load();
+    if (session.refresh.length > 0 && session.token === this.bridgeToken.trim()) {
+      AgentService.get().configureBridgeSession(this.bridgeUrl, session.token, session.refresh);
+    } else {
+      AgentService.get().configureBridge(this.bridgeUrl, this.bridgeToken);
+    }
     if (!AgentService.get().isBridgeConfigured()) {
       this.bridgeStatus = 'enter URL and token';
       return;

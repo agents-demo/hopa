@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import json
+import time
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -170,9 +171,50 @@ def test_token_is_required() -> None:
         BridgeServer(FakeDevice(), "")
 
 
-def test_pair_returns_token_for_the_right_code(bridge) -> None:
+def test_pair_rotates_and_returns_a_session(bridge) -> None:
     server, _ = bridge
-    assert _call(server, "/pair", {"code": "123456"}, token="") == {"token": "secret"}
+    session = _call(server, "/pair", {"code": "123456"}, token="")
+    assert session["token"] and session["token"] != "secret"
+    assert len(session["refresh"]) >= 32
+    assert session["expires_in"] > 0
+    # The bootstrap token is replaced the moment the phone pairs.
+    with pytest.raises(urllib.error.HTTPError) as error:
+        _call(server, "/observe", {}, token="secret")
+    assert error.value.code == 401
+    assert "WLAN" in _call(server, "/observe", {}, token=session["token"])["text"]
+
+
+def test_refresh_rotates_again_and_retires_the_old_pair(bridge) -> None:
+    server, _ = bridge
+    first = _call(server, "/pair", {"code": "123456"}, token="")
+    second = _call(server, "/refresh", {"refresh": first["refresh"]}, token="")
+    assert second["token"] != first["token"]
+    assert second["refresh"] != first["refresh"]
+    with pytest.raises(urllib.error.HTTPError) as error:
+        _call(server, "/observe", {}, token=first["token"])
+    assert error.value.code == 401
+    with pytest.raises(urllib.error.HTTPError) as error:
+        _call(server, "/refresh", {"refresh": first["refresh"]}, token="")
+    assert error.value.code == 401
+    _call(server, "/observe", {}, token=second["token"])
+
+
+def test_expired_token_says_so_and_can_be_refreshed() -> None:
+    device = FakeDevice()
+    server = BridgeServer(device, "secret", port=0, pair_code="123456", token_ttl=0.15)
+    server.start()
+    try:
+        session = _call(server, "/pair", {"code": "123456"}, token="")
+        time.sleep(0.3)
+        with pytest.raises(urllib.error.HTTPError) as error:
+            _call(server, "/observe", {}, token=session["token"])
+        assert error.value.code == 401
+        assert json.loads(error.value.read().decode())["error"] == "token expired"
+        renewed = _call(server, "/refresh", {"refresh": session["refresh"]}, token="")
+        assert renewed["token"] != session["token"]
+        _call(server, "/observe", {}, token=renewed["token"])
+    finally:
+        server.stop()
 
 
 def test_pair_rejects_a_wrong_code(bridge) -> None:
