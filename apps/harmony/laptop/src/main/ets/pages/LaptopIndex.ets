@@ -877,17 +877,21 @@ struct LaptopIndex {
           .onClick(() => {
             this.settingsOpen = !this.settingsOpen;
           })
-        Text(this.keyPresent
-          ? this.modelName + ' \u00b7 key on this laptop'
-          : 'No model key yet')
-          .fontSize(9.5)
-          .fontColor($r('app.color.text_hint'))
-          .width('100%')
-          .padding({ left: 8, top: 4 })
+        if (!this.keyPresent) {
+          Text('Add a model key')
+            .fontSize(11)
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.primary'))
+            .width('100%')
+            .padding({ left: 8, top: 4 })
+            .onClick(() => {
+              this.settingsOpen = true;
+            })
+        }
       }
       .width('100%')
-      .padding({ left: 12, right: 12, top: 8, bottom: 10 })
-      .border({ width: { top: 1 }, color: $r('app.color.divider') })
+      .padding({ left: 12, right: 12, top: 10, bottom: 10 })
+      .backgroundColor($r('app.color.surface'))
     }
     .width(212)
     .height('100%')
@@ -905,9 +909,18 @@ struct LaptopIndex {
       Column() {
         this.Header()
         if (this.settingsOpen) {
-          this.SettingsPanel()
-        }
-        if (this.remoteOpen) {
+          Scroll() {
+            Column() {
+              this.SettingsPanel()
+            }
+            .width('100%')
+            .alignItems(HorizontalAlign.Start)
+          }
+          .layoutWeight(1)
+          .width('100%')
+          .align(Alignment.TopStart)
+          .scrollBar(BarState.Off)
+        } else if (this.remoteOpen) {
           List() {
             ForEach(this.remoteTurns, (turn: RemoteTurn, index: number) => {
               ListItem() {
@@ -987,7 +1000,11 @@ struct LaptopIndex {
             .width('100%')
             .padding({ left: 22, right: 22, bottom: 4 })
         }
-        if (this.remoteOpen) {
+        if (this.settingsOpen) {
+          Row()
+            .width('100%')
+            .height(0)
+        } else if (this.remoteOpen) {
           Row({ space: 10 }) {
             Text('Read-only copy from your phone. Reply there.')
               .fontSize(11.5)
