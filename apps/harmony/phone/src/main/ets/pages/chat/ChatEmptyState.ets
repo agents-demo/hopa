@@ -23,6 +23,7 @@ export struct ChatEmptyState {
   @State greeting: string = 'Hi';
   /** With history the screen stays quiet; examples are one tap away. */
   @State ideasOpen: boolean = false;
+  @State promptTick: number = 0;
   @StorageLink('hopa.accent') accentColor: string = '';
   @StorageLink('hopa.style') styleName: string = 'calm';
   @StorageLink('hopa.profile') profileName: string = 'everyday';
@@ -108,6 +109,102 @@ export struct ChatEmptyState {
     return days < 7 ? `${days} days ago` : 'last week';
   }
 
+  private dayKey(kind: string): string {
+    const now = new Date();
+    return `hopa.dismissed.${kind}.${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+  }
+
+  private dismissed(kind: string): boolean {
+    return (AppStorage.get<string>(this.dayKey(kind)) ?? '').length > 0;
+  }
+
+  private dismiss(kind: string): void {
+    AppStorage.setOrCreate<string>(this.dayKey(kind), '1');
+    this.promptTick += 1;
+  }
+
+  private ritualTitle(): string {
+    const hour: number = new Date().getHours();
+    if (hour >= 5 && hour < 12) {
+      return 'Morning brief';
+    }
+    if (hour >= 18) {
+      return 'Evening close';
+    }
+    return '';
+  }
+
+  private ritualGoal(): string {
+    const hour: number = new Date().getHours();
+    if (hour >= 5 && hour < 12) {
+      return 'What should I get done this morning?';
+    }
+    if (hour >= 18) {
+      return 'What did I get done today?';
+    }
+    return '';
+  }
+
+  /** A goal the user has asked more than once, so offering it is useful. */
+  private repeatGoal(): string {
+    const goals: string[] = [];
+    const counts: number[] = [];
+    for (const session of AgentService.get().conversations.all()) {
+      for (const entry of session.entries) {
+        if (entry.role !== 'user') {
+          continue;
+        }
+        const goal: string = entry.text.trim();
+        if (goal.length < 4 || goal.length > 90) {
+          continue;
+        }
+        if (goal.toLowerCase() === this.resume.toLowerCase()) {
+          continue;
+        }
+        let found: number = -1;
+        for (let i = 0; i < goals.length; i++) {
+          if (goals[i].toLowerCase() === goal.toLowerCase()) {
+            found = i;
+            break;
+          }
+        }
+        if (found >= 0) {
+          counts[found] += 1;
+        } else {
+          goals.push(goal);
+          counts.push(1);
+        }
+      }
+    }
+    let best: number = 1;
+    let goal: string = '';
+    for (let i = 0; i < goals.length; i++) {
+      if (counts[i] > best) {
+        best = counts[i];
+        goal = goals[i];
+      }
+    }
+    return goal;
+  }
+
+  private promptKind(): string {
+    if (!this.dismissed('ritual') && this.ritualTitle().length > 0) {
+      return 'ritual';
+    }
+    if (!this.dismissed('again') && this.repeatGoal().length > 0) {
+      return 'again';
+    }
+    return '';
+  }
+
+  private promptTitle(): string {
+    return this.promptKind() === 'ritual' ? this.ritualTitle() : 'Again?';
+  }
+
+  private promptGoal(): string {
+    return this.promptKind() === 'ritual' ? this.ritualGoal() : this.repeatGoal();
+  }
+
   private hasResume(): boolean {
     return this.resume.length > 0 && this.hasEarlier && !this.suggestions().includes(this.resume);
   }
@@ -176,6 +273,45 @@ export struct ChatEmptyState {
         .onClick(() => {
           this.onTrust();
         })
+        if (this.promptKind().length > 0) {
+          Row({ space: 8 }) {
+            Column({ space: 2 }) {
+              Text(this.promptTitle())
+                .fontSize(9)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(this.accent())
+                .letterSpacing(0.6)
+              Text(this.promptGoal())
+                .fontSize(12.5)
+                .fontColor($r('app.color.text_primary'))
+                .maxLines(2)
+                .textOverflow({ overflow: TextOverflow.Ellipsis })
+            }
+            .layoutWeight(1)
+            .alignItems(HorizontalAlign.Start)
+            Text('Run')
+              .fontSize(10.5)
+              .fontWeight(FontWeight.Medium)
+              .fontColor($r('app.color.on_primary'))
+              .padding({ left: 10, right: 10, top: 5, bottom: 5 })
+              .backgroundColor(this.accent())
+              .borderRadius(9)
+              .onClick(() => {
+                this.onPick(this.promptGoal());
+              })
+            Text('\u00d7')
+              .fontSize(15)
+              .fontColor($r('app.color.text_hint'))
+              .padding(5)
+              .onClick(() => {
+                this.dismiss(this.promptKind());
+              })
+          }
+          .width('100%')
+          .padding({ left: 12, right: 8, top: 9, bottom: 9 })
+          .backgroundColor($r('app.color.surface_alt'))
+          .borderRadius(12)
+        }
         if (this.hasResume()) {
           Row({ space: 10 }) {
             Column({ space: 2 }) {
@@ -190,7 +326,7 @@ export struct ChatEmptyState {
                 .maxLines(1)
                 .textOverflow({ overflow: TextOverflow.Ellipsis })
               Text(this.resumeWhen().length > 0
-                ? `${this.resumeWhen()} ? Tap to open`
+                ? `${this.resumeWhen()} \u00b7 Tap to open`
                 : 'Tap to open it')
                 .fontSize(10)
                 .fontColor($r('app.color.text_hint'))
