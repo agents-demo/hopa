@@ -807,8 +807,8 @@ struct LaptopIndex {
             .fontSize(11)
             .fontColor($r('app.color.text_hint'))
           Blank()
-          Text('Ctrl K')
-            .fontSize(9)
+          Text('\u203a')
+            .fontSize(12)
             .fontColor($r('app.color.text_hint'))
             .opacity(0.7)
         }
