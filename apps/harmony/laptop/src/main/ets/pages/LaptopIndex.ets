@@ -1,6 +1,7 @@
 import { common } from '@kit.AbilityKit';
 import { window } from '@kit.ArkUI';
-import { HopaMark, EmptyHero, KeyStore, SettingsStore, StoredSettings } from '@hopa/app';
+import { pasteboard } from '@kit.BasicServicesKit';
+import { HopaMark, EmptyHero, ResultActions, KeyStore, SettingsStore, StoredSettings } from '@hopa/app';
 import { LaptopChat, LaptopTurn } from '../services/LaptopChat';
 
 import { LaptopSessions, LaptopSession } from '../services/LaptopSessions';
@@ -131,6 +132,15 @@ struct LaptopIndex {
     }
   }
 
+  private copyText(text: string): void {
+    try {
+      const data = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, text);
+      pasteboard.getSystemPasteboard().setData(data).catch(() => {});
+    } catch (error) {
+      // Clipboard is best effort.
+    }
+  }
+
   private refreshSessions(): void {
     this.sessions = this.store.list.slice();
     this.currentId = this.store.currentId;
@@ -202,6 +212,14 @@ struct LaptopIndex {
     this.remoteTitle = session.title;
     this.remoteTurns = session.turns;
     this.paletteOpen = false;
+  }
+
+  private focusRoot(): void {
+    try {
+      focusControl.requestFocus('hopa-root');
+    } catch (error) {
+      // Focus control is best effort.
+    }
   }
 
   private closeRemote(): void {
@@ -324,7 +342,7 @@ struct LaptopIndex {
       return;
     }
     if (!this.chat.isReady()) {
-      this.settingsOpen = true;
+      this.error = 'Add a model key to send. Settings is in the sidebar.';
       return;
     }
     const text: string = this.draft;
@@ -352,6 +370,7 @@ struct LaptopIndex {
     if (event.keyCode === 2070) {
       if (this.paletteOpen) {
         this.paletteOpen = false;
+        this.focusRoot();
         return true;
       }
       return false;
@@ -375,7 +394,10 @@ struct LaptopIndex {
   private scrollToEnd(): void {
     setTimeout(() => {
       this.scroller.scrollEdge(Edge.Bottom);
-    }, 40);
+    }, 60);
+    setTimeout(() => {
+      this.scroller.scrollEdge(Edge.Bottom);
+    }, 220);
   }
 
   private async saveSettings(): Promise<void> {
@@ -414,7 +436,7 @@ struct LaptopIndex {
           .maxLines(1)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
           .constraintSize({ maxWidth: 320 })
-        Text('Running on this laptop')
+        Text(this.remoteOpen ? 'Read-only copy from your phone' : 'Running on this laptop')
           .fontSize(10)
           .fontColor($r('app.color.text_hint'))
       }
@@ -430,16 +452,7 @@ struct LaptopIndex {
         .gesture(TapGesture({ count: 2 }).onAction(() => {
           this.toggleMaximize();
         }))
-      Text('Ctrl K')
-        .fontSize(11)
-        .fontColor($r('app.color.text_hint'))
-        .padding({ left: 10, right: 10, top: 6, bottom: 6 })
-        .border({ width: 1, color: $r('app.color.divider') })
-        .borderRadius(8)
-        .onClick(() => {
-          this.paletteOpen = true;
-        })
-      if (this.turns.length > 0) {
+      if (!this.showSidebar()) {
         Text('New')
           .fontSize(12)
           .fontColor($r('app.color.text_secondary'))
@@ -450,17 +463,6 @@ struct LaptopIndex {
             this.newChat();
           })
       }
-      Text(this.keyPresent ? `Model · ${this.modelName}` : 'Add model key')
-        .fontSize(12)
-        .fontColor(this.keyPresent ? $r('app.color.text_secondary') : $r('app.color.primary'))
-        .padding({ left: 14, right: 14, top: 7, bottom: 7 })
-        .backgroundColor(this.keyPresent
-          ? $r('app.color.surface_alt')
-          : $r('app.color.primary_soft'))
-        .borderRadius(16)
-        .onClick(() => {
-          this.settingsOpen = !this.settingsOpen;
-        })
       if (this.decorHidden) {
         Row({ space: 2 }) {
           Text('\u2013')
@@ -635,7 +637,7 @@ struct LaptopIndex {
   }
 
   @Builder
-  Turn(turn: LaptopTurn) {
+  Turn(turn: LaptopTurn, index: number) {
     if (turn.role === 'user') {
       Row() {
         Blank()
@@ -660,9 +662,19 @@ struct LaptopIndex {
             .fontColor($r('app.color.text_primary'))
             .width('100%')
             .copyOption(CopyOptions.LocalDevice)
-          Text('HOPA · this laptop')
+          Text('HOPA on this laptop')
             .fontSize(9.5)
             .fontColor($r('app.color.text_hint'))
+          if (index === this.turns.length - 1 && !this.busy) {
+            ResultActions({
+              showOpen: false,
+              onCopy: () => {
+                this.copyText(turn.text);
+              },
+              onShare: () => {},
+              onRemember: () => {}
+            })
+          }
         }
         .layoutWeight(1)
         .alignItems(HorizontalAlign.Start)
@@ -688,125 +700,164 @@ struct LaptopIndex {
 
   @Builder
   Sidebar() {
-    Column({ space: 10 }) {
-      Row({ space: 8 }) {
-        HopaMark({ state: 'idle', markSize: 22, interactive: false })
-        Text('HOPA')
-          .fontSize(14)
-          .fontWeight(FontWeight.Bold)
-          .fontColor($r('app.color.text_primary'))
-      }
-      .width('100%')
-      .padding({ left: 4 })
-
-      Text('New chat')
-        .fontSize(12.5)
-        .fontColor($r('app.color.primary'))
-        .width('100%')
-        .textAlign(TextAlign.Center)
-        .padding({ top: 9, bottom: 9 })
-        .backgroundColor($r('app.color.primary_soft'))
-        .borderRadius(10)
-        .onClick(() => {
-          this.newChat();
-        })
-
-      Text('CONVERSATIONS')
-        .fontSize(9)
-        .fontWeight(FontWeight.Bold)
-        .fontColor($r('app.color.text_hint'))
-        .letterSpacing(0.7)
-        .width('100%')
-        .padding({ left: 4, top: 8 })
-
-      ForEach(this.sessions, (session: LaptopSession) => {
-        Row({ space: 6 }) {
-          Text(session.title)
-            .fontSize(12)
-            .fontColor(session.id === this.currentId
-              ? $r('app.color.text_primary')
-              : $r('app.color.text_secondary'))
-            .maxLines(1)
-            .textOverflow({ overflow: TextOverflow.Ellipsis })
-            .layoutWeight(1)
-          if (session.id === this.currentId) {
-            Text('\u00d7')
-              .fontSize(12)
-              .fontColor($r('app.color.text_hint'))
-              .padding({ left: 4, right: 2 })
-              .onClick(() => {
-                this.deleteSession(session.id);
-              })
-          }
+    Column() {
+      Column({ space: 10 }) {
+        Row({ space: 8 }) {
+          HopaMark({ state: 'idle', markSize: 22, interactive: false })
+          Text('HOPA')
+            .fontSize(14)
+            .fontWeight(FontWeight.Bold)
+            .fontColor($r('app.color.text_primary'))
         }
         .width('100%')
-        .padding({ left: 8, right: 8, top: 7, bottom: 7 })
-        .backgroundColor(session.id === this.currentId
-          ? $r('app.color.surface')
-          : Color.Transparent)
-        .borderRadius(9)
-        .onClick(() => {
-          this.openSession(session.id);
-        })
-      }, (session: LaptopSession) => `${session.id}-${session.title}`)
+        .padding({ left: 2 })
 
-      if (this.remoteSessions.length > 0) {
-        Text('FROM YOUR PHONE')
-          .fontSize(9)
-          .fontWeight(FontWeight.Bold)
-          .fontColor($r('app.color.text_hint'))
-          .letterSpacing(0.7)
-          .width('100%')
-          .padding({ left: 4, top: 14 })
-        ForEach(this.remoteSessions.slice(0, 20), (session: RemoteSession) => {
-          Row({ space: 6 }) {
-            Text(session.title)
-              .fontSize(12)
-              .fontColor($r('app.color.text_secondary'))
-              .maxLines(1)
-              .textOverflow({ overflow: TextOverflow.Ellipsis })
-              .layoutWeight(1)
-            Text('\u2192')
-              .fontSize(10)
-              .fontColor($r('app.color.text_hint'))
-          }
-          .width('100%')
-          .padding({ left: 8, right: 8, top: 6, bottom: 6 })
-          .borderRadius(8)
-          .onClick(() => {
-            this.openRemote(session);
-          })
-        }, (session: RemoteSession) => `phone-${session.id}-${session.title}`)
-        if (this.remoteSessions.length > 20) {
-          Text(`+${this.remoteSessions.length - 20} more on the phone`)
-            .fontSize(10)
+        Row() {
+          Text('Commands')
+            .fontSize(11.5)
             .fontColor($r('app.color.text_hint'))
-            .width('100%')
-            .padding({ left: 8, top: 4 })
+          Blank()
+          Text('Ctrl K')
+            .fontSize(9.5)
+            .fontColor($r('app.color.text_hint'))
         }
-      }
-
-      Blank()
-
-      Text(this.keyPresent ? `Model \u00b7 ${this.modelName}` : 'Add model key')
-        .fontSize(11)
-        .fontColor(this.keyPresent ? $r('app.color.text_secondary') : $r('app.color.primary'))
         .width('100%')
-        .padding({ left: 8, right: 8, top: 7, bottom: 7 })
+        .height(32)
+        .padding({ left: 10, right: 10 })
         .backgroundColor($r('app.color.surface'))
         .borderRadius(9)
+        .border({ width: 1, color: $r('app.color.divider') })
         .onClick(() => {
-          this.settingsOpen = !this.settingsOpen;
+          this.paletteOpen = true;
         })
-      Text('This laptop \u00b7 v0.1')
-        .fontSize(9.5)
-        .fontColor($r('app.color.text_hint'))
+
+        Text('New chat')
+          .fontSize(12.5)
+          .fontColor($r('app.color.primary'))
+          .width('100%')
+          .textAlign(TextAlign.Center)
+          .padding({ top: 9, bottom: 9 })
+          .backgroundColor($r('app.color.primary_soft'))
+          .borderRadius(10)
+          .onClick(() => {
+            this.newChat();
+          })
+      }
+      .width('100%')
+      .padding({ left: 12, right: 12, top: 14, bottom: 8 })
+
+      Scroll() {
+        Column({ space: 2 }) {
+          Text('CONVERSATIONS')
+            .fontSize(9)
+            .fontWeight(FontWeight.Bold)
+            .fontColor($r('app.color.text_hint'))
+            .letterSpacing(0.7)
+            .width('100%')
+            .padding({ left: 4, top: 2 })
+
+          ForEach(this.sessions, (session: LaptopSession) => {
+            Row({ space: 6 }) {
+              Text(session.title)
+                .fontSize(12)
+                .fontColor(session.id === this.currentId
+                  ? $r('app.color.text_primary')
+                  : $r('app.color.text_secondary'))
+                .maxLines(1)
+                .textOverflow({ overflow: TextOverflow.Ellipsis })
+                .layoutWeight(1)
+              if (session.id === this.currentId) {
+                Text('\u00d7')
+                  .fontSize(12)
+                  .fontColor($r('app.color.text_hint'))
+                  .padding({ left: 4, right: 2 })
+                  .onClick(() => {
+                    this.deleteSession(session.id);
+                  })
+              }
+            }
+            .width('100%')
+            .padding({ left: 8, right: 8, top: 7, bottom: 7 })
+            .backgroundColor(session.id === this.currentId
+              ? $r('app.color.surface')
+              : Color.Transparent)
+            .borderRadius(9)
+            .onClick(() => {
+              this.openSession(session.id);
+            })
+          }, (session: LaptopSession) => session.id + session.title)
+
+          if (this.remoteSessions.length > 0) {
+            Text('FROM YOUR PHONE')
+              .fontSize(9)
+              .fontWeight(FontWeight.Bold)
+              .fontColor($r('app.color.text_hint'))
+              .letterSpacing(0.7)
+              .width('100%')
+              .padding({ left: 4, top: 16 })
+
+            ForEach(this.remoteSessions.slice(0, 20), (session: RemoteSession) => {
+              Row({ space: 6 }) {
+                Text(session.title)
+                  .fontSize(12)
+                  .fontColor($r('app.color.text_secondary'))
+                  .maxLines(1)
+                  .textOverflow({ overflow: TextOverflow.Ellipsis })
+                  .layoutWeight(1)
+                Text('\u2192')
+                  .fontSize(10)
+                  .fontColor($r('app.color.text_hint'))
+              }
+              .width('100%')
+              .padding({ left: 8, right: 8, top: 6, bottom: 6 })
+              .borderRadius(8)
+              .onClick(() => {
+                this.openRemote(session);
+              })
+            }, (session: RemoteSession) => 'phone-' + session.id + session.title)
+
+            if (this.remoteSessions.length > 20) {
+              Text('+' + (this.remoteSessions.length - 20) + ' more on the phone')
+                .fontSize(10)
+                .fontColor($r('app.color.text_hint'))
+                .width('100%')
+                .padding({ left: 8, top: 4 })
+            }
+          }
+        }
         .width('100%')
-        .padding({ left: 4, bottom: 4 })
+        .padding({ left: 12, right: 12, bottom: 8 })
+        .alignItems(HorizontalAlign.Start)
+      }
+      .layoutWeight(1)
+      .width('100%')
+      .scrollBar(BarState.Off)
+      .align(Alignment.TopStart)
+
+      Column({ space: 2 }) {
+        Text('Settings')
+          .fontSize(12)
+          .fontColor($r('app.color.text_secondary'))
+          .width('100%')
+          .padding({ left: 8, right: 8, top: 7, bottom: 7 })
+          .borderRadius(8)
+          .onClick(() => {
+            this.settingsOpen = !this.settingsOpen;
+          })
+        Text(this.keyPresent
+          ? this.modelName + ' \u00b7 key on this laptop'
+          : 'No model key yet')
+          .fontSize(9.5)
+          .fontColor($r('app.color.text_hint'))
+          .width('100%')
+          .padding({ left: 8, top: 4 })
+      }
+      .width('100%')
+      .padding({ left: 12, right: 12, top: 8, bottom: 10 })
+      .border({ width: { top: 1 }, color: $r('app.color.divider') })
     }
     .width(212)
     .height('100%')
-    .padding({ left: 12, right: 12, top: 14, bottom: 10 })
     .backgroundColor($r('app.color.surface_alt'))
     .border({ width: { right: 1 }, color: $r('app.color.divider') })
     .alignItems(HorizontalAlign.Start)
@@ -998,7 +1049,7 @@ struct LaptopIndex {
           List({ scroller: this.scroller }) {
             ForEach(this.turns, (turn: LaptopTurn, index: number) => {
               ListItem() {
-                this.Turn(turn)
+                this.Turn(turn, index)
               }
               .padding({ top: 10, bottom: 10 })
             }, (turn: LaptopTurn, index: number) => `${index}-${turn.role}`)
@@ -1105,6 +1156,9 @@ struct LaptopIndex {
     }
     .width('100%')
     .height('100%')
+    .id('hopa-root')
+    .focusable(true)
+    .defaultFocus(true)
     .onKeyEvent((event: KeyEvent) => {
       return this.handleShortcut(event);
     })
