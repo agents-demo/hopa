@@ -143,23 +143,27 @@ export struct EasyHome {
       : '';
   }
 
-  private async placeCall(): Promise<void> {
+  private placeCall(): void {
     if (this.padNumber.length === 0) {
       return;
     }
-    try {
-      const want: Want = {
-        action: 'ohos.want.action.dial',
-        uri: `tel:${this.padNumber}`
-      };
-      await (getContext(this) as common.UIAbilityContext).startAbility(want);
-    } catch (error) {
-      const opened: boolean = await AgentService.get().bridge.launch('com.ohos.contacts');
-      if (!opened) {
-        this.toast('Open Phone to finish the call.');
-      }
-    }
+    const number: string = this.padNumber;
+    // The pad closes at once; the system handoff must never freeze it.
     this.closePad();
+    const context = getContext(this) as common.UIAbilityContext;
+    const want: Want = {
+      action: 'ohos.want.action.dial',
+      uri: `tel:${number}`
+    };
+    context.startAbility(want).catch(() => {
+      AgentService.get().bridge.launch('com.ohos.contacts').then((opened: boolean) => {
+        if (!opened) {
+          this.toast('Open Phone to finish the call.');
+        }
+      }).catch(() => {
+        this.toast('Open Phone to finish the call.');
+      });
+    });
   }
 
   private async messageSomeone(): Promise<void> {
