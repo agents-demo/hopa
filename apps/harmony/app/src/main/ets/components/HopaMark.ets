@@ -98,6 +98,39 @@ export struct HopaMark {
     }, 140);
   }
 
+  /** The laptop lid is landscape, so its face and arm sit elsewhere. */
+  private isLaptop(): boolean {
+    return this.body === 'laptop';
+  }
+
+  private armX(): number {
+    return this.markSize * (this.isLaptop() ? 0.862 : 0.713);
+  }
+
+  private armY(): number {
+    return this.markSize * (this.isLaptop() ? 0.246 : 0.281);
+  }
+
+  private lidX(): number {
+    return this.markSize * (this.isLaptop() ? 0.406 : 0.414);
+  }
+
+  private lidRight(): number {
+    return this.markSize * (this.isLaptop() ? 0.539 : 0.547);
+  }
+
+  private lidY(): number {
+    return this.markSize * (this.isLaptop() ? 0.328 : 0.398);
+  }
+
+  private lidWidth(): number {
+    return this.markSize * (this.isLaptop() ? 0.0586 : 0.051);
+  }
+
+  private lidHeight(): number {
+    return this.markSize * (this.isLaptop() ? 0.125 : 0.113);
+  }
+
   private armAngle(): number {
     if (this.waveStep === 0) {
       return 45;
@@ -155,24 +188,24 @@ export struct HopaMark {
         .height(this.markSize * 0.20)
         .borderRadius(this.markSize * 0.031)
         .backgroundColor($r('app.color.accent'))
-        .position({ x: this.markSize * 0.713, y: this.markSize * 0.281 })
+        .position({ x: this.armX(), y: this.armY() })
         .rotate({ angle: this.armAngle() })
         .animation({ duration: 110, curve: Curve.EaseInOut })
 
       // Closed eyelids: the same cream as the screen face in the SVG.
       Column()
-        .width(this.markSize * 0.051)
-        .height(this.markSize * 0.113)
+        .width(this.lidWidth())
+        .height(this.lidHeight())
         .borderRadius(this.markSize * 0.03)
         .backgroundColor('#FFF9F0')
-        .position({ x: this.markSize * 0.414, y: this.markSize * 0.398 })
+        .position({ x: this.lidX(), y: this.lidY() })
         .opacity(this.blink ? 1 : 0)
       Column()
-        .width(this.markSize * 0.051)
-        .height(this.markSize * 0.113)
+        .width(this.lidWidth())
+        .height(this.lidHeight())
         .borderRadius(this.markSize * 0.03)
         .backgroundColor('#FFF9F0')
-        .position({ x: this.markSize * 0.547, y: this.markSize * 0.398 })
+        .position({ x: this.lidRight(), y: this.lidY() })
         .opacity(this.blink ? 1 : 0)
 
       // The bubble only exists while it is shown: a hidden Text node would

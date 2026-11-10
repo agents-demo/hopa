@@ -66,15 +66,15 @@ export class Character {
   /** Keeps the promise line, but lets the tone tighten it. */
   static tagline(profile: string): string {
     if (profile === 'easy' || profile === 'kid') {
-      return 'Type or say what you need. I will do it on this phone.';
+      return 'Type or say what you need. I will do it here.';
     }
     if (profile === 'social') {
       return 'What are we doing today?';
     }
     if (Character.tone === 'direct') {
-      return 'Your phone agent. Ask.';
+      return 'Your agent. Ask.';
     }
-    return 'Your phone agent. Ask for anything.';
+    return 'Your agent. Ask for anything.';
   }
 
   /**
