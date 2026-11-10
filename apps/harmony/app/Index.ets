@@ -7,6 +7,7 @@ export { KeyStore } from './src/main/ets/services/KeyStore';
 export { SettingsStore, StoredSettings } from './src/main/ets/services/SettingsStore';
 export { TrustedApps } from './src/main/ets/services/TrustedApps';
 export { Character } from './src/main/ets/services/Character';
+export { ChatFormat } from './src/main/ets/services/ChatFormat';
 export { ConversationService } from './src/main/ets/services/ConversationService';
 export { MemoryStore, MemoryItem } from './src/main/ets/services/MemoryStore';
 export { SkillStore } from './src/main/ets/services/SkillStore';

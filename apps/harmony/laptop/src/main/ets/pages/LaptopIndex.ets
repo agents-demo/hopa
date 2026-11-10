@@ -1,7 +1,7 @@
 import { common } from '@kit.AbilityKit';
 import { window } from '@kit.ArkUI';
 import { pasteboard } from '@kit.BasicServicesKit';
-import { HopaMark, EmptyHero, ResultActions, StepChips, KeyStore, SettingsStore, StoredSettings } from '@hopa/app';
+import { HopaMark, EmptyHero, ResultActions, StepChips, ChatFormat, KeyStore, SettingsStore, StoredSettings } from '@hopa/app';
 import { LaptopChat, LaptopTurn } from '../services/LaptopChat';
 import { LaptopAgent } from '../services/LaptopAgent';
 
@@ -746,12 +746,43 @@ struct LaptopIndex {
           if (turn.steps.length > 0) {
             StepChips({ steps: turn.steps, dense: true })
           }
-          Text(turn.text)
-            .fontSize(13.5)
-            .lineHeight(22)
-            .fontColor($r('app.color.text_primary'))
-            .width('100%')
-            .copyOption(CopyOptions.LocalDevice)
+          if (ChatFormat.listItems(turn.text).length > 0) {
+            if (ChatFormat.listLead(turn.text).length > 0) {
+              Text(ChatFormat.listLead(turn.text))
+                .fontSize(13.5)
+                .lineHeight(22)
+                .fontColor($r('app.color.text_primary'))
+                .width('100%')
+            }
+            ForEach(ChatFormat.listItems(turn.text), (line: string, lineIndex: number) => {
+              Row({ space: 10 }) {
+                Text(`${lineIndex + 1}`)
+                  .fontSize(10)
+                  .fontWeight(FontWeight.Bold)
+                  .fontColor($r('app.color.primary'))
+                  .width(20)
+                  .height(20)
+                  .textAlign(TextAlign.Center)
+                  .backgroundColor($r('app.color.primary_soft'))
+                  .borderRadius(10)
+                Text(line)
+                  .fontSize(13.5)
+                  .lineHeight(20)
+                  .fontColor($r('app.color.text_primary'))
+                  .layoutWeight(1)
+                  .copyOption(CopyOptions.LocalDevice)
+              }
+              .width('100%')
+              .alignItems(VerticalAlign.Top)
+            }, (line: string, lineIndex: number) => `${lineIndex}-${line}`)
+          } else {
+            Text(turn.text)
+              .fontSize(13.5)
+              .lineHeight(22)
+              .fontColor($r('app.color.text_primary'))
+              .width('100%')
+              .copyOption(CopyOptions.LocalDevice)
+          }
           Text('HOPA on this laptop')
             .fontSize(9.5)
             .fontColor($r('app.color.text_hint'))
