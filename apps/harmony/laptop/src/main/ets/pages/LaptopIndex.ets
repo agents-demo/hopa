@@ -53,6 +53,8 @@ struct LaptopIndex {
     });
     LaptopSessions.load(context).then((store: LaptopSessions) => {
       this.store = store;
+      this.store.prune();
+      this.store.save(context);
       const session: LaptopSession = store.current();
       this.chat.turns = session.turns.slice();
       this.turns = session.turns.slice();
@@ -137,6 +139,18 @@ struct LaptopIndex {
 
   private newChat(): void {
     const context = getContext(this) as common.UIAbilityContext;
+    const current: LaptopSession = this.store.current();
+    if (current.turns.length === 0) {
+      // Already a blank thread: clear it instead of stacking another one.
+      this.chat.clear();
+      this.turns = [];
+      this.error = '';
+      this.lastQuestion = '';
+      this.lastLatency = 0;
+      this.lastTokens = 0;
+      this.refreshSessions();
+      return;
+    }
     this.store.create();
     this.chat.clear();
     this.turns = [];
@@ -489,9 +503,7 @@ struct LaptopIndex {
       greeting: '',
       tagline: 'Your agent. Ask for anything.',
       promise: this.showRail() ? '' : 'Payments always ask first.',
-      note: this.keyPresent
-        ? 'Running here, on this machine. It cannot drive other laptop apps yet.'
-        : 'Add a model key to start. The key stays on this laptop.',
+      note: this.keyPresent ? '' : 'Add a model key to start. The key stays on this laptop.',
       titleSize: 34,
       bodySize: 16,
       markSize: this.heroMark(),
@@ -677,8 +689,8 @@ struct LaptopIndex {
         .letterSpacing(0.7)
         .width('100%')
       Text(this.turns.length > 0
-        ? 'The conversation only. This build does not read the screen or other apps.'
-        : 'Your words only. No screen capture, no app control on this machine yet.')
+        ? 'The conversation only. HOPA runs here, on this machine; it does not read the screen or drive other apps yet.'
+        : 'Your words only. HOPA runs here, on this machine; it cannot drive other laptop apps yet.')
         .fontSize(11)
         .lineHeight(17)
         .fontColor($r('app.color.text_secondary'))

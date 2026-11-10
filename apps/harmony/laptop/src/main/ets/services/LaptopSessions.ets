@@ -150,6 +150,32 @@ export class LaptopSessions {
     }
   }
 
+  /** At most one blank draft: repeated New chat must not stack them. */
+  prune(): void {
+    const kept: LaptopSession[] = [];
+    let keptEmpty: boolean = false;
+    for (const session of this.list) {
+      if (session.turns.length === 0) {
+        if (keptEmpty) {
+          continue;
+        }
+        keptEmpty = true;
+      }
+      kept.push(session);
+    }
+    this.list = kept;
+    let found: boolean = false;
+    for (const session of this.list) {
+      if (session.id === this.currentId) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      this.currentId = this.list.length > 0 ? this.list[0].id : '';
+    }
+  }
+
   /** Called after a reply: the thread owns its turns and its title. */
   commit(turns: LaptopTurn[], latency: number, tokens: number): void {
     const session = this.current();

@@ -77,17 +77,27 @@ export default class LaptopAbility extends UIAbility {
         return;
       }
       hilog.info(DOMAIN, TAG, 'content loaded');
+      const mainWindow: window.Window = windowStage.getMainWindowSync();
+      // The platform hides the title text and icon but keeps its strip and
+      // buttons; forcing the height throws on HarmonyOS 7, so do not try.
       try {
-        const mainWindow: window.Window = windowStage.getMainWindowSync();
-        // The app draws its own title strip: one HOPA, not two.
         mainWindow.setWindowDecorVisible(false);
-        mainWindow.setWindowBackgroundColor('#F7F4EE');
-        const height: number = mainWindow.getWindowDecorHeight();
-        AppStorage.setOrCreate<boolean>('hopa.decorHidden', height === 0);
-        hilog.info(DOMAIN, TAG, 'decor height: %{public}d', height);
       } catch (error) {
-        hilog.warn(DOMAIN, TAG, 'custom title bar unavailable');
+        hilog.warn(DOMAIN, TAG, 'title text cannot be hidden');
       }
+      try {
+        mainWindow.setWindowBackgroundColor('#F7F4EE');
+      } catch (error) {
+        hilog.warn(DOMAIN, TAG, 'window background not set');
+      }
+      let decorHeight: number = -1;
+      try {
+        decorHeight = mainWindow.getWindowDecorHeight();
+      } catch (error) {
+        decorHeight = -1;
+      }
+      AppStorage.setOrCreate<boolean>('hopa.decorHidden', decorHeight === 0);
+      hilog.info(DOMAIN, TAG, 'decor height: %{public}d', decorHeight);
     });
   }
 }
