@@ -101,6 +101,7 @@ export class ActionExecutor {
     record.verified = verified;
     record.detail = observation.success ? observation.summary : observation.detail;
     record.changed = this.lastChange;
+    record.target = action.app.length > 0 ? action.app : action.target;
     record.startedAt = startedAt;
     record.finishedAt = Date.now();
     record.durationMs = record.finishedAt - record.startedAt;

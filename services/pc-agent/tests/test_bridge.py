@@ -79,6 +79,13 @@ class FakeDevice:
         self.calls.append(("swipe", *args, velocity))
 
 
+def test_stop_closes_the_app(bridge):
+    server, device = bridge
+    body = _call(server, "/stop", {"bundle": "com.huawei.hmos.settings"})
+    assert body["ok"] is True
+    assert ("stop", "com.huawei.hmos.settings") in device.calls
+
+
 def test_focus_restarts_when_the_window_does_not_raise(bridge):
     server, device = bridge
     # The first launch takes the intent but never raises the window; only a

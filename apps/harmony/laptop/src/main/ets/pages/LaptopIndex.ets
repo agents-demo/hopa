@@ -64,6 +64,7 @@ struct LaptopIndex {
   @State openTurn: string = '';
   @State replayTurn: string = '';
   @State replayIndex: number = 0;
+  @State undoNote: string = '';
   @State address: string = LaptopIndex.START_URL;
   private static readonly START_URL: string = 'https://example.com';
   @State pageTitle: string = '';
@@ -268,6 +269,18 @@ struct LaptopIndex {
       }
     }
     return groups;
+  }
+
+  /** The inverse of a launch: close what HOPA opened, then come back here. */
+  private async undoRun(run: RunRecord): Promise<void> {
+    if (run.target.length === 0 || run.target === 'com.hopa.agent') {
+      this.undoNote = 'Nothing to put back for this step.';
+      return;
+    }
+    this.undoNote = 'Closing\u2026';
+    const closed: boolean = await this.agent.bridge.stopApp(run.target);
+    await this.agent.bridge.focus('com.hopa.agent', 'LaptopAbility');
+    this.undoNote = closed ? `Closed ${run.target}.` : 'The app did not close.';
   }
 
   private questionFor(turnId: string): string {
@@ -1195,6 +1208,13 @@ struct LaptopIndex {
       .width('100%')
       .padding({ top: 4, bottom: 4 })
 
+      if (this.undoNote.length > 0) {
+        Text(this.undoNote)
+          .fontSize(11)
+          .fontColor($r('app.color.text_hint'))
+          .width('100%')
+      }
+
       if (this.runGroups().length === 0) {
         Text('Nothing yet. Every action HOPA takes lands here, grouped by the question that caused it.')
           .fontSize(12)
@@ -1273,6 +1293,18 @@ struct LaptopIndex {
                       Text(`${run.durationMs} ms`)
                         .fontSize(10)
                         .fontColor($r('app.color.text_hint'))
+                      if (run.kind === 'ui.launch' && run.target.length > 0 &&
+                        run.target !== 'com.hopa.agent') {
+                        Text('Undo')
+                          .fontSize(10.5)
+                          .fontColor($r('app.color.primary'))
+                          .padding({ left: 8, right: 8, top: 3, bottom: 3 })
+                          .backgroundColor($r('app.color.primary_soft'))
+                          .borderRadius(8)
+                          .onClick(() => {
+                            this.undoRun(run);
+                          })
+                      }
                     }
                     .width('100%')
                     .padding({ top: 2, bottom: 2 })

@@ -443,6 +443,10 @@ class _Handler(BaseHTTPRequestHandler):
             bundle = str(data["bundle"])
             device.launch(bundle, ability=str(data.get("ability", "")))
             return {"ok": True, "foreground": _wait_for_foreground(device, bundle)}
+        if self.path == "/stop":
+            bundle = str(data["bundle"])
+            _retry(device.stop, bundle)
+            return {"ok": True, "stopped": bundle}
         if self.path == "/focus":
             # Bringing an app back is not the same as starting it: with a
             # singleton ability `aa start` can deliver the intent without

@@ -6,6 +6,8 @@ export class RunRecord {
   id: string;
   actionId: string;
   kind: string;
+  /** What the action was aimed at (bundle or element ref), for undo and audit. */
+  target: string = '';
   /** Which conversation turn this action belonged to; '' for older records. */
   turnId: string = '';
   isPayment: boolean;

@@ -361,6 +361,17 @@ export class BridgeClient {
     }
   }
 
+  /** Close an app the agent opened; the inverse of a launch. */
+  async stopApp(bundle: string): Promise<boolean> {
+    try {
+      await this.call('/stop', JSON.stringify({ bundle: bundle }));
+      return true;
+    } catch (error) {
+      this.lastError = `${(error as Error).message}`;
+      return false;
+    }
+  }
+
   /**
    * Bring an app back to the front. Unlike `launch`, this is allowed to
    * restart it: a singleton ability can take the intent without raising its
