@@ -144,12 +144,12 @@ export struct RunsPage {
 
   private shownRuns(): RunRecord[] {
     if (this.filter === 'payments') {
-      return this.runs.filter((run: RunRecord) => run.isPayment);
+      return this.runs.filter((run: RunRecord) => run.isPayment).reverse();
     }
     if (this.filter === 'failed') {
-      return this.runs.filter((run: RunRecord) => run.status !== 'executed');
+      return this.runs.filter((run: RunRecord) => run.status !== 'executed').reverse();
     }
-    return this.runs;
+    return this.runs.slice().reverse();
   }
 
   @Builder
@@ -358,6 +358,7 @@ export struct RunsPage {
 
   @Builder
   Detail() {
+    Scroll() {
     Column({ space: 12 }) {
       Row({ space: 8 }) {
         Button('Back')
@@ -409,15 +410,19 @@ export struct RunsPage {
       }, (run: RunRecord, index: number) => run.id)
     }
     .width('100%')
-    .height('100%')
     .padding(20)
     .alignItems(HorizontalAlign.Start)
+    }
+    .width('100%')
+    .height('100%')
+    .scrollBar(BarState.Off)
   }
 
   build() {
     if (this.selectedId.length > 0) {
       this.Detail()
     } else {
+      Scroll() {
       Column({ space: 12 }) {
         Text(this.status)
           .fontSize(16)
@@ -558,13 +563,16 @@ export struct RunsPage {
             }
           }, (run: RunRecord) => run.id)
         }
-        .layoutWeight(1)
+        .height(520)
         .width('100%')
       }
       .width('100%')
-      .height('100%')
       .padding(20)
       .alignItems(HorizontalAlign.Start)
+      }
+      .width('100%')
+      .height('100%')
+      .scrollBar(BarState.Off)
     }
   }
 }

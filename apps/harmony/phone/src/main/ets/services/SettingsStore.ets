@@ -21,6 +21,7 @@ export class StoredSettings {
   address: string = '';
   voice: string = '';
   kidPin: string = '';
+  kidStars: number = 0;
   bridgeUrl: string = '';
   bridgeToken: string = '';
   lastTokens: number = 0;
@@ -112,6 +113,10 @@ export class SettingsStore {
     if (typeof kidPin === 'string') {
       settings.kidPin = kidPin;
     }
+    const kidStars = await store.get('kid_stars', settings.kidStars);
+    if (typeof kidStars === 'number') {
+      settings.kidStars = kidStars;
+    }
     const bridgeUrl = await store.get('bridge_url', settings.bridgeUrl);
     if (typeof bridgeUrl === 'string') {
       settings.bridgeUrl = bridgeUrl;
@@ -151,6 +156,7 @@ export class SettingsStore {
     await store.put('address', settings.address);
     await store.put('voice', settings.voice);
     await store.put('kid_pin', settings.kidPin);
+    await store.put('kid_stars', settings.kidStars);
     await store.put('bridge_url', settings.bridgeUrl);
     await store.put('bridge_token', settings.bridgeToken);
     await store.put('last_tokens', settings.lastTokens);

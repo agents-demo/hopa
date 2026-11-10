@@ -29,13 +29,26 @@ export struct KidHome {
   @State pinOpen: boolean = false;
   @State pinDraft: string = '';
   @State pinWrong: boolean = false;
+  @State stars: number = 0;
   private boopTimer: number = -1;
 
   aboutToAppear(): void {
     SettingsStore.load(getContext(this) as Context).then((stored: StoredSettings) => {
       this.kidPin = stored.kidPin;
+      this.stars = stored.kidStars;
     }).catch(() => {
-      // No PIN is set.
+      // No PIN and no stars is fine.
+    });
+  }
+
+  private awardStar(): void {
+    this.stars += 1;
+    const context = getContext(this) as Context;
+    SettingsStore.load(context).then((stored: StoredSettings) => {
+      stored.kidStars = this.stars;
+      return SettingsStore.save(context, stored);
+    }).catch(() => {
+      // Stars are cosmetic.
     });
   }
 
@@ -203,6 +216,10 @@ export struct KidHome {
     }
     this.result = reply;
     this.phase = 'done';
+    const low: string = reply.toLowerCase();
+    if (!low.includes('something went wrong') && !low.includes("couldn't")) {
+      this.awardStar();
+    }
     this.speak(reply);
   }
 
@@ -286,6 +303,14 @@ export struct KidHome {
           Text(this.phrases()[this.phraseIndex])
             .fontSize(this.style().body)
             .fontColor(this.accent())
+          if (this.stars > 0) {
+            Text(this.stars > 5
+              ? `\u2b50 x${this.stars}`
+              : '\u2b50'.repeat(this.stars))
+              .fontSize(16)
+              .letterSpacing(2)
+              .fontColor(this.accent())
+          }
         }
         .width('100%')
 
@@ -297,6 +322,11 @@ export struct KidHome {
         Row({ space: 14 }) {
           this.Tile(2, '🎵', 'Music', () => { this.launchApp('com.huawei.hmsapp.music'); })
           this.Tile(3, '📝', 'Draw', () => { this.launchApp('com.huawei.hmos.notepad'); })
+        }
+        .width('100%')
+        Row({ space: 14 }) {
+          this.Tile(4, '📸', 'Camera', () => { this.launchApp('com.huawei.hmos.camera'); })
+          this.Tile(5, '⏱', 'Timer', () => { this.launchApp('com.huawei.hmos.clock'); })
         }
         .width('100%')
       }
