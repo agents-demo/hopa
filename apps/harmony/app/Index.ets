@@ -5,3 +5,6 @@ export { SettingsStore, StoredSettings } from './src/main/ets/services/SettingsS
 export { TrustedApps } from './src/main/ets/services/TrustedApps';
 export { Character } from './src/main/ets/services/Character';
 export { ConversationService } from './src/main/ets/services/ConversationService';
+export { MemoryStore, MemoryItem } from './src/main/ets/services/MemoryStore';
+export { SkillStore } from './src/main/ets/services/SkillStore';
+export { RunArchive } from './src/main/ets/services/RunArchive';
