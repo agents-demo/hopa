@@ -224,6 +224,7 @@ struct LaptopIndex {
   }
 
   private openRemote(session: RemoteSession): void {
+    this.settingsOpen = false;
     this.remoteOpen = true;
     this.remoteId = session.id;
     this.remoteTitle = session.title;
@@ -248,6 +249,7 @@ struct LaptopIndex {
 
   private newChat(): void {
     const context = getContext(this) as common.UIAbilityContext;
+    this.settingsOpen = false;
     const current: LaptopSession = this.store.current();
     if (current.turns.length === 0) {
       // Already a blank thread: put the caret where the user will type.
@@ -278,6 +280,7 @@ struct LaptopIndex {
 
   private openSession(id: string): void {
     const context = getContext(this) as common.UIAbilityContext;
+    this.settingsOpen = false;
     this.closeRemote();
     this.store.select(id);
     this.store.save(context);
@@ -394,6 +397,10 @@ struct LaptopIndex {
       if (this.paletteOpen) {
         this.paletteOpen = false;
         this.focusRoot();
+        return true;
+      }
+      if (this.settingsOpen) {
+        this.settingsOpen = false;
         return true;
       }
       return false;
@@ -529,119 +536,174 @@ struct LaptopIndex {
   }
 
   @Builder
+  FieldLabel(text: string) {
+    Text(text)
+      .fontSize(11)
+      .fontColor($r('app.color.text_secondary'))
+      .width('100%')
+  }
+
+  @Builder
   SettingsPanel() {
-    Column({ space: 10 }) {
-      Row({ space: 10 }) {
-        Text('Model')
-          .fontSize(15)
-          .fontWeight(FontWeight.Medium)
+    Column({ space: 22 }) {
+      Row() {
+        Text('Settings')
+          .fontSize(17)
+          .fontWeight(FontWeight.Bold)
           .fontColor($r('app.color.text_primary'))
         Blank()
-        Text('Close')
-          .fontSize(12)
-          .fontColor($r('app.color.text_secondary'))
+        Text('Done')
+          .fontSize(12.5)
+          .fontColor($r('app.color.primary'))
+          .padding({ left: 14, right: 14, top: 7, bottom: 7 })
+          .backgroundColor($r('app.color.primary_soft'))
+          .borderRadius(14)
           .onClick(() => {
             this.settingsOpen = false;
           })
       }
       .width('100%')
-      Text('The key is stored in Asset Store on this laptop. It is not sent anywhere except to the endpoint below.')
-        .fontSize(11)
-        .fontColor($r('app.color.text_secondary'))
-        .width('100%')
-      TextInput({ text: this.endpoint, placeholder: 'endpoint' })
-        .height(38)
-        .fontSize(12.5)
-        .backgroundColor($r('app.color.surface_muted'))
-        .borderRadius(9)
-        .onChange((value: string) => {
-          this.endpoint = value;
-        })
-      TextInput({ text: this.modelName, placeholder: 'model name' })
-        .height(38)
-        .fontSize(12.5)
-        .backgroundColor($r('app.color.surface_muted'))
-        .borderRadius(9)
-        .onChange((value: string) => {
-          this.modelName = value;
-        })
-      TextInput({ text: this.keyDraft, placeholder: this.keyPresent ? 'API key (loaded; leave blank to keep it)' : 'API key' })
-        .height(38)
-        .fontSize(12.5)
-        .type(InputType.Password)
-        .backgroundColor($r('app.color.surface_muted'))
-        .borderRadius(9)
-        .onChange((value: string) => {
-          this.keyDraft = value;
-        })
-      Divider().color($r('app.color.divider'))
-      Text('PHONE LINK')
-        .fontSize(9)
-        .fontWeight(FontWeight.Bold)
-        .fontColor($r('app.color.text_hint'))
-        .letterSpacing(0.8)
-        .width('100%')
-      Text('Read-only copy of the phone threads, through the PC bridge. The key only allows reading; it cannot tap or type on the phone.')
-        .fontSize(10.5)
-        .lineHeight(16)
-        .fontColor($r('app.color.text_secondary'))
-        .width('100%')
-      TextInput({ text: this.linkUrl, placeholder: 'bridge address, e.g. http://192.168.1.10:8766' })
-        .height(38)
-        .fontSize(12.5)
-        .backgroundColor($r('app.color.surface_muted'))
-        .borderRadius(9)
-        .onChange((value: string) => {
-          this.linkUrl = value;
-        })
-      TextInput({ text: this.linkKey, placeholder: 'read-only sessions key' })
-        .height(38)
-        .fontSize(12.5)
-        .type(InputType.Password)
-        .backgroundColor($r('app.color.surface_muted'))
-        .borderRadius(9)
-        .onChange((value: string) => {
-          this.linkKey = value;
-        })
-      Row({ space: 10 }) {
-        Button('Link')
-          .height(36)
+
+      Column({ space: 8 }) {
+        Text('MODEL')
+          .fontSize(9)
+          .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_hint'))
+          .letterSpacing(0.8)
+          .width('100%')
+
+        this.FieldLabel('Endpoint')
+        TextInput({ text: this.endpoint, placeholder: 'https://api.deepseek.com/v1' })
+          .height(38)
           .fontSize(12.5)
-          .backgroundColor($r('app.color.primary'))
-          .fontColor($r('app.color.on_primary'))
-          .onClick(() => {
-            this.savePhoneLink();
+          .backgroundColor($r('app.color.surface'))
+          .borderRadius(9)
+          .onChange((value: string) => {
+            this.endpoint = value;
           })
-        if (this.linkStatus.length > 0) {
-          Text(this.linkStatus)
-            .fontSize(11)
-            .fontColor($r('app.color.text_hint'))
-            .maxLines(2)
-            .textOverflow({ overflow: TextOverflow.Ellipsis })
-        }
-      }
-      .width('100%')
-      Row({ space: 10 }) {
-        Button('Save')
-          .height(36)
-          .fontSize(12.5)
-          .backgroundColor($r('app.color.primary'))
-          .fontColor($r('app.color.on_primary'))
-          .onClick(() => {
+          .onSubmit(() => {
             this.saveSettings();
           })
+          .onBlur(() => {
+            this.saveSettings();
+          })
+
+        this.FieldLabel('Model')
+        TextInput({ text: this.modelName, placeholder: 'deepseek-v4-flash' })
+          .height(38)
+          .fontSize(12.5)
+          .backgroundColor($r('app.color.surface'))
+          .borderRadius(9)
+          .onChange((value: string) => {
+            this.modelName = value;
+          })
+          .onSubmit(() => {
+            this.saveSettings();
+          })
+          .onBlur(() => {
+            this.saveSettings();
+          })
+
+        this.FieldLabel(this.keyPresent ? 'API key (stored; leave blank to keep it)' : 'API key')
+        TextInput({ text: this.keyDraft, placeholder: this.keyPresent ? 'stored in Asset Store' : 'paste your key' })
+          .height(38)
+          .fontSize(12.5)
+          .type(InputType.Password)
+          .backgroundColor($r('app.color.surface'))
+          .borderRadius(9)
+          .onChange((value: string) => {
+            this.keyDraft = value;
+          })
+          .onSubmit(() => {
+            this.saveSettings();
+          })
+
+        Text('Changes save when you leave a field. The key lives in Asset Store on this laptop, never in the app package.')
+          .fontSize(10.5)
+          .lineHeight(16)
+          .fontColor($r('app.color.text_hint'))
+          .width('100%')
         if (this.saved.length > 0) {
           Text(this.saved)
             .fontSize(11)
-            .fontColor($r('app.color.text_hint'))
+            .fontColor($r('app.color.text_secondary'))
+            .width('100%')
         }
       }
       .width('100%')
+      .alignItems(HorizontalAlign.Start)
+
+      Divider().color($r('app.color.divider'))
+
+      Column({ space: 8 }) {
+        Text('PHONE SESSIONS')
+          .fontSize(9)
+          .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_hint'))
+          .letterSpacing(0.8)
+          .width('100%')
+
+        Text('A read-only copy of the conversations on your phone, through the PC bridge. This key can only read them; it cannot tap or type on the phone.')
+          .fontSize(11)
+          .lineHeight(17)
+          .fontColor($r('app.color.text_secondary'))
+          .width('100%')
+
+        this.FieldLabel('Bridge address')
+        TextInput({ text: this.linkUrl, placeholder: 'http://127.0.0.1:8766' })
+          .height(38)
+          .fontSize(12.5)
+          .backgroundColor($r('app.color.surface'))
+          .borderRadius(9)
+          .onChange((value: string) => {
+            this.linkUrl = value;
+          })
+
+        this.FieldLabel('Read-only key')
+        TextInput({ text: this.linkKey, placeholder: 'from the bridge output' })
+          .height(38)
+          .fontSize(12.5)
+          .type(InputType.Password)
+          .backgroundColor($r('app.color.surface'))
+          .borderRadius(9)
+          .onChange((value: string) => {
+            this.linkKey = value;
+          })
+
+        Row({ space: 12 }) {
+          Text('Connect')
+            .fontSize(12.5)
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.primary'))
+            .padding({ left: 14, right: 14, top: 7, bottom: 7 })
+            .backgroundColor($r('app.color.primary_soft'))
+            .borderRadius(14)
+            .onClick(() => {
+              this.savePhoneLink();
+            })
+          if (this.linkStatus.length > 0) {
+            Text(this.linkStatus)
+              .fontSize(11)
+              .fontColor($r('app.color.text_hint'))
+              .maxLines(2)
+              .textOverflow({ overflow: TextOverflow.Ellipsis })
+              .layoutWeight(1)
+          }
+        }
+        .width('100%')
+      }
+      .width('100%')
+      .alignItems(HorizontalAlign.Start)
+
+      Text('HOPA runs here, on this laptop. Payments always ask first.')
+        .fontSize(10.5)
+        .fontColor($r('app.color.text_hint'))
+        .width('100%')
     }
     .width('100%')
-    .padding(18)
-    .backgroundColor($r('app.color.surface'))
-    .border({ width: { bottom: 1 }, color: $r('app.color.divider') })
+    .padding({ left: 22, right: 22, top: 18, bottom: 28 })
+    .backgroundColor($r('app.color.bg'))
+    .alignItems(HorizontalAlign.Start)
   }
 
   @Builder
@@ -891,7 +953,7 @@ struct LaptopIndex {
       }
       .width('100%')
       .padding({ left: 12, right: 12, top: 10, bottom: 10 })
-      .backgroundColor($r('app.color.surface'))
+      .border({ width: { top: 1 }, color: $r('app.color.divider') })
     }
     .width(212)
     .height('100%')
