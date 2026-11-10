@@ -141,6 +141,16 @@ struct LaptopIndex {
     }
   }
 
+  private listedSessions(): LaptopSession[] {
+    const shown: LaptopSession[] = [];
+    for (const session of this.sessions) {
+      if (session.turns.length > 0) {
+        shown.push(session);
+      }
+    }
+    return shown;
+  }
+
   private refreshSessions(): void {
     this.sessions = this.store.list.slice();
     this.currentId = this.store.currentId;
@@ -232,7 +242,7 @@ struct LaptopIndex {
     const context = getContext(this) as common.UIAbilityContext;
     const current: LaptopSession = this.store.current();
     if (current.turns.length === 0) {
-      // Already a blank thread: clear it instead of stacking another one.
+      // Already a blank thread: put the caret where the user will type.
       this.chat.clear();
       this.turns = [];
       this.error = '';
@@ -240,6 +250,11 @@ struct LaptopIndex {
       this.lastLatency = 0;
       this.lastTokens = 0;
       this.refreshSessions();
+      try {
+        focusControl.requestFocus('hopa-composer');
+      } catch (error) {
+        // Focus is best effort.
+      }
       return;
     }
     this.store.create();
@@ -755,7 +770,15 @@ struct LaptopIndex {
             .width('100%')
             .padding({ left: 4, top: 2 })
 
-          ForEach(this.sessions, (session: LaptopSession) => {
+          if (this.listedSessions().length === 0) {
+            Text('No saved conversations yet.')
+              .fontSize(11)
+              .fontColor($r('app.color.text_hint'))
+              .width('100%')
+              .padding({ left: 8, top: 4, bottom: 4 })
+          }
+
+          ForEach(this.listedSessions(), (session: LaptopSession) => {
             Row({ space: 6 }) {
               Text(session.title)
                 .fontSize(12)
@@ -1098,6 +1121,7 @@ struct LaptopIndex {
         } else {
         Row({ space: 10 }) {
           TextArea({ text: this.draft, placeholder: 'Ask HOPA\u2026' })
+            .id('hopa-composer')
             .layoutWeight(1)
             .fontSize(13.5)
             .constraintSize({ minHeight: 44, maxHeight: 132 })
