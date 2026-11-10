@@ -85,7 +85,7 @@ export struct HopaMark {
         this.bubble = false;
         this.bubbleTimer = -1;
       }, 2200);
-    }, 240);
+    }, 140);
   }
 
   private armAngle(): number {
@@ -200,7 +200,7 @@ export struct HopaMark {
         .clip(false)
         .rotate({ angle: -3 })
         .position({
-          x: this.markSize + 8,
+          x: this.markSize - 20,
           y: this.markSize * 0.02
         })
         .transition(
@@ -224,9 +224,6 @@ export struct HopaMark {
         : 0
     })
     .animation({ duration: 900, curve: Curve.EaseInOut })
-    // The nudge is instant: an animated x shift would leave the bubble
-    // hanging outside the screen for the first frames.
-    .translate({ x: this.bubble ? -this.markSize * 0.55 : 0 })
     .onClick(() => {
       if (!this.interactive) {
         return;

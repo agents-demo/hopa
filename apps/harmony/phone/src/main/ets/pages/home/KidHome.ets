@@ -298,6 +298,57 @@ export struct KidHome {
     .justifyContent(FlexAlign.Center)
   }
 
+  /** A calm outline picture: no colour emoji competing with the label. */
+  @Builder
+  PhotoGlyph() {
+    Stack({ alignContent: Alignment.TopStart }) {
+      Column()
+        .width(58)
+        .height(46)
+        .border({ width: 2, color: $r('app.color.text_secondary') })
+        .borderRadius(8)
+      Circle({ width: 9, height: 9 })
+        .fill($r('app.color.text_secondary'))
+        .position({ x: 42, y: 7 })
+      Polygon({ width: 38, height: 16 })
+        .points([[0, 16], [13, 0], [26, 16]])
+        .fill($r('app.color.text_secondary'))
+        .position({ x: 10, y: 24 })
+    }
+    .width(58)
+    .height(46)
+  }
+
+  @Builder
+  PhotoTile(index: number, action: () => void) {
+    Column({ space: 8 }) {
+      this.PhotoGlyph()
+      Text('Photos')
+        .fontSize(this.style().body + 1)
+        .fontWeight(FontWeight.Medium)
+        .fontColor($r('app.color.text_primary'))
+        .textAlign(TextAlign.Center)
+    }
+    .layoutWeight(1)
+    .height(120)
+    .justifyContent(FlexAlign.Center)
+    .backgroundColor(this.tileColor(index))
+    .border({ width: 1, color: '#141C1B18' })
+    .borderRadius(this.style().cardRadius)
+    .shadow({ radius: 10, color: '#0D1C1B18', offsetY: 2 })
+    .scale({ x: this.pressed === index ? 0.95 : 1, y: this.pressed === index ? 0.95 : 1 })
+    .animation({ duration: 110, curve: Curve.EaseOut })
+    .onTouch((event: TouchEvent) => {
+      if (event.type === TouchType.Down) {
+        this.pressed = index;
+      } else if (event.type === TouchType.Up || event.type === TouchType.Cancel) {
+        this.pressed = -1;
+      }
+    })
+    .accessibilityText('Photos')
+    .onClick(action)
+  }
+
   @Builder
   Tile(index: number, icon: string, label: string, action: () => void) {
     Column({ space: 8 }) {
@@ -372,7 +423,7 @@ export struct KidHome {
         }
         .width('100%')
         Row({ space: 14 }) {
-          this.Tile(1, '🖼', 'Photos', () => { this.launchApp('com.huawei.hmos.photos'); })
+          this.PhotoTile(1, () => { this.launchApp('com.huawei.hmos.photos'); })
           this.Tile(2, '🎵', 'Music', () => { this.launchApp('com.huawei.hmsapp.music'); })
         }
         .width('100%')

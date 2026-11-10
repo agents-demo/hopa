@@ -48,6 +48,7 @@ export struct FilesPage {
             .fontColor($r('app.color.text_primary'))
             .width('100%')
         }
+.scrollBar(BarState.Off)
         .layoutWeight(1)
         .width('100%')
         .backgroundColor($r('app.color.surface_alt'))

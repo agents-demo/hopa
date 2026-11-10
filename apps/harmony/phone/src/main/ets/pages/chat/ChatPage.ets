@@ -163,6 +163,7 @@ export struct ChatPage {
     const grew: boolean = next.length > this.renderedCount;
     this.renderedCount = next.length;
     this.messages = next;
+    AppStorage.setOrCreate<boolean>('hopa.chatEmpty', next.length === 0);
     if (grew) {
       this.scrollToEnd();
     }
@@ -435,6 +436,7 @@ export struct ChatPage {
     this.runningGoal = text;
     Haptics.tap();
     this.messages = this.messages.concat([`You: ${text}`]);
+    AppStorage.setOrCreate<boolean>('hopa.chatEmpty', false);
     this.renderedCount = this.messages.length;
     this.scrollToEnd();
     service.conversations.add('user', text);

@@ -292,9 +292,6 @@ export struct ChatEmptyState {
             }
             .layoutWeight(1)
             .alignItems(HorizontalAlign.Start)
-            Text('›')
-              .fontSize(18)
-              .fontColor(this.quietCard() ? $r('app.color.text_secondary') : this.accent())
           }
           .width('100%')
           .padding({ left: 12, right: 10, top: 9, bottom: 9 })

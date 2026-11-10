@@ -51,6 +51,7 @@ struct Index {
   @StorageLink('hopa.style') styleName: string = 'calm';
   @State profileName: string = 'everyday';
   @StorageLink('hopa.wide') wide: boolean = false;
+  @StorageLink('hopa.chatEmpty') chatEmpty: boolean = true;
   private agentOpenedBrowser: boolean = false;
   private titleTimer: number = -1;
   private previousPage: string = 'chat';
@@ -140,6 +141,8 @@ struct Index {
 
   /** Profiles with a custom home land there; Everyday lands in the chat. */
   onProfileChange(): void {
+    // A sheet on the old page must not hide the new page's chrome.
+    AppStorage.setOrCreate<boolean>('hopa.focus', false);
     if (this.customHome()) {
       if (this.activePage === 'chat' || this.activePage === 'capabilities') {
         this.activePage = 'home';
@@ -198,10 +201,12 @@ struct Index {
   }
 
   private go(key: string): void {
-    if (key !== this.activePage) {
+    // `home` only exists for Easy/Kid; Other modes use `chat`.
+    const page: string = !this.customHome() && key === 'home' ? 'chat' : key;
+    if (page !== this.activePage) {
       animateTo({ duration: 160, curve: Curve.EaseOut }, () => {
       this.previousPage = this.activePage;
-      this.activePage = key;
+      this.activePage = page;
       });
     }
     this.chatsOpen = false;
@@ -214,6 +219,10 @@ struct Index {
     // Easy/Kid have no tab bar: never land on a page with no way out.
     if (this.customHome() && (target === 'capabilities' || target === 'chat')) {
       target = 'home';
+    }
+    // Everyday has no custom home page; `home` would hide the header.
+    if (!this.customHome() && target === 'home') {
+      target = 'chat';
     }
     this.previousPage = this.homeKey();
     this.activePage = target;
@@ -437,7 +446,8 @@ struct Index {
             this.go('runs');
           })
         }
-        if (this.profileName === 'everyday') {
+        if (this.profileName === 'everyday' &&
+          !(this.activePage === 'chat' && this.chatEmpty)) {
         Stack({ alignContent: Alignment.Center }) {
           Row()
             .width(34)
