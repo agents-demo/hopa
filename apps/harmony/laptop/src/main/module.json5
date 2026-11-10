@@ -4,8 +4,12 @@
     "type": "entry",
     "description": "$string:module_desc",
     "mainElement": "LaptopAbility",
+    // 2in1 is the target. Tablet and phone are here so the shell can be
+    // installed and smoke-tested when no 2-in-1 is available.
     "deviceTypes": [
-      "2in1"
+      "2in1",
+      "tablet",
+      "phone"
     ],
     "deliveryWithInstall": true,
     "installationFree": false,
