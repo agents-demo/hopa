@@ -3,6 +3,7 @@
 export struct ResultActions {
   @Prop showOpen: boolean = false;
   @State pressed: number = -1;
+  @State hovered: number = -1;
   onOpen: () => void = () => {};
   onCopy: () => void = () => {};
   onShare: () => void = () => {};
@@ -114,6 +115,11 @@ export struct ResultActions {
         .height(30)
         .justifyContent(FlexAlign.Center)
         .alignItems(VerticalAlign.Center)
+        .backgroundColor(this.hovered === 0 ? $r('app.color.surface_alt') : Color.Transparent)
+        .borderRadius(15)
+        .onHover((isHover: boolean) => {
+          this.hovered = isHover ? 0 : -1;
+        })
         .accessibilityText('Open')
         .onClick(() => {
           this.onOpen();
@@ -126,6 +132,11 @@ export struct ResultActions {
       .height(30)
       .justifyContent(FlexAlign.Center)
       .alignItems(VerticalAlign.Center)
+      .backgroundColor(this.hovered === 1 ? $r('app.color.surface_alt') : Color.Transparent)
+      .borderRadius(15)
+      .onHover((isHover: boolean) => {
+        this.hovered = isHover ? 1 : -1;
+      })
       .accessibilityText('Copy')
       .onClick(() => {
         this.onCopy();
@@ -137,6 +148,11 @@ export struct ResultActions {
       .height(30)
       .justifyContent(FlexAlign.Center)
       .alignItems(VerticalAlign.Center)
+      .backgroundColor(this.hovered === 2 ? $r('app.color.surface_alt') : Color.Transparent)
+      .borderRadius(15)
+      .onHover((isHover: boolean) => {
+        this.hovered = isHover ? 2 : -1;
+      })
       .accessibilityText('Share')
       .onClick(() => {
         this.onShare();
@@ -148,6 +164,11 @@ export struct ResultActions {
       .height(30)
       .justifyContent(FlexAlign.Center)
       .alignItems(VerticalAlign.Center)
+      .backgroundColor(this.hovered === 3 ? $r('app.color.surface_alt') : Color.Transparent)
+      .borderRadius(15)
+      .onHover((isHover: boolean) => {
+        this.hovered = isHover ? 3 : -1;
+      })
       .accessibilityText('Remember')
       .onClick(() => {
         this.onRemember();
