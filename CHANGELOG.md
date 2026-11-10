@@ -23,6 +23,25 @@ All notable changes are recorded here. Versions follow `docs/versioning.md`.
   device, and `/sessions` resolves to the phone unless `X-Hopa-Read` asks for
   the other side. hdc only allows one device per device-side port, so the phone
   tunnels 8768 and the 2in1 8766.
+- Left pane, restructured to the chat-app shape: **New chat → Search (Ctrl K)
+  → conversations grouped Today / Previous 7 days / Earlier → Settings**. The
+  Commands, Browser, Plans and Activity rows left the pane; they are header
+  tools now (Log · Plans · Web), and the mascot + HOPA exist once, in the hero.
+  Rows are 30 px, the selected one is a soft fill, and the delete `×` appears
+  only on hover. Ctrl+K was matched against the wrong key code (2070 vs 2027),
+  so the palette shortcut had never worked; it does now.
+- Composer: one primary button (mic when empty, Send when not, Stop while
+  running); Enter inserts a line break and only **Ctrl+Enter** sends; the
+  question appears in the transcript immediately instead of after the answer.
+- Undo: a run record keeps what it acted on, the bridge can close an app, and
+  Activity offers **Undo** on a launch — verified: Settings closed and HOPA came
+  back to the front.
+- Settings is four pages (Model, Bridge, Modes, About) instead of one scroll.
+- Kid hides the history browser (one thread, no list), and the completion
+  notification carries a **Stop** action that cancels the run.
+- Schedules are shared: `ScheduleService` moved into the kit, the laptop runs it
+  against its own runtime, and a **Plans** page adds and removes them
+  (hourly/daily) while HOPA is open.
 - Sync integrity: turns are never identified by their position. An adopted turn
   keeps the id the sender had, and a turn without an id merges by role, time
   and text. A position-based id made every sync look like new messages and grew

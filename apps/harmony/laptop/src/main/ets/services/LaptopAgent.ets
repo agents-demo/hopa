@@ -9,6 +9,7 @@ import {
   BridgeClient,
   BridgeScreenSource,
   ChatSync,
+  ScheduleService,
   MemoryStore,
   RemoteUiCapability,
   RemoteUiGates,
@@ -76,6 +77,7 @@ export class LaptopAgent {
   readonly bridge: BridgeClient = new BridgeClient();
   readonly runs: RunStore = new RunStore();
   readonly browser: LaptopBrowser = new LaptopBrowser();
+  readonly schedules: ScheduleService = new ScheduleService();
   readonly archive: RunArchive = new RunArchive(this.runs);
   readonly chatSync: ChatSync = new ChatSync();
   private executor: ActionExecutor;
@@ -107,6 +109,10 @@ export class LaptopAgent {
       new BridgeScreenSource(this.bridge, gates)
     );
     this.runtime.setHomeAbility('LaptopAbility');
+    this.schedules.bindRunner(
+      (goal: string): Promise<string> => this.runtime.run(goal),
+      (): boolean => this.runtime.isBusy()
+    );
   }
 
   /** Points the bridge capability at a running `pc-agent bridge`. */

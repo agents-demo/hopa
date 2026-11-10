@@ -19,6 +19,7 @@ export { BridgeClient, BridgeNode, BridgeSession, BridgeSessionSink } from './sr
 export { BridgeScreenSource, RemoteUiCapability, RemoteUiGates } from './src/main/ets/services/RemoteUi';
 export { ChatSync, SyncSession, SyncTurn } from './src/main/ets/services/ChatSync';
 export { VoiceService } from './src/main/ets/services/VoiceService';
+export { ScheduleService } from './src/main/ets/services/ScheduleService';
 export { APP_CATALOG, SITE_CATALOG, CatalogApp, CatalogSite } from './src/main/ets/services/AppCatalog';
 export { AppCatalogPrompt } from './src/main/ets/services/AppCatalogPrompt';
 export { AppRouteTargets } from './src/main/ets/services/AppRouteTargets';

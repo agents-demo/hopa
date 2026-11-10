@@ -1,5 +1,5 @@
 import { common } from '@kit.AbilityKit';
-import { RunRecord, RunStatus } from '@hopa/core';
+import { RunRecord, RunStatus, ScheduledTask } from '@hopa/core';
 import { window } from '@kit.ArkUI';
 import { pasteboard } from '@kit.BasicServicesKit';
 import { notificationManager } from '@kit.NotificationKit';
@@ -23,6 +23,25 @@ const LAPTOP_KEY_ALIAS: string = 'hopa_laptop_key';
  * This shell runs the agent on the laptop itself. It never drives the phone,
  * and it never borrows the phone's key.
  */
+class SessionGroup {
+  label: string = '';
+  sessions: LaptopSession[] = [];
+
+  constructor(label: string) {
+    this.label = label;
+  }
+}
+
+class PlanChoice {
+  label: string = '';
+  ms: number = 0;
+
+  constructor(label: string, ms: number) {
+    this.label = label;
+    this.ms = ms;
+  }
+}
+
 class RunGroup {
   turnId: string = '';
   question: string = '';
@@ -66,6 +85,11 @@ struct LaptopIndex {
   @State replayTurn: string = '';
   @State replayIndex: number = 0;
   @State undoNote: string = '';
+  @State plans: ScheduledTask[] = [];
+  @State hoveredSession: string = '';
+  private ctrlHeld: boolean = false;
+  @State planDraft: string = '';
+  @State planEvery: number = 3600000;
   @State address: string = LaptopIndex.START_URL;
   private static readonly START_URL: string = 'https://example.com';
   @State pageTitle: string = '';
@@ -133,6 +157,12 @@ struct LaptopIndex {
       this.lastTokens = session.lastTokens;
       this.refreshSessions();
       this.syncChats();
+      this.agent.schedules.load(context).then(() => {
+        this.agent.schedules.start();
+        this.plans = this.agent.schedules.tasks().slice();
+      }).catch(() => {
+        this.plans = [];
+      });
       this.agent.archive.load(context).then(() => {
         this.runs = this.agent.runs.all().reverse();
       }).catch(() => {
@@ -316,6 +346,35 @@ struct LaptopIndex {
       }
     }
     return shots;
+  }
+
+  /** Recency groups, like every chat list since 2010. */
+  private sessionGroups(): SessionGroup[] {
+    const now: number = Date.now();
+    const today = new SessionGroup('Today');
+    const week = new SessionGroup('Previous 7 days');
+    const older = new SessionGroup('Earlier');
+    for (const session of this.listedSessions()) {
+      const age: number = now - session.updated;
+      if (age < 20 * 60 * 60 * 1000) {
+        today.sessions.push(session);
+      } else if (age < 7 * 24 * 60 * 60 * 1000) {
+        week.sessions.push(session);
+      } else {
+        older.sessions.push(session);
+      }
+    }
+    const groups: SessionGroup[] = [];
+    if (today.sessions.length > 0) {
+      groups.push(today);
+    }
+    if (week.sessions.length > 0) {
+      groups.push(week);
+    }
+    if (older.sessions.length > 0) {
+      groups.push(older);
+    }
+    return groups;
   }
 
   private listedSessions(): LaptopSession[] {
@@ -560,7 +619,11 @@ struct LaptopIndex {
     const text: string = this.draft;
     this.draft = '';
     this.busy = true;
-    await this.chat.send(text);
+    // Show the question at once; waiting for the run made the pane look dead.
+    const running: Promise<void> = this.chat.send(text);
+    this.turns = this.chat.turns.slice();
+    this.lastQuestion = this.chat.lastQuestion;
+    await running;
     this.turns = this.chat.turns.slice();
     this.error = this.chat.error;
     this.lastQuestion = this.chat.lastQuestion;
@@ -587,40 +650,46 @@ struct LaptopIndex {
   }
 
   /** Ctrl+K opens the palette; Esc closes it. Phone shells never see these. */
+  /**
+   * Ctrl+K opens the palette, Esc closes whatever is open.
+   *
+   * The modifier is tracked from its own key events instead of asking the
+   * event for modifier state: that call is what took the app down on the 2in1,
+   * and a keyboard shortcut must never be able to kill the shell.
+   */
   private handleShortcut(event: KeyEvent): boolean {
-    if (event.type !== KeyType.Down) {
-      return false;
-    }
-    if (event.keyCode === 2070) {
-      if (this.paletteOpen) {
-        this.paletteOpen = false;
-        this.focusRoot();
-        return true;
+    try {
+      const isCtrl: boolean = event.keyCode === 2072 || event.keyCode === 2073;
+      const isMeta: boolean = event.keyCode === 2076 || event.keyCode === 2077;
+      if (isCtrl || isMeta) {
+        this.ctrlHeld = event.type === KeyType.Down;
+        return false;
       }
-      if (this.settingsOpen) {
-        this.settingsOpen = false;
-        return true;
+      if (event.type !== KeyType.Down) {
+        return false;
       }
-      if (this.busy) {
-        this.chat.cancel();
-        return true;
-      }
-      return false;
-    }
-    const key: string = event.keyText.toLowerCase();
-    if (key === 'k') {
-      const ctrl: boolean = event.getModifierKeyState
-        ? event.getModifierKeyState(['ctrl'])
-        : false;
-      const meta: boolean = event.getModifierKeyState
-        ? event.getModifierKeyState(['meta'])
-        : false;
-      if (ctrl || meta) {
+      if (this.ctrlHeld && event.keyCode === 2027) {
         this.paletteOpen = !this.paletteOpen;
+        if (!this.paletteOpen) {
+          this.focusRoot();
+        }
         return true;
       }
+      if (event.keyCode === 2070) {
+        if (this.paletteOpen) {
+          this.paletteOpen = false;
+          this.focusRoot();
+          return true;
+        }
+        if (this.settingsOpen) {
+          this.settingsOpen = false;
+          return true;
+        }
+      }
+      return false;
+    } catch (error) {
+      return false;
     }
-    return false;
   }
 
   private scrollToEnd(): void {
@@ -810,6 +879,51 @@ struct LaptopIndex {
         .gesture(TapGesture({ count: 2 }).onAction(() => {
           this.toggleMaximize();
         }))
+      // The three tools used to be sidebar rows; they are destinations, so
+      // they sit with the conversation, not with the list of conversations.
+      Row({ space: 2 }) {
+        Text('Log')
+          .fontSize(10.5)
+          .fontColor(this.view === 'activity'
+            ? $r('app.color.text_primary')
+            : $r('app.color.text_hint'))
+          .padding({ left: 9, right: 9, top: 5, bottom: 5 })
+          .backgroundColor(this.view === 'activity' ? $r('app.color.surface') : Color.Transparent)
+          .borderRadius(9)
+          .onClick(() => {
+            this.view = this.view === 'activity' ? 'chat' : 'activity';
+          })
+        Text('Plans')
+          .fontSize(10.5)
+          .fontColor(this.view === 'plans'
+            ? $r('app.color.text_primary')
+            : $r('app.color.text_hint'))
+          .padding({ left: 9, right: 9, top: 5, bottom: 5 })
+          .backgroundColor(this.view === 'plans' ? $r('app.color.surface') : Color.Transparent)
+          .borderRadius(9)
+          .onClick(() => {
+            this.view = this.view === 'plans' ? 'chat' : 'plans';
+            if (this.view === 'plans') {
+              this.plans = this.agent.schedules.tasks().slice();
+            }
+          })
+        Text('Web')
+          .fontSize(10.5)
+          .fontColor(this.view === 'browser'
+            ? $r('app.color.text_primary')
+            : $r('app.color.text_hint'))
+          .padding({ left: 9, right: 9, top: 5, bottom: 5 })
+          .backgroundColor(this.view === 'browser' ? $r('app.color.surface') : Color.Transparent)
+          .borderRadius(9)
+          .onClick(() => {
+            this.view = this.view === 'browser' ? 'chat' : 'browser';
+            if (this.view === 'browser') {
+              this.agent.browser.attach(this.web);
+            }
+          })
+      }
+      .padding({ right: 4 })
+
       if (!this.showSidebar()) {
         Text('New')
           .fontSize(12)
@@ -1144,6 +1258,136 @@ struct LaptopIndex {
     .padding({ left: 22, right: 22, top: 18, bottom: 28 })
     .backgroundColor($r('app.color.bg'))
     .alignItems(HorizontalAlign.Start)
+  }
+
+  @Builder
+  PlansPane() {
+    Column({ space: 10 }) {
+      Row() {
+        Text('Plans')
+          .fontSize(16)
+          .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_primary'))
+        Blank()
+        Text('While HOPA is open on this laptop')
+          .fontSize(10.5)
+          .fontColor($r('app.color.text_hint'))
+      }
+      .width('100%')
+
+      Row({ space: 8 }) {
+        TextInput({ text: this.planDraft, placeholder: 'Ask HOPA to do this\u2026' })
+          .layoutWeight(1)
+          .height(34)
+          .fontSize(12)
+          .backgroundColor($r('app.color.surface'))
+          .borderRadius(9)
+          .onChange((value: string) => {
+            this.planDraft = value;
+          })
+          .onSubmit(() => {
+            this.addPlan();
+          })
+        ForEach(this.planChoices(), (choice: PlanChoice) => {
+          Text(choice.label)
+            .fontSize(11)
+            .fontColor(this.planEvery === choice.ms
+              ? $r('app.color.on_primary')
+              : $r('app.color.text_secondary'))
+            .padding({ left: 10, right: 10, top: 6, bottom: 6 })
+            .backgroundColor(this.planEvery === choice.ms
+              ? $r('app.color.primary')
+              : $r('app.color.surface'))
+            .borderRadius(10)
+            .onClick(() => {
+              this.planEvery = choice.ms;
+            })
+        }, (choice: PlanChoice) => 'every-' + choice.ms + this.planEvery)
+        Text('Add')
+          .fontSize(12)
+          .fontColor($r('app.color.on_primary'))
+          .padding({ left: 14, right: 14, top: 7, bottom: 7 })
+          .backgroundColor($r('app.color.primary'))
+          .borderRadius(12)
+          .onClick(() => {
+            this.addPlan();
+          })
+      }
+      .width('100%')
+
+      if (this.plans.length === 0) {
+        Text('No plans yet. A plan is a question HOPA asks itself on a schedule.')
+          .fontSize(12)
+          .lineHeight(18)
+          .fontColor($r('app.color.text_hint'))
+          .width('100%')
+      } else {
+        List({ space: 6 }) {
+          ForEach(this.plans, (plan: ScheduledTask) => {
+            ListItem() {
+              Row({ space: 10 }) {
+                Column({ space: 2 }) {
+                  Text(plan.goal)
+                    .fontSize(12.5)
+                    .fontColor($r('app.color.text_primary'))
+                    .maxLines(2)
+                    .textOverflow({ overflow: TextOverflow.Ellipsis })
+                    .width('100%')
+                  Text(plan.label())
+                    .fontSize(10.5)
+                    .fontColor($r('app.color.text_hint'))
+                    .width('100%')
+                }
+                .layoutWeight(1)
+                .alignItems(HorizontalAlign.Start)
+                Text('Remove')
+                  .fontSize(10.5)
+                  .fontColor($r('app.color.text_secondary'))
+                  .padding({ left: 8, right: 8, top: 4, bottom: 4 })
+                  .backgroundColor($r('app.color.surface_muted'))
+                  .borderRadius(8)
+                  .onClick(() => {
+                    this.removePlan(plan.id);
+                  })
+              }
+              .width('100%')
+              .padding(10)
+              .backgroundColor($r('app.color.surface'))
+              .borderRadius(10)
+            }
+          }, (plan: ScheduledTask) => plan.id + plan.nextRunAt)
+        }
+        .layoutWeight(1)
+        .width('100%')
+        .scrollBar(BarState.Off)
+      }
+    }
+    .layoutWeight(1)
+    .width('100%')
+    .padding({ left: 22, right: 22, top: 8 })
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  private planChoices(): PlanChoice[] {
+    const choices: PlanChoice[] = [];
+    choices.push(new PlanChoice('Hourly', 3600000));
+    choices.push(new PlanChoice('Daily', 86400000));
+    return choices;
+  }
+
+  private async addPlan(): Promise<void> {
+    const goal: string = this.planDraft.trim();
+    if (goal.length === 0) {
+      return;
+    }
+    this.planDraft = '';
+    await this.agent.schedules.add(goal, this.planEvery, 0);
+    this.plans = this.agent.schedules.tasks().slice();
+  }
+
+  private async removePlan(id: string): Promise<void> {
+    await this.agent.schedules.remove(id);
+    this.plans = this.agent.schedules.tasks().slice();
   }
 
   @Builder
@@ -1674,79 +1918,6 @@ struct LaptopIndex {
   Sidebar() {
     Column() {
       Column({ space: 10 }) {
-        Row({ space: 8 }) {
-          HopaMark({ state: 'idle', markSize: 22, interactive: false, body: 'laptop' })
-          Text('HOPA')
-            .fontSize(14)
-            .fontWeight(FontWeight.Bold)
-            .fontColor($r('app.color.text_primary'))
-        }
-        .width('100%')
-        .padding({ left: 2 })
-
-        Row() {
-          Text('Commands')
-            .fontSize(11)
-            .fontColor($r('app.color.text_hint'))
-          Blank()
-          Text('\u203a')
-            .fontSize(12)
-            .fontColor($r('app.color.text_hint'))
-            .opacity(0.7)
-        }
-        .width('100%')
-        .height(26)
-        .padding({ left: 8, right: 8 })
-        .borderRadius(7)
-        .onClick(() => {
-          this.paletteOpen = true;
-        })
-
-        Row() {
-          Text('Browser')
-            .fontSize(11)
-            .fontColor(this.view === 'browser'
-              ? $r('app.color.text_primary')
-              : $r('app.color.text_hint'))
-            .layoutWeight(1)
-          Text('\u2197')
-            .fontSize(11)
-            .fontColor($r('app.color.text_hint'))
-        }
-        .width('100%')
-        .height(26)
-        .padding({ left: 8, right: 8 })
-        .borderRadius(7)
-        .backgroundColor(this.view === 'browser' ? $r('app.color.surface') : Color.Transparent)
-        .onClick(() => {
-          this.view = this.view === 'browser' ? 'chat' : 'browser';
-          if (this.view === 'browser') {
-            this.agent.browser.attach(this.web);
-          }
-        })
-
-        if (this.profileName !== 'kid') {
-          Row() {
-            Text('Activity')
-              .fontSize(11)
-              .fontColor(this.view === 'activity'
-                ? $r('app.color.text_primary')
-                : $r('app.color.text_hint'))
-              .layoutWeight(1)
-            Text(`${this.runs.length}`)
-              .fontSize(10)
-              .fontColor($r('app.color.text_hint'))
-          }
-          .width('100%')
-          .height(26)
-          .padding({ left: 8, right: 8 })
-          .borderRadius(7)
-          .backgroundColor(this.view === 'activity' ? $r('app.color.surface') : Color.Transparent)
-          .onClick(() => {
-            this.view = this.view === 'activity' ? 'chat' : 'activity';
-          })
-        }
-
         Text('New chat')
           .fontSize(12.5)
           .fontColor($r('app.color.primary'))
@@ -1764,63 +1935,76 @@ struct LaptopIndex {
 
       Scroll() {
         Column({ space: 2 }) {
-          TextInput({ text: this.query, placeholder: 'Search' })
-            .height(32)
-            .fontSize(11.5)
-            .backgroundColor($r('app.color.surface'))
-            .borderRadius(8)
-            .placeholderColor($r('app.color.text_hint'))
-            .margin({ bottom: 6 })
-            .onChange((value: string) => {
-              this.query = value;
-            })
-
-          Text('CONVERSATIONS')
-            .fontSize(9)
-            .fontWeight(FontWeight.Bold)
-            .fontColor($r('app.color.text_hint'))
-            .letterSpacing(0.7)
-            .width('100%')
-            .padding({ left: 4, top: 2 })
-
-          if (this.listedSessions().length === 0) {
-            Text('No saved conversations yet.')
-              .fontSize(11)
+          Row({ space: 4 }) {
+            TextInput({ text: this.query, placeholder: 'Search' })
+              .height(34)
+              .fontSize(12)
+              .backgroundColor($r('app.color.surface_muted'))
+              .border({ width: 1, color: $r('app.color.divider') })
+              .borderRadius(8)
+              .padding({ left: 8, right: 8, top: 0, bottom: 0 })
+              .placeholderColor($r('app.color.text_hint'))
+              .layoutWeight(1)
+              .onChange((value: string) => {
+                this.query = value;
+              })
+            Text('Ctrl K')
+              .fontSize(9.5)
               .fontColor($r('app.color.text_hint'))
-              .width('100%')
-              .padding({ left: 8, top: 4, bottom: 4 })
+              .padding({ left: 6, right: 6, top: 3, bottom: 3 })
+              .backgroundColor($r('app.color.surface'))
+              .borderRadius(5)
+              .onClick(() => {
+                this.paletteOpen = true;
+              })
           }
+          .width('100%')
+          .margin({ bottom: 6 })
 
-          ForEach(this.listedSessions(), (session: LaptopSession) => {
-            Row({ space: 6 }) {
-              Text(session.title)
-                .fontSize(12)
-                .fontColor(session.id === this.currentId
-                  ? $r('app.color.text_primary')
-                  : $r('app.color.text_secondary'))
-                .maxLines(1)
-                .textOverflow({ overflow: TextOverflow.Ellipsis })
-                .layoutWeight(1)
-              if (session.id === this.currentId) {
-                Text('\u00d7')
-                  .fontSize(12)
-                  .fontColor($r('app.color.text_hint'))
-                  .padding({ left: 4, right: 2 })
-                  .onClick(() => {
-                    this.deleteSession(session.id);
-                  })
+          ForEach(this.sessionGroups(), (group: SessionGroup) => {
+            Text(group.label.toUpperCase())
+              .fontSize(9)
+              .fontWeight(FontWeight.Bold)
+              .fontColor($r('app.color.text_hint'))
+              .letterSpacing(0.7)
+              .width('100%')
+              .padding({ left: 4, top: 8, bottom: 2 })
+
+            ForEach(group.sessions, (session: LaptopSession) => {
+              Row({ space: 6 }) {
+                Text(session.title)
+                  .fontSize(12.5)
+                  .fontColor(session.id === this.currentId
+                    ? $r('app.color.text_primary')
+                    : $r('app.color.text_secondary'))
+                  .maxLines(1)
+                  .textOverflow({ overflow: TextOverflow.Ellipsis })
+                  .layoutWeight(1)
+                if (this.hoveredSession === session.id) {
+                  Text('\u00d7')
+                    .fontSize(12)
+                    .fontColor($r('app.color.text_hint'))
+                    .padding({ left: 4, right: 2 })
+                    .onClick(() => {
+                      this.deleteSession(session.id);
+                    })
+                }
               }
-            }
-            .width('100%')
-            .padding({ left: 8, right: 8, top: 7, bottom: 7 })
-            .backgroundColor(session.id === this.currentId
-              ? $r('app.color.surface')
-              : Color.Transparent)
-            .borderRadius(9)
-            .onClick(() => {
-              this.openSession(session.id);
-            })
-          }, (session: LaptopSession) => session.id + session.title)
+              .width('100%')
+              .height(30)
+              .padding({ left: 8, right: 8 })
+              .backgroundColor(session.id === this.currentId
+                ? $r('app.color.surface')
+                : Color.Transparent)
+              .borderRadius(7)
+              .onHover((isHover: boolean) => {
+                this.hoveredSession = isHover ? session.id : '';
+              })
+              .onClick(() => {
+                this.openSession(session.id);
+              })
+            }, (session: LaptopSession) => session.id + session.title)
+          }, (group: SessionGroup) => 'group-' + group.label + group.sessions.length)
         }
         .width('100%')
         .padding({ left: 12, right: 12, bottom: 8 })
@@ -1837,8 +2021,8 @@ struct LaptopIndex {
             .fontSize(12)
             .fontColor($r('app.color.text_secondary'))
           Blank()
-          Text('\u203a')
-            .fontSize(15)
+          Text('\u2699')
+            .fontSize(13)
             .fontColor($r('app.color.text_hint'))
         }
         .width('100%')
@@ -1877,7 +2061,9 @@ struct LaptopIndex {
       }
       Column() {
         this.Header()
-        if (this.view === 'browser') {
+        if (this.view === 'plans') {
+          this.PlansPane()
+        } else if (this.view === 'browser') {
           this.BrowserPane()
         } else if (this.view === 'activity') {
           this.ActivityPane()
@@ -1979,6 +2165,12 @@ struct LaptopIndex {
           Row()
             .width('100%')
             .height(0)
+        } else if (this.turns.length === 0 && this.error.length > 0) {
+          Text(this.error)
+            .fontSize(11.5)
+            .fontColor($r('app.color.danger'))
+            .width('100%')
+            .padding({ left: 22, right: 22, bottom: 4 })
         } else {
         Row({ space: 10 }) {
           TextArea({ text: this.draft, placeholder: 'Ask HOPA\u2026' })
@@ -1999,11 +2191,13 @@ struct LaptopIndex {
               if (event.type !== KeyType.Down || event.keyCode !== 2054) {
                 return;
               }
+              // The chat convention, same as Slack or ChatGPT on a desktop:
+              // Enter sends, Shift+Enter starts a new line.
               const shift: boolean = event.getModifierKeyState
                 ? event.getModifierKeyState(['shift'])
                 : false;
               if (shift) {
-                return;
+                return false;
               }
               this.send();
               return true;
