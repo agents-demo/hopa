@@ -41,6 +41,8 @@ struct Index {
   @State approvalFrameW: number = 0;
   @State approvalFrameH: number = 0;
   @State approvalLabel: string = '';
+  /** The most recent frame of another app, used as the approval backdrop. */
+  @State approvalFrame: string = '';
   @State approvalRememberLabel: string = '';
   private approvalRememberBundle: string = '';
   /** Empty unless the last run (or setup) needs attention. */
@@ -269,6 +271,11 @@ struct Index {
     this.approvalLabel = content.highlightLabel;
     this.approvalRememberLabel = content.rememberLabel;
     this.approvalRememberBundle = content.rememberBundle;
+    // The run already captured a frame of the app before this step; showing it
+    // under the highlight is honest evidence, and costs no extra screenshot.
+    // (A live capture here would include the sheet itself.)
+    const shots: string[] = AgentService.get().runtime.stepShots();
+    this.approvalFrame = shots.length > 0 ? shots[shots.length - 1] : '';
     Haptics.attention();
     this.getUIContext().animateTo({ duration: 220, curve: Curve.EaseOut }, () => {
       this.approvalOpen = true;
@@ -649,6 +656,7 @@ struct Index {
           frameWidth: this.approvalFrameW,
           frameHeight: this.approvalFrameH,
           highlightLabel: this.approvalLabel,
+          frameUrl: this.approvalFrame,
           rememberLabel: this.approvalRememberLabel,
           onAllow: (remember: boolean) => {
             if (remember && this.approvalRememberBundle.length > 0) {

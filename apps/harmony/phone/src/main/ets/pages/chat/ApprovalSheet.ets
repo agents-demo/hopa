@@ -6,6 +6,9 @@
  */
 import { HopaMark } from './HopaMark';
 
+/** Wide enough to read a row, short enough for a sheet. */
+const CROP_ASPECT: number = 2.2;
+
 @Component
 export struct ApprovalSheet {
   @Prop title: string = '';
@@ -19,6 +22,8 @@ export struct ApprovalSheet {
   @Prop frameWidth: number = 0;
   @Prop frameHeight: number = 0;
   @Prop highlightLabel: string = '';
+  /** A real frame of the screen behind the sheet, as a data URI. */
+  @Prop frameUrl: string = '';
   /** Non-empty when the app can be remembered for outgoing messages. */
   @Prop rememberLabel: string = '';
   @State understood: boolean = false;
@@ -47,6 +52,73 @@ export struct ApprovalSheet {
   private cueHeight(): string {
     const share: number = (this.highlightY2 - this.highlightY1) / this.frameHeight * 100;
     return `${Math.min(100, Math.max(4, share))}%`;
+  }
+
+  /**
+   * A crop around the target, not the whole phone: the frame is much taller
+   * than the card, and the point is to see what will be tapped.
+   */
+  private cropWidth(): number {
+    const target: number = Math.max(1, this.highlightX2 - this.highlightX1);
+    const wanted: number = Math.max(target * 2.4, this.frameWidth * 0.42);
+    return Math.min(this.frameWidth, Math.max(this.frameWidth * 0.2, wanted));
+  }
+
+  private cropHeight(): number {
+    return Math.min(this.frameHeight, this.cropWidth() / CROP_ASPECT);
+  }
+
+  private cropX(): number {
+    const width: number = this.cropWidth();
+    const center: number = (this.highlightX1 + this.highlightX2) / 2;
+    return Math.min(Math.max(0, center - width / 2), this.frameWidth - width);
+  }
+
+  private cropY(): number {
+    const height: number = this.cropHeight();
+    const center: number = (this.highlightY1 + this.highlightY2) / 2;
+    return Math.min(Math.max(0, center - height / 2), this.frameHeight - height);
+  }
+
+  @Builder
+  FrameCue() {
+    Column({ space: 6 }) {
+      Stack({ alignContent: Alignment.TopStart }) {
+        Image(this.frameUrl)
+          .width(`${this.frameWidth / this.cropWidth() * 100}%`)
+          .height(`${this.frameHeight / this.cropHeight() * 100}%`)
+          .position({
+            x: `${-this.cropX() / this.cropWidth() * 100}%`,
+            y: `${-this.cropY() / this.cropHeight() * 100}%`
+          })
+          .objectFit(ImageFit.Fill)
+        Column()
+          .width(`${(this.highlightX2 - this.highlightX1) / this.cropWidth() * 100}%`)
+          .height(`${(this.highlightY2 - this.highlightY1) / this.cropHeight() * 100}%`)
+          .position({
+            x: `${(this.highlightX1 - this.cropX()) / this.cropWidth() * 100}%`,
+            y: `${(this.highlightY1 - this.cropY()) / this.cropHeight() * 100}%`
+          })
+          .border({ width: 2, color: $r('app.color.primary') })
+          .borderRadius(7)
+          .backgroundColor('#222F6FEB')
+      }
+      .width('100%')
+      .aspectRatio(CROP_ASPECT)
+      .clip(true)
+      .borderRadius(10)
+
+      if (this.highlightLabel.length > 0) {
+        Text(`Highlighted: ${this.highlightLabel}`)
+          .fontSize(10)
+          .fontColor($r('app.color.text_hint'))
+          .width('100%')
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+      }
+    }
+    .width('100%')
+    .alignItems(HorizontalAlign.Start)
   }
 
   @Builder
@@ -128,7 +200,11 @@ export struct ApprovalSheet {
           .fontColor($r('app.color.text_primary'))
           .width('100%')
         if (this.hasCue()) {
-          this.Cue()
+          if (this.frameUrl.length > 0) {
+            this.FrameCue()
+          } else {
+            this.Cue()
+          }
         }
         Scroll() {
           Text(this.message)
