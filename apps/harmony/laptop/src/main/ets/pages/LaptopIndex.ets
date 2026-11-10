@@ -24,6 +24,16 @@ const LAPTOP_KEY_ALIAS: string = 'hopa_laptop_key';
  * This shell runs the agent on the laptop itself. It never drives the phone,
  * and it never borrows the phone's key.
  */
+class UsageRow {
+  label: string = '';
+  value: string = '';
+
+  constructor(label: string, value: string) {
+    this.label = label;
+    this.value = value;
+  }
+}
+
 class SessionGroup {
   label: string = '';
   sessions: LaptopSession[] = [];
@@ -913,6 +923,12 @@ struct LaptopIndex {
             }
           },
           {
+            value: 'Usage',
+            action: () => {
+              this.view = 'usage';
+            }
+          },
+          {
             value: 'Memory',
             action: () => {
               this.view = 'memory';
@@ -1267,6 +1283,59 @@ struct LaptopIndex {
     .padding({ left: 22, right: 22, top: 18, bottom: 28 })
     .backgroundColor($r('app.color.bg'))
     .alignItems(HorizontalAlign.Start)
+  }
+
+  @Builder
+  UsagePane() {
+    Column({ space: 10 }) {
+      Row() {
+        Text('Usage')
+          .fontSize(16)
+          .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_primary'))
+        Blank()
+        Text('This launch of HOPA')
+          .fontSize(10.5)
+          .fontColor($r('app.color.text_hint'))
+      }
+      .width('100%')
+
+      ForEach(this.usageRows(), (row: UsageRow) => {
+        Row() {
+          Text(row.label)
+            .fontSize(12)
+            .fontColor($r('app.color.text_secondary'))
+            .layoutWeight(1)
+          Text(row.value)
+            .fontSize(12.5)
+            .fontColor($r('app.color.text_primary'))
+        }
+        .width('100%')
+        .padding({ top: 8, bottom: 8 })
+      }, (row: UsageRow) => row.label + row.value)
+
+      Text('Counts start at zero each launch. The shared store keeps the conversations, not the meter.')
+        .fontSize(10.5)
+        .lineHeight(16)
+        .fontColor($r('app.color.text_hint'))
+        .width('100%')
+        .padding({ top: 4 })
+    }
+    .layoutWeight(1)
+    .width('100%')
+    .padding({ left: 22, right: 22, top: 8 })
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  private usageRows(): UsageRow[] {
+    const rows: UsageRow[] = [];
+    rows.push(new UsageRow('Model', this.modelName.length > 0 ? this.modelName : 'not set'));
+    rows.push(new UsageRow('Conversations', `${this.sessions.length}`));
+    rows.push(new UsageRow('Last run', this.lastTokens > 0 ? `${this.lastTokens} tokens` : 'none yet'));
+    rows.push(new UsageRow('Last duration', this.lastLatency > 0 ? `${this.lastLatency} ms` : 'none yet'));
+    rows.push(new UsageRow('Tokens this launch', `${this.chat.totalTokens}`));
+    rows.push(new UsageRow('Bridge', this.bridgeLive ? 'connected' : 'off'));
+    return rows;
   }
 
   @Builder
@@ -2257,7 +2326,9 @@ struct LaptopIndex {
       }
       Column() {
         this.Header()
-        if (this.view === 'memory') {
+        if (this.view === 'usage') {
+          this.UsagePane()
+        } else if (this.view === 'memory') {
           this.MemoryPane()
         } else if (this.view === 'skills') {
           this.SkillsPane()
