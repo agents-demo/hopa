@@ -7,7 +7,7 @@
       "wants": [
         {
           "bundleName": "com.hopa.agent",
-          "moduleName": "phone",
+          "moduleName": "entry",
           "abilityName": "EntryAbility",
           "parameters": {
             "hopa.shortcut": "chat"
@@ -22,7 +22,7 @@
       "wants": [
         {
           "bundleName": "com.hopa.agent",
-          "moduleName": "phone",
+          "moduleName": "entry",
           "abilityName": "EntryAbility",
           "parameters": {
             "hopa.shortcut": "runs"
