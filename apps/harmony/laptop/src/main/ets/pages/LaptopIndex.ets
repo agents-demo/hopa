@@ -1,4 +1,5 @@
 import { common } from '@kit.AbilityKit';
+import { RunRecord, RunStatus } from '@hopa/core';
 import { window } from '@kit.ArkUI';
 import { pasteboard } from '@kit.BasicServicesKit';
 import { HopaMark, EmptyHero, ResultActions, StepChips, ChatFormat, KeyStore, SettingsStore, StoredSettings } from '@hopa/app';
@@ -45,6 +46,10 @@ struct LaptopIndex {
   @State approvalKind: string = '';
   @State approvalFrame: string = '';
   @State listening: boolean = false;
+  @State query: string = '';
+  @State view: string = 'chat';
+  @State runs: RunRecord[] = [];
+  @State openRunId: string = '';
   @State speakReplies: boolean = false;
   private voice: LaptopVoice = new LaptopVoice();
   @State currentId: string = '';
@@ -92,6 +97,11 @@ struct LaptopIndex {
       this.lastTokens = session.lastTokens;
       this.refreshSessions();
       this.syncChats();
+      this.agent.archive.load(context).then(() => {
+        this.runs = this.agent.runs.all().reverse();
+      }).catch(() => {
+        this.runs = [];
+      });
       if ((AppStorage.get<string>('hopa.laptop.new') ?? '') === '1') {
         AppStorage.setOrCreate<string>('hopa.laptop.new', '');
         this.newChat();
@@ -193,10 +203,25 @@ struct LaptopIndex {
   }
 
   private listedSessions(): LaptopSession[] {
+    const needle: string = this.query.trim().toLowerCase();
     const shown: LaptopSession[] = [];
     for (const session of this.sessions) {
-      if (session.turns.length > 0) {
+      if (session.turns.length === 0) {
+        continue;
+      }
+      if (needle.length === 0) {
         shown.push(session);
+        continue;
+      }
+      if (session.title.toLowerCase().includes(needle)) {
+        shown.push(session);
+        continue;
+      }
+      for (const turn of session.turns) {
+        if (turn.text.toLowerCase().includes(needle)) {
+          shown.push(session);
+          break;
+        }
       }
     }
     return shown;
@@ -433,6 +458,8 @@ struct LaptopIndex {
     await this.store.save(context);
     this.refreshSessions();
     this.syncChats();
+    this.runs = this.agent.runs.all().reverse();
+    this.agent.archive.save(context);
   }
 
   /** Ctrl+K opens the palette; Esc closes it. Phone shells never see these. */
@@ -832,6 +859,91 @@ struct LaptopIndex {
   }
 
   @Builder
+  ActivityPane() {
+    Column({ space: 8 }) {
+      Row() {
+        Text('Activity')
+          .fontSize(16)
+          .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_primary'))
+        Blank()
+        Text('Steps this laptop actually took')
+          .fontSize(10.5)
+          .fontColor($r('app.color.text_hint'))
+      }
+      .width('100%')
+      .padding({ top: 4, bottom: 4 })
+
+      if (this.runs.length === 0) {
+        Text('Nothing yet. Every action HOPA takes lands here, with what happened.')
+          .fontSize(12)
+          .lineHeight(18)
+          .fontColor($r('app.color.text_hint'))
+          .width('100%')
+          .padding({ top: 8 })
+      } else {
+        List({ space: 6 }) {
+          ForEach(this.runs.slice(0, 80), (run: RunRecord) => {
+            ListItem() {
+              Column({ space: 6 }) {
+                Row({ space: 8 }) {
+                  Row()
+                    .width(7)
+                    .height(7)
+                    .borderRadius(4)
+                    .backgroundColor(run.status === RunStatus.Executed
+                      ? $r('app.color.success')
+                      : (run.status === RunStatus.Denied
+                        ? $r('app.color.warning')
+                        : $r('app.color.danger')))
+                  Text(run.kind)
+                    .fontSize(12.5)
+                    .fontColor($r('app.color.text_primary'))
+                    .layoutWeight(1)
+                  Text(`${run.durationMs} ms`)
+                    .fontSize(10.5)
+                    .fontColor($r('app.color.text_hint'))
+                }
+                .width('100%')
+                Text(run.detail.length > 0 ? run.detail : run.status)
+                  .fontSize(11.5)
+                  .lineHeight(16)
+                  .fontColor($r('app.color.text_secondary'))
+                  .maxLines(this.openRunId === run.id ? 8 : 2)
+                  .textOverflow({ overflow: TextOverflow.Ellipsis })
+                  .width('100%')
+                if (this.openRunId === run.id && run.shot.length > 0) {
+                  Image(run.shot)
+                    .width('100%')
+                    .height(120)
+                    .objectFit(ImageFit.Cover)
+                    .borderRadius(8)
+                    .border({ width: 1, color: $r('app.color.divider') })
+                }
+              }
+              .width('100%')
+              .padding(10)
+              .backgroundColor($r('app.color.surface'))
+              .borderRadius(10)
+              .alignItems(HorizontalAlign.Start)
+              .onClick(() => {
+                this.openRunId = this.openRunId === run.id ? '' : run.id;
+              })
+            }
+          }, (run: RunRecord) => run.id + run.startedAt + run.kind)
+        }
+        .layoutWeight(1)
+        .width('100%')
+        .scrollBar(BarState.Off)
+      }
+    }
+    .layoutWeight(1)
+    .width('100%')
+    .padding({ left: 22, right: 22, top: 8 })
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  @Builder
   Empty() {
     EmptyHero({
       greeting: '',
@@ -981,6 +1093,26 @@ struct LaptopIndex {
           this.paletteOpen = true;
         })
 
+        Row() {
+          Text('Activity')
+            .fontSize(11)
+            .fontColor(this.view === 'activity'
+              ? $r('app.color.text_primary')
+              : $r('app.color.text_hint'))
+            .layoutWeight(1)
+          Text(`${this.runs.length}`)
+            .fontSize(10)
+            .fontColor($r('app.color.text_hint'))
+        }
+        .width('100%')
+        .height(26)
+        .padding({ left: 8, right: 8 })
+        .borderRadius(7)
+        .backgroundColor(this.view === 'activity' ? $r('app.color.surface') : Color.Transparent)
+        .onClick(() => {
+          this.view = this.view === 'activity' ? 'chat' : 'activity';
+        })
+
         Text('New chat')
           .fontSize(12.5)
           .fontColor($r('app.color.primary'))
@@ -998,6 +1130,17 @@ struct LaptopIndex {
 
       Scroll() {
         Column({ space: 2 }) {
+          TextInput({ text: this.query, placeholder: 'Search' })
+            .height(32)
+            .fontSize(11.5)
+            .backgroundColor($r('app.color.surface'))
+            .borderRadius(8)
+            .placeholderColor($r('app.color.text_hint'))
+            .margin({ bottom: 6 })
+            .onChange((value: string) => {
+              this.query = value;
+            })
+
           Text('CONVERSATIONS')
             .fontSize(9)
             .fontWeight(FontWeight.Bold)
@@ -1100,7 +1243,9 @@ struct LaptopIndex {
       }
       Column() {
         this.Header()
-        if (this.settingsOpen) {
+        if (this.view === 'activity') {
+          this.ActivityPane()
+        } else if (this.settingsOpen) {
           Scroll() {
             Column() {
               this.SettingsPanel()
@@ -1194,7 +1339,7 @@ struct LaptopIndex {
           .padding({ left: 22, right: 22, top: 12, bottom: 6 })
           .alignItems(HorizontalAlign.Start)
         }
-        if (this.settingsOpen) {
+        if (this.settingsOpen || this.view !== 'chat') {
           Row()
             .width('100%')
             .height(0)

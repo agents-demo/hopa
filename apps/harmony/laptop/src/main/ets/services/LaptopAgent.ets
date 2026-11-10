@@ -19,6 +19,7 @@ import {
   SkillStore
 } from '@hopa/app';
 import { LaptopApprovals } from './LaptopApprovals';
+import { RunArchive } from '@hopa/app';
 
 /**
  * The laptop's binding of the shared runtime.
@@ -90,6 +91,8 @@ export class LaptopAgent {
   readonly skills: SkillStore = new SkillStore();
   readonly approvals: LaptopApprovals = new LaptopApprovals();
   readonly bridge: BridgeClient = new BridgeClient();
+  readonly runs: RunStore = new RunStore();
+  readonly archive: RunArchive = new RunArchive(this.runs);
   readonly chatSync: ChatSync = new ChatSync();
   private executor: ActionExecutor;
 
@@ -104,7 +107,7 @@ export class LaptopAgent {
     const executor = new ActionExecutor(
       new ApprovalPolicy(),
       this.approvals,
-      new RunStore()
+      this.runs
     );
     executor.registerCapability(new RemoteUiCapability(this.bridge, gates));
     this.executor = executor;
