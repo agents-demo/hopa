@@ -250,72 +250,75 @@ export struct ChatEmptyState {
 
   build() {
     Column({ space: 12 }) {
-      Column({ space: 12 }) {
-        HopaMark({
-          state: this.listening ? 'listening' : 'idle',
-          markSize: this.style().mascot,
-          animate: this.style().motion
-        })
-        Text(this.greeting)
-          .fontSize(11)
-          .fontColor($r('app.color.text_hint'))
-          .letterSpacing(0.4)
-        Text('HOPA')
-          .fontSize(this.style().title)
-          .fontWeight(FontWeight.Bold)
-          .fontColor($r('app.color.text_primary'))
-          .letterSpacing(-0.4)
-        Text(this.tagline())
-          .fontSize(this.style().body - 1)
-          .fontColor($r('app.color.text_secondary'))
-          .textAlign(TextAlign.Center)
-        Text('Payments always ask first.')
-          .fontSize(this.style().body - 4)
-          .fontColor($r('app.color.text_hint'))
-      }
-      .width('100%')
-      .padding({ top: 72 })
-
-      // Examples grow upward from the bottom row, so the hero never moves.
-      Column({ space: 8 }) {
-        Blank()
-        if (this.ideasOpen) {
-          Text('TRY SOMETHING')
-            .fontSize(9)
-            .fontWeight(FontWeight.Bold)
+      Stack({ alignContent: Alignment.Center }) {
+        Column({ space: 12 }) {
+          HopaMark({
+            state: this.listening ? 'listening' : 'idle',
+            markSize: this.style().mascot,
+            animate: this.style().motion
+          })
+          Text(this.greeting)
+            .fontSize(11)
             .fontColor($r('app.color.text_hint'))
-            .letterSpacing(0.7)
-            .width('100%')
-            .padding({ left: 2 })
-          ForEach(this.suggestions(), (suggestion: string, index: number) => {
-            Row() {
-              Text(suggestion)
-                .fontSize(this.style().body - 2.5)
-                .fontColor($r('app.color.text_primary'))
-                .maxLines(1)
-                .textOverflow({ overflow: TextOverflow.Ellipsis })
-            }
-            .width('100%')
-            .padding({ left: 14, right: 14, top: this.style().motion ? 12 : 14, bottom: this.style().motion ? 12 : 14 })
-            .backgroundColor($r('app.color.surface'))
-            .border({ width: 1, color: '#0F1C1B18' })
-            .borderRadius(this.style().cardRadius)
-            .shadow({ radius: 10, color: '#0A1C1B18', offsetY: 2 })
-            .scale({ x: this.pressed === index ? 0.985 : 1, y: this.pressed === index ? 0.985 : 1 })
-            .animation({ duration: 140, curve: Curve.EaseOut })
-            .onClick(() => {
-              this.pick(index, suggestion);
-            })
-          }, (suggestion: string) => suggestion)
+            .letterSpacing(0.4)
+          Text('HOPA')
+            .fontSize(this.style().title)
+            .fontWeight(FontWeight.Bold)
+            .fontColor($r('app.color.text_primary'))
+            .letterSpacing(-0.4)
+          Text(this.tagline())
+            .fontSize(this.style().body - 1)
+            .fontColor($r('app.color.text_secondary'))
+            .textAlign(TextAlign.Center)
+          Text('Payments always ask first.')
+            .fontSize(this.style().body - 4)
+            .fontColor($r('app.color.text_hint'))
+        }
+        .width('100%')
+
+        // The examples overlay the lower half: the hero never moves.
+        if (this.ideasOpen) {
+          Column({ space: 8 }) {
+            Text('TRY SOMETHING')
+              .fontSize(9)
+              .fontWeight(FontWeight.Bold)
+              .fontColor($r('app.color.text_hint'))
+              .letterSpacing(0.7)
+              .width('100%')
+              .padding({ left: 2 })
+            ForEach(this.suggestions(), (suggestion: string, index: number) => {
+              Row() {
+                Text(suggestion)
+                  .fontSize(this.style().body - 2.5)
+                  .fontColor($r('app.color.text_primary'))
+                  .maxLines(1)
+                  .textOverflow({ overflow: TextOverflow.Ellipsis })
+              }
+              .width('100%')
+              .padding({ left: 14, right: 14, top: this.style().motion ? 12 : 14, bottom: this.style().motion ? 12 : 14 })
+              .backgroundColor($r('app.color.surface'))
+              .border({ width: 1, color: '#0F1C1B18' })
+              .borderRadius(this.style().cardRadius)
+              .shadow({ radius: 10, color: '#0A1C1B18', offsetY: 2 })
+              .scale({ x: this.pressed === index ? 0.985 : 1, y: this.pressed === index ? 0.985 : 1 })
+              .animation({ duration: 140, curve: Curve.EaseOut })
+              .onClick(() => {
+                this.pick(index, suggestion);
+              })
+            }, (suggestion: string) => suggestion)
+          }
+          .width('100%')
+          .height('100%')
+          .justifyContent(FlexAlign.End)
+          .alignItems(HorizontalAlign.Start)
         }
       }
       .width('100%')
       .layoutWeight(1)
-      .alignItems(HorizontalAlign.Start)
 
       Row({ space: 8 }) {
         if (this.profile().discovery === 'guided') {
-          Text(this.ideasOpen ? 'Hide examples \u2191' : 'Try an example \u2193')
+          Text(this.ideasOpen ? 'Hide examples \u2193' : 'Try an example \u2191')
             .fontSize(12)
             .fontColor(this.accent())
             .padding({ left: 14, right: 14, top: 9, bottom: 9 })

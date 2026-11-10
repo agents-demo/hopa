@@ -496,19 +496,6 @@ struct Index {
               this.refreshChats();
               this.go('chat');
             })
-          } else if (this.previousSession() !== undefined) {
-            Text('Continue')
-              .fontSize(13)
-              .fontWeight(FontWeight.Medium)
-              .fontColor($r('app.color.primary'))
-              .height(40)
-              .padding({ left: 14, right: 14 })
-              .backgroundColor($r('app.color.primary_soft'))
-              .borderRadius(20)
-              .accessibilityText('Continue last conversation')
-              .onClick(() => {
-                this.continueLast();
-              })
           }
         }
       } else {
