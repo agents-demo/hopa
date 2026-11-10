@@ -23,6 +23,9 @@ export class LaptopChat {
   lastTokens: number = 0;
   totalTokens: number = 0;
   lastQuestion: string = '';
+  /** Set before a run so run records can be grouped by the turn that caused them. */
+  lastUserTurnId: string = '';
+  onTurnStart: (turnId: string) => void = () => {};
 
   private runtime: AgentRuntime | undefined = undefined;
   private provider: string = 'deepseek';
@@ -59,6 +62,7 @@ export class LaptopChat {
     }
     const user = new LaptopTurn();
     user.id = this.newTurnId();
+    this.lastUserTurnId = user.id;
     user.at = Date.now();
     user.role = 'user';
     user.text = prompt;
@@ -70,6 +74,7 @@ export class LaptopChat {
       if (this.runtime === undefined || !this.isReady()) {
         throw new Error('no model key yet');
       }
+      this.onTurnStart(user.id);
       const replyText: string = await this.runtime.run(prompt);
       this.lastLatencyMs = this.runtime.getLastDurationMs();
       this.lastTokens = this.runtime.getLastTokens();

@@ -6,6 +6,8 @@ export class RunRecord {
   id: string;
   actionId: string;
   kind: string;
+  /** Which conversation turn this action belonged to; '' for older records. */
+  turnId: string = '';
   isPayment: boolean;
   approved: boolean = false;
   /** The executor re-observed the screen and saw a change. */

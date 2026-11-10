@@ -22,6 +22,15 @@ const LAPTOP_KEY_ALIAS: string = 'hopa_laptop_key';
  * This shell runs the agent on the laptop itself. It never drives the phone,
  * and it never borrows the phone's key.
  */
+class RunGroup {
+  turnId: string = '';
+  question: string = '';
+  at: number = 0;
+  duration: number = 0;
+  failed: number = 0;
+  records: RunRecord[] = [];
+}
+
 @Entry
 @Component
 struct LaptopIndex {
@@ -52,6 +61,9 @@ struct LaptopIndex {
   @State view: string = 'chat';
   @State runs: RunRecord[] = [];
   @State openRunId: string = '';
+  @State openTurn: string = '';
+  @State replayTurn: string = '';
+  @State replayIndex: number = 0;
   @State address: string = LaptopIndex.START_URL;
   private static readonly START_URL: string = 'https://example.com';
   @State pageTitle: string = '';
@@ -87,6 +99,9 @@ struct LaptopIndex {
     const context = getContext(this) as common.UIAbilityContext;
     this.chat.useRuntime(this.agent.runtime);
     this.store.attachSync(this.agent.chatSync);
+    this.chat.onTurnStart = (turnId: string) => {
+      this.agent.runs.beginTurn(turnId);
+    };
     this.agent.approvals.onAsk = (kind: string, detail: string) => {
       this.approvalKind = kind;
       this.approvalDetail = detail;
@@ -230,6 +245,49 @@ struct LaptopIndex {
     } catch (error) {
       // Clipboard is best effort.
     }
+  }
+
+  /** Run records grouped by the conversation turn that caused them. */
+  private runGroups(): RunGroup[] {
+    const groups: RunGroup[] = [];
+    let current: RunGroup | undefined = undefined;
+    for (const run of this.runs) {
+      const key: string = run.turnId.length > 0 ? run.turnId : 'single';
+      if (current === undefined || current.turnId !== key) {
+        current = new RunGroup();
+        current.turnId = key;
+        current.question = this.questionFor(key);
+        current.at = run.startedAt;
+        groups.push(current);
+      }
+      current.records.push(run);
+      current.duration += run.durationMs;
+      if (run.status === RunStatus.Failed) {
+        current.failed += 1;
+      }
+    }
+    return groups;
+  }
+
+  private questionFor(turnId: string): string {
+    for (const session of this.sessions) {
+      for (const turn of session.turns) {
+        if (turn.id === turnId && turn.role === 'user') {
+          return turn.text;
+        }
+      }
+    }
+    return '';
+  }
+
+  private replayShots(group: RunGroup): string[] {
+    const shots: string[] = [];
+    for (const run of group.records) {
+      if (run.shot.length > 0) {
+        shots.push(run.shot);
+      }
+    }
+    return shots;
   }
 
   private listedSessions(): LaptopSession[] {
@@ -1103,51 +1161,119 @@ struct LaptopIndex {
       .width('100%')
       .padding({ top: 4, bottom: 4 })
 
-      if (this.runs.length === 0) {
-        Text('Nothing yet. Every action HOPA takes lands here, with what happened.')
+      if (this.runGroups().length === 0) {
+        Text('Nothing yet. Every action HOPA takes lands here, grouped by the question that caused it.')
           .fontSize(12)
           .lineHeight(18)
           .fontColor($r('app.color.text_hint'))
           .width('100%')
           .padding({ top: 8 })
       } else {
-        List({ space: 6 }) {
-          ForEach(this.runs.slice(0, 80), (run: RunRecord) => {
+        List({ space: 8 }) {
+          ForEach(this.runGroups(), (group: RunGroup) => {
             ListItem() {
-              Column({ space: 6 }) {
+              Column({ space: 8 }) {
                 Row({ space: 8 }) {
-                  Row()
-                    .width(7)
-                    .height(7)
-                    .borderRadius(4)
-                    .backgroundColor(run.status === RunStatus.Executed
-                      ? $r('app.color.success')
-                      : (run.status === RunStatus.Denied
-                        ? $r('app.color.warning')
-                        : $r('app.color.danger')))
-                  Text(run.kind)
-                    .fontSize(12.5)
-                    .fontColor($r('app.color.text_primary'))
-                    .layoutWeight(1)
-                  Text(`${run.durationMs} ms`)
-                    .fontSize(10.5)
+                  Column({ space: 2 }) {
+                    Text(group.question.length > 0 ? group.question : 'Action')
+                      .fontSize(12.5)
+                      .fontColor($r('app.color.text_primary'))
+                      .maxLines(1)
+                      .textOverflow({ overflow: TextOverflow.Ellipsis })
+                      .width('100%')
+                    Text(`${group.records.length} step${group.records.length === 1 ? '' : 's'} \u00b7 ${group.duration} ms`)
+                      .fontSize(10.5)
+                      .fontColor($r('app.color.text_hint'))
+                      .width('100%')
+                  }
+                  .layoutWeight(1)
+                  .alignItems(HorizontalAlign.Start)
+                  if (group.failed > 0) {
+                    Text(`${group.failed} failed`)
+                      .fontSize(10)
+                      .fontColor($r('app.color.danger'))
+                  }
+                  Text(this.openTurn === group.turnId ? '\u2039' : '\u203a')
+                    .fontSize(14)
                     .fontColor($r('app.color.text_hint'))
                 }
                 .width('100%')
-                Text(run.detail.length > 0 ? run.detail : run.status)
-                  .fontSize(11.5)
-                  .lineHeight(16)
-                  .fontColor($r('app.color.text_secondary'))
-                  .maxLines(this.openRunId === run.id ? 8 : 2)
-                  .textOverflow({ overflow: TextOverflow.Ellipsis })
-                  .width('100%')
-                if (this.openRunId === run.id && run.shot.length > 0) {
-                  Image(run.shot)
+                .onClick(() => {
+                  this.openTurn = this.openTurn === group.turnId ? '' : group.turnId;
+                  this.replayTurn = '';
+                })
+
+                if (this.openTurn === group.turnId) {
+                  ForEach(group.records, (run: RunRecord) => {
+                    Row({ space: 8 }) {
+                      Row()
+                        .width(6)
+                        .height(6)
+                        .borderRadius(3)
+                        .backgroundColor(run.status === RunStatus.Executed
+                          ? $r('app.color.success')
+                          : (run.status === RunStatus.Denied
+                            ? $r('app.color.warning')
+                            : $r('app.color.danger')))
+                      Column({ space: 2 }) {
+                        Text(run.kind)
+                          .fontSize(11.5)
+                          .fontColor($r('app.color.text_primary'))
+                          .width('100%')
+                        if (run.detail.length > 0) {
+                          Text(run.detail)
+                            .fontSize(10.5)
+                            .lineHeight(15)
+                            .fontColor($r('app.color.text_secondary'))
+                            .width('100%')
+                        }
+                      }
+                      .layoutWeight(1)
+                      .alignItems(HorizontalAlign.Start)
+                      Text(`${run.durationMs} ms`)
+                        .fontSize(10)
+                        .fontColor($r('app.color.text_hint'))
+                    }
                     .width('100%')
-                    .height(120)
-                    .objectFit(ImageFit.Cover)
-                    .borderRadius(8)
-                    .border({ width: 1, color: $r('app.color.divider') })
+                    .padding({ top: 2, bottom: 2 })
+                  }, (run: RunRecord) => run.id + run.kind + run.startedAt)
+
+                  if (this.replayShots(group).length > 0) {
+                    Row({ space: 8 }) {
+                      Text(this.replayTurn === group.turnId ? 'Hide frames' : 'Replay frames')
+                        .fontSize(11)
+                        .fontColor($r('app.color.primary'))
+                        .padding({ left: 10, right: 10, top: 5, bottom: 5 })
+                        .backgroundColor($r('app.color.primary_soft'))
+                        .borderRadius(10)
+                        .onClick(() => {
+                          this.replayTurn = this.replayTurn === group.turnId ? '' : group.turnId;
+                          this.replayIndex = 0;
+                        })
+                      if (this.replayTurn === group.turnId) {
+                        Text(`${this.replayIndex + 1} / ${this.replayShots(group).length}`)
+                          .fontSize(10.5)
+                          .fontColor($r('app.color.text_hint'))
+                        Text('Next')
+                          .fontSize(11)
+                          .fontColor($r('app.color.primary'))
+                          .onClick(() => {
+                            const total: number = this.replayShots(group).length;
+                            this.replayIndex = (this.replayIndex + 1) % total;
+                          })
+                      }
+                    }
+                    .width('100%')
+
+                    if (this.replayTurn === group.turnId) {
+                      Image(this.replayShots(group)[this.replayIndex])
+                        .width('100%')
+                        .height(150)
+                        .objectFit(ImageFit.Cover)
+                        .borderRadius(8)
+                        .border({ width: 1, color: $r('app.color.divider') })
+                    }
+                  }
                 }
               }
               .width('100%')
@@ -1155,11 +1281,8 @@ struct LaptopIndex {
               .backgroundColor($r('app.color.surface'))
               .borderRadius(10)
               .alignItems(HorizontalAlign.Start)
-              .onClick(() => {
-                this.openRunId = this.openRunId === run.id ? '' : run.id;
-              })
             }
-          }, (run: RunRecord) => run.id + run.startedAt + run.kind)
+          }, (group: RunGroup) => group.turnId + group.at + group.records.length)
         }
         .layoutWeight(1)
         .width('100%')
