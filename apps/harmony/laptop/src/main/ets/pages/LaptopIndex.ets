@@ -1,8 +1,9 @@
 import { common } from '@kit.AbilityKit';
-import { HopaMark } from '@hopa/app';
+import { HopaMark, KeyStore } from '@hopa/app';
 import { LaptopChat, LaptopTurn } from '../services/LaptopChat';
-import { LaptopKeyStore } from '../services/LaptopKeyStore';
 import { LaptopSettings } from '../services/LaptopSettings';
+
+const LAPTOP_KEY_ALIAS: string = 'hopa_laptop_key';
 
 /**
  * The HOPA workbench: one conversation, one input, everything else quiet.
@@ -23,6 +24,7 @@ struct LaptopIndex {
   @State settingsOpen: boolean = false;
   @State keyDraft: string = '';
   @State saved: string = '';
+  @State winWidth: number = 1280;
   @StorageLink('hopa.laptop.pending') @Watch('onPending') pending: string = '';
   private deferredAsk: string = '';
   private chat: LaptopChat = new LaptopChat();
@@ -33,7 +35,7 @@ struct LaptopIndex {
     LaptopSettings.load(context).then((settings: LaptopSettings) => {
       this.endpoint = settings.endpoint;
       this.modelName = settings.model;
-      LaptopKeyStore.load().then((key: string) => {
+      KeyStore.load(LAPTOP_KEY_ALIAS).then((key: string) => {
         this.keyPresent = key.length > 0;
         this.chat.configure(this.endpoint, this.modelName, key);
         this.applyInjected().then(() => {
@@ -94,9 +96,9 @@ struct LaptopIndex {
       AppStorage.setOrCreate<string>('hopa.laptop.model', '');
     }
     if (injectedKey.length > 0) {
-      const saved: boolean = await LaptopKeyStore.save(injectedKey);
+      const saved: boolean = await KeyStore.save(injectedKey, LAPTOP_KEY_ALIAS);
       AppStorage.setOrCreate<string>('hopa.laptop.key', '');
-      const key: string = await LaptopKeyStore.load();
+      const key: string = await KeyStore.load(LAPTOP_KEY_ALIAS);
       this.keyPresent = key.length > 0;
       this.saved = this.keyPresent ? 'Key saved.' : 'Key store unavailable.';
       this.chat.configure(this.endpoint, this.modelName, key);
@@ -134,15 +136,15 @@ struct LaptopIndex {
     settings.model = this.modelName.trim().length > 0 ? this.modelName.trim() : settings.model;
     await settings.save(context);
     if (this.keyDraft.trim().length > 0) {
-      const ok: boolean = await LaptopKeyStore.save(this.keyDraft);
+      const ok: boolean = await KeyStore.save(this.keyDraft, LAPTOP_KEY_ALIAS);
       this.saved = ok ? 'Saved.' : 'That key looks too short.';
       this.keyDraft = '';
-      const key: string = await LaptopKeyStore.load();
+      const key: string = await KeyStore.load(LAPTOP_KEY_ALIAS);
       this.keyPresent = key.length > 0;
       this.chat.configure(settings.endpoint, settings.model, key);
     } else {
       this.saved = 'Saved.';
-      const key: string = await LaptopKeyStore.load();
+      const key: string = await KeyStore.load(LAPTOP_KEY_ALIAS);
       this.chat.configure(settings.endpoint, settings.model, key);
     }
     this.modelName = settings.model;
@@ -334,80 +336,232 @@ struct LaptopIndex {
     }
   }
 
-  build() {
-    Column() {
-      this.Header()
-      if (this.settingsOpen) {
-        this.SettingsPanel()
-      }
-      if (this.turns.length === 0) {
-        Column() {
-          this.Empty()
-        }
-        .layoutWeight(1)
-        .width('100%')
-      } else {
-        List({ scroller: this.scroller }) {
-          ForEach(this.turns, (turn: LaptopTurn, index: number) => {
-            ListItem() {
-              this.Turn(turn)
-            }
-            .padding({ top: 10, bottom: 10 })
-          }, (turn: LaptopTurn, index: number) => `${index}-${turn.role}`)
-          if (this.busy) {
-            ListItem() {
-              Row({ space: 10 }) {
-                HopaMark({ state: 'thinking', markSize: 18, interactive: false })
-                Text('Thinking…')
-                  .fontSize(12)
-                  .fontColor($r('app.color.text_hint'))
-              }
-              .width('100%')
-            }
-            .padding({ top: 8, bottom: 8 })
-          }
-        }
-        .layoutWeight(1)
-        .width('100%')
-        .padding({ left: 22, right: 22 })
-        .scrollBar(BarState.Off)
-      }
-      if (this.error.length > 0) {
-        Text(this.error)
-          .fontSize(10.5)
-          .fontColor($r('app.color.danger'))
-          .width('100%')
-          .padding({ left: 22, right: 22, bottom: 4 })
-      }
-      Row({ space: 10 }) {
-        TextInput({ text: this.draft, placeholder: 'Ask HOPA…' })
-          .layoutWeight(1)
-          .height(44)
-          .fontSize(13.5)
-          .backgroundColor($r('app.color.surface_muted'))
-          .borderRadius(22)
-          .enterKeyType(EnterKeyType.Send)
-          .onChange((value: string) => {
-            this.draft = value;
-          })
-          .onSubmit(() => {
-            this.send();
-          })
-        Button('Send')
-          .height(44)
-          .fontSize(13)
-          .backgroundColor($r('app.color.primary'))
-          .fontColor($r('app.color.on_primary'))
-          .enabled(!this.busy && this.draft.trim().length > 0)
-          .onClick(() => {
-            this.send();
-          })
+  private showSidebar(): boolean {
+    return this.winWidth >= 640;
+  }
+
+  private showRail(): boolean {
+    return this.winWidth >= 940;
+  }
+
+  @Builder
+  Sidebar() {
+    Column({ space: 10 }) {
+      Row({ space: 8 }) {
+        HopaMark({ state: 'idle', markSize: 22, interactive: false })
+        Text('HOPA')
+          .fontSize(14)
+          .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_primary'))
       }
       .width('100%')
-      .padding({ left: 22, right: 22, top: 8, bottom: 16 })
+      .padding({ left: 4 })
+
+      Text('New chat')
+        .fontSize(12.5)
+        .fontColor($r('app.color.primary'))
+        .width('100%')
+        .textAlign(TextAlign.Center)
+        .padding({ top: 9, bottom: 9 })
+        .backgroundColor($r('app.color.primary_soft'))
+        .borderRadius(10)
+        .onClick(() => {
+          this.chat.clear();
+          this.turns = [];
+          this.error = '';
+        })
+
+      Text('THIS SESSION')
+        .fontSize(9)
+        .fontWeight(FontWeight.Bold)
+        .fontColor($r('app.color.text_hint'))
+        .letterSpacing(0.7)
+        .width('100%')
+        .padding({ left: 4, top: 8 })
+
+      Row({ space: 8 }) {
+        Row()
+          .width(5)
+          .height(5)
+          .borderRadius(3)
+          .backgroundColor($r('app.color.primary'))
+        Text(this.turns.length > 0 ? 'Conversation' : 'Nothing yet')
+          .fontSize(12)
+          .fontColor($r('app.color.text_primary'))
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+      }
+      .width('100%')
+      .padding({ left: 8, right: 8, top: 8, bottom: 8 })
+      .backgroundColor($r('app.color.surface'))
+      .borderRadius(9)
+
+      Blank()
+
+      Text(this.keyPresent ? `Model \u00b7 ${this.modelName}` : 'Add model key')
+        .fontSize(11)
+        .fontColor(this.keyPresent ? $r('app.color.text_secondary') : $r('app.color.primary'))
+        .width('100%')
+        .padding({ left: 8, right: 8, top: 7, bottom: 7 })
+        .backgroundColor($r('app.color.surface'))
+        .borderRadius(9)
+        .onClick(() => {
+          this.settingsOpen = !this.settingsOpen;
+        })
+      Text('This laptop \u00b7 v0.1')
+        .fontSize(9.5)
+        .fontColor($r('app.color.text_hint'))
+        .width('100%')
+        .padding({ left: 4, bottom: 4 })
+    }
+    .width(212)
+    .height('100%')
+    .padding({ left: 12, right: 12, top: 14, bottom: 10 })
+    .backgroundColor($r('app.color.surface_alt'))
+    .border({ width: { right: 1 }, color: $r('app.color.divider') })
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  @Builder
+  Rail() {
+    Column({ space: 10 }) {
+      Text('WHAT HOPA SEES')
+        .fontSize(9)
+        .fontWeight(FontWeight.Bold)
+        .fontColor($r('app.color.text_hint'))
+        .letterSpacing(0.7)
+        .width('100%')
+      Text('Your words only. This build does not read the screen or drive other apps, so there is no capture to show.')
+        .fontSize(11)
+        .lineHeight(17)
+        .fontColor($r('app.color.text_secondary'))
+        .width('100%')
+
+      Divider().color($r('app.color.divider'))
+
+      Text('LIMITS')
+        .fontSize(9)
+        .fontWeight(FontWeight.Bold)
+        .fontColor($r('app.color.text_hint'))
+        .letterSpacing(0.7)
+        .width('100%')
+      Text('\u2022 No app control on this machine yet\n\u2022 No files or screen access\n\u2022 Payments always ask first')
+        .fontSize(11)
+        .lineHeight(18)
+        .fontColor($r('app.color.text_secondary'))
+        .width('100%')
+
+      Divider().color($r('app.color.divider'))
+
+      Text('PHONE')
+        .fontSize(9)
+        .fontWeight(FontWeight.Bold)
+        .fontColor($r('app.color.text_hint'))
+        .letterSpacing(0.7)
+        .width('100%')
+      Text('The phone runs its own HOPA with its own key. The two do not share a session yet.')
+        .fontSize(11)
+        .lineHeight(17)
+        .fontColor($r('app.color.text_secondary'))
+        .width('100%')
+
+      Blank()
+    }
+    .width(258)
+    .height('100%')
+    .padding({ left: 16, right: 16, top: 16, bottom: 12 })
+    .backgroundColor($r('app.color.surface_alt'))
+    .border({ width: { left: 1 }, color: $r('app.color.divider') })
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  build() {
+    Row() {
+      if (this.showSidebar()) {
+        this.Sidebar()
+      }
+      Column() {
+        this.Header()
+        if (this.settingsOpen) {
+          this.SettingsPanel()
+        }
+        if (this.turns.length === 0) {
+          Column() {
+            this.Empty()
+          }
+          .layoutWeight(1)
+          .width('100%')
+        } else {
+          List({ scroller: this.scroller }) {
+            ForEach(this.turns, (turn: LaptopTurn, index: number) => {
+              ListItem() {
+                this.Turn(turn)
+              }
+              .padding({ top: 10, bottom: 10 })
+            }, (turn: LaptopTurn, index: number) => `${index}-${turn.role}`)
+            if (this.busy) {
+              ListItem() {
+                Row({ space: 10 }) {
+                  HopaMark({ state: 'thinking', markSize: 18, interactive: false })
+                  Text('Thinking\u2026')
+                    .fontSize(12)
+                    .fontColor($r('app.color.text_hint'))
+                }
+                .width('100%')
+              }
+              .padding({ top: 8, bottom: 8 })
+            }
+          }
+          .layoutWeight(1)
+          .width('100%')
+          .padding({ left: 22, right: 22 })
+          .scrollBar(BarState.Off)
+        }
+        if (this.error.length > 0) {
+          Text(this.error)
+            .fontSize(10.5)
+            .fontColor($r('app.color.danger'))
+            .width('100%')
+            .padding({ left: 22, right: 22, bottom: 4 })
+        }
+        Row({ space: 10 }) {
+          TextInput({ text: this.draft, placeholder: 'Ask HOPA\u2026' })
+            .layoutWeight(1)
+            .height(44)
+            .fontSize(13.5)
+            .backgroundColor($r('app.color.surface_muted'))
+            .borderRadius(22)
+            .enterKeyType(EnterKeyType.Send)
+            .onChange((value: string) => {
+              this.draft = value;
+            })
+            .onSubmit(() => {
+              this.send();
+            })
+          Button('Send')
+            .height(44)
+            .fontSize(13)
+            .backgroundColor($r('app.color.primary'))
+            .fontColor($r('app.color.on_primary'))
+            .enabled(!this.busy && this.draft.trim().length > 0)
+            .onClick(() => {
+              this.send();
+            })
+        }
+        .width('100%')
+        .padding({ left: 22, right: 22, top: 8, bottom: 16 })
+      }
+      .layoutWeight(1)
+      .height('100%')
+      if (this.showRail()) {
+        this.Rail()
+      }
     }
     .width('100%')
     .height('100%')
     .backgroundColor($r('app.color.bg'))
+    .onAreaChange((oldValue: Area, newValue: Area) => {
+      this.winWidth = Number(newValue.width.toString());
+    })
   }
 }
