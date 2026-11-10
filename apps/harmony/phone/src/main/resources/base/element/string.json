@@ -211,6 +211,14 @@
     {
       "name": "placeholder_key",
       "value": "sk-…"
+    },
+    {
+      "name": "shortcut_ask",
+      "value": "Ask HOPA"
+    },
+    {
+      "name": "shortcut_last",
+      "value": "Last run"
     }
   ]
 }

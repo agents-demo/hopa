@@ -40,6 +40,10 @@ export default class EntryAbility extends UIAbility {
         IntentInbox.put(text);
       }
     }
+    const shortcut: string | undefined = want.parameters?.['hopa.shortcut'] as string | undefined;
+    if (typeof shortcut === 'string' && shortcut.length > 0) {
+      AppStorage.setOrCreate<string>('hopa.goto', shortcut === 'runs' ? 'runs' : 'chat');
+    }
     const shared: string | undefined = want.parameters?.['hopa.sharedText'] as string | undefined;
     if (typeof shared === 'string' && shared.length > 0) {
       IntentInbox.put(shared);
