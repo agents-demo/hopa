@@ -35,6 +35,7 @@ struct LaptopIndex {
   @State sessions: LaptopSession[] = [];
   @State remoteSessions: RemoteSession[] = [];
   @State remoteOpen: boolean = false;
+  @State remoteId: string = '';
   @State remoteTitle: string = '';
   @State remoteTurns: RemoteTurn[] = [];
   @State linkUrl: string = '';
@@ -219,6 +220,7 @@ struct LaptopIndex {
 
   private openRemote(session: RemoteSession): void {
     this.remoteOpen = true;
+    this.remoteId = session.id;
     this.remoteTitle = session.title;
     this.remoteTurns = session.turns;
     this.paletteOpen = false;
@@ -234,6 +236,7 @@ struct LaptopIndex {
 
   private closeRemote(): void {
     this.remoteOpen = false;
+    this.remoteId = '';
     this.remoteTurns = [];
     this.remoteTitle = '';
   }
@@ -832,6 +835,9 @@ struct LaptopIndex {
               }
               .width('100%')
               .padding({ left: 8, right: 8, top: 6, bottom: 6 })
+              .backgroundColor(this.remoteOpen && this.remoteId === session.id
+                ? $r('app.color.surface')
+                : Color.Transparent)
               .borderRadius(8)
               .onClick(() => {
                 this.openRemote(session);
@@ -1054,7 +1060,7 @@ struct LaptopIndex {
                 }
               }
               .padding({ top: 10, bottom: 10 })
-            }, (turn: RemoteTurn, index: number) => `remote-${index}-${turn.role}`)
+            }, (turn: RemoteTurn, index: number) => `${this.remoteId}-${index}-${turn.role}`)
           }
           .layoutWeight(1)
           .width('100%')
