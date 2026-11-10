@@ -6,22 +6,20 @@
     </linearGradient>
   </defs>
 
-  <!-- feet, tucked under the deck -->
-  <rect x="150" y="384" width="32" height="28" rx="10" fill="url(#mascot-coral-laptop)"/>
-  <rect x="334" y="384" width="32" height="28" rx="10" fill="url(#mascot-coral-laptop)"/>
-
   <!-- deck -->
-  <rect x="48" y="348" width="420" height="36" rx="15" fill="url(#mascot-coral-laptop)"/>
-  <rect x="128" y="361" width="258" height="6" rx="3" fill="#FFF9F0" opacity="0.85"/>
+  <rect x="56" y="338" width="400" height="42" rx="20" fill="url(#mascot-coral-laptop)"/>
+  <rect x="100" y="347" width="312" height="3" rx="1.5" fill="#FFF9F0" opacity="0.50"/>
+  <rect x="214" y="356" width="84" height="15" rx="6" fill="#FFF9F0" opacity="0.85"/>
 
-  <!-- lid: landscape, the way a real laptop reads -->
-  <rect x="66" y="92" width="384" height="256" rx="24" fill="url(#mascot-coral-laptop)"/>
-  <rect x="101" y="109" width="314" height="222" rx="11" fill="#FFF9F0"/>
+  <!-- lid: the same thickness of body as the phone -->
+  <rect x="72" y="92" width="368" height="246" rx="34" fill="url(#mascot-coral-laptop)"/>
+  <circle cx="256" cy="110" r="3.6" fill="#FFF9F0" opacity="0.5"/>
+  <rect x="126" y="128" width="260" height="168" rx="26" fill="#FFF9F0"/>
 
-  <!-- eyes: paired with the eyelid overlay in HopaMark -->
-  <rect x="208" y="168" width="30" height="64" rx="15" fill="#1C1B18"/>
-  <rect x="276" y="168" width="30" height="64" rx="15" fill="#1C1B18"/>
+  <!-- eyes -->
+  <rect x="206" y="156" width="30" height="62" rx="15" fill="#1C1B18"/>
+  <rect x="276" y="156" width="30" height="62" rx="15" fill="#1C1B18"/>
 
   <!-- smile -->
-  <path d="M 232 258 Q 257 278 282 258" stroke="#1C1B18" stroke-width="13" stroke-linecap="round" fill="none"/>
+  <path d="M 230 240 Q 256 256 282 240" stroke="#1C1B18" stroke-width="12" stroke-linecap="round" fill="none"/>
 </svg>
