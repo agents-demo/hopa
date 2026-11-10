@@ -235,6 +235,18 @@ struct LaptopIndex {
     await this.fetchPhone();
   }
 
+  /** Phone turns carry a [meta] line; the laptop shows the words only. */
+  private cleanRemote(text: string): string {
+    const lines: string[] = text.split('\n');
+    const kept: string[] = [];
+    for (const line of lines) {
+      if (!line.startsWith('[meta]')) {
+        kept.push(line);
+      }
+    }
+    return kept.join('\n').trim();
+  }
+
   private openRemote(session: RemoteSession): void {
     this.settingsOpen = false;
     this.remoteOpen = true;
@@ -1042,7 +1054,7 @@ struct LaptopIndex {
                 if (turn.role === 'user') {
                   Row() {
                     Blank()
-                    Text(turn.text)
+                    Text(this.cleanRemote(turn.text))
                       .fontSize(13.5)
                       .lineHeight(21)
                       .fontColor($r('app.color.on_primary'))
@@ -1056,7 +1068,7 @@ struct LaptopIndex {
                 } else {
                   Row({ space: 12 }) {
                     HopaMark({ state: 'idle', markSize: 22, animate: false, interactive: false })
-                    Text(turn.text)
+                    Text(this.cleanRemote(turn.text))
                       .fontSize(13.5)
                       .lineHeight(22)
                       .fontColor($r('app.color.text_primary'))
@@ -1115,7 +1127,7 @@ struct LaptopIndex {
             .width('100%')
             .padding({ left: 22, right: 22, bottom: 4 })
         }
-        if (this.approvalOpen) {
+        if (this.approvalOpen && !this.showRail()) {
           Column({ space: 10 }) {
             Text('HOPA asks first')
               .fontSize(10)
@@ -1229,7 +1241,17 @@ struct LaptopIndex {
           lastQuestion: this.lastQuestion,
           lastLatency: this.lastLatency,
           lastTokens: this.lastTokens,
-          hasTurns: this.turns.length > 0
+          hasTurns: this.turns.length > 0,
+          approvalOpen: this.approvalOpen,
+          approvalDetail: this.approvalDetail,
+          onAllow: () => {
+            this.approvalOpen = false;
+            this.agent.approvals.answer(true);
+          },
+          onDeny: () => {
+            this.approvalOpen = false;
+            this.agent.approvals.answer(false);
+          }
         })
       }
     }

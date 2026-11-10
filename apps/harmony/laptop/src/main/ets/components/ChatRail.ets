@@ -10,6 +10,10 @@ export struct ChatRail {
   @Prop lastLatency: number = 0;
   @Prop lastTokens: number = 0;
   @Prop hasTurns: boolean = false;
+  @Prop approvalOpen: boolean = false;
+  @Prop approvalDetail: string = '';
+  onAllow: () => void = () => {};
+  onDeny: () => void = () => {};
 
   @Builder
   Label(text: string) {
@@ -24,6 +28,47 @@ export struct ChatRail {
   build() {
     Column() {
       Column({ space: 14 }) {
+        if (this.approvalOpen) {
+          Column({ space: 8 }) {
+            this.Label('YOUR OK')
+            Text(this.approvalDetail)
+              .fontSize(12.5)
+              .lineHeight(18)
+              .fontColor($r('app.color.text_primary'))
+              .width('100%')
+            Row({ space: 8 }) {
+              Text('Not now')
+                .fontSize(11.5)
+                .fontColor($r('app.color.text_primary'))
+                .padding({ left: 12, right: 12, top: 7, bottom: 7 })
+                .backgroundColor($r('app.color.surface_muted'))
+                .borderRadius(14)
+                .onClick(() => {
+                  this.onDeny();
+                })
+              Text('Allow')
+                .fontSize(11.5)
+                .fontWeight(FontWeight.Medium)
+                .fontColor($r('app.color.on_primary'))
+                .padding({ left: 14, right: 14, top: 7, bottom: 7 })
+                .backgroundColor($r('app.color.primary'))
+                .borderRadius(14)
+                .onClick(() => {
+                  this.onAllow();
+                })
+            }
+            .width('100%')
+          }
+          .width('100%')
+          .padding(10)
+          .backgroundColor($r('app.color.surface'))
+          .borderRadius(10)
+          .border({ width: 1, color: $r('app.color.primary_soft') })
+          .alignItems(HorizontalAlign.Start)
+
+          Divider().color($r('app.color.divider'))
+        }
+
         Column({ space: 6 }) {
           this.Label('THIS CONVERSATION')
           Text(this.lastQuestion.length > 0 ? this.lastQuestion : 'No question yet.')
