@@ -235,6 +235,7 @@ export struct ChatEmptyState {
 
   build() {
     Column({ space: 12 }) {
+      Column({ space: 12 }) {
       HopaMark({
         state: this.listening ? 'listening' : 'idle',
         markSize: this.style().mascot,
@@ -256,62 +257,6 @@ export struct ChatEmptyState {
         .fontColor($r('app.color.text_secondary'))
         .textAlign(TextAlign.Center)
       Column({ space: 8 }) {
-        Row({ space: 6 }) {
-          Text('Payments always ask')
-            .fontSize(10)
-            .fontColor($r('app.color.text_hint'))
-          Text('\u00b7')
-            .fontSize(10)
-            .fontColor($r('app.color.text_hint'))
-          Text(`${this.appCount()} apps, ${this.factCount()} facts`)
-            .fontSize(10)
-            .fontColor($r('app.color.text_secondary'))
-          Text('Review')
-            .fontSize(10)
-            .fontWeight(FontWeight.Medium)
-            .fontColor(this.accent())
-        }
-        .padding({ left: 2, top: 2 })
-        .onClick(() => {
-          this.onTrust();
-        })
-        if (this.promptKind().length > 0) {
-          Row({ space: 8 }) {
-            Text(this.promptTitle().toUpperCase())
-              .fontSize(9)
-              .fontWeight(FontWeight.Bold)
-              .fontColor($r('app.color.text_hint'))
-              .letterSpacing(0.6)
-            Text(this.promptGoal())
-              .fontSize(12.5)
-              .fontColor($r('app.color.text_primary'))
-              .layoutWeight(1)
-              .maxLines(1)
-              .textOverflow({ overflow: TextOverflow.Ellipsis })
-              .onClick(() => {
-                this.onPick(this.promptGoal());
-              })
-            Text('Run')
-              .fontSize(10.5)
-              .fontWeight(FontWeight.Medium)
-              .fontColor($r('app.color.on_primary'))
-              .padding({ left: 10, right: 10, top: 5, bottom: 5 })
-              .backgroundColor(this.accent())
-              .borderRadius(9)
-              .onClick(() => {
-                this.onPick(this.promptGoal());
-              })
-            Text('\u00d7')
-              .fontSize(13)
-              .fontColor($r('app.color.text_hint'))
-              .padding({ left: 4 })
-              .onClick(() => {
-                this.dismiss(this.promptKind());
-              })
-          }
-          .width('100%')
-          .padding({ left: 2, right: 2, top: 2, bottom: 2 })
-        }
         if (this.hasResume()) {
           Row({ space: 10 }) {
             Column({ space: 2 }) {
@@ -396,10 +341,44 @@ export struct ChatEmptyState {
       }
       .width('100%')
       .margin({ top: 12 })
+      }
+      .width('100%')
+      .layoutWeight(1)
+      .justifyContent(FlexAlign.Center)
+
+      if (this.promptKind().length > 0) {
+        Row({ space: 8 }) {
+          Column({ space: 1 }) {
+            Text(this.promptTitle())
+              .fontSize(10)
+              .fontColor($r('app.color.text_hint'))
+            Text(this.promptGoal())
+              .fontSize(12.5)
+              .fontColor($r('app.color.text_secondary'))
+              .maxLines(2)
+          }
+          .layoutWeight(1)
+          .alignItems(HorizontalAlign.Start)
+          Text('Start')
+            .fontSize(11)
+            .fontColor($r('app.color.text_secondary'))
+          Text('\u00d7')
+            .fontSize(12)
+            .fontColor($r('app.color.text_hint'))
+            .padding({ left: 4 })
+            .onClick(() => {
+              this.dismiss(this.promptKind());
+            })
+        }
+        .width('100%')
+        .padding({ left: 4, right: 4, top: 8, bottom: 4 })
+        .onClick(() => {
+          this.onPick(this.promptGoal());
+        })
+      }
     }
     .width('100%')
     .constraintSize({ minHeight: '100%' })
-    .justifyContent(FlexAlign.Center)
     .opacity(this.entered ? 1 : 0)
     .translate({ y: this.entered ? 0 : 10 })
     .animation({ duration: 420, curve: Curve.EaseOut })

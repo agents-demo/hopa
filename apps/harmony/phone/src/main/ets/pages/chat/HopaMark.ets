@@ -197,8 +197,8 @@ export struct HopaMark {
         .clip(false)
         .rotate({ angle: -3 })
         .position({
-          x: (this.markSize - this.markSize * 2.20) / 2,
-          y: -this.markSize * 1.05
+          x: this.markSize + 8,
+          y: this.markSize * 0.02
         })
         .hitTestBehavior(HitTestMode.None)
       }
@@ -213,6 +213,7 @@ export struct HopaMark {
     })
     .rotate({ angle: this.state === 'acting' ? -4 : (this.state === 'listening' ? -2 : 0) })
     .offset({
+      x: this.bubble ? -this.markSize * 0.55 : 0,
       y: this.state === 'idle' || this.state === 'waiting'
         ? (this.bob ? this.markSize * 0.025 : -this.markSize * 0.025)
         : 0
