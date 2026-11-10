@@ -97,7 +97,7 @@ export struct ApprovalSheet {
           .backgroundColor($r('app.color.divider'))
           .margin({ bottom: 2 })
         Row({ space: 8 }) {
-          HopaMark({ state: 'waiting', markSize: 28 })
+          HopaMark({ state: 'waiting', markSize: 28, interactive: false })
           Text('HOPA')
             .fontSize(12)
             .fontWeight(FontWeight.Medium)

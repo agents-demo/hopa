@@ -162,7 +162,7 @@ export struct HopaMark {
 
       // The bubble only exists while it is shown: a hidden Text node would
       // still be picked up by observe and confuse the model.
-      if (this.bubble) {
+      if (this.bubble && this.markSize >= 56) {
         // One SVG shape: rounded bubble with a curved tail flowing toward the
         // head. Drawn as a single outline so there is no seam to look pasted on.
         Stack({ alignContent: Alignment.TopStart }) {
@@ -196,7 +196,10 @@ export struct HopaMark {
         .height(this.markSize * 0.99)
         .clip(false)
         .rotate({ angle: -3 })
-        .position({ x: this.markSize * 0.42, y: -this.markSize * 1.12 })
+        .position({
+          x: (this.markSize - this.markSize * 2.20) / 2,
+          y: -this.markSize * 1.05
+        })
         .hitTestBehavior(HitTestMode.None)
       }
     }

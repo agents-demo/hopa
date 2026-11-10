@@ -67,6 +67,8 @@ export struct ChatEmptyState {
     this.greeting = Character.greeting(hour);
     const context = getContext(this) as Context;
     SettingsStore.load(context).then((stored) => {
+      Character.configure(stored);
+      this.greeting = Character.greeting(new Date().getHours());
       if (stored.reduceMotion || !this.style().motion) {
         this.entered = true;
       }
@@ -137,7 +139,7 @@ export struct ChatEmptyState {
   private ritualGoal(): string {
     const hour: number = new Date().getHours();
     if (hour >= 5 && hour < 12) {
-      return 'What should I get done this morning?';
+      return 'What should I get done today?';
     }
     if (hour >= 18) {
       return 'What did I get done today?';
@@ -253,17 +255,17 @@ export struct ChatEmptyState {
         .fontSize(this.style().body - 1)
         .fontColor($r('app.color.text_secondary'))
         .textAlign(TextAlign.Center)
-      Text('I always ask before any payment.')
-        .fontSize(this.style().body - 4)
-        .fontColor($r('app.color.text_hint'))
       Column({ space: 8 }) {
         Row({ space: 6 }) {
-          Text('HOPA can use')
+          Text('Payments always ask')
+            .fontSize(10)
+            .fontColor($r('app.color.text_hint'))
+          Text('\u00b7')
             .fontSize(10)
             .fontColor($r('app.color.text_hint'))
           Text(`${this.appCount()} apps, ${this.factCount()} facts`)
             .fontSize(10)
-            .fontColor(this.accent())
+            .fontColor($r('app.color.text_secondary'))
           Text('Review')
             .fontSize(10)
             .fontWeight(FontWeight.Medium)
@@ -275,20 +277,20 @@ export struct ChatEmptyState {
         })
         if (this.promptKind().length > 0) {
           Row({ space: 8 }) {
-            Column({ space: 2 }) {
-              Text(this.promptTitle())
-                .fontSize(9)
-                .fontWeight(FontWeight.Bold)
-                .fontColor(this.accent())
-                .letterSpacing(0.6)
-              Text(this.promptGoal())
-                .fontSize(12.5)
-                .fontColor($r('app.color.text_primary'))
-                .maxLines(2)
-                .textOverflow({ overflow: TextOverflow.Ellipsis })
-            }
-            .layoutWeight(1)
-            .alignItems(HorizontalAlign.Start)
+            Text(this.promptTitle().toUpperCase())
+              .fontSize(9)
+              .fontWeight(FontWeight.Bold)
+              .fontColor($r('app.color.text_hint'))
+              .letterSpacing(0.6)
+            Text(this.promptGoal())
+              .fontSize(12.5)
+              .fontColor($r('app.color.text_primary'))
+              .layoutWeight(1)
+              .maxLines(1)
+              .textOverflow({ overflow: TextOverflow.Ellipsis })
+              .onClick(() => {
+                this.onPick(this.promptGoal());
+              })
             Text('Run')
               .fontSize(10.5)
               .fontWeight(FontWeight.Medium)
@@ -300,17 +302,15 @@ export struct ChatEmptyState {
                 this.onPick(this.promptGoal());
               })
             Text('\u00d7')
-              .fontSize(15)
+              .fontSize(13)
               .fontColor($r('app.color.text_hint'))
-              .padding(5)
+              .padding({ left: 4 })
               .onClick(() => {
                 this.dismiss(this.promptKind());
               })
           }
           .width('100%')
-          .padding({ left: 12, right: 8, top: 9, bottom: 9 })
-          .backgroundColor($r('app.color.surface_alt'))
-          .borderRadius(12)
+          .padding({ left: 2, right: 2, top: 2, bottom: 2 })
         }
         if (this.hasResume()) {
           Row({ space: 10 }) {
@@ -350,7 +350,7 @@ export struct ChatEmptyState {
             this.onResume();
           })
         }
-        if (this.hasResume() && this.profile().discovery === 'guided') {
+        if (this.profile().discovery === 'guided') {
           Row({ space: 4 }) {
             Text(this.ideasOpen ? 'Hide examples' : 'Try an example')
               .fontSize(11)
@@ -363,16 +363,15 @@ export struct ChatEmptyState {
           .onClick(() => {
             this.ideasOpen = !this.ideasOpen;
           })
-        } else if (!this.hasResume()) {
-          Text('TRY SOMETHING')
-            .fontSize(9)
-            .fontWeight(FontWeight.Bold)
-            .fontColor($r('app.color.text_hint'))
-            .letterSpacing(0.7)
-            .width('100%')
-            .padding({ left: 2, top: 2 })
         }
-        if (!this.hasResume() || this.ideasOpen) {
+        if (this.ideasOpen) {
+        Text('TRY SOMETHING')
+          .fontSize(9)
+          .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_hint'))
+          .letterSpacing(0.7)
+          .width('100%')
+          .padding({ left: 2, top: 2 })
         ForEach(this.suggestions(), (suggestion: string, index: number) => {
           Row() {
             Text(suggestion)

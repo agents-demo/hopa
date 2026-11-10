@@ -46,7 +46,7 @@ export struct ChatTyping {
 
   build() {
     Row({ space: 8 }) {
-      HopaMark({ state: 'thinking', markSize: 26 })
+      HopaMark({ state: 'thinking', markSize: 26, interactive: false })
       Row({ space: 4 }) {
         Column()
           .width(6)

@@ -87,7 +87,7 @@ export struct CapabilitiesPage {
       Column({ space: 8 }) {
         Column({ space: 6 }) {
           Row({ space: 12 }) {
-            HopaMark({ state: 'idle', markSize: 46 })
+            HopaMark({ state: 'idle', markSize: 46, interactive: false })
             Column({ space: 6 }) {
               Text(this.ready() ? 'Ready on this phone' : 'Finish setup')
                 .fontSize(17)

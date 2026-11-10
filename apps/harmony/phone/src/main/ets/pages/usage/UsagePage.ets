@@ -78,7 +78,7 @@ export struct UsagePage {
     Scroll() {
       Column({ space: 4 }) {
         Row({ space: 12 }) {
-          HopaMark({ state: 'idle', markSize: 44 })
+          HopaMark({ state: 'idle', markSize: 44, interactive: false })
           Column({ space: 2 }) {
             Text('Usage')
               .fontSize(22)

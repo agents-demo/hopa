@@ -64,7 +64,7 @@ export struct PhonePage {
     Scroll() {
       Column({ space: 12 }) {
         Row({ space: 12 }) {
-          HopaMark({ state: 'idle', markSize: 48 })
+          HopaMark({ state: 'idle', markSize: 48, interactive: false })
           Column({ space: 2 }) {
             Text('Phone access')
               .fontSize(22)
