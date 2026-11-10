@@ -1,8 +1,9 @@
 import { common } from '@kit.AbilityKit';
-import { HopaMark, KeyStore } from '@hopa/app';
+import { HopaMark, KeyStore, SettingsStore, StoredSettings } from '@hopa/app';
 import { LaptopChat, LaptopTurn } from '../services/LaptopChat';
-import { LaptopSettings } from '../services/LaptopSettings';
+
 import { LaptopHistory } from '../services/LaptopHistory';
+import { LaptopFirstRun } from '../services/LaptopFirstRun';
 
 const LAPTOP_KEY_ALIAS: string = 'hopa_laptop_key';
 
@@ -51,9 +52,9 @@ struct LaptopIndex {
     }).catch(() => {
       // An unreadable history is an empty one.
     });
-    LaptopSettings.load(context).then((settings: LaptopSettings) => {
-      this.endpoint = settings.endpoint;
-      this.modelName = settings.model;
+    LaptopFirstRun.ensure(context).then((stored: StoredSettings) => {
+      this.endpoint = stored.endpoint;
+      this.modelName = stored.model;
       KeyStore.load(LAPTOP_KEY_ALIAS).then((key: string) => {
         this.keyPresent = key.length > 0;
         this.chat.configure(this.endpoint, this.modelName, key);
@@ -110,12 +111,12 @@ struct LaptopIndex {
     }
     const context = getContext(this) as common.UIAbilityContext;
     if (injectedEndpoint.length > 0 || injectedModel.length > 0) {
-      const settings = new LaptopSettings();
-      settings.endpoint = injectedEndpoint.length > 0 ? injectedEndpoint : settings.endpoint;
-      settings.model = injectedModel.length > 0 ? injectedModel : settings.model;
-      await settings.save(context);
-      this.endpoint = settings.endpoint;
-      this.modelName = settings.model;
+      const stored: StoredSettings = await SettingsStore.load(context);
+      stored.endpoint = injectedEndpoint.length > 0 ? injectedEndpoint : stored.endpoint;
+      stored.model = injectedModel.length > 0 ? injectedModel : stored.model;
+      await SettingsStore.save(context, stored);
+      this.endpoint = stored.endpoint;
+      this.modelName = stored.model;
       AppStorage.setOrCreate<string>('hopa.laptop.endpoint', '');
       AppStorage.setOrCreate<string>('hopa.laptop.model', '');
     }
@@ -160,24 +161,24 @@ struct LaptopIndex {
 
   private async saveSettings(): Promise<void> {
     const context = getContext(this) as common.UIAbilityContext;
-    const settings = new LaptopSettings();
-    settings.endpoint = this.endpoint.trim().length > 0 ? this.endpoint.trim() : settings.endpoint;
-    settings.model = this.modelName.trim().length > 0 ? this.modelName.trim() : settings.model;
-    await settings.save(context);
+    const stored: StoredSettings = await SettingsStore.load(context);
+    stored.endpoint = this.endpoint.trim().length > 0 ? this.endpoint.trim() : stored.endpoint;
+    stored.model = this.modelName.trim().length > 0 ? this.modelName.trim() : stored.model;
+    await SettingsStore.save(context, stored);
     if (this.keyDraft.trim().length > 0) {
       const ok: boolean = await KeyStore.save(this.keyDraft, LAPTOP_KEY_ALIAS);
       this.saved = ok ? 'Saved.' : 'That key looks too short.';
       this.keyDraft = '';
       const key: string = await KeyStore.load(LAPTOP_KEY_ALIAS);
       this.keyPresent = key.length > 0;
-      this.chat.configure(settings.endpoint, settings.model, key);
+      this.chat.configure(stored.endpoint, stored.model, key);
     } else {
       this.saved = 'Saved.';
       const key: string = await KeyStore.load(LAPTOP_KEY_ALIAS);
-      this.chat.configure(settings.endpoint, settings.model, key);
+      this.chat.configure(stored.endpoint, stored.model, key);
     }
-    this.modelName = settings.model;
-    this.endpoint = settings.endpoint;
+    this.modelName = stored.model;
+    this.endpoint = stored.endpoint;
   }
 
   @Builder
