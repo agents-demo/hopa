@@ -1,5 +1,6 @@
 import { common } from '@kit.AbilityKit';
-import { RunRecord, RunStatus, ScheduledTask } from '@hopa/core';
+import { RunRecord, RunStatus, ScheduledTask, Skill } from '@hopa/core';
+import { MemoryItem } from '@hopa/app';
 import { window } from '@kit.ArkUI';
 import { pasteboard } from '@kit.BasicServicesKit';
 import { notificationManager } from '@kit.NotificationKit';
@@ -86,6 +87,9 @@ struct LaptopIndex {
   @State replayIndex: number = 0;
   @State undoNote: string = '';
   @State plans: ScheduledTask[] = [];
+  @State memories: MemoryItem[] = [];
+  @State skills: Skill[] = [];
+  @State memoryDraft: string = '';
   @State hoveredSession: string = '';
   private ctrlHeld: boolean = false;
   @State planDraft: string = '';
@@ -157,6 +161,12 @@ struct LaptopIndex {
       this.lastTokens = session.lastTokens;
       this.refreshSessions();
       this.syncChats();
+      this.agent.memory.load(context).then(() => {
+        this.memories = this.agent.memory.all().slice();
+      }).catch(() => {});
+      this.agent.skills.load(context).then(() => {
+        this.skills = this.agent.skills.all().slice();
+      }).catch(() => {});
       this.agent.schedules.load(context).then(() => {
         this.agent.schedules.start();
         this.plans = this.agent.schedules.tasks().slice();
@@ -879,50 +889,49 @@ struct LaptopIndex {
         .gesture(TapGesture({ count: 2 }).onAction(() => {
           this.toggleMaximize();
         }))
-      // The three tools used to be sidebar rows; they are destinations, so
-      // they sit with the conversation, not with the list of conversations.
-      Row({ space: 2 }) {
-        Text('Log')
-          .fontSize(10.5)
-          .fontColor(this.view === 'activity'
-            ? $r('app.color.text_primary')
-            : $r('app.color.text_hint'))
-          .padding({ left: 9, right: 9, top: 5, bottom: 5 })
-          .backgroundColor(this.view === 'activity' ? $r('app.color.surface') : Color.Transparent)
-          .borderRadius(9)
-          .onClick(() => {
-            this.view = this.view === 'activity' ? 'chat' : 'activity';
-          })
-        Text('Plans')
-          .fontSize(10.5)
-          .fontColor(this.view === 'plans'
-            ? $r('app.color.text_primary')
-            : $r('app.color.text_hint'))
-          .padding({ left: 9, right: 9, top: 5, bottom: 5 })
-          .backgroundColor(this.view === 'plans' ? $r('app.color.surface') : Color.Transparent)
-          .borderRadius(9)
-          .onClick(() => {
-            this.view = this.view === 'plans' ? 'chat' : 'plans';
-            if (this.view === 'plans') {
+      // Destinations, not conversations: one menu beside the title.
+      Text('Tools')
+        .fontSize(10.5)
+        .fontColor(this.view === 'chat' && !this.settingsOpen
+          ? $r('app.color.text_hint')
+          : $r('app.color.text_primary'))
+        .padding({ left: 9, right: 9, top: 5, bottom: 5 })
+        .backgroundColor($r('app.color.surface'))
+        .borderRadius(9)
+        .bindMenu([
+          {
+            value: 'Log',
+            action: () => {
+              this.view = 'activity';
+            }
+          },
+          {
+            value: 'Plans',
+            action: () => {
               this.plans = this.agent.schedules.tasks().slice();
+              this.view = 'plans';
             }
-          })
-        Text('Web')
-          .fontSize(10.5)
-          .fontColor(this.view === 'browser'
-            ? $r('app.color.text_primary')
-            : $r('app.color.text_hint'))
-          .padding({ left: 9, right: 9, top: 5, bottom: 5 })
-          .backgroundColor(this.view === 'browser' ? $r('app.color.surface') : Color.Transparent)
-          .borderRadius(9)
-          .onClick(() => {
-            this.view = this.view === 'browser' ? 'chat' : 'browser';
-            if (this.view === 'browser') {
+          },
+          {
+            value: 'Memory',
+            action: () => {
+              this.view = 'memory';
+            }
+          },
+          {
+            value: 'Skills',
+            action: () => {
+              this.view = 'skills';
+            }
+          },
+          {
+            value: 'Web',
+            action: () => {
               this.agent.browser.attach(this.web);
+              this.view = 'browser';
             }
-          })
-      }
-      .padding({ right: 4 })
+          }
+        ])
 
       if (!this.showSidebar()) {
         Text('New')
@@ -1258,6 +1267,193 @@ struct LaptopIndex {
     .padding({ left: 22, right: 22, top: 18, bottom: 28 })
     .backgroundColor($r('app.color.bg'))
     .alignItems(HorizontalAlign.Start)
+  }
+
+  @Builder
+  MemoryPane() {
+    Column({ space: 10 }) {
+      Row() {
+        Text('Memory')
+          .fontSize(16)
+          .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_primary'))
+        Blank()
+        Text('Facts you asked HOPA to keep')
+          .fontSize(10.5)
+          .fontColor($r('app.color.text_hint'))
+      }
+      .width('100%')
+
+      Row({ space: 8 }) {
+        TextInput({ text: this.memoryDraft, placeholder: 'A fact worth keeping\u2026' })
+          .layoutWeight(1)
+          .height(34)
+          .fontSize(12)
+          .backgroundColor($r('app.color.surface_muted'))
+          .borderRadius(9)
+          .onChange((value: string) => {
+            this.memoryDraft = value;
+          })
+          .onSubmit(() => {
+            this.addMemory();
+          })
+        Text('Keep')
+          .fontSize(12)
+          .fontColor($r('app.color.on_primary'))
+          .padding({ left: 14, right: 14, top: 7, bottom: 7 })
+          .backgroundColor($r('app.color.primary'))
+          .borderRadius(12)
+          .onClick(() => {
+            this.addMemory();
+          })
+      }
+      .width('100%')
+
+      if (this.memories.length === 0) {
+        Text('Nothing kept yet. Memory is only what you add here or ask HOPA to remember.')
+          .fontSize(12)
+          .lineHeight(18)
+          .fontColor($r('app.color.text_hint'))
+          .width('100%')
+      } else {
+        List({ space: 6 }) {
+          ForEach(this.memories, (item: MemoryItem) => {
+            ListItem() {
+              Row({ space: 10 }) {
+                Text(item.text)
+                  .fontSize(12.5)
+                  .lineHeight(18)
+                  .fontColor($r('app.color.text_primary'))
+                  .layoutWeight(1)
+                Text('Forget')
+                  .fontSize(10.5)
+                  .fontColor($r('app.color.text_secondary'))
+                  .padding({ left: 8, right: 8, top: 4, bottom: 4 })
+                  .backgroundColor($r('app.color.surface_muted'))
+                  .borderRadius(8)
+                  .onClick(() => {
+                    this.forgetMemory(item.id);
+                  })
+              }
+              .width('100%')
+              .padding(10)
+              .backgroundColor($r('app.color.surface'))
+              .borderRadius(10)
+            }
+          }, (item: MemoryItem) => item.id + item.text)
+        }
+        .layoutWeight(1)
+        .width('100%')
+        .scrollBar(BarState.Off)
+      }
+    }
+    .layoutWeight(1)
+    .width('100%')
+    .padding({ left: 22, right: 22, top: 8 })
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  @Builder
+  SkillsPane() {
+    Column({ space: 10 }) {
+      Row() {
+        Text('Skills')
+          .fontSize(16)
+          .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_primary'))
+        Blank()
+        Text('What HOPA learned from doing')
+          .fontSize(10.5)
+          .fontColor($r('app.color.text_hint'))
+      }
+      .width('100%')
+
+      if (this.skills.length === 0) {
+        Text('No skills yet. After a run that worked, HOPA can draft one; it appears here with its trigger and its guidance.')
+          .fontSize(12)
+          .lineHeight(18)
+          .fontColor($r('app.color.text_hint'))
+          .width('100%')
+      } else {
+        List({ space: 6 }) {
+          ForEach(this.skills, (skill: Skill) => {
+            ListItem() {
+              Column({ space: 4 }) {
+                Row({ space: 8 }) {
+                  Text(skill.name)
+                    .fontSize(12.5)
+                    .fontColor($r('app.color.text_primary'))
+                    .layoutWeight(1)
+                    .maxLines(1)
+                    .textOverflow({ overflow: TextOverflow.Ellipsis })
+                  Text(`${skill.successes}/${skill.uses}`)
+                    .fontSize(10)
+                    .fontColor($r('app.color.text_hint'))
+                  Text('Delete')
+                    .fontSize(10.5)
+                    .fontColor($r('app.color.text_secondary'))
+                    .padding({ left: 8, right: 8, top: 3, bottom: 3 })
+                    .backgroundColor($r('app.color.surface_muted'))
+                    .borderRadius(8)
+                    .onClick(() => {
+                      this.deleteSkill(skill.id);
+                    })
+                }
+                .width('100%')
+                Text(`When: ${skill.trigger}`)
+                  .fontSize(10.5)
+                  .fontColor($r('app.color.text_hint'))
+                  .width('100%')
+                Text(skill.guidance)
+                  .fontSize(11.5)
+                  .lineHeight(16)
+                  .fontColor($r('app.color.text_secondary'))
+                  .maxLines(3)
+                  .textOverflow({ overflow: TextOverflow.Ellipsis })
+                  .width('100%')
+              }
+              .width('100%')
+              .padding(10)
+              .backgroundColor($r('app.color.surface'))
+              .borderRadius(10)
+              .alignItems(HorizontalAlign.Start)
+            }
+          }, (skill: Skill) => skill.id + skill.name)
+        }
+        .layoutWeight(1)
+        .width('100%')
+        .scrollBar(BarState.Off)
+      }
+    }
+    .layoutWeight(1)
+    .width('100%')
+    .padding({ left: 22, right: 22, top: 8 })
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  private async addMemory(): Promise<void> {
+    if (this.memoryDraft.trim().length === 0) {
+      return;
+    }
+    this.agent.memory.add(this.memoryDraft);
+    this.memoryDraft = '';
+    const context = getContext(this) as common.UIAbilityContext;
+    await this.agent.memory.save(context);
+    this.memories = this.agent.memory.all().slice();
+  }
+
+  private async forgetMemory(id: string): Promise<void> {
+    this.agent.memory.remove(id);
+    const context = getContext(this) as common.UIAbilityContext;
+    await this.agent.memory.save(context);
+    this.memories = this.agent.memory.all().slice();
+  }
+
+  private async deleteSkill(id: string): Promise<void> {
+    this.agent.skills.remove(id);
+    const context = getContext(this) as common.UIAbilityContext;
+    await this.agent.skills.save(context);
+    this.skills = this.agent.skills.all().slice();
   }
 
   @Builder
@@ -2061,7 +2257,11 @@ struct LaptopIndex {
       }
       Column() {
         this.Header()
-        if (this.view === 'plans') {
+        if (this.view === 'memory') {
+          this.MemoryPane()
+        } else if (this.view === 'skills') {
+          this.SkillsPane()
+        } else if (this.view === 'plans') {
           this.PlansPane()
         } else if (this.view === 'browser') {
           this.BrowserPane()
