@@ -1,4 +1,5 @@
 import {
+  Action,
   ActionExecutor,
   ApprovalPolicy,
   RunStore,
@@ -77,6 +78,12 @@ export class LaptopAgent {
   readonly memory: MemoryStore = new MemoryStore();
   readonly skills: SkillStore = new SkillStore();
   readonly approvals: LaptopApprovals = new LaptopApprovals();
+  private executor: ActionExecutor;
+
+  /** Only for the approval demo; not part of the runtime path. */
+  executorForDemo(): ActionExecutor {
+    return this.executor;
+  }
 
   constructor() {
     const executor = new ActionExecutor(
@@ -84,6 +91,7 @@ export class LaptopAgent {
       this.approvals,
       new RunStore()
     );
+    this.executor = executor;
     this.runtime = new AgentRuntime(
       executor,
       this.memory,
@@ -96,4 +104,18 @@ export class LaptopAgent {
       new EmptyScreen()
     );
   }
+}
+
+/**
+ * Verification hook: push a sensitive action through the real gate.
+ *
+ * Nothing executes on the laptop (there is no capability), but the approval
+ * card, the pause and the answer path are exactly the ones a run would use.
+ */
+export async function demoApproval(agent: LaptopAgent): Promise<string> {
+  const action = new Action('system.sendMessage');
+  action.target = 'Alex';
+  action.text = 'hello';
+  const outcome = await agent.executorForDemo().execute(action);
+  return outcome.observation.summary;
 }

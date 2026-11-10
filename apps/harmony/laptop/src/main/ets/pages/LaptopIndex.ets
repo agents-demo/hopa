@@ -3,7 +3,7 @@ import { window } from '@kit.ArkUI';
 import { pasteboard } from '@kit.BasicServicesKit';
 import { HopaMark, EmptyHero, ResultActions, StepChips, ChatFormat, KeyStore, SettingsStore, StoredSettings } from '@hopa/app';
 import { LaptopChat, LaptopTurn } from '../services/LaptopChat';
-import { LaptopAgent } from '../services/LaptopAgent';
+import { LaptopAgent, demoApproval } from '../services/LaptopAgent';
 
 import { LaptopSessions, LaptopSession } from '../services/LaptopSessions';
 import { LaptopPhoneLink, RemoteSession, RemoteTurn } from '../services/LaptopPhoneLink';
@@ -143,6 +143,10 @@ struct LaptopIndex {
     // fires on later changes, so read it once here.
     if (this.pending.length > 0) {
       this.onPending();
+    }
+    if ((AppStorage.get<string>('hopa.laptop.demoApproval') ?? '') === '1') {
+      AppStorage.setOrCreate<string>('hopa.laptop.demoApproval', '');
+      demoApproval(this.agent);
     }
   }
 
