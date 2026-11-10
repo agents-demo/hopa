@@ -2,7 +2,8 @@ import { common } from '@kit.AbilityKit';
 import { RunRecord, RunStatus } from '@hopa/core';
 import { window } from '@kit.ArkUI';
 import { pasteboard } from '@kit.BasicServicesKit';
-import { HopaMark, EmptyHero, ResultActions, StepChips, ChatFormat, KeyStore, SettingsStore, StoredSettings } from '@hopa/app';
+import { notificationManager } from '@kit.NotificationKit';
+import { HopaMark, EmptyHero, ResultActions, StepChips, ChatFormat, Character, KeyStore, SettingsStore, StoredSettings } from '@hopa/app';
 import { LaptopChat, LaptopTurn } from '../services/LaptopChat';
 import { LaptopAgent, demoApproval } from '../services/LaptopAgent';
 
@@ -51,12 +52,14 @@ struct LaptopIndex {
   @State runs: RunRecord[] = [];
   @State openRunId: string = '';
   @State speakReplies: boolean = false;
+  @State profileName: string = 'everyday';
   private voice: LaptopVoice = new LaptopVoice();
   @State currentId: string = '';
   private store: LaptopSessions = new LaptopSessions();
   private win: window.Window | undefined = undefined;
   @State maximized: boolean = false;
   @StorageProp('hopa.decorHidden') decorHidden: boolean = false;
+  @StorageProp('hopa.laptop.focused') focused: boolean = true;
   @State currentTitle: string = 'HOPA';
   @State lastLatency: number = 0;
   @State lastTokens: number = 0;
@@ -120,6 +123,7 @@ struct LaptopIndex {
       this.modelName = stored.model;
       this.provider = stored.provider;
       this.speakReplies = stored.speakReplies;
+      this.profileName = stored.profile;
       this.bridgeUrl = stored.bridgeUrl;
       this.bridgeToken = stored.bridgeToken;
       if (stored.bridgeUrl.length > 0 && stored.bridgeToken.length > 0) {
@@ -454,6 +458,9 @@ struct LaptopIndex {
         this.voice.speak(this.agent, last.text, context);
       }
     }
+    if (!this.focused) {
+      this.notifyAnswer(text.length > 0 ? this.lastQuestion : 'HOPA');
+    }
     this.store.commit(this.chat.turns, this.chat.lastLatencyMs, this.chat.lastTokens);
     await this.store.save(context);
     this.refreshSessions();
@@ -551,6 +558,25 @@ struct LaptopIndex {
     await SettingsStore.save(context, stored);
   }
 
+  /** A system notification only when the window is not the one in front. */
+  private notifyAnswer(question: string): void {
+    try {
+      const request: notificationManager.NotificationRequest = {
+        id: 1,
+        content: {
+          notificationContentType: notificationManager.ContentType.NOTIFICATION_CONTENT_BASIC_TEXT,
+          normal: {
+            title: 'HOPA has an answer',
+            text: question
+          }
+        }
+      };
+      notificationManager.publish(request).catch(() => {});
+    } catch (error) {
+      // Notifications are a courtesy, never a dependency.
+    }
+  }
+
   private async saveSettings(): Promise<void> {
     const context = getContext(this) as common.UIAbilityContext;
     const stored: StoredSettings = await SettingsStore.load(context);
@@ -572,6 +598,23 @@ struct LaptopIndex {
     this.modelName = stored.model;
     this.endpoint = stored.endpoint;
     this.provider = stored.provider;
+  }
+
+  @Builder
+  ModeChip(mode: string) {
+    Text(mode.charAt(0).toUpperCase() + mode.substring(1))
+      .fontSize(11.5)
+      .fontColor(this.profileName === mode
+        ? $r('app.color.on_primary')
+        : $r('app.color.text_secondary'))
+      .padding({ left: 12, right: 12, top: 6, bottom: 6 })
+      .backgroundColor(this.profileName === mode
+        ? $r('app.color.primary')
+        : $r('app.color.surface'))
+      .borderRadius(12)
+      .onClick(() => {
+        this.setProfile(mode);
+      })
   }
 
   @Builder
@@ -686,6 +729,31 @@ struct LaptopIndex {
       }
       .width('100%')
       .alignItems(VerticalAlign.Center)
+
+      Column({ space: 8 }) {
+        Text('MODE')
+          .fontSize(9)
+          .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_hint'))
+          .letterSpacing(0.8)
+          .width('100%')
+        Row({ space: 6 }) {
+          ForEach(['everyday', 'easy', 'power'], (mode: string) => {
+            this.ModeChip(mode)
+          }, (mode: string) => 'mode-a-' + mode + (this.profileName === mode))
+        }
+        .width('100%')
+        Row({ space: 6 }) {
+          ForEach(['social', 'kid'], (mode: string) => {
+            this.ModeChip(mode)
+          }, (mode: string) => 'mode-b-' + mode + (this.profileName === mode))
+        }
+        .width('100%')
+      }
+      .width('100%')
+      .alignItems(HorizontalAlign.Start)
+
+      Divider().color($r('app.color.divider'))
 
       Column({ space: 8 }) {
         Text('MODEL')
@@ -947,11 +1015,11 @@ struct LaptopIndex {
   Empty() {
     EmptyHero({
       greeting: '',
-      tagline: 'Your agent. Ask for anything.',
+      tagline: Character.tagline(this.profileName),
       promise: this.showRail() ? '' : 'Payments always ask first.',
       note: this.keyPresent ? '' : 'Add a model key to start. The key stays on this laptop.',
-      titleSize: 34,
-      bodySize: 16,
+      titleSize: this.heroTitle(),
+      bodySize: this.heroBody(),
       markSize: this.heroMark(),
       animate: true,
       interactive: true,
@@ -1058,7 +1126,37 @@ struct LaptopIndex {
   }
 
   private showRail(): boolean {
+    if (this.profileName === 'easy' || this.profileName === 'kid') {
+      return false;
+    }
     return this.winWidth >= 940;
+  }
+
+  /** Easy and Kid read larger; Power and Social stay tight. */
+  private heroTitle(): number {
+    if (this.profileName === 'easy' || this.profileName === 'kid') {
+      return 40;
+    }
+    return 34;
+  }
+
+  private heroBody(): number {
+    if (this.profileName === 'easy' || this.profileName === 'kid') {
+      return 19;
+    }
+    return 16;
+  }
+
+  private tileText(): number {
+    return this.profileName === 'easy' || this.profileName === 'kid' ? 15 : 13.5;
+  }
+
+  private async setProfile(name: string): Promise<void> {
+    this.profileName = name;
+    const context = getContext(this) as common.UIAbilityContext;
+    const stored: StoredSettings = await SettingsStore.load(context);
+    stored.profile = name;
+    await SettingsStore.save(context, stored);
   }
 
   @Builder
@@ -1093,25 +1191,27 @@ struct LaptopIndex {
           this.paletteOpen = true;
         })
 
-        Row() {
-          Text('Activity')
-            .fontSize(11)
-            .fontColor(this.view === 'activity'
-              ? $r('app.color.text_primary')
-              : $r('app.color.text_hint'))
-            .layoutWeight(1)
-          Text(`${this.runs.length}`)
-            .fontSize(10)
-            .fontColor($r('app.color.text_hint'))
+        if (this.profileName !== 'kid') {
+          Row() {
+            Text('Activity')
+              .fontSize(11)
+              .fontColor(this.view === 'activity'
+                ? $r('app.color.text_primary')
+                : $r('app.color.text_hint'))
+              .layoutWeight(1)
+            Text(`${this.runs.length}`)
+              .fontSize(10)
+              .fontColor($r('app.color.text_hint'))
+          }
+          .width('100%')
+          .height(26)
+          .padding({ left: 8, right: 8 })
+          .borderRadius(7)
+          .backgroundColor(this.view === 'activity' ? $r('app.color.surface') : Color.Transparent)
+          .onClick(() => {
+            this.view = this.view === 'activity' ? 'chat' : 'activity';
+          })
         }
-        .width('100%')
-        .height(26)
-        .padding({ left: 8, right: 8 })
-        .borderRadius(7)
-        .backgroundColor(this.view === 'activity' ? $r('app.color.surface') : Color.Transparent)
-        .onClick(() => {
-          this.view = this.view === 'activity' ? 'chat' : 'activity';
-        })
 
         Text('New chat')
           .fontSize(12.5)

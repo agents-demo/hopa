@@ -68,6 +68,14 @@ export default class LaptopAbility extends UIAbility {
       // Remembering the window is a convenience.
     }
   }
+  onForeground(): void {
+    AppStorage.setOrCreate<boolean>('hopa.laptop.focused', true);
+  }
+
+  onBackground(): void {
+    AppStorage.setOrCreate<boolean>('hopa.laptop.focused', false);
+  }
+
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
     const params = want.parameters;
     if (params !== undefined) {
