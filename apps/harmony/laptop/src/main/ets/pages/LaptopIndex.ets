@@ -714,19 +714,18 @@ struct LaptopIndex {
 
         Row() {
           Text('Commands')
-            .fontSize(11.5)
+            .fontSize(11)
             .fontColor($r('app.color.text_hint'))
           Blank()
           Text('Ctrl K')
-            .fontSize(9.5)
+            .fontSize(9)
             .fontColor($r('app.color.text_hint'))
+            .opacity(0.7)
         }
         .width('100%')
-        .height(32)
-        .padding({ left: 10, right: 10 })
-        .backgroundColor($r('app.color.surface'))
-        .borderRadius(9)
-        .border({ width: 1, color: $r('app.color.divider') })
+        .height(26)
+        .padding({ left: 8, right: 8 })
+        .borderRadius(7)
         .onClick(() => {
           this.paletteOpen = true;
         })
