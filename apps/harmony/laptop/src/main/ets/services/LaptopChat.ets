@@ -18,6 +18,10 @@ export class LaptopChat {
   turns: LaptopTurn[] = [];
   busy: boolean = false;
   error: string = '';
+  lastLatencyMs: number = 0;
+  lastTokens: number = 0;
+  totalTokens: number = 0;
+  lastQuestion: string = '';
 
   private endpoint: string = '';
   private model: string = '';
@@ -44,6 +48,8 @@ export class LaptopChat {
     this.turns.push(user);
     this.busy = true;
     this.error = '';
+    this.lastQuestion = prompt;
+    const started: number = Date.now();
     try {
       if (!this.isReady()) {
         throw new Error('no model key yet');
@@ -57,6 +63,9 @@ export class LaptopChat {
         request.messages.push(new ModelMessage(turn.role, turn.text));
       }
       const response: ModelResponse = await client.complete(request);
+      this.lastLatencyMs = Date.now() - started;
+      this.lastTokens = response.tokens;
+      this.totalTokens += response.tokens;
       if (response.error.length > 0 && response.text.length === 0) {
         throw new Error(response.error);
       }
@@ -77,5 +86,8 @@ export class LaptopChat {
   clear(): void {
     this.turns = [];
     this.error = '';
+    this.lastQuestion = '';
+    this.lastLatencyMs = 0;
+    this.lastTokens = 0;
   }
 }

@@ -2,6 +2,7 @@ import { common } from '@kit.AbilityKit';
 import { HopaMark, KeyStore } from '@hopa/app';
 import { LaptopChat, LaptopTurn } from '../services/LaptopChat';
 import { LaptopSettings } from '../services/LaptopSettings';
+import { LaptopHistory } from '../services/LaptopHistory';
 
 const LAPTOP_KEY_ALIAS: string = 'hopa_laptop_key';
 
@@ -24,6 +25,9 @@ struct LaptopIndex {
   @State settingsOpen: boolean = false;
   @State keyDraft: string = '';
   @State saved: string = '';
+  @State lastQuestion: string = '';
+  @State lastLatency: number = 0;
+  @State lastTokens: number = 0;
   @State winWidth: number = 1280;
   @StorageLink('hopa.laptop.pending') @Watch('onPending') pending: string = '';
   private deferredAsk: string = '';
@@ -32,6 +36,20 @@ struct LaptopIndex {
 
   aboutToAppear(): void {
     const context = getContext(this) as common.UIAbilityContext;
+    LaptopHistory.load(context).then((turns: LaptopTurn[]) => {
+      if (turns.length > 0) {
+        this.chat.turns = turns;
+        this.turns = turns.slice();
+        for (let i = turns.length - 1; i >= 0; i--) {
+          if (turns[i].role === 'user') {
+            this.lastQuestion = turns[i].text;
+            break;
+          }
+        }
+      }
+    }).catch(() => {
+      // An unreadable history is an empty one.
+    });
     LaptopSettings.load(context).then((settings: LaptopSettings) => {
       this.endpoint = settings.endpoint;
       this.modelName = settings.model;
@@ -50,6 +68,11 @@ struct LaptopIndex {
     }).catch(() => {
       // Defaults are fine.
     });
+    // A pending ask can already be set when the page is created; @Watch only
+    // fires on later changes, so read it once here.
+    if (this.pending.length > 0) {
+      this.onPending();
+    }
   }
 
   /** `aa start --ps hopa.ask`, or a hopa://ask link, asks without typing. */
@@ -119,8 +142,13 @@ struct LaptopIndex {
     await this.chat.send(text);
     this.turns = this.chat.turns.slice();
     this.error = this.chat.error;
+    this.lastQuestion = this.chat.lastQuestion;
+    this.lastLatency = this.chat.lastLatencyMs;
+    this.lastTokens = this.chat.lastTokens;
     this.busy = false;
     this.scrollToEnd();
+    const context = getContext(this) as common.UIAbilityContext;
+    LaptopHistory.save(context, this.chat.turns);
   }
 
   private scrollToEnd(): void {
@@ -369,6 +397,11 @@ struct LaptopIndex {
           this.chat.clear();
           this.turns = [];
           this.error = '';
+          this.lastQuestion = '';
+          this.lastLatency = 0;
+          this.lastTokens = 0;
+          const context = getContext(this) as common.UIAbilityContext;
+          LaptopHistory.save(context, this.turns);
         })
 
       Text('THIS SESSION')
@@ -425,6 +458,31 @@ struct LaptopIndex {
   @Builder
   Rail() {
     Column({ space: 10 }) {
+      Text('THIS CONVERSATION')
+        .fontSize(9)
+        .fontWeight(FontWeight.Bold)
+        .fontColor($r('app.color.text_hint'))
+        .letterSpacing(0.7)
+        .width('100%')
+      Text(this.lastQuestion.length > 0 ? this.lastQuestion : 'No question yet.')
+        .fontSize(12)
+        .lineHeight(18)
+        .fontColor($r('app.color.text_primary'))
+        .maxLines(3)
+        .textOverflow({ overflow: TextOverflow.Ellipsis })
+        .width('100%')
+      Row({ space: 12 }) {
+        Text(this.lastLatency > 0 ? `${this.lastLatency} ms` : '\u2014')
+          .fontSize(10.5)
+          .fontColor($r('app.color.text_secondary'))
+        Text(this.lastTokens > 0 ? `${this.lastTokens} tokens` : 'no tokens yet')
+          .fontSize(10.5)
+          .fontColor($r('app.color.text_hint'))
+      }
+      .width('100%')
+
+      Divider().color($r('app.color.divider'))
+
       Text('WHAT HOPA SEES')
         .fontSize(9)
         .fontWeight(FontWeight.Bold)
