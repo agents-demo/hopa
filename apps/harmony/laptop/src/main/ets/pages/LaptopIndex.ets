@@ -2,7 +2,7 @@ import { common } from '@kit.AbilityKit';
 import { HopaMark, EmptyHero, KeyStore, SettingsStore, StoredSettings } from '@hopa/app';
 import { LaptopChat, LaptopTurn } from '../services/LaptopChat';
 
-import { LaptopHistory } from '../services/LaptopHistory';
+import { LaptopSessions, LaptopSession } from '../services/LaptopSessions';
 import { LaptopFirstRun } from '../services/LaptopFirstRun';
 
 const LAPTOP_KEY_ALIAS: string = 'hopa_laptop_key';
@@ -28,6 +28,9 @@ struct LaptopIndex {
   @State saved: string = '';
   @State paletteOpen: boolean = false;
   @State lastQuestion: string = '';
+  @State sessions: LaptopSession[] = [];
+  @State currentId: string = '';
+  private store: LaptopSessions = new LaptopSessions();
   @State lastLatency: number = 0;
   @State lastTokens: number = 0;
   @State winWidth: number = 1280;
@@ -38,19 +41,26 @@ struct LaptopIndex {
 
   aboutToAppear(): void {
     const context = getContext(this) as common.UIAbilityContext;
-    LaptopHistory.load(context).then((turns: LaptopTurn[]) => {
-      if (turns.length > 0) {
-        this.chat.turns = turns;
-        this.turns = turns.slice();
-        for (let i = turns.length - 1; i >= 0; i--) {
-          if (turns[i].role === 'user') {
-            this.lastQuestion = turns[i].text;
-            break;
-          }
+    LaptopSessions.load(context).then((store: LaptopSessions) => {
+      this.store = store;
+      const session: LaptopSession = store.current();
+      this.chat.turns = session.turns.slice();
+      this.turns = session.turns.slice();
+      this.lastLatency = session.lastLatency;
+      this.lastTokens = session.lastTokens;
+      this.refreshSessions();
+      if ((AppStorage.get<string>('hopa.laptop.new') ?? '') === '1') {
+        AppStorage.setOrCreate<string>('hopa.laptop.new', '');
+        this.newChat();
+      }
+      for (let i = this.turns.length - 1; i >= 0; i--) {
+        if (this.turns[i].role === 'user') {
+          this.lastQuestion = this.turns[i].text;
+          break;
         }
       }
     }).catch(() => {
-      // An unreadable history is an empty one.
+      // An unreadable store is an empty one.
     });
     LaptopFirstRun.ensure(context).then((stored: StoredSettings) => {
       this.endpoint = stored.endpoint;
@@ -75,6 +85,54 @@ struct LaptopIndex {
     if (this.pending.length > 0) {
       this.onPending();
     }
+  }
+
+  private refreshSessions(): void {
+    this.sessions = this.store.list.slice();
+    this.currentId = this.store.currentId;
+  }
+
+  private newChat(): void {
+    const context = getContext(this) as common.UIAbilityContext;
+    this.store.create();
+    this.chat.clear();
+    this.turns = [];
+    this.error = '';
+    this.lastQuestion = '';
+    this.lastLatency = 0;
+    this.lastTokens = 0;
+    this.refreshSessions();
+    this.store.save(context);
+  }
+
+  private openSession(id: string): void {
+    const context = getContext(this) as common.UIAbilityContext;
+    this.store.select(id);
+    this.store.save(context);
+    const session: LaptopSession = this.store.current();
+    this.chat.turns = session.turns.slice();
+    this.turns = session.turns.slice();
+    this.lastLatency = session.lastLatency;
+    this.lastTokens = session.lastTokens;
+    this.error = '';
+    this.lastQuestion = '';
+    for (let i = this.turns.length - 1; i >= 0; i--) {
+      if (this.turns[i].role === 'user') {
+        this.lastQuestion = this.turns[i].text;
+        break;
+      }
+    }
+    this.refreshSessions();
+  }
+
+  private deleteSession(id: string): void {
+    const context = getContext(this) as common.UIAbilityContext;
+    this.store.remove(id);
+    if (this.store.currentId.length === 0) {
+      this.store.create();
+    }
+    this.store.save(context);
+    this.openSession(this.store.currentId);
   }
 
   /** `aa start --ps hopa.ask`, or a hopa://ask link, asks without typing. */
@@ -150,7 +208,9 @@ struct LaptopIndex {
     this.busy = false;
     this.scrollToEnd();
     const context = getContext(this) as common.UIAbilityContext;
-    LaptopHistory.save(context, this.chat.turns);
+    this.store.commit(this.chat.turns, this.chat.lastLatencyMs, this.chat.lastTokens);
+    this.store.save(context);
+    this.refreshSessions();
   }
 
   /** Ctrl+K opens the palette; Esc closes it. Phone shells never see these. */
@@ -242,9 +302,7 @@ struct LaptopIndex {
           .backgroundColor($r('app.color.surface_alt'))
           .borderRadius(16)
           .onClick(() => {
-            this.chat.clear();
-            this.turns = [];
-            this.error = '';
+            this.newChat();
           })
       }
       Text(this.keyPresent ? `Model · ${this.modelName}` : 'Add model key')
@@ -339,6 +397,7 @@ struct LaptopIndex {
     EmptyHero({
       greeting: '',
       tagline: 'Your agent. Ask for anything.',
+      promise: 'Payments always ask first.',
       note: this.keyPresent
         ? 'Running here, on this machine. It cannot drive other laptop apps yet.'
         : 'Add a model key to start. The key stays on this laptop.',
@@ -419,17 +478,10 @@ struct LaptopIndex {
         .backgroundColor($r('app.color.primary_soft'))
         .borderRadius(10)
         .onClick(() => {
-          this.chat.clear();
-          this.turns = [];
-          this.error = '';
-          this.lastQuestion = '';
-          this.lastLatency = 0;
-          this.lastTokens = 0;
-          const context = getContext(this) as common.UIAbilityContext;
-          LaptopHistory.save(context, this.turns);
+          this.newChat();
         })
 
-      Text('THIS SESSION')
+      Text('CONVERSATIONS')
         .fontSize(9)
         .fontWeight(FontWeight.Bold)
         .fontColor($r('app.color.text_hint'))
@@ -437,22 +489,36 @@ struct LaptopIndex {
         .width('100%')
         .padding({ left: 4, top: 8 })
 
-      Row({ space: 8 }) {
-        Row()
-          .width(5)
-          .height(5)
-          .borderRadius(3)
-          .backgroundColor($r('app.color.primary'))
-        Text(this.turns.length > 0 ? 'Conversation' : 'Nothing yet')
-          .fontSize(12)
-          .fontColor($r('app.color.text_primary'))
-          .maxLines(1)
-          .textOverflow({ overflow: TextOverflow.Ellipsis })
-      }
-      .width('100%')
-      .padding({ left: 8, right: 8, top: 8, bottom: 8 })
-      .backgroundColor($r('app.color.surface'))
-      .borderRadius(9)
+      ForEach(this.sessions, (session: LaptopSession) => {
+        Row({ space: 6 }) {
+          Text(session.title)
+            .fontSize(12)
+            .fontColor(session.id === this.currentId
+              ? $r('app.color.text_primary')
+              : $r('app.color.text_secondary'))
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+            .layoutWeight(1)
+          if (session.id === this.currentId) {
+            Text('\u00d7')
+              .fontSize(12)
+              .fontColor($r('app.color.text_hint'))
+              .padding({ left: 4, right: 2 })
+              .onClick(() => {
+                this.deleteSession(session.id);
+              })
+          }
+        }
+        .width('100%')
+        .padding({ left: 8, right: 8, top: 7, bottom: 7 })
+        .backgroundColor(session.id === this.currentId
+          ? $r('app.color.surface')
+          : Color.Transparent)
+        .borderRadius(9)
+        .onClick(() => {
+          this.openSession(session.id);
+        })
+      }, (session: LaptopSession) => `${session.id}-${session.title}`)
 
       Blank()
 
@@ -577,26 +643,13 @@ struct LaptopIndex {
           .width('100%')
           .padding({ left: 12, bottom: 6 })
         this.PaletteRow('New chat', () => {
-          this.chat.clear();
-          this.turns = [];
-          this.error = '';
-          this.lastQuestion = '';
-          this.lastLatency = 0;
-          this.lastTokens = 0;
-          const context = getContext(this) as common.UIAbilityContext;
-          LaptopHistory.save(context, this.turns);
+          this.newChat();
         })
         this.PaletteRow('Model and key', () => {
           this.settingsOpen = true;
         })
         this.PaletteRow('Clear conversation', () => {
-          this.chat.clear();
-          this.turns = [];
-          this.lastQuestion = '';
-          this.lastLatency = 0;
-          this.lastTokens = 0;
-          const context = getContext(this) as common.UIAbilityContext;
-          LaptopHistory.save(context, this.turns);
+          this.newChat();
         })
         this.PaletteRow('Close', () => {})
       }
@@ -644,6 +697,7 @@ struct LaptopIndex {
           }
           .layoutWeight(1)
           .width('100%')
+          .justifyContent(FlexAlign.Center)
         } else {
           List({ scroller: this.scroller }) {
             ForEach(this.turns, (turn: LaptopTurn, index: number) => {

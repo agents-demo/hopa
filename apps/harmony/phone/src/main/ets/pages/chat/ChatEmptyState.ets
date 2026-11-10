@@ -254,7 +254,7 @@ export struct ChatEmptyState {
         EmptyHero({
           greeting: this.greeting,
           tagline: this.tagline(),
-          note: 'Payments always ask first.',
+          promise: 'Payments always ask first.',
           titleSize: this.style().title,
           bodySize: this.style().body,
           markSize: this.style().mascot,

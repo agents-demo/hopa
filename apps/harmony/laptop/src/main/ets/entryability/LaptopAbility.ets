@@ -29,6 +29,10 @@ export default class LaptopAbility extends UIAbility {
       if (typeof model === 'string' && model.length > 0) {
         AppStorage.setOrCreate<string>('hopa.laptop.model', model);
       }
+      const fresh = params['hopa.new'];
+      if (typeof fresh === 'string' && fresh === '1') {
+        AppStorage.setOrCreate<string>('hopa.laptop.new', '1');
+      }
       const ask = params['hopa.ask'];
       if (typeof ask === 'string' && ask.trim().length > 0) {
         AppStorage.setOrCreate<string>('hopa.laptop.pending', ask.trim());

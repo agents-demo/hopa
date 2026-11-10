@@ -9,7 +9,9 @@ import { HopaMark } from './HopaMark';
 export struct EmptyHero {
   @Prop greeting: string = '';
   @Prop tagline: string = '';
-  /** The small line under the tagline: the promise, or a build note. */
+  /** The promise that must never be dropped, on any shell. */
+  @Prop promise: string = '';
+  /** A build note under the promise; empty on the phone. */
   @Prop note: string = '';
   @Prop titleSize: number = 34;
   @Prop bodySize: number = 15;
@@ -40,9 +42,15 @@ export struct EmptyHero {
         .fontSize(this.bodySize - 1)
         .fontColor($r('app.color.text_secondary'))
         .textAlign(TextAlign.Center)
+      if (this.promise.length > 0) {
+        Text(this.promise)
+          .fontSize(this.bodySize - 4)
+          .fontColor($r('app.color.text_hint'))
+          .textAlign(TextAlign.Center)
+      }
       if (this.note.length > 0) {
         Text(this.note)
-          .fontSize(this.bodySize - 4)
+          .fontSize(this.bodySize - 5)
           .fontColor($r('app.color.text_hint'))
           .textAlign(TextAlign.Center)
       }
