@@ -33,12 +33,43 @@ struct LaptopIndex {
       LaptopKeyStore.load().then((key: string) => {
         this.keyPresent = key.length > 0;
         this.chat.configure(this.endpoint, this.modelName, key);
+        this.applyInjected();
       }).catch(() => {
         // No key yet: the Model panel asks for one.
+        this.applyInjected();
       });
     }).catch(() => {
       // Defaults are fine.
     });
+  }
+
+  /** A scripted first run can pass the key once; it lands in Asset Store and is forgotten. */
+  private async applyInjected(): Promise<void> {
+    const injectedKey: string = AppStorage.get<string>('hopa.laptop.key') ?? '';
+    const injectedEndpoint: string = AppStorage.get<string>('hopa.laptop.endpoint') ?? '';
+    const injectedModel: string = AppStorage.get<string>('hopa.laptop.model') ?? '';
+    if (injectedEndpoint.length === 0 && injectedModel.length === 0 && injectedKey.length === 0) {
+      return;
+    }
+    const context = getContext(this) as common.UIAbilityContext;
+    if (injectedEndpoint.length > 0 || injectedModel.length > 0) {
+      const settings = new LaptopSettings();
+      settings.endpoint = injectedEndpoint.length > 0 ? injectedEndpoint : settings.endpoint;
+      settings.model = injectedModel.length > 0 ? injectedModel : settings.model;
+      await settings.save(context);
+      this.endpoint = settings.endpoint;
+      this.modelName = settings.model;
+      AppStorage.setOrCreate<string>('hopa.laptop.endpoint', '');
+      AppStorage.setOrCreate<string>('hopa.laptop.model', '');
+    }
+    if (injectedKey.length > 0) {
+      const saved: boolean = await LaptopKeyStore.save(injectedKey);
+      AppStorage.setOrCreate<string>('hopa.laptop.key', '');
+      const key: string = await LaptopKeyStore.load();
+      this.keyPresent = key.length > 0;
+      this.saved = this.keyPresent ? 'Key saved.' : 'Key store unavailable.';
+      this.chat.configure(this.endpoint, this.modelName, key);
+    }
   }
 
   private async send(): Promise<void> {
@@ -258,6 +289,12 @@ struct LaptopIndex {
         .fontSize(11)
         .fontColor($r('app.color.text_hint'))
         .textAlign(TextAlign.Center)
+      if (!this.keyPresent && this.saved.length > 0) {
+        Text(this.saved)
+          .fontSize(11)
+          .fontColor($r('app.color.danger'))
+          .textAlign(TextAlign.Center)
+      }
     }
     .width('100%')
     .height('100%')

@@ -8,11 +8,28 @@ const TAG: string = 'HOPA-Laptop';
 /**
  * Laptop shell entry point.
  *
- * The agent engine (`@hopa/core`) and the platform transport are shared with
- * the phone; this module only owns the 2-in-1 window and its pages.
+ * Optional launch parameters, for a scripted first run:
+ *   --ps hopa.laptop_key <key> --ps hopa.laptop_endpoint <url>
+ *   --ps hopa.laptop_model <name>
+ * The page writes the key straight into Asset Store and then forgets it.
  */
 export default class LaptopAbility extends UIAbility {
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
+    const params = want.parameters;
+    if (params !== undefined) {
+      const key = params['hopa.laptop_key'];
+      const endpoint = params['hopa.laptop_endpoint'];
+      const model = params['hopa.laptop_model'];
+      if (typeof key === 'string' && key.length > 0) {
+        AppStorage.setOrCreate<string>('hopa.laptop.key', key);
+      }
+      if (typeof endpoint === 'string' && endpoint.length > 0) {
+        AppStorage.setOrCreate<string>('hopa.laptop.endpoint', endpoint);
+      }
+      if (typeof model === 'string' && model.length > 0) {
+        AppStorage.setOrCreate<string>('hopa.laptop.model', model);
+      }
+    }
     hilog.info(DOMAIN, TAG, 'laptop ability created');
   }
 
