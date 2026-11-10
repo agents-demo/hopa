@@ -207,7 +207,7 @@ struct LaptopIndex {
       }
       withTurns.sort((a: RemoteSession, b: RemoteSession) => b.updated - a.updated);
       this.remoteSessions = withTurns;
-      this.linkStatus = `${withTurns.length} threads`;
+      this.linkStatus = 'Connected';
     } else {
       this.remoteSessions = [];
       this.linkStatus = this.link.error;
@@ -546,23 +546,23 @@ struct LaptopIndex {
   @Builder
   SettingsPanel() {
     Column({ space: 22 }) {
-      Row() {
+      Row({ space: 10 }) {
+        Text('\u2190')
+          .fontSize(17)
+          .fontColor($r('app.color.text_secondary'))
+          .width(28)
+          .height(28)
+          .textAlign(TextAlign.Center)
+          .onClick(() => {
+            this.settingsOpen = false;
+          })
         Text('Settings')
           .fontSize(17)
           .fontWeight(FontWeight.Bold)
           .fontColor($r('app.color.text_primary'))
-        Blank()
-        Text('Done')
-          .fontSize(12.5)
-          .fontColor($r('app.color.primary'))
-          .padding({ left: 14, right: 14, top: 7, bottom: 7 })
-          .backgroundColor($r('app.color.primary_soft'))
-          .borderRadius(14)
-          .onClick(() => {
-            this.settingsOpen = false;
-          })
       }
       .width('100%')
+      .alignItems(VerticalAlign.Center)
 
       Column({ space: 8 }) {
         Text('MODEL')
@@ -880,7 +880,7 @@ struct LaptopIndex {
           }, (session: LaptopSession) => session.id + session.title)
 
           if (this.remoteSessions.length > 0) {
-            Text('FROM YOUR PHONE')
+            Text(`FROM YOUR PHONE \u00b7 ${this.remoteSessions.length}`)
               .fontSize(9)
               .fontWeight(FontWeight.Bold)
               .fontColor($r('app.color.text_hint'))
@@ -930,15 +930,20 @@ struct LaptopIndex {
       .align(Alignment.TopStart)
 
       Column({ space: 2 }) {
-        Text('Settings')
-          .fontSize(12)
-          .fontColor($r('app.color.text_secondary'))
-          .width('100%')
-          .padding({ left: 8, right: 8, top: 7, bottom: 7 })
-          .borderRadius(8)
-          .onClick(() => {
-            this.settingsOpen = !this.settingsOpen;
-          })
+        Row() {
+          Text('Settings')
+            .fontSize(12)
+            .fontColor($r('app.color.text_secondary'))
+          Blank()
+          Text('\u203a')
+            .fontSize(15)
+            .fontColor($r('app.color.text_hint'))
+        }
+        .width('100%')
+        .padding({ left: 8, right: 8, top: 6, bottom: 6 })
+        .onClick(() => {
+          this.settingsOpen = !this.settingsOpen;
+        })
         if (!this.keyPresent) {
           Text('Add a model key')
             .fontSize(11)
@@ -952,8 +957,8 @@ struct LaptopIndex {
         }
       }
       .width('100%')
-      .padding({ left: 12, right: 12, top: 10, bottom: 10 })
-      .border({ width: { top: 1 }, color: $r('app.color.divider') })
+      .padding({ left: 12, right: 12, top: 6, bottom: 10 })
+      .border({ width: { top: 1 }, color: '#DCD5C7' })
     }
     .width(212)
     .height('100%')
