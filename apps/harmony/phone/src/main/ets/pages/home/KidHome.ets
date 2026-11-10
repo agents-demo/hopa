@@ -4,6 +4,7 @@ import { Haptics } from '../../services/Haptics';
 import { VisualStyle } from '../../services/VisualStyle';
 import { VoiceController } from '../../services/VoiceController';
 import { TaskRunner } from '../../services/TaskRunner';
+import { SettingsStore, StoredSettings } from '../../services/SettingsStore';
 import { HopaMark } from '../chat/HopaMark';
 
 /**
@@ -24,7 +25,38 @@ export struct KidHome {
   @State pressed: number = -1;
   @State boop: boolean = false;
   @State phraseIndex: number = 0;
+  @State kidPin: string = '';
+  @State pinOpen: boolean = false;
+  @State pinDraft: string = '';
+  @State pinWrong: boolean = false;
   private boopTimer: number = -1;
+
+  aboutToAppear(): void {
+    SettingsStore.load(getContext(this) as Context).then((stored: StoredSettings) => {
+      this.kidPin = stored.kidPin;
+    }).catch(() => {
+      // No PIN is set.
+    });
+  }
+
+  private openGrownUp(): void {
+    if (this.kidPin.length > 0) {
+      this.pinDraft = '';
+      this.pinWrong = false;
+      this.pinOpen = true;
+      return;
+    }
+    this.onOpenSettings();
+  }
+
+  private unlock(): void {
+    if (this.pinDraft === this.kidPin) {
+      this.pinOpen = false;
+      this.onOpenSettings();
+      return;
+    }
+    this.pinWrong = true;
+  }
 
   private phrases(): string[] {
     return [
@@ -280,8 +312,76 @@ export struct KidHome {
         .width('100%')
         .padding({ top: 10, bottom: 16 })
         .onClick(() => {
-          this.onOpenSettings();
+          this.openGrownUp();
         })
+    }
+    .width('100%')
+    .height('100%')
+  }
+
+  @Builder
+  PinGate() {
+    Stack({ alignContent: Alignment.Center }) {
+      Column()
+        .width('100%')
+        .height('100%')
+        .backgroundColor('#66000000')
+      Column({ space: 10 }) {
+        Text('Grown-ups only')
+          .fontSize(19)
+          .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_primary'))
+        Text('Enter the parent PIN to open Settings.')
+          .fontSize(12)
+          .fontColor($r('app.color.text_secondary'))
+        TextInput({ text: this.pinDraft, placeholder: '4 digits' })
+          .type(InputType.Number)
+          .maxLength(4)
+          .height(44)
+          .fontSize(17)
+          .backgroundColor($r('app.color.surface_muted'))
+          .borderRadius(10)
+          .onChange((value: string) => {
+            this.pinDraft = value;
+            this.pinWrong = false;
+          })
+        if (this.pinWrong) {
+          Text('That PIN is not right.')
+            .fontSize(11)
+            .fontColor($r('app.color.danger'))
+        }
+        Row({ space: 10 }) {
+          Text('Cancel')
+            .fontSize(13)
+            .fontColor($r('app.color.text_primary'))
+            .textAlign(TextAlign.Center)
+            .height(44)
+            .layoutWeight(1)
+            .backgroundColor($r('app.color.surface_muted'))
+            .borderRadius(12)
+            .onClick(() => {
+              this.pinOpen = false;
+            })
+          Text('Unlock')
+            .fontSize(13)
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.on_primary'))
+            .textAlign(TextAlign.Center)
+            .height(44)
+            .layoutWeight(1)
+            .backgroundColor(this.accent())
+            .borderRadius(12)
+            .onClick(() => {
+              this.unlock();
+            })
+        }
+        .width('100%')
+      }
+      .width('82%')
+      .padding(18)
+      .backgroundColor($r('app.color.surface'))
+      .borderRadius(18)
+      .alignItems(HorizontalAlign.Start)
     }
     .width('100%')
     .height('100%')
@@ -440,6 +540,9 @@ export struct KidHome {
       this.Home()
       if (this.taskOpen) {
         this.Sheet()
+      }
+      if (this.pinOpen) {
+        this.PinGate()
       }
     }
     .width('100%')

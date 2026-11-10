@@ -17,6 +17,7 @@ import { ModelSettingsCard } from './ModelSettingsCard';
 import { BridgeMonitor } from '../../services/BridgeMonitor';
 import { TrustedApps } from '../../services/TrustedApps';
 import { CharacterPage } from './CharacterPage';
+import { ParentPinPage } from './ParentPinPage';
 
 /** Model, bridge, safety switches and the advanced sub-pages. */
 @Component
@@ -210,6 +211,9 @@ export struct SettingsPage {
     if (this.subPage === 'character') {
       return 'Character';
     }
+    if (this.subPage === 'parentpin') {
+      return 'Parent PIN';
+    }
     return 'About';
   }
 
@@ -384,6 +388,8 @@ export struct SettingsPage {
           this.Permissions()
         } else if (this.subPage === 'character') {
           CharacterPage()
+        } else if (this.subPage === 'parentpin') {
+          ParentPinPage()
         } else if (this.subPage === 'screens') {
           ScreensPage()
         } else {
@@ -710,6 +716,7 @@ export struct SettingsPage {
             Divider().color($r('app.color.divider'))
             this.Row('App access', 'Which bundles may be launched', 'appaccess')
             this.Row('Permissions', 'What HOPA can and cannot do', 'permissions')
+            this.Row('Parent PIN', 'Locks Settings in Kid mode', 'parentpin')
           }
           .cardStyle()
           .alignItems(HorizontalAlign.Start)

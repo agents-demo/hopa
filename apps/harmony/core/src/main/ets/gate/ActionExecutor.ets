@@ -97,6 +97,7 @@ export class ActionExecutor {
     const status: RunStatus = observation.success ? RunStatus.Executed : RunStatus.Failed;
     const record = new RunRecord(action, status);
     record.approved = approved;
+    record.verified = verified;
     record.detail = observation.success ? observation.summary : observation.detail;
     record.startedAt = startedAt;
     record.finishedAt = Date.now();

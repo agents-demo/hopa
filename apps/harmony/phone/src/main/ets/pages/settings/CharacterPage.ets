@@ -345,7 +345,17 @@ export struct CharacterPage {
           .fontSize(13.5)
           .lineHeight(20)
           .fontColor($r('app.color.text_primary'))
-        Text('One run, in this voice.')
+        Divider().color($r('app.color.divider')).margin({ top: 2, bottom: 2 })
+        Text(Character.failure('timeout'))
+          .fontSize(11.5)
+          .lineHeight(17)
+          .fontColor($r('app.color.text_secondary'))
+        if (Character.quip(true, 2).length > 0) {
+          Text(Character.quip(true, 2))
+            .fontSize(11.5)
+            .fontColor($r('app.color.text_secondary'))
+        }
+        Text('One run, one failure and one close, in this voice.')
           .fontSize(10)
           .fontColor($r('app.color.text_hint'))
       }

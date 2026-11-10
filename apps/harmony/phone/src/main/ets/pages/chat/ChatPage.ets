@@ -237,6 +237,11 @@ export struct ChatPage {
     }
   }
 
+  private lastRunVerified(): boolean {
+    const runs = AgentService.get().runs.all();
+    return runs.length > 0 && runs[runs.length - 1].verified;
+  }
+
   /** First http(s) link in an answer, or ''. */
   private firstUrl(text: string): string {
     const match = text.match(/https?:\/\/[^\s)]+/);
@@ -849,6 +854,22 @@ export struct ChatPage {
                           .fontColor($r('app.color.text_hint'))
                           .width('100%')
                           .padding({ left: 2, top: 2 })
+                      }
+                      if (index === this.lastAnswerIndex() && !this.busy &&
+                        AgentService.get().lastRunHadActions()) {
+                        Row({ space: 5 }) {
+                          Circle({ width: 5, height: 5 })
+                            .fill(this.lastRunVerified()
+                              ? $r('app.color.success')
+                              : $r('app.color.warning'))
+                          Text(this.lastRunVerified()
+                            ? 'Verified on screen'
+                            : 'Not verified on screen')
+                            .fontSize(9.5)
+                            .fontColor($r('app.color.text_hint'))
+                        }
+                        .width('100%')
+                        .padding({ left: 2, top: 1, bottom: 2 })
                       }
                       if (!this.busy && this.shotOf(item).length > 0) {
                         Row({ space: 10 }) {

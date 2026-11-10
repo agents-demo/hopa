@@ -8,6 +8,8 @@ export class RunRecord {
   kind: string;
   isPayment: boolean;
   approved: boolean = false;
+  /** The executor re-observed the screen and saw a change. */
+  verified: boolean = false;
   status: RunStatus;
   detail: string = '';
   startedAt: number;

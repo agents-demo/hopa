@@ -20,6 +20,7 @@ export class StoredSettings {
   tactile: boolean = true;
   address: string = '';
   voice: string = '';
+  kidPin: string = '';
   bridgeUrl: string = '';
   bridgeToken: string = '';
   lastTokens: number = 0;
@@ -107,6 +108,10 @@ export class SettingsStore {
     if (typeof voice === 'string') {
       settings.voice = voice;
     }
+    const kidPin = await store.get('kid_pin', settings.kidPin);
+    if (typeof kidPin === 'string') {
+      settings.kidPin = kidPin;
+    }
     const bridgeUrl = await store.get('bridge_url', settings.bridgeUrl);
     if (typeof bridgeUrl === 'string') {
       settings.bridgeUrl = bridgeUrl;
@@ -145,6 +150,7 @@ export class SettingsStore {
     await store.put('tactile', settings.tactile);
     await store.put('address', settings.address);
     await store.put('voice', settings.voice);
+    await store.put('kid_pin', settings.kidPin);
     await store.put('bridge_url', settings.bridgeUrl);
     await store.put('bridge_token', settings.bridgeToken);
     await store.put('last_tokens', settings.lastTokens);
