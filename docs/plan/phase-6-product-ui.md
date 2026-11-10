@@ -34,7 +34,7 @@
 - [ ] Read-only replay of a past run
 - [ ] Voice input, or a recorded decision to defer it
 - [ ] Share target: receive text, image or file from other apps
-- [ ] Quick action or home-screen widget
+- [x] Quick action or home-screen widget (long-press shortcuts: Ask HOPA, Last run; verified on the Pura 90)
 - [ ] Completion notification
 - [ ] Cost and latency display per run
 - [ ] Undo where the platform allows it
