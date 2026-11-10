@@ -21,6 +21,7 @@ import { util } from '@kit.ArkTS';
 import { image } from '@kit.ImageKit';
 import { BrowserController } from './BrowserController';
 import { BackgroundKeeper } from './BackgroundKeeper';
+import { CompositeScreenSource } from './CompositeScreenSource';
 import { BridgeClient } from './BridgeClient';
 import { BridgeSessionStore } from './BridgeSessionStore';
 import { RemoteUiCapability } from './RemoteUiCapability';
@@ -116,7 +117,8 @@ export class AgentService {
       this.bridge,
       this.accessibility,
       this.background,
-      this.pageLinks
+      this.pageLinks,
+      new CompositeScreenSource(this.browser, this.bridge)
     );
     this.scheduleService.bindRunner(
       (goal: string): Promise<string> => this.run(goal),

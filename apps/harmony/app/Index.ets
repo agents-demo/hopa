@@ -16,3 +16,4 @@ export { BridgeClient, BridgeNode, BridgeSession, BridgeSessionSink } from './sr
 export { APP_CATALOG, SITE_CATALOG, CatalogApp, CatalogSite } from './src/main/ets/services/AppCatalog';
 export { AppCatalogPrompt } from './src/main/ets/services/AppCatalogPrompt';
 export { AppRouteTargets } from './src/main/ets/services/AppRouteTargets';
+export { AgentRuntime } from './src/main/ets/services/AgentRuntime';
