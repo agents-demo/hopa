@@ -19,6 +19,7 @@ import {
   SkillStore
 } from '@hopa/app';
 import { LaptopApprovals } from './LaptopApprovals';
+import { LaptopBrowser } from './LaptopBrowser';
 import { RunArchive } from '@hopa/app';
 
 /**
@@ -29,24 +30,6 @@ import { RunArchive } from '@hopa/app';
  * taps, types and launches through `pc-agent bridge`. With the bridge off the
  * runtime answers questions and refuses actions instead of pretending.
  */
-
-class NoBrowser implements RuntimeBrowser {
-  isReady(): boolean {
-    return false;
-  }
-
-  currentUrl(): string {
-    return '';
-  }
-
-  currentTitle(): string {
-    return '';
-  }
-
-  async pageText(): Promise<string> {
-    return '';
-  }
-}
 
 class NoBackground implements RuntimeBackground {
   async begin(): Promise<void> {}
@@ -92,6 +75,7 @@ export class LaptopAgent {
   readonly approvals: LaptopApprovals = new LaptopApprovals();
   readonly bridge: BridgeClient = new BridgeClient();
   readonly runs: RunStore = new RunStore();
+  readonly browser: LaptopBrowser = new LaptopBrowser();
   readonly archive: RunArchive = new RunArchive(this.runs);
   readonly chatSync: ChatSync = new ChatSync();
   private executor: ActionExecutor;
@@ -115,7 +99,7 @@ export class LaptopAgent {
       executor,
       this.memory,
       this.skills,
-      new NoBrowser(),
+      this.browser,
       this.bridge,
       new NoAccessibility(),
       new NoBackground(),

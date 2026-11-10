@@ -3,6 +3,7 @@ import { RunRecord, RunStatus } from '@hopa/core';
 import { window } from '@kit.ArkUI';
 import { pasteboard } from '@kit.BasicServicesKit';
 import { notificationManager } from '@kit.NotificationKit';
+import { webview } from '@kit.ArkWeb';
 import { HopaMark, EmptyHero, ResultActions, StepChips, ChatFormat, Character, KeyStore, SettingsStore, StoredSettings } from '@hopa/app';
 import { LaptopChat, LaptopTurn } from '../services/LaptopChat';
 import { LaptopAgent, demoApproval } from '../services/LaptopAgent';
@@ -51,6 +52,11 @@ struct LaptopIndex {
   @State view: string = 'chat';
   @State runs: RunRecord[] = [];
   @State openRunId: string = '';
+  @State address: string = '';
+  @State pageUrl: string = 'https://example.com';
+  @State pageTitle: string = '';
+  @State pageQuestion: string = '';
+  private web: webview.WebviewController = new webview.WebviewController();
   @State speakReplies: boolean = false;
   @State profileName: string = 'everyday';
   @State kidPin: string = '';
@@ -934,6 +940,108 @@ struct LaptopIndex {
   }
 
   @Builder
+  BrowserPane() {
+    Column({ space: 8 }) {
+      Row({ space: 8 }) {
+        TextInput({ text: this.address, placeholder: 'Type an address, then press Enter' })
+          .layoutWeight(1)
+          .height(34)
+          .fontSize(12)
+          .backgroundColor($r('app.color.surface'))
+          .borderRadius(9)
+          .onChange((value: string) => {
+            this.address = value;
+          })
+          .onSubmit(() => {
+            this.openAddress();
+          })
+        Text('Go')
+          .fontSize(12)
+          .fontColor($r('app.color.primary'))
+          .padding({ left: 14, right: 14, top: 7, bottom: 7 })
+          .backgroundColor($r('app.color.primary_soft'))
+          .borderRadius(12)
+          .onClick(() => {
+            this.openAddress();
+          })
+      }
+      .width('100%')
+
+      Web({ src: this.pageUrl, controller: this.web })
+        .layoutWeight(1)
+        .width('100%')
+        .domStorageAccess(true)
+        .onPageEnd(() => {
+          this.pageUrl = this.web.getUrl();
+          this.address = this.pageUrl;
+          this.agent.browser.attach(this.web);
+          this.agent.browser.note(this.pageUrl, this.web.getTitle());
+          this.pageTitle = this.web.getTitle();
+        })
+
+      Row({ space: 8 }) {
+        TextInput({ text: this.pageQuestion, placeholder: 'Ask about this page' })
+          .layoutWeight(1)
+          .height(34)
+          .fontSize(12)
+          .backgroundColor($r('app.color.surface_muted'))
+          .borderRadius(17)
+          .onChange((value: string) => {
+            this.pageQuestion = value;
+          })
+          .onSubmit(() => {
+            this.askAboutPage();
+          })
+        Text('Ask')
+          .fontSize(12)
+          .fontColor($r('app.color.on_primary'))
+          .padding({ left: 14, right: 14, top: 7, bottom: 7 })
+          .backgroundColor($r('app.color.primary'))
+          .borderRadius(12)
+          .onClick(() => {
+            this.askAboutPage();
+          })
+      }
+      .width('100%')
+    }
+    .layoutWeight(1)
+    .width('100%')
+    .padding({ left: 14, right: 14, top: 8, bottom: 10 })
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  /** Ask while the page is still mounted, then show the answer in chat. */
+  private async askAboutPage(): Promise<void> {
+    const question: string = this.pageQuestion.trim();
+    if (question.length === 0 || this.busy) {
+      return;
+    }
+    this.pageQuestion = '';
+    this.draft = question;
+    await this.send();
+    this.view = 'chat';
+  }
+
+  private openAddress(): void {
+    let target: string = this.address.trim();
+    if (target.length === 0) {
+      return;
+    }
+    if (!target.startsWith('http://') && !target.startsWith('https://')) {
+      target = target.includes('.')
+        ? `https://${target}`
+        : `https://duckduckgo.com/?q=${encodeURIComponent(target)}`;
+    }
+    this.pageUrl = target;
+    this.agent.browser.attach(this.web);
+    try {
+      this.web.loadUrl(target);
+    } catch (error) {
+      // The page simply stays as it was.
+    }
+  }
+
+  @Builder
   ActivityPane() {
     Column({ space: 8 }) {
       Row() {
@@ -1272,6 +1380,29 @@ struct LaptopIndex {
           this.paletteOpen = true;
         })
 
+        Row() {
+          Text('Browser')
+            .fontSize(11)
+            .fontColor(this.view === 'browser'
+              ? $r('app.color.text_primary')
+              : $r('app.color.text_hint'))
+            .layoutWeight(1)
+          Text('\u2197')
+            .fontSize(11)
+            .fontColor($r('app.color.text_hint'))
+        }
+        .width('100%')
+        .height(26)
+        .padding({ left: 8, right: 8 })
+        .borderRadius(7)
+        .backgroundColor(this.view === 'browser' ? $r('app.color.surface') : Color.Transparent)
+        .onClick(() => {
+          this.view = this.view === 'browser' ? 'chat' : 'browser';
+          if (this.view === 'browser') {
+            this.agent.browser.attach(this.web);
+          }
+        })
+
         if (this.profileName !== 'kid') {
           Row() {
             Text('Activity')
@@ -1424,7 +1555,9 @@ struct LaptopIndex {
       }
       Column() {
         this.Header()
-        if (this.view === 'activity') {
+        if (this.view === 'browser') {
+          this.BrowserPane()
+        } else if (this.view === 'activity') {
           this.ActivityPane()
         } else if (this.settingsOpen) {
           Scroll() {
