@@ -1,8 +1,11 @@
 import { AgentRuntime } from '@hopa/app';
 
 export class LaptopTurn {
+  /** Stable across devices: the shared store merges by this. */
+  id: string = '';
   role: string = 'user';
   text: string = '';
+  at: number = 0;
   steps: string[] = [];
 }
 
@@ -55,6 +58,8 @@ export class LaptopChat {
       return;
     }
     const user = new LaptopTurn();
+    user.id = this.newTurnId();
+    user.at = Date.now();
     user.role = 'user';
     user.text = prompt;
     this.turns.push(user);
@@ -70,6 +75,8 @@ export class LaptopChat {
       this.lastTokens = this.runtime.getLastTokens();
       this.totalTokens += this.lastTokens;
       const reply = new LaptopTurn();
+      reply.id = this.newTurnId();
+      reply.at = Date.now();
       reply.role = 'assistant';
       reply.text = replyText;
       reply.steps = this.runtime.lastSteps().slice();
@@ -85,6 +92,11 @@ export class LaptopChat {
   }
 
   /** Ask the last question again, replacing its answer. */
+  /** An id the bridge can merge on; collisions across devices are vanishing. */
+  private newTurnId(): string {
+    return `t\u00b7${Date.now()}\u00b7${Math.floor(Math.random() * 1e6)}`;
+  }
+
   async retry(): Promise<void> {
     if (this.busy || this.turns.length === 0) {
       return;

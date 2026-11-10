@@ -86,20 +86,21 @@ Tokens stay per device, so the phone's token cannot act on the laptop. The pool
 forwards the request untouched; authentication, rate limits and the device lock
 all stay in the device server that owns them.
 
-**Sessions travel both ways, read-only.** Each shell pushes its own snapshot
-when it changes (`POST /sessions` with its role and its own token). To read the
-other side, a shell sends `X-Hopa-Read: phone` or `X-Hopa-Read: 2in1` on
-`GET /sessions`; the pool accepts any live credential it knows, so the phone
-never needs the laptop's secret. The laptop shows one merged, newest-first list
-with a small body mark for origin; the phone shows a “From your laptop” group
-inside Chats that opens a read-only thread. Nothing writes across, and there is
-no merge: the other copy stays owned by the machine it lives on.
+**Conversations live on the bridge.** `/chats` is the single store: the phone
+and the laptop are views over it, exactly like a chat app with a server.
 
-**Continue here** is the escape hatch: it copies the other side's thread into a
-local conversation (marked with the local body) and leaves the original alone.
-Both directions have it — the laptop's read-only viewer and the phone's
-read-only thread header — so you can pick up a thread anywhere without the two
-copies ever fighting.
+- `GET /chats` returns `{rev, sessions}` for any live credential.
+- `POST /chats` takes `{sessions:[…]}` and merges: a turn is identified by its
+  id, so the same turn arriving twice is one turn; a title is last-writer-wins
+  on `titleAt`; a delete is a tombstone on `deletedAt` so an old copy cannot
+  revive it. `rev` grows only on a real change.
+- Both shells push what they have on launch and after an edit, then adopt the
+  merged answer. There is no “from your phone” section, no origin badge and no
+  Continue button: every thread is just a thread, editable on either device.
+- Offline, a shell keeps its local copy and pushes when the bridge returns.
+  Messages are append-only, so nothing is lost and nothing needs conflict
+  resolution. Two devices cannot see each other's new messages without the
+  bridge — that is the price of having no cloud account.
 
 `hdc` allows only one device to own a given *device-side* port, so the two
 shells cannot both listen on 8766 locally. Current mapping:

@@ -33,6 +33,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 
 from .bridge import BridgeServer
+from .chat_store import ChatStore
 from .device import Device
 
 PHONE_ROLES = ("phone", "tablet")
@@ -47,9 +48,13 @@ class BridgePool:
         port: int = 8766,
         token_ttl: float = 12 * 60 * 60,
         device_factory: Any = None,
+        chats: ChatStore | None = None,
     ) -> None:
         if not devices:
             raise ValueError("a pool needs at least one device")
+        # One conversation store for every device: this is the modern model,
+        # the shells are views over it.
+        self.chats = chats if chats is not None else ChatStore()
         self.nodes: dict[str, BridgeServer] = {}
         self.roles: dict[str, str] = {}
         for entry in devices:
@@ -218,7 +223,18 @@ class _PoolHandler(BaseHTTPRequestHandler):
             "updated": node.sessions_updated,
         })
 
+    def _authorized_any(self) -> bool:
+        header = self.headers.get("Authorization", "")
+        presented = header[len("Bearer "):] if header.startswith("Bearer ") else ""
+        return self.pool.authorized_any(presented)
+
     def do_GET(self) -> None:  # noqa: N802
+        if self.path == "/chats":
+            if not self._authorized_any():
+                self._send(401, {"error": "unauthorized"})
+                return
+            self._send(200, self.pool.chats.snapshot())
+            return
         read_role = self.headers.get("X-Hopa-Read", "").strip()
         if read_role and self.path == "/sessions":
             self._cross_sessions(read_role)
@@ -235,4 +251,20 @@ class _PoolHandler(BaseHTTPRequestHandler):
         self._forward(self.path, self._role(), b"")
 
     def do_POST(self) -> None:  # noqa: N802
+        if self.path == "/chats":
+            if not self._authorized_any():
+                body = self._body()
+                del body
+                self._send(401, {"error": "unauthorized"})
+                return
+            try:
+                payload = json.loads(self._body().decode("utf-8") or "{}")
+            except (UnicodeDecodeError, ValueError):
+                self._send(400, {"error": "body is not JSON"})
+                return
+            if not isinstance(payload, dict):
+                self._send(400, {"error": "body must be an object"})
+                return
+            self._send(200, self.pool.chats.merge(payload.get("sessions")))
+            return
         self._forward(self.path, self._role(), self._body())

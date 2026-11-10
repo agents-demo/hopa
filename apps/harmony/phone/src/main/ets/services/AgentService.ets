@@ -34,6 +34,7 @@ import { ExportService } from './ExportService';
 import { ConversationService } from './ConversationService';
 import { PageLinkService } from './PageLinkService';
 import { AgentRuntime } from './AgentRuntime';
+import { ChatSync } from '@hopa/app';
 import { ToolRegistryDefaults } from './ToolRegistryDefaults';
 import { SettingsStore, StoredSettings } from './SettingsStore';
 
@@ -71,6 +72,7 @@ export class AgentService {
   readonly system: SystemCapability;
   readonly runArchive: RunArchive;
   readonly conversations: ConversationService = new ConversationService();
+  private chatSync: ChatSync = new ChatSync();
   readonly pageLinks: PageLinkService = new PageLinkService();
   readonly exportService: ExportService;
   readonly runtime: AgentRuntime;
@@ -100,12 +102,15 @@ export class AgentService {
     this.executor.registerCapability(this.ui);
     this.executor.registerCapability(this.system);
     this.bridge.setRole('phone');
+    this.conversations.attachSync(this.chatSync);
     this.executor.registerCapability(new RemoteUiCapability(this.bridge));
 
     this.tools = ToolRegistryDefaults.create();
     this.bridge.setSessionSink(new BridgeSessionStore());
+    // The shared conversation store replaces the old read-only relay; the
+    // listener now only syncs, and only when a bridge is configured.
     this.conversations.setChangeListener(() => {
-      this.scheduleSessionRelay();
+      this.chatSyncNow();
     });
 
     this.runArchive = new RunArchive(this.runs);
@@ -197,33 +202,12 @@ export class AgentService {
     this.runDone = listener;
   }
 
-  private relayTimer: number = -1;
-
-  /** A quiet 2.5 s debounce: one snapshot per burst of messages. */
-  /** Push now: a restarted bridge has an empty snapshot until this lands. */
-  pushSessionsNow(): void {
-    if (!this.bridge.isConfigured()) {
+  /** Pull the shared conversations, then push what this phone has. */
+  chatSyncNow(): void {
+    if (!this.chatSync.isConfigured()) {
       return;
     }
-    this.scheduleSessionRelay();
-  }
-
-  scheduleSessionRelay(): void {
-    if (!this.bridge.isConfigured()) {
-      return;
-    }
-    if (this.relayTimer >= 0) {
-      clearTimeout(this.relayTimer);
-    }
-    this.relayTimer = setTimeout(() => {
-      this.relayTimer = -1;
-      this.relaySessions();
-    }, 2500);
-  }
-
-  private async relaySessions(): Promise<void> {
-    const payload: string = JSON.stringify({ sessions: this.sessionsSnapshot() });
-    await this.bridge.pushSessions(payload);
+    this.conversations.syncNow();
   }
 
   /** The same shape the laptop's sidebar understands. */
@@ -251,15 +235,16 @@ export class AgentService {
   /** Points the bridge capability at a running `pc-agent bridge`. */
   configureBridge(url: string, token: string): void {
     this.bridge.configure(url, token);
-    // Any path that points at a bridge also gives it the snapshot.
-    this.scheduleSessionRelay();
+    this.chatSync.configure(url, token, 'phone');
+    this.chatSyncNow();
     AccessibilityBridge.get().setBridgePreferred(this.bridge.isConfigured());
   }
 
   /** A paired session: access token plus the token that renews it. */
   configureBridgeSession(url: string, token: string, refresh: string): void {
     this.bridge.configureSession(url, token, refresh);
-    this.scheduleSessionRelay();
+    this.chatSync.configure(url, token, 'phone');
+    this.chatSyncNow();
     AccessibilityBridge.get().setBridgePreferred(this.bridge.isConfigured());
   }
 

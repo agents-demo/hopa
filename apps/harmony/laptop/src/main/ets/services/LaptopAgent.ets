@@ -8,6 +8,7 @@ import {
   AgentRuntime,
   BridgeClient,
   BridgeScreenSource,
+  ChatSync,
   MemoryStore,
   RemoteUiCapability,
   RemoteUiGates,
@@ -89,6 +90,7 @@ export class LaptopAgent {
   readonly skills: SkillStore = new SkillStore();
   readonly approvals: LaptopApprovals = new LaptopApprovals();
   readonly bridge: BridgeClient = new BridgeClient();
+  readonly chatSync: ChatSync = new ChatSync();
   private executor: ActionExecutor;
 
   /** Only for the approval demo; not part of the runtime path. */
@@ -122,6 +124,7 @@ export class LaptopAgent {
   /** Points the bridge capability at a running `pc-agent bridge`. */
   configureBridge(url: string, token: string): void {
     this.bridge.configure(url, token);
+    this.chatSync.configure(url, token, '2in1');
   }
 
   isBridgeConfigured(): boolean {

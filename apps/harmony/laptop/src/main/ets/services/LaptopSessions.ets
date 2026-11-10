@@ -1,5 +1,6 @@
 import { preferences } from '@kit.ArkData';
 import { Context } from '@kit.AbilityKit';
+import { ChatSync, SyncSession, SyncTurn } from '@hopa/app';
 import { LaptopTurn } from './LaptopChat';
 
 interface StoredTurn {
@@ -34,16 +35,6 @@ export class SessionWire {
   turns: SessionWireTurn[] = [];
 }
 
-/** One row in the sidebar: a laptop session or a read-only phone one. */
-export class LaptopListRow {
-  id: string = '';
-  title: string = '';
-  updated: number = 0;
-  /** 'here' on this laptop, 'phone' for the read-only copy. */
-  origin: string = 'here';
-  remoteIndex: number = -1;
-}
-
 export class LaptopSession {
   id: string = '';
   title: string = '';
@@ -65,22 +56,91 @@ export class LaptopSessions {
 
   list: LaptopSession[] = [];
   currentId: string = '';
+  /** The bridge is the store of record; this class is its local view. */
+  private sync: ChatSync | undefined = undefined;
+  private removed: string[] = [];
 
-  /**
-   * A local copy of a thread that lives elsewhere.
-   *
-   * It is a fork on purpose: the other machine keeps its copy and stays the
-   * owner, so nothing has to be merged later.
-   */
-  createFrom(title: string, turns: LaptopTurn[]): LaptopSession {
-    const session = new LaptopSession();
-    session.id = `fork\u00b7${Date.now()}`;
-    session.title = title.length > 0 ? title : 'Continued from your phone';
-    session.updated = Date.now();
-    session.turns = turns.slice();
-    this.list.unshift(session);
-    this.currentId = session.id;
-    return session;
+  attachSync(sync: ChatSync): void {
+    this.sync = sync;
+  }
+
+  /** Push what this laptop has, then adopt the merged truth. */
+  async syncNow(): Promise<void> {
+    if (this.sync === undefined || !this.sync.isConfigured()) {
+      return;
+    }
+    const merged: SyncSession[] = await this.sync.push(this.toSync());
+    if (merged.length === 0) {
+      return;
+    }
+    this.adopt(merged);
+  }
+
+  private toSync(): SyncSession[] {
+    const out: SyncSession[] = [];
+    for (const session of this.list) {
+      if (session.turns.length === 0) {
+        continue;
+      }
+      const wire = new SyncSession();
+      wire.id = session.id;
+      wire.title = session.title;
+      wire.titleAt = session.updated;
+      wire.created = session.turns.length > 0 ? session.turns[0].at : session.updated;
+      wire.updated = session.updated;
+      for (const turn of session.turns) {
+        const item = new SyncTurn();
+        item.id = turn.id;
+        item.role = turn.role;
+        item.text = turn.text;
+        item.at = turn.at;
+        wire.turns.push(item);
+      }
+      out.push(wire);
+    }
+    for (const id of this.removed) {
+      const grave = new SyncSession();
+      grave.id = id;
+      grave.deletedAt = Date.now();
+      out.push(grave);
+    }
+    return out;
+  }
+
+  private adopt(sessions: SyncSession[]): void {
+    const active: string = this.currentId;
+    const kept: LaptopSession[] = [];
+    for (const wire of sessions) {
+      if (wire.deletedAt > 0) {
+        continue;
+      }
+      const session = new LaptopSession();
+      session.id = wire.id;
+      session.title = wire.title;
+      session.updated = wire.updated;
+      for (const turn of wire.turns) {
+        const local = new LaptopTurn();
+        local.id = turn.id;
+        local.role = turn.role;
+        local.text = turn.text;
+        local.at = turn.at;
+        session.turns.push(local);
+      }
+      kept.push(session);
+    }
+    if (kept.length === 0) {
+      kept.push(this.create());
+    }
+    this.list = kept;
+    let stillThere = false;
+    for (const session of kept) {
+      if (session.id === active) {
+        stillThere = true;
+        break;
+      }
+    }
+    this.currentId = stillThere ? active : kept[0].id;
+    this.removed = [];
   }
 
   /** The same shape the phone and the bridge already speak. */
@@ -197,6 +257,12 @@ export class LaptopSessions {
 
   select(id: string): void {
     this.currentId = id;
+  }
+
+  /** A delete is a tombstone for the bridge, so it cannot come back. */
+  removeEverywhere(id: string): void {
+    this.removed.push(id);
+    this.remove(id);
   }
 
   remove(id: string): void {

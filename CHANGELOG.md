@@ -23,20 +23,17 @@ All notable changes are recorded here. Versions follow `docs/versioning.md`.
   device, and `/sessions` resolves to the phone unless `X-Hopa-Read` asks for
   the other side. hdc only allows one device per device-side port, so the phone
   tunnels 8768 and the 2in1 8766.
-- **Continue here** forks a thread from the other device into a local
-  conversation, in both directions, so you can carry on where you like; the
-  original stays with its owner.
-- Sessions are visible both ways, read-only: the laptop pushes its own threads
-  and shows one merged, newest-first list with a body mark for origin; the phone
-  shows a “From your laptop” group in Chats with a read-only thread view. No
-  merge, and the other copy stays owned by its machine.
+- Conversations now live on the bridge (`/chats`), one store for both devices:
+  append-only turns with ids, last-writer-wins titles, delete tombstones and a
+  revision. Each shell pushes on launch and after an edit and adopts the merged
+  answer, so the list is the same on the phone and the laptop and any thread can
+  be continued on either. The “From your phone” section, the origin badge and
+  **Continue here** are gone.
 - The phone's conversation store notifies its listeners once it has loaded, so
   the session relay no longer pushes an empty snapshot at boot; the laptop also
   refreshes the phone list on focus and on a slow timer.
-- The bridge also persists the conversation snapshot, and the phone pushes it
-  once at boot, so a restarted bridge no longer leaves the laptop's "From your
-  phone" list empty. When the list is empty the laptop now says why (key
-  rejected, or nothing pushed yet) instead of showing nothing.
+- The bridge persists the conversation snapshot, and the phone pushes it once at
+  boot, so a restarted bridge does not lose history.
 - The bridge persists its token pair and read-only sessions key in
   `~/.hopa/bridge-<port>.json`, so a restart inside the TTL no longer forces a
   re-pair (`--state`, `--no-state`). `tools\scripts\bridges.ps1` starts,

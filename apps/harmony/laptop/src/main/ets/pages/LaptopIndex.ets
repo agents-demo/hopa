@@ -5,8 +5,7 @@ import { HopaMark, EmptyHero, ResultActions, StepChips, ChatFormat, KeyStore, Se
 import { LaptopChat, LaptopTurn } from '../services/LaptopChat';
 import { LaptopAgent, demoApproval } from '../services/LaptopAgent';
 
-import { LaptopListRow, LaptopSessions, LaptopSession } from '../services/LaptopSessions';
-import { LaptopPhoneLink, RemoteSession, RemoteTurn } from '../services/LaptopPhoneLink';
+import { LaptopSessions, LaptopSession } from '../services/LaptopSessions';
 import { ChatRail } from '../components/ChatRail';
 import { CommandPalette } from '../components/CommandPalette';
 import { LaptopFirstRun } from '../services/LaptopFirstRun';
@@ -36,16 +35,6 @@ struct LaptopIndex {
   @State paletteOpen: boolean = false;
   @State lastQuestion: string = '';
   @State sessions: LaptopSession[] = [];
-  @State rows: LaptopListRow[] = [];
-  @State remoteSessions: RemoteSession[] = [];
-  @State remoteOpen: boolean = false;
-  @State remoteId: string = '';
-  @State remoteTitle: string = '';
-  @State remoteTurns: RemoteTurn[] = [];
-  @State linkUrl: string = '';
-  @State linkKey: string = '';
-  @State linkStatus: string = '';
-  @State linkConfigured: boolean = false;
   @State bridgeUrl: string = '';
   @State bridgeToken: string = '';
   @State bridgeStatus: string = '';
@@ -54,7 +43,6 @@ struct LaptopIndex {
   @State approvalDetail: string = '';
   @State approvalKind: string = '';
   @State approvalFrame: string = '';
-  private link: LaptopPhoneLink = new LaptopPhoneLink();
   @State currentId: string = '';
   private store: LaptopSessions = new LaptopSessions();
   private win: window.Window | undefined = undefined;
@@ -69,11 +57,11 @@ struct LaptopIndex {
   private chat: LaptopChat = new LaptopChat();
   private agent: LaptopAgent = new LaptopAgent();
   private scroller: Scroller = new Scroller();
-  private phoneTimer: number = -1;
 
   aboutToAppear(): void {
     const context = getContext(this) as common.UIAbilityContext;
     this.chat.useRuntime(this.agent.runtime);
+    this.store.attachSync(this.agent.chatSync);
     this.agent.approvals.onAsk = (kind: string, detail: string) => {
       this.approvalKind = kind;
       this.approvalDetail = detail;
@@ -82,35 +70,6 @@ struct LaptopIndex {
       this.approvalFrame = shots.length > 0 ? shots[shots.length - 1] : '';
       this.approvalOpen = true;
     };
-    LaptopPhoneLink.load(context).then((link: LaptopPhoneLink) => {
-      this.link = link;
-      const injectedUrl: string = AppStorage.get<string>('hopa.laptop.linkUrl') ?? '';
-      const injectedKey: string = AppStorage.get<string>('hopa.laptop.linkKey') ?? '';
-      if (injectedUrl.length > 0 || injectedKey.length > 0) {
-        this.link.url = injectedUrl.length > 0 ? injectedUrl : link.url;
-        this.link.key = injectedKey.length > 0 ? injectedKey : link.key;
-        AppStorage.setOrCreate<string>('hopa.laptop.linkUrl', '');
-        AppStorage.setOrCreate<string>('hopa.laptop.linkKey', '');
-        this.link.save(context);
-      }
-      this.linkUrl = this.link.url;
-      this.linkKey = this.link.key;
-      this.linkConfigured = this.link.isConfigured();
-      if (this.linkConfigured) {
-        this.fetchPhone();
-        // The phone pushes when it changes; the laptop looks again on a slow
-        // timer so the list is not frozen at whatever it saw on launch.
-        if (this.phoneTimer < 0) {
-          this.phoneTimer = setInterval(() => {
-            if (!this.remoteOpen && !this.settingsOpen) {
-              this.fetchPhone();
-            }
-          }, 20000);
-        }
-      }
-    }).catch(() => {
-      // No phone link yet.
-    });
     window.getLastWindow(context).then((win: window.Window) => {
       this.win = win;
     }).catch(() => {
@@ -118,6 +77,8 @@ struct LaptopIndex {
     });
     LaptopSessions.load(context).then((store: LaptopSessions) => {
       this.store = store;
+      // The loaded instance replaces the placeholder, so attach again.
+      this.store.attachSync(this.agent.chatSync);
       this.store.prune();
       this.store.save(context);
       const session: LaptopSession = store.current();
@@ -126,6 +87,7 @@ struct LaptopIndex {
       this.lastLatency = session.lastLatency;
       this.lastTokens = session.lastTokens;
       this.refreshSessions();
+      this.syncChats();
       if ((AppStorage.get<string>('hopa.laptop.new') ?? '') === '1') {
         AppStorage.setOrCreate<string>('hopa.laptop.new', '');
         this.newChat();
@@ -203,95 +165,20 @@ struct LaptopIndex {
     return shown;
   }
 
-  /** Copy a phone thread here and carry on; the phone keeps its own copy. */
-  private async continueRemote(): Promise<void> {
-    if (!this.remoteOpen) {
-      return;
-    }
-    const remote: RemoteSession | undefined = this.remoteSessionById(this.remoteId);
-    if (remote === undefined) {
-      return;
-    }
-    const turns: LaptopTurn[] = [];
-    for (const turn of remote.turns) {
-      const local = new LaptopTurn();
-      local.role = turn.role;
-      local.text = this.cleanRemote(turn.text);
-      turns.push(local);
-    }
-    const session: LaptopSession = this.store.createFrom(remote.title, turns);
+  /** Ask the bridge for the shared list; it is the store of record. */
+  private async syncChats(): Promise<void> {
+    await this.store.syncNow();
     const context = getContext(this) as common.UIAbilityContext;
     await this.store.save(context);
-    await this.pushOwnSessions();
-    this.remoteOpen = false;
-    this.remoteId = '';
-    this.openSession(session.id);
-  }
-
-  /** The laptop's own conversations, for the phone to read back. */
-  private async pushOwnSessions(): Promise<void> {
-    if (!this.agent.isBridgeConfigured()) {
-      return;
-    }
-    const payload: string = JSON.stringify({ sessions: this.store.snapshot() });
-    await this.agent.bridge.pushSessions(payload);
-  }
-
-  aboutToDisappear(): void {
-    if (this.phoneTimer >= 0) {
-      clearInterval(this.phoneTimer);
-      this.phoneTimer = -1;
-    }
-  }
-
-  /** Coming back to the window is when a fresh phone list matters. */
-  onPageShow(): void {
-    if (this.linkConfigured) {
-      this.fetchPhone();
-    }
-  }
-
-  /** One list, newest first; the mark on the row says where it started. */
-  private rebuildRows(): void {
-    const rows: LaptopListRow[] = [];
-    for (const session of this.sessions) {
-      if (session.turns.length === 0) {
-        continue;
-      }
-      const row = new LaptopListRow();
-      row.id = session.id;
-      row.title = session.title;
-      row.updated = session.updated;
-      row.origin = 'here';
-      rows.push(row);
-    }
-    for (let index = 0; index < this.remoteSessions.length; index++) {
-      const remote: RemoteSession = this.remoteSessions[index];
-      const row = new LaptopListRow();
-      row.id = remote.id;
-      row.title = remote.title;
-      row.updated = remote.updated;
-      row.origin = 'phone';
-      row.remoteIndex = index;
-      rows.push(row);
-    }
-    rows.sort((a: LaptopListRow, b: LaptopListRow) => b.updated - a.updated);
-    this.rows = rows;
-  }
-
-  private remoteSessionById(id: string): RemoteSession | undefined {
-    for (const session of this.remoteSessions) {
-      if (session.id === id) {
-        return session;
-      }
-    }
-    return undefined;
+    this.refreshSessions();
+    const session: LaptopSession = this.store.current();
+    this.chat.turns = session.turns.slice();
+    this.turns = session.turns.slice();
   }
 
   private refreshSessions(): void {
     this.sessions = this.store.list.slice();
     this.currentId = this.store.currentId;
-    this.rebuildRows();
     for (const session of this.sessions) {
       if (session.id === this.currentId) {
         this.currentTitle = session.turns.length > 0 ? session.title : 'HOPA';
@@ -327,35 +214,6 @@ struct LaptopIndex {
     }
   }
 
-  private async fetchPhone(): Promise<void> {
-    this.linkStatus = 'Reading?';
-    const ok: boolean = await this.link.fetch();
-    if (ok) {
-      const withTurns: RemoteSession[] = [];
-      for (const session of this.link.sessions) {
-        if (session.turns.length > 0) {
-          withTurns.push(session);
-        }
-      }
-      withTurns.sort((a: RemoteSession, b: RemoteSession) => b.updated - a.updated);
-      this.remoteSessions = withTurns;
-      this.rebuildRows();
-      this.linkStatus = 'Connected';
-    } else {
-      this.remoteSessions = [];
-      this.linkStatus = this.link.error;
-    }
-  }
-
-  private async savePhoneLink(): Promise<void> {
-    const context = getContext(this) as common.UIAbilityContext;
-    this.link.url = this.linkUrl;
-    this.link.key = this.linkKey;
-    await this.link.save(context);
-    this.linkConfigured = this.link.isConfigured();
-    await this.fetchPhone();
-  }
-
   /** Phone turns carry a [meta] line; the laptop shows the words only. */
   private cleanRemote(text: string): string {
     const lines: string[] = text.split('\n');
@@ -368,28 +226,12 @@ struct LaptopIndex {
     return kept.join('\n').trim();
   }
 
-  private openRemote(session: RemoteSession): void {
-    this.settingsOpen = false;
-    this.remoteOpen = true;
-    this.remoteId = session.id;
-    this.remoteTitle = session.title;
-    this.remoteTurns = session.turns;
-    this.paletteOpen = false;
-  }
-
   private focusRoot(): void {
     try {
       focusControl.requestFocus('hopa-root');
     } catch (error) {
       // Focus control is best effort.
     }
-  }
-
-  private closeRemote(): void {
-    this.remoteOpen = false;
-    this.remoteId = '';
-    this.remoteTurns = [];
-    this.remoteTitle = '';
   }
 
   private newChat(): void {
@@ -426,7 +268,6 @@ struct LaptopIndex {
   private openSession(id: string): void {
     const context = getContext(this) as common.UIAbilityContext;
     this.settingsOpen = false;
-    this.closeRemote();
     this.store.select(id);
     this.store.save(context);
     const session: LaptopSession = this.store.current();
@@ -447,7 +288,7 @@ struct LaptopIndex {
 
   private deleteSession(id: string): void {
     const context = getContext(this) as common.UIAbilityContext;
-    this.store.remove(id);
+    this.store.removeEverywhere(id);
     if (this.store.currentId.length === 0) {
       this.store.create();
     }
@@ -548,7 +389,7 @@ struct LaptopIndex {
     this.store.commit(this.chat.turns, this.chat.lastLatencyMs, this.chat.lastTokens);
     await this.store.save(context);
     this.refreshSessions();
-    this.pushOwnSessions();
+    this.syncChats();
   }
 
   /** Ctrl+K opens the palette; Esc closes it. Phone shells never see these. */
@@ -627,8 +468,7 @@ struct LaptopIndex {
     this.bridgeLive = ok;
     this.bridgeStatus = ok ? 'Connected.' : `No answer from the bridge. ${this.agent.bridgeFailure()}`;
     if (ok) {
-      // The phone should see this laptop's threads from the first second.
-      this.pushOwnSessions();
+      this.syncChats();
     }
   }
 
@@ -660,7 +500,7 @@ struct LaptopIndex {
     Row({ space: 12 }) {
       HopaMark({ state: 'idle', markSize: 26, interactive: false, body: 'laptop' })
       Column({ space: 1 }) {
-        Text(this.remoteOpen ? this.remoteTitle : this.currentTitle)
+        Text(this.currentTitle)
           .fontSize(15)
           .fontWeight(FontWeight.Medium)
           .fontColor($r('app.color.text_primary'))
@@ -668,7 +508,7 @@ struct LaptopIndex {
           .maxLines(1)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
           .constraintSize({ maxWidth: 320 })
-        Text(this.remoteOpen ? 'Read-only copy from your phone' : 'Running on this laptop')
+        Text('Running on this laptop')
           .fontSize(10)
           .fontColor($r('app.color.text_hint'))
       }
@@ -833,68 +673,6 @@ struct LaptopIndex {
             .fontColor($r('app.color.text_secondary'))
             .width('100%')
         }
-      }
-      .width('100%')
-      .alignItems(HorizontalAlign.Start)
-
-      Divider().color($r('app.color.divider'))
-
-      Column({ space: 8 }) {
-        Text('PHONE SESSIONS')
-          .fontSize(9)
-          .fontWeight(FontWeight.Bold)
-          .fontColor($r('app.color.text_hint'))
-          .letterSpacing(0.8)
-          .width('100%')
-
-        Text('A read-only copy of the conversations on your phone, through the PC bridge. This key can only read them; it cannot tap or type on the phone.')
-          .fontSize(11)
-          .lineHeight(17)
-          .fontColor($r('app.color.text_secondary'))
-          .width('100%')
-
-        this.FieldLabel('Bridge address')
-        TextInput({ text: this.linkUrl, placeholder: 'http://127.0.0.1:8766' })
-          .height(38)
-          .fontSize(12.5)
-          .backgroundColor($r('app.color.surface'))
-          .borderRadius(9)
-          .onChange((value: string) => {
-            this.linkUrl = value;
-          })
-
-        this.FieldLabel('Read-only key')
-        TextInput({ text: this.linkKey, placeholder: 'from the bridge output' })
-          .height(38)
-          .fontSize(12.5)
-          .type(InputType.Password)
-          .backgroundColor($r('app.color.surface'))
-          .borderRadius(9)
-          .onChange((value: string) => {
-            this.linkKey = value;
-          })
-
-        Row({ space: 12 }) {
-          Text('Connect')
-            .fontSize(12.5)
-            .fontWeight(FontWeight.Medium)
-            .fontColor($r('app.color.primary'))
-            .padding({ left: 14, right: 14, top: 7, bottom: 7 })
-            .backgroundColor($r('app.color.primary_soft'))
-            .borderRadius(14)
-            .onClick(() => {
-              this.savePhoneLink();
-            })
-          if (this.linkStatus.length > 0) {
-            Text(this.linkStatus)
-              .fontSize(11)
-              .fontColor($r('app.color.text_hint'))
-              .maxLines(2)
-              .textOverflow({ overflow: TextOverflow.Ellipsis })
-              .layoutWeight(1)
-          }
-        }
-        .width('100%')
       }
       .width('100%')
       .alignItems(HorizontalAlign.Start)
@@ -1156,61 +934,44 @@ struct LaptopIndex {
             .width('100%')
             .padding({ left: 4, top: 2 })
 
-          if (this.rows.length === 0) {
-            Text(this.linkConfigured && this.linkStatus.length > 0
-              ? this.linkStatus
-              : 'No saved conversations yet.')
+          if (this.listedSessions().length === 0) {
+            Text('No saved conversations yet.')
               .fontSize(11)
-              .lineHeight(16)
               .fontColor($r('app.color.text_hint'))
               .width('100%')
               .padding({ left: 8, top: 4, bottom: 4 })
           }
 
-          ForEach(this.rows, (row: LaptopListRow) => {
-            Row({ space: 8 }) {
-              // Where it started: the same body the shell uses everywhere.
-              Image(row.origin === 'phone'
-                ? $r('app.media.hopa_body')
-                : $r('app.media.hopa_body_laptop'))
-                .width(13)
-                .height(13)
-                .objectFit(ImageFit.Contain)
-                .opacity(0.55)
-              Text(row.title)
+          ForEach(this.listedSessions(), (session: LaptopSession) => {
+            Row({ space: 6 }) {
+              Text(session.title)
                 .fontSize(12)
-                .fontColor((row.origin === 'here' && row.id === this.currentId && !this.remoteOpen)
+                .fontColor(session.id === this.currentId
                   ? $r('app.color.text_primary')
                   : $r('app.color.text_secondary'))
                 .maxLines(1)
                 .textOverflow({ overflow: TextOverflow.Ellipsis })
                 .layoutWeight(1)
-              if (row.origin === 'here' && row.id === this.currentId) {
+              if (session.id === this.currentId) {
                 Text('\u00d7')
                   .fontSize(12)
                   .fontColor($r('app.color.text_hint'))
                   .padding({ left: 4, right: 2 })
                   .onClick(() => {
-                    this.deleteSession(row.id);
+                    this.deleteSession(session.id);
                   })
               }
             }
             .width('100%')
             .padding({ left: 8, right: 8, top: 7, bottom: 7 })
-            .backgroundColor(((row.origin === 'here' && row.id === this.currentId && !this.remoteOpen) ||
-              (row.origin === 'phone' && this.remoteOpen && this.remoteId === row.id))
+            .backgroundColor(session.id === this.currentId
               ? $r('app.color.surface')
               : Color.Transparent)
             .borderRadius(9)
             .onClick(() => {
-              if (row.origin === 'phone' && row.remoteIndex >= 0) {
-                this.openRemote(this.remoteSessions[row.remoteIndex]);
-              } else {
-                this.openSession(row.id);
-              }
+              this.openSession(session.id);
             })
-          }, (row: LaptopListRow) => row.origin + row.id + row.title)
-
+          }, (session: LaptopSession) => session.id + session.title)
         }
         .width('100%')
         .padding({ left: 12, right: 12, bottom: 8 })
@@ -1278,46 +1039,6 @@ struct LaptopIndex {
           .layoutWeight(1)
           .width('100%')
           .align(Alignment.TopStart)
-          .scrollBar(BarState.Off)
-        } else if (this.remoteOpen) {
-          List() {
-            ForEach(this.remoteTurns, (turn: RemoteTurn, index: number) => {
-              ListItem() {
-                if (turn.role === 'user') {
-                  Row() {
-                    Blank()
-                    Text(this.cleanRemote(turn.text))
-                      .fontSize(13.5)
-                      .lineHeight(21)
-                      .fontColor($r('app.color.on_primary'))
-                      .padding({ left: 14, right: 14, top: 10, bottom: 10 })
-                      .backgroundColor($r('app.color.primary'))
-                      .borderRadius(14)
-                      .constraintSize({ maxWidth: '62%' })
-                      .copyOption(CopyOptions.LocalDevice)
-                  }
-                  .width('100%')
-                } else {
-                  Row({ space: 12 }) {
-                    HopaMark({ state: 'idle', markSize: 22, animate: false, interactive: false, body: 'laptop' })
-                    Text(this.cleanRemote(turn.text))
-                      .fontSize(13.5)
-                      .lineHeight(22)
-                      .fontColor($r('app.color.text_primary'))
-                      .layoutWeight(1)
-                      .copyOption(CopyOptions.LocalDevice)
-                  }
-                  .width('100%')
-                  .alignItems(VerticalAlign.Top)
-                  .padding({ right: 40 })
-                }
-              }
-              .padding({ top: 10, bottom: 10 })
-            }, (turn: RemoteTurn, index: number) => `${this.remoteId}-${index}-${turn.role}`)
-          }
-          .layoutWeight(1)
-          .width('100%')
-          .padding({ left: 22, right: 22 })
           .scrollBar(BarState.Off)
         } else if (this.turns.length === 0) {
           Column() {
@@ -1405,34 +1126,6 @@ struct LaptopIndex {
           Row()
             .width('100%')
             .height(0)
-        } else if (this.remoteOpen) {
-          Row({ space: 10 }) {
-            Text('Read-only copy from your phone.')
-              .fontSize(11.5)
-              .fontColor($r('app.color.text_secondary'))
-              .layoutWeight(1)
-            Text('Continue here')
-              .fontSize(12)
-              .fontWeight(FontWeight.Medium)
-              .fontColor($r('app.color.on_primary'))
-              .padding({ left: 14, right: 14, top: 8, bottom: 8 })
-              .backgroundColor($r('app.color.primary'))
-              .borderRadius(14)
-              .onClick(() => {
-                this.continueRemote();
-              })
-            Text('Close')
-              .fontSize(12)
-              .fontColor($r('app.color.primary'))
-              .padding({ left: 14, right: 14, top: 8, bottom: 8 })
-              .backgroundColor($r('app.color.primary_soft'))
-              .borderRadius(14)
-              .onClick(() => {
-                this.closeRemote();
-              })
-          }
-          .width('100%')
-          .padding({ left: 22, right: 22, top: 8, bottom: 16 })
         } else {
         Row({ space: 10 }) {
           TextArea({ text: this.draft, placeholder: 'Ask HOPA\u2026' })

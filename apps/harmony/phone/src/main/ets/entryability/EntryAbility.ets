@@ -63,7 +63,7 @@ export default class EntryAbility extends UIAbility {
       stored.bridgeToken = token;
       await SettingsStore.save(this.context, stored);
       await BridgeSessionStore.clear();
-      AgentService.get().pushSessionsNow();
+      AgentService.get().chatSyncNow();
     } catch (error) {
       // Remembering is a convenience; this run already works.
     }

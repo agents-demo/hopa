@@ -107,6 +107,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="read-only key another device can use to read /sessions",
     )
     bridge.add_argument(
+        "--chats",
+        default="",
+        help="conversation store shared by every device (default ~/.hopa/chats.json)",
+    )
+    bridge.add_argument(
         "--devices",
         default="",
         help="JSON file listing several devices; one listener serves them all "
@@ -163,7 +168,10 @@ def _cmd_bridge(args: argparse.Namespace, device: Device) -> int:
     if args.devices:
         from .bridge import BridgeError
         from .bridge_pool import BridgePool
+        from .chat_store import ChatStore
 
+        chats_path = args.chats or str(Path.home() / ".hopa" / "chats.json")
+        chats = ChatStore(chats_path)
         try:
             entries = json.loads(Path(args.devices).read_text(encoding="utf-8-sig"))
         except (OSError, ValueError) as exc:
@@ -178,12 +186,14 @@ def _cmd_bridge(args: argparse.Namespace, device: Device) -> int:
                 host=args.host,
                 port=args.port,
                 token_ttl=ttl_hours * 3600,
+                chats=chats,
             )
         except (BridgeError, ValueError, KeyError) as exc:
             print(f"pc-agent: {exc}", file=sys.stderr)
             return 2
         pool.start()
         print(f"bridge listening on http://{args.host}:{pool.port} (pool)", flush=True)
+        print(f"conversations: {chats_path} (rev {chats.rev})", flush=True)
         for entry in entries:
             serial = str(entry["serial"])
             node = pool.node_for(serial)
