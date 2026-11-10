@@ -141,6 +141,30 @@ def test_tap_and_type_and_launch(bridge) -> None:
     ]
 
 
+def test_sessions_round_trip(bridge) -> None:
+    server, _ = bridge
+    payload = {"sessions": [{"id": "a", "title": "Plan", "turns": []}]}
+    assert _call(server, "/sessions", payload)["count"] == 1
+    pulled = _call(server, "/sessions", None)
+    assert pulled["sessions"] == payload["sessions"]
+    assert pulled["updated"] > 0
+
+
+def test_sessions_need_a_token(bridge) -> None:
+    server, _ = bridge
+    with pytest.raises(urllib.error.HTTPError) as error:
+        _call(server, "/sessions", None, token="wrong")
+    assert error.value.code == 401
+
+
+def test_sessions_snapshot_is_capped(bridge) -> None:
+    server, _ = bridge
+    huge = {"sessions": [{"id": "x", "title": "y" * 600000, "turns": []}]}
+    with pytest.raises(urllib.error.HTTPError) as error:
+        _call(server, "/sessions", huge)
+    assert error.value.code == 400
+
+
 def test_unknown_endpoint(bridge) -> None:
     server, _ = bridge
     with pytest.raises(urllib.error.HTTPError) as error:

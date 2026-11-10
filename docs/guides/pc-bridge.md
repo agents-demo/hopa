@@ -84,6 +84,8 @@ bridge.
 | GET | `/health` | — | `{"ok":true}` |
 | POST | `/pair` | `{"code":"123456"}` | `{"token","refresh","expires_in"}` |
 | POST | `/refresh` | `{"refresh":"<token>"}` | `{"token","refresh","expires_in"}` |
+| GET | `/sessions` | — | `{"sessions":[…],"updated":unix}` |
+| POST | `/sessions` | `{"sessions":[…]}` | `{"ok":true,"count":n}` |
 | POST | `/observe` | `{}` | `{"text","nodes":[{"ref","text","description","type","bounds","clickable"}],"width","height"}` |
 | POST | `/foreground` | `{}` | `{"bundle"}` (the bundle in front, or `""`) |
 | POST | `/screenshot` | `{}` | `{"mime":"image/jpeg","bytes":int,"image":"<base64>"}` |
@@ -120,6 +122,17 @@ On 2026-11-08 the full chain ran in one request with the fixed loop:
 post-tap observation was the Settings WLAN page (25 nodes, `VirtWifi`,
 `Available`). The bridge log showed `/launch`, `/observe`, `/tap`, `/observe`,
 so launch -> observe -> tap -> observe is verified on the emulator.
+
+## Sessions relay (H3)
+
+The bridge keeps one **snapshot** of the phone's conversations so a laptop can
+read them without the phone opening a port:
+
+- the phone `POST`s its sessions when they change (debounced);
+- the laptop `GET`s them and shows a read-only "From your phone" list;
+- the snapshot is capped at 512 KB and requires the same bearer token;
+- there is no merge logic: two-way sync would need conflict rules and is not
+  part of v1.
 
 ## Tests
 

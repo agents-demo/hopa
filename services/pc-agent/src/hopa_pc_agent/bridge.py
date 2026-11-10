@@ -18,6 +18,8 @@ Endpoints (JSON):
     POST /speak                {"text": str} -> {"mime": "audio/wav", "audio": base64}
     POST /pair                 {"code": str} -> {"token", "refresh", "expires_in"}
     POST /refresh              {"refresh": str} -> {"token", "refresh", "expires_in"}
+    GET  /sessions             -> {"sessions": [...], "updated": unix}
+    POST /sessions             {"sessions": [...]} -> {"ok", "count"}
 
 Access tokens expire (12 h by default) and every pair or refresh rotates both
 tokens, so a leaked token stops working once the phone refreshes.
@@ -43,6 +45,10 @@ from .device import Device
 
 class BridgeError(Exception):
     pass
+
+
+# A session snapshot is a convenience, not a database: cap it hard.
+SESSIONS_LIMIT_BYTES = 512 * 1024
 
 
 def _retry(fn: Any, *args: Any) -> Any:
@@ -298,6 +304,15 @@ class _Handler(BaseHTTPRequestHandler):
         return data
 
     def do_GET(self) -> None:  # noqa: N802
+        if self.path == "/sessions":
+            if not self._authorized():
+                self._send(401, {"error": "unauthorized"})
+                return
+            self._send(200, {
+                "sessions": self.bridge.sessions,
+                "updated": self.bridge.sessions_updated,
+            })
+            return
         if self.path != "/health":
             self._send(404, {"error": "not found"})
             return
@@ -376,6 +391,17 @@ class _Handler(BaseHTTPRequestHandler):
 
     def _dispatch(self, data: dict[str, Any]) -> dict[str, Any]:
         device = self.bridge.device
+        if self.path == "/sessions":
+            sessions = data.get("sessions")
+            if not isinstance(sessions, list):
+                raise BridgeError("sessions must be a list")
+            encoded = json.dumps(sessions, ensure_ascii=False).encode("utf-8")
+            if len(encoded) > SESSIONS_LIMIT_BYTES:
+                raise BridgeError("sessions snapshot is too large")
+            self.bridge.sessions = sessions
+            self.bridge.sessions_updated = int(time.time())
+            print(f"sessions: {len(sessions)}", file=sys.stderr, flush=True)
+            return {"ok": True, "count": len(sessions)}
         if self.path == "/observe":
             started = time.perf_counter()
             observation = _observe(device)
@@ -473,6 +499,8 @@ class BridgeServer:
         self.pair_lock = threading.Lock()
         self.refresh_attempts: list[float] = []
         self.refresh_lock = threading.Lock()
+        self.sessions: list[Any] = []
+        self.sessions_updated: int = 0
         self.lock = threading.Lock()
         self.httpd = ThreadingHTTPServer((host, port), _Handler)
         self.httpd.bridge = self  # type: ignore[attr-defined]
