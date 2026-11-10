@@ -37,6 +37,7 @@ export struct ChatPage {
   @State resumeAt: number = 0;
   @State loaded: boolean = false;
   @State diffText: string = '';
+  @State trimmedCount: number = 0;
   @State canUndo: boolean = false;
   private undoSteps: string[] = [];
   @State runningGoal: string = '';
@@ -148,7 +149,12 @@ export struct ChatPage {
 
   private render(): void {
     const next: ResourceStr[] = [];
-    for (const entry of AgentService.get().conversations.entries()) {
+    const entries = AgentService.get().conversations.entries();
+    // Long conversations keep the newest window; the rest stay in History.
+    const start: number = entries.length > 300 ? entries.length - 300 : 0;
+    this.trimmedCount = start;
+    for (let index = start; index < entries.length; index++) {
+      const entry = entries[index];
       next.push(entry.role === 'user' ? `You: ${entry.text}` : `HOPA: ${entry.text}`);
     }
     const grew: boolean = next.length > this.renderedCount;
@@ -747,6 +753,16 @@ export struct ChatPage {
         .clip(true)
       } else {
         List({ space: this.profile().density === 'compact' ? 6 : 10, scroller: this.listScroller }) {
+          if (this.trimmedCount > 0) {
+            ListItem() {
+              Text(`${this.trimmedCount} earlier messages stay in History.`)
+                .fontSize(10.5)
+                .fontColor($r('app.color.text_hint'))
+                .width('100%')
+                .textAlign(TextAlign.Center)
+                .padding({ top: 8, bottom: 6 })
+            }
+          }
           ForEach(this.messages, (item: ResourceStr, index: number) => {
             ListItem() {
               Row() {
