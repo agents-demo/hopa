@@ -925,6 +925,15 @@ export struct ChatPage {
                             .backgroundColor($r('app.color.primary_soft'))
                             .borderRadius(8)
                             .onClick(() => {
+                              const typed: number = AgentService.get().runtime.typedLength();
+                              if (typed > 0) {
+                                AgentService.get().bridge.key('Backspace', typed);
+                                this.canUndo = false;
+                                this.getUIContext().getPromptAction().showToast({
+                                  message: typed === 1 ? 'Removed 1 character' : `Removed ${typed} characters`
+                                });
+                                return;
+                              }
                               const undoKey: string = this.undoSteps.length > 0 && this.undoSteps[0].indexOf('Tapped') > 0
                                 ? 'Back'
                                 : 'Home';

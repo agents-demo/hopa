@@ -378,7 +378,11 @@ class _Handler(BaseHTTPRequestHandler):
             device.launch(bundle, ability=str(data.get("ability", "")))
             return {"ok": True, "foreground": _wait_for_foreground(device, bundle)}
         if self.path == "/key":
-            _retry(device.press_key, str(data["name"]))
+            count = max(1, min(int(data.get("count", 1)), 120))
+            if count == 1:
+                _retry(device.press_key, str(data["name"]))
+            else:
+                _retry(device.press_key_many, str(data["name"]), count)
             return {"ok": True}
         if self.path == "/transcribe":
             audio = str(data.get("audio", ""))

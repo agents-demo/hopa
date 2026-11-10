@@ -262,9 +262,9 @@ export class BridgeClient {
     }
   }
 
-  async key(name: string): Promise<boolean> {
+  async key(name: string, count: number = 1): Promise<boolean> {
     try {
-      await this.call('/key', JSON.stringify({ name: name }));
+      await this.call('/key', JSON.stringify({ name: name, count: count }));
       return true;
     } catch (error) {
       return false;

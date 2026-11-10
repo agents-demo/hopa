@@ -145,8 +145,32 @@ class Device:
         quoted = shlex.quote(text)
         self.hdc.shell(f"uitest uiInput text {quoted}")
 
+    # `uitest` accepts numeric key codes reliably; names such as Backspace do
+    # not reach ArkUI text fields, while 2055 does.
+    _KEY_CODES = {
+        "backspace": "2055",
+        "del": "2055",
+        "delete": "2071",
+        "enter": "2054",
+        "tab": "2049",
+        "escape": "2070",
+        "space": "2050",
+    }
+
     def press_key(self, key: str) -> None:
-        self.hdc.shell(f"uitest uiInput keyEvent {shlex.quote(key)}")
+        code = self._KEY_CODES.get(key.strip().lower(), key)
+        self.hdc.shell(f"uitest uiInput keyEvent {shlex.quote(code)}")
+
+    def press_key_many(self, key: str, count: int) -> None:
+        """Repeat a key in one hdc call; one round-trip instead of `count`."""
+        if count <= 0:
+            return
+        code = self._KEY_CODES.get(key.strip().lower(), key)
+        safe = shlex.quote(code)
+        self.hdc.shell(
+            f"i=0; while [ $i -lt {count} ]; do uitest uiInput keyEvent {safe}; "
+            f"i=$((i+1)); done"
+        )
 
     # -- app lifecycle -------------------------------------------------------
 
