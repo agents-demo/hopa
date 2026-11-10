@@ -53,6 +53,28 @@ export struct SocialHome {
     return count;
   }
 
+  private weekCount(): number {
+    const cutoff: number = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    let count: number = 0;
+    for (const run of AgentService.get().runs.all()) {
+      if (run.startedAt >= cutoff) {
+        count += 1;
+      }
+    }
+    return count;
+  }
+
+  private weekApps(): number {
+    const cutoff: number = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    let count: number = 0;
+    for (const run of AgentService.get().runs.all()) {
+      if (run.startedAt >= cutoff && run.kind === 'ui.launch') {
+        count += 1;
+      }
+    }
+    return count;
+  }
+
   private badge(run: RunRecord): string {
     if (run.kind === 'ui.launch') {
       return '📱 App';
@@ -264,6 +286,40 @@ export struct SocialHome {
         Blank()
       }
       .width('100%')
+
+      Column({ space: 6 }) {
+        Row({ space: 6 }) {
+          Text('THE AGENT')
+            .fontSize(9)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(this.accent())
+            .letterSpacing(0.7)
+            .layoutWeight(1)
+          Text('Ask HOPA')
+            .fontSize(10.5)
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.on_primary'))
+            .padding({ left: 10, right: 10, top: 5, bottom: 5 })
+            .backgroundColor(this.accent())
+            .borderRadius(9)
+            .onClick(() => {
+              this.onOpenChat('', false);
+            })
+        }
+        .width('100%')
+        Text(`${this.weekCount()} actions this week \u00b7 ${this.weekApps()} apps`)
+          .fontSize(12)
+          .fontColor($r('app.color.text_primary'))
+        Text('Messages, posts and payments still ask you first.')
+          .fontSize(10)
+          .fontColor($r('app.color.text_hint'))
+      }
+      .width('100%')
+      .padding(12)
+      .backgroundColor($r('app.color.surface'))
+      .border({ width: 1, color: $r('app.color.divider') })
+      .borderRadius(this.style().cardRadius)
+      .alignItems(HorizontalAlign.Start)
 
       if (this.feed().length === 0) {
         Column({ space: 8 }) {
