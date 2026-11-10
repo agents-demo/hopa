@@ -13,7 +13,7 @@ import { RecapCard } from './RecapCard';
 import { ChatTyping } from './ChatTyping';
 import { MessageActions } from './MessageActions';
 import { ResultActions } from './ResultActions';
-import { StepChips } from '@hopa/app';
+import { StepChips, AnswerMeta } from '@hopa/app';
 import { HopaMark } from './HopaMark';
 import { Haptics } from '../../services/Haptics';
 import { VoiceController } from '../../services/VoiceController';
@@ -907,21 +907,11 @@ export struct ChatPage {
                         .width('100%')
                         .padding({ left: 2, top: 2 })
                       }
-                      if (index === this.lastAnswerIndex() && !this.busy &&
-                        AgentService.get().lastRunHadActions()) {
-                        Row({ space: 5 }) {
-                          Circle({ width: 5, height: 5 })
-                            .fill(this.lastRunVerified()
-                              ? $r('app.color.success')
-                              : $r('app.color.warning'))
-                          Text(this.lastRunVerified()
-                            ? 'Verified on screen'
-                            : 'Not verified on screen')
-                            .fontSize(9.5)
-                            .fontColor($r('app.color.text_hint'))
-                        }
-                        .width('100%')
-                        .padding({ left: 2, top: 1, bottom: 2 })
+                      if (index === this.lastAnswerIndex() && !this.busy) {
+                        AnswerMeta({
+                          steps: this.stepsOf(item),
+                          hasActions: this.stepsOf(item).length > 0
+                        })
                       }
                       if (!this.busy && this.shotOf(item).length > 0) {
                         Row({ space: 10 }) {
