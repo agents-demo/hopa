@@ -1,9 +1,17 @@
 import { AbilityConstant, UIAbility, Want } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { window } from '@kit.ArkUI';
+import { preferences } from '@kit.ArkData';
 
 const DOMAIN: number = 0x0000;
 const TAG: string = 'HOPA-Laptop';
+
+class SavedWindow {
+  w: number = 0;
+  h: number = 0;
+  x: number = 0;
+  y: number = 0;
+}
 
 /**
  * Laptop shell entry point.
@@ -14,6 +22,52 @@ const TAG: string = 'HOPA-Laptop';
  * The page writes the key straight into Asset Store and then forgets it.
  */
 export default class LaptopAbility extends UIAbility {
+  private saveTimer: number = -1;
+  private pending: SavedWindow = new SavedWindow();
+
+  /** The window comes back where it was: size in the store, position too. */
+  private async restoreWindow(win: window.Window): Promise<void> {
+    try {
+      const store = await preferences.getPreferences(this.context, 'hopa_laptop');
+      const raw = await store.get('win_state', '');
+      if (typeof raw === 'string' && raw.length > 2) {
+        const saved = JSON.parse(raw) as SavedWindow;
+        if (saved.w > 400 && saved.h > 300) {
+          await win.resize(saved.w, saved.h);
+          await win.moveWindowTo(saved.x, saved.y);
+        }
+      }
+      win.on('windowRectChange', (options: window.RectChangeOptions) => {
+        this.pending.w = options.rect.width;
+        this.pending.h = options.rect.height;
+        this.pending.x = options.rect.left;
+        this.pending.y = options.rect.top;
+        this.scheduleWindowSave();
+      });
+    } catch (error) {
+      hilog.warn(DOMAIN, TAG, 'window state unavailable');
+    }
+  }
+
+  private scheduleWindowSave(): void {
+    if (this.saveTimer >= 0) {
+      clearTimeout(this.saveTimer);
+    }
+    this.saveTimer = setTimeout(() => {
+      this.saveTimer = -1;
+      this.persistWindow();
+    }, 900);
+  }
+
+  private async persistWindow(): Promise<void> {
+    try {
+      const store = await preferences.getPreferences(this.context, 'hopa_laptop');
+      await store.put('win_state', JSON.stringify(this.pending));
+      await store.flush();
+    } catch (error) {
+      // Remembering the window is a convenience.
+    }
+  }
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
     const params = want.parameters;
     if (params !== undefined) {
@@ -110,6 +164,7 @@ export default class LaptopAbility extends UIAbility {
       }
       AppStorage.setOrCreate<boolean>('hopa.decorHidden', decorHeight === 0);
       hilog.info(DOMAIN, TAG, 'decor height: %{public}d', decorHeight);
+      this.restoreWindow(mainWindow);
     });
   }
 }
