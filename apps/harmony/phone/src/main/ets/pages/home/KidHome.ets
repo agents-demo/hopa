@@ -30,6 +30,10 @@ export struct KidHome {
   @State pinDraft: string = '';
   @State pinWrong: boolean = false;
   @State stars: number = 0;
+  @State timerOpen: boolean = false;
+  @State timerLeft: number = 0;
+  @State timerDone: boolean = false;
+  private timerHandle: number = -1;
   private boopTimer: number = -1;
 
   aboutToAppear(): void {
@@ -50,6 +54,50 @@ export struct KidHome {
     }).catch(() => {
       // Stars are cosmetic.
     });
+  }
+
+  private openTimer(): void {
+    this.timerOpen = true;
+    this.timerLeft = 0;
+    this.timerDone = false;
+  }
+
+  private closeTimer(): void {
+    if (this.timerHandle >= 0) {
+      clearInterval(this.timerHandle);
+      this.timerHandle = -1;
+    }
+    this.timerOpen = false;
+    this.timerLeft = 0;
+    this.timerDone = false;
+  }
+
+  private startTimer(minutes: number): void {
+    if (this.timerHandle >= 0) {
+      clearInterval(this.timerHandle);
+    }
+    this.timerLeft = minutes * 60;
+    this.timerDone = false;
+    this.timerHandle = setInterval(() => {
+      if (this.timerLeft > 1) {
+        this.timerLeft -= 1;
+        return;
+      }
+      this.timerLeft = 0;
+      if (this.timerHandle >= 0) {
+        clearInterval(this.timerHandle);
+        this.timerHandle = -1;
+      }
+      this.timerDone = true;
+      Haptics.attention();
+      this.speak('Time is up!');
+    }, 1000);
+  }
+
+  private timerLabel(): string {
+    const minutes: number = Math.floor(this.timerLeft / 60);
+    const seconds: number = this.timerLeft % 60;
+    return `${minutes}:${seconds < 10 ? `0${seconds}` : `${seconds}`}`;
   }
 
   private openGrownUp(): void {
@@ -107,6 +155,10 @@ export struct KidHome {
 
   aboutToDisappear(): void {
     AppStorage.setOrCreate<boolean>('hopa.focus', false);
+    if (this.timerHandle >= 0) {
+      clearInterval(this.timerHandle);
+      this.timerHandle = -1;
+    }
     if (this.boopTimer >= 0) {
       clearTimeout(this.boopTimer);
       this.boopTimer = -1;
@@ -258,7 +310,7 @@ export struct KidHome {
         .textAlign(TextAlign.Center)
     }
     .layoutWeight(1)
-    .height(140)
+    .height(120)
     .justifyContent(FlexAlign.Center)
     .backgroundColor(this.tileColor(index))
     .border({ width: 1, color: '#141C1B18' })
@@ -282,7 +334,7 @@ export struct KidHome {
     // Footer floats so the play area is centred in the full page: equal top
     // and bottom margins.
     Stack({ alignContent: Alignment.Bottom }) {
-      Column({ space: 34 }) {
+      Column({ space: 24 }) {
         Column({ space: 6 }) {
           Stack({ alignContent: Alignment.Center }) {
             HopaMark({ state: 'idle', markSize: 104, animate: true, interactive: false })
@@ -316,17 +368,17 @@ export struct KidHome {
 
         Row({ space: 14 }) {
           this.Tile(0, '🎤', 'Talk', () => { this.openTask(true); })
-          this.Tile(1, '📷', 'Photos', () => { this.launchApp('com.huawei.hmos.photos'); })
-        }
-        .width('100%')
-        Row({ space: 14 }) {
-          this.Tile(2, '🎵', 'Music', () => { this.launchApp('com.huawei.hmsapp.music'); })
-          this.Tile(3, '📝', 'Draw', () => { this.launchApp('com.huawei.hmos.notepad'); })
-        }
-        .width('100%')
-        Row({ space: 14 }) {
           this.Tile(4, '📸', 'Camera', () => { this.launchApp('com.huawei.hmos.camera'); })
-          this.Tile(5, '⏱', 'Timer', () => { this.launchApp('com.huawei.hmos.clock'); })
+        }
+        .width('100%')
+        Row({ space: 14 }) {
+          this.Tile(1, '🖼', 'Photos', () => { this.launchApp('com.huawei.hmos.photos'); })
+          this.Tile(2, '🎵', 'Music', () => { this.launchApp('com.huawei.hmsapp.music'); })
+        }
+        .width('100%')
+        Row({ space: 14 }) {
+          this.Tile(3, '📝', 'Notes', () => { this.launchApp('com.huawei.hmos.notepad'); })
+          this.Tile(5, '⏱', 'Timer', () => { this.openTimer(); })
         }
         .width('100%')
       }
@@ -565,6 +617,107 @@ export struct KidHome {
     .alignItems(HorizontalAlign.Start)
   }
 
+  @Builder
+  TimerSheet() {
+    Stack({ alignContent: Alignment.TopStart }) {
+      Column()
+        .width('100%')
+        .height('100%')
+        .backgroundColor($r('app.color.bg'))
+      Column({ space: 20 }) {
+        Row({ space: 8 }) {
+          Text('\u2190')
+            .fontSize(24)
+            .fontColor($r('app.color.text_primary'))
+            .width(44)
+            .height(44)
+            .textAlign(TextAlign.Center)
+            .onClick(() => {
+              this.closeTimer();
+            })
+          Text('Timer')
+            .fontSize(this.style().body + 3)
+            .fontWeight(FontWeight.Bold)
+            .layoutWeight(1)
+        }
+        .width('100%')
+        if (this.timerDone) {
+          Text('\u23F1')
+            .fontSize(72)
+          Text('Time is up!')
+            .fontSize(this.style().body + 14)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(this.accent())
+          Text('Done')
+            .fontSize(this.style().body + 1)
+            .fontWeight(FontWeight.Bold)
+            .fontColor($r('app.color.on_primary'))
+            .width('100%')
+            .height(56)
+            .textAlign(TextAlign.Center)
+            .backgroundColor(this.accent())
+            .borderRadius(this.style().cardRadius)
+            .onClick(() => {
+              this.closeTimer();
+            })
+        } else if (this.timerLeft > 0) {
+          Text(this.timerLabel())
+            .fontSize(this.style().body + 40)
+            .fontWeight(FontWeight.Bold)
+            .fontColor($r('app.color.text_primary'))
+          Text('Time left')
+            .fontSize(this.style().body - 2)
+            .fontColor($r('app.color.text_hint'))
+          Text('Stop')
+            .fontSize(this.style().body + 1)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(Color.White)
+            .width('100%')
+            .height(56)
+            .textAlign(TextAlign.Center)
+            .backgroundColor($r('app.color.danger'))
+            .borderRadius(this.style().cardRadius)
+            .onClick(() => {
+              this.closeTimer();
+            })
+        } else {
+          Text('How long?')
+            .fontSize(this.style().body + 6)
+            .fontWeight(FontWeight.Bold)
+            .fontColor($r('app.color.text_primary'))
+          Row({ space: 12 }) {
+            ForEach([1, 3, 5], (minutes: number) => {
+              Text(`${minutes} min`)
+                .fontSize(this.style().body + 1)
+                .fontWeight(FontWeight.Bold)
+                .fontColor($r('app.color.text_primary'))
+                .layoutWeight(1)
+                .height(64)
+                .textAlign(TextAlign.Center)
+                .backgroundColor($r('app.color.surface'))
+                .border({ width: 1, color: $r('app.color.divider') })
+                .borderRadius(this.style().cardRadius)
+                .onClick(() => {
+                  this.startTimer(minutes);
+                })
+            }, (minutes: number) => `${minutes}`)
+          }
+          .width('100%')
+          Text('A grown-up can stop it any time.')
+            .fontSize(this.style().body - 4)
+            .fontColor($r('app.color.text_hint'))
+        }
+      }
+      .width('100%')
+      .height('100%')
+      .padding({ left: 20, right: 20, top: 40, bottom: 48 })
+      .justifyContent(FlexAlign.Center)
+      .alignItems(HorizontalAlign.Center)
+    }
+    .width('100%')
+    .height('100%')
+  }
+
   build() {
     Stack({ alignContent: Alignment.TopStart }) {
       this.Home()
@@ -573,6 +726,9 @@ export struct KidHome {
       }
       if (this.pinOpen) {
         this.PinGate()
+      }
+      if (this.timerOpen) {
+        this.TimerSheet()
       }
     }
     .width('100%')
