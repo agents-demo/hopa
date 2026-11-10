@@ -150,6 +150,15 @@ struct LaptopIndex {
     }
   }
 
+  private async retryRun(): Promise<void> {
+    await this.chat.retry();
+    this.turns = this.chat.turns.slice();
+    this.lastQuestion = this.chat.lastQuestion;
+    this.lastLatency = this.chat.lastLatencyMs;
+    this.lastTokens = this.chat.lastTokens;
+    this.busy = this.chat.busy;
+  }
+
   private copyText(text: string): void {
     try {
       const data = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, text);
@@ -815,6 +824,12 @@ struct LaptopIndex {
             .fontSize(9.5)
             .fontColor($r('app.color.text_hint'))
           if (index === this.turns.length - 1 && !this.busy) {
+            Text('Retry')
+              .fontSize(11)
+              .fontColor($r('app.color.text_secondary'))
+              .onClick(() => {
+                this.retryRun();
+              })
             ResultActions({
               showOpen: false,
               onCopy: () => {

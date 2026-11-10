@@ -84,6 +84,23 @@ export class LaptopChat {
     this.busy = false;
   }
 
+  /** Ask the last question again, replacing its answer. */
+  async retry(): Promise<void> {
+    if (this.busy || this.turns.length === 0) {
+      return;
+    }
+    while (this.turns.length > 0 && this.turns[this.turns.length - 1].role === 'assistant') {
+      this.turns.pop();
+    }
+    const last: LaptopTurn | undefined = this.turns[this.turns.length - 1];
+    if (last === undefined || last.role !== 'user' || last.text.length === 0) {
+      return;
+    }
+    const text: string = last.text;
+    this.turns.pop();
+    await this.send(text);
+  }
+
   /** Stop the run; the loop closes out and the reply is whatever it reached. */
   cancel(): void {
     if (this.runtime !== undefined) {
