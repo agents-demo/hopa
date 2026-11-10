@@ -341,6 +341,20 @@ export struct ChatPage {
     return ModeProfile.of(this.profileName);
   }
 
+  /** Social shows the wins: failed steps are evidence, not a share card. */
+  private visibleSteps(steps: string[]): string[] {
+    if (this.profileName !== 'social') {
+      return steps;
+    }
+    const shown: string[] = [];
+    for (const step of steps) {
+      if (!step.startsWith('\u2715')) {
+        shown.push(step);
+      }
+    }
+    return shown;
+  }
+
   private style(): VisualStyle {
     return VisualStyle.of(this.styleName);
   }
@@ -575,7 +589,7 @@ export struct ChatPage {
     }
     this.recapGoal = this.lastUserGoal();
     this.recapAnswer = this.textOf(this.messages[index]);
-    this.recapSteps = this.stepsOf(this.messages[index]);
+    this.recapSteps = this.visibleSteps(this.stepsOf(this.messages[index]));
     try {
       // One frame so the hidden card is laid out before it is captured.
       await new Promise<void>((resolve) => setTimeout(() => resolve(), 80));
@@ -817,9 +831,9 @@ export struct ChatPage {
                       Row().width(26).height(1)
                     }
                     Column({ space: 4 }) {
-                      if (this.showSteps && this.stepsOf(item).length > 0) {
+                      if (this.showSteps && this.visibleSteps(this.stepsOf(item)).length > 0) {
                         Flex({ wrap: FlexWrap.Wrap }) {
-                          ForEach(this.stepsOf(item), (step: string) => {
+                          ForEach(this.visibleSteps(this.stepsOf(item)), (step: string) => {
                             Row({ space: 5 }) {
                               Circle({ width: 4, height: 4 })
                                 .fill(this.stepColor(step))
@@ -889,6 +903,23 @@ export struct ChatPage {
                           .fontColor($r('app.color.text_hint'))
                           .width('100%')
                           .padding({ left: 2, top: 2 })
+                      }
+                      if (this.profileName === 'social' && index === this.lastAnswerIndex() && !this.busy) {
+                        Row({ space: 6 }) {
+                          Text('HOPA')
+                            .fontSize(9)
+                            .fontWeight(FontWeight.Bold)
+                            .fontColor($r('app.color.primary'))
+                            .letterSpacing(0.4)
+                          Text('\u00b7')
+                            .fontSize(9)
+                            .fontColor($r('app.color.text_hint'))
+                          Text('screenshot it, send it')
+                            .fontSize(9)
+                            .fontColor($r('app.color.text_hint'))
+                        }
+                        .width('100%')
+                        .padding({ left: 2, top: 2 })
                       }
                       if (index === this.lastAnswerIndex() && !this.busy &&
                         AgentService.get().lastRunHadActions()) {
@@ -1075,7 +1106,7 @@ export struct ChatPage {
                 }
                 if (this.liveSteps.length > 0) {
                   Flex({ wrap: FlexWrap.Wrap }) {
-                    ForEach(this.liveSteps, (step: string) => {
+                    ForEach(this.visibleSteps(this.liveSteps), (step: string) => {
                       Row({ space: 5 }) {
                         Circle({ width: 4, height: 4 })
                           .fill(this.stepColor(step))
