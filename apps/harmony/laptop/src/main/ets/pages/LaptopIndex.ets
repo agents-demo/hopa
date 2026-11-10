@@ -25,6 +25,7 @@ struct LaptopIndex {
   @State settingsOpen: boolean = false;
   @State keyDraft: string = '';
   @State saved: string = '';
+  @State paletteOpen: boolean = false;
   @State lastQuestion: string = '';
   @State lastLatency: number = 0;
   @State lastTokens: number = 0;
@@ -195,6 +196,15 @@ struct LaptopIndex {
       }
       .alignItems(HorizontalAlign.Start)
       Blank()
+      Text('Ctrl K')
+        .fontSize(11)
+        .fontColor($r('app.color.text_hint'))
+        .padding({ left: 10, right: 10, top: 6, bottom: 6 })
+        .border({ width: 1, color: $r('app.color.divider') })
+        .borderRadius(8)
+        .onClick(() => {
+          this.paletteOpen = true;
+        })
       if (this.turns.length > 0) {
         Text('New')
           .fontSize(12)
@@ -533,7 +543,77 @@ struct LaptopIndex {
     .alignItems(HorizontalAlign.Start)
   }
 
+  @Builder
+  Palette() {
+    Stack({ alignContent: Alignment.Center }) {
+      Column()
+        .width('100%')
+        .height('100%')
+        .backgroundColor('#33000000')
+        .onClick(() => {
+          this.paletteOpen = false;
+        })
+      Column({ space: 2 }) {
+        Text('Commands')
+          .fontSize(11)
+          .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_hint'))
+          .letterSpacing(0.7)
+          .width('100%')
+          .padding({ left: 12, bottom: 6 })
+        this.PaletteRow('New chat', () => {
+          this.chat.clear();
+          this.turns = [];
+          this.error = '';
+          this.lastQuestion = '';
+          this.lastLatency = 0;
+          this.lastTokens = 0;
+          const context = getContext(this) as common.UIAbilityContext;
+          LaptopHistory.save(context, this.turns);
+        })
+        this.PaletteRow('Model and key', () => {
+          this.settingsOpen = true;
+        })
+        this.PaletteRow('Clear conversation', () => {
+          this.chat.clear();
+          this.turns = [];
+          this.lastQuestion = '';
+          this.lastLatency = 0;
+          this.lastTokens = 0;
+          const context = getContext(this) as common.UIAbilityContext;
+          LaptopHistory.save(context, this.turns);
+        })
+        this.PaletteRow('Close', () => {})
+      }
+      .width(420)
+      .padding(10)
+      .backgroundColor($r('app.color.surface'))
+      .borderRadius(14)
+      .shadow({ radius: 24, color: '#33000000', offsetY: 8 })
+    }
+    .width('100%')
+    .height('100%')
+  }
+
+  @Builder
+  PaletteRow(label: string, action: () => void) {
+    Row() {
+      Text(label)
+        .fontSize(13)
+        .fontColor($r('app.color.text_primary'))
+      Blank()
+    }
+    .width('100%')
+    .padding({ left: 12, right: 12, top: 11, bottom: 11 })
+    .borderRadius(9)
+    .onClick(() => {
+      action();
+      this.paletteOpen = false;
+    })
+  }
+
   build() {
+    Stack({ alignContent: Alignment.Center }) {
     Row() {
       if (this.showSidebar()) {
         this.Sidebar()
@@ -583,18 +663,28 @@ struct LaptopIndex {
             .padding({ left: 22, right: 22, bottom: 4 })
         }
         Row({ space: 10 }) {
-          TextInput({ text: this.draft, placeholder: 'Ask HOPA\u2026' })
+          TextArea({ text: this.draft, placeholder: 'Ask HOPA\u2026' })
             .layoutWeight(1)
-            .height(44)
             .fontSize(13.5)
+            .constraintSize({ minHeight: 44, maxHeight: 132 })
             .backgroundColor($r('app.color.surface_muted'))
             .borderRadius(22)
-            .enterKeyType(EnterKeyType.Send)
+            .padding({ left: 16, right: 16, top: 11, bottom: 11 })
             .onChange((value: string) => {
               this.draft = value;
             })
-            .onSubmit(() => {
+            .onKeyEvent((event: KeyEvent) => {
+              if (event.type !== KeyType.Down || event.keyCode !== 2054) {
+                return;
+              }
+              const shift: boolean = event.getModifierKeyState
+                ? event.getModifierKeyState(['shift'])
+                : false;
+              if (shift) {
+                return;
+              }
               this.send();
+              return true;
             })
           Button('Send')
             .height(44)
@@ -620,6 +710,19 @@ struct LaptopIndex {
     .backgroundColor($r('app.color.bg'))
     .onAreaChange((oldValue: Area, newValue: Area) => {
       this.winWidth = Number(newValue.width.toString());
+    })
+      if (this.paletteOpen) {
+        this.Palette()
+      }
+    }
+    .width('100%')
+    .height('100%')
+    .onKeyEvent((event: KeyEvent) => {
+      if (event.type === KeyType.Down && event.keyCode === 2070 && this.paletteOpen) {
+        this.paletteOpen = false;
+        return true;
+      }
+      return false;
     })
   }
 }
