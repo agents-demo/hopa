@@ -47,6 +47,9 @@ export class ConversationService {
     this.loaded = true;
     this.version += 1;
     await this.save();
+    // Listeners (the session relay) only care once the store is real; a push
+    // that starts before this line would send an empty snapshot.
+    this.notify();
   }
 
   async save(): Promise<void> {

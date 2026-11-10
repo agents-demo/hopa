@@ -68,6 +68,7 @@ struct LaptopIndex {
   private chat: LaptopChat = new LaptopChat();
   private agent: LaptopAgent = new LaptopAgent();
   private scroller: Scroller = new Scroller();
+  private phoneTimer: number = -1;
 
   aboutToAppear(): void {
     const context = getContext(this) as common.UIAbilityContext;
@@ -96,6 +97,15 @@ struct LaptopIndex {
       this.linkConfigured = this.link.isConfigured();
       if (this.linkConfigured) {
         this.fetchPhone();
+        // The phone pushes when it changes; the laptop looks again on a slow
+        // timer so the list is not frozen at whatever it saw on launch.
+        if (this.phoneTimer < 0) {
+          this.phoneTimer = setInterval(() => {
+            if (!this.remoteOpen && !this.settingsOpen) {
+              this.fetchPhone();
+            }
+          }, 20000);
+        }
       }
     }).catch(() => {
       // No phone link yet.
@@ -190,6 +200,20 @@ struct LaptopIndex {
       }
     }
     return shown;
+  }
+
+  aboutToDisappear(): void {
+    if (this.phoneTimer >= 0) {
+      clearInterval(this.phoneTimer);
+      this.phoneTimer = -1;
+    }
+  }
+
+  /** Coming back to the window is when a fresh phone list matters. */
+  onPageShow(): void {
+    if (this.linkConfigured) {
+      this.fetchPhone();
+    }
   }
 
   private refreshSessions(): void {

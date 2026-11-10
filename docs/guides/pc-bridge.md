@@ -57,6 +57,46 @@ Settings -> **Bridge setup** (guided, three steps):
 The older inline URL + token fields still work for a bootstrap token, but the
 wizard is the path that stores a rotating pair.
 
+## One process, several devices
+
+`BridgePool` puts one listener in front of one `BridgeServer` per device, so a
+single process serves the phone and the 2-in-1:
+
+```bash
+pc-agent bridge --port 8766 --devices devices.json
+```
+
+The file is a list; one entry per device:
+
+```json
+[{"serial": "2SX...", "token": "hopaphone", "pair": "246810", "role": "phone",
+  "sessions_key": "hopareadonly-phone", "state": "C:/Users/me/.hopa/bridge-8766-2SX....json"},
+ {"serial": "3QC...", "token": "hopalaptop", "pair": "135790", "role": "2in1"}]
+```
+
+Each request says which device it means, in this order:
+
+1. `/d/<serial>/...` — explicit, always wins;
+2. `X-Hopa-Role: phone` or `X-Hopa-Role: 2in1` — what both apps send now;
+3. `/sessions` without a role — the phone, because the snapshot is a phone idea;
+4. a pool with exactly one device — no header needed (legacy clients);
+5. otherwise `400`, because guessing which device to tap is not acceptable.
+
+Tokens stay per device, so the phone's token cannot act on the laptop. The pool
+forwards the request untouched; authentication, rate limits and the device lock
+all stay in the device server that owns them.
+
+`hdc` allows only one device to own a given *device-side* port, so the two
+shells cannot both listen on 8766 locally. Current mapping:
+
+| Device | Tunnel | App address |
+|---|---|---|
+| phone | `hdc -t <phone> rport tcp:8768 tcp:8766` | `http://127.0.0.1:8768` |
+| 2in1 | `hdc -t <2in1> rport tcp:8766 tcp:8766` | `http://127.0.0.1:8766` |
+
+`tools\scripts\bridges.ps1` writes the device file from `hdc list targets`,
+starts or stops the one process, and adds the tunnels. `deploy.ps1` calls it.
+
 ## The 2in1 as a second device
 
 A HarmonyOS laptop (`const.product.devicetype` = `2in1`) is an `hdc` device

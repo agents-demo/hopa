@@ -107,6 +107,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="read-only key another device can use to read /sessions",
     )
     bridge.add_argument(
+        "--devices",
+        default="",
+        help="JSON file listing several devices; one listener serves them all "
+             "(entry: serial, token, pair, role, state, sessions_key)",
+    )
+    bridge.add_argument(
         "--state",
         default="",
         help="file that keeps the token pair across restarts (default ~/.hopa/bridge-<port>.json)",
@@ -151,6 +157,51 @@ def _cmd_bridge(args: argparse.Namespace, device: Device) -> int:
     import time
 
     from .bridge import BridgeError, BridgeServer
+
+    ttl_hours = max(0.05, args.token_ttl_hours)
+
+    if args.devices:
+        from .bridge import BridgeError
+        from .bridge_pool import BridgePool
+
+        try:
+            entries = json.loads(Path(args.devices).read_text(encoding="utf-8-sig"))
+        except (OSError, ValueError) as exc:
+            print(f"pc-agent: cannot read {args.devices}: {exc}", file=sys.stderr)
+            return 2
+        if not isinstance(entries, list) or not entries:
+            print("pc-agent: --devices needs a non-empty JSON list", file=sys.stderr)
+            return 2
+        try:
+            pool = BridgePool(
+                entries,
+                host=args.host,
+                port=args.port,
+                token_ttl=ttl_hours * 3600,
+            )
+        except (BridgeError, ValueError, KeyError) as exc:
+            print(f"pc-agent: {exc}", file=sys.stderr)
+            return 2
+        pool.start()
+        print(f"bridge listening on http://{args.host}:{pool.port} (pool)", flush=True)
+        for entry in entries:
+            serial = str(entry["serial"])
+            node = pool.node_for(serial)
+            role = next((r for r, s in pool.roles.items() if s == serial), "")
+            print(
+                f"device {serial} role={role or '?'} token={entry['token']} "
+                f"pair code={entry.get('pair', '')}",
+                flush=True,
+            )
+            print(f"  sessions key (read-only): {node.sessions_key if node else ''}", flush=True)
+        try:
+            while True:
+                time.sleep(3600)
+        except KeyboardInterrupt:
+            pass
+        finally:
+            pool.stop()
+        return 0
 
     token = args.token or secrets.token_urlsafe(24)
     pair_code = args.pair_code or f"{secrets.randbelow(1_000_000):06d}"

@@ -18,6 +18,13 @@ All notable changes are recorded here. Versions follow `docs/versioning.md`.
 - The laptop approval card shows the last frame the bridge captured, labelled
   **WHAT HOPA SAW**, so the consent is given against evidence rather than a
   description.
+- One bridge process now serves every device (`--devices`), with the caller
+  naming its device through `X-Hopa-Role` or `/d/<serial>/...`; tokens stay per
+  device, and `/sessions` always resolves to the phone. hdc only allows one
+  device per device-side port, so the phone tunnels 8768 and the 2in1 8766.
+- The phone's conversation store notifies its listeners once it has loaded, so
+  the session relay no longer pushes an empty snapshot at boot; the laptop also
+  refreshes the phone list on focus and on a slow timer.
 - The bridge also persists the conversation snapshot, and the phone pushes it
   once at boot, so a restarted bridge no longer leaves the laptop's "From your
   phone" list empty. When the list is empty the laptop now says why (key

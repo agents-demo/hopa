@@ -45,11 +45,13 @@ foreach ($t in $targets) {
     $installed = & $hdc -t $serial install -r $hap 2>&1 | Select-String -Pattern 'successfully|failed'
     Write-Host ("  install: " + ($installed -join ' ').Trim())
 
-    # install drops the reverse tunnel; the bridge is unreachable without it
-    & $hdc -t $serial rport tcp:8766 tcp:8766 2>&1 | Out-Null
+    # install drops the reverse tunnel; the bridge is unreachable without it.
+    # One bridge serves both, but hdc allows one device per device-side port,
+    # so the phone forwards 8768 and the laptop 8766.
     if ($isLaptop) {
-        # the laptop has its own bridge instance: the phone's is single-device
-        & $hdc -t $serial rport tcp:8767 tcp:8767 2>&1 | Out-Null
+        & $hdc -t $serial rport tcp:8766 tcp:8766 2>&1 | Out-Null
+    } else {
+        & $hdc -t $serial rport tcp:8768 tcp:8766 2>&1 | Out-Null
     }
 
     if (-not $NoLaunch) {

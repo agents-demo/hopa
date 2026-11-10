@@ -97,6 +97,7 @@ export class LaptopAgent {
   }
 
   constructor() {
+    this.bridge.setRole('2in1');
     const gates: LaptopGates = new LaptopGates();
     const executor = new ActionExecutor(
       new ApprovalPolicy(),

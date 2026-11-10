@@ -89,6 +89,8 @@ export class BridgeClient {
   private height: number = 0;
   private lastError: string = '';
   private foreground: string = '';
+  /** 'phone' or '2in1': which device this client wants when one port serves both. */
+  private role: string = '';
 
   /**
    * A bare host and `localhost` are normalised here: a reverse port listens on
@@ -119,6 +121,11 @@ export class BridgeClient {
     this.refresh = refresh.trim();
   }
 
+  /** Tells a pooled bridge which device this app is. */
+  setRole(role: string): void {
+    this.role = role.trim();
+  }
+
   setSessionSink(sink: BridgeSessionSink): void {
     this.sessionSink = sink;
   }
@@ -139,13 +146,17 @@ export class BridgeClient {
     const client = http.createHttp();
     try {
       let options: http.HttpRequestOptions;
+      const authHeader: Record<string, string> = {
+        'Authorization': `Bearer ${this.token}`
+      };
+      if (this.role.length > 0) {
+        authHeader['X-Hopa-Role'] = this.role;
+      }
       if (method === http.RequestMethod.POST) {
+        authHeader['Content-Type'] = 'application/json';
         options = {
           method: method,
-          header: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.token}`
-          },
+          header: authHeader,
           extraData: payload,
           expectDataType: http.HttpDataType.ARRAY_BUFFER,
           connectTimeout: 8000,
@@ -154,9 +165,7 @@ export class BridgeClient {
       } else {
         options = {
           method: method,
-          header: {
-            'Authorization': `Bearer ${this.token}`
-          },
+          header: authHeader,
           expectDataType: http.HttpDataType.ARRAY_BUFFER,
           connectTimeout: 8000,
           readTimeout: 20000
@@ -182,7 +191,10 @@ export class BridgeClient {
     try {
       const options: http.HttpRequestOptions = {
         method: http.RequestMethod.POST,
-        header: { 'Content-Type': 'application/json' },
+        header: {
+          'Content-Type': 'application/json',
+          'X-Hopa-Role': this.role
+        },
         extraData: JSON.stringify({ refresh: this.refresh }),
         expectDataType: http.HttpDataType.ARRAY_BUFFER,
         connectTimeout: 8000,

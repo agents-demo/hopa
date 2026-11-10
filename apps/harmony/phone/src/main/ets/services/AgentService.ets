@@ -99,6 +99,7 @@ export class AgentService {
     this.executor.registerCapability(this.accessibility);
     this.executor.registerCapability(this.ui);
     this.executor.registerCapability(this.system);
+    this.bridge.setRole('phone');
     this.executor.registerCapability(new RemoteUiCapability(this.bridge));
 
     this.tools = ToolRegistryDefaults.create();
@@ -250,12 +251,15 @@ export class AgentService {
   /** Points the bridge capability at a running `pc-agent bridge`. */
   configureBridge(url: string, token: string): void {
     this.bridge.configure(url, token);
+    // Any path that points at a bridge also gives it the snapshot.
+    this.scheduleSessionRelay();
     AccessibilityBridge.get().setBridgePreferred(this.bridge.isConfigured());
   }
 
   /** A paired session: access token plus the token that renews it. */
   configureBridgeSession(url: string, token: string, refresh: string): void {
     this.bridge.configureSession(url, token, refresh);
+    this.scheduleSessionRelay();
     AccessibilityBridge.get().setBridgePreferred(this.bridge.isConfigured());
   }
 

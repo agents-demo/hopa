@@ -7,6 +7,7 @@ import { AppFocus } from '../services/AppFocus';
 import { AgentService } from '../services/AgentService';
 import { SettingsStore, StoredSettings } from '../services/SettingsStore';
 import { IntentInbox } from '../services/IntentInbox';
+import { BridgeSessionStore } from '../services/BridgeSessionStore';
 import { TrustedApps } from '../services/TrustedApps';
 import { Character } from '../services/Character';
 
@@ -51,6 +52,24 @@ export default class EntryAbility extends UIAbility {
   }
 
   /**
+   * A bridge supplied at launch is part of the setup, so it is remembered and
+   * it retires a stale rotating pair. Otherwise the next cold start would fall
+   * back to a token the bridge no longer knows.
+   */
+  private async rememberBridge(url: string, token: string): Promise<void> {
+    try {
+      const stored: StoredSettings = await SettingsStore.load(this.context);
+      stored.bridgeUrl = url;
+      stored.bridgeToken = token;
+      await SettingsStore.save(this.context, stored);
+      await BridgeSessionStore.clear();
+      AgentService.get().pushSessionsNow();
+    } catch (error) {
+      // Remembering is a convenience; this run already works.
+    }
+  }
+
+  /**
    * Optional automation hook: `aa start ... --ps hopa.* value` supplies the
    * model and bridge settings for this run. The API key stays in memory.
    */
@@ -81,6 +100,7 @@ export default class EntryAbility extends UIAbility {
     }
     if (bridgeUrl.length > 0 && bridgeToken.length > 0) {
       AgentService.get().configureBridge(bridgeUrl, bridgeToken);
+      this.rememberBridge(bridgeUrl, bridgeToken);
     }
     SettingsStore.load(this.context).then((stored: StoredSettings) => {
       Character.configure(stored);
