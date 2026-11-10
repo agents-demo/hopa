@@ -1,4 +1,5 @@
 import { common } from '@kit.AbilityKit';
+import { HopaMark } from '@hopa/app';
 import { LaptopChat, LaptopTurn } from '../services/LaptopChat';
 import { LaptopKeyStore } from '../services/LaptopKeyStore';
 import { LaptopSettings } from '../services/LaptopSettings';
@@ -149,46 +150,9 @@ struct LaptopIndex {
   }
 
   @Builder
-  Mark(size: number) {
-    Stack({ alignContent: Alignment.TopStart }) {
-      Row()
-        .width(size)
-        .height(size * 1.12)
-        .borderRadius(size * 0.28)
-        .backgroundColor($r('app.color.primary'))
-      Row()
-        .width(size * 0.16)
-        .height(size * 0.2)
-        .borderRadius(size * 0.08)
-        .backgroundColor('#FFFFFF')
-        .position({ x: size * 0.24, y: size * 0.3 })
-      Row()
-        .width(size * 0.16)
-        .height(size * 0.2)
-        .borderRadius(size * 0.08)
-        .backgroundColor('#FFFFFF')
-        .position({ x: size * 0.6, y: size * 0.3 })
-      Row()
-        .width(size * 0.32)
-        .height(size * 0.09)
-        .borderRadius(size * 0.05)
-        .backgroundColor('#FFFFFF')
-        .position({ x: size * 0.34, y: size * 0.62 })
-      Row()
-        .width(size * 0.16)
-        .height(size * 0.1)
-        .borderRadius(size * 0.05)
-        .backgroundColor($r('app.color.primary'))
-        .position({ x: size * 0.78, y: size * 0.22 })
-    }
-    .width(size * 1.0)
-    .height(size * 1.12)
-  }
-
-  @Builder
   Header() {
     Row({ space: 12 }) {
-      this.Mark(26)
+      HopaMark({ state: 'idle', markSize: 26, interactive: false })
       Column({ space: 1 }) {
         Text('HOPA')
           .fontSize(17)
@@ -304,7 +268,7 @@ struct LaptopIndex {
   @Builder
   Empty() {
     Column({ space: 12 }) {
-      this.Mark(48)
+      HopaMark({ state: 'idle', markSize: 48, animate: true, interactive: true })
       Text('HOPA')
         .fontSize(30)
         .fontWeight(FontWeight.Bold)
@@ -349,7 +313,7 @@ struct LaptopIndex {
       .width('100%')
     } else {
       Row({ space: 12 }) {
-        this.Mark(22)
+        HopaMark({ state: 'idle', markSize: 22, animate: false, interactive: false })
         Column({ space: 6 }) {
           Text(turn.text)
             .fontSize(13.5)
@@ -393,7 +357,7 @@ struct LaptopIndex {
           if (this.busy) {
             ListItem() {
               Row({ space: 10 }) {
-                this.Mark(18)
+                HopaMark({ state: 'thinking', markSize: 18, interactive: false })
                 Text('Thinking…')
                   .fontSize(12)
                   .fontColor($r('app.color.text_hint'))

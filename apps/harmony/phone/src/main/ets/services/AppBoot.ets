@@ -5,6 +5,8 @@ import { AgentService } from './AgentService';
 import { Appearance } from './Appearance';
 import { SettingsStore, StoredSettings } from './SettingsStore';
 import { KeyStore } from './KeyStore';
+import { setMascotTapFeedback } from '@hopa/app';
+import { Haptics } from './Haptics';
 import { BridgeSessionStore } from './BridgeSessionStore';
 
 /**
@@ -15,6 +17,9 @@ import { BridgeSessionStore } from './BridgeSessionStore';
 export class AppBoot {
   /** Configures the app and returns true on the first run. */
   static async start(service: AgentService, context: common.UIAbilityContext): Promise<boolean> {
+    setMascotTapFeedback(() => {
+      Haptics.tap();
+    });
     await AppBoot.applySettings(service, context);
     await AppBoot.loadStores(service, context);
     service.setUiLauncher(new AppLauncher(context));
