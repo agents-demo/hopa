@@ -1,5 +1,5 @@
 /** The first screen of a new chat: brand, promise and three suggestions. */
-import { HopaMark } from './HopaMark';
+import { EmptyHero } from '@hopa/app';
 import { AgentService } from '../../services/AgentService';
 import { SettingsStore } from '../../services/SettingsStore';
 import { VisualStyle } from '../../services/VisualStyle';
@@ -251,30 +251,16 @@ export struct ChatEmptyState {
   build() {
     Column({ space: 12 }) {
       Stack({ alignContent: Alignment.Center }) {
-        Column({ space: 12 }) {
-          HopaMark({
-            state: this.listening ? 'listening' : 'idle',
-            markSize: this.style().mascot,
-            animate: this.style().motion
-          })
-          Text(this.greeting)
-            .fontSize(11)
-            .fontColor($r('app.color.text_hint'))
-            .letterSpacing(0.4)
-          Text('HOPA')
-            .fontSize(this.style().title)
-            .fontWeight(FontWeight.Bold)
-            .fontColor($r('app.color.text_primary'))
-            .letterSpacing(-0.4)
-          Text(this.tagline())
-            .fontSize(this.style().body - 1)
-            .fontColor($r('app.color.text_secondary'))
-            .textAlign(TextAlign.Center)
-          Text('Payments always ask first.')
-            .fontSize(this.style().body - 4)
-            .fontColor($r('app.color.text_hint'))
-        }
-        .width('100%')
+        EmptyHero({
+          greeting: this.greeting,
+          tagline: this.tagline(),
+          note: 'Payments always ask first.',
+          titleSize: this.style().title,
+          bodySize: this.style().body,
+          markSize: this.style().mascot,
+          animate: this.style().motion,
+          interactive: true
+        })
 
         // The examples overlay the lower half: the hero never moves.
         if (this.ideasOpen) {

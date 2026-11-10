@@ -1,5 +1,5 @@
 import { common } from '@kit.AbilityKit';
-import { HopaMark, KeyStore, SettingsStore, StoredSettings } from '@hopa/app';
+import { HopaMark, EmptyHero, KeyStore, SettingsStore, StoredSettings } from '@hopa/app';
 import { LaptopChat, LaptopTurn } from '../services/LaptopChat';
 
 import { LaptopHistory } from '../services/LaptopHistory';
@@ -151,6 +151,34 @@ struct LaptopIndex {
     this.scrollToEnd();
     const context = getContext(this) as common.UIAbilityContext;
     LaptopHistory.save(context, this.chat.turns);
+  }
+
+  /** Ctrl+K opens the palette; Esc closes it. Phone shells never see these. */
+  private handleShortcut(event: KeyEvent): boolean {
+    if (event.type !== KeyType.Down) {
+      return false;
+    }
+    if (event.keyCode === 2070) {
+      if (this.paletteOpen) {
+        this.paletteOpen = false;
+        return true;
+      }
+      return false;
+    }
+    const key: string = event.keyText.toLowerCase();
+    if (key === 'k') {
+      const ctrl: boolean = event.getModifierKeyState
+        ? event.getModifierKeyState(['ctrl'])
+        : false;
+      const meta: boolean = event.getModifierKeyState
+        ? event.getModifierKeyState(['meta'])
+        : false;
+      if (ctrl || meta) {
+        this.paletteOpen = !this.paletteOpen;
+        return true;
+      }
+    }
+    return false;
   }
 
   private scrollToEnd(): void {
@@ -308,32 +336,18 @@ struct LaptopIndex {
 
   @Builder
   Empty() {
-    Column({ space: 12 }) {
-      HopaMark({ state: 'idle', markSize: 48, animate: true, interactive: true })
-      Text('HOPA')
-        .fontSize(30)
-        .fontWeight(FontWeight.Bold)
-        .fontColor($r('app.color.text_primary'))
-        .letterSpacing(-0.5)
-      Text('Your agent. Ask for anything.')
-        .fontSize(14)
-        .fontColor($r('app.color.text_secondary'))
-      Text(this.keyPresent
+    EmptyHero({
+      greeting: '',
+      tagline: 'Your agent. Ask for anything.',
+      note: this.keyPresent
         ? 'Running here, on this machine. It cannot drive other laptop apps yet.'
-        : 'Add a model key to start. The key stays on this laptop.')
-        .fontSize(11)
-        .fontColor($r('app.color.text_hint'))
-        .textAlign(TextAlign.Center)
-      if (!this.keyPresent && this.saved.length > 0) {
-        Text(this.saved)
-          .fontSize(11)
-          .fontColor($r('app.color.danger'))
-          .textAlign(TextAlign.Center)
-      }
-    }
-    .width('100%')
-    .height('100%')
-    .justifyContent(FlexAlign.Center)
+        : 'Add a model key to start. The key stays on this laptop.',
+      titleSize: 30,
+      bodySize: 15,
+      markSize: 48,
+      animate: true,
+      interactive: true
+    })
   }
 
   @Builder
@@ -675,6 +689,9 @@ struct LaptopIndex {
               this.draft = value;
             })
             .onKeyEvent((event: KeyEvent) => {
+              if (this.handleShortcut(event)) {
+                return true;
+              }
               if (event.type !== KeyType.Down || event.keyCode !== 2054) {
                 return;
               }
@@ -719,11 +736,7 @@ struct LaptopIndex {
     .width('100%')
     .height('100%')
     .onKeyEvent((event: KeyEvent) => {
-      if (event.type === KeyType.Down && event.keyCode === 2070 && this.paletteOpen) {
-        this.paletteOpen = false;
-        return true;
-      }
-      return false;
+      return this.handleShortcut(event);
     })
   }
 }
