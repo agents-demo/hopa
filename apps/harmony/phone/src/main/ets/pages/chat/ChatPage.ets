@@ -38,6 +38,8 @@ export struct ChatPage {
   @State loaded: boolean = false;
   @State diffText: string = '';
   @State trimmedCount: number = 0;
+  /** Tapping a bubble reveals its actions; -1 means only the latest. */
+  @State selectedActionIndex: number = -1;
   @State canUndo: boolean = false;
   private undoSteps: string[] = [];
   @State runningGoal: string = '';
@@ -148,6 +150,7 @@ export struct ChatPage {
   }
 
   private render(): void {
+    this.selectedActionIndex = -1;
     const next: ResourceStr[] = [];
     const entries = AgentService.get().conversations.entries();
     // Long conversations keep the newest window; the rest stay in History.
@@ -427,6 +430,7 @@ export struct ChatPage {
     });
     this.reaction = '';
     this.characterLine = '';
+    this.selectedActionIndex = -1;
     this.liveSteps = [];
     this.runningGoal = text;
     Haptics.tap();
@@ -779,9 +783,13 @@ export struct ChatPage {
                       .fontSize(this.style().body)
                       .constraintSize({ maxWidth: '84%' })
                       .copyOption(CopyOptions.LocalDevice)
-                    if (index === this.lastUserIndex() && !this.busy) {
+                      .onClick(() => {
+                        this.selectedActionIndex = this.selectedActionIndex === index ? -1 : index;
+                      })
+                    if ((index === this.lastUserIndex() || this.selectedActionIndex === index) && !this.busy) {
                       MessageActions({
-                        showRetry: true,
+                        showRetry: index === this.lastUserIndex(),
+                        muted: true,
                         onCopy: () => {
                           this.copy(this.textOf(item));
                         },
@@ -857,6 +865,9 @@ export struct ChatPage {
                         }
                         .width('100%')
                         .padding({ top: 2, bottom: 2 })
+                        .onClick(() => {
+                          this.selectedActionIndex = this.selectedActionIndex === index ? -1 : index;
+                        })
                       } else {
                         Text(this.bubbleText(item))
                           .width('100%')
@@ -865,6 +876,9 @@ export struct ChatPage {
                           .fontColor($r('app.color.text_primary'))
                           .padding({ left: 2, right: 2, top: 2, bottom: 2 })
                           .copyOption(CopyOptions.LocalDevice)
+                          .onClick(() => {
+                            this.selectedActionIndex = this.selectedActionIndex === index ? -1 : index;
+                          })
                       }
                       if (index === this.lastAnswerIndex() && !this.busy &&
                         this.characterLine.length > 0) {
@@ -1004,7 +1018,8 @@ export struct ChatPage {
                         .backgroundColor('#0FD9342F')
                         .borderRadius(10)
                       }
-                      if (index === this.lastAnswerIndex() && !this.busy) {
+                      if ((index === this.lastAnswerIndex() || this.selectedActionIndex === index) &&
+                        !this.busy) {
                         ResultActions({
                           showOpen: this.firstUrl(this.textOf(item)).length > 0,
                           onOpen: () => {

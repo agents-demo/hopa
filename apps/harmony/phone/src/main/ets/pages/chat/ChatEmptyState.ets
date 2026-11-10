@@ -211,10 +211,10 @@ export struct ChatEmptyState {
   private chipLabel(): string {
     if (this.promptKind() === 'ritual') {
       return this.promptTitle() === 'Morning brief'
-        ? 'Give me a morning brief'
-        : 'Close out my day';
+        ? 'Morning brief?'
+        : 'Evening close?';
     }
-    return `Again: ${this.promptGoal()}`;
+    return `Again? ${this.promptGoal()}`;
   }
 
   private hasResume(): boolean {
@@ -363,11 +363,11 @@ export struct ChatEmptyState {
       if (this.promptKind().length > 0) {
         Row({ space: 6 }) {
           Text(this.chipLabel())
-            .fontSize(12.5)
-            .fontColor($r('app.color.text_primary'))
+            .fontSize(13)
+            .fontColor($r('app.color.text_secondary'))
             .maxLines(1)
             .textOverflow({ overflow: TextOverflow.Ellipsis })
-            .layoutWeight(1)
+            .constraintSize({ maxWidth: 260 })
           Text('\u00d7')
             .fontSize(12)
             .fontColor($r('app.color.text_hint'))
@@ -376,11 +376,9 @@ export struct ChatEmptyState {
               this.dismiss(this.promptKind());
             })
         }
-        .width('100%')
-        .padding({ left: 14, right: 12, top: 9, bottom: 9 })
+        .padding({ left: 16, right: 12, top: 10, bottom: 10 })
         .backgroundColor($r('app.color.surface_alt'))
-        .border({ width: 1, color: $r('app.color.divider') })
-        .borderRadius(18)
+        .borderRadius(22)
         .onClick(() => {
           this.onPick(this.promptGoal());
         })

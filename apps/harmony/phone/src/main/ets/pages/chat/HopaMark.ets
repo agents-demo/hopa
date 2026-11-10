@@ -75,14 +75,17 @@ export struct HopaMark {
 
   /** A short, warm greeting that appears beside the mascot, not a toast. */
   private speak(): void {
-    this.bubble = true;
     if (this.bubbleTimer >= 0) {
       clearTimeout(this.bubbleTimer);
     }
+    // Let the wave and the little cheer land first; the line follows.
     this.bubbleTimer = setTimeout(() => {
-      this.bubble = false;
-      this.bubbleTimer = -1;
-    }, 2200);
+      this.bubble = true;
+      this.bubbleTimer = setTimeout(() => {
+        this.bubble = false;
+        this.bubbleTimer = -1;
+      }, 2200);
+    }, 240);
   }
 
   private armAngle(): number {
@@ -200,6 +203,9 @@ export struct HopaMark {
           x: this.markSize + 8,
           y: this.markSize * 0.02
         })
+        .transition(
+          TransitionEffect.OPACITY.combine(TransitionEffect.scale({ x: 0.86, y: 0.86 }))
+        )
         .hitTestBehavior(HitTestMode.None)
       }
     }
