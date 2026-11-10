@@ -298,25 +298,31 @@ export struct KidHome {
     .justifyContent(FlexAlign.Center)
   }
 
-  /** A calm outline picture: no colour emoji competing with the label. */
+  /** A small pastel landscape in a white frame: same weight as the emoji. */
   @Builder
   PhotoGlyph() {
     Stack({ alignContent: Alignment.TopStart }) {
       Column()
-        .width(58)
-        .height(46)
-        .border({ width: 2, color: $r('app.color.text_secondary') })
-        .borderRadius(8)
+        .width('100%')
+        .height('100%')
+        .backgroundColor('#E9F2FB')
       Circle({ width: 9, height: 9 })
-        .fill($r('app.color.text_secondary'))
-        .position({ x: 42, y: 7 })
-      Polygon({ width: 38, height: 16 })
-        .points([[0, 16], [13, 0], [26, 16]])
-        .fill($r('app.color.text_secondary'))
-        .position({ x: 10, y: 24 })
+        .fill('#F2C14E')
+        .position({ x: 41, y: 8 })
+      Polygon({ width: 40, height: 18 })
+        .points([[0, 18], [20, 0], [40, 18]])
+        .fill('#A9C7B2')
+        .position({ x: 8, y: 22 })
+      Polygon({ width: 26, height: 13 })
+        .points([[0, 13], [13, 0], [26, 13]])
+        .fill('#7FAE8D')
+        .position({ x: 26, y: 28 })
     }
     .width(58)
     .height(46)
+    .border({ width: 1, color: '#E3E9F1' })
+    .borderRadius(8)
+    .clip(true)
   }
 
   @Builder

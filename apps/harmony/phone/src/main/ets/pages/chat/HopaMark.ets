@@ -171,37 +171,37 @@ export struct HopaMark {
         Stack({ alignContent: Alignment.TopStart }) {
           // Soft, shape-following shadow: the same outline, offset in layers.
           Image($r('app.media.hopa_bubble_shadow'))
-            .width(this.markSize * 2.20)
+            .width(this.markSize * 1.70)
             .height(this.markSize * 0.99)
             .objectFit(ImageFit.Fill)
             .opacity(0.10)
             .offset({ x: this.markSize * 0.01, y: this.markSize * 0.05 })
           Image($r('app.media.hopa_bubble_shadow'))
-            .width(this.markSize * 2.20)
+            .width(this.markSize * 1.70)
             .height(this.markSize * 0.99)
             .objectFit(ImageFit.Fill)
             .opacity(0.06)
             .offset({ x: this.markSize * 0.02, y: this.markSize * 0.09 })
           Image($r('app.media.hopa_bubble'))
-            .width(this.markSize * 2.20)
+            .width(this.markSize * 1.70)
             .height(this.markSize * 0.99)
             .objectFit(ImageFit.Fill)
           Text("Hi, I'm HOPA 👋")
-            .width(this.markSize * 2.20)
+            .width(this.markSize * 1.70)
             .padding({ top: this.markSize * 0.20 })
             .textAlign(TextAlign.Center)
-            .fontSize(this.markSize * 0.205)
+            .fontSize(this.markSize * 0.19)
             .fontWeight(FontWeight.Bold)
             .fontColor(Color.White)
             .maxLines(1)
         }
-        .width(this.markSize * 2.20)
+        .width(this.markSize * 1.70)
         .height(this.markSize * 0.99)
         .clip(false)
         .rotate({ angle: -3 })
         .position({
-          x: this.markSize - 20,
-          y: this.markSize * 0.02
+          x: this.markSize * 0.38,
+          y: -this.markSize * 1.02
         })
         .transition(
           TransitionEffect.OPACITY.combine(TransitionEffect.scale({ x: 0.86, y: 0.86 }))

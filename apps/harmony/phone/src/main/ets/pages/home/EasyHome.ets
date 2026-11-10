@@ -1,4 +1,4 @@
-import { Context, common } from '@kit.AbilityKit';
+import { Context, Want, common } from '@kit.AbilityKit';
 import { VisualStyle } from '../../services/VisualStyle';
 import { VoiceController } from '../../services/VoiceController';
 import { TaskRunner } from '../../services/TaskRunner';
@@ -6,6 +6,7 @@ import { Haptics } from '../../services/Haptics';
 import { TaskLog } from '../../services/TaskLog';
 import { HopaMark } from '../chat/HopaMark';
 import { Character } from '../../services/Character';
+import { AgentService } from '../../services/AgentService';
 
 /**
  * Easy home: big choices, one task sheet, no Everyday chat screen.
@@ -27,13 +28,15 @@ export struct EasyHome {
   @State stepText: string = '';
   @State recording: boolean = false;
   @State hello: boolean = false;
+  @State padOpen: boolean = false;
+  @State padNumber: string = '';
   private helloTimer: number = -1;
   private voice: VoiceController = new VoiceController();
   private runner: TaskRunner = new TaskRunner();
 
   /** The sheet owns the whole screen: no shell bar, no tabs, no "+". */
   syncFocus(): void {
-    AppStorage.setOrCreate<boolean>('hopa.focus', this.taskOpen || this.helpOpen);
+    AppStorage.setOrCreate<boolean>('hopa.focus', this.taskOpen || this.helpOpen || this.padOpen);
   }
 
   aboutToAppear(): void {
@@ -115,6 +118,55 @@ export struct EasyHome {
       this.voice.cancel();
     }
     this.taskOpen = false;
+  }
+
+  private openPad(): void {
+    this.padNumber = '';
+    this.padOpen = true;
+    this.syncFocus();
+  }
+
+  private closePad(): void {
+    this.padOpen = false;
+    this.syncFocus();
+  }
+
+  private digit(value: string): void {
+    if (this.padNumber.length < 18) {
+      this.padNumber = `${this.padNumber}${value}`;
+    }
+  }
+
+  private backspace(): void {
+    this.padNumber = this.padNumber.length > 0
+      ? this.padNumber.substring(0, this.padNumber.length - 1)
+      : '';
+  }
+
+  private async placeCall(): Promise<void> {
+    if (this.padNumber.length === 0) {
+      return;
+    }
+    try {
+      const want: Want = {
+        action: 'ohos.want.action.dial',
+        uri: `tel:${this.padNumber}`
+      };
+      await (getContext(this) as common.UIAbilityContext).startAbility(want);
+    } catch (error) {
+      const opened: boolean = await AgentService.get().bridge.launch('com.ohos.contacts');
+      if (!opened) {
+        this.toast('Open Phone to finish the call.');
+      }
+    }
+    this.closePad();
+  }
+
+  private async messageSomeone(): Promise<void> {
+    const opened: boolean = await AgentService.get().bridge.launch('com.ohos.mms');
+    if (!opened) {
+      this.toast('Messages is not available.');
+    }
   }
 
   private openTaskWith(draft: string): void {
@@ -274,11 +326,11 @@ export struct EasyHome {
           })
 
         this.Tile('Send a message', () => {
-          this.openTaskWith('Send a message to ');
+          this.messageSomeone();
         })
 
         this.Tile('Call someone', () => {
-          this.openTaskWith('Call ');
+          this.openPad();
         })
 
 
@@ -557,6 +609,100 @@ export struct EasyHome {
     .alignItems(HorizontalAlign.Start)
   }
 
+  @Builder
+  Keypad() {
+    Column({ space: 14 }) {
+      Row({ space: 8 }) {
+        Text('\u2190')
+          .fontSize(24)
+          .fontColor($r('app.color.text_primary'))
+          .width(44)
+          .height(44)
+          .textAlign(TextAlign.Center)
+          .onClick(() => {
+            this.closePad();
+          })
+        Text('Call')
+          .fontSize(this.style().body + 3)
+          .fontWeight(FontWeight.Bold)
+          .layoutWeight(1)
+      }
+      .width('100%')
+      Row({ space: 10 }) {
+        Text(this.padNumber.length > 0 ? this.padNumber : 'Enter a number')
+          .fontSize(this.padNumber.length > 0 ? this.style().body + 12 : this.style().body)
+          .fontWeight(this.padNumber.length > 0 ? FontWeight.Bold : FontWeight.Normal)
+          .fontColor(this.padNumber.length > 0
+            ? $r('app.color.text_primary')
+            : $r('app.color.text_hint'))
+          .layoutWeight(1)
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+        if (this.padNumber.length > 0) {
+          Text('\u232b')
+            .fontSize(22)
+            .fontColor($r('app.color.text_secondary'))
+            .width(48)
+            .height(48)
+            .textAlign(TextAlign.Center)
+            .onClick(() => {
+              this.backspace();
+            })
+        }
+      }
+      .width('100%')
+      .height(56)
+      .padding({ left: 14, right: 6 })
+      .backgroundColor($r('app.color.surface'))
+      .border({ width: 1, color: $r('app.color.divider') })
+      .borderRadius(this.style().cardRadius)
+      ForEach([['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9'], ['*', '0', '#']],
+        (row: string[]) => {
+          Row({ space: 10 }) {
+            ForEach(row, (key: string) => {
+              Text(key)
+                .fontSize(this.style().body + 8)
+                .fontWeight(FontWeight.Medium)
+                .fontColor($r('app.color.text_primary'))
+                .layoutWeight(1)
+                .height(64)
+                .textAlign(TextAlign.Center)
+                .backgroundColor($r('app.color.surface'))
+                .border({ width: 1, color: $r('app.color.divider') })
+                .borderRadius(this.style().cardRadius)
+                .onClick(() => {
+                  this.digit(key);
+                })
+            }, (key: string) => key)
+          }
+          .width('100%')
+        }, (row: string[]) => row.join(''))
+      Blank()
+      Text('Call')
+        .fontSize(this.style().body + 2)
+        .fontWeight(FontWeight.Bold)
+        .width('100%')
+        .height(64)
+        .textAlign(TextAlign.Center)
+        .backgroundColor(this.padNumber.length > 0
+          ? $r('app.color.success')
+          : $r('app.color.surface_muted'))
+        .fontColor(this.padNumber.length > 0 ? Color.White : $r('app.color.text_hint'))
+        .borderRadius(this.style().cardRadius + 4)
+        .onClick(() => {
+          this.placeCall();
+        })
+      Text('The phone will ask before the call goes out.')
+        .fontSize(this.style().body - 4)
+        .fontColor($r('app.color.text_hint'))
+    }
+    .width('100%')
+    .height('100%')
+    .padding({ left: 20, right: 20, top: 40, bottom: 36 })
+    .backgroundColor($r('app.color.bg'))
+    .alignItems(HorizontalAlign.Start)
+  }
+
   build() {
     Stack({ alignContent: Alignment.TopStart }) {
       this.Home()
@@ -565,6 +711,9 @@ export struct EasyHome {
       }
       if (this.helpOpen) {
         this.HelpPanel()
+      }
+      if (this.padOpen) {
+        this.Keypad()
       }
     }
     .width('100%')

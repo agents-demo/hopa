@@ -195,6 +195,31 @@ struct Index {
     }
   }
 
+  /** The newest conversation with content that is not the current one. */
+  private previousSession(): ChatSession | undefined {
+    const service = AgentService.get();
+    const currentId: string = service.conversations.currentId();
+    let best: ChatSession | undefined = undefined;
+    for (const session of service.conversations.all()) {
+      if (session.id === currentId || session.entries.length === 0) {
+        continue;
+      }
+      if (best === undefined || session.updatedAt > best.updatedAt) {
+        best = session;
+      }
+    }
+    return best;
+  }
+
+  private continueLast(): void {
+    const session: ChatSession | undefined = this.previousSession();
+    if (session === undefined) {
+      return;
+    }
+    AgentService.get().conversations.select(session.id);
+    this.go('chat');
+  }
+
   private openChats(): void {
     this.refreshChats();
     this.chatsOpen = true;
@@ -392,31 +417,38 @@ struct Index {
       }
       if (this.activePage === 'chat' || this.activePage === 'home') {
         if (this.profileName === 'everyday') {
-        Stack({ alignContent: Alignment.Center }) {
-          Column()
-            .width(19)
-            .height(19)
-            .borderRadius(9.5)
-            .border({ width: 1.8, color: $r('app.color.text_primary') })
-          Column()
-            .width(1.8)
-            .height(5)
-            .borderRadius(0.9)
-            .backgroundColor($r('app.color.text_primary'))
-            .offset({ y: -2 })
-          Row()
-            .width(4.5)
-            .height(1.8)
-            .borderRadius(0.9)
-            .backgroundColor($r('app.color.text_primary'))
-            .offset({ x: 2, y: 0.5 })
-        }
-        .width(44)
-        .height(44)
-        .accessibilityText('Chat history')
-        .onClick(() => {
-          this.openChats();
-        })
+          Row({ space: 4 }) {
+            Stack({ alignContent: Alignment.Center }) {
+              Column()
+                .width(19)
+                .height(19)
+                .borderRadius(9.5)
+                .border({ width: 1.8, color: $r('app.color.text_primary') })
+              Column()
+                .width(1.8)
+                .height(5)
+                .borderRadius(0.9)
+                .backgroundColor($r('app.color.text_primary'))
+                .offset({ y: -2 })
+              Row()
+                .width(4.5)
+                .height(1.8)
+                .borderRadius(0.9)
+                .backgroundColor($r('app.color.text_primary'))
+                .offset({ x: 2, y: 0.5 })
+            }
+            .width(26)
+            .height(44)
+            Text('Chats')
+              .fontSize(12)
+              .fontColor($r('app.color.text_secondary'))
+          }
+          .height(44)
+          .padding({ left: 4, right: 8 })
+          .accessibilityText('Chats')
+          .onClick(() => {
+            this.openChats();
+          })
         }
         if (this.chatTitle.length > 0 && this.activePage === 'chat') {
           Text(this.chatTitle)
@@ -429,7 +461,6 @@ struct Index {
         } else {
           Row().layoutWeight(1)
         }
-        // Chat stays clean; the only header signal is a real problem.
         if (this.problem.length > 0) {
           Row({ space: 5 }) {
             HopaMark({ state: 'error', markSize: 20, interactive: false })
@@ -446,25 +477,39 @@ struct Index {
             this.go('runs');
           })
         }
-        if (this.profileName === 'everyday' &&
-          !(this.activePage === 'chat' && this.chatEmpty)) {
-        Stack({ alignContent: Alignment.Center }) {
-          Row()
-            .width(34)
-            .height(34)
-            .borderRadius(17)
-            .backgroundColor($r('app.color.primary_soft'))
-          Row().width(14).height(2).borderRadius(1).backgroundColor($r('app.color.primary'))
-          Row().width(2).height(14).borderRadius(1).backgroundColor($r('app.color.primary'))
-        }
-        .width(40)
-        .height(44)
-        .accessibilityText('New chat')
-        .onClick(() => {
-          AgentService.get().conversations.newChat();
-          this.refreshChats();
-          this.go('chat');
-        })
+        if (this.profileName === 'everyday') {
+          if (!this.chatEmpty) {
+            Stack({ alignContent: Alignment.Center }) {
+              Row()
+                .width(34)
+                .height(34)
+                .borderRadius(17)
+                .backgroundColor($r('app.color.primary_soft'))
+              Row().width(14).height(2).borderRadius(1).backgroundColor($r('app.color.primary'))
+              Row().width(2).height(14).borderRadius(1).backgroundColor($r('app.color.primary'))
+            }
+            .width(40)
+            .height(44)
+            .accessibilityText('New chat')
+            .onClick(() => {
+              AgentService.get().conversations.newChat();
+              this.refreshChats();
+              this.go('chat');
+            })
+          } else if (this.previousSession() !== undefined) {
+            Text('Continue')
+              .fontSize(13)
+              .fontWeight(FontWeight.Medium)
+              .fontColor($r('app.color.primary'))
+              .height(40)
+              .padding({ left: 14, right: 14 })
+              .backgroundColor($r('app.color.primary_soft'))
+              .borderRadius(20)
+              .accessibilityText('Continue last conversation')
+              .onClick(() => {
+                this.continueLast();
+              })
+          }
         }
       } else {
         Text(pageTitle(this.activePage))
@@ -554,11 +599,13 @@ struct Index {
             Text('PC bridge offline')
               .fontSize(11)
               .fontColor($r('app.color.danger'))
-            Text('Retry')
+            Text('Open setup')
               .fontSize(11)
+              .fontWeight(FontWeight.Medium)
               .fontColor($r('app.color.primary'))
               .onClick(() => {
-                BridgeMonitor.checkNow();
+                AppStorage.setOrCreate<boolean>('hopa.openBridgeSetup', true);
+                this.go('settings');
               })
           }
           .width('100%')

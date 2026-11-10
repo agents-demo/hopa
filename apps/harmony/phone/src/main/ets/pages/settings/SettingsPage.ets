@@ -43,6 +43,10 @@ export struct SettingsPage {
   @StorageLink('hopa.bridgeOnline') bridgeLive: boolean = true;
 
   aboutToAppear(): void {
+    if (AppStorage.get<boolean>('hopa.openBridgeSetup') ?? false) {
+      AppStorage.setOrCreate<boolean>('hopa.openBridgeSetup', false);
+      this.subPage = 'bridgewizard';
+    }
     if (AppStorage.get<boolean>('hopa.openLogs') ?? false) {
       AppStorage.setOrCreate<boolean>('hopa.openLogs', false);
       this.subPage = 'logs';

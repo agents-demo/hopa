@@ -74,7 +74,7 @@ export class Character {
     if (Character.tone === 'direct') {
       return 'Your phone agent. Ask.';
     }
-    return 'Your phone agent. Ask for something on this phone.';
+    return 'Your phone agent. Ask for anything.';
   }
 
   /**

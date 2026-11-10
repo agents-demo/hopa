@@ -214,7 +214,12 @@ export struct ChatEmptyState {
         ? 'Morning brief?'
         : 'Evening close?';
     }
-    return `Again? ${this.promptGoal()}`;
+    const goal: string = this.promptGoal();
+    const clean: string = goal.length > 0
+      ? `${goal.substring(0, 1).toUpperCase()}${goal.substring(1)}`
+      : goal;
+    const trimmed: string = clean.endsWith('.') ? clean.substring(0, clean.length - 1) : clean;
+    return `${trimmed} again?`;
   }
 
   private hasResume(): boolean {
@@ -246,140 +251,106 @@ export struct ChatEmptyState {
   build() {
     Column({ space: 12 }) {
       Column({ space: 12 }) {
-      HopaMark({
-        state: this.listening ? 'listening' : 'idle',
-        markSize: this.style().mascot,
-        animate: this.style().motion
-      })
-      Text(this.greeting)
-        .fontSize(11)
-        .fontColor($r('app.color.text_hint'))
-        .letterSpacing(0.4)
-      Text('HOPA')
-        .fontSize(this.style().title)
-        .fontWeight(FontWeight.Bold)
-        .fontColor($r('app.color.text_primary'))
-        .letterSpacing(-0.4)
-      Text(this.tagline())
-        // One line in Calm, as before the profile work; bigger only where the
-        // profile asks for larger text.
-        .fontSize(this.style().body - 1)
-        .fontColor($r('app.color.text_secondary'))
-        .textAlign(TextAlign.Center)
+        HopaMark({
+          state: this.listening ? 'listening' : 'idle',
+          markSize: this.style().mascot,
+          animate: this.style().motion
+        })
+        Text(this.greeting)
+          .fontSize(11)
+          .fontColor($r('app.color.text_hint'))
+          .letterSpacing(0.4)
+        Text('HOPA')
+          .fontSize(this.style().title)
+          .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_primary'))
+          .letterSpacing(-0.4)
+        Text(this.tagline())
+          .fontSize(this.style().body - 1)
+          .fontColor($r('app.color.text_secondary'))
+          .textAlign(TextAlign.Center)
+        Text('Payments always ask first.')
+          .fontSize(this.style().body - 4)
+          .fontColor($r('app.color.text_hint'))
       }
       .width('100%')
       .padding({ top: 72 })
-      Scroll() {
+
+      // Examples grow upward from the bottom row, so the hero never moves.
       Column({ space: 8 }) {
-        if (this.hasResume()) {
-          Row({ space: 10 }) {
-            Column({ space: 2 }) {
-              Text('Last conversation')
-                .fontSize(9)
-                .fontWeight(FontWeight.Bold)
-                .fontColor(this.quietCard() ? $r('app.color.text_hint') : this.accent())
-                .letterSpacing(0.6)
-              Text(this.resume)
-                .fontSize(13)
+        Blank()
+        if (this.ideasOpen) {
+          Text('TRY SOMETHING')
+            .fontSize(9)
+            .fontWeight(FontWeight.Bold)
+            .fontColor($r('app.color.text_hint'))
+            .letterSpacing(0.7)
+            .width('100%')
+            .padding({ left: 2 })
+          ForEach(this.suggestions(), (suggestion: string, index: number) => {
+            Row() {
+              Text(suggestion)
+                .fontSize(this.style().body - 2.5)
                 .fontColor($r('app.color.text_primary'))
                 .maxLines(1)
                 .textOverflow({ overflow: TextOverflow.Ellipsis })
-              Text(this.resumeWhen().length > 0
-                ? `${this.resumeWhen()} \u00b7 Tap to open`
-                : 'Tap to open it')
-                .fontSize(10)
-                .fontColor($r('app.color.text_hint'))
             }
-            .layoutWeight(1)
-            .alignItems(HorizontalAlign.Start)
-          }
-          .width('100%')
-          .padding({ left: 12, right: 10, top: 9, bottom: 9 })
-          .border({
-            width: 1,
-            color: this.quietCard() ? $r('app.color.divider') : this.accentTint('26')
-          })
-          .borderRadius(12)
-          .opacity(this.pressed === -1 ? 1 : 0.62)
-          .animation({ duration: 140, curve: Curve.EaseOut })
-          .onClick(() => {
-            this.onResume();
-          })
+            .width('100%')
+            .padding({ left: 14, right: 14, top: this.style().motion ? 12 : 14, bottom: this.style().motion ? 12 : 14 })
+            .backgroundColor($r('app.color.surface'))
+            .border({ width: 1, color: '#0F1C1B18' })
+            .borderRadius(this.style().cardRadius)
+            .shadow({ radius: 10, color: '#0A1C1B18', offsetY: 2 })
+            .scale({ x: this.pressed === index ? 0.985 : 1, y: this.pressed === index ? 0.985 : 1 })
+            .animation({ duration: 140, curve: Curve.EaseOut })
+            .onClick(() => {
+              this.pick(index, suggestion);
+            })
+          }, (suggestion: string) => suggestion)
         }
-        if (this.profile().discovery === 'guided') {
-          Row({ space: 4 }) {
-            Text(this.ideasOpen ? 'Hide examples' : 'Try an example')
-              .fontSize(11)
-              .fontColor(this.accent())
-            Text(this.ideasOpen ? '↑' : '↓')
-              .fontSize(10)
-              .fontColor(this.accent())
-          }
-          .padding({ left: 2, top: 2, bottom: 2 })
-          .onClick(() => {
-            this.ideasOpen = !this.ideasOpen;
-          })
-        }
-        if (this.ideasOpen) {
-        Text('TRY SOMETHING')
-          .fontSize(9)
-          .fontWeight(FontWeight.Bold)
-          .fontColor($r('app.color.text_hint'))
-          .letterSpacing(0.7)
-          .width('100%')
-          .padding({ left: 2, top: 2 })
-        ForEach(this.suggestions(), (suggestion: string, index: number) => {
-          Row() {
-            Text(suggestion)
-              .fontSize(this.style().body - 2.5)
-              .fontColor($r('app.color.text_primary'))
-              .maxLines(1)
-              .textOverflow({ overflow: TextOverflow.Ellipsis })
-          }
-          .width('100%')
-          .padding({ left: 14, right: 14, top: this.style().motion ? 12 : 14, bottom: this.style().motion ? 12 : 14 })
-          .backgroundColor($r('app.color.surface'))
-          .border({ width: 1, color: '#0F1C1B18' })
-          .borderRadius(this.style().cardRadius)
-          .shadow({ radius: 10, color: '#0A1C1B18', offsetY: 2 })
-          .scale({ x: this.pressed === index ? 0.985 : 1, y: this.pressed === index ? 0.985 : 1 })
-          .animation({ duration: 140, curve: Curve.EaseOut })
-          .onClick(() => {
-            this.pick(index, suggestion);
-          })
-        }, (suggestion: string) => suggestion)
-        }
-      }
-      .width('100%')
-      .margin({ top: 12 })
       }
       .width('100%')
       .layoutWeight(1)
-      .scrollBar(BarState.Off)
-      .align(Alignment.Top)
-      if (this.promptKind().length > 0) {
-        Row({ space: 6 }) {
-          Text(this.chipLabel())
-            .fontSize(13)
-            .fontColor($r('app.color.text_secondary'))
-            .maxLines(1)
-            .textOverflow({ overflow: TextOverflow.Ellipsis })
-            .constraintSize({ maxWidth: 260 })
-          Text('\u00d7')
+      .alignItems(HorizontalAlign.Start)
+
+      Row({ space: 8 }) {
+        if (this.profile().discovery === 'guided') {
+          Text(this.ideasOpen ? 'Hide examples \u2191' : 'Try an example \u2193')
             .fontSize(12)
-            .fontColor($r('app.color.text_hint'))
-            .padding({ left: 2 })
+            .fontColor(this.accent())
+            .padding({ left: 14, right: 14, top: 9, bottom: 9 })
+            .backgroundColor($r('app.color.surface_alt'))
+            .borderRadius(20)
             .onClick(() => {
-              this.dismiss(this.promptKind());
+              this.ideasOpen = !this.ideasOpen;
             })
         }
-        .padding({ left: 16, right: 12, top: 10, bottom: 10 })
-        .backgroundColor($r('app.color.surface_alt'))
-        .borderRadius(22)
-        .onClick(() => {
-          this.onPick(this.promptGoal());
-        })
+        if (this.promptKind().length > 0) {
+          Row({ space: 6 }) {
+            Text(this.chipLabel())
+              .fontSize(12.5)
+              .fontColor($r('app.color.text_secondary'))
+              .maxLines(1)
+              .textOverflow({ overflow: TextOverflow.Ellipsis })
+              .constraintSize({ maxWidth: 200 })
+            Text('\u00d7')
+              .fontSize(12)
+              .fontColor($r('app.color.text_hint'))
+              .padding({ left: 2 })
+              .onClick(() => {
+                this.dismiss(this.promptKind());
+              })
+          }
+          .padding({ left: 14, right: 10, top: 9, bottom: 9 })
+          .backgroundColor($r('app.color.surface_alt'))
+          .borderRadius(20)
+          .onClick(() => {
+            this.onPick(this.promptGoal());
+          })
+        }
       }
+      .width('100%')
+      .justifyContent(FlexAlign.Center)
     }
     .width('100%')
     .height('100%')
