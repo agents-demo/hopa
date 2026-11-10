@@ -99,6 +99,10 @@ export default class LaptopAbility extends UIAbility {
       if (typeof linkKey === 'string' && linkKey.length > 0) {
         AppStorage.setOrCreate<string>('hopa.laptop.linkKey', linkKey);
       }
+      const cancel = params['hopa.cancel'];
+      if (typeof cancel === 'string' && cancel === '1') {
+        AppStorage.setOrCreate<string>('hopa.laptop.cancel', '1');
+      }
       const pageAsk = params['hopa.page_ask'];
       if (typeof pageAsk === 'string' && pageAsk.trim().length > 0) {
         AppStorage.setOrCreate<string>('hopa.laptop.pageAsk', pageAsk.trim());

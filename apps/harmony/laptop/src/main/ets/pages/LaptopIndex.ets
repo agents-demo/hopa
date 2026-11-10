@@ -3,6 +3,7 @@ import { RunRecord, RunStatus } from '@hopa/core';
 import { window } from '@kit.ArkUI';
 import { pasteboard } from '@kit.BasicServicesKit';
 import { notificationManager } from '@kit.NotificationKit';
+import { wantAgent, WantAgent } from '@kit.AbilityKit';
 import { webview } from '@kit.ArkWeb';
 import { HopaMark, EmptyHero, ResultActions, StepChips, ChatFormat, Character, KeyStore, SettingsStore, StoredSettings } from '@hopa/app';
 import { LaptopChat, LaptopTurn } from '../services/LaptopChat';
@@ -88,6 +89,7 @@ struct LaptopIndex {
   @State maximized: boolean = false;
   @StorageProp('hopa.decorHidden') decorHidden: boolean = false;
   @StorageProp('hopa.laptop.focused') focused: boolean = true;
+  @StorageLink('hopa.laptop.cancel') @Watch('onCancelFlag') cancelFlag: string = '';
   @State currentTitle: string = 'HOPA';
   @State lastLatency: number = 0;
   @State lastTokens: number = 0;
@@ -229,6 +231,17 @@ struct LaptopIndex {
       this.error = 'The microphone is not available.';
     } else {
       this.error = '';
+    }
+  }
+
+  /** The notification's Stop button lands here through the ability. */
+  onCancelFlag(): void {
+    if (this.cancelFlag !== '1') {
+      return;
+    }
+    this.cancelFlag = '';
+    if (this.busy) {
+      this.chat.cancel();
     }
   }
 
@@ -680,11 +693,34 @@ struct LaptopIndex {
   }
 
   /** A system notification only when the window is not the one in front. */
-  private notifyAnswer(question: string): void {
+  private async notifyAnswer(question: string): Promise<void> {
     if (!this.notifyAnswers) {
       return;
     }
     try {
+      const agent: WantAgent = await wantAgent.getWantAgent({
+        wants: [
+          {
+            bundleName: 'com.hopa.agent',
+            abilityName: 'LaptopAbility'
+          }
+        ],
+        actionType: wantAgent.OperationType.START_ABILITY,
+        requestCode: 1,
+        wantAgentFlags: [wantAgent.WantAgentFlags.UPDATE_PRESENT_FLAG]
+      });
+      const stopAgent: WantAgent = await wantAgent.getWantAgent({
+        wants: [
+          {
+            bundleName: 'com.hopa.agent',
+            abilityName: 'LaptopAbility',
+            parameters: { 'hopa.cancel': '1' }
+          }
+        ],
+        actionType: wantAgent.OperationType.START_ABILITY,
+        requestCode: 2,
+        wantAgentFlags: [wantAgent.WantAgentFlags.UPDATE_PRESENT_FLAG]
+      });
       const request: notificationManager.NotificationRequest = {
         id: 1,
         content: {
@@ -693,7 +729,11 @@ struct LaptopIndex {
             title: 'HOPA has an answer',
             text: question
           }
-        }
+        },
+        wantAgent: agent,
+        actionButtons: [
+          { title: 'Stop', wantAgent: stopAgent }
+        ]
       };
       notificationManager.publish(request).catch(() => {});
     } catch (error) {
@@ -1515,6 +1555,10 @@ struct LaptopIndex {
   }
 
   private showSidebar(): boolean {
+    // Kid is a different shape of app: one thread, no history browser.
+    if (this.profileName === 'kid') {
+      return false;
+    }
     return this.winWidth >= 640;
   }
 
