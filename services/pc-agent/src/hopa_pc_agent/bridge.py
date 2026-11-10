@@ -171,7 +171,9 @@ if ($Mode -eq 'transcribe') {
 _speech_script: Path | None = None
 
 
-def _powershell(script: Path, args: list[str], timeout: float = 30.0) -> subprocess.CompletedProcess[str]:
+def _powershell(
+    script: Path, args: list[str], timeout: float = 30.0
+) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [
             "powershell.exe",

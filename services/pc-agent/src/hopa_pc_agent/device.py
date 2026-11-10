@@ -172,7 +172,12 @@ class Device:
             candidates.append(resolved)
         if ability:
             candidates.append(ability)
-        for name in ("EntryAbility", "MainAbility", f"{bundle}.EntryAbility", f"{bundle}.MainAbility"):
+        for name in (
+            "EntryAbility",
+            "MainAbility",
+            f"{bundle}.EntryAbility",
+            f"{bundle}.MainAbility",
+        ):
             if name not in candidates:
                 candidates.append(name)
         errors: list[str] = []
