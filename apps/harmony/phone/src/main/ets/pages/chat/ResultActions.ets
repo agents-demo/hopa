@@ -1,6 +1,8 @@
 /** Actions attached to the latest answer: copy, share, remember. */
 @Component
 export struct ResultActions {
+  @Prop showOpen: boolean = false;
+  onOpen: () => void = () => {};
   onCopy: () => void = () => {};
   onShare: () => void = () => {};
   onRemember: () => void = () => {};
@@ -20,6 +22,9 @@ export struct ResultActions {
 
   build() {
     Row({ space: 6 }) {
+      if (this.showOpen) {
+        this.Action('Open', this.onOpen)
+      }
       this.Action('Copy', this.onCopy)
       this.Action('Share', this.onShare)
       this.Action('Remember', this.onRemember)

@@ -20,7 +20,8 @@ const TITLES: Map<string, string> = new Map<string, string>([
   ['usage', 'Usage'],
   ['phone', 'Phone setup'],
   ['source', 'Source'],
-  ['mcpservers', 'MCP servers']
+  ['mcpservers', 'MCP servers'],
+  ['skills', 'Skills']
 ]);
 
 /** The header title for a page key. */

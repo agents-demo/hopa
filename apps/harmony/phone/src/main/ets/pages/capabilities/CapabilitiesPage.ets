@@ -139,6 +139,10 @@ export struct CapabilitiesPage {
           this.Tile('MCP servers', 'Phone and PC tools', 'mcpservers')
         }
         .width('100%')
+        Row({ space: 8 }) {
+          this.Tile('Skills', 'Triggers HOPA has learned', 'skills')
+        }
+        .width('100%')
       }
       .width('100%')
       .padding(20)

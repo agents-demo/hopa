@@ -237,6 +237,12 @@ export struct ChatPage {
     }
   }
 
+  /** First http(s) link in an answer, or ''. */
+  private firstUrl(text: string): string {
+    const match = text.match(/https?:\/\/[^\s)]+/);
+    return match === null ? '' : match[0];
+  }
+
   private isUser(item: ResourceStr): boolean {
     return ChatFormat.isUser(item);
   }
@@ -420,7 +426,13 @@ export struct ChatPage {
     this.sync();
 
     const beforeTitle: string = service.pageLinks.title();
+    const beforeUrl: string = service.pageLinks.url();
     const reply: string = await service.run(text);
+    const afterTitle: string = service.pageLinks.title();
+    const afterUrl: string = service.pageLinks.url();
+    this.diffText = afterUrl !== beforeUrl
+      ? `${beforeTitle.length > 0 ? beforeTitle : 'Page'} \u2192 ${afterTitle.length > 0 ? afterTitle : afterUrl}`
+      : '';
     const low: string = reply.toLowerCase();
     this.failed = low.includes("couldn't") || low.includes('failed') || low.includes('error');
     const steps: string[] = service.runtime.lastSteps();
@@ -945,6 +957,10 @@ export struct ChatPage {
                       }
                       if (index === this.lastAnswerIndex() && !this.busy) {
                         ResultActions({
+                          showOpen: this.firstUrl(this.textOf(item)).length > 0,
+                          onOpen: () => {
+                            AgentService.get().pageLinks.open(this.firstUrl(this.textOf(item)));
+                          },
                           onCopy: () => {
                             this.copy(this.textOf(item));
                           },

@@ -24,6 +24,7 @@ import { PowerHome } from './home/PowerHome';
 import { SocialHome } from './home/SocialHome';
 import { KidHome } from './home/KidHome';
 import { EasyHistory } from './home/EasyHistory';
+import { SkillsPage } from './skills/SkillsPage';
 
 /** Maps the active page key to one page; the shell owns navigation only. */
 @Component
@@ -78,6 +79,8 @@ export struct PageRouter {
       AboutPage()
     } else if (this.activePage === 'source') {
       SourcePage()
+    } else if (this.activePage === 'skills') {
+      SkillsPage()
     } else if (this.activePage === 'mcpservers') {
       McpServersPage()
     } else if (this.activePage === 'files') {
