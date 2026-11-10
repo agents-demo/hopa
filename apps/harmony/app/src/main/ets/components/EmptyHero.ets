@@ -18,6 +18,7 @@ export struct EmptyHero {
   @Prop markSize: number = 92;
   @Prop animate: boolean = true;
   @Prop interactive: boolean = true;
+  @Prop body: string = 'phone';
 
   build() {
     Column({ space: 12 }) {
@@ -25,7 +26,8 @@ export struct EmptyHero {
         state: 'idle',
         markSize: this.markSize,
         animate: this.animate,
-        interactive: this.interactive
+        interactive: this.interactive,
+        body: this.body
       })
       if (this.greeting.length > 0) {
         Text(this.greeting)

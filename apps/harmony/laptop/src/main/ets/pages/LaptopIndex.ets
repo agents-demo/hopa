@@ -493,7 +493,7 @@ struct LaptopIndex {
   @Builder
   Header() {
     Row({ space: 12 }) {
-      HopaMark({ state: 'idle', markSize: 26, interactive: false })
+      HopaMark({ state: 'idle', markSize: 26, interactive: false, body: 'laptop' })
       Column({ space: 1 }) {
         Text(this.remoteOpen ? this.remoteTitle : this.currentTitle)
           .fontSize(15)
@@ -756,7 +756,8 @@ struct LaptopIndex {
       bodySize: 16,
       markSize: this.heroMark(),
       animate: true,
-      interactive: true
+      interactive: true,
+      body: 'laptop'
     })
   }
 
@@ -778,7 +779,7 @@ struct LaptopIndex {
       .width('100%')
     } else {
       Row({ space: 12 }) {
-        HopaMark({ state: 'idle', markSize: 22, animate: false, interactive: false })
+        HopaMark({ state: 'idle', markSize: 22, animate: false, interactive: false, body: 'laptop' })
         Column({ space: 6 }) {
           if (turn.steps.length > 0) {
             StepChips({ steps: turn.steps, dense: true })
@@ -867,7 +868,7 @@ struct LaptopIndex {
     Column() {
       Column({ space: 10 }) {
         Row({ space: 8 }) {
-          HopaMark({ state: 'idle', markSize: 22, interactive: false })
+          HopaMark({ state: 'idle', markSize: 22, interactive: false, body: 'laptop' })
           Text('HOPA')
             .fontSize(14)
             .fontWeight(FontWeight.Bold)
@@ -1086,7 +1087,7 @@ struct LaptopIndex {
                   .width('100%')
                 } else {
                   Row({ space: 12 }) {
-                    HopaMark({ state: 'idle', markSize: 22, animate: false, interactive: false })
+                    HopaMark({ state: 'idle', markSize: 22, animate: false, interactive: false, body: 'laptop' })
                     Text(this.cleanRemote(turn.text))
                       .fontSize(13.5)
                       .lineHeight(22)
@@ -1124,7 +1125,7 @@ struct LaptopIndex {
             if (this.busy) {
               ListItem() {
                 Row({ space: 10 }) {
-                  HopaMark({ state: 'thinking', markSize: 18, interactive: false })
+                  HopaMark({ state: 'thinking', markSize: 18, interactive: false, body: 'laptop' })
                   Text('Thinking\u2026')
                     .fontSize(12)
                     .fontColor($r('app.color.text_hint'))

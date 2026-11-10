@@ -21,6 +21,8 @@ export struct HopaMark {
   @Prop animate: boolean = true;
   /** The header mark is a status light, not a button. */
   @Prop interactive: boolean = true;
+  /** 'phone' on the phone, 'laptop' on the 2in1: one character, two bodies. */
+  @Prop body: string = 'phone';
   @State pulse: boolean = false;
   @State blink: boolean = false;
   @State cheer: boolean = false;
@@ -140,7 +142,9 @@ export struct HopaMark {
 
   build() {
     Stack({ alignContent: Alignment.Center }) {
-      Image($r('app.media.hopa_body'))
+      Image(this.body === 'laptop'
+        ? $r('app.media.hopa_body_laptop')
+        : $r('app.media.hopa_body'))
         .width('100%')
         .height('100%')
         .objectFit(ImageFit.Contain)
