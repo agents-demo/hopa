@@ -13,6 +13,7 @@ import { RecapCard } from './RecapCard';
 import { ChatTyping } from './ChatTyping';
 import { MessageActions } from './MessageActions';
 import { ResultActions } from './ResultActions';
+import { StepChips } from '@hopa/app';
 import { HopaMark } from './HopaMark';
 import { Haptics } from '../../services/Haptics';
 import { VoiceController } from '../../services/VoiceController';
@@ -832,22 +833,7 @@ export struct ChatPage {
                     }
                     Column({ space: 4 }) {
                       if (this.showSteps && this.visibleSteps(this.stepsOf(item)).length > 0) {
-                        Flex({ wrap: FlexWrap.Wrap }) {
-                          ForEach(this.visibleSteps(this.stepsOf(item)), (step: string) => {
-                            Row({ space: 5 }) {
-                              Circle({ width: 4, height: 4 })
-                                .fill(this.stepColor(step))
-                              Text(step.substring(2))
-                                .fontSize(11)
-                                .fontColor($r('app.color.text_secondary'))
-                            }
-                            .padding({ left: 8, right: 9, top: 3, bottom: 3 })
-                            .backgroundColor($r('app.color.surface_alt'))
-                            .borderRadius(9)
-                            .margin({ right: 6, bottom: 4 })
-                          }, (step: string, i: number) => `${i}-${step}`)
-                        }
-                        .width('100%')
+                        StepChips({ steps: this.visibleSteps(this.stepsOf(item)) })
                       }
                       if (this.listItems(this.textOf(item)).length > 0) {
                         Column({ space: 8 }) {

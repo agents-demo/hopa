@@ -1,7 +1,7 @@
 import { common } from '@kit.AbilityKit';
 import { window } from '@kit.ArkUI';
 import { pasteboard } from '@kit.BasicServicesKit';
-import { HopaMark, EmptyHero, ResultActions, KeyStore, SettingsStore, StoredSettings } from '@hopa/app';
+import { HopaMark, EmptyHero, ResultActions, StepChips, KeyStore, SettingsStore, StoredSettings } from '@hopa/app';
 import { LaptopChat, LaptopTurn } from '../services/LaptopChat';
 import { LaptopAgent } from '../services/LaptopAgent';
 
@@ -743,6 +743,9 @@ struct LaptopIndex {
       Row({ space: 12 }) {
         HopaMark({ state: 'idle', markSize: 22, animate: false, interactive: false })
         Column({ space: 6 }) {
+          if (turn.steps.length > 0) {
+            StepChips({ steps: turn.steps, dense: true })
+          }
           Text(turn.text)
             .fontSize(13.5)
             .lineHeight(22)

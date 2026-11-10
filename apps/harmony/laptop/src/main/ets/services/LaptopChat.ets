@@ -3,6 +3,7 @@ import { AgentRuntime } from '@hopa/app';
 export class LaptopTurn {
   role: string = 'user';
   text: string = '';
+  steps: string[] = [];
 }
 
 /**
@@ -71,6 +72,7 @@ export class LaptopChat {
       const reply = new LaptopTurn();
       reply.role = 'assistant';
       reply.text = replyText;
+      reply.steps = this.runtime.lastSteps().slice();
       this.turns.push(reply);
     } catch (error) {
       this.error = `${(error as Error).message}`;
