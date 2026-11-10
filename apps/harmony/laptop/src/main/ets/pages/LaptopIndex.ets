@@ -1092,7 +1092,7 @@ struct LaptopIndex {
             })
           }, (session: LaptopSession) => session.id + session.title)
 
-          if (this.remoteSessions.length > 0) {
+          if (this.linkConfigured || this.remoteSessions.length > 0) {
             Text(`FROM YOUR PHONE \u00b7 ${this.remoteSessions.length}`)
               .fontSize(9)
               .fontWeight(FontWeight.Bold)
@@ -1100,6 +1100,17 @@ struct LaptopIndex {
               .letterSpacing(0.7)
               .width('100%')
               .padding({ left: 4, top: 16 })
+
+            if (this.remoteSessions.length === 0) {
+              // An empty list has to say why: a rejected key looks the same as
+              // a phone that never pushed.
+              Text(this.linkStatus.length > 0 ? this.linkStatus : 'Nothing yet. The phone pushes when its conversations change.')
+                .fontSize(10.5)
+                .lineHeight(15)
+                .fontColor($r('app.color.text_hint'))
+                .width('100%')
+                .padding({ left: 8, right: 8, top: 4, bottom: 6 })
+            }
 
             ForEach(this.remoteSessions.slice(0, 20), (session: RemoteSession) => {
               Row({ space: 6 }) {

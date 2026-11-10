@@ -111,13 +111,21 @@ bridge.
 ### The pair survives a restart
 
 The bridge keeps `~/.hopa/bridge-<port>.json` (mode 0600) with the access
-token, the refresh token, its issue time and the read-only sessions key. On
+token, the refresh token, its issue time, the read-only sessions key and the
+last conversation snapshot. On
 startup it adopts that pair only when it is still inside the TTL and was
 issued for the same base token; otherwise the file is replaced and clients
 pair again. This is why `Ctrl+C` on the PC no longer looks like a lost phone.
 
+Keeping the snapshot matters for the other shell: without it a restart leaves
+the laptop's "From your phone" list empty until the phone happens to change a
+conversation. The phone also pushes once at boot now.
+
 Override the path with `--state <file>`, or disable it with `--no-state` so
 every restart requires a fresh pair. A port of `0` (tests) never writes state.
+`--sessions-key <value>` pins the read-only key; the dev script uses
+`hopareadonly-8766` / `hopareadonly-8767` so both shells can be configured by
+copy-paste without a leading dash (which `aa start --ps` eats).
 
 ## Security
 

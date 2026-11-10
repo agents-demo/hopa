@@ -199,6 +199,14 @@ export class AgentService {
   private relayTimer: number = -1;
 
   /** A quiet 2.5 s debounce: one snapshot per burst of messages. */
+  /** Push now: a restarted bridge has an empty snapshot until this lands. */
+  pushSessionsNow(): void {
+    if (!this.bridge.isConfigured()) {
+      return;
+    }
+    this.scheduleSessionRelay();
+  }
+
   scheduleSessionRelay(): void {
     if (!this.bridge.isConfigured()) {
       return;

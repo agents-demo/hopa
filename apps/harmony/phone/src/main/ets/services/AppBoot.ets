@@ -54,6 +54,9 @@ export class AppBoot {
           // setup wizard issues a paired session.
           service.configureBridge(stored.bridgeUrl, stored.bridgeToken);
         }
+        // A bridge that restarted has no snapshot; push one now instead of
+        // waiting for the next conversation change.
+        service.pushSessionsNow();
       }
     } catch (error) {
       // First run or an unreadable store: keep the defaults.

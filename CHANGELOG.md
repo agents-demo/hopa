@@ -18,6 +18,10 @@ All notable changes are recorded here. Versions follow `docs/versioning.md`.
 - The laptop approval card shows the last frame the bridge captured, labelled
   **WHAT HOPA SAW**, so the consent is given against evidence rather than a
   description.
+- The bridge also persists the conversation snapshot, and the phone pushes it
+  once at boot, so a restarted bridge no longer leaves the laptop's "From your
+  phone" list empty. When the list is empty the laptop now says why (key
+  rejected, or nothing pushed yet) instead of showing nothing.
 - The bridge persists its token pair and read-only sessions key in
   `~/.hopa/bridge-<port>.json`, so a restart inside the TTL no longer forces a
   re-pair (`--state`, `--no-state`). `tools\scripts\bridges.ps1` starts,

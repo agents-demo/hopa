@@ -407,6 +407,7 @@ class _Handler(BaseHTTPRequestHandler):
                 raise BridgeError("sessions snapshot is too large")
             self.bridge.sessions = sessions
             self.bridge.sessions_updated = int(time.time())
+            self.bridge._save_state()
             print(f"sessions: {len(sessions)}", file=sys.stderr, flush=True)
             return {"ok": True, "count": len(sessions)}
         if self.path == "/observe":
@@ -534,6 +535,9 @@ class BridgeServer:
             "refresh": self.refresh_token,
             "issued_at": time.time() - (time.monotonic() - self.token_issued_at),
             "sessions_key": self.sessions_key,
+            # The snapshot lives here too: a restart must not blank the laptop.
+            "sessions": self.sessions,
+            "sessions_updated": self.sessions_updated,
         }
 
     def _save_state(self) -> None:
@@ -582,6 +586,13 @@ class BridgeServer:
             key = str(data.get("sessions_key", ""))
             if key:
                 self.sessions_key = key
+        sessions = data.get("sessions")
+        if isinstance(sessions, list):
+            self.sessions = sessions
+            try:
+                self.sessions_updated = int(data.get("sessions_updated", 0))
+            except (TypeError, ValueError):
+                self.sessions_updated = 0
         self.restored = True
 
     def token_live(self) -> bool:
