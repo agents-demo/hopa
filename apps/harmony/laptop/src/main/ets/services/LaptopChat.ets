@@ -1,5 +1,5 @@
-import { ModelMessage, ModelRequest, ModelResponse } from '@hopa/core';
-import { OpenAiCompatibleClient } from '@hopa/capability-llm';
+import { ModelClient, ModelMessage, ModelRequest, ModelResponse } from '@hopa/core';
+import { ModelFactory } from '@hopa/app';
 
 export class LaptopTurn {
   role: string = 'user';
@@ -23,11 +23,13 @@ export class LaptopChat {
   totalTokens: number = 0;
   lastQuestion: string = '';
 
+  private provider: string = 'deepseek';
   private endpoint: string = '';
   private model: string = '';
   private key: string = '';
 
-  configure(endpoint: string, model: string, key: string): void {
+  configure(provider: string, endpoint: string, model: string, key: string): void {
+    this.provider = provider.length > 0 ? provider : 'deepseek';
     this.endpoint = endpoint;
     this.model = model;
     this.key = key;
@@ -54,7 +56,8 @@ export class LaptopChat {
       if (!this.isReady()) {
         throw new Error('no model key yet');
       }
-      const client = new OpenAiCompatibleClient(this.endpoint, this.key, this.model);
+      const client: ModelClient = ModelFactory.create(
+        this.provider, this.endpoint, this.key, this.model);
       const request = new ModelRequest();
       request.model = this.model;
       request.temperature = 0.4;

@@ -8,3 +8,5 @@ export { ConversationService } from './src/main/ets/services/ConversationService
 export { MemoryStore, MemoryItem } from './src/main/ets/services/MemoryStore';
 export { SkillStore } from './src/main/ets/services/SkillStore';
 export { RunArchive } from './src/main/ets/services/RunArchive';
+export { ModelFactory } from './src/main/ets/services/ModelFactory';
+export { LoggingModelClient } from './src/main/ets/services/LoggingModelClient';

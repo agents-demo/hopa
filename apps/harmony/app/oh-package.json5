@@ -6,7 +6,8 @@
   "author": "The HOPA Authors",
   "license": "Apache-2.0",
   "dependencies": {
-    "@hopa/core": "file:../core"
+    "@hopa/core": "file:../core",
+    "@hopa/capability-llm": "file:../capabilities/llm"
   },
   "devDependencies": {
     "@ohos/hypium": "1.0.28"

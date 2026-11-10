@@ -24,6 +24,7 @@ struct LaptopIndex {
   @State error: string = '';
   @State keyPresent: boolean = false;
   @State modelName: string = 'deepseek-v4-flash';
+  @State provider: string = 'deepseek';
   @State endpoint: string = 'https://api.deepseek.com/v1';
   @State settingsOpen: boolean = false;
   @State keyDraft: string = '';
@@ -107,9 +108,10 @@ struct LaptopIndex {
     LaptopFirstRun.ensure(context).then((stored: StoredSettings) => {
       this.endpoint = stored.endpoint;
       this.modelName = stored.model;
+      this.provider = stored.provider;
       KeyStore.load(LAPTOP_KEY_ALIAS).then((key: string) => {
         this.keyPresent = key.length > 0;
-        this.chat.configure(this.endpoint, this.modelName, key);
+        this.chat.configure(this.provider, this.endpoint, this.modelName, key);
         this.applyInjected().then(() => {
           this.runDeferredAsk();
         });
@@ -313,7 +315,7 @@ struct LaptopIndex {
       const key: string = await KeyStore.load(LAPTOP_KEY_ALIAS);
       this.keyPresent = key.length > 0;
       this.saved = this.keyPresent ? 'Key saved.' : 'Key store unavailable.';
-      this.chat.configure(this.endpoint, this.modelName, key);
+      this.chat.configure(this.provider, this.endpoint, this.modelName, key);
     }
   }
 
@@ -388,14 +390,15 @@ struct LaptopIndex {
       this.keyDraft = '';
       const key: string = await KeyStore.load(LAPTOP_KEY_ALIAS);
       this.keyPresent = key.length > 0;
-      this.chat.configure(stored.endpoint, stored.model, key);
+      this.chat.configure(stored.provider, stored.endpoint, stored.model, key);
     } else {
       this.saved = 'Saved.';
       const key: string = await KeyStore.load(LAPTOP_KEY_ALIAS);
-      this.chat.configure(stored.endpoint, stored.model, key);
+      this.chat.configure(stored.provider, stored.endpoint, stored.model, key);
     }
     this.modelName = stored.model;
     this.endpoint = stored.endpoint;
+    this.provider = stored.provider;
   }
 
   @Builder
