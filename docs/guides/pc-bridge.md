@@ -86,6 +86,15 @@ Tokens stay per device, so the phone's token cannot act on the laptop. The pool
 forwards the request untouched; authentication, rate limits and the device lock
 all stay in the device server that owns them.
 
+**Sessions travel both ways, read-only.** Each shell pushes its own snapshot
+when it changes (`POST /sessions` with its role and its own token). To read the
+other side, a shell sends `X-Hopa-Read: phone` or `X-Hopa-Read: 2in1` on
+`GET /sessions`; the pool accepts any live credential it knows, so the phone
+never needs the laptop's secret. The laptop shows one merged, newest-first list
+with a small body mark for origin; the phone shows a “From your laptop” group
+inside Chats that opens a read-only thread. Nothing writes across, and there is
+no merge: the other copy stays owned by the machine it lives on.
+
 `hdc` allows only one device to own a given *device-side* port, so the two
 shells cannot both listen on 8766 locally. Current mapping:
 

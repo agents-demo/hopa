@@ -63,12 +63,14 @@ def pool():
         server.stop()
 
 
-def call(pool, path, *, role="", token="phone-token", method="POST", payload=None):
+def call(pool, path, *, role="", token="phone-token", method="POST", payload=None, read=""):
     url = f"http://127.0.0.1:{pool.port}{path}"
     body = None if payload is None else json.dumps(payload).encode("utf-8")
     headers = {"Authorization": f"Bearer {token}"}
     if role:
         headers["X-Hopa-Role"] = role
+    if read:
+        headers["X-Hopa-Read"] = read
     if body is not None:
         headers["Content-Type"] = "application/json"
     request = urllib.request.Request(url, data=body, headers=headers, method=method)
@@ -103,6 +105,22 @@ def test_sessions_goes_to_the_phone(pool):
     status, body = call(server, "/sessions", token="phone-token", method="GET")
     assert status == 200
     assert body["sessions"] == []
+
+
+def test_cross_read_uses_the_callers_own_credential(pool):
+    server, _ = pool
+    # The phone (phone token) asks for the laptop's snapshot.
+    status, body = call(server, "/sessions", role="phone", token="phone-token", method="GET",
+                        payload=None, read="2in1")
+    assert status == 200
+    assert body["sessions"] == []
+
+
+def test_cross_read_without_a_valid_credential_is_rejected(pool):
+    server, _ = pool
+    with pytest.raises(urllib.error.HTTPError) as error:
+        call(server, "/sessions", role="phone", token="nope", method="GET", read="2in1")
+    assert error.value.code == 401
 
 
 def test_no_role_is_ambiguous_with_two_devices(pool):

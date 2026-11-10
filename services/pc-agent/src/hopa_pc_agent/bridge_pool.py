@@ -25,6 +25,7 @@ devices listen on the same local port, so the phone uses 8768 and the laptop
 
 from __future__ import annotations
 
+import hmac
 import http.client
 import json
 import threading
@@ -122,6 +123,19 @@ class BridgePool:
             return next(iter(self.nodes.values())), path
         return None, "say which device: X-Hopa-Role, or /d/<serial>/..."
 
+    def authorized_any(self, presented: str) -> bool:
+        """True when one of the devices accepts this token.
+
+        Used for cross-reads: the phone may read the laptop's snapshot with the
+        phone's own credential, never the laptop's token.
+        """
+        for node in self.nodes.values():
+            if hmac.compare_digest(presented, node.sessions_key):
+                return True
+            if hmac.compare_digest(presented, node.token) and node.token_live():
+                return True
+        return False
+
     def start(self) -> None:
         self.thread = threading.Thread(target=self.httpd.serve_forever, daemon=True)
         self.thread.start()
@@ -189,7 +203,26 @@ class _PoolHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
+    def _cross_sessions(self, read_role: str) -> None:
+        node, target = self.pool.resolve("/sessions", read_role)
+        if node is None:
+            self._send(400, {"error": target})
+            return
+        header = self.headers.get("Authorization", "")
+        presented = header[len("Bearer "):] if header.startswith("Bearer ") else ""
+        if not self.pool.authorized_any(presented):
+            self._send(401, {"error": "unauthorized"})
+            return
+        self._send(200, {
+            "sessions": node.sessions,
+            "updated": node.sessions_updated,
+        })
+
     def do_GET(self) -> None:  # noqa: N802
+        read_role = self.headers.get("X-Hopa-Read", "").strip()
+        if read_role and self.path == "/sessions":
+            self._cross_sessions(read_role)
+            return
         if self.path == "/health":
             self._send(200, {
                 "ok": True,

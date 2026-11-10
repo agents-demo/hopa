@@ -134,6 +134,15 @@ export class BridgeClient {
     return this.baseUrl.length > 0 && this.token.length > 0;
   }
 
+  /** Where this client points, and the token it is currently using. */
+  endpoint(): string {
+    return this.baseUrl;
+  }
+
+  authToken(): string {
+    return this.token;
+  }
+
   lastPageText(): string {
     return this.lastText;
   }

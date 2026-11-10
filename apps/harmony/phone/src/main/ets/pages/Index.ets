@@ -4,6 +4,7 @@ import { AgentService } from '../services/AgentService';
 import { AppBoot } from '../services/AppBoot';
 import { ApprovalContent, ApprovalContentBuilder } from '../services/ApprovalContent';
 import { ChatsSheet } from '../navigation/ChatsSheet';
+import { LaptopLink, LaptopSessionView } from '../services/LaptopLink';
 import { pageTitle } from '../navigation/PageTitles';
 import { TabIcon } from '../navigation/TabIcon';
 import { ApprovalSheet } from './chat/ApprovalSheet';
@@ -29,6 +30,8 @@ struct Index {
   @State keyboardVisible: boolean = false;
   @State chatsOpen: boolean = false;
   @State chatSessions: ChatSession[] = [];
+  @State laptopRemote: LaptopSessionView[] = [];
+  private laptopLink: LaptopLink = new LaptopLink();
   @State chatTitle: string = '';
   @State approvalOpen: boolean = false;
   @State approvalTitle: string = '';
@@ -225,6 +228,12 @@ struct Index {
   private openChats(): void {
     this.refreshChats();
     this.chatsOpen = true;
+    // The laptop's threads are read over the same bridge, so ask on open.
+    this.laptopLink.fetch().then(() => {
+      this.laptopRemote = this.laptopLink.sessions.slice();
+    }).catch(() => {
+      this.laptopRemote = [];
+    });
   }
 
   private go(key: string): void {
@@ -564,6 +573,7 @@ struct Index {
     ChatsSheet({
       sessions: this.chatSessions,
       currentId: AgentService.get().conversations.currentId(),
+      laptopSessions: this.laptopRemote,
       onNewChat: () => { AgentService.get().conversations.newChat(); this.refreshChats(); this.go('chat'); },
       onSelect: (id: string) => { AgentService.get().conversations.select(id); this.refreshChats(); this.go('chat'); },
       onDelete: (id: string) => { AgentService.get().conversations.delete(id); this.refreshChats(); },

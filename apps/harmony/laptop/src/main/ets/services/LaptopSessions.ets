@@ -21,6 +21,29 @@ interface StoredState {
   sessions: StoredSession[];
 }
 
+/** The wire shape the bridge and the other shell understand. */
+export class SessionWireTurn {
+  role: string = '';
+  text: string = '';
+}
+
+export class SessionWire {
+  id: string = '';
+  title: string = '';
+  updated: number = 0;
+  turns: SessionWireTurn[] = [];
+}
+
+/** One row in the sidebar: a laptop session or a read-only phone one. */
+export class LaptopListRow {
+  id: string = '';
+  title: string = '';
+  updated: number = 0;
+  /** 'here' on this laptop, 'phone' for the read-only copy. */
+  origin: string = 'here';
+  remoteIndex: number = -1;
+}
+
 export class LaptopSession {
   id: string = '';
   title: string = '';
@@ -42,6 +65,28 @@ export class LaptopSessions {
 
   list: LaptopSession[] = [];
   currentId: string = '';
+
+  /** The same shape the phone and the bridge already speak. */
+  snapshot(): SessionWire[] {
+    const out: SessionWire[] = [];
+    for (const session of this.list) {
+      if (session.turns.length === 0) {
+        continue;
+      }
+      const wire = new SessionWire();
+      wire.id = session.id;
+      wire.title = session.title;
+      wire.updated = session.updated;
+      for (const turn of session.turns) {
+        const item = new SessionWireTurn();
+        item.role = turn.role;
+        item.text = turn.text;
+        wire.turns.push(item);
+      }
+      out.push(wire);
+    }
+    return out;
+  }
 
   static async load(context: Context): Promise<LaptopSessions> {
     const store = new LaptopSessions();

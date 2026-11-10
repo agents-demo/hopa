@@ -5,7 +5,7 @@ import { HopaMark, EmptyHero, ResultActions, StepChips, ChatFormat, KeyStore, Se
 import { LaptopChat, LaptopTurn } from '../services/LaptopChat';
 import { LaptopAgent, demoApproval } from '../services/LaptopAgent';
 
-import { LaptopSessions, LaptopSession } from '../services/LaptopSessions';
+import { LaptopListRow, LaptopSessions, LaptopSession } from '../services/LaptopSessions';
 import { LaptopPhoneLink, RemoteSession, RemoteTurn } from '../services/LaptopPhoneLink';
 import { ChatRail } from '../components/ChatRail';
 import { CommandPalette } from '../components/CommandPalette';
@@ -36,6 +36,7 @@ struct LaptopIndex {
   @State paletteOpen: boolean = false;
   @State lastQuestion: string = '';
   @State sessions: LaptopSession[] = [];
+  @State rows: LaptopListRow[] = [];
   @State remoteSessions: RemoteSession[] = [];
   @State remoteOpen: boolean = false;
   @State remoteId: string = '';
@@ -202,6 +203,15 @@ struct LaptopIndex {
     return shown;
   }
 
+  /** The laptop's own conversations, for the phone to read back. */
+  private async pushOwnSessions(): Promise<void> {
+    if (!this.agent.isBridgeConfigured()) {
+      return;
+    }
+    const payload: string = JSON.stringify({ sessions: this.store.snapshot() });
+    await this.agent.bridge.pushSessions(payload);
+  }
+
   aboutToDisappear(): void {
     if (this.phoneTimer >= 0) {
       clearInterval(this.phoneTimer);
@@ -216,9 +226,38 @@ struct LaptopIndex {
     }
   }
 
+  /** One list, newest first; the mark on the row says where it started. */
+  private rebuildRows(): void {
+    const rows: LaptopListRow[] = [];
+    for (const session of this.sessions) {
+      if (session.turns.length === 0) {
+        continue;
+      }
+      const row = new LaptopListRow();
+      row.id = session.id;
+      row.title = session.title;
+      row.updated = session.updated;
+      row.origin = 'here';
+      rows.push(row);
+    }
+    for (let index = 0; index < this.remoteSessions.length; index++) {
+      const remote: RemoteSession = this.remoteSessions[index];
+      const row = new LaptopListRow();
+      row.id = remote.id;
+      row.title = remote.title;
+      row.updated = remote.updated;
+      row.origin = 'phone';
+      row.remoteIndex = index;
+      rows.push(row);
+    }
+    rows.sort((a: LaptopListRow, b: LaptopListRow) => b.updated - a.updated);
+    this.rows = rows;
+  }
+
   private refreshSessions(): void {
     this.sessions = this.store.list.slice();
     this.currentId = this.store.currentId;
+    this.rebuildRows();
     for (const session of this.sessions) {
       if (session.id === this.currentId) {
         this.currentTitle = session.turns.length > 0 ? session.title : 'HOPA';
@@ -266,6 +305,7 @@ struct LaptopIndex {
       }
       withTurns.sort((a: RemoteSession, b: RemoteSession) => b.updated - a.updated);
       this.remoteSessions = withTurns;
+      this.rebuildRows();
       this.linkStatus = 'Connected';
     } else {
       this.remoteSessions = [];
@@ -472,8 +512,9 @@ struct LaptopIndex {
     this.scrollToEnd();
     const context = getContext(this) as common.UIAbilityContext;
     this.store.commit(this.chat.turns, this.chat.lastLatencyMs, this.chat.lastTokens);
-    this.store.save(context);
+    await this.store.save(context);
     this.refreshSessions();
+    this.pushOwnSessions();
   }
 
   /** Ctrl+K opens the palette; Esc closes it. Phone shells never see these. */
@@ -551,6 +592,10 @@ struct LaptopIndex {
     const ok: boolean = await this.agent.testBridge();
     this.bridgeLive = ok;
     this.bridgeStatus = ok ? 'Connected.' : `No answer from the bridge. ${this.agent.bridgeFailure()}`;
+    if (ok) {
+      // The phone should see this laptop's threads from the first second.
+      this.pushOwnSessions();
+    }
   }
 
   private async saveSettings(): Promise<void> {
@@ -1077,96 +1122,61 @@ struct LaptopIndex {
             .width('100%')
             .padding({ left: 4, top: 2 })
 
-          if (this.listedSessions().length === 0) {
-            Text('No saved conversations yet.')
+          if (this.rows.length === 0) {
+            Text(this.linkConfigured && this.linkStatus.length > 0
+              ? this.linkStatus
+              : 'No saved conversations yet.')
               .fontSize(11)
+              .lineHeight(16)
               .fontColor($r('app.color.text_hint'))
               .width('100%')
               .padding({ left: 8, top: 4, bottom: 4 })
           }
 
-          ForEach(this.listedSessions(), (session: LaptopSession) => {
-            Row({ space: 6 }) {
-              Text(session.title)
+          ForEach(this.rows, (row: LaptopListRow) => {
+            Row({ space: 8 }) {
+              // Where it started: the same body the shell uses everywhere.
+              Image(row.origin === 'phone'
+                ? $r('app.media.hopa_body')
+                : $r('app.media.hopa_body_laptop'))
+                .width(13)
+                .height(13)
+                .objectFit(ImageFit.Contain)
+                .opacity(0.55)
+              Text(row.title)
                 .fontSize(12)
-                .fontColor(session.id === this.currentId && !this.remoteOpen
+                .fontColor((row.origin === 'here' && row.id === this.currentId && !this.remoteOpen)
                   ? $r('app.color.text_primary')
                   : $r('app.color.text_secondary'))
                 .maxLines(1)
                 .textOverflow({ overflow: TextOverflow.Ellipsis })
                 .layoutWeight(1)
-              if (session.id === this.currentId) {
+              if (row.origin === 'here' && row.id === this.currentId) {
                 Text('\u00d7')
                   .fontSize(12)
                   .fontColor($r('app.color.text_hint'))
                   .padding({ left: 4, right: 2 })
                   .onClick(() => {
-                    this.deleteSession(session.id);
+                    this.deleteSession(row.id);
                   })
               }
             }
             .width('100%')
             .padding({ left: 8, right: 8, top: 7, bottom: 7 })
-            .backgroundColor(session.id === this.currentId && !this.remoteOpen
+            .backgroundColor(((row.origin === 'here' && row.id === this.currentId && !this.remoteOpen) ||
+              (row.origin === 'phone' && this.remoteOpen && this.remoteId === row.id))
               ? $r('app.color.surface')
               : Color.Transparent)
             .borderRadius(9)
             .onClick(() => {
-              this.openSession(session.id);
-            })
-          }, (session: LaptopSession) => session.id + session.title)
-
-          if (this.linkConfigured || this.remoteSessions.length > 0) {
-            Text(`FROM YOUR PHONE \u00b7 ${this.remoteSessions.length}`)
-              .fontSize(9)
-              .fontWeight(FontWeight.Bold)
-              .fontColor($r('app.color.text_hint'))
-              .letterSpacing(0.7)
-              .width('100%')
-              .padding({ left: 4, top: 16 })
-
-            if (this.remoteSessions.length === 0) {
-              // An empty list has to say why: a rejected key looks the same as
-              // a phone that never pushed.
-              Text(this.linkStatus.length > 0 ? this.linkStatus : 'Nothing yet. The phone pushes when its conversations change.')
-                .fontSize(10.5)
-                .lineHeight(15)
-                .fontColor($r('app.color.text_hint'))
-                .width('100%')
-                .padding({ left: 8, right: 8, top: 4, bottom: 6 })
-            }
-
-            ForEach(this.remoteSessions.slice(0, 20), (session: RemoteSession) => {
-              Row({ space: 6 }) {
-                Text(session.title)
-                  .fontSize(12)
-                  .fontColor($r('app.color.text_secondary'))
-                  .maxLines(1)
-                  .textOverflow({ overflow: TextOverflow.Ellipsis })
-                  .layoutWeight(1)
-                Text('\u2192')
-                  .fontSize(10)
-                  .fontColor($r('app.color.text_hint'))
+              if (row.origin === 'phone' && row.remoteIndex >= 0) {
+                this.openRemote(this.remoteSessions[row.remoteIndex]);
+              } else {
+                this.openSession(row.id);
               }
-              .width('100%')
-              .padding({ left: 8, right: 8, top: 6, bottom: 6 })
-              .backgroundColor(this.remoteOpen && this.remoteId === session.id
-                ? $r('app.color.surface')
-                : Color.Transparent)
-              .borderRadius(8)
-              .onClick(() => {
-                this.openRemote(session);
-              })
-            }, (session: RemoteSession) => 'phone-' + session.id + session.title)
+            })
+          }, (row: LaptopListRow) => row.origin + row.id + row.title)
 
-            if (this.remoteSessions.length > 20) {
-              Text('+' + (this.remoteSessions.length - 20) + ' more on the phone')
-                .fontSize(10)
-                .fontColor($r('app.color.text_hint'))
-                .width('100%')
-                .padding({ left: 8, top: 4 })
-            }
-          }
         }
         .width('100%')
         .padding({ left: 12, right: 12, bottom: 8 })

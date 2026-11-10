@@ -20,8 +20,13 @@ All notable changes are recorded here. Versions follow `docs/versioning.md`.
   description.
 - One bridge process now serves every device (`--devices`), with the caller
   naming its device through `X-Hopa-Role` or `/d/<serial>/...`; tokens stay per
-  device, and `/sessions` always resolves to the phone. hdc only allows one
-  device per device-side port, so the phone tunnels 8768 and the 2in1 8766.
+  device, and `/sessions` resolves to the phone unless `X-Hopa-Read` asks for
+  the other side. hdc only allows one device per device-side port, so the phone
+  tunnels 8768 and the 2in1 8766.
+- Sessions are visible both ways, read-only: the laptop pushes its own threads
+  and shows one merged, newest-first list with a body mark for origin; the phone
+  shows a “From your laptop” group in Chats with a read-only thread view. No
+  merge, and the other copy stays owned by its machine.
 - The phone's conversation store notifies its listeners once it has loaded, so
   the session relay no longer pushes an empty snapshot at boot; the laptop also
   refreshes the phone list on focus and on a slow timer.
