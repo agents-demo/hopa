@@ -1,7 +1,5 @@
 import {
-  Action,
   ActionExecutor,
-  ApprovalGateway,
   ApprovalPolicy,
   RunStore,
   Screen,
@@ -17,6 +15,7 @@ import {
   RuntimePageLinks,
   SkillStore
 } from '@hopa/app';
+import { LaptopApprovals } from './LaptopApprovals';
 
 /**
  * The laptop's binding of the shared runtime.
@@ -26,12 +25,6 @@ import {
  * The runtime therefore answers questions and refuses actions, instead of
  * pretending it can drive another window.
  */
-
-class DenyAllGateway implements ApprovalGateway {
-  async requestApproval(action: Action, screen?: Screen): Promise<boolean> {
-    return false;
-  }
-}
 
 class NoBrowser implements RuntimeBrowser {
   isReady(): boolean {
@@ -83,11 +76,12 @@ export class LaptopAgent {
   readonly runtime: AgentRuntime;
   readonly memory: MemoryStore = new MemoryStore();
   readonly skills: SkillStore = new SkillStore();
+  readonly approvals: LaptopApprovals = new LaptopApprovals();
 
   constructor() {
     const executor = new ActionExecutor(
       new ApprovalPolicy(),
-      new DenyAllGateway(),
+      this.approvals,
       new RunStore()
     );
     this.runtime = new AgentRuntime(

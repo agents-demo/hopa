@@ -45,6 +45,9 @@ struct LaptopIndex {
   @State linkKey: string = '';
   @State linkStatus: string = '';
   @State linkConfigured: boolean = false;
+  @State approvalOpen: boolean = false;
+  @State approvalDetail: string = '';
+  @State approvalKind: string = '';
   private link: LaptopPhoneLink = new LaptopPhoneLink();
   @State currentId: string = '';
   private store: LaptopSessions = new LaptopSessions();
@@ -64,6 +67,11 @@ struct LaptopIndex {
   aboutToAppear(): void {
     const context = getContext(this) as common.UIAbilityContext;
     this.chat.useRuntime(this.agent.runtime);
+    this.agent.approvals.onAsk = (kind: string, detail: string) => {
+      this.approvalKind = kind;
+      this.approvalDetail = detail;
+      this.approvalOpen = true;
+    };
     LaptopPhoneLink.load(context).then((link: LaptopPhoneLink) => {
       this.link = link;
       const injectedUrl: string = AppStorage.get<string>('hopa.laptop.linkUrl') ?? '';
@@ -1102,6 +1110,48 @@ struct LaptopIndex {
             .fontColor($r('app.color.danger'))
             .width('100%')
             .padding({ left: 22, right: 22, bottom: 4 })
+        }
+        if (this.approvalOpen) {
+          Column({ space: 10 }) {
+            Text('HOPA asks first')
+              .fontSize(10)
+              .fontWeight(FontWeight.Bold)
+              .fontColor($r('app.color.text_hint'))
+              .letterSpacing(0.7)
+              .width('100%')
+            Text(this.approvalDetail)
+              .fontSize(13.5)
+              .lineHeight(20)
+              .fontColor($r('app.color.text_primary'))
+              .width('100%')
+            Row({ space: 10 }) {
+              Text('Not now')
+                .fontSize(12.5)
+                .fontColor($r('app.color.text_primary'))
+                .padding({ left: 16, right: 16, top: 9, bottom: 9 })
+                .backgroundColor($r('app.color.surface_muted'))
+                .borderRadius(18)
+                .onClick(() => {
+                  this.approvalOpen = false;
+                  this.agent.approvals.answer(false);
+                })
+              Text('Allow')
+                .fontSize(12.5)
+                .fontWeight(FontWeight.Medium)
+                .fontColor($r('app.color.on_primary'))
+                .padding({ left: 18, right: 18, top: 9, bottom: 9 })
+                .backgroundColor($r('app.color.primary'))
+                .borderRadius(18)
+                .onClick(() => {
+                  this.approvalOpen = false;
+                  this.agent.approvals.answer(true);
+                })
+            }
+            .width('100%')
+          }
+          .width('100%')
+          .padding({ left: 22, right: 22, top: 12, bottom: 6 })
+          .alignItems(HorizontalAlign.Start)
         }
         if (this.settingsOpen) {
           Row()

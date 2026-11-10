@@ -31,7 +31,15 @@ export struct StepChips {
             .fill(this.tint(step))
           Text(this.label(step))
             .fontSize(this.dense ? 10.5 : 11)
-            .fontColor($r('app.color.text_secondary'))
+            .fontColor(step.startsWith('\u2715')
+              ? $r('app.color.text_hint')
+              : $r('app.color.text_secondary'))
+            .decoration({
+              type: step.startsWith('\u2715')
+                ? TextDecorationType.LineThrough
+                : TextDecorationType.None,
+              color: $r('app.color.text_hint')
+            })
         }
         .padding({ left: 8, right: 9, top: 3, bottom: 3 })
         .backgroundColor($r('app.color.surface_alt'))
