@@ -150,6 +150,17 @@ def test_sessions_round_trip(bridge) -> None:
     assert pulled["updated"] > 0
 
 
+def test_sessions_key_is_read_only(bridge) -> None:
+    server, _ = bridge
+    key = server.sessions_key
+    _call(server, "/sessions", {"sessions": []})  # control token writes
+    pulled = _call(server, "/sessions", None, token=key)
+    assert pulled["sessions"] == []
+    with pytest.raises(urllib.error.HTTPError) as error:
+        _call(server, "/tap", {"x": 1, "y": 2}, token=key)
+    assert error.value.code == 401
+
+
 def test_sessions_need_a_token(bridge) -> None:
     server, _ = bridge
     with pytest.raises(urllib.error.HTTPError) as error:

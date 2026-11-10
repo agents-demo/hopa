@@ -401,6 +401,16 @@ export class BridgeClient {
     }
   }
 
+  /** Hand a snapshot of the conversations to the bridge (H3 relay). */
+  async pushSessions(payload: string): Promise<boolean> {
+    try {
+      await this.call('/sessions', payload);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
   /** Speech-to-text on the PC; '' when it did not catch anything. */
   async transcribe(wavBase64: string): Promise<string> {
     const raw: string = await this.call('/transcribe', JSON.stringify({ audio: wavBase64 }));

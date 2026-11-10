@@ -37,6 +37,18 @@ import { ToolRegistryDefaults } from './ToolRegistryDefaults';
 import { SettingsStore, StoredSettings } from './SettingsStore';
 
 /** Process-wide composition root: policy + gate + capabilities + runtime. */
+class SessionTurnSnapshot {
+  role: string = '';
+  text: string = '';
+}
+
+class SessionSnapshot {
+  id: string = '';
+  title: string = '';
+  updated: number = 0;
+  turns: SessionTurnSnapshot[] = [];
+}
+
 export class AgentService {
   private static instance: AgentService | undefined = undefined;
 
@@ -90,6 +102,9 @@ export class AgentService {
 
     this.tools = ToolRegistryDefaults.create();
     this.bridge.setSessionSink(new BridgeSessionStore());
+    this.conversations.setChangeListener(() => {
+      this.scheduleSessionRelay();
+    });
 
     this.runArchive = new RunArchive(this.runs);
     this.exportService = new ExportService(this.memory, this.skills, this.runs);
@@ -177,6 +192,46 @@ export class AgentService {
   /** Called after every run, so the UI can return to Chat when the answer is ready. */
   setRunDoneListener(listener: () => void): void {
     this.runDone = listener;
+  }
+
+  private relayTimer: number = -1;
+
+  /** A quiet 2.5 s debounce: one snapshot per burst of messages. */
+  scheduleSessionRelay(): void {
+    if (!this.bridge.isConfigured()) {
+      return;
+    }
+    if (this.relayTimer >= 0) {
+      clearTimeout(this.relayTimer);
+    }
+    this.relayTimer = setTimeout(() => {
+      this.relayTimer = -1;
+      this.relaySessions();
+    }, 2500);
+  }
+
+  private async relaySessions(): Promise<void> {
+    const payload: string = JSON.stringify({ sessions: this.sessionsSnapshot() });
+    await this.bridge.pushSessions(payload);
+  }
+
+  /** The same shape the laptop's sidebar understands. */
+  private sessionsSnapshot(): SessionSnapshot[] {
+    const snapshots: SessionSnapshot[] = [];
+    for (const session of this.conversations.all()) {
+      const snapshot = new SessionSnapshot();
+      snapshot.id = session.id;
+      snapshot.title = session.title;
+      snapshot.updated = session.updatedAt;
+      for (const entry of session.entries) {
+        const turn = new SessionTurnSnapshot();
+        turn.role = entry.role;
+        turn.text = entry.text;
+        snapshot.turns.push(turn);
+      }
+      snapshots.push(snapshot);
+    }
+    return snapshots;
   }
 
   /** Points the bridge capability at a running `pc-agent bridge`. */

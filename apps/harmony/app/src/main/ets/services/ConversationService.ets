@@ -13,6 +13,18 @@ export class ConversationService {
   private static readonly KEY: string = 'chats_v1';
 
   private history: ChatHistory = new ChatHistory();
+  /** The host decides who cares; the kit just reports a change. */
+  private changeListener: (() => void) | undefined = undefined;
+
+  setChangeListener(listener: () => void): void {
+    this.changeListener = listener;
+  }
+
+  private notify(): void {
+    if (this.changeListener !== undefined) {
+      this.changeListener();
+    }
+  }
   private context: Context | undefined = undefined;
   private loaded: boolean = false;
 
@@ -70,12 +82,14 @@ export class ConversationService {
     this.history.newSession(Date.now());
     this.version += 1;
     this.save();
+    this.notify();
   }
 
   select(id: string): boolean {
     const changed: boolean = this.history.select(id);
     if (changed) {
       this.version += 1;
+      this.notify();
     }
     return changed;
   }
@@ -85,12 +99,14 @@ export class ConversationService {
     this.history.ensureCurrent(Date.now());
     this.version += 1;
     this.save();
+    this.notify();
   }
 
   add(role: string, text: string): void {
     if (this.history.add(role, text, Date.now())) {
       this.version += 1;
       this.save();
+      this.notify();
     }
   }
 }

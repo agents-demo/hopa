@@ -281,6 +281,12 @@ class _Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _authorized_sessions(self) -> bool:
+        presented = self._presented_token()
+        if hmac.compare_digest(presented, self.bridge.sessions_key):
+            return True
+        return hmac.compare_digest(presented, self.bridge.token) and self.bridge.token_live()
+
     def _presented_token(self) -> str:
         header = self.headers.get("Authorization", "")
         prefix = "Bearer "
@@ -305,7 +311,7 @@ class _Handler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:  # noqa: N802
         if self.path == "/sessions":
-            if not self._authorized():
+            if not self._authorized_sessions():
                 self._send(401, {"error": "unauthorized"})
                 return
             self._send(200, {
@@ -486,6 +492,7 @@ class BridgeServer:
         port: int = 8765,
         pair_code: str = "",
         token_ttl: float = 12 * 60 * 60,
+        sessions_key: str = "",
     ) -> None:
         if not token:
             raise BridgeError("a token is required")
@@ -501,6 +508,9 @@ class BridgeServer:
         self.refresh_lock = threading.Lock()
         self.sessions: list[Any] = []
         self.sessions_updated: int = 0
+        # Read-only key for other devices: it can read the session snapshot
+        # and nothing else, so a laptop never needs the token that can tap.
+        self.sessions_key = sessions_key or secrets.token_urlsafe(24)
         self.lock = threading.Lock()
         self.httpd = ThreadingHTTPServer((host, port), _Handler)
         self.httpd.bridge = self  # type: ignore[attr-defined]
