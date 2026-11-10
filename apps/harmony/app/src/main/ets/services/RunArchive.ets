@@ -25,6 +25,12 @@ export class RunArchive {
         if (typeof run.shot !== 'string') {
           run.shot = '';
         }
+        if (typeof run.turnId !== 'string') {
+          run.turnId = '';
+        }
+        if (typeof run.changed !== 'string') {
+          run.changed = '';
+        }
         if (typeof run.verified !== 'boolean') {
           run.verified = false;
         }

@@ -126,6 +126,7 @@ export class AgentService {
       this.pageLinks,
       new CompositeScreenSource(this.browser, this.bridge)
     );
+    this.runtime.setHomeAbility('EntryAbility');
     this.scheduleService.bindRunner(
       (goal: string): Promise<string> => this.run(goal),
       (): boolean => this.isBusy()

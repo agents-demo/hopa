@@ -90,6 +90,7 @@ export class ActionExecutor {
       observation = Observation.fail(`${error}`);
     }
 
+    this.lastChange = '';
     // 4. Verify: re-observe when a screen source is available.
     const verified: boolean = await this.verifyAfter(action, screen, observation);
 
@@ -99,6 +100,7 @@ export class ActionExecutor {
     record.approved = approved;
     record.verified = verified;
     record.detail = observation.success ? observation.summary : observation.detail;
+    record.changed = this.lastChange;
     record.startedAt = startedAt;
     record.finishedAt = Date.now();
     record.durationMs = record.finishedAt - record.startedAt;
@@ -111,6 +113,47 @@ export class ActionExecutor {
     outcome.recordId = record.id;
     return outcome;
   }
+
+  /** A short, honest summary of what the action changed on screen. */
+  private describeChange(before: string, after: string): string {
+    const oldLines: string[] = before.split('\n').map((line: string) => line.trim()).filter((line: string) => line.length > 0);
+    const newLines: string[] = after.split('\n').map((line: string) => line.trim()).filter((line: string) => line.length > 0);
+    const counts: Map<string, number> = new Map<string, number>();
+    for (const line of oldLines) {
+      counts.set(line, (counts.get(line) ?? 0) + 1);
+    }
+    let added: number = 0;
+    const fresh: string[] = [];
+    for (const line of newLines) {
+      const seen: number = counts.get(line) ?? 0;
+      if (seen > 0) {
+        counts.set(line, seen - 1);
+      } else {
+        added += 1;
+        if (fresh.length < 1) {
+          fresh.push(line);
+        }
+      }
+    }
+    let removed: number = 0;
+    for (const value of counts.values()) {
+      removed += value;
+    }
+    if (added === 0 && removed === 0) {
+      return '';
+    }
+    const parts: string[] = [];
+    if (added > 0) {
+      parts.push(`+${added}`);
+    }
+    if (removed > 0) {
+      parts.push(`-${removed}`);
+    }
+    const sample: string = fresh.length > 0 ? ` \u00b7 ${fresh[0].substring(0, 48)}` : '';
+    return `${parts.join(' ')} lines${sample}`;
+  }
+
+  private lastChange: string = '';
 
   private async verifyAfter(
     action: Action,
@@ -129,6 +172,7 @@ export class ActionExecutor {
       return this.verifier.verify(action, observation);
     }
     const beforeText: string = before === undefined ? '' : before.text;
+    this.lastChange = this.describeChange(beforeText, after.text);
     return after.text !== beforeText;
   }
 

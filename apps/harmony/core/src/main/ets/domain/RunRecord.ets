@@ -16,6 +16,8 @@ export class RunRecord {
   shot: string = '';
   status: RunStatus;
   detail: string = '';
+  /** What the screen actually gained or lost, e.g. "+3 ?1 lines ? Save". */
+  changed: string = '';
   startedAt: number;
   finishedAt: number;
   durationMs: number = 0;

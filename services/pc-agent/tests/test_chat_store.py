@@ -55,6 +55,28 @@ def test_a_delete_is_a_tombstone(tmp_path):
     assert store.snapshot()["sessions"] == []
 
 
+def test_turns_without_ids_merge_by_content(tmp_path):
+    store = ChatStore(tmp_path / "chats.json")
+    idle = {"id": "", "role": "user", "at": 0, "text": "hi"}
+    answer = {"id": "", "role": "assistant", "at": 0, "text": "hello"}
+    store.merge([session(turns=[idle, answer])])
+    store.merge([session(turns=[idle, answer])])
+    assert len(store.snapshot()["sessions"][0]["turns"]) == 2
+
+
+def test_a_repeated_thread_collapses_on_load(tmp_path):
+    path = tmp_path / "chats.json"
+    block = [turn("u", "question", role="user"), turn("a", "answer", role="assistant")]
+    path.write_text(json.dumps({
+        "rev": 3,
+        "sessions": {"s1": {"id": "s1", "title": "x", "titleAt": 1, "created": 1,
+                             "updated": 2, "deletedAt": 0,
+                             "turns": block * 4}},
+    }), encoding="utf-8")
+    store = ChatStore(path)
+    assert len(store.snapshot()["sessions"][0]["turns"]) == 2
+
+
 def test_the_store_survives_a_restart(tmp_path):
     path = tmp_path / "chats.json"
     first = ChatStore(path)

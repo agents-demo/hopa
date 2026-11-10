@@ -120,9 +120,11 @@ export class LaptopSessions {
       session.updated = wire.updated;
       for (const turn of wire.turns) {
         const local = new LaptopTurn();
+        // Never invent an id from the position: the position moves, the id then
+        // changes, and the merge sees a brand new message every time.
         local.id = turn.id;
         local.role = turn.role;
-        local.text = turn.text;
+        local.text = LaptopSessions.stripMeta(turn.text);
         local.at = turn.at;
         session.turns.push(local);
       }
@@ -141,6 +143,20 @@ export class LaptopSessions {
     }
     this.currentId = stillThere ? active : kept[0].id;
     this.removed = [];
+  }
+
+  /** The phone stores a machine block with some answers; it is not prose. */
+  private static stripMeta(text: string): string {
+    const lines: string[] = text.split('\n');
+    const kept: string[] = [];
+    for (const line of lines) {
+      const trimmed: string = line.trim();
+      if (trimmed.startsWith('[meta]') || trimmed.startsWith('shot=') || trimmed.startsWith('ref=')) {
+        continue;
+      }
+      kept.push(line);
+    }
+    return kept.join('\n').trim();
   }
 
   /** The same shape the phone and the bridge already speak. */
@@ -214,7 +230,8 @@ export class LaptopSessions {
     for (const item of items) {
       const turn = new LaptopTurn();
       turn.role = item.role === 'assistant' ? 'assistant' : 'user';
-      turn.text = item.text;
+      // Older saves and synced phone turns can carry the machine block.
+      turn.text = LaptopSessions.stripMeta(item.text);
       if (turn.text.length > 0) {
         turns.push(turn);
       }

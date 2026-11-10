@@ -44,6 +44,8 @@ class FakeDevice:
         self.calls: list[tuple] = []
         self.hdc = FakeHdc()
         self.foreground_bundle = ""
+        self.raise_after_stop = False
+        self.stopped = False
 
     def devices(self) -> list[str]:
         return ["127.0.0.1:5555"]
@@ -62,13 +64,37 @@ class FakeDevice:
 
     def launch(self, bundle: str, ability: str = "") -> None:
         self.calls.append(("launch", bundle, ability))
+        if self.raise_after_stop and not self.stopped:
+            return
         self.foreground_bundle = bundle
+
+    def stop(self, bundle: str) -> None:
+        self.calls.append(("stop", bundle))
+        self.stopped = True
 
     def press_key(self, name: str) -> None:
         self.calls.append(("key", name))
 
     def swipe(self, *args, velocity: int = 600) -> None:
         self.calls.append(("swipe", *args, velocity))
+
+
+def test_focus_restarts_when_the_window_does_not_raise(bridge):
+    server, device = bridge
+    # The first launch takes the intent but never raises the window; only a
+    # cold restart does. That is the singleton case seen on the 2in1.
+    device.raise_after_stop = True
+    body = _call(server, "/focus", {"bundle": "com.hopa.agent"}, timeout=20)
+    assert body["ok"] is True
+    assert body["restarted"] is True
+    assert device.stopped is True
+
+
+def test_focus_does_not_restart_a_working_launch(bridge):
+    server, device = bridge
+    body = _call(server, "/focus", {"bundle": "com.hopa.agent"})
+    assert body["restarted"] is False
+    assert device.stopped is False
 
 
 def test_pair_survives_a_restart(tmp_path):
@@ -118,7 +144,8 @@ def bridge():
         server.stop()
 
 
-def _call(server: BridgeServer, path: str, payload: dict | None = None, token: str = "secret"):
+def _call(server: BridgeServer, path: str, payload: dict | None = None, token: str = "secret",
+          timeout: float = 3.0):
     url = f"http://127.0.0.1:{server.port}{path}"
     data = None if payload is None else json.dumps(payload).encode("utf-8")
     request = urllib.request.Request(url, data=data, method="POST" if data else "GET")
@@ -126,7 +153,7 @@ def _call(server: BridgeServer, path: str, payload: dict | None = None, token: s
         request.add_header("Authorization", f"Bearer {token}")
     if data:
         request.add_header("Content-Type", "application/json")
-    with urllib.request.urlopen(request, timeout=3) as response:
+    with urllib.request.urlopen(request, timeout=timeout) as response:
         return json.loads(response.read().decode("utf-8"))
 
 

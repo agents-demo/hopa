@@ -258,6 +258,19 @@ export class BridgeClient {
     return this.send(path, '', http.RequestMethod.GET);
   }
 
+  /** Authenticated: proves the token works, not just that a port is open. */
+  async whoami(): Promise<boolean> {
+    try {
+      const raw: string = await this.get('/whoami');
+      const parsed = JSON.parse(raw) as BridgeOkBody;
+      this.lastError = parsed.ok ? '' : 'bridge rejected the key';
+      return parsed.ok;
+    } catch (error) {
+      this.lastError = `${(error as Error).message}`;
+      return false;
+    }
+  }
+
   async health(): Promise<boolean> {
     // One retry: a socket can be refused while the reverse port reconnects.
     for (let attempt = 0; attempt < 2; attempt++) {
@@ -341,6 +354,24 @@ export class BridgeClient {
       const parsed = JSON.parse(raw) as BridgeLaunchBody;
       this.foreground = parsed.foreground;
       this.lastError = parsed.ok ? '' : 'bridge launch was not ok';
+      return parsed.ok;
+    } catch (error) {
+      this.lastError = `${(error as Error).message}`;
+      return false;
+    }
+  }
+
+  /**
+   * Bring an app back to the front. Unlike `launch`, this is allowed to
+   * restart it: a singleton ability can take the intent without raising its
+   * window, and the user should not be stranded in whatever HOPA opened.
+   */
+  async focus(bundle: string, ability: string = ''): Promise<boolean> {
+    try {
+      const raw: string = await this.call('/focus', JSON.stringify({ bundle: bundle, ability: ability }));
+      const parsed = JSON.parse(raw) as BridgeLaunchBody;
+      this.foreground = parsed.foreground;
+      this.lastError = parsed.ok ? '' : 'bridge could not raise the app';
       return parsed.ok;
     } catch (error) {
       this.lastError = `${(error as Error).message}`;

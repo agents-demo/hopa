@@ -23,6 +23,23 @@ All notable changes are recorded here. Versions follow `docs/versioning.md`.
   device, and `/sessions` resolves to the phone unless `X-Hopa-Read` asks for
   the other side. hdc only allows one device per device-side port, so the phone
   tunnels 8768 and the 2in1 8766.
+- Sync integrity: turns are never identified by their position. An adopted turn
+  keeps the id the sender had, and a turn without an id merges by role, time
+  and text. A position-based id made every sync look like new messages and grew
+  a single thread to a thousand turns; the store now self-heals on load by
+  collapsing adjacent and periodic repeats, and `/whoami` makes “Connected”
+  mean a working key rather than an open port.
+- Fixes from device testing: switching sessions on the laptop now replaces the
+  transcript (the list keyed rows by index, so equal-shaped sessions reused the
+  old rows); Activity reads run records saved before turn ids existed;
+  `[meta]` lines from phone turns are stripped on the laptop; the browser has a
+  Close button and an unloadable-page message, and picking any session returns
+  the pane to chat.
+- `POST /focus` brings HOPA back after a run left it: `aa start` alone cannot
+  raise a singleton window on the 2in1, so the bridge falls back to one cold
+  restart and reports whether it did.
+- Run records carry what changed on screen (`+3 -1 lines · …`), computed where
+  the executor already compares the before and after observations.
 - B7: HOPA's own browser pane on the 2in1, exposed to the runtime as a page
   source (`document.body.innerText`), with “Ask about this page”. Verified: it
   answered “the page open in the browser is example.com…” from the page itself.

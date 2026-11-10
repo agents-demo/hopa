@@ -40,6 +40,12 @@ export class AgentRuntime {
   private background: RuntimeBackground;
   private pageLinks: RuntimePageLinks;
   private screen: ScreenSource;
+  /** The ability to raise when a run leaves this shell; the host knows it. */
+  private homeAbility: string = '';
+
+  setHomeAbility(ability: string): void {
+    this.homeAbility = ability;
+  }
 
   private batch: BatchRunner = new BatchRunner();
   private model: ModelClient | undefined = undefined;
@@ -338,7 +344,7 @@ export class AgentRuntime {
     if (this.leftHopa(outcomes)) {
       let returned: boolean = false;
       if (this.bridge.isConfigured()) {
-        returned = await this.bridge.launch('com.hopa.agent');
+        returned = await this.bridge.focus('com.hopa.agent', this.homeAbility);
         hilog.info(0x0000, 'HOPA', `focus: bridge return ${returned}`);
       }
       if (!returned) {

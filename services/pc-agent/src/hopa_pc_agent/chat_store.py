@@ -51,6 +51,37 @@ class ChatStore:
             self.rev = int(data.get("rev", 0))
         except (TypeError, ValueError):
             self.rev = 0
+        # Self-healing: an older build could append the same turn again under a
+        # fresh index, so a single message grew into hundreds. Collapse those.
+        repaired = False
+        for session in self.sessions.values():
+            turns = session.get("turns")
+            if not isinstance(turns, list):
+                continue
+            seen: set[str] = set()
+            kept: list[Any] = []
+            for index, turn in enumerate(turns):
+                if not isinstance(turn, dict):
+                    continue
+                key = self._turn_key(turn, index)
+                if key in seen:
+                    continue
+                # A broken push repeated the whole thread; the repeats are
+                # adjacent and identical in role and words. Collapse those even
+                # when their timestamps differ.
+                if kept:
+                    last = kept[-1]
+                    if last.get("role") == turn.get("role") and last.get("text") == turn.get("text"):
+                        continue
+                seen.add(key)
+                kept.append(turn)
+            kept = self._collapse_cycle(kept)
+            if len(kept) != len(turns):
+                session["turns"] = kept
+                repaired = True
+        if repaired:
+            self.rev += 1
+            self._save()
 
     def _save(self) -> None:
         if self._path is None:
@@ -71,8 +102,31 @@ class ChatStore:
         tid = str(turn.get("id", "")).strip()
         if tid:
             return tid
-        # Older clients have no turn ids; keep them stable by content and order.
-        return f"{index}:{turn.get('role', '')}:{turn.get('at', 0)}:{str(turn.get('text', ''))[:40]}"
+        # Older clients have no turn ids. Never key on the index: a merge can
+        # change it, and an index in the key turns one message into many.
+        return f"{turn.get('role', '')}:{turn.get('at', 0)}:{turn.get('text', '')}"
+
+    @staticmethod
+    def _collapse_cycle(turns: list[Any]) -> list[Any]:
+        """A broken client could push the whole thread again and again.
+
+        The repeat is periodic, not adjacent (user, assistant, user, ...), so
+        look for the shortest period that reproduces the list and keep one.
+        """
+        count = len(turns)
+        for period in range(1, count // 2 + 1):
+            if count % period:
+                continue
+            matches = True
+            for index in range(period, count):
+                here = turns[index]
+                there = turns[index - period]
+                if here.get("role") != there.get("role") or here.get("text") != there.get("text"):
+                    matches = False
+                    break
+            if matches:
+                return turns[:period]
+        return turns
 
     def _merge_session(self, incoming: dict[str, Any]) -> bool:
         sid = str(incoming.get("id", "")).strip()

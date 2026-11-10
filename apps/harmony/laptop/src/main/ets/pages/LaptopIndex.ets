@@ -67,6 +67,7 @@ struct LaptopIndex {
   @State address: string = LaptopIndex.START_URL;
   private static readonly START_URL: string = 'https://example.com';
   @State pageTitle: string = '';
+  @State pageError: string = '';
   @State pageQuestion: string = '';
   private web: webview.WebviewController = new webview.WebviewController();
   @State speakReplies: boolean = false;
@@ -369,9 +370,12 @@ struct LaptopIndex {
     const lines: string[] = text.split('\n');
     const kept: string[] = [];
     for (const line of lines) {
-      if (!line.startsWith('[meta]')) {
-        kept.push(line);
+      const trimmed: string = line.trim();
+      // A phone turn carries a machine block; only the words belong on screen.
+      if (trimmed.startsWith('[meta]') || trimmed.startsWith('shot=') || trimmed.startsWith('ref=')) {
+        continue;
       }
+      kept.push(line);
     }
     return kept.join('\n').trim();
   }
@@ -387,6 +391,7 @@ struct LaptopIndex {
   private newChat(): void {
     const context = getContext(this) as common.UIAbilityContext;
     this.settingsOpen = false;
+    this.view = 'chat';
     const current: LaptopSession = this.store.current();
     if (current.turns.length === 0) {
       // Already a blank thread: put the caret where the user will type.
@@ -418,6 +423,7 @@ struct LaptopIndex {
   private openSession(id: string): void {
     const context = getContext(this) as common.UIAbilityContext;
     this.settingsOpen = false;
+    this.view = 'chat';
     this.store.select(id);
     this.store.save(context);
     const session: LaptopSession = this.store.current();
@@ -625,10 +631,19 @@ struct LaptopIndex {
       return;
     }
     this.bridgeStatus = 'Checking\u2026';
-    const ok: boolean = await this.agent.testBridge();
-    this.bridgeLive = ok;
-    this.bridgeStatus = ok ? 'Connected.' : `No answer from the bridge. ${this.agent.bridgeFailure()}`;
-    if (ok) {
+    const alive: boolean = await this.agent.testBridge();
+    if (!alive) {
+      this.bridgeLive = false;
+      this.bridgeStatus = `No answer from the bridge. ${this.agent.bridgeFailure()}`;
+      return;
+    }
+    // A port that answers is not a key that works; /whoami proves the token.
+    const trusted: boolean = await this.agent.bridge.whoami();
+    this.bridgeLive = trusted;
+    this.bridgeStatus = trusted
+      ? 'Connected.'
+      : 'The bridge rejected this key. Copy the current token from the bridge output.';
+    if (trusted) {
       this.syncChats();
     }
   }
@@ -1057,6 +1072,15 @@ struct LaptopIndex {
           .onSubmit(() => {
             this.openAddress();
           })
+        Text('Close')
+          .fontSize(12)
+          .fontColor($r('app.color.text_secondary'))
+          .padding({ left: 10, right: 10, top: 7, bottom: 7 })
+          .backgroundColor($r('app.color.surface'))
+          .borderRadius(12)
+          .onClick(() => {
+            this.view = 'chat';
+          })
         Text('Go')
           .fontSize(12)
           .fontColor($r('app.color.primary'))
@@ -1073,6 +1097,9 @@ struct LaptopIndex {
         .layoutWeight(1)
         .width('100%')
         .domStorageAccess(true)
+        .onErrorReceive(() => {
+          this.pageError = 'This page did not load. Check the connection, or open another address.';
+        })
         .onPageEnd(() => {
           // Reading a new src from state re-created the Web view and dropped the
           // shell back to chat; navigation now goes through loadUrl only.
@@ -1082,6 +1109,13 @@ struct LaptopIndex {
           this.agent.browser.attach(this.web);
           this.agent.browser.note(url, this.pageTitle);
         })
+
+      if (this.pageError.length > 0) {
+        Text(this.pageError)
+          .fontSize(11)
+          .fontColor($r('app.color.danger'))
+          .width('100%')
+      }
 
       Row({ space: 8 }) {
         TextInput({ text: this.pageQuestion, placeholder: 'Ask about this page' })
@@ -1227,6 +1261,12 @@ struct LaptopIndex {
                             .fontColor($r('app.color.text_secondary'))
                             .width('100%')
                         }
+                        if (run.changed.length > 0) {
+                          Text(run.changed)
+                            .fontSize(10)
+                            .fontColor($r('app.color.text_hint'))
+                            .width('100%')
+                        }
                       }
                       .layoutWeight(1)
                       .alignItems(HorizontalAlign.Start)
@@ -1334,15 +1374,15 @@ struct LaptopIndex {
           if (turn.steps.length > 0) {
             StepChips({ steps: turn.steps, dense: true })
           }
-          if (ChatFormat.listItems(turn.text).length > 0) {
-            if (ChatFormat.listLead(turn.text).length > 0) {
-              Text(ChatFormat.listLead(turn.text))
+          if (ChatFormat.listItems(this.cleanRemote(turn.text)).length > 0) {
+            if (ChatFormat.listLead(this.cleanRemote(turn.text)).length > 0) {
+              Text(ChatFormat.listLead(this.cleanRemote(turn.text)))
                 .fontSize(13.5)
                 .lineHeight(22)
                 .fontColor($r('app.color.text_primary'))
                 .width('100%')
             }
-            ForEach(ChatFormat.listItems(turn.text), (line: string, lineIndex: number) => {
+            ForEach(ChatFormat.listItems(this.cleanRemote(turn.text)), (line: string, lineIndex: number) => {
               Row({ space: 10 }) {
                 Text(`${lineIndex + 1}`)
                   .fontSize(10)
@@ -1364,7 +1404,7 @@ struct LaptopIndex {
               .alignItems(VerticalAlign.Top)
             }, (line: string, lineIndex: number) => `${lineIndex}-${line}`)
           } else {
-            Text(turn.text)
+            Text(this.cleanRemote(turn.text))
               .fontSize(13.5)
               .lineHeight(22)
               .fontColor($r('app.color.text_primary'))
@@ -1384,7 +1424,7 @@ struct LaptopIndex {
             ResultActions({
               showOpen: false,
               onCopy: () => {
-                this.copyText(turn.text);
+                this.copyText(this.cleanRemote(turn.text));
               },
               onShare: () => {},
               onRemember: () => {}
@@ -1754,7 +1794,7 @@ struct LaptopIndex {
                 this.Turn(turn, index)
               }
               .padding({ top: 10, bottom: 10 })
-            }, (turn: LaptopTurn, index: number) => `${index}-${turn.role}`)
+            }, (turn: LaptopTurn, index: number) => `${turn.id.length > 0 ? turn.id : index}-${index}-${turn.role}`)
             if (this.busy) {
               ListItem() {
                 Row({ space: 10 }) {
@@ -1855,46 +1895,64 @@ struct LaptopIndex {
               this.send();
               return true;
             })
-          Stack({ alignContent: Alignment.Center }) {
-            Column()
-              .width(7)
-              .height(13)
-              .borderRadius(4)
-              .backgroundColor(this.listening ? $r('app.color.danger') : $r('app.color.text_secondary'))
-              .offset({ y: -2 })
-            Row()
-              .width(13)
-              .height(1.6)
-              .borderRadius(1)
-              .backgroundColor(this.listening ? $r('app.color.danger') : $r('app.color.text_secondary'))
-              .offset({ y: 6 })
-            Row()
-              .width(1.6)
-              .height(3)
-              .backgroundColor(this.listening ? $r('app.color.danger') : $r('app.color.text_secondary'))
-              .offset({ y: 9 })
-          }
-          .width(44)
-          .height(44)
-          .borderRadius(22)
-          .backgroundColor(this.listening ? $r('app.color.surface_alt') : $r('app.color.surface_muted'))
-          .accessibilityText(this.listening ? 'Stop listening' : 'Talk to HOPA')
-          .onClick(() => {
-            this.toggleMic();
-          })
-          Button(this.busy ? 'Stop' : 'Send')
-            .height(44)
-            .fontSize(13)
-            .backgroundColor(this.busy ? $r('app.color.surface_muted') : $r('app.color.primary'))
-            .fontColor(this.busy ? $r('app.color.text_primary') : $r('app.color.on_primary'))
-            .enabled(this.busy || this.draft.trim().length > 0)
-            .onClick(() => {
-              if (this.busy) {
+          // One button, three states: speak when the field is empty, send when
+          // it is not, stop while a run is going. Two buttons was clutter.
+          if (this.busy) {
+            Button('Stop')
+              .height(44)
+              .fontSize(13)
+              .backgroundColor($r('app.color.surface_muted'))
+              .fontColor($r('app.color.text_primary'))
+              .onClick(() => {
                 this.chat.cancel();
-              } else {
+              })
+          } else if (this.listening) {
+            Button('Stop')
+              .height(44)
+              .fontSize(13)
+              .backgroundColor($r('app.color.surface_alt'))
+              .fontColor($r('app.color.danger'))
+              .onClick(() => {
+                this.toggleMic();
+              })
+          } else if (this.draft.trim().length > 0) {
+            Button('Send')
+              .height(44)
+              .fontSize(13)
+              .backgroundColor($r('app.color.primary'))
+              .fontColor($r('app.color.on_primary'))
+              .onClick(() => {
                 this.send();
-              }
+              })
+          } else {
+            Stack({ alignContent: Alignment.Center }) {
+              Column()
+                .width(7)
+                .height(13)
+                .borderRadius(4)
+                .backgroundColor($r('app.color.text_secondary'))
+                .offset({ y: -2 })
+              Row()
+                .width(13)
+                .height(1.6)
+                .borderRadius(1)
+                .backgroundColor($r('app.color.text_secondary'))
+                .offset({ y: 6 })
+              Row()
+                .width(1.6)
+                .height(3)
+                .backgroundColor($r('app.color.text_secondary'))
+                .offset({ y: 9 })
+            }
+            .width(44)
+            .height(44)
+            .borderRadius(22)
+            .backgroundColor($r('app.color.surface_muted'))
+            .accessibilityText('Talk to HOPA')
+            .onClick(() => {
+              this.toggleMic();
             })
+          }
         }
         .width('100%')
         .padding({ left: 22, right: 22, top: 8, bottom: 16 })

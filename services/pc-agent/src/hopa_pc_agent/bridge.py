@@ -443,6 +443,27 @@ class _Handler(BaseHTTPRequestHandler):
             bundle = str(data["bundle"])
             device.launch(bundle, ability=str(data.get("ability", "")))
             return {"ok": True, "foreground": _wait_for_foreground(device, bundle)}
+        if self.path == "/focus":
+            # Bringing an app back is not the same as starting it: with a
+            # singleton ability `aa start` can deliver the intent without
+            # raising the window, which leaves the user staring at whatever
+            # HOPA opened. Fall back to one cold restart, then say so.
+            bundle = str(data["bundle"])
+            ability = str(data.get("ability", ""))
+            device.launch(bundle, ability=ability)
+            foreground = _wait_for_foreground(device, bundle, timeout=2.0)
+            restarted = False
+            if foreground != bundle:
+                # A cold start is the only reliable raise on this window
+                # manager; do not wait on the foreground query to finish it.
+                device.stop(bundle)
+                time.sleep(0.5)
+                device.launch(bundle, ability=ability)
+                restarted = True
+                foreground = _wait_for_foreground(device, bundle, timeout=2.0)
+            # The foreground query is not dependable on a 2in1 desktop; a
+            # cold restart that the window manager accepted is the real signal.
+            return {"ok": restarted or foreground == bundle, "foreground": foreground, "restarted": restarted}
         if self.path == "/key":
             count = max(1, min(int(data.get("count", 1)), 120))
             if count == 1:

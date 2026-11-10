@@ -106,6 +106,7 @@ export class LaptopAgent {
       new NoPageLinks(),
       new BridgeScreenSource(this.bridge, gates)
     );
+    this.runtime.setHomeAbility('LaptopAbility');
   }
 
   /** Points the bridge capability at a running `pc-agent bridge`. */

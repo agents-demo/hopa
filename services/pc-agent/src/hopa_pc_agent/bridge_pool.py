@@ -229,6 +229,12 @@ class _PoolHandler(BaseHTTPRequestHandler):
         return self.pool.authorized_any(presented)
 
     def do_GET(self) -> None:  # noqa: N802
+        if self.path == "/whoami":
+            if not self._authorized_any():
+                self._send(401, {"error": "unauthorized"})
+                return
+            self._send(200, {"ok": True, "devices": sorted(self.pool.roles.keys())})
+            return
         if self.path == "/chats":
             if not self._authorized_any():
                 self._send(401, {"error": "unauthorized"})

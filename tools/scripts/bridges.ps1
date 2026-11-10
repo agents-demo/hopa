@@ -77,7 +77,8 @@ foreach ($t in $targets) {
 }
 
 $config = Join-Path $shots 'bridge-devices.json'
-$json = $entries | ConvertTo-Json -Depth 5
+# Always a JSON array: ConvertTo-Json turns a single entry into an object.
+$json = '[' + (($entries | ForEach-Object { $_ | ConvertTo-Json -Compress -Depth 5 }) -join ',') + ']'
 # No BOM: the Python reader treats it as a JSON error.
 [System.IO.File]::WriteAllText($config, $json, (New-Object System.Text.UTF8Encoding($false)))
 
