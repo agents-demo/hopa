@@ -34,6 +34,7 @@ export struct ChatPage {
   @State busy: boolean = false;
   @State reaction: string = '';
   @State resumeGoal: string = '';
+  @State resumeAt: number = 0;
   @State loaded: boolean = false;
   @State diffText: string = '';
   @State canUndo: boolean = false;
@@ -291,6 +292,7 @@ export struct ChatPage {
     const service = AgentService.get();
     const live: string = service.runtime.lastGoalText();
     if (live.length > 0) {
+      this.resumeAt = Date.now();
       return live;
     }
     const sessions = service.conversations.all();
@@ -305,6 +307,7 @@ export struct ChatPage {
         const entry = session.entries[j];
         if (entry.role === 'user' && entry.text.length > 0) {
           best = session.updatedAt;
+          this.resumeAt = session.updatedAt;
           goal = entry.text;
           break;
         }
@@ -706,6 +709,7 @@ export struct ChatPage {
         Scroll() {
           ChatEmptyState({
             resume: this.resumeGoal,
+            resumeAt: this.resumeAt,
             hasEarlier: this.hasEarlierChat(),
             listening: this.draft.length > 0,
             onPick: (text: string) => {
@@ -1005,6 +1009,13 @@ export struct ChatPage {
                   }
                   .width('100%')
                   .padding({ left: 4 })
+                }
+                if (this.liveSteps.length > 0) {
+                  Text(Character.narrate(this.liveSteps[this.liveSteps.length - 1].substring(2)))
+                    .fontSize(11)
+                    .fontColor($r('app.color.text_secondary'))
+                    .width('100%')
+                    .padding({ left: 4, bottom: 2 })
                 }
                 ChatTyping()
               }

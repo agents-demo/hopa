@@ -145,10 +145,12 @@ def _screenshot(device: Device) -> dict[str, Any]:
 # reply back through its own speaker.
 _SPEECH_PS1 = r"""
 param(
-  [Parameter(Mandatory=$true)][ValidateSet('transcribe','speak')][string]$Mode,
+  [Parameter(Mandatory=$true)][ValidateSet('transcribe','speak','voices')][string]$Mode,
   [string]$Path = '',
   [string]$Text = '',
-  [string]$Out = ''
+  [string]$Out = '',
+  [string]$Voice = '',
+  [string]$Rate = ''
 )
 Add-Type -AssemblyName System.Speech
 if ($Mode -eq 'transcribe') {
@@ -160,9 +162,19 @@ if ($Mode -eq 'transcribe') {
   $engine.Dispose()
   [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
   if ($null -ne $result) { Write-Output $result.Text }
+} elseif ($Mode -eq 'voices') {
+  [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+  $synth = New-Object System.Speech.Synthesis.SpeechSynthesizer
+  foreach ($v in $synth.GetInstalledVoices()) {
+    if ($v.Enabled) { Write-Output $v.VoiceInfo.Name }
+  }
+  $synth.Dispose()
 } else {
   $synth = New-Object System.Speech.Synthesis.SpeechSynthesizer
-  $synth.Rate = 0
+  if ($Rate -ne '') { $synth.Rate = [int]$Rate } else { $synth.Rate = 0 }
+  if ($Voice -ne '') {
+    try { $synth.SelectVoice($Voice) } catch { }
+  }
   $synth.SetOutputToWaveFile($Out)
   $synth.Speak($Text)
   $synth.Dispose()
@@ -215,13 +227,22 @@ def transcribe_wav(wav: bytes) -> str:
     return result.stdout.strip()
 
 
-def speak_wav(text: str) -> bytes:
+def list_voices() -> list[str]:
+    """Installed System.Speech voices, in the order the PC reports them."""
+    result = _powershell(_speech_script_path(), ["-Mode", "voices"])
+    if result.returncode != 0:
+        raise BridgeError(f"speech engine failed: {result.stderr.strip()[:200]}")
+    return [line.strip() for line in result.stdout.splitlines() if line.strip()]
+
+
+def speak_wav(text: str, voice: str = '') -> bytes:
     """Render `text` to a WAV file with the PC's speech synthesiser."""
     with tempfile.TemporaryDirectory(prefix="hopa-tts-") as tmp:
         target = Path(tmp) / "reply.wav"
-        result = _powershell(
-            _speech_script_path(), ["-Mode", "speak", "-Text", text, "-Out", str(target)]
-        )
+        args = ["-Mode", "speak", "-Text", text, "-Out", str(target)]
+        if voice:
+            args.extend(["-Voice", voice])
+        result = _powershell(_speech_script_path(), args)
         if result.returncode != 0 or not target.exists():
             raise BridgeError(f"speech engine failed: {result.stderr.strip()[:200]}")
         return target.read_bytes()
@@ -374,7 +395,13 @@ class _Handler(BaseHTTPRequestHandler):
                 raise BridgeError("text is required")
             if len(text) > 1200:
                 text = text[:1200]
-            return {"mime": "audio/wav", "audio": base64.b64encode(speak_wav(text)).decode("ascii")}
+            voice = str(data.get("voice", "")).strip()
+            return {
+                "mime": "audio/wav",
+                "audio": base64.b64encode(speak_wav(text, voice)).decode("ascii"),
+            }
+        if self.path == "/voices":
+            return {"voices": list_voices()}
         if self.path == "/swipe":
             device.swipe(
                 int(data["from_x"]),

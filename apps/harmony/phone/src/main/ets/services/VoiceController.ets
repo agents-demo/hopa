@@ -1,6 +1,7 @@
 import { abilityAccessCtrl, common, Permissions } from '@kit.AbilityKit';
 import { util } from '@kit.ArkTS';
 import { AgentService } from './AgentService';
+import { Character } from './Character';
 import { VoiceService } from './VoiceService';
 
 /**
@@ -81,7 +82,7 @@ export class VoiceController {
       return;
     }
     try {
-      const audio: string = await service.bridge.speak(spoken.substring(0, 600));
+      const audio: string = await service.bridge.speak(spoken.substring(0, 600), Character.voice);
       if (audio.length === 0) {
         return;
       }

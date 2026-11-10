@@ -15,6 +15,7 @@ export struct ChatEmptyState {
   onResume: () => void = () => {};
   onTrust: () => void = () => {};
   @Prop resume: string = '';
+  @Prop resumeAt: number = 0;
   @Prop hasEarlier: boolean = false;
   @Prop listening: boolean = false;
   @State entered: boolean = false;
@@ -83,6 +84,28 @@ export struct ChatEmptyState {
       'Open Settings and show me Wi-Fi',
       'Draft a one-line message to my team'
     ];
+  }
+
+  private resumeWhen(): string {
+    if (this.resumeAt <= 0) {
+      return '';
+    }
+    const minutes: number = Math.floor((Date.now() - this.resumeAt) / 60000);
+    if (minutes <= 1) {
+      return 'just now';
+    }
+    if (minutes < 60) {
+      return `${minutes} min ago`;
+    }
+    const hours: number = Math.floor(minutes / 60);
+    if (hours < 24) {
+      return hours === 1 ? 'an hour ago' : `${hours} hours ago`;
+    }
+    const days: number = Math.floor(hours / 24);
+    if (days === 1) {
+      return 'yesterday';
+    }
+    return days < 7 ? `${days} days ago` : 'last week';
   }
 
   private hasResume(): boolean {
@@ -166,7 +189,9 @@ export struct ChatEmptyState {
                 .fontColor($r('app.color.text_primary'))
                 .maxLines(1)
                 .textOverflow({ overflow: TextOverflow.Ellipsis })
-              Text('Tap to open it')
+              Text(this.resumeWhen().length > 0
+                ? `${this.resumeWhen()} ? Tap to open`
+                : 'Tap to open it')
                 .fontSize(10)
                 .fontColor($r('app.color.text_hint'))
             }

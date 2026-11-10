@@ -49,6 +49,10 @@ class PairBody {
   token: string = '';
 }
 
+class VoicesBody {
+  voices: string[] = [];
+}
+
 /**
  * Client for `pc-agent bridge`.
  *
@@ -320,10 +324,24 @@ export class BridgeClient {
   }
 
   /** A spoken WAV reply from the PC, base64 encoded. */
-  async speak(text: string): Promise<string> {
-    const raw: string = await this.call('/speak', JSON.stringify({ text: text }));
+  async speak(text: string, voice: string = ''): Promise<string> {
+    const raw: string = await this.call('/speak', JSON.stringify({
+      text: text,
+      voice: voice
+    }));
     const parsed = JSON.parse(raw) as SpeakBody;
     return parsed.audio;
+  }
+
+  /** Installed voices on the PC; empty when the bridge is unavailable. */
+  async voices(): Promise<string[]> {
+    try {
+      const raw: string = await this.call('/voices', '{}');
+      const parsed = JSON.parse(raw) as VoicesBody;
+      return parsed.voices;
+    } catch (error) {
+      return [];
+    }
   }
 
   async swipe(fromX: number, fromY: number, toX: number, toY: number): Promise<boolean> {

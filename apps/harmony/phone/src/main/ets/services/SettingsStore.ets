@@ -19,6 +19,7 @@ export class StoredSettings {
   quips: boolean = true;
   tactile: boolean = true;
   address: string = '';
+  voice: string = '';
   bridgeUrl: string = '';
   bridgeToken: string = '';
   lastTokens: number = 0;
@@ -102,6 +103,10 @@ export class SettingsStore {
     if (typeof address === 'string') {
       settings.address = address;
     }
+    const voice = await store.get('voice', settings.voice);
+    if (typeof voice === 'string') {
+      settings.voice = voice;
+    }
     const bridgeUrl = await store.get('bridge_url', settings.bridgeUrl);
     if (typeof bridgeUrl === 'string') {
       settings.bridgeUrl = bridgeUrl;
@@ -139,6 +144,7 @@ export class SettingsStore {
     await store.put('quips', settings.quips);
     await store.put('tactile', settings.tactile);
     await store.put('address', settings.address);
+    await store.put('voice', settings.voice);
     await store.put('bridge_url', settings.bridgeUrl);
     await store.put('bridge_token', settings.bridgeToken);
     await store.put('last_tokens', settings.lastTokens);

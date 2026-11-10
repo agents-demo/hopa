@@ -27,6 +27,8 @@ export class Character {
   static tactile: boolean = true;
   /** What HOPA calls the user; empty means no name. */
   static address: string = '';
+  /** System.Speech voice name on the PC; empty means the PC default. */
+  static voice: string = '';
 
   static configure(stored: StoredSettings): void {
     Character.tone = Character.TONES.indexOf(stored.tone) >= 0 ? stored.tone : 'warm';
@@ -36,6 +38,7 @@ export class Character {
     Character.quips = stored.quips;
     Character.tactile = stored.tactile;
     Character.address = stored.address.trim();
+    Character.voice = stored.voice;
   }
 
   static label(tone: string): string {
@@ -115,6 +118,32 @@ export class Character {
       return 'Done. That took a few taps.';
     }
     return steps > 1 ? 'Done. The phone did the rest.' : 'Done.';
+  }
+
+  /** One line for the step in progress, in the current voice. */
+  static narrate(step: string): string {
+    const low: string = step.toLowerCase();
+    let line: string = 'Working.';
+    if (low.includes('launch') || low.startsWith('opened')) {
+      line = 'Opening the app.';
+    } else if (low.includes('type')) {
+      line = 'Typing.';
+    } else if (low.includes('tap')) {
+      line = 'Tapping where you asked.';
+    } else if (low.includes('screenshot') || low.includes('observe') || low.includes('scroll')) {
+      line = 'Reading the screen.';
+    } else if (low.includes('wait')) {
+      line = 'Waiting for the screen.';
+    } else if (low.includes('speak') || low.includes('transcrib')) {
+      line = 'Listening.';
+    }
+    if (Character.tone === 'direct') {
+      return line;
+    }
+    if (Character.chattiness === 'chatty' && line !== 'Working.') {
+      return `${line} One moment.`;
+    }
+    return line;
   }
 
   /** The live example shown in the persona sheet. */
