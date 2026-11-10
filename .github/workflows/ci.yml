@@ -78,7 +78,7 @@ jobs:
       - name: Restore toolchain cache
         if: env.CLT_URL != ''
         id: clt-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ runner.temp }}/command-line-tools
           key: harmony-clt-26.0.0.851-${{ runner.os }}
@@ -127,7 +127,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Cache Kotlin compiler
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .tools/kotlinc
           key: kotlin-2.1.0-linux
@@ -185,7 +185,7 @@ jobs:
       - name: Restore toolchain cache
         if: env.CLT_URL != ''
         id: clt-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ runner.temp }}/command-line-tools
           key: harmony-clt-macos-26.0.0.851
