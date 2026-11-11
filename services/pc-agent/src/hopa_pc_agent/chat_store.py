@@ -71,7 +71,8 @@ class ChatStore:
                 # when their timestamps differ.
                 if kept:
                     last = kept[-1]
-                    if last.get("role") == turn.get("role") and last.get("text") == turn.get("text"):
+                    same_role = last.get("role") == turn.get("role")
+                    if same_role and last.get("text") == turn.get("text"):
                         continue
                 seen.add(key)
                 kept.append(turn)
@@ -152,7 +153,8 @@ class ChatStore:
             title_at = int(incoming.get("titleAt", 0) or 0)
         except (TypeError, ValueError):
             title_at = 0
-        if title and title_at >= int(current.get("titleAt", 0) or 0) and title != current.get("title"):
+        saved_at = int(current.get("titleAt", 0) or 0)
+        if title and title_at >= saved_at and title != current.get("title"):
             current["title"] = title
             current["titleAt"] = title_at
             changed = True

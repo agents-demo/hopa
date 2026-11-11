@@ -474,7 +474,8 @@ class _Handler(BaseHTTPRequestHandler):
                 foreground = _wait_for_foreground(device, bundle, timeout=2.0)
             # The foreground query is not dependable on a 2in1 desktop; a
             # cold restart that the window manager accepted is the real signal.
-            return {"ok": restarted or foreground == bundle, "foreground": foreground, "restarted": restarted}
+            ok = restarted or foreground == bundle
+            return {"ok": ok, "foreground": foreground, "restarted": restarted}
         if self.path == "/key":
             count = max(1, min(int(data.get("count", 1)), 120))
             if count == 1:

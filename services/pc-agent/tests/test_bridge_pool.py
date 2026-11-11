@@ -96,7 +96,10 @@ def test_role_routes_the_tap(pool):
 
 def test_explicit_path_wins_over_the_role(pool):
     server, devices = pool
-    assert call(server, "/d/1111/tap", role="2in1", token="phone-token", payload={"x": 1, "y": 2})[0] == 200
+    status, _ = call(
+        server, "/d/1111/tap", role="2in1", token="phone-token", payload={"x": 1, "y": 2}
+    )
+    assert status == 200
     assert devices["1111"].calls == [("tap", 1, 2)]
 
 

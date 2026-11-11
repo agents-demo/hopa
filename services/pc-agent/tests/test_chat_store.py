@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 from hopa_pc_agent.chat_store import ChatStore
 
