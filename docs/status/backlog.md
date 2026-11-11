@@ -42,8 +42,9 @@ Updated 2026-11-11. Two shells: phone (`2SX0224410054549`) and MateBook 2-in-1
 | Desktop leftovers | 2.0 | focus ring styling, taskbar alternative |
 | Verification pass | 1.5 | six behaviours built but unseen: browser Close, Enter sends, search height, notification Stop, Kid layout, rename-by-hover |
 | Surface freeze | 0.5 | see above |
+| Split the oversized pages | 1.0 | `ChatPage` 1159, `SettingsPage` 801, `LaptopIndex` 3106, `BridgeClient` 519 lines: the structure gate reports them as grandfathered debt |
 | Buffer | 1.0 | |
-| **Total** | **12.0** | |
+| **Total** | **13.0** | |
 
 ## Runbook
 

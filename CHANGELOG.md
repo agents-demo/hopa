@@ -105,6 +105,10 @@ All notable changes are recorded here. Versions follow `docs/versioning.md`.
 - The laptop details rail no longer echoes the last request — it is already the
   centre of the screen. The rail now carries only facts the conversation cannot
   show: measured timing when one exists, and the bridge's real status.
+- The structure checker and the app-catalogue generator follow the
+  `app` / `phone` / `laptop` split, so the CI gates measure the real modules
+  again; the four files that were already over budget are listed as
+  grandfathered debt in the remaining-work table.
 
 ## 0.1.0 — 2026-11-06
 
