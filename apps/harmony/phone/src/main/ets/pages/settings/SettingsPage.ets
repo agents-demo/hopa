@@ -20,6 +20,7 @@ import { TrustedApps } from '../../services/TrustedApps';
 import { CharacterPage } from './CharacterPage';
 import { ParentPinPage } from './ParentPinPage';
 import { BridgeWizard } from './BridgeWizard';
+import { TunnelClient } from '../../services/TunnelClient';
 
 /** Model, bridge, safety switches and the advanced sub-pages. */
 @Component
@@ -42,6 +43,10 @@ export struct SettingsPage {
   @State trustVersion: number = 0;
   @StorageLink('hopa.wide') wide: boolean = false;
   @StorageLink('hopa.bridgeOnline') bridgeLive: boolean = true;
+  @StorageLink('hopa.tunnel') tunnelEnabled: boolean = false;
+  @StorageLink('hopa.tunnelRelay') tunnelRelay: string = 'off';
+  @StorageLink('hopa.tunnelDevice') tunnelDevice: string = 'not connected';
+  @StorageLink('hopa.tunnelReady') tunnelReady: boolean = false;
 
   aboutToAppear(): void {
     if (AppStorage.get<boolean>('hopa.openBridgeSetup') ?? false) {
@@ -81,6 +86,12 @@ export struct SettingsPage {
       this.quietMode = !stored.showSteps && stored.reduceMotion;
       this.bridgeUrl = stored.bridgeUrl;
       this.bridgeToken = stored.bridgeToken;
+      this.tunnelEnabled = stored.tunnel;
+      if (stored.tunnel) {
+        TunnelClient.get().startIfWanted(getContext(this) as common.UIAbilityContext).catch(() => {
+          // The tunnel reports its own failure in the status row.
+        });
+      }
       if (this.bridgeUrl.length > 0 && this.bridgeToken.length > 0) {
         await this.refreshBridge();
       }
@@ -154,6 +165,7 @@ export struct SettingsPage {
       stored.speakReplies = this.speakReplies;
       stored.bridgeUrl = this.bridgeUrl;
       stored.bridgeToken = this.bridgeToken;
+      stored.tunnel = this.tunnelEnabled;
       AppStorage.setOrCreate<boolean>('hopa.showSteps', this.showSteps);
       AppStorage.setOrCreate<boolean>('hopa.speak', this.speakReplies);
       return SettingsStore.save(context, stored);
@@ -312,6 +324,11 @@ export struct SettingsPage {
           ? (this.bridgeLive ? 'reachable' : 'no answer')
           : 'off',
         AgentService.get().isBridgeConfigured() && this.bridgeLive)
+      this.Capability('HDC tunnel',
+        this.tunnelEnabled
+          ? (this.tunnelReady ? 'ready' : `${this.tunnelRelay} / ${this.tunnelDevice}`)
+          : 'off',
+        this.tunnelEnabled && this.tunnelReady)
       this.Capability('Accessibility', AgentService.get().isAccessibilityAvailable() ? 'on' : 'needs ACL',
         AgentService.get().isAccessibilityAvailable())
       this.Capability('Web access', this.networkEnabled ? 'on' : 'off', this.networkEnabled)
@@ -731,6 +748,49 @@ export struct SettingsPage {
             Text('Run "pc-agent bridge" on the PC. Used only when accessibility is unavailable.')
               .fontSize(10)
               .fontColor($r('app.color.text_hint'))
+            Divider().color($r('app.color.divider'))
+            Row({ space: 10 }) {
+              Column({ space: 2 }) {
+                Text('Cable-free control (hdc tunnel)')
+                  .fontSize(14)
+                  .fontColor($r('app.color.text_primary'))
+                Text('Carries hdc through the relay. The PC still runs hdc-tunnel.')
+                  .fontSize(10)
+                  .fontColor($r('app.color.text_hint'))
+              }
+              .layoutWeight(1)
+              .alignItems(HorizontalAlign.Start)
+              Toggle({ type: ToggleType.Switch, isOn: this.tunnelEnabled })
+                .onChange((on: boolean) => {
+                  this.tunnelEnabled = on;
+                  TunnelClient.get().setEnabled(
+                    getContext(this) as common.UIAbilityContext,
+                    on
+                  ).catch(() => {
+                    // The status row below shows the failure.
+                  });
+                  this.persist();
+                })
+            }
+            .width('100%')
+            Column({ space: 2 }) {
+              Text(`Relay: ${this.tunnelRelay}`)
+                .fontSize(10)
+                .fontColor($r('app.color.text_hint'))
+                .width('100%')
+              Text(this.tunnelReady ? 'Tunnel: ready' : 'Tunnel: waiting for the PC')
+                .fontSize(10)
+                .fontColor(this.tunnelReady
+                  ? $r('app.color.success')
+                  : $r('app.color.text_hint'))
+                .width('100%')
+              Text(`Device: ${this.tunnelDevice}`)
+                .fontSize(10)
+                .fontColor($r('app.color.text_hint'))
+                .width('100%')
+            }
+            .width('100%')
+            .alignItems(HorizontalAlign.Start)
             Divider().color($r('app.color.divider'))
             this.Row('App access', 'Which bundles may be launched', 'appaccess')
             this.Row('Permissions', 'What HOPA can and cannot do', 'permissions')

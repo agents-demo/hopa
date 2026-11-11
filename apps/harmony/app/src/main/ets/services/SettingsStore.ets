@@ -26,6 +26,8 @@ export class StoredSettings {
   kidStars: number = 0;
   bridgeUrl: string = '';
   bridgeToken: string = '';
+  /** Opt-in: expose this phone's hdc port through the cloud relay. */
+  tunnel: boolean = false;
   lastTokens: number = 0;
   lastDurationMs: number = 0;
 }
@@ -127,6 +129,10 @@ export class SettingsStore {
     if (typeof bridgeToken === 'string') {
       settings.bridgeToken = bridgeToken;
     }
+    const tunnel = await store.get('tunnel', settings.tunnel);
+    if (typeof tunnel === 'boolean') {
+      settings.tunnel = tunnel;
+    }
     const lastTokens = await store.get('last_tokens', settings.lastTokens);
     if (typeof lastTokens === 'number') {
       settings.lastTokens = lastTokens;
@@ -161,6 +167,7 @@ export class SettingsStore {
     await store.put('kid_stars', settings.kidStars);
     await store.put('bridge_url', settings.bridgeUrl);
     await store.put('bridge_token', settings.bridgeToken);
+    await store.put('tunnel', settings.tunnel);
     await store.put('last_tokens', settings.lastTokens);
     await store.put('last_duration_ms', settings.lastDurationMs);
     await store.flush();

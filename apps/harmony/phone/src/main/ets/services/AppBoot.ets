@@ -8,6 +8,7 @@ import { KeyStore } from './KeyStore';
 import { setMascotTapFeedback } from '@hopa/app';
 import { Haptics } from './Haptics';
 import { BridgeSessionStore } from './BridgeSessionStore';
+import { TunnelClient } from './TunnelClient';
 
 /**
  * App startup: saved settings, the bundled development key, and the stores.
@@ -41,9 +42,11 @@ export class AppBoot {
       service.setAutonomous(stored.autonomous);
       service.restoreLastUsage(stored.lastTokens, stored.lastDurationMs);
       Appearance.apply(context, stored.appearance);
+      let bridgeToken: string = '';
       if (stored.bridgeUrl.length > 0) {
         const session = await BridgeSessionStore.load();
         if (session.token.length > 0) {
+          bridgeToken = session.token;
           if (session.refresh.length > 0) {
             service.configureBridgeSession(stored.bridgeUrl, session.token, session.refresh);
           } else {
@@ -52,8 +55,13 @@ export class AppBoot {
         } else if (stored.bridgeToken.length > 0) {
           // A pre-rotation install: works until that token expires, then the
           // setup wizard issues a paired session.
+          bridgeToken = stored.bridgeToken;
           service.configureBridge(stored.bridgeUrl, stored.bridgeToken);
         }
+      }
+      if (stored.tunnel && stored.bridgeUrl.length > 0 && bridgeToken.length > 0) {
+        TunnelClient.get().configure(stored.bridgeUrl, bridgeToken);
+        await TunnelClient.get().setEnabled(context, true);
       }
     } catch (error) {
       // First run or an unreadable store: keep the defaults.

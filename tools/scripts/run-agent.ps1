@@ -49,6 +49,15 @@ $port = if ($localUri.Port -gt 0) { $localUri.Port } else { 80 }
 $isLoopback = $phoneUrl -match '^https?://(127\.0\.0\.1|localhost)(:|/|$)'
 $relayUrl = $cfg['HOPA_RELAY_URL']
 $cloudEnabled = (-not $isLoopback) -and [bool]$relayUrl -and [bool]$cfg['HOPA_LINK_TOKEN']
+$bridgeTarget = $cfg['HOPA_BRIDGE_TARGET']
+if (-not $bridgeTarget) { $bridgeTarget = $cfg['HOPA_DEVICE'] }
+$tunnelListen = $cfg['HOPA_TUNNEL_LISTEN']
+if (-not $tunnelListen) { $tunnelListen = '127.0.0.1:5556' }
+$tunnelSession = $cfg['HOPA_TUNNEL_SESSION']
+if (-not $tunnelSession) { $tunnelSession = 'default' }
+$tunnelEnabled = $cloudEnabled -and (
+    ($cfg['HOPA_TUNNEL'] -match '^(1|true|yes|on)$') -or ($bridgeTarget -eq $tunnelListen)
+)
 $pcAgent = Join-Path $root '.venv\Scripts\pc-agent.exe'
 
 function Test-Port([int]$value) {
@@ -82,9 +91,23 @@ function Stop-CloudLink {
     }
 }
 
+function Get-TunnelProcess {
+    if (-not $tunnelEnabled) { return @() }
+    return @(Get-CimInstance Win32_Process | Where-Object {
+        $_.CommandLine -and $_.CommandLine -match 'hdc-tunnel' -and
+        $_.CommandLine -match [regex]::Escape($tunnelListen)
+    })
+}
+
+function Stop-Tunnel {
+    foreach ($process in (Get-TunnelProcess)) {
+        Stop-Process -Id $process.ProcessId -Force -ErrorAction SilentlyContinue
+    }
+}
+
 function Show-Status {
     $bridgeState = if (Test-Port $port) { 'up' } else { 'down' }
-    Write-Host "bridge:     $localUrl ($bridgeState)"
+    Write-Host "bridge:     $localUrl ($bridgeState, target $bridgeTarget)"
     if ($cloudEnabled) {
         $links = @(Get-CloudLinkProcess -Relay $relayUrl)
         $linkState = if ($links.Count -gt 0) { "running (pid $($links[0].ProcessId))" } else { 'not running' }
@@ -92,12 +115,24 @@ function Show-Status {
     } else {
         Write-Host 'cloud link: off (local mode)'
     }
+    if ($tunnelEnabled) {
+        $tunnels = @(Get-TunnelProcess)
+        $tunnelState = if ($tunnels.Count -gt 0) { "running (pid $($tunnels[0].ProcessId))" } else { 'not running' }
+        Write-Host "hd tunnel:  $tunnelListen ($tunnelState)"
+    } else {
+        Write-Host 'hd tunnel:  off (set HOPA_BRIDGE_TARGET to the tunnel address to enable)'
+    }
     Write-Host "phone:      $phoneUrl"
     if ($cloudEnabled) {
         try {
             $health = Invoke-RestMethod -Uri "$relayUrl/health" -TimeoutSec 15
             $age = if ($null -eq $health.link_age_seconds) { 'never' } else { "$($health.link_age_seconds)s ago" }
             Write-Host "relay:      linked=$($health.linked) (last link $age)"
+            if ($null -ne $health.tunnel) {
+                $tunnel = $health.tunnel
+                $tunnelState = if ($tunnel.ready) { 'ready' } else { "host=$($tunnel.host) phone=$($tunnel.phone)" }
+                Write-Host "tunnel:     $tunnelState"
+            }
         } catch {
             Write-Host "relay:      unreachable ($($_.Exception.Message))"
         }
@@ -111,14 +146,16 @@ if ($Status) {
 
 if ($Stop) {
     Stop-CloudLink
+    Stop-Tunnel
     Stop-Bridge $port
     Start-Sleep -Seconds 1
-    Write-Host 'stopped the bridge and cloud link'
+    Write-Host 'stopped the bridge, cloud link and hdc tunnel'
     exit 0
 }
 
 if ($Restart) {
     Stop-CloudLink
+    Stop-Tunnel
     Stop-Bridge $port
     Start-Sleep -Seconds 2
 }
@@ -129,9 +166,9 @@ if (-not (Test-Path $pcAgent)) {
 
 if (-not (Test-Port $port)) {
     $bridgeArgs = @('bridge', '--host', '127.0.0.1', '--port', "$port", '--token', $cfg['HOPA_BRIDGE_TOKEN'])
-    if ($cfg['HOPA_DEVICE']) {
+    if ($bridgeTarget) {
         # --target is a global option, so it goes before the subcommand.
-        $bridgeArgs = @('--target', $cfg['HOPA_DEVICE']) + $bridgeArgs
+        $bridgeArgs = @('--target', $bridgeTarget) + $bridgeArgs
     }
     Write-Host "Starting bridge on $localUrl..."
     Start-Process -FilePath $pcAgent -WindowStyle Hidden -ArgumentList $bridgeArgs | Out-Null
@@ -156,6 +193,18 @@ if ($cloudEnabled) {
         ) | Out-Null
         Start-Sleep -Seconds 3
     }
+}
+
+if ($tunnelEnabled -and @(Get-TunnelProcess).Count -eq 0) {
+    Write-Host "Starting hdc tunnel on $tunnelListen..."
+    Start-Process -FilePath $pcAgent -WindowStyle Hidden -ArgumentList @(
+        'hdc-tunnel',
+        '--relay', $relayUrl,
+        '--link-token', $cfg['HOPA_LINK_TOKEN'],
+        '--listen', $tunnelListen,
+        '--session', $tunnelSession
+    ) | Out-Null
+    Start-Sleep -Seconds 2
 }
 
 Show-Status

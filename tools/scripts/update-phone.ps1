@@ -140,6 +140,7 @@ $parameters = [ordered]@{
     'hopa.api_key'      = $cfg['HOPA_MODEL_API_KEY']
     'hopa.bridge_url'   = $phoneUrl
     'hopa.bridge_token' = $cfg['HOPA_BRIDGE_TOKEN']
+    'hopa.tunnel'       = $cfg['HOPA_TUNNEL']
 }
 $shellArgs = @('shell', 'aa', 'start', '-a', 'EntryAbility', '-b', 'com.hopa.agent')
 foreach ($key in $parameters.Keys) {
