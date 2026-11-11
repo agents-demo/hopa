@@ -278,6 +278,11 @@ export class AgentRuntime {
     this.bridge.setTarget(role);
   }
 
+  /** '' means this device; otherwise the device the run should act on. */
+  targetRole(): string {
+    return this.bridge.targetRole();
+  }
+
   async run(goal: string): Promise<string> {    this.activeRuns += 1;
     try {
       return await this.runInner(goal);

@@ -151,6 +151,15 @@ All notable changes are recorded here. Versions follow `docs/versioning.md`.
 
 ### Fixed
 
+- "Open Douyin" failed on the laptop with `could not open com.ss.hm.ugc.aweme
+  here`: the shared catalog names the phone's bundle, while the 2-in-1 installs
+  Douyin as `com.ss.ohpc.ugc.aweme`. The laptop launcher now carries a
+  device-alias map and tries both names, in the installed list and in the
+  launch itself.
+- A launch aimed at the phone was executed on the laptop: `LocalLaunchCapability`
+  answered every `ui.launch` before the bridge capability, so the target device
+  never saw the request. It now declines when the run targets another device and
+  lets `RemoteUiCapability` forward it with that device's own bundle name.
 - A bridge address typed with an IME could carry a capitalised scheme and a
   space (`Http ://127.0.0.1:8766`), and the client prefixed `http://` to it, so
   the host became `"Http "` and every request failed as *failed to resolve the

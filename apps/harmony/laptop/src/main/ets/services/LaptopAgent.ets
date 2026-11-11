@@ -80,13 +80,20 @@ class LaptopGates implements RemoteUiGates {
  */
 class LocalLaunchCapability implements ActionCapability {
   private launcher: LaptopLauncher;
+  private isLocal: () => boolean;
 
-  constructor(launcher: LaptopLauncher) {
+  constructor(launcher: LaptopLauncher, isLocal: () => boolean) {
     this.launcher = launcher;
+    this.isLocal = isLocal;
   }
 
+  /**
+   * Only this machine's launches. A run aimed at the phone must reach the
+   * phone's launcher through the bridge, with the phone's bundle name - taking
+   * it locally is how "open Douyin on the phone" failed on the laptop.
+   */
   canHandle(kind: string): boolean {
-    return kind === 'ui.launch';
+    return kind === 'ui.launch' && this.isLocal();
   }
 
   async execute(action: Action): Promise<Observation> {
@@ -130,7 +137,12 @@ export class LaptopAgent {
       this.approvals,
       this.runs
     );
-    executor.registerCapability(new LocalLaunchCapability(this.launcher));
+    // Read at call time: the runtime is built below this line, and the target
+    // changes per request.
+    executor.registerCapability(new LocalLaunchCapability(
+      this.launcher,
+      (): boolean => this.runtime.targetRole().length === 0
+    ));
     executor.registerCapability(new RemoteUiCapability(this.bridge, gates));
     this.executor = executor;
     this.runtime = new AgentRuntime(

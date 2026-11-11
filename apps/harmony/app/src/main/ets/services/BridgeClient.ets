@@ -171,6 +171,11 @@ export class BridgeClient {
     this.target = role.trim();
   }
 
+  /** The device this run acts on; '' means the one that asked. */
+  targetRole(): string {
+    return this.target;
+  }
+
   setSessionSink(sink: BridgeSessionSink): void {
     this.sessionSink = sink;
   }
