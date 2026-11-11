@@ -117,6 +117,7 @@ struct LaptopIndex {
   @State launchNote: string = '';
   @State hoveredSession: string = '';
   @State renameId: string = '';
+  @State sidebarOpen: boolean = false;
   @State renameDraft: string = '';
   private ctrlHeld: boolean = false;
   @State planDraft: string = '';
@@ -539,6 +540,7 @@ struct LaptopIndex {
   private newChat(): void {
     const context = getContext(this) as common.UIAbilityContext;
     this.settingsOpen = false;
+    this.sidebarOpen = false;
     this.view = 'chat';
     const current: LaptopSession = this.store.current();
     if (current.turns.length === 0) {
@@ -571,6 +573,7 @@ struct LaptopIndex {
   private openSession(id: string): void {
     const context = getContext(this) as common.UIAbilityContext;
     this.settingsOpen = false;
+    this.sidebarOpen = false;
     this.view = 'chat';
     this.store.select(id);
     this.store.save(context);
@@ -959,6 +962,14 @@ struct LaptopIndex {
 
 
       if (!this.showSidebar()) {
+        Text('\u2630')
+          .fontSize(14)
+          .fontColor($r('app.color.text_secondary'))
+          .padding({ left: 10, right: 10, top: 6, bottom: 6 })
+          .borderRadius(8)
+          .onClick(() => {
+            this.sidebarOpen = !this.sidebarOpen;
+          })
         Text('New')
           .fontSize(12)
           .fontColor($r('app.color.text_secondary'))
@@ -2878,6 +2889,25 @@ struct LaptopIndex {
     .onAreaChange((oldValue: Area, newValue: Area) => {
       this.winWidth = Number(newValue.width.toString());
     })
+      if (this.sidebarOpen && !this.showSidebar()) {
+        Row() {
+          Column() {
+            this.Sidebar()
+          }
+          .width(240)
+          .height('100%')
+          .backgroundColor($r('app.color.surface_alt'))
+          Row()
+            .layoutWeight(1)
+            .height('100%')
+            .backgroundColor('#33000000')
+            .onClick(() => {
+              this.sidebarOpen = false;
+            })
+        }
+        .width('100%')
+        .height('100%')
+      }
       if (this.renameId.length > 0) {
         Column()
           .width('100%')
