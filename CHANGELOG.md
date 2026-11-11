@@ -109,6 +109,23 @@ All notable changes are recorded here. Versions follow `docs/versioning.md`.
   `app` / `phone` / `laptop` split, so the CI gates measure the real modules
   again; the four files that were already over budget are listed as
   grandfathered debt in the remaining-work table.
+- The laptop rail now describes **the run**, not the conversation: `WHAT HOPA
+  DID` (steps with a human verb, the outcome, the duration and a failed/blocked
+  tag), `WHAT HOPA SAW` (the frame that was read, with its time), `THIS ANSWER`
+  (measured only) and the bridge's real status. Sections appear only when they
+  have data; a turn the phone ran shows its recorded step chips instead of
+  pretending to have local run records.
+- Copy, Retry and Undo move from under the last bubble into the rail header.
+  Undo is offered only for a launch that actually executed; the old row under
+  the answer is gone, so the centre carries words and the rail carries verbs.
+
+### Fixed
+
+- Opening a system app (Settings, Browser) failed with "could not open … here"
+  because `getLaunchWantForBundleSync` does not resolve them on this build. The
+  launcher now falls back to an explicit ability Want (`<bundle>.MainAbility`,
+  `<bundle>.EntryAbility`, then the bare names), so the action HOPA was asked
+  for actually happens.
 
 ## 0.1.0 — 2026-11-06
 

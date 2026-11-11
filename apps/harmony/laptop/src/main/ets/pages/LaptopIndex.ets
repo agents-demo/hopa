@@ -6,7 +6,7 @@ import { pasteboard } from '@kit.BasicServicesKit';
 import { notificationManager } from '@kit.NotificationKit';
 import { wantAgent, WantAgent } from '@kit.AbilityKit';
 import { webview } from '@kit.ArkWeb';
-import { HopaMark, EmptyHero, ResultActions, StepChips, ChatFormat, Character, KeyStore, SettingsStore, StoredSettings } from '@hopa/app';
+import { HopaMark, EmptyHero, StepChips, ChatFormat, Character, KeyStore, SettingsStore, StoredSettings } from '@hopa/app';
 import { LaptopChat, LaptopTurn } from '../services/LaptopChat';
 import { LaptopAgent, demoApproval } from '../services/LaptopAgent';
 
@@ -406,6 +406,97 @@ struct LaptopIndex {
       }
     }
     return shots;
+  }
+
+  /** The runs behind the answer on screen, oldest first. */
+  private lastRuns(): RunRecord[] {
+    let userId: string = '';
+    let since: number = 0;
+    let until: number = 0;
+    for (let i = this.turns.length - 1; i >= 0; i--) {
+      const turn: LaptopTurn = this.turns[i];
+      if (turn.role === 'assistant' && until === 0 && turn.at > 0) {
+        until = turn.at + 2000;
+      }
+      if (turn.role === 'user') {
+        userId = turn.id;
+        since = turn.at;
+        break;
+      }
+    }
+    if (until === 0) {
+      until = Date.now();
+    }
+    const byId: RunRecord[] = userId.length > 0
+      ? this.runs.filter((run: RunRecord) => run.turnId === userId)
+      : [];
+    // The shared store can re-key a turn, so ids are not enough. A run that
+    // started between the question and the answer belongs to that answer.
+    const picked: RunRecord[] = byId.length > 0
+      ? byId
+      : (since > 0
+        ? this.runs.filter((run: RunRecord) => run.startedAt >= since - 500 && run.startedAt <= until)
+        : []);
+    picked.sort((a: RunRecord, b: RunRecord) => a.startedAt - b.startedAt);
+    return picked;
+  }
+
+  /** Step chips survive a cross-device sync; run records do not. */
+  private lastAnswerSteps(): string[] {
+    for (let i = this.turns.length - 1; i >= 0; i--) {
+      if (this.turns[i].role === 'assistant') {
+        return this.turns[i].steps;
+      }
+    }
+    return [];
+  }
+
+  private lastShot(): string {
+    const picked: RunRecord[] = this.lastRuns();
+    for (let i = picked.length - 1; i >= 0; i--) {
+      if (picked[i].shot.length > 0) {
+        return picked[i].shot;
+      }
+    }
+    return '';
+  }
+
+  private lastShotAt(): number {
+    const picked: RunRecord[] = this.lastRuns();
+    for (let i = picked.length - 1; i >= 0; i--) {
+      if (picked[i].shot.length > 0) {
+        return picked[i].startedAt;
+      }
+    }
+    return 0;
+  }
+
+  private undoableRun(): RunRecord | undefined {
+    const picked: RunRecord[] = this.lastRuns();
+    for (let i = picked.length - 1; i >= 0; i--) {
+      const run: RunRecord = picked[i];
+      if (run.kind === 'ui.launch' && run.status === RunStatus.Executed &&
+        run.target.length > 0 && run.target !== 'com.hopa.agent') {
+        return run;
+      }
+    }
+    return undefined;
+  }
+
+  private copyAnswer(): void {
+    for (let i = this.turns.length - 1; i >= 0; i--) {
+      if (this.turns[i].role === 'assistant') {
+        this.copyText(this.cleanRemote(this.turns[i].text));
+        return;
+      }
+    }
+  }
+
+  private undoLastRun(): void {
+    const run: RunRecord | undefined = this.undoableRun();
+    if (run !== undefined) {
+      this.undoRun(run);
+    }
   }
 
   /** Recency groups, like every chat list since 2010. */
@@ -2235,7 +2326,7 @@ struct LaptopIndex {
   }
 
   @Builder
-  Turn(turn: LaptopTurn, index: number) {
+  Turn(turn: LaptopTurn) {
     if (turn.role === 'user') {
       Row() {
         Blank()
@@ -2297,22 +2388,6 @@ struct LaptopIndex {
           Text('HOPA on this laptop')
             .fontSize(9.5)
             .fontColor($r('app.color.text_hint'))
-          if (index === this.turns.length - 1 && !this.busy) {
-            Text('Retry')
-              .fontSize(11)
-              .fontColor($r('app.color.text_secondary'))
-              .onClick(() => {
-                this.retryRun();
-              })
-            ResultActions({
-              showOpen: false,
-              onCopy: () => {
-                this.copyText(this.cleanRemote(turn.text));
-              },
-              onShare: () => {},
-              onRemember: () => {}
-            })
-          }
         }
         .layoutWeight(1)
         .alignItems(HorizontalAlign.Start)
@@ -2713,7 +2788,7 @@ struct LaptopIndex {
           List({ scroller: this.scroller }) {
             ForEach(this.turns, (turn: LaptopTurn, index: number) => {
               ListItem() {
-                this.Turn(turn, index)
+                this.Turn(turn)
               }
               .padding({ top: 10, bottom: 10 })
             }, (turn: LaptopTurn, index: number) => `${turn.id.length > 0 ? turn.id : index}-${index}-${turn.role}`)
@@ -2903,6 +2978,12 @@ struct LaptopIndex {
       .height('100%')
       if (this.showRail()) {
         ChatRail({
+          runs: this.lastRuns(),
+          steps: this.lastAnswerSteps(),
+          shot: this.lastShot(),
+          shotAt: this.lastShotAt(),
+          busy: this.busy,
+          canUndo: this.undoableRun() !== undefined,
           lastLatency: this.lastLatency,
           lastTokens: this.lastTokens,
           bridgeLive: this.bridgeLive,
@@ -2910,6 +2991,15 @@ struct LaptopIndex {
           approvalOpen: this.approvalOpen,
           approvalDetail: this.approvalDetail,
           approvalFrame: this.approvalFrame,
+          onCopy: () => {
+            this.copyAnswer();
+          },
+          onRetry: () => {
+            this.retryRun();
+          },
+          onUndo: () => {
+            this.undoLastRun();
+          },
           onAllow: () => {
             this.approvalOpen = false;
             this.agent.approvals.answer(true);

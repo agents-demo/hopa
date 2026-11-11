@@ -79,7 +79,25 @@ export class LaptopLauncher {
       await context.startAbility(want);
       return true;
     } catch (error) {
-      return false;
+      // The resolver does not answer for every system app on this build
+      // (Settings and Browser are the known ones). The explicit ability is
+      // still a plain Want, so fall back to the names HarmonyOS ships.
     }
+    const candidates: string[] = [
+      `${bundle}.MainAbility`,
+      `${bundle}.EntryAbility`,
+      'EntryAbility',
+      'MainAbility'
+    ];
+    for (const name of candidates) {
+      try {
+        const want: Want = { bundleName: bundle, abilityName: name };
+        await context.startAbility(want);
+        return true;
+      } catch (error) {
+        // Try the next ability name.
+      }
+    }
+    return false;
   }
 }
