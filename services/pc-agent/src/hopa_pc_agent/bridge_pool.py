@@ -127,7 +127,9 @@ class BridgePool:
             if wanted in self.nodes:
                 return self.nodes[wanted], path
             return None, f"unknown role: {wanted}"
-        if path == "/sessions":
+        if path == "/sessions" or path == "/pair":
+            # Both are phone-first: a phone pairs before it has any way to say
+            # who it is, and the session snapshot is a phone concept.
             return self.nodes[self.phone_serial()], path
         if len(self.nodes) == 1:
             return next(iter(self.nodes.values())), path

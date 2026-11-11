@@ -207,3 +207,9 @@ def test_a_bad_base64_image_is_refused(pool):
     with pytest.raises(urllib.error.HTTPError) as caught:
         call(server, "/images", token="phone-token", payload={"mime": "image/jpeg", "data": "!!!"})
     assert caught.value.code == 400
+
+def test_pair_without_a_role_goes_to_the_phone(pool):
+    server, _ = pool
+    status, body = call(server, "/pair", token="", payload={"code": "123456"})
+    assert status == 200
+    assert body["token"]
