@@ -74,6 +74,7 @@ class Job:
     path: str
     content_type: str
     body: bytes
+    role: str = ""
 
 
 @dataclass
@@ -191,7 +192,9 @@ class Relay:
             finally:
                 self._pollers -= 1
 
-    def enqueue(self, method: str, path: str, content_type: str, body: bytes) -> Pending:
+    def enqueue(
+        self, method: str, path: str, content_type: str, body: bytes, role: str = ""
+    ) -> Pending:
         if len(body) > MAX_BODY_BYTES:
             raise RelayBusy("request body is too large")
         job = Job(
@@ -200,6 +203,7 @@ class Relay:
             path=path,
             content_type=content_type,
             body=body,
+            role=role[:32],
         )
         pending = Pending()
         with self._cond:
@@ -466,6 +470,7 @@ class _Handler(BaseHTTPRequestHandler):
                 "path": job.path,
                 "content_type": job.content_type,
                 "body": base64.b64encode(job.body).decode("ascii"),
+                "role": job.role,
             },
         )
 
@@ -505,6 +510,7 @@ class _Handler(BaseHTTPRequestHandler):
                 self.path,
                 self.headers.get("Content-Type", "application/json"),
                 body,
+                self.headers.get("X-Hopa-Role", ""),
             )
         except RelayBusy as exc:
             self._send_json(503, {"error": str(exc)})
@@ -578,11 +584,14 @@ class LinkClient:
         token: str,
         body: bytes | None = None,
         content_type: str = "",
+        extra_headers: dict[str, str] | None = None,
         timeout: float = 30.0,
     ) -> tuple[int, str, bytes]:
         headers = {"Authorization": f"Bearer {token}"} if token else {}
         if content_type:
             headers["Content-Type"] = content_type
+        if extra_headers:
+            headers.update(extra_headers)
         request = urllib.request.Request(url, data=body, method=method, headers=headers)
         try:
             with urllib.request.urlopen(request, timeout=timeout) as response:
@@ -618,12 +627,14 @@ class LinkClient:
         body = base64.b64decode(str(job.get("body", "")), validate=False)
         token = self.local_token or ""
         content_type = str(job.get("content_type", "")) or "application/json"
+        role = str(job.get("role", "")).strip()[:32]
         return self._request(
             method,
             f"{self.local_url}{path}",
             token=token,
             body=body if method in ("POST", "PUT", "DELETE") else None,
             content_type=content_type,
+            extra_headers={"X-Hopa-Role": role} if role else None,
             timeout=self.local_timeout,
         )
 

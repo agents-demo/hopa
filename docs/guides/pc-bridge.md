@@ -131,12 +131,15 @@ turn into "PC bridge offline" after an install.
 
 For the 2-in-1 alone, `tools\scripts\run-laptop.ps1` starts the laptop bridge on
 8767, adds `hdc rport tcp:8767`, and launches `LaptopAbility` with the bridge
-and model settings from `.env`. It reads `HOPA_LAPTOP_DEVICE`,
-`HOPA_LAPTOP_BRIDGE_PORT`, `HOPA_LAPTOP_BRIDGE_TOKEN` and
-`HOPA_LAPTOP_BRIDGE_URL` (defaults: the current MateBook, 8767, `hopalaptop`,
-`http://127.0.0.1:8767`). Use `-Status`, `-Restart`, `-Stop`, `-NoLaunch` or
-`-ResetForward` when the USB forward is stale. A healthy run prints the bridge,
-laptop, app, reverse-port and `/whoami` state.
+and model settings from `.env` in **local mode**. With `HOPA_LAPTOP_CLOUD=1`
+(or `-Cloud`) it instead launches the app against the cloud relay and the PC
+pool, and does not start the local 8767 bridge. `-Local` forces the 8767
+fallback. The script reads `HOPA_LAPTOP_DEVICE`, `HOPA_LAPTOP_BRIDGE_PORT`,
+`HOPA_LAPTOP_BRIDGE_TOKEN`, `HOPA_LAPTOP_BRIDGE_URL`, `HOPA_LAPTOP_CLOUD_URL`
+and `HOPA_LAPTOP_CLOUD_TOKEN` (the cloud token defaults to
+`HOPA_BRIDGE_TOKEN`). Use `-Status`, `-Restart`, `-Stop`, `-NoLaunch` or
+`-ResetForward` as needed; a healthy run prints the bridge/relay, laptop, app,
+reverse-port and `/whoami` state.
 
 Then in the laptop app: **Settings -> PC BRIDGE**, address
 `http://127.0.0.1:8767`, the key the bridge printed, **Connect**. The status
@@ -237,6 +240,35 @@ Limits worth stating:
   `pip install --no-deps ./services/pc-agent` and start
   `python -m hopa_pc_agent relay --host 0.0.0.0 --port $PORT`. The repository's
   `render.yaml` describes the same service for a Blueprint.
+
+### Both devices through one relay
+
+One relay can serve more than one device when the PC runs the `BridgePool`.
+With `HOPA_POOL=1`, `run-agent.ps1` writes `~/.hopa/devices.json` with the
+phone tunnel (`phone`) and the laptop USB (`2in1`), starts one bridge on 8765
+with `--devices`, and keeps one cloud link and one hdc tunnel. The relay
+preserves `X-Hopa-Role` through the link, so the pool sends `phone` or `2in1` to
+the right device.
+
+Both apps point at the relay URL with the same phone token. The role header,
+not a second token, selects the device, so one Render instance and one
+conversation store serve both. The laptop no longer needs its own 8767 bridge.
+
+```dotenv
+HOPA_POOL=1
+HOPA_LAPTOP_DEVICE=3QC0225821000268
+HOPA_LAPTOP_CLOUD=1
+HOPA_LAPTOP_CLOUD_URL=https://hopa-relay.onrender.com
+# HOPA_LAPTOP_CLOUD_TOKEN defaults to HOPA_BRIDGE_TOKEN
+```
+
+`run-agent.ps1` starts the pool, cloud link and hdc tunnel. `run-laptop.ps1`
+uses cloud mode by default when `HOPA_LAPTOP_CLOUD=1`; it launches the laptop
+app against the relay and does not start the local 8767 bridge. Use
+`run-laptop.ps1 -Local` for the 8767 bridge/rport fallback.
+
+The pool uses one shared token for both devices. Separate per-device tokens
+would need a relay token-to-role map, which this change does not add.
 
 ## hdc over the relay (cable-free control)
 
