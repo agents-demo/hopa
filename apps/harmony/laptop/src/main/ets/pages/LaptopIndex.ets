@@ -459,7 +459,8 @@ struct LaptopIndex {
     this.currentId = this.store.currentId;
     for (const session of this.sessions) {
       if (session.id === this.currentId) {
-        this.currentTitle = session.turns.length > 0 ? session.title : 'HOPA';
+        // An empty draft is not called HOPA: the hero already says the name.
+        this.currentTitle = session.turns.length > 0 ? session.title : 'New chat';
         break;
       }
     }
@@ -2212,8 +2213,14 @@ struct LaptopIndex {
     return Math.min(108, Math.max(64, this.winWidth * 0.085));
   }
 
-  /** The name is never off screen for long: it rides in the header's second line. */
+  /**
+   * The name is never off screen for long — but never twice on one screen:
+   * the hero carries it when it is visible, the header carries it otherwise.
+   */
   private subtitle(): string {
+    if (this.view === 'chat' && this.turns.length === 0 && !this.settingsOpen) {
+      return 'Running on this laptop';
+    }
     if (this.view === 'activity') {
       return 'HOPA \u00b7 Activity';
     }
@@ -2466,9 +2473,10 @@ struct LaptopIndex {
 
       Column({ space: 2 }) {
         Row({ space: 8 }) {
-          Text('\u2699')
-            .fontSize(12)
-            .fontColor($r('app.color.text_hint'))
+          Image($r('app.media.ic_settings'))
+            .width(14)
+            .height(14)
+            .objectFit(ImageFit.Contain)
           Text('Settings')
             .fontSize(12)
             .fontColor($r('app.color.text_secondary'))
