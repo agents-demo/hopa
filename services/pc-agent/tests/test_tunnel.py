@@ -160,7 +160,9 @@ def _health(port: int) -> dict:
 
 def test_relay_exposes_tunnel_status(relay_server):
     _relay, server = relay_server
-    assert _health(server.port)["tunnel"]["ready"] is False
+    health = _health(server.port)["tunnel"]
+    assert health["ready"] is False
+    assert health["links"] == []
 
 
 class _FakeWs:
@@ -214,6 +216,10 @@ def test_a_byte_stream_crosses_the_tunnel(relay_server, echo_port):
         assert phone.ready.wait(5.0)
         _wait_until(lambda: tunnel.ready)
         _wait_until(lambda: _health(server.port)["tunnel"]["ready"])
+        links = _health(server.port)["tunnel"]["links"]
+        assert any(
+            item["session"] == "default" and item["host"] and item["phone"] for item in links
+        )
 
         client = socket.create_connection(("127.0.0.1", port), timeout=5)
         client.settimeout(5)
