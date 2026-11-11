@@ -366,6 +366,10 @@ export class AgentRuntime {
       `route: ${match.target === undefined ? 'none' : match.target.display} score=${match.score}`
     );
     this.loop.resetCancel();
+    // Stop at a launch only when THIS shell performs it. A run aimed at the
+    // phone is driven over the bridge: this window never loses the foreground,
+    // so it must keep going and read the result back.
+    this.loop.setStopAfterLaunch(this.stopAfterLaunch && this.bridge.targetRole().length === 0);
     hilog.info(0x0000, 'HOPA', `run: start goal=${goal.length} chars`);
     let backgroundHeld: boolean = false;
     if (this.bridge.isConfigured()) {
