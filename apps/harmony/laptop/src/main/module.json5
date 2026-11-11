@@ -1,0 +1,64 @@
+{
+  "module": {
+    "name": "laptop",
+    "type": "entry",
+    "description": "$string:module_desc",
+    "mainElement": "LaptopAbility",
+    // The laptop shell ships for 2in1 and tablet. It is not a phone app:
+    // installing it there would show a desktop layout on a handset.
+    "deviceTypes": [
+      "2in1",
+      "tablet"
+    ],
+    "deliveryWithInstall": true,
+    "installationFree": false,
+    "requestPermissions": [
+      {
+        "name": "ohos.permission.INTERNET"
+      },
+      {
+        "name": "ohos.permission.GET_NETWORK_INFO"
+      },
+      {
+        "name": "ohos.permission.MICROPHONE",
+        "reason": "$string:mic_reason",
+        "usedScene": {
+          "abilities": ["LaptopAbility"],
+          "when": "inuse"
+        }
+      }
+    ],
+    "pages": "$profile:main_pages",
+    "abilities": [
+      {
+        "name": "LaptopAbility",
+        "srcEntry": "./ets/entryability/LaptopAbility.ets",
+        "launchType": "singleton",
+        "description": "$string:EntryAbility_desc",
+        "icon": "$media:startIcon",
+        "label": "$string:EntryAbility_label",
+        "startWindowIcon": "$media:startIcon",
+        "startWindowBackground": "$color:start_window_background",
+        "supportWindowMode": [
+          "fullscreen",
+          "split",
+          "floating"
+        ],
+        // Below this the sidebar, rail and composer stop fitting honestly.
+        "minWindowWidth": 960,
+        "minWindowHeight": 620,
+        "exported": true,
+        "skills": [
+          {
+            "entities": [
+              "entity.system.home"
+            ],
+            "actions": [
+              "ohos.want.action.home"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

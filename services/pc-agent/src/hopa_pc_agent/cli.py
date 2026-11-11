@@ -100,6 +100,39 @@ def build_parser() -> argparse.ArgumentParser:
     bridge.add_argument("--host", default="127.0.0.1")
     bridge.add_argument("--port", type=int, default=8765)
     bridge.add_argument("--token", default=os.environ.get("HOPA_BRIDGE_TOKEN", ""))
+    bridge.add_argument("--pair-code", default=os.environ.get("HOPA_PAIR_CODE", ""))
+    bridge.add_argument(
+        "--sessions-key",
+        default=os.environ.get("HOPA_SESSIONS_KEY", ""),
+        help="read-only key another device can use to read /sessions",
+    )
+    bridge.add_argument(
+        "--chats",
+        default="",
+        help="conversation store shared by every device (default ~/.hopa/chats.json)",
+    )
+    bridge.add_argument(
+        "--devices",
+        default="",
+        help="JSON file listing several devices; one listener serves them all "
+        "(entry: serial, token, pair, role, state, sessions_key)",
+    )
+    bridge.add_argument(
+        "--state",
+        default="",
+        help="file that keeps the token pair across restarts (default ~/.hopa/bridge-<port>.json)",
+    )
+    bridge.add_argument(
+        "--no-state",
+        action="store_true",
+        help="do not persist the pair: every restart needs a fresh pairing",
+    )
+    bridge.add_argument(
+        "--token-ttl-hours",
+        type=float,
+        default=float(os.environ.get("HOPA_TOKEN_TTL_HOURS", "12")),
+        help="hours an access token stays valid before the phone refreshes it",
+    )
 
     return parser
 
@@ -130,15 +163,85 @@ def _cmd_bridge(args: argparse.Namespace, device: Device) -> int:
 
     from .bridge import BridgeError, BridgeServer
 
+    ttl_hours = max(0.05, args.token_ttl_hours)
+
+    if args.devices:
+        from .bridge import BridgeError
+        from .bridge_pool import BridgePool
+        from .chat_store import ChatStore
+
+        chats_path = args.chats or str(Path.home() / ".hopa" / "chats.json")
+        chats = ChatStore(chats_path)
+        try:
+            entries = json.loads(Path(args.devices).read_text(encoding="utf-8-sig"))
+        except (OSError, ValueError) as exc:
+            print(f"pc-agent: cannot read {args.devices}: {exc}", file=sys.stderr)
+            return 2
+        if not isinstance(entries, list) or not entries:
+            print("pc-agent: --devices needs a non-empty JSON list", file=sys.stderr)
+            return 2
+        try:
+            pool = BridgePool(
+                entries,
+                host=args.host,
+                port=args.port,
+                token_ttl=ttl_hours * 3600,
+                chats=chats,
+            )
+        except (BridgeError, ValueError, KeyError) as exc:
+            print(f"pc-agent: {exc}", file=sys.stderr)
+            return 2
+        pool.start()
+        print(f"bridge listening on http://{args.host}:{pool.port} (pool)", flush=True)
+        print(f"conversations: {chats_path} (rev {chats.rev})", flush=True)
+        for entry in entries:
+            serial = str(entry["serial"])
+            node = pool.node_for(serial)
+            role = next((r for r, s in pool.roles.items() if s == serial), "")
+            print(
+                f"device {serial} role={role or '?'} token={entry['token']} "
+                f"pair code={entry.get('pair', '')}",
+                flush=True,
+            )
+            print(f"  sessions key (read-only): {node.sessions_key if node else ''}", flush=True)
+        try:
+            while True:
+                time.sleep(3600)
+        except KeyboardInterrupt:
+            pass
+        finally:
+            pool.stop()
+        return 0
+
     token = args.token or secrets.token_urlsafe(24)
+    pair_code = args.pair_code or f"{secrets.randbelow(1_000_000):06d}"
+    ttl_hours = max(0.05, args.token_ttl_hours)
+    state_path = None
+    if not args.no_state and args.port > 0:
+        state_path = args.state or str(Path.home() / ".hopa" / f"bridge-{args.port}.json")
     try:
-        server = BridgeServer(device, token, host=args.host, port=args.port)
+        server = BridgeServer(
+            device,
+            token,
+            host=args.host,
+            port=args.port,
+            pair_code=pair_code,
+            token_ttl=ttl_hours * 3600,
+            sessions_key=args.sessions_key,
+            state_path=state_path,
+        )
     except BridgeError as exc:
         print(f"pc-agent: {exc}", file=sys.stderr)
         return 2
     server.start()
     print(f"bridge listening on http://{args.host}:{server.port}", flush=True)
     print(f"token: {token}", flush=True)
+    print(f"pair code: {pair_code}", flush=True)
+    print(f"token ttl: {ttl_hours:g} h", flush=True)
+    if state_path is not None:
+        kept = "kept a live pair" if server.restored else "new pair"
+        print(f"state: {state_path} ({kept})", flush=True)
+    print(f"sessions key (read-only): {server.sessions_key}", flush=True)
     try:
         while True:
             time.sleep(3600)

@@ -25,7 +25,7 @@ ohpm install
 hvigorw assembleHap --no-daemon
 ```
 
-2. The output is `apps/harmony/entry/build/default/outputs/default/entry-default-unsigned.hap`.
+2. The output is `apps/harmony/phone/build/default/outputs/default/entry-default-unsigned.hap`.
 3. Sign it in DevEco (`Project Structure → Signing Configs`) before installing.
 4. Install with `hdc install <signed.hap>`.
 

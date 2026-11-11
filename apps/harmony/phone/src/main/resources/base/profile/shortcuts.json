@@ -1,0 +1,34 @@
+{
+  "shortcuts": [
+    {
+      "shortcutId": "ask_hopa",
+      "label": "$string:shortcut_ask",
+      "icon": "$media:startIcon",
+      "wants": [
+        {
+          "bundleName": "com.hopa.agent",
+          "moduleName": "entry",
+          "abilityName": "EntryAbility",
+          "parameters": {
+            "hopa.shortcut": "chat"
+          }
+        }
+      ]
+    },
+    {
+      "shortcutId": "last_run",
+      "label": "$string:shortcut_last",
+      "icon": "$media:startIcon",
+      "wants": [
+        {
+          "bundleName": "com.hopa.agent",
+          "moduleName": "entry",
+          "abilityName": "EntryAbility",
+          "parameters": {
+            "hopa.shortcut": "runs"
+          }
+        }
+      ]
+    }
+  ]
+}

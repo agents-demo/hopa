@@ -215,7 +215,7 @@ hvigorw test -p module=core@default --no-daemon -p coverage=false
 
 Result files:
 
-- HAP: `apps/harmony/entry/build/default/outputs/default/entry-default-signed.hap`
+- HAP: `apps/harmony/phone/build/default/outputs/default/entry-default-signed.hap`
 - Local test results: `apps/harmony/core/.test/default/intermediates/test/coverage_data/test_result.txt`
 - Local test report: `apps/harmony/core/.test/default/outputs/test/reports/index.html`
 
@@ -277,7 +277,7 @@ ruff check pc-agent bench agent
 For local on-device testing without typing a key through the IME:
 
 1. Put one API key on one line in
-   `apps/harmony/entry/src/main/resources/rawfile/deepseek.key`.
+   `apps/harmony/phone/src/main/resources/rawfile/deepseek.key`.
 2. `*.key` is already in `.gitignore`; never force-add it.
 3. Build and install. On start the app configures DeepSeek
    (`https://api.deepseek.com/v1`, `deepseek-v4-flash`) and persists the

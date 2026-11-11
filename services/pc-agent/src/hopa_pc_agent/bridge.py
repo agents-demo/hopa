@@ -16,6 +16,13 @@ Endpoints (JSON):
     POST /screenshot           -> {"mime": "image/jpeg", "bytes": int, "image": "base64"}
     POST /transcribe           {"audio": base64 WAV} -> {"text": str}
     POST /speak                {"text": str} -> {"mime": "audio/wav", "audio": base64}
+    POST /pair                 {"code": str} -> {"token", "refresh", "expires_in"}
+    POST /refresh              {"refresh": str} -> {"token", "refresh", "expires_in"}
+    GET  /sessions             -> {"sessions": [...], "updated": unix}
+    POST /sessions             {"sessions": [...]} -> {"ok", "count"}
+
+Access tokens expire (12 h by default) and every pair or refresh rotates both
+tokens, so a leaked token stops working once the phone refreshes.
 """
 
 from __future__ import annotations
@@ -23,6 +30,8 @@ from __future__ import annotations
 import base64
 import hmac
 import json
+import os
+import secrets
 import subprocess
 import sys
 import tempfile
@@ -37,6 +46,10 @@ from .device import Device
 
 class BridgeError(Exception):
     pass
+
+
+# A session snapshot is a convenience, not a database: cap it hard.
+SESSIONS_LIMIT_BYTES = 512 * 1024
 
 
 def _retry(fn: Any, *args: Any) -> Any:
@@ -144,10 +157,12 @@ def _screenshot(device: Device) -> dict[str, Any]:
 # reply back through its own speaker.
 _SPEECH_PS1 = r"""
 param(
-  [Parameter(Mandatory=$true)][ValidateSet('transcribe','speak')][string]$Mode,
+  [Parameter(Mandatory=$true)][ValidateSet('transcribe','speak','voices')][string]$Mode,
   [string]$Path = '',
   [string]$Text = '',
-  [string]$Out = ''
+  [string]$Out = '',
+  [string]$Voice = '',
+  [string]$Rate = ''
 )
 Add-Type -AssemblyName System.Speech
 if ($Mode -eq 'transcribe') {
@@ -159,9 +174,19 @@ if ($Mode -eq 'transcribe') {
   $engine.Dispose()
   [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
   if ($null -ne $result) { Write-Output $result.Text }
+} elseif ($Mode -eq 'voices') {
+  [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+  $synth = New-Object System.Speech.Synthesis.SpeechSynthesizer
+  foreach ($v in $synth.GetInstalledVoices()) {
+    if ($v.Enabled) { Write-Output $v.VoiceInfo.Name }
+  }
+  $synth.Dispose()
 } else {
   $synth = New-Object System.Speech.Synthesis.SpeechSynthesizer
-  $synth.Rate = 0
+  if ($Rate -ne '') { $synth.Rate = [int]$Rate } else { $synth.Rate = 0 }
+  if ($Voice -ne '') {
+    try { $synth.SelectVoice($Voice) } catch { }
+  }
   $synth.SetOutputToWaveFile($Out)
   $synth.Speak($Text)
   $synth.Dispose()
@@ -216,13 +241,22 @@ def transcribe_wav(wav: bytes) -> str:
     return result.stdout.strip()
 
 
-def speak_wav(text: str) -> bytes:
+def list_voices() -> list[str]:
+    """Installed System.Speech voices, in the order the PC reports them."""
+    result = _powershell(_speech_script_path(), ["-Mode", "voices"])
+    if result.returncode != 0:
+        raise BridgeError(f"speech engine failed: {result.stderr.strip()[:200]}")
+    return [line.strip() for line in result.stdout.splitlines() if line.strip()]
+
+
+def speak_wav(text: str, voice: str = "") -> bytes:
     """Render `text` to a WAV file with the PC's speech synthesiser."""
     with tempfile.TemporaryDirectory(prefix="hopa-tts-") as tmp:
         target = Path(tmp) / "reply.wav"
-        result = _powershell(
-            _speech_script_path(), ["-Mode", "speak", "-Text", text, "-Out", str(target)]
-        )
+        args = ["-Mode", "speak", "-Text", text, "-Out", str(target)]
+        if voice:
+            args.extend(["-Voice", voice])
+        result = _powershell(_speech_script_path(), args)
         if result.returncode != 0 or not target.exists():
             raise BridgeError(f"speech engine failed: {result.stderr.strip()[:200]}")
         return target.read_bytes()
@@ -250,10 +284,27 @@ class _Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def _authorized(self) -> bool:
+    def _authorized_sessions(self) -> bool:
+        presented = self._presented_token()
+        if hmac.compare_digest(presented, self.bridge.sessions_key):
+            return True
+        if hmac.compare_digest(presented, self.bridge._base_token):
+            return True
+        return hmac.compare_digest(presented, self.bridge.token) and self.bridge.token_live()
+
+    def _presented_token(self) -> str:
         header = self.headers.get("Authorization", "")
-        expected = f"Bearer {self.bridge.token}"
-        return hmac.compare_digest(header, expected)
+        prefix = "Bearer "
+        return header[len(prefix) :] if header.startswith(prefix) else ""
+
+    def _authorized(self) -> bool:
+        presented = self._presented_token()
+        # The bootstrap token never expires; a paired token must still be live.
+        if hmac.compare_digest(presented, self.bridge._base_token):
+            return True
+        if not hmac.compare_digest(presented, self.bridge.token):
+            return False
+        return self.bridge.token_live()
 
     def _read_json(self) -> dict[str, Any]:
         length = int(self.headers.get("Content-Length", "0"))
@@ -267,6 +318,18 @@ class _Handler(BaseHTTPRequestHandler):
         return data
 
     def do_GET(self) -> None:  # noqa: N802
+        if self.path == "/sessions":
+            if not self._authorized_sessions():
+                self._send(401, {"error": "unauthorized"})
+                return
+            self._send(
+                200,
+                {
+                    "sessions": self.bridge.sessions,
+                    "updated": self.bridge.sessions_updated,
+                },
+            )
+            return
         if self.path != "/health":
             self._send(404, {"error": "not found"})
             return
@@ -275,13 +338,21 @@ class _Handler(BaseHTTPRequestHandler):
         self._send(200, {"ok": True})
 
     def do_POST(self) -> None:  # noqa: N802
+        # Pairing and refresh must work before the app holds a live token.
+        if self.path == "/pair":
+            self._handle_pair()
+            return
+        if self.path == "/refresh":
+            self._handle_refresh()
+            return
         if not self._authorized():
             # Drain the body so the client does not see a connection reset.
             length = int(self.headers.get("Content-Length", "0"))
             if length:
                 self.rfile.read(length)
             self.close_connection = True
-            self._send(401, {"error": "unauthorized"})
+            expired = hmac.compare_digest(self._presented_token(), self.bridge.token)
+            self._send(401, {"error": "token expired" if expired else "unauthorized"})
             return
         try:
             data = self._read_json()
@@ -297,8 +368,58 @@ class _Handler(BaseHTTPRequestHandler):
             return
         self._send(200, result)
 
+    def _handle_pair(self) -> None:
+        if not self.bridge.pair_code:
+            self.close_connection = True
+            self._send(403, {"error": "pairing is disabled"})
+            return
+        if not self.bridge.pair_allowed():
+            self.close_connection = True
+            self._send(429, {"error": "too many attempts, wait a minute"})
+            return
+        try:
+            data = self._read_json()
+        except BridgeError as exc:
+            self._send(400, {"error": str(exc)})
+            return
+        code = str(data.get("code", "")).strip()
+        if hmac.compare_digest(code, self.bridge.pair_code):
+            self.bridge.reset_pair_attempts()
+            self._send(200, self.bridge.issue_tokens())
+        else:
+            self._send(401, {"error": "wrong code"})
+
+    def _handle_refresh(self) -> None:
+        if not self.bridge.refresh_allowed():
+            self.close_connection = True
+            self._send(429, {"error": "too many attempts, wait a minute"})
+            return
+        try:
+            data = self._read_json()
+        except BridgeError as exc:
+            self._send(400, {"error": str(exc)})
+            return
+        refresh = str(data.get("refresh", "")).strip()
+        if not refresh or not hmac.compare_digest(refresh, self.bridge.refresh_token):
+            self.close_connection = True
+            self._send(401, {"error": "refresh rejected"})
+            return
+        self._send(200, self.bridge.issue_tokens())
+
     def _dispatch(self, data: dict[str, Any]) -> dict[str, Any]:
         device = self.bridge.device
+        if self.path == "/sessions":
+            sessions = data.get("sessions")
+            if not isinstance(sessions, list):
+                raise BridgeError("sessions must be a list")
+            encoded = json.dumps(sessions, ensure_ascii=False).encode("utf-8")
+            if len(encoded) > SESSIONS_LIMIT_BYTES:
+                raise BridgeError("sessions snapshot is too large")
+            self.bridge.sessions = sessions
+            self.bridge.sessions_updated = int(time.time())
+            self.bridge._save_state()
+            print(f"sessions: {len(sessions)}", file=sys.stderr, flush=True)
+            return {"ok": True, "count": len(sessions)}
         if self.path == "/observe":
             started = time.perf_counter()
             observation = _observe(device)
@@ -332,8 +453,38 @@ class _Handler(BaseHTTPRequestHandler):
             bundle = str(data["bundle"])
             device.launch(bundle, ability=str(data.get("ability", "")))
             return {"ok": True, "foreground": _wait_for_foreground(device, bundle)}
+        if self.path == "/stop":
+            bundle = str(data["bundle"])
+            _retry(device.stop, bundle)
+            return {"ok": True, "stopped": bundle}
+        if self.path == "/focus":
+            # Bringing an app back is not the same as starting it: with a
+            # singleton ability `aa start` can deliver the intent without
+            # raising the window, which leaves the user staring at whatever
+            # HOPA opened. Fall back to one cold restart, then say so.
+            bundle = str(data["bundle"])
+            ability = str(data.get("ability", ""))
+            device.launch(bundle, ability=ability)
+            foreground = _wait_for_foreground(device, bundle, timeout=2.0)
+            restarted = False
+            if foreground != bundle:
+                # A cold start is the only reliable raise on this window
+                # manager; do not wait on the foreground query to finish it.
+                device.stop(bundle)
+                time.sleep(0.5)
+                device.launch(bundle, ability=ability)
+                restarted = True
+                foreground = _wait_for_foreground(device, bundle, timeout=2.0)
+            # The foreground query is not dependable on a 2in1 desktop; a
+            # cold restart that the window manager accepted is the real signal.
+            ok = restarted or foreground == bundle
+            return {"ok": ok, "foreground": foreground, "restarted": restarted}
         if self.path == "/key":
-            _retry(device.press_key, str(data["name"]))
+            count = max(1, min(int(data.get("count", 1)), 120))
+            if count == 1:
+                _retry(device.press_key, str(data["name"]))
+            else:
+                _retry(device.press_key_many, str(data["name"]), count)
             return {"ok": True}
         if self.path == "/transcribe":
             audio = str(data.get("audio", ""))
@@ -350,7 +501,13 @@ class _Handler(BaseHTTPRequestHandler):
                 raise BridgeError("text is required")
             if len(text) > 1200:
                 text = text[:1200]
-            return {"mime": "audio/wav", "audio": base64.b64encode(speak_wav(text)).decode("ascii")}
+            voice = str(data.get("voice", "")).strip()
+            return {
+                "mime": "audio/wav",
+                "audio": base64.b64encode(speak_wav(text, voice)).decode("ascii"),
+            }
+        if self.path == "/voices":
+            return {"voices": list_voices()}
         if self.path == "/swipe":
             device.swipe(
                 int(data["from_x"]),
@@ -371,15 +528,148 @@ class BridgeServer:
         *,
         host: str = "127.0.0.1",
         port: int = 8765,
+        pair_code: str = "",
+        token_ttl: float = 12 * 60 * 60,
+        sessions_key: str = "",
+        state_path: str | Path | None = None,
     ) -> None:
         if not token:
             raise BridgeError("a token is required")
         self.device = device
         self.token = token
+        self.refresh_token = secrets.token_urlsafe(32)
+        self.token_ttl = token_ttl
+        self.token_issued_at = time.monotonic()
+        self.pair_code = pair_code.strip()
+        self.pair_attempts: list[float] = []
+        self.pair_lock = threading.Lock()
+        self.refresh_attempts: list[float] = []
+        self.refresh_lock = threading.Lock()
+        self.sessions: list[Any] = []
+        self.sessions_updated: int = 0
+        # Read-only key for other devices: it can read the session snapshot
+        # and nothing else, so a laptop never needs the token that can tap.
+        self.sessions_key = sessions_key or secrets.token_urlsafe(24)
+        # A pair must survive a restart: otherwise every `Ctrl+C` on the PC
+        # forces the phone to pair again and looks like "bridge offline".
+        self._explicit_sessions_key = bool(sessions_key)
+        self._base_token = token
+        self._state_path = Path(state_path) if state_path is not None else None
+        self.restored = False
         self.lock = threading.Lock()
+        if self._state_path is not None:
+            self._restore_state()
+            self._save_state()
         self.httpd = ThreadingHTTPServer((host, port), _Handler)
         self.httpd.bridge = self  # type: ignore[attr-defined]
         self.thread: threading.Thread | None = None
+
+    def _state(self) -> dict[str, Any]:
+        return {
+            "base": self._base_token,
+            "token": self.token,
+            "refresh": self.refresh_token,
+            "issued_at": time.time() - (time.monotonic() - self.token_issued_at),
+            "sessions_key": self.sessions_key,
+            # The snapshot lives here too: a restart must not blank the laptop.
+            "sessions": self.sessions,
+            "sessions_updated": self.sessions_updated,
+        }
+
+    def _save_state(self) -> None:
+        """Write the pair and the read-only key for the next process.
+
+        Best effort: a bridge with no writable state still works, it just
+        asks clients to pair again after a restart.
+        """
+        if self._state_path is None:
+            return
+        try:
+            self._state_path.parent.mkdir(parents=True, exist_ok=True)
+            tmp = self._state_path.with_suffix(".tmp")
+            tmp.write_text(json.dumps(self._state()), encoding="utf-8")
+            try:
+                os.chmod(tmp, 0o600)
+            except OSError:
+                pass
+            tmp.replace(self._state_path)
+        except OSError:
+            pass
+
+    def _restore_state(self) -> None:
+        """Adopt a live pair from the previous process, never an expired one."""
+        if self._state_path is None or not self._state_path.exists():
+            return
+        try:
+            data = json.loads(self._state_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return
+        if not isinstance(data, dict) or data.get("base") != self._base_token:
+            return
+        token = str(data.get("token", ""))
+        refresh = str(data.get("refresh", ""))
+        try:
+            issued = float(data.get("issued_at", 0.0))
+        except (TypeError, ValueError):
+            return
+        age = time.time() - issued
+        if not token or not refresh or age < 0 or age >= self.token_ttl:
+            return
+        self.token = token
+        self.refresh_token = refresh
+        self.token_issued_at = time.monotonic() - age
+        if not self._explicit_sessions_key:
+            key = str(data.get("sessions_key", ""))
+            if key:
+                self.sessions_key = key
+        sessions = data.get("sessions")
+        if isinstance(sessions, list):
+            self.sessions = sessions
+            try:
+                self.sessions_updated = int(data.get("sessions_updated", 0))
+            except (TypeError, ValueError):
+                self.sessions_updated = 0
+        self.restored = True
+
+    def token_live(self) -> bool:
+        return time.monotonic() - self.token_issued_at < self.token_ttl
+
+    def issue_tokens(self) -> dict[str, Any]:
+        """Rotate both tokens; the previous pair stops working immediately."""
+        with self.pair_lock:
+            self.token = secrets.token_urlsafe(32)
+            self.refresh_token = secrets.token_urlsafe(32)
+            self.token_issued_at = time.monotonic()
+            self._save_state()
+            return {
+                "token": self.token,
+                "refresh": self.refresh_token,
+                "expires_in": int(self.token_ttl),
+            }
+
+    def refresh_allowed(self) -> bool:
+        """Five refreshes a minute: a leaked token cannot be churned."""
+        now = time.monotonic()
+        with self.refresh_lock:
+            self.refresh_attempts = [stamp for stamp in self.refresh_attempts if now - stamp < 60.0]
+            if len(self.refresh_attempts) >= 5:
+                return False
+            self.refresh_attempts.append(now)
+            return True
+
+    def pair_allowed(self) -> bool:
+        """At most five attempts a minute, to keep a short code cheap to guess-proof."""
+        now = time.monotonic()
+        with self.pair_lock:
+            self.pair_attempts = [stamp for stamp in self.pair_attempts if now - stamp < 60.0]
+            if len(self.pair_attempts) >= 5:
+                return False
+            self.pair_attempts.append(now)
+            return True
+
+    def reset_pair_attempts(self) -> None:
+        with self.pair_lock:
+            self.pair_attempts.clear()
 
     @property
     def port(self) -> int:

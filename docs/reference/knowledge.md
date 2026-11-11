@@ -94,7 +94,7 @@ name must be the ability whose skills include `entity.system.home`; check it wit
 ## The in-app catalogue
 
 `tools/scripts/build-app-catalog.py` reads every `APP.md` and `SITE.md` and
-generates `apps/harmony/entry/src/main/ets/services/AppCatalog.ets`, which the
+generates `apps/harmony/phone/src/main/ets/services/AppCatalog.ets`, which the
 **Apps** tab shows. The generated file is committed, and
 `build-app-catalog.py --check` runs in CI and in `tools/scripts/run-tests`, so
 the app and the knowledge cannot drift.

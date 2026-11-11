@@ -1,0 +1,16 @@
+{
+  "name": "laptop",
+  "version": "0.1.0",
+  "description": "HOPA laptop shell (2-in-1)",
+  "main": "",
+  "author": "The HOPA Authors",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@hopa/app": "file:../app",
+    "@hopa/core": "file:../core",
+    "@hopa/capability-llm": "file:../capabilities/llm"
+  },
+  "devDependencies": {
+    "@ohos/hypium": "1.0.28"
+  }
+}

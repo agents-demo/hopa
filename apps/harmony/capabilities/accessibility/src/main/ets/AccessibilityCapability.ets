@@ -1,3 +1,4 @@
+import { RuntimeAccessibility } from '@hopa/app';
 import { Action, ActionCapability, Observation } from '@hopa/core';
 import { AccessibilityBridge } from './AccessibilityBridge';
 
@@ -8,7 +9,7 @@ import { AccessibilityBridge } from './AccessibilityBridge';
  * the app has the approved ACL, the extension is declared, and the user enables
  * the HOPA accessibility service in Settings -> Accessibility.
  */
-export class AccessibilityCapability implements ActionCapability {
+export class AccessibilityCapability implements ActionCapability, RuntimeAccessibility {
   private available: boolean = false;
 
   setAvailable(available: boolean): void {

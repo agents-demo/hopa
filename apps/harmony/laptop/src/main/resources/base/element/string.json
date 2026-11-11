@@ -1,0 +1,28 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "HOPA laptop shell"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "HOPA laptop agent"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "HOPA"
+    },
+    {
+      "name": "shortcut_ask",
+      "value": "Ask HOPA"
+    },
+    {
+      "name": "shortcut_activity",
+      "value": "Activity"
+    },
+    {
+      "name": "mic_reason",
+      "value": "So you can talk to HOPA instead of typing"
+    }
+  ]
+}

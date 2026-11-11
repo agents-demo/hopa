@@ -6,10 +6,20 @@ export class RunRecord {
   id: string;
   actionId: string;
   kind: string;
+  /** What the action was aimed at (bundle or element ref), for undo and audit. */
+  target: string = '';
+  /** Which conversation turn this action belonged to; '' for older records. */
+  turnId: string = '';
   isPayment: boolean;
   approved: boolean = false;
+  /** The executor re-observed the screen and saw a change. */
+  verified: boolean = false;
+  /** Sandbox path of the step thumbnail, or ''. */
+  shot: string = '';
   status: RunStatus;
   detail: string = '';
+  /** What the screen actually gained or lost, e.g. "+3 ?1 lines ? Save". */
+  changed: string = '';
   startedAt: number;
   finishedAt: number;
   durationMs: number = 0;

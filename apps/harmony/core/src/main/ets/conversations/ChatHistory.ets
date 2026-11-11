@@ -6,8 +6,11 @@
  * rendering out of the page: the page turns entries back into its message list.
  */
 export class ChatEntry {
+  /** Stable identity across devices: the sync merges by this, not by text. */
+  id: string = '';
   role: string = '';
   text: string = '';
+  at: number = 0;
 }
 
 export class ChatSession {
@@ -98,8 +101,11 @@ export class ChatHistory {
     }
     const session: ChatSession = this.ensureCurrent(now);
     const entry = new ChatEntry();
+    this.counter += 1;
+    entry.id = `${session.id}·${this.counter}·${now}`;
     entry.role = role;
     entry.text = trimmed;
+    entry.at = now;
     session.entries.push(entry);
     session.updatedAt = now;
     if (role === 'user' && (session.title === 'New chat' || session.title.length === 0)) {
@@ -148,10 +154,16 @@ export class ChatHistory {
           session.title = saved.title;
           session.updatedAt = saved.updatedAt;
           const entries: ChatEntry[] = [];
-          for (const savedEntry of saved.entries === undefined ? [] : saved.entries) {
+          for (let index = 0; index < (saved.entries === undefined ? 0 : saved.entries.length); index++) {
+            const savedEntry = (saved.entries as ChatEntry[])[index];
             const entry = new ChatEntry();
+            // Older saves have no ids: derive one so a merge stays stable.
+            entry.id = savedEntry.id !== undefined && savedEntry.id.length > 0
+              ? savedEntry.id
+              : `${saved.id}·${index}`;
             entry.role = savedEntry.role;
             entry.text = savedEntry.text;
+            entry.at = savedEntry.at !== undefined ? savedEntry.at : saved.updatedAt;
             entries.push(entry);
           }
           session.entries = entries;

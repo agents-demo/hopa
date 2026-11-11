@@ -5,13 +5,13 @@
         "name": "default",
         "type": "HarmonyOS",
         "material": {
-          "certpath": "C:\\Users\\a00644753\\.ohos\\config\\default_harmony_WSHzqq-fVFLZ03kU50j5u2g9XJGg-ml3ytZXIs0YXZo=.cer",
+          "certpath": "C:\\Users\\m00645993\\.ohos\\config\\default_harmony_wfE_o5O0Ooita3ktFk_0J5-21vxGKRcOMWAM96l8lMQ=.cer",
           "keyAlias": "debugKey",
-          "keyPassword": "0000001BDA19013CB4F90C1B5AF407A8B29782A6360B28E04D2A56230A334DE607461FF565675BF0233DEF",
-          "profile": "C:\\Users\\a00644753\\.ohos\\config\\default_harmony_WSHzqq-fVFLZ03kU50j5u2g9XJGg-ml3ytZXIs0YXZo=.p7b",
+          "keyPassword": "0000001A22A135A36F07252E5AA0258DFFAC80BE8D862C43833E96A47EBFB76E815D34CB8044CAD4F4B0",
+          "profile": "C:\\Users\\m00645993\\.ohos\\config\\default_harmony_wfE_o5O0Ooita3ktFk_0J5-21vxGKRcOMWAM96l8lMQ=.p7b",
           "signAlg": "SHA256withECDSA",
-          "storeFile": "C:\\Users\\a00644753\\.ohos\\config\\default_harmony_WSHzqq-fVFLZ03kU50j5u2g9XJGg-ml3ytZXIs0YXZo=.p12",
-          "storePassword": "0000001BAB908CF82E99F3568336B0F8C6FD3826E420DB885ABE1940173C872158DA0AC93244EE8E355CB4"
+          "storeFile": "C:\\Users\\m00645993\\.ohos\\config\\default_harmony_wfE_o5O0Ooita3ktFk_0J5-21vxGKRcOMWAM96l8lMQ=.p12",
+          "storePassword": "0000001AB0D60BFF38318A74B61B35C2C92B98DD2452094DFE09E7BD74C510FB5311CCBA09BF4A66E4D5"
         }
       }
     ],
@@ -37,7 +37,7 @@
   "modules": [
     {
       "name": "entry",
-      "srcPath": "./entry",
+      "srcPath": "./phone",
       "targets": [
         {
           "name": "default",
@@ -46,6 +46,22 @@
           ]
         }
       ]
+    },
+    {
+      "name": "laptop",
+      "srcPath": "./laptop",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "app",
+      "srcPath": "./app"
     },
     {
       "name": "core",

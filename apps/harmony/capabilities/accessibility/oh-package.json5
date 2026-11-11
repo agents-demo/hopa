@@ -6,6 +6,7 @@
   "author": "The HOPA Authors",
   "license": "Apache-2.0",
   "dependencies": {
+    "@hopa/app": "file:../../app",
     "@hopa/core": "file:../../core"
   }
 }
