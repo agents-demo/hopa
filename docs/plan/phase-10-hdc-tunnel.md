@@ -98,8 +98,8 @@ bytes (`SYSTEM_SUSPEND_DATA_TRANSFER_LOW_SPEED`). The app requests
 `dataTransfer` + `multiDeviceConnection` and falls back to `dataTransfer` on
 builds that reject the pair.
 
-- [ ] HOPA's ArkTS tunnel client reconnects after the relay restarts
-- [ ] HOPA holds the tunnel for 10 minutes with the screen off
+- [x] HOPA's ArkTS tunnel client reconnects after the relay restarts (evidence: 2026-11-11 Render deploy 635d5ce; PC re-linked, opening HOPA reconnected the phone tunnel with the same token)
+- [ ] [BLOCKED: the WebSocket stays ready for 10 min, but HarmonyOS suspends the app's JS/TCP handlers; new OPEN streams time out until HOPA is foregrounded] HOPA holds the tunnel for 10 minutes with the screen off
 - [x] Settings has a Tunnel toggle and a three-state status (relay, tunnel, device) (evidence: Settings -> PHONE ACCESS -> Cable-free control; 2026-11-11 screenshot shows Relay connected / Tunnel ready / Device connected)
 - [x] The tunnel starts only when the user enables it, and stops on sign-out (evidence: toggle off removes the phone from /health; there is no account sign-out, so onDestroy and the toggle are the stop paths)
 - [x] A failed tunnel does not block normal chat or the local conversation store (evidence: TunnelClient does not touch BridgeClient or ConversationService; tunnel off leaves Settings and chat usable)
@@ -119,7 +119,7 @@ builds that reject the pair.
 - [x] A 100-command hdc burst completes without a lost frame (evidence: 2026-11-11 burst 100/100 after 4 reconnects; first pass 94/100, the reconnects were idle-target hdc reconnects, not frame loss)
 - [x] Tunnel logs contain no tokens, hdc payloads or screen text (evidence: relay log_message strips the query; TunnelClient logs only state and error messages)
 - [x] The runbook covers start, stop, token rotation, reconnect and failure modes (evidence: docs/guides/pc-bridge.md#hdc-over-the-relay-cable-free-control)
-- [ ] A Render cold start is survived without re-pairing the phone
+- [x] A Render cold start is survived without re-pairing the phone (evidence: 2026-11-11 deploy/restart; the PC re-linked and HOPA reconnected on foreground with the same token; a frozen background JS timer needs the foreground wake)
 
 ## 6. Risks
 
@@ -211,4 +211,25 @@ The reconnects are hdc's idle-target behaviour, not lost tunnel frames.
 
 **2026-11-11, auth.** A wrong token is rejected with `401` before the upgrade;
 the relay log line contains only the path, never the token or a frame body.
+
+**2026-11-11, health UI.** Settings showed the PC bridge as **Device ready** and
+the tunnel row as **Relay: connected / Tunnel: ready / Device: tunnel ready**,
+so the app no longer treats a reachable relay as a usable device.
+
+
+**2026-11-11, relay restart.** Deployed `635d5ce` over the live relay. The PC
+re-linked automatically; the phone tunnel reconnected when HOPA was brought to
+the foreground, with the same token and no pairing. While HarmonyOS has the app
+frozen in the background its reconnect timer does not run, so a restart with the
+screen off needs a foreground wake to resume.
+
+**2026-11-11, 10-minute screen-off.** The relay still reported `ready` after
+10:00, but `/observe` and `/screenshot` returned `500` (`layout dump produced no
+file`) and `hdc tconn` reported a dead session. After foregrounding HOPA and
+resetting the local hdc server (`hdc kill`, `hdc start`, `hdc tconn
+127.0.0.1:5556`), the same target served `observe` (30 nodes) and a 174 KB
+screenshot. The transport stays up; HarmonyOS freezes the app's JS/TCP handlers,
+which is why this box is blocked rather than the tunnel being broken.
+
+
 

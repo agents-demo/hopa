@@ -257,10 +257,12 @@ HOPA_TUNNEL_LISTEN=127.0.0.1:5556
 
 `HOPA_DEVICE` stays the USB serial, because `update-phone.ps1` still installs
 over USB. `run-agent.ps1` starts `pc-agent hdc-tunnel` when
-`HOPA_BRIDGE_TARGET` points at the tunnel, and the bridge targets that address.
-Switching back to USB is one line: delete `HOPA_BRIDGE_TARGET` (or point it at
-the serial). `HOPA_DEVICE=127.0.0.1:5556` also works for a bridge-only setup;
-the scripts use `HOPA_BRIDGE_TARGET` so an install still knows the USB serial.
+`HOPA_BRIDGE_TARGET` equals `HOPA_TUNNEL_LISTEN`, and the bridge targets that
+address. `HOPA_TUNNEL=1` tells the app to start its side at launch; it does not
+start the PC tunnel by itself. Switching back to USB is one line: delete
+`HOPA_BRIDGE_TARGET` (or point it at the serial) and restart `run-agent.ps1`.
+`HOPA_DEVICE=127.0.0.1:5556` also works for a bridge-only setup; the scripts use
+`HOPA_BRIDGE_TARGET` so an install still knows the USB serial.
 
 In the app, **Settings → PHONE ACCESS → Cable-free control (hdc tunnel)** is the
 same switch. It persists in settings, starts only when you turn it on, and shows
@@ -310,6 +312,11 @@ raw `hdc` commands instead of the bridge, run `hdc tconn` again after a pause.
   not change.
 - If the relay reports `phone=false`, open the app or turn the toggle off/on.
   If it reports `host=false`, check `run-agent.ps1 -Status` and the PC process.
+- **`ready=true` but device commands fail.** HarmonyOS can freeze the app's JS
+  and TCP handlers while the WebSocket remains open. Bring HOPA to the
+  foreground; if `hdc` still says `Bind target session is dead`, reset the local
+  server with `hdc kill`, `hdc start`, then `hdc tconn 127.0.0.1:5556`. The
+  bridge then retries the command.
 - A wrong token is rejected with `401` before the upgrade. The relay logs the
   path without its query; the tunnel client logs no token, payload or screen
   text.
@@ -324,6 +331,7 @@ raw `hdc` commands instead of the bridge, run `hdc tconn` again after a pause.
 | `hdc` target Offline | idle TCP target | the bridge re-runs `tconn` automatically; raw hdc users run it manually |
 | `401` on the WebSocket | token mismatch | check `HOPA_BRIDGE_TOKEN` on Render and in `.env` |
 | Device unreachable in the app | app cannot open `127.0.0.1:5555` | check that HOPA is installed and running; the retail build cannot execute a pushed binary (SELinux) |
+| `ready=true` but `observe` 500 / `tconn` dead session | HarmonyOS froze the app while the socket stayed open | open HOPA; then `hdc kill`, `hdc start`, `hdc tconn 127.0.0.1:5556` |
 | Tunnel dies with the screen off | continuous task refused | check notification permission and `KEEP_BACKGROUND_RUNNING` |
 
 **Security:** with the toggle on, the relay carries full device control. Keep
