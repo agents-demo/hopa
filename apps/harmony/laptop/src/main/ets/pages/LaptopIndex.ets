@@ -3211,7 +3211,10 @@ struct LaptopIndex {
         // margin gets clipped, which is why earlier attempts looked uninset.
         Row() {
         Row({ space: 6 }) {
-          if (this.agent.isBridgeConfigured()) {
+          // bridgeLive is @State: keying this on the agent (plain object) meant
+          // the chip only appeared when some other state happened to rebuild the
+          // composer, so a shell that connected at startup showed no switch.
+          if (this.bridgeLive || this.agent.isBridgeConfigured()) {
             Text(this.targetRole === 'phone' ? 'Phone' : 'Laptop')
               .fontSize(10)
               .fontColor(this.targetRole === 'phone'

@@ -59,6 +59,10 @@ class PairBody {
   expires_in: number = 0;
 }
 
+class BridgeErrorBody {
+  error: string = '';
+}
+
 class HttpAnswer {
   status: number = 0;
   body: string = '';
@@ -309,7 +313,22 @@ export class BridgeClient {
       }
     }
     if (answer.status !== 200) {
-      throw new Error(`bridge HTTP ${answer.status}: ${answer.body}`);
+      // A device error is a wall of JSON from `aa start`; the chat should not
+      // receive it verbatim.
+      let detail: string = answer.body;
+      try {
+        const parsed = JSON.parse(answer.body) as BridgeErrorBody;
+        const message: string = `${parsed.error ?? ''}`;
+        if (message.length > 0) {
+          detail = message;
+        }
+      } catch (error) {
+        // Not JSON: keep the text.
+      }
+      if (detail.length > 180) {
+        detail = `${detail.substring(0, 180)}\u2026`;
+      }
+      throw new Error(`bridge HTTP ${answer.status}: ${detail}`);
     }
     return answer.body;
   }

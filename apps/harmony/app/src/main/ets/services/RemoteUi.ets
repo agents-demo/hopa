@@ -117,7 +117,11 @@ export class RemoteUiCapability implements ActionCapability {
           ? `launched ${bundle} (PC bridge, in front)`
           : `launched ${bundle} (PC bridge, front not confirmed)`);
       }
-      return Observation.fail(`bridge launch failed: ${this.bridge.lastFailure()}`);
+      const why: string = this.bridge.lastFailure();
+      if (why.includes('not installed') || why.includes('does not exist')) {
+        return Observation.fail(`${bundle} is not installed on this device`);
+      }
+      return Observation.fail(`could not open ${bundle} here: ${why}`);
     }
 
     if (action.kind === 'ui.back') {
