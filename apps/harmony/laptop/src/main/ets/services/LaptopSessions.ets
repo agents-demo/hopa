@@ -6,6 +6,9 @@ import { LaptopTurn } from './LaptopChat';
 interface StoredTurn {
   role: string;
   text: string;
+  /** The shared-store id, so a run record still finds its turn after a restart. */
+  id?: string;
+  at?: number;
 }
 
 interface StoredSession {
@@ -109,6 +112,13 @@ export class LaptopSessions {
 
   private adopt(sessions: SyncSession[]): void {
     const active: string = this.currentId;
+    let localActive: LaptopSession | undefined = undefined;
+    for (const session of this.list) {
+      if (session.id === active) {
+        localActive = session;
+        break;
+      }
+    }
     const kept: LaptopSession[] = [];
     for (const wire of sessions) {
       if (wire.deletedAt > 0) {
@@ -141,7 +151,16 @@ export class LaptopSessions {
         break;
       }
     }
-    this.currentId = stillThere ? active : kept[0].id;
+    if (!stillThere && localActive !== undefined && localActive.turns.length > 0) {
+      // The merge does not know the conversation you are in yet (its push and
+      // this pull crossed). Keep it and stay on it: jumping to another chat is
+      // how a finished run used to disappear from the screen.
+      kept.unshift(localActive);
+      this.list = kept;
+      this.currentId = active;
+    } else {
+      this.currentId = stillThere ? active : kept[0].id;
+    }
     this.removed = [];
   }
 
@@ -151,7 +170,9 @@ export class LaptopSessions {
     const kept: string[] = [];
     for (const line of lines) {
       const trimmed: string = line.trim();
-      if (trimmed.includes('[meta]') || trimmed.startsWith('shot=') || trimmed.startsWith('ref=')) {
+      // The phone stores a machine block with some answers; it is not prose.
+      if (trimmed.includes('[meta]') || trimmed.includes('\u27e6meta\u27e7') ||
+        trimmed.startsWith('shot=') || trimmed.startsWith('ref=')) {
         continue;
       }
       kept.push(line);
@@ -229,6 +250,8 @@ export class LaptopSessions {
     const turns: LaptopTurn[] = [];
     for (const item of items) {
       const turn = new LaptopTurn();
+      turn.id = item.id ?? '';
+      turn.at = item.at ?? 0;
       turn.role = item.role === 'assistant' ? 'assistant' : 'user';
       // Older saves and synced phone turns can carry the machine block.
       turn.text = LaptopSessions.stripMeta(item.text);
@@ -337,7 +360,7 @@ export class LaptopSessions {
       for (const session of this.list) {
         const turns: StoredTurn[] = [];
         for (const turn of session.turns) {
-          const item: StoredTurn = { role: turn.role, text: turn.text };
+          const item: StoredTurn = { role: turn.role, text: turn.text, id: turn.id, at: turn.at };
           turns.push(item);
         }
         const stored: StoredSession = {

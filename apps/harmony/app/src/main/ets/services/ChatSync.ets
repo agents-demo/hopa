@@ -43,6 +43,17 @@ class SyncUrls {
   role: string = '';
 }
 
+class ImageReceipt {
+  id: string = '';
+  mime: string = '';
+  bytes: number = 0;
+}
+
+class ImageUpload {
+  mime: string = '';
+  data: string = '';
+}
+
 export class ChatSync {
   private where: SyncUrls = new SyncUrls();
 
@@ -102,8 +113,7 @@ export class ChatSync {
   }
 
   /** Hand the store this device's sessions; the answer is the merged truth. */
-  async push(sessions: SyncSession[]): Promise<SyncSession[]> {
-    if (!this.isConfigured()) {
+  async push(sessions: SyncSession[]): Promise<SyncSession[]> {    if (!this.isConfigured()) {
       return [];
     }
     const body = new SyncPushBody();
@@ -130,6 +140,70 @@ export class ChatSync {
       return parsed.sessions;
     } catch (error) {
       return [];
+    } finally {
+      client.destroy();
+    }
+  }
+
+  /**
+   * Put a frame in the shared store and return its id.
+   *
+   * The id is what a turn carries, because a sandbox path means nothing on the
+   * other device; the bytes live once on the PC and both shells read them.
+   */
+  async uploadImage(dataBase64: string, mime: string): Promise<string> {
+    if (!this.isConfigured() || dataBase64.length === 0) {
+      return '';
+    }
+    const body = new ImageUpload();
+    body.mime = mime;
+    body.data = dataBase64;
+    const client = http.createHttp();
+    try {
+      const response = await client.request(`${this.where.url}/images`, {
+        method: http.RequestMethod.POST,
+        header: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.where.token}`,
+          'X-Hopa-Role': this.where.role
+        },
+        extraData: JSON.stringify(body),
+        expectDataType: http.HttpDataType.ARRAY_BUFFER,
+        connectTimeout: 6000,
+        readTimeout: 20000
+      });
+      if (response.responseCode !== 200) {
+        return '';
+      }
+      const raw: string = buffer.from(response.result as ArrayBuffer).toString('utf8');
+      return (JSON.parse(raw) as ImageReceipt).id;
+    } catch (error) {
+      return '';
+    } finally {
+      client.destroy();
+    }
+  }
+
+  /** Read a frame the other device uploaded; undefined when it is not there. */
+  async downloadImage(id: string): Promise<ArrayBuffer | undefined> {
+    if (!this.isConfigured() || id.length === 0) {
+      return undefined;
+    }
+    const client = http.createHttp();
+    try {
+      const response = await client.request(`${this.where.url}/images/${id}`, {
+        method: http.RequestMethod.GET,
+        header: this.headers(),
+        expectDataType: http.HttpDataType.ARRAY_BUFFER,
+        connectTimeout: 6000,
+        readTimeout: 20000
+      });
+      if (response.responseCode !== 200) {
+        return undefined;
+      }
+      return response.result as ArrayBuffer;
+    } catch (error) {
+      return undefined;
     } finally {
       client.destroy();
     }

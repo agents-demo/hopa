@@ -554,14 +554,13 @@ class BridgeServer:
         pair_code: str = "",
         token_ttl: float = 12 * 60 * 60,
         sessions_key: str = "",
-        state_path: str | Path | None = None,
         chats: ChatStore | None = None,
+        state_path: str | Path | None = None,
     ) -> None:
         if not token:
             raise BridgeError("a token is required")
         self.device = device
         self.token = token
-        self.chats = chats if chats is not None else ChatStore()
         self.refresh_token = secrets.token_urlsafe(32)
         self.token_ttl = token_ttl
         self.token_issued_at = time.monotonic()
@@ -572,6 +571,9 @@ class BridgeServer:
         self.refresh_lock = threading.Lock()
         self.sessions: list[Any] = []
         self.sessions_updated: int = 0
+        # A single-device bridge has no pool in front, so it owns the shared
+        # conversation store itself; the pool passes its own store in.
+        self.chats = chats if chats is not None else ChatStore()
         # Read-only key for other devices: it can read the session snapshot
         # and nothing else, so a laptop never needs the token that can tap.
         self.sessions_key = sessions_key or secrets.token_urlsafe(24)

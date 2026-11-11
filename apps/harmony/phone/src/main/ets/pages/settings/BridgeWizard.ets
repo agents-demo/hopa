@@ -201,6 +201,18 @@ export struct BridgeWizard {
         .onChange((value: string) => {
           this.url = value;
         })
+      Row({ space: 6 }) {
+        Text('Use the HOPA cloud relay \u00b7 hopa-relay.onrender.com')
+          .fontSize(11.5)
+          .fontColor($r('app.color.primary'))
+          .onClick(() => {
+            this.url = 'https://hopa-relay.onrender.com';
+          })
+        Text('No USB, no port forward')
+          .fontSize(10.5)
+          .fontColor($r('app.color.text_hint'))
+      }
+      .width('100%')
       TextInput({ text: this.code, placeholder: 'six-digit pair code' })
         .height(44)
         .fontSize(15)
@@ -223,7 +235,7 @@ export struct BridgeWizard {
         .onClick(() => {
           this.pair();
         })
-      Text('No QR code and no cloud account: the code is the whole handshake.')
+      Text('No QR code and no account: the code is the whole handshake.')
         .fontSize(10)
         .fontColor($r('app.color.text_hint'))
     }

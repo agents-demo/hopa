@@ -35,6 +35,7 @@ from typing import Any
 from .bridge import BridgeServer
 from .chat_store import ChatStore
 from .device import Device
+from .images import ImageStore
 
 PHONE_ROLES = ("phone", "tablet")
 
@@ -49,12 +50,15 @@ class BridgePool:
         token_ttl: float = 12 * 60 * 60,
         device_factory: Any = None,
         chats: ChatStore | None = None,
+        images: ImageStore | None = None,
     ) -> None:
         if not devices:
             raise ValueError("a pool needs at least one device")
         # One conversation store for every device: this is the modern model,
         # the shells are views over it.
         self.chats = chats if chats is not None else ChatStore()
+        # One image store, too: a phone frame has to be readable on the laptop.
+        self.images = images if images is not None else ImageStore()
         self.nodes: dict[str, BridgeServer] = {}
         self.roles: dict[str, str] = {}
         for entry in devices:
@@ -69,6 +73,7 @@ class BridgePool:
                 token_ttl=token_ttl,
                 sessions_key=str(entry.get("sessions_key", "")),
                 state_path=entry.get("state") or None,
+                chats=self.chats,
             )
             node.start()
             self.nodes[serial] = node
@@ -122,7 +127,9 @@ class BridgePool:
             if wanted in self.nodes:
                 return self.nodes[wanted], path
             return None, f"unknown role: {wanted}"
-        if path == "/sessions":
+        if path == "/sessions" or path == "/pair":
+            # Both are phone-first: a phone pairs before it has any way to say
+            # who it is, and the session snapshot is a phone concept.
             return self.nodes[self.phone_serial()], path
         if len(self.nodes) == 1:
             return next(iter(self.nodes.values())), path
@@ -171,6 +178,13 @@ class _PoolHandler(BaseHTTPRequestHandler):
         body = json.dumps(payload).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _send_bytes(self, status: int, body: bytes, content_type: str) -> None:
+        self.send_response(status)
+        self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
@@ -248,6 +262,17 @@ class _PoolHandler(BaseHTTPRequestHandler):
         if read_role and self.path == "/sessions":
             self._cross_sessions(read_role)
             return
+        if self.path.startswith("/images/"):
+            if not self._authorized_any():
+                self._send(401, {"error": "unauthorized"})
+                return
+            found = self.pool.images.get(self.path[len("/images/") :])
+            if found is None:
+                self._send(404, {"error": "no such image"})
+                return
+            data, kind = found
+            self._send_bytes(200, data, kind)
+            return
         if self.path == "/health":
             self._send(
                 200,
@@ -278,5 +303,28 @@ class _PoolHandler(BaseHTTPRequestHandler):
                 self._send(400, {"error": "body must be an object"})
                 return
             self._send(200, self.pool.chats.merge(payload.get("sessions")))
+            return
+        if self.path == "/images":
+            if not self._authorized_any():
+                del_body = self._body()
+                del del_body
+                self._send(401, {"error": "unauthorized"})
+                return
+            try:
+                payload = json.loads(self._body().decode("utf-8") or "{}")
+            except (UnicodeDecodeError, ValueError):
+                self._send(400, {"error": "body is not JSON"})
+                return
+            if not isinstance(payload, dict):
+                self._send(400, {"error": "body must be an object"})
+                return
+            try:
+                receipt = self.pool.images.put(
+                    str(payload.get("mime", "")), str(payload.get("data", ""))
+                )
+            except ValueError as exc:
+                self._send(400, {"error": str(exc)})
+                return
+            self._send(200, receipt)
             return
         self._forward(self.path, self._role(), self._body())

@@ -211,6 +211,11 @@ export class AgentService {
     this.conversations.syncNow();
   }
 
+  /** A run frame goes to the shared store; the turn keeps only its id. */
+  async uploadShot(dataBase64: string): Promise<string> {
+    return this.chatSync.uploadImage(dataBase64, 'image/jpeg');
+  }
+
   /** The same shape the laptop's sidebar understands. */
   private sessionsSnapshot(): SessionSnapshot[] {
     const snapshots: SessionSnapshot[] = [];
