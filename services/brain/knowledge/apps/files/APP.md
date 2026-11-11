@@ -1,7 +1,7 @@
 ---
 name: files
 display: Files
-bundle: com.huawei.hmos.files
+bundle: com.huawei.hmos.filemanager
 bundle_verified: 2026-11-06
 ability: EntryAbility
 aliases: [文件, 文件管理]
@@ -15,6 +15,6 @@ platform: harmonyos
 - Use search for a file name.
 - Long-press a file for copy, move, rename or delete.
 
-Bundle confirmed on the emulator (`com.huawei.hmos.files`, 2026-11-06).
+Bundle confirmed on the emulator (`com.huawei.hmos.filemanager`, 2026-11-11).
 
 Validated on a HarmonyOS 6.1.1 emulator only after a smoke test.

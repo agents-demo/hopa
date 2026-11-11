@@ -136,7 +136,7 @@ export const APP_CATALOG: CatalogApp[] = [
   {
     name: "files",
     display: "Files",
-    bundle: "com.huawei.hmos.files",
+    bundle: "com.huawei.hmos.filemanager",
     aliases: ["文件", "文件管理"],
     confirmed: true,
     verified: true,

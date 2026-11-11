@@ -416,9 +416,10 @@ export class BridgeClient {
   }
 
   /** A JPEG of the device screen as a data URI, or '' when unavailable. */
-  async screenshot(): Promise<string> {
+  async screenshot(width: number = 0): Promise<string> {
     try {
-      const raw: string = await this.call('/screenshot', '{}');
+      const body: string = `{"width":${width}}`;
+      const raw: string = await this.call('/screenshot', body);
       const parsed = JSON.parse(raw) as ScreenshotBody;
       this.lastError = '';
       return parsed.image.length > 0 ? `data:${parsed.mime};base64,${parsed.image}` : '';

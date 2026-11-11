@@ -141,9 +141,12 @@ def _wait_for_foreground(device: Device, bundle: str, timeout: float = 6.0) -> s
     return ""
 
 
-def _screenshot(device: Device) -> dict[str, Any]:
+def _screenshot(device: Device, width: int = 0) -> dict[str, Any]:
     remote = "/data/local/tmp/hopa-bridge.jpeg"
-    device.hdc.shell(f"snapshot_display -f {remote}")
+    # The frame is evidence, not a wallpaper: cap it on the device so an app
+    # window of any size cannot turn into a multi-megabyte capture.
+    size = f" -w {width}" if width > 0 else ""
+    device.hdc.shell(f"snapshot_display -f {remote}{size}")
     with tempfile.TemporaryDirectory(prefix="hopa-shot-") as tmp:
         local = Path(tmp) / "screen.jpeg"
         device.hdc.file_recv(remote, local)
@@ -458,7 +461,7 @@ class _Handler(BaseHTTPRequestHandler):
             return {"ok": True}
         if self.path == "/screenshot":
             started = time.perf_counter()
-            shot = _screenshot(device)
+            shot = _screenshot(device, int(data.get("width", 0) or 0))
             print(f"screenshot {time.perf_counter() - started:.2f}s", file=sys.stderr, flush=True)
             return shot
         if self.path == "/type":

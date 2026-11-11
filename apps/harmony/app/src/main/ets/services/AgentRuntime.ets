@@ -144,7 +144,7 @@ export class AgentRuntime {
       if (foreground.length === 0 || foreground === 'com.hopa.agent') {
         return;
       }
-      const shot: string = await this.bridge.screenshot();
+      const shot: string = await this.bridge.screenshot(960);
       if (shot.length > 0) {
         this.lastStepShots.push(shot);
         this.lastStepShotIds.push(outcome.recordId);

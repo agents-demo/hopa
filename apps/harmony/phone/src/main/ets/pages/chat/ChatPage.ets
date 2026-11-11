@@ -478,7 +478,7 @@ export struct ChatPage {
     if (!AppFocus.active && service.lastRunHadActions() && service.isBridgeConfigured()) {
       const foreground: string = await service.bridge.foregroundBundle();
       if (foreground.length > 0 && foreground !== 'com.hopa.agent') {
-        const shot: string = await service.bridge.screenshot();
+        const shot: string = await service.bridge.screenshot(960);
         const marker: number = shot.indexOf('base64,');
         if (marker > 0) {
           try {
