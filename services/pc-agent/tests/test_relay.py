@@ -42,6 +42,7 @@ class _LocalBridge(BaseHTTPRequestHandler):
             {
                 "path": self.path,
                 "auth": self.headers.get("Authorization", ""),
+                "role": self.headers.get("X-Hopa-Role", ""),
                 "body": body.decode("utf-8"),
             }
         )
@@ -79,12 +80,15 @@ def _call(
     *,
     method: str = "GET",
     token: str = "",
+    role: str = "",
     payload: dict | None = None,
 ) -> tuple[int, dict]:
     headers = {}
     body = None
     if token:
         headers["Authorization"] = f"Bearer {token}"
+    if role:
+        headers["X-Hopa-Role"] = role
     if payload is not None:
         body = json.dumps(payload).encode("utf-8")
         headers["Content-Type"] = "application/json"
@@ -186,12 +190,13 @@ def test_link_forwards_and_reports(relay_server, local_bridge):
     worker.start()
     _wait_for_poller(relay)
 
-    status, body = _call(f"{base}/foreground", method="POST", token=PHONE, payload={})
+    status, body = _call(f"{base}/foreground", method="POST", token=PHONE, role="2in1", payload={})
     worker.join(timeout=5)
 
     assert status == 200
     assert body == {"local": True, "path": "/foreground"}
     assert _LocalBridge.seen[-1]["auth"] == "Bearer local-secret"
+    assert _LocalBridge.seen[-1]["role"] == "2in1"
     assert _LocalBridge.seen[-1]["body"] == "{}"
 
 

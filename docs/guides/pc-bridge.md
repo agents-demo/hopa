@@ -129,6 +129,18 @@ hdc -t 3QC0225821000268 rport tcp:8767 tcp:8767
 `-Stop`), and `deploy.ps1` calls it, so a bridge that died does not silently
 turn into "PC bridge offline" after an install.
 
+For the 2-in-1 alone, `tools\scripts\run-laptop.ps1` starts the laptop bridge on
+8767, adds `hdc rport tcp:8767`, and launches `LaptopAbility` with the bridge
+and model settings from `.env` in **local mode**. With `HOPA_LAPTOP_CLOUD=1`
+(or `-Cloud`) it instead launches the app against the cloud relay and the PC
+pool, and does not start the local 8767 bridge. `-Local` forces the 8767
+fallback. The script reads `HOPA_LAPTOP_DEVICE`, `HOPA_LAPTOP_BRIDGE_PORT`,
+`HOPA_LAPTOP_BRIDGE_TOKEN`, `HOPA_LAPTOP_BRIDGE_URL`, `HOPA_LAPTOP_CLOUD_URL`
+and `HOPA_LAPTOP_CLOUD_TOKEN` (the cloud token defaults to
+`HOPA_BRIDGE_TOKEN`). Use `-Status`, `-Restart`, `-Stop`, `-NoLaunch` or
+`-ResetForward` as needed; a healthy run prints the bridge/relay, laptop, app,
+reverse-port and `/whoami` state.
+
 Then in the laptop app: **Settings -> PC BRIDGE**, address
 `http://127.0.0.1:8767`, the key the bridge printed, **Connect**. The status
 reads `Connected.` only after a real `/health` answer; otherwise it shows the
@@ -229,6 +241,35 @@ Limits worth stating:
   `python -m hopa_pc_agent relay --host 0.0.0.0 --port $PORT`. The repository's
   `render.yaml` describes the same service for a Blueprint.
 
+### Both devices through one relay
+
+One relay can serve more than one device when the PC runs the `BridgePool`.
+With `HOPA_POOL=1`, `run-agent.ps1` writes `~/.hopa/devices.json` with the
+phone tunnel (`phone`) and the laptop USB (`2in1`), starts one bridge on 8765
+with `--devices`, and keeps one cloud link and one hdc tunnel. The relay
+preserves `X-Hopa-Role` through the link, so the pool sends `phone` or `2in1` to
+the right device.
+
+Both apps point at the relay URL with the same phone token. The role header,
+not a second token, selects the device, so one Render instance and one
+conversation store serve both. The laptop no longer needs its own 8767 bridge.
+
+```dotenv
+HOPA_POOL=1
+HOPA_LAPTOP_DEVICE=3QC0225821000268
+HOPA_LAPTOP_CLOUD=1
+HOPA_LAPTOP_CLOUD_URL=https://hopa-relay.onrender.com
+# HOPA_LAPTOP_CLOUD_TOKEN defaults to HOPA_BRIDGE_TOKEN
+```
+
+`run-agent.ps1` starts the pool, cloud link and hdc tunnel. `run-laptop.ps1`
+uses cloud mode by default when `HOPA_LAPTOP_CLOUD=1`; it launches the laptop
+app against the relay and does not start the local 8767 bridge. Use
+`run-laptop.ps1 -Local` for the 8767 bridge/rport fallback.
+
+The pool uses one shared token for both devices. Separate per-device tokens
+would need a relay token-to-role map, which this change does not add.
+
 ## hdc over the relay (cable-free control)
 
 The relay removes the phone→PC hop, but `hdc` is host-initiated: the bridge
@@ -314,9 +355,9 @@ raw `hdc` commands instead of the bridge, run `hdc tconn` again after a pause.
   If it reports `host=false`, check `run-agent.ps1 -Status` and the PC process.
 - **`ready=true` but device commands fail.** HarmonyOS can freeze the app's JS
   and TCP handlers while the WebSocket remains open. Bring HOPA to the
-  foreground; if `hdc` still says `Bind target session is dead`, reset the local
-  server with `hdc kill`, `hdc start`, then `hdc tconn 127.0.0.1:5556`. The
-  bridge then retries the command.
+  foreground. If the hdc session died, the bridge resets the local hdc server
+  once (`hdc kill`, `hdc start`, `hdc tconn 127.0.0.1:5556`) and replays the
+  command automatically.
 - A wrong token is rejected with `401` before the upgrade. The relay logs the
   path without its query; the tunnel client logs no token, payload or screen
   text.
@@ -331,7 +372,7 @@ raw `hdc` commands instead of the bridge, run `hdc tconn` again after a pause.
 | `hdc` target Offline | idle TCP target | the bridge re-runs `tconn` automatically; raw hdc users run it manually |
 | `401` on the WebSocket | token mismatch | check `HOPA_BRIDGE_TOKEN` on Render and in `.env` |
 | Device unreachable in the app | app cannot open `127.0.0.1:5555` | check that HOPA is installed and running; the retail build cannot execute a pushed binary (SELinux) |
-| `ready=true` but `observe` 500 / `tconn` dead session | HarmonyOS froze the app while the socket stayed open | open HOPA; then `hdc kill`, `hdc start`, `hdc tconn 127.0.0.1:5556` |
+| `ready=true` but `observe` 500 / `tconn` dead session | HarmonyOS froze the app while the socket stayed open | open HOPA; the bridge resets hdc and replays once |
 | Tunnel dies with the screen off | continuous task refused | check notification permission and `KEEP_BACKGROUND_RUNNING` |
 
 **Security:** with the toggle on, the relay carries full device control. Keep

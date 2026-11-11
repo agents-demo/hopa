@@ -108,7 +108,7 @@ builds that reject the pair.
 
 - [x] The bridge accepts the tunnel target without changing its HTTP endpoints (evidence: bridge --target 127.0.0.1:5556 served /observe and /screenshot through the relay)
 - [x] The app's bridge health distinguishes "relay reachable" from "device reachable" (evidence: BridgeClient parses /health.tunnel.ready; Settings shows Device ready vs Relay only)
-- [x] A dropped tunnel is retried with backoff and does not wedge the device lock (evidence: TunnelClient 2->30 s, HdcTunnel 5->30 s, hdc.py re-runs tconn; cable-free and burst runs)
+- [x] A dropped tunnel is retried with backoff and does not wedge the device lock (evidence: TunnelClient 2->30 s, HdcTunnel 5->30 s, hdc.py re-runs tconn and resets a dead session; unit tests in tests/test_hdc.py)
 - [x] `HOPA_DEVICE=127.0.0.1:5556` is documented as the tunnel target (evidence: docs/guides/pc-bridge.md#hdc-over-the-relay-cable-free-control; HOPA_BRIDGE_TARGET is the preferred switch)
 - [x] The USB target and the tunnel target can be switched with one setting change (evidence: .env HOPA_BRIDGE_TARGET; run-agent.ps1 picks it up)
 
@@ -147,6 +147,25 @@ builds that reject the pair.
    frame size, monthly hours)?
 6. If the relay is compromised, what stops it from driving the phone? The hdc
    key is the only remaining gate; is that enough?
+
+**Answers (2026-11-11):**
+
+1. **Yes.** The app uid connected to `127.0.0.1:5555`; `hdc shell` over the
+   tunnel returned uid 2000.
+2. **No fresh pairing.** The PC's existing hdc key worked; `hdc tconn
+   127.0.0.1:5556` connected without a code.
+3. **The same hdcd.** The tunneled target served shell, `uitest`, and
+   `snapshot_display`, exactly like the USB target.
+4. **Partly.** The WebSocket survives a 10-minute screen-off run, but
+   HarmonyOS suspends the app's JS/TCP handlers after a few minutes. The relay
+   can report `ready` while new OPEN streams time out; foregrounding HOPA and
+   resetting the local hdc server recovers it. This is the one blocked box.
+5. **No observed limit.** The free plan carried the tunnel for 10 minutes and
+   the 100-command burst with 32 KiB chunks; application keepalives every 15 s
+   kept the socket alive.
+6. **It is a full control path while enabled.** The hdc key is a second gate,
+   not a substitute for a trustworthy relay. Keep the toggle off when remote
+   control is not needed.
 
 ## 8. Acceptance criteria
 

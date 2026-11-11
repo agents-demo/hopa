@@ -169,6 +169,7 @@ class TunnelRegistry:
             "host": any(item["host"] for item in sessions),
             "phone": any(item["phone"] for item in sessions),
             "ready": any(item["host"] and item["phone"] for item in sessions),
+            "links": sessions,
         }
 
 

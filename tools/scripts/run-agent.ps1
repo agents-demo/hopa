@@ -56,7 +56,42 @@ if (-not $tunnelListen) { $tunnelListen = '127.0.0.1:5556' }
 $tunnelSession = $cfg['HOPA_TUNNEL_SESSION']
 if (-not $tunnelSession) { $tunnelSession = 'default' }
 $tunnelEnabled = $cloudEnabled -and ($bridgeTarget -eq $tunnelListen)
+$poolEnabled = $cfg['HOPA_POOL'] -match '^(1|true|yes|on)$'
+$devicesPath = $cfg['HOPA_DEVICES']
+if (-not $devicesPath) { $devicesPath = Join-Path $env:USERPROFILE '.hopa\devices.json' }
+$laptopDevice = $cfg['HOPA_LAPTOP_DEVICE']
 $pcAgent = Join-Path $root '.venv\Scripts\pc-agent.exe'
+
+function Write-PoolFile {
+    if (-not $poolEnabled) { return }
+    $stateDir = Join-Path $env:USERPROFILE '.hopa'
+    New-Item -ItemType Directory -Force $stateDir | Out-Null
+    $entries = @()
+    if ($bridgeTarget) {
+        $entries += [ordered]@{
+            serial = $bridgeTarget
+            token  = $cfg['HOPA_BRIDGE_TOKEN']
+            role   = 'phone'
+            state  = (Join-Path $stateDir 'bridge-8765-phone.json')
+        }
+    }
+    if ($laptopDevice) {
+        $entries += [ordered]@{
+            serial = $laptopDevice
+            token  = $cfg['HOPA_BRIDGE_TOKEN']
+            role   = '2in1'
+            state  = (Join-Path $stateDir 'bridge-8765-2in1.json')
+        }
+    }
+    if ($entries.Count -eq 0) {
+        throw 'HOPA_POOL is on but neither HOPA_BRIDGE_TARGET nor HOPA_LAPTOP_DEVICE is set.'
+    }
+    $json = ConvertTo-Json -InputObject $entries -Depth 5
+    if ($entries.Count -eq 1) {
+        $json = "[$($json.Trim())]"
+    }
+    Set-Content -Path $devicesPath -Value $json -Encoding utf8
+}
 
 function Test-Port([int]$value) {
     return [bool](Get-NetTCPConnection -LocalPort $value -State Listen -ErrorAction SilentlyContinue)
@@ -105,7 +140,13 @@ function Stop-Tunnel {
 
 function Show-Status {
     $bridgeState = if (Test-Port $port) { 'up' } else { 'down' }
-    Write-Host "bridge:     $localUrl ($bridgeState, target $bridgeTarget)"
+    if ($poolEnabled) {
+        $poolTargets = "phone=$bridgeTarget"
+        if ($laptopDevice) { $poolTargets = "$poolTargets, 2in1=$laptopDevice" }
+        Write-Host "bridge:     $localUrl ($bridgeState, pool: $poolTargets)"
+    } else {
+        Write-Host "bridge:     $localUrl ($bridgeState, target $bridgeTarget)"
+    }
     if ($cloudEnabled) {
         $links = @(Get-CloudLinkProcess -Relay $relayUrl)
         $linkState = if ($links.Count -gt 0) { "running (pid $($links[0].ProcessId))" } else { 'not running' }
@@ -137,6 +178,8 @@ function Show-Status {
     }
 }
 
+Write-PoolFile
+
 if ($Status) {
     Show-Status
     exit 0
@@ -163,12 +206,20 @@ if (-not (Test-Path $pcAgent)) {
 }
 
 if (-not (Test-Port $port)) {
-    $bridgeArgs = @('bridge', '--host', '127.0.0.1', '--port', "$port", '--token', $cfg['HOPA_BRIDGE_TOKEN'])
-    if ($bridgeTarget) {
-        # --target is a global option, so it goes before the subcommand.
-        $bridgeArgs = @('--target', $bridgeTarget) + $bridgeArgs
+    if ($poolEnabled) {
+        $bridgeArgs = @(
+            'bridge', '--host', '127.0.0.1', '--port', "$port",
+            '--devices', $devicesPath
+        )
+        Write-Host "Starting bridge pool on $localUrl..."
+    } else {
+        $bridgeArgs = @('bridge', '--host', '127.0.0.1', '--port', "$port", '--token', $cfg['HOPA_BRIDGE_TOKEN'])
+        if ($bridgeTarget) {
+            # --target is a global option, so it goes before the subcommand.
+            $bridgeArgs = @('--target', $bridgeTarget) + $bridgeArgs
+        }
+        Write-Host "Starting bridge on $localUrl..."
     }
-    Write-Host "Starting bridge on $localUrl..."
     Start-Process -FilePath $pcAgent -WindowStyle Hidden -ArgumentList $bridgeArgs | Out-Null
     for ($attempt = 0; $attempt -lt 20; $attempt++) {
         Start-Sleep -Milliseconds 250

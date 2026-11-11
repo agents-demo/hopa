@@ -67,3 +67,42 @@ def test_usb_target_is_not_reconnected(monkeypatch) -> None:
     hdc.run("shell", "echo hi")
 
     assert ensured == []
+
+
+def test_network_target_resets_a_dead_session(monkeypatch) -> None:
+    hdc = Hdc(hdc_path="hdc", target="127.0.0.1:5556")
+    calls: list[list[str]] = []
+    ensured: list[bool] = []
+    resets: list[bool] = []
+
+    def fake_execute(cmd: list[str], timeout: float) -> HdcResult:
+        calls.append(cmd)
+        if len(calls) <= 2:
+            return HdcResult("", "[F] Send isDead Bind target session is dead", 0)
+        return HdcResult("ok", "", 0)
+
+    monkeypatch.setattr(hdc, "_execute", fake_execute)
+    monkeypatch.setattr(hdc, "_ensure_target", lambda: ensured.append(True))
+    monkeypatch.setattr(hdc, "_reset_hdc_server", lambda: resets.append(True))
+
+    result = hdc.run("shell", "echo hi")
+
+    assert result.stdout == "ok"
+    assert resets == [True]
+    assert ensured == [True, True]
+    assert len(calls) == 3
+
+
+def test_usb_target_never_resets_hdc(monkeypatch) -> None:
+    hdc = Hdc(hdc_path="hdc", target="63Q0226113049275")
+    resets: list[bool] = []
+    monkeypatch.setattr(
+        hdc,
+        "_execute",
+        lambda cmd, timeout: HdcResult("", "Bind target session is dead", 0),
+    )
+    monkeypatch.setattr(hdc, "_reset_hdc_server", lambda: resets.append(True))
+
+    hdc.run("shell", "echo hi")
+
+    assert resets == []
