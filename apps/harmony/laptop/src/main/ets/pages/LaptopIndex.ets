@@ -5,6 +5,7 @@ import { window } from '@kit.ArkUI';
 import { pasteboard } from '@kit.BasicServicesKit';
 import { notificationManager } from '@kit.NotificationKit';
 import { wantAgent, WantAgent } from '@kit.AbilityKit';
+import { backgroundTaskManager } from '@kit.BackgroundTasksKit';
 import { webview } from '@kit.ArkWeb';
 import { HopaMark, EmptyHero, StepChips, ChatFormat, Character, KeyStore, SettingsStore, StoredSettings } from '@hopa/app';
 import { LaptopChat, LaptopTurn } from '../services/LaptopChat';
@@ -630,13 +631,32 @@ struct LaptopIndex {
 
   /** Ask the bridge for the shared list; it is the store of record. */
   private async syncChats(): Promise<void> {
+    if (this.busy || this.chat.busy) {
+      return;
+    }
+    const pinned: string = this.store.currentId;
     await this.store.syncNow();
+    if (this.busy || this.chat.busy) {
+      return;
+    }
     const context = getContext(this) as common.UIAbilityContext;
     await this.store.save(context);
+    // A merge must not silently switch the conversation you are reading.
+    if (pinned.length > 0 && this.store.currentId !== pinned) {
+      this.store.select(pinned);
+    }
     this.refreshSessions();
     const session: LaptopSession = this.store.current();
-    this.chat.turns = session.turns.slice();
-    this.turns = session.turns.slice();
+    // A pull can be older than a run that just finished on this laptop. Adopt
+    // it only when it knows at least as much; otherwise keep the local turns
+    // and let the next push carry them over. Losing a finished run to a stale
+    // merge is why an action could happen and leave no turn behind.
+    if (this.chat.turns.length === 0 || session.turns.length >= this.chat.turns.length) {
+      this.chat.turns = session.turns.slice();
+      this.turns = session.turns.slice();
+    } else {
+      this.store.commit(this.turns, this.lastLatency, this.lastTokens);
+    }
     this.prefetchImages();
     this.refreshLastQuestion();
   }
@@ -858,6 +878,32 @@ struct LaptopIndex {
     }
   }
 
+  /** Hold the app alive while a run works and the user is in another app. */
+  private async keepAlive(run: boolean): Promise<void> {
+    const context = getContext(this) as common.UIAbilityContext;
+    try {
+      if (run) {
+        const agent: WantAgent = await wantAgent.getWantAgent({
+          wants: [
+            {
+              bundleName: 'com.hopa.agent',
+              abilityName: 'LaptopAbility'
+            }
+          ],
+          actionType: wantAgent.OperationType.START_ABILITY,
+          requestCode: 31
+        });
+        await backgroundTaskManager.startBackgroundRunning(
+          context, backgroundTaskManager.BackgroundMode.DATA_TRANSFER, agent);
+      } else {
+        await backgroundTaskManager.stopBackgroundRunning(context);
+      }
+    } catch (error) {
+      // Without it the run still works while HOPA is in front; it is a shield,
+      // not a requirement.
+    }
+  }
+
   private async send(): Promise<void> {
     if (this.draft.trim().length === 0 || this.busy) {
       return;
@@ -869,12 +915,28 @@ struct LaptopIndex {
     const text: string = this.draft;
     this.draft = '';
     this.busy = true;
+    const context = getContext(this) as common.UIAbilityContext;
     // Show the question at once; waiting for the run made the pane look dead.
     const running: Promise<void> = this.chat.send(text);
     this.turns = this.chat.turns.slice();
     this.prefetchImages();
     this.lastQuestion = this.chat.lastQuestion;
+    // The question is in the list now; without this it sits below the fold and
+    // looks like the send did nothing.
+    this.scrollToEnd();
+    // Put the question in the shared store before the model runs. A finished
+    // action with no turn behind it has nowhere for its steps or frame to live.
+    this.store.commit(this.chat.turns, this.chat.lastLatencyMs, this.chat.lastTokens);
+    await this.store.save(context);
+    this.refreshSessions();
+    try {
+      await this.store.syncNow();
+    } catch (error) {
+      // The turn is local; a later sync will carry it.
+    }
+    await this.keepAlive(true);
     await running;
+    this.keepAlive(false);
     this.turns = this.chat.turns.slice();
     this.prefetchImages();
     this.error = this.chat.error;
@@ -883,7 +945,6 @@ struct LaptopIndex {
     this.lastTokens = this.chat.lastTokens;
     this.busy = false;
     this.scrollToEnd();
-    const context = getContext(this) as common.UIAbilityContext;
     if (this.speakReplies && this.chat.turns.length > 0) {
       const last = this.chat.turns[this.chat.turns.length - 1];
       if (last.role === 'assistant') {
@@ -896,7 +957,14 @@ struct LaptopIndex {
     this.store.commit(this.chat.turns, this.chat.lastLatencyMs, this.chat.lastTokens);
     await this.store.save(context);
     this.refreshSessions();
-    this.syncChats();
+    // Push the finished turn; do not adopt here. A pull is a merge of every
+    // device and can lag this run by one request, and adopting it would replace
+    // the conversation you are looking at — the run would vanish with it.
+    try {
+      await this.store.syncNow();
+    } catch (error) {
+      // The run is safe locally; the bridge will get it on the next sync.
+    }
     this.runs = this.agent.runs.all().reverse();
     this.agent.archive.save(context);
   }
@@ -946,10 +1014,18 @@ struct LaptopIndex {
 
   private scrollToEnd(): void {
     setTimeout(() => {
-      this.scroller.scrollEdge(Edge.Bottom);
+      try {
+        this.scroller.scrollEdge(Edge.Bottom);
+      } catch (error) {
+        // The list is not mounted (another pane is showing): nothing to scroll.
+      }
     }, 60);
     setTimeout(() => {
-      this.scroller.scrollEdge(Edge.Bottom);
+      try {
+        this.scroller.scrollEdge(Edge.Bottom);
+      } catch (error) {
+        // Same.
+      }
     }, 220);
   }
 
