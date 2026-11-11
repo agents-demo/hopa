@@ -17,6 +17,8 @@ param(
     [switch]$Restart,
     [switch]$NoLaunch,
     [switch]$ResetForward,
+    [switch]$Cloud,
+    [switch]$Local,
     [string]$EnvFile = '.env'
 )
 
@@ -55,6 +57,20 @@ $bundle = 'com.hopa.agent'
 $ability = 'LaptopAbility'
 $pcAgent = Join-Path $root '.venv\Scripts\pc-agent.exe'
 $healthUrl = "http://127.0.0.1:$port"
+
+$cloud = $Cloud -or ($cfg['HOPA_LAPTOP_CLOUD'] -match '^(1|true|yes|on)$')
+if ($Local) { $cloud = $false }
+$cloudUrl = $cfg['HOPA_LAPTOP_CLOUD_URL']
+if (-not $cloudUrl) { $cloudUrl = $cfg['HOPA_BRIDGE_URL'] }
+$cloudToken = $cfg['HOPA_LAPTOP_CLOUD_TOKEN']
+if (-not $cloudToken) { $cloudToken = $cfg['HOPA_BRIDGE_TOKEN'] }
+if ($cloud) {
+    if (-not $cloudUrl) { throw 'Set HOPA_LAPTOP_CLOUD_URL or HOPA_BRIDGE_URL for cloud mode.' }
+    if (-not $cloudToken) { throw 'Set HOPA_LAPTOP_CLOUD_TOKEN or HOPA_BRIDGE_TOKEN for cloud mode.' }
+    $appUrl = $cloudUrl
+    $token = $cloudToken
+    $healthUrl = $cloudUrl
+}
 
 function Resolve-Hdc {
     if ($env:HOPA_HDC -and (Test-Path $env:HOPA_HDC)) { return $env:HOPA_HDC }
@@ -178,19 +194,53 @@ function Start-LaptopApp {
 }
 
 function Show-Status {
-    $bridgeUp = Test-Port $port
     $targets = @(Get-Targets)
     $connected = $targets -contains $device
     $appText = ''
-    $reverseText = ''
     if ($connected) {
         $appText = (& $hdc -t $device shell "ps -A | grep com.hopa.agent" 2>&1 | Out-String).Trim()
+    }
+    $laptopState = if ($connected) { 'connected' } else { 'not connected' }
+    $appState = if ($appText) { 'running' } else { 'not running' }
+    if ($cloud) {
+        Write-Host 'mode:    cloud relay (PC pool)'
+        Write-Host "relay:   $appUrl"
+        Write-Host "laptop:  $device ($laptopState)"
+        Write-Host "app:     $appState"
+        try {
+            $health = Invoke-RestMethod -Uri "$healthUrl/health" -TimeoutSec 10
+            $linked = $health.linked
+            $tunnelState = 'n/a'
+            if ($null -ne $health.tunnel) {
+                $tunnelState = if ($health.tunnel.ready) {
+                    'ready'
+                } else {
+                    "host=$($health.tunnel.host) phone=$($health.tunnel.phone)"
+                }
+            }
+            Write-Host "health:  linked=$linked tunnel=$tunnelState"
+        } catch {
+            Write-Host "health:  $($_.Exception.Message)"
+        }
+        try {
+            Invoke-RestMethod -Uri "$healthUrl/whoami" `
+                -Headers @{
+                    Authorization  = "Bearer $token"
+                    'X-Hopa-Role' = '2in1'
+                } -TimeoutSec 10 | Out-Null
+            Write-Host 'whoami:  ok'
+        } catch {
+            Write-Host 'whoami:  rejected or unavailable'
+        }
+        return
+    }
+    $bridgeUp = Test-Port $port
+    $reverseText = ''
+    if ($connected) {
         $hex = '{0:X4}' -f $port
         $reverseText = (& $hdc -t $device shell "cat /proc/net/tcp 2>/dev/null | grep -i ':$hex '" 2>&1 | Out-String).Trim()
     }
     $bridgeState = if ($bridgeUp) { 'up' } else { 'down' }
-    $laptopState = if ($connected) { 'connected' } else { 'not connected' }
-    $appState = if ($appText) { 'running' } else { 'not running' }
     $reverseState = if ($reverseText) { "tcp:$port forward present" } else { "tcp:$port forward missing" }
     Write-Host "bridge:  $healthUrl ($bridgeState)"
     Write-Host "laptop:  $device ($laptopState)"
@@ -206,7 +256,10 @@ function Show-Status {
         }
         try {
             Invoke-RestMethod -Uri "$healthUrl/whoami" `
-                -Headers @{ Authorization = "Bearer $token" } -TimeoutSec 5 | Out-Null
+                -Headers @{
+                    Authorization  = "Bearer $token"
+                    'X-Hopa-Role' = '2in1'
+                } -TimeoutSec 5 | Out-Null
             Write-Host 'whoami:  ok'
         } catch {
             Write-Host 'whoami:  rejected or unavailable'
@@ -223,7 +276,22 @@ if ($Status) {
 
 if ($Stop) {
     Stop-LaptopBridge
-    Write-Host "stopped the laptop bridge on port $port"
+    if ($cloud) {
+        Write-Host 'stopped the local laptop bridge; stop the cloud pool with run-agent.ps1 -Stop'
+    } else {
+        Write-Host "stopped the laptop bridge on port $port"
+    }
+    exit 0
+}
+
+if ($cloud) {
+    if ($Restart) {
+        Write-Host 'cloud mode: restart the pool with run-agent.ps1 -Restart; relaunching the app now'
+    }
+    if (-not $NoLaunch) {
+        Start-LaptopApp
+    }
+    Show-Status
     exit 0
 }
 
