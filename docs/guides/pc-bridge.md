@@ -299,9 +299,12 @@ raw `hdc` commands instead of the bridge, run `hdc tconn` again after a pause.
 
 ### Background and reconnects
 
-- The tunnel holds the same `dataTransfer` continuous task as a running agent.
-  The task is ref-counted, so a run and the tunnel can share it; turning the
-  tunnel off does not stop a run and vice versa.
+- The tunnel holds the same continuous task as a running agent. It requests
+  `dataTransfer` plus `multiDeviceConnection` (the latter matches a PC↔phone
+  control channel; `dataTransfer` alone is suspended when an idle tunnel moves
+  no bytes), with a `dataTransfer` fallback on older builds. The task is
+  ref-counted, so a run and the tunnel can share it; turning the tunnel off does
+  not stop a run and vice versa.
 - The app retries 2 s → 4 s → 8 s → 16 s → 30 s. The PC retries 5 s → 30 s.
   A Render restart or cold start is survived without re-pairing; the tokens do
   not change.

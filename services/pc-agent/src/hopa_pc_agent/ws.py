@@ -183,13 +183,19 @@ class WebSocketConnection:
             except (OSError, ValueError):
                 pass
 
-    def start_keepalive(self, interval: float = 20.0) -> None:
-        """Ping the peer so proxies do not drop an idle tunnel."""
+    def start_keepalive(self, interval: float = 15.0) -> None:
+        """Keep an idle tunnel alive through proxies and phone power save.
+
+        A WebSocket ping is a control frame; some stacks still suspend a socket
+        that carries no application data. Send a one-byte binary no-op as well.
+        Both tunnel ends ignore a frame shorter than five bytes.
+        """
 
         def loop() -> None:
             while not self._closed.wait(interval):
                 try:
                     self._send(OP_PING, b"")
+                    self._send(OP_BINARY, b"\x00")
                 except (OSError, WebSocketError, ValueError):
                     self.close()
                     return

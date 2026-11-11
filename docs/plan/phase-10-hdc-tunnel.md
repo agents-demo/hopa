@@ -93,6 +93,11 @@ verified on the device. No fresh hdc pairing was required: `hdc tconn
 
 ### 5.2 P1 — the app-side tunnel client
 
+Background note: `dataTransfer` alone is suspended when an idle tunnel moves no
+bytes (`SYSTEM_SUSPEND_DATA_TRANSFER_LOW_SPEED`). The app requests
+`dataTransfer` + `multiDeviceConnection` and falls back to `dataTransfer` on
+builds that reject the pair.
+
 - [ ] HOPA's ArkTS tunnel client reconnects after the relay restarts
 - [ ] HOPA holds the tunnel for 10 minutes with the screen off
 - [x] Settings has a Tunnel toggle and a three-state status (relay, tunnel, device) (evidence: Settings -> PHONE ACCESS -> Cable-free control; 2026-11-11 screenshot shows Relay connected / Tunnel ready / Device connected)
@@ -191,7 +196,13 @@ Device connected.
 
 **2026-11-11, background.** With the screen off and the continuous task
 running, the tunnel stayed `ready` for 90 s and `/observe` still returned a
-layout. The 10-minute run is recorded in the commit/PR that closes this phase.
+layout. A `dataTransfer`-only task was suspended after a few minutes
+(`SYSTEM_SUSPEND_DATA_TRANSFER_LOW_SPEED`), so the app now requests
+`dataTransfer` + `multiDeviceConnection` with a fallback. A socket that only
+sees WebSocket control frames still went quiet at about five minutes, so the
+relay now sends a one-byte binary no-op alongside each ping; both tunnel ends
+ignore it. The full 10-minute run is recorded in the commit/PR that closes this
+phase.
 
 **2026-11-11, burst.** 100 sequential `hdc ... shell` commands reached the
 device. 94 passed on the first attempt; the other 6 needed at most one
