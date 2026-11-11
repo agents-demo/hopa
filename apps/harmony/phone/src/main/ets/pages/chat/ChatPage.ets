@@ -33,6 +33,8 @@ export struct ChatPage {
   @State messages: ResourceStr[] = [];
   @State draft: string = '';
   @State busy: boolean = false;
+  /** '' acts on this phone; '2in1' asks the PC bridge to act on the laptop. */
+  @State targetRole: string = '';
   @State reaction: string = '';
   @State resumeGoal: string = '';
   @State resumeAt: number = 0;
@@ -459,6 +461,7 @@ export struct ChatPage {
 
     const beforeTitle: string = service.pageLinks.title();
     const beforeUrl: string = service.pageLinks.url();
+    service.runtime.setTarget(this.targetRole);
     const reply: string = await service.run(text);
     await service.persistStepShots(context).catch(() => {
       // Thumbnails are optional.
@@ -478,7 +481,7 @@ export struct ChatPage {
     if (!AppFocus.active && service.lastRunHadActions() && service.isBridgeConfigured()) {
       const foreground: string = await service.bridge.foregroundBundle();
       if (foreground.length > 0 && foreground !== 'com.hopa.agent') {
-        const shot: string = await service.bridge.screenshot();
+        const shot: string = await service.bridge.screenshot(960);
         const marker: number = shot.indexOf('base64,');
         if (marker > 0) {
           try {
@@ -1137,6 +1140,24 @@ export struct ChatPage {
             AgentService.get().pageLinks.open(this.lastPageUrl);
           }
         })
+      }
+      if (AgentService.get().isBridgeConfigured()) {
+        Row({ space: 6 }) {
+          Blank()
+          Text(this.targetRole === '2in1' ? 'Laptop' : 'Phone')
+            .fontSize(10)
+            .fontColor(this.targetRole === '2in1'
+              ? $r('app.color.primary')
+              : $r('app.color.text_hint'))
+            .padding({ left: 8, right: 8, top: 4, bottom: 4 })
+            .backgroundColor($r('app.color.surface_muted'))
+            .borderRadius(8)
+            .onClick(() => {
+              this.targetRole = this.targetRole === '2in1' ? '' : '2in1';
+            })
+        }
+        .width('100%')
+        .padding({ bottom: 4 })
       }
       ChatComposer({
         draft: this.draft,

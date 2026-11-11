@@ -144,7 +144,7 @@ export class AgentRuntime {
       if (foreground.length === 0 || foreground === 'com.hopa.agent') {
         return;
       }
-      const shot: string = await this.bridge.screenshot();
+      const shot: string = await this.bridge.screenshot(960);
       if (shot.length > 0) {
         this.lastStepShots.push(shot);
         this.lastStepShotIds.push(outcome.recordId);
@@ -273,8 +273,12 @@ export class AgentRuntime {
     return this.skills.draftFrom(this.lastGoal, this.lastTranscript);
   }
 
-  async run(goal: string): Promise<string> {
-    this.activeRuns += 1;
+  /** '' means this device; otherwise the device the run should act on. */
+  setTarget(role: string): void {
+    this.bridge.setTarget(role);
+  }
+
+  async run(goal: string): Promise<string> {    this.activeRuns += 1;
     try {
       return await this.runInner(goal);
     } finally {

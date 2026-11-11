@@ -201,8 +201,17 @@ class _PoolHandler(BaseHTTPRequestHandler):
         if node is None:
             self._send(400, {"error": target})
             return
-        headers: dict[str, str] = {}
-        for name in ("Authorization", "Content-Type"):
+        header = self.headers.get("Authorization", "")
+        presented = header[len("Bearer ") :] if header.startswith("Bearer ") else ""
+        # Pairing happens before a device holds any credential, so the node's
+        # own pair code is the check. Everything else must come from a paired
+        # device: the pool is the trust boundary, and it speaks to the target
+        # node with that node's token, so a paired phone may drive the PC.
+        if target != "/pair" and not self.pool.authorized_any(presented):
+            self._send(401, {"error": "unauthorized"})
+            return
+        headers: dict[str, str] = {"Authorization": f"Bearer {node.token}"}
+        for name in ("Content-Type",):
             value = self.headers.get(name)
             if value:
                 headers[name] = value

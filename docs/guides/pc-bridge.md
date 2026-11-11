@@ -342,6 +342,12 @@ tunnel is enabled.
 
 ## Security
 
+- Pairing is per device, but the pool is **one trust domain**: a paired phone
+  may name another device as the target (`X-Hopa-Role`, `/d/<serial>/…`) and the
+  pool will act on that device with its own token. Pairing a device is therefore
+  a decision to let it drive every device in the pool. The pool authorises the
+  caller first and never forwards an unknown token.
+
 - Every `POST` requires `Authorization: Bearer <token>`; comparison is
   constant-time. `/pair` and `/refresh` are the only unauthenticated writes and
   are rate-limited.
