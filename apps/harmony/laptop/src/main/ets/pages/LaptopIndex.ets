@@ -1,4 +1,5 @@
 import { common } from '@kit.AbilityKit';
+import { preferences } from '@kit.ArkData';
 import { RunRecord, RunStatus, ScheduledTask, Skill } from '@hopa/core';
 import { MemoryItem } from '@hopa/app';
 import { window } from '@kit.ArkUI';
@@ -681,10 +682,34 @@ struct LaptopIndex {
     reply.id = `t\u00b7${Date.now()}\u00b7${Math.floor(Math.random() * 1e6)}`;
     reply.at = Date.now();
     reply.role = 'assistant';
-    reply.text = 'I was stopped before I could answer: the system closed me while ' +
-      'I was working in another app. Ask again and I will retry.';
+    reply.text = 'I was stopped before I could answer: the system suspended me while ' +
+      'I was working in another app. Asking again now.';
     turns.push(reply);
     this.store.commit(turns, this.lastLatency, this.lastTokens);
+    this.resumeInterrupted(last.text);
+  }
+
+  /**
+   * The system suspends this shell ~0.4 s after an action opens another app and
+   * recovers it two seconds later. Finishing the question on that return is the
+   * only reliable behaviour a third-party 2-in-1 app can offer; the guard stops
+   * a second suspend from looping forever.
+   */
+  private resumeInterrupted(prompt: string): void {
+    if (prompt.trim().length === 0) {
+      return;
+    }
+    const context = getContext(this) as common.UIAbilityContext;
+    preferences.getPreferences(context, 'hopa_laptop').then(async (store) => {
+      const last = await store.get('resume_at', 0);
+      const since: number = typeof last === 'number' ? last : 0;
+      if (Date.now() - since < 180000) {
+        return;
+      }
+      await store.put('resume_at', Date.now());
+      await store.flush();
+      this.whenReady(prompt, Date.now());
+    }).catch(() => {});
   }
 
   /** The rail and the retry both read this; adopted turns must update it. */
@@ -905,6 +930,51 @@ struct LaptopIndex {
   }
 
   /** Hold the app alive while a run works and the user is in another app. */
+  /** The key loads asynchronously; a resume must wait for it, not race it. */
+  private whenReady(prompt: string, startedAt: number): void {
+    if (this.chat.isReady() && !this.busy) {
+      this.draft = prompt;
+      this.send();
+      return;
+    }
+    if (Date.now() - startedAt > 15000) {
+      this.error = 'Ask again when the model key is loaded.';
+      return;
+    }
+    setTimeout(() => {
+      this.whenReady(prompt, startedAt);
+    }, 500);
+  }
+
+  /**
+   * While a run acts in another app, this window stays above it. A shell that
+   * is fully covered goes to the background, and the resource scheduler freezes
+   * it on a lifecycle timeout, which used to kill the run mid-answer.
+   */
+  private async enterWorkingWindow(): Promise<void> {
+    const win: window.Window | undefined = this.win;
+    if (win === undefined) {
+      return;
+    }
+    try {
+      await win.setWindowTopmost(true);
+    } catch (error) {
+      // Not fatal: without it the run may still finish if the app is quick.
+    }
+  }
+
+  private async leaveWorkingWindow(): Promise<void> {
+    const win: window.Window | undefined = this.win;
+    if (win === undefined) {
+      return;
+    }
+    try {
+      await win.setWindowTopmost(false);
+    } catch (error) {
+      // Leaving it on top is harmless; the user can move the window.
+    }
+  }
+
   private async keepAliveBounded(run: boolean): Promise<void> {
     let timer: number = -1;
     const guard: Promise<void> = new Promise<void>(
@@ -960,10 +1030,10 @@ struct LaptopIndex {
     const context = getContext(this) as common.UIAbilityContext;
     // The choice of machine rides on the request, not on the conversation.
     this.agent.runtime.setTarget(this.targetRole);
-    // Hold a background task BEFORE the run: the first action opens another app,
-    // and the memory manager reaps this shell the moment that app takes the
-    // foreground. Requesting the task after the run started was too late - the
-    // launch happens within the first seconds and the process died mid-run.
+    // Two shields before the first action, because the first action opens
+    // another app: keep the window on top (the scheduler freezes a fully
+    // backgrounded shell mid-run) and hold a background task as well.
+    await this.enterWorkingWindow();
     await this.keepAliveBounded(true);
     // Show the question at once; waiting for the run made the pane look dead.
     const running: Promise<void> = this.chat.send(text);
@@ -996,6 +1066,7 @@ struct LaptopIndex {
       this.error = `${(error as Error).message}`;
     } finally {
       this.keepAlive(false).catch(() => {});
+      this.leaveWorkingWindow().catch(() => {});
       this.busy = false;
     }
     this.turns = this.chat.turns.slice();
