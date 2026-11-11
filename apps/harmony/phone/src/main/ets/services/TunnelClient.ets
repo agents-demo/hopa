@@ -119,13 +119,15 @@ export class TunnelClient {
       return;
     }
     let token: string = this.token.length > 0 ? this.token : stored.bridgeToken;
-    try {
-      const session: BridgeSessionRecord = await BridgeSessionStore.load();
-      if (session.token.length > 0) {
-        token = session.token;
+    if (this.token.length === 0) {
+      try {
+        const session: BridgeSessionRecord = await BridgeSessionStore.load();
+        if (session.token.length > 0) {
+          token = session.token;
+        }
+      } catch (error) {
+        // Keep the stored fallback.
       }
-    } catch (error) {
-      // Keep the stored fallback.
     }
     this.configure(stored.bridgeUrl, token);
     this.enabled = true;

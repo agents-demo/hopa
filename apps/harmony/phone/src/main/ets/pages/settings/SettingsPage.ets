@@ -30,8 +30,8 @@ export struct SettingsPage {
   @State bridgeUrl: string = '';
   @State bridgeToken: string = '';
   @State bridgeStatus: string = 'not connected';
-  @State bridgeDeviceReady: boolean = false;
-  @State bridgeTunnelKnown: boolean = false;
+  @StorageLink('hopa.bridgeDeviceReady') bridgeDeviceReady: boolean = false;
+  @StorageLink('hopa.bridgeTunnelKnown') bridgeTunnelKnown: boolean = false;
   @State pairCode: string = '';
   @State appearance: string = 'system';
   @State profile: string = 'everyday';
@@ -211,6 +211,7 @@ export struct SettingsPage {
     } else {
       AgentService.get().configureBridge(this.bridgeUrl, this.bridgeToken);
     }
+    TunnelClient.get().configure(this.bridgeUrl, this.bridgeToken);
     if (!AgentService.get().isBridgeConfigured()) {
       this.bridgeStatus = 'enter URL and token';
       return;

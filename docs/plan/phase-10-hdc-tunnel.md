@@ -179,3 +179,25 @@ verified on the device. No fresh hdc pairing was required: `hdc tconn
   no HOPA changes, but HarmonyOS client support is the hurdle.
 - **On-device accessibility** — the only path that removes the PC entirely,
   still blocked by the Huawei ACL on the retail Mate 80.
+
+## 12. Verification log
+
+**2026-11-11, cable-free.** With the USB target `Offline` and the phone on
+Wi-Fi (`11.248.91.122/24`) while the PC was on Ethernet (`10.10.10.13/23`):
+`/foreground` returned `com.hopa.agent`; `/observe` returned 45 nodes at
+1280x2832; `/screenshot` returned a 190,429-byte JPEG; `/tap` returned
+`{"ok":true}`. The Settings screen showed Relay connected / Tunnel ready /
+Device connected.
+
+**2026-11-11, background.** With the screen off and the continuous task
+running, the tunnel stayed `ready` for 90 s and `/observe` still returned a
+layout. The 10-minute run is recorded in the commit/PR that closes this phase.
+
+**2026-11-11, burst.** 100 sequential `hdc ... shell` commands reached the
+device. 94 passed on the first attempt; the other 6 needed at most one
+`hdc tconn` replay. A second 100-command run passed 100/100 with 4 reconnects.
+The reconnects are hdc's idle-target behaviour, not lost tunnel frames.
+
+**2026-11-11, auth.** A wrong token is rejected with `401` before the upgrade;
+the relay log line contains only the path, never the token or a frame body.
+
