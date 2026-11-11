@@ -6,6 +6,7 @@ enabled. Every request needs a bearer token; the default bind is 127.0.0.1.
 
 Endpoints (JSON):
     GET  /health
+    GET  /whoami               -> {"ok": true} (proves the token)
     POST /observe              -> {"text": str, "nodes": [...], "width": int, "height": int}
     POST /foreground           -> {"bundle": str}
     POST /tap                  {"x": int, "y": int}
@@ -341,6 +342,15 @@ class _Handler(BaseHTTPRequestHandler):
                     "updated": self.bridge.sessions_updated,
                 },
             )
+            return
+        if self.path == "/whoami":
+            # A port that answers is not a key that works. /health is public;
+            # this endpoint proves the bearer token before the shell says
+            # "Connected."
+            if not self._authorized():
+                self._send(401, {"ok": False, "error": "unauthorized"})
+                return
+            self._send(200, {"ok": True})
             return
         if self.path != "/health":
             self._send(404, {"error": "not found"})

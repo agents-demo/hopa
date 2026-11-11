@@ -180,6 +180,18 @@ def test_health_needs_no_token(bridge) -> None:
     assert _call(server, "/health", token="")["ok"] is True
 
 
+def test_whoami_confirms_the_token(bridge) -> None:
+    server, _ = bridge
+    assert _call(server, "/whoami")["ok"] is True
+
+
+def test_whoami_rejects_a_wrong_token(bridge) -> None:
+    server, _ = bridge
+    with pytest.raises(urllib.error.HTTPError) as error:
+        _call(server, "/whoami", token="wrong")
+    assert error.value.code == 401
+
+
 def test_post_requires_token(bridge) -> None:
     server, _ = bridge
     with pytest.raises(urllib.error.HTTPError) as error:
