@@ -87,8 +87,16 @@ export struct ChatRail {
         }
 
         Column({ space: 6 }) {
-          this.Label('THIS CONVERSATION')
-          Text(this.lastQuestion.length > 0 ? this.lastQuestion : 'No question yet.')
+          this.Label('DETAILS')
+          Text('Your request')
+            .fontSize(9.5)
+            .fontColor($r('app.color.text_hint'))
+            .width('100%')
+          Text('Your request')
+            .fontSize(9.5)
+            .fontColor($r('app.color.text_hint'))
+            .width('100%')
+          Text(this.lastQuestion.length > 0 ? this.lastQuestion : 'Nothing yet.')
             .fontSize(12.5)
             .lineHeight(18)
             .fontColor(this.lastQuestion.length > 0
@@ -97,12 +105,13 @@ export struct ChatRail {
             .maxLines(3)
             .textOverflow({ overflow: TextOverflow.Ellipsis })
             .width('100%')
-          Text(this.lastLatency > 0
-            ? `${this.lastLatency} ms  \u00b7  ${this.lastTokens} tokens`
-            : 'No answer yet')
-            .fontSize(10.5)
-            .fontColor($r('app.color.text_hint'))
-            .width('100%')
+          // No stopwatch, no line: a synced answer simply has no timing here.
+          if (this.lastLatency > 0) {
+            Text(`${(this.lastLatency / 1000).toFixed(1)} s  \u00b7  ${this.lastTokens} tokens`)
+              .fontSize(10.5)
+              .fontColor($r('app.color.text_hint'))
+              .width('100%')
+          }
         }
         .width('100%')
         .alignItems(HorizontalAlign.Start)
@@ -126,12 +135,6 @@ export struct ChatRail {
       }
       .width('100%')
       .alignItems(HorizontalAlign.Start)
-
-      Text('Payments always ask first.')
-        .fontSize(10)
-        .fontColor($r('app.color.text_hint'))
-        .width('100%')
-        .padding({ bottom: 2 })
     }
     .width(258)
     .height('100%')

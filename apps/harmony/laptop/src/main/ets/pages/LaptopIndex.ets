@@ -452,6 +452,18 @@ struct LaptopIndex {
     const session: LaptopSession = this.store.current();
     this.chat.turns = session.turns.slice();
     this.turns = session.turns.slice();
+    this.refreshLastQuestion();
+  }
+
+  /** The rail and the retry both read this; adopted turns must update it. */
+  private refreshLastQuestion(): void {
+    this.lastQuestion = '';
+    for (let index = this.turns.length - 1; index >= 0; index--) {
+      if (this.turns[index].role === 'user') {
+        this.lastQuestion = this.turns[index].text;
+        return;
+      }
+    }
   }
 
   private refreshSessions(): void {
@@ -560,13 +572,7 @@ struct LaptopIndex {
     this.lastLatency = session.lastLatency;
     this.lastTokens = session.lastTokens;
     this.error = '';
-    this.lastQuestion = '';
-    for (let i = this.turns.length - 1; i >= 0; i--) {
-      if (this.turns[i].role === 'user') {
-        this.lastQuestion = this.turns[i].text;
-        break;
-      }
-    }
+    this.refreshLastQuestion();
     this.refreshSessions();
   }
 
@@ -2260,6 +2266,10 @@ struct LaptopIndex {
     if (this.profileName === 'easy' || this.profileName === 'kid') {
       return false;
     }
+    // Details are for an answer; an empty draft has none to describe.
+    if (this.turns.length === 0 && !this.approvalOpen) {
+      return false;
+    }
     return this.winWidth >= 940;
   }
 
@@ -2367,18 +2377,23 @@ struct LaptopIndex {
   @Builder
   Sidebar() {
     Column() {
-      Column({ space: 10 }) {
-        Text('New chat')
-          .fontSize(12.5)
-          .fontColor($r('app.color.primary'))
-          .width('100%')
-          .textAlign(TextAlign.Center)
-          .padding({ top: 9, bottom: 9 })
-          .backgroundColor($r('app.color.primary_soft'))
-          .borderRadius(10)
-          .onClick(() => {
-            this.newChat();
-          })
+      Column({ space: 6 }) {
+        Row({ space: 8 }) {
+          Text('+')
+            .fontSize(14)
+            .fontColor($r('app.color.text_secondary'))
+          Text('New chat')
+            .fontSize(12.5)
+            .fontColor($r('app.color.text_secondary'))
+          Blank()
+        }
+        .width('100%')
+        .height(30)
+        .padding({ left: 10, right: 10 })
+        .borderRadius(8)
+        .onClick(() => {
+          this.newChat();
+        })
       }
       .width('100%')
       .padding({ left: 12, right: 12, top: 14, bottom: 8 })
@@ -2639,15 +2654,14 @@ struct LaptopIndex {
             .width('100%')
             .padding({ left: 22, right: 22, bottom: 4 })
         } else {
-        Row({ space: 10 }) {
+        Row({ space: 6 }) {
           TextArea({ text: this.draft, placeholder: 'Ask HOPA\u2026' })
             .id('hopa-composer')
             .layoutWeight(1)
             .fontSize(13.5)
             .constraintSize({ minHeight: 44, maxHeight: 132 })
-            .backgroundColor($r('app.color.surface_muted'))
-            .borderRadius(22)
-            .padding({ left: 16, right: 16, top: 11, bottom: 11 })
+            .backgroundColor(Color.Transparent)
+            .padding({ left: 8, right: 4, top: 11, bottom: 11 })
             .onChange((value: string) => {
               this.draft = value;
             })
@@ -2729,7 +2743,11 @@ struct LaptopIndex {
           }
         }
         .width('100%')
-        .padding({ left: 22, right: 22, top: 8, bottom: 16 })
+        .padding({ left: 6, right: 6 })
+        .backgroundColor($r('app.color.surface_muted'))
+        .borderRadius(24)
+        .padding({ left: 14, right: 6, top: 2, bottom: 2 })
+        .margin({ left: 22, right: 22, top: 8, bottom: 16 })
         }
       }
       .layoutWeight(1)
