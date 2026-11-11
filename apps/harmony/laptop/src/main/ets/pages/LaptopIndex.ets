@@ -1406,6 +1406,14 @@ struct LaptopIndex {
             this.saveBridge();
           })
 
+        Text('Use the HOPA cloud relay \u00b7 no USB, no port forward')
+          .fontSize(10.5)
+          .fontColor($r('app.color.primary'))
+          .onClick(() => {
+            // Fill only, like the phone's wizard: Connect is the decision.
+            this.bridgeUrl = 'https://hopa-relay.onrender.com';
+          })
+
         this.FieldLabel('Bridge key')
         TextInput({ text: this.bridgeToken, placeholder: 'from the bridge output' })
           .height(38)
