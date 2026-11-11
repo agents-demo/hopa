@@ -73,6 +73,7 @@ class BridgePool:
                 token_ttl=token_ttl,
                 sessions_key=str(entry.get("sessions_key", "")),
                 state_path=entry.get("state") or None,
+                chats=self.chats,
             )
             node.start()
             self.nodes[serial] = node

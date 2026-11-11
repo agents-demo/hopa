@@ -198,6 +198,39 @@ def test_observe_returns_nodes(bridge) -> None:
     assert wlan["clickable"] is True
 
 
+def test_chats_roundtrip(bridge) -> None:
+    server, _ = bridge
+    empty = _call(server, "/chats")
+    assert empty["rev"] == 0
+    assert empty["sessions"] == []
+
+    payload = {
+        "sessions": [
+            {
+                "id": "s1",
+                "title": "Hello",
+                "titleAt": 10,
+                "created": 1,
+                "updated": 2,
+                "turns": [{"id": "t1", "role": "user", "text": "hi", "at": 1}],
+            }
+        ]
+    }
+    merged = _call(server, "/chats", payload)
+    assert merged["rev"] == 1
+    assert merged["sessions"][0]["id"] == "s1"
+    assert merged["sessions"][0]["turns"][0]["text"] == "hi"
+
+    # The same turn arriving twice is still one turn, so rev does not move.
+    again = _call(server, "/chats", payload)
+    assert again["rev"] == 1
+    assert len(again["sessions"][0]["turns"]) == 1
+
+    with pytest.raises(urllib.error.HTTPError) as error:
+        _call(server, "/chats", payload, token="wrong")
+    assert error.value.code == 401
+
+
 def test_launch_confirms_the_foreground_app(bridge) -> None:
     server, device = bridge
     result = _call(server, "/launch", {"bundle": "com.huawei.hmos.settings"})
