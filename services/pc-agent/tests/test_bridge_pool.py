@@ -155,10 +155,10 @@ def test_unknown_role_is_rejected(pool):
     assert error.value.code == 400
 
 
-def test_wrong_token_is_rejected_by_the_device_server(pool):
+def test_unknown_token_is_rejected_even_for_a_valid_target(pool):
     server, _ = pool
     with pytest.raises(urllib.error.HTTPError) as error:
-        call(server, "/tap", role="2in1", token="phone-token", payload={"x": 1, "y": 2})
+        call(server, "/tap", role="2in1", token="not-a-token", payload={"x": 1, "y": 2})
     assert error.value.code == 401
 
 
@@ -208,7 +208,29 @@ def test_a_bad_base64_image_is_refused(pool):
         call(server, "/images", token="phone-token", payload={"mime": "image/jpeg", "data": "!!!"})
     assert caught.value.code == 400
 
+
 def test_pair_without_a_role_goes_to_the_phone(pool):
+    server, _ = pool
+    status, body = call(server, "/pair", token="", payload={"code": "123456"})
+    assert status == 200
+    assert body["token"]
+
+
+def test_a_paired_phone_may_drive_the_pc(pool):
+    server, devices = pool
+    status, _ = call(server, "/tap", role="2in1", token="phone-token", payload={"x": 5, "y": 6})
+    assert status == 200
+    assert devices["2222"].calls == [("tap", 5, 6)]
+
+
+def test_an_unknown_token_is_refused(pool):
+    server, _ = pool
+    with pytest.raises(urllib.error.HTTPError) as caught:
+        call(server, "/tap", role="2in1", token="nope", payload={"x": 1, "y": 2})
+    assert caught.value.code == 401
+
+
+def test_pair_needs_no_token(pool):
     server, _ = pool
     status, body = call(server, "/pair", token="", payload={"code": "123456"})
     assert status == 200
