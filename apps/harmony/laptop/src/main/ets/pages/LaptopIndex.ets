@@ -1406,7 +1406,7 @@ struct LaptopIndex {
             this.saveBridge();
           })
 
-        Text('Use the HOPA cloud relay \u00b7 no USB, no port forward')
+        Text('Use the HOPA cloud relay \u00b7 hopa-relay.onrender.com')
           .fontSize(10.5)
           .fontColor($r('app.color.primary'))
           .onClick(() => {

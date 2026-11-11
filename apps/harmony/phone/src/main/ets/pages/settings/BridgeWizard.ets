@@ -202,13 +202,13 @@ export struct BridgeWizard {
           this.url = value;
         })
       Row({ space: 6 }) {
-        Text('Use the HOPA cloud relay')
+        Text('Use the HOPA cloud relay \u00b7 hopa-relay.onrender.com')
           .fontSize(11.5)
           .fontColor($r('app.color.primary'))
           .onClick(() => {
             this.url = 'https://hopa-relay.onrender.com';
           })
-        Text('\u00b7 no USB, no port forward')
+        Text('No USB, no port forward')
           .fontSize(10.5)
           .fontColor($r('app.color.text_hint'))
       }
