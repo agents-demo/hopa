@@ -23,7 +23,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 KNOWLEDGE = ROOT / "services" / "brain" / "knowledge" / "apps"
 SITES = ROOT / "services" / "brain" / "knowledge" / "sites"
-TARGET = ROOT / "apps" / "harmony" / "entry" / "src" / "main" / "ets" / "services" / "AppCatalog.ets"
+TARGET = ROOT / "apps" / "harmony" / "app" / "src" / "main" / "ets" / "services" / "AppCatalog.ets"
 
 MAX_PURPOSE = 200
 MAX_ACTION = 120

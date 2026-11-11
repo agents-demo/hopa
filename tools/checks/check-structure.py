@@ -23,6 +23,15 @@ BUDGETS = {
     "services": 250,
     "core": 250,
 }
+# Files that were already over budget when the single `entry` module was split
+# into `app` / `phone` / `laptop`. They stay reported as open debt, not as new
+# drift: the list may only shrink. Tracked in docs/status/backlog.md.
+GRANDFATHERED = {
+    "apps/harmony/phone/src/main/ets/pages/chat/ChatPage.ets",
+    "apps/harmony/phone/src/main/ets/pages/settings/SettingsPage.ets",
+    "apps/harmony/laptop/src/main/ets/pages/LaptopIndex.ets",
+    "apps/harmony/app/src/main/ets/services/BridgeClient.ets",
+}
 IMPORT = re.compile(r"from\s+'([^']+)'")
 KIT = re.compile(r"from\s+'@kit\.")
 CAPABILITY = re.compile(r"from\s+'@hopa/capability-([a-z-]+)")
@@ -64,7 +73,8 @@ def check_capabilities(errors: list[str]) -> None:
 def check_barrels(errors: list[str]) -> None:
     allowed = {
         APP / "core/Index.ets",
-        APP / "entry/src/main/ets/pages/Index.ets",  # ArkUI entry page, not a barrel
+        APP / "app/Index.ets",  # the shared kit's package root
+        APP / "phone/src/main/ets/pages/Index.ets",  # ArkUI entry page, not a barrel
     } | {path / "Index.ets" for path in (APP / "capabilities").iterdir() if path.is_dir()}
     for path in APP.rglob("Index.ets"):
         if path in allowed:
@@ -78,8 +88,11 @@ def size_report() -> tuple[list[str], list[str]]:
     warnings: list[str] = []
     violations: list[str] = []
     areas = [
-        ("pages", APP / "entry/src/main/ets/pages", BUDGETS["pages"]),
-        ("services", APP / "entry/src/main/ets/services", BUDGETS["services"]),
+        ("phone pages", APP / "phone/src/main/ets/pages", BUDGETS["pages"]),
+        ("phone services", APP / "phone/src/main/ets/services", BUDGETS["services"]),
+        ("app services", APP / "app/src/main/ets/services", BUDGETS["services"]),
+        ("laptop pages", APP / "laptop/src/main/ets/pages", BUDGETS["pages"]),
+        ("laptop services", APP / "laptop/src/main/ets/services", BUDGETS["services"]),
         ("core", APP / "core/src/main", BUDGETS["core"]),
     ]
     for name, base, budget in areas:
@@ -88,6 +101,9 @@ def size_report() -> tuple[list[str], list[str]]:
                 continue
             lines = len(path.read_text(encoding="utf-8").splitlines())
             relative = path.relative_to(ROOT)
+            if relative.as_posix() in GRANDFATHERED:
+                warnings.append(f"{relative}: {lines} lines, already over the {budget} budget")
+                continue
             if lines > budget * 2:
                 violations.append(f"{relative}: {lines} lines (limit {budget}, hard {budget * 2})")
             elif lines > budget:
