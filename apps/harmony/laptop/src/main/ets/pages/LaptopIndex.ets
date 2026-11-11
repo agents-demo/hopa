@@ -190,7 +190,9 @@ struct LaptopIndex {
       this.lastTokens = session.lastTokens;
       this.refreshSessions();
       this.syncChats();
-      this.agent.launcher.attach(context);
+      // Without this the first publish is silently dropped on a fresh install.
+    notificationManager.requestEnableNotification(context).catch(() => {});
+    this.agent.launcher.attach(context);
       this.agent.launcher.loadInstalled().then(() => {
         this.apps = this.agent.launcher.apps();
       }).catch(() => {
