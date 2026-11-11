@@ -128,9 +128,11 @@ All notable changes are recorded here. Versions follow `docs/versioning.md`.
   same chat with a link to Activity, measured cost when it exists, and a pinned
   bridge line. An older run says `Earlier: …` so the pane never lies about which
   answer it describes.
-- Copy, Retry and Undo move from under the last bubble into the rail header.
-  Undo is offered only for a launch that actually executed; the old row under
-  the answer is gone, so the centre carries words and the rail carries verbs.
+- The pane observes; it does not command. `Copy` lives on the last answer,
+  consent lives in the card, and undo lives on the Activity row that knows the
+  app and the question. `Ask again`, `Copy run`, `Copy answer` and `Close app`
+  were tried in the pane and removed: the composer and the Activity row are
+  where those actions have context.
 - The header is silent while the PC bridge is healthy, as every modern shell
   is; only the exception earns chrome (`No bridge · Set up`, which opens
   Settings). The permanent status dot and the word "Bridge" are gone.
@@ -147,14 +149,10 @@ All notable changes are recorded here. Versions follow `docs/versioning.md`.
   now reads the same stored form as the phone (`ChatFormat.textOf` /
   `stepsOf`), so the line disappears and its steps become real steps in the
   rail — which is also why the pane can show a phone-run answer again.
-
-### Fixed
-
-- Opening a system app (Settings, Browser) failed with "could not open … here"
-  because `getLaunchWantForBundleSync` does not resolve them on this build. The
-  launcher now falls back to an explicit ability Want (`<bundle>.MainAbility`,
-  `<bundle>.EntryAbility`, then the bare names), so the action HOPA was asked
-  for actually happens.
+- A phone that had not yet paired was refused by the pooled bridge
+  (`400 say which device`): `/pair` now belongs to the phone, like `/sessions`,
+  because at that moment the caller has no credential with which to name itself.
+  With two devices in the pool, the setup wizard could never complete.
 
 ## 0.1.0 — 2026-11-06
 
