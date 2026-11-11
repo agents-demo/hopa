@@ -113,7 +113,6 @@ struct LaptopIndex {
   @State undoNote: string = '';
   /** '' acts on this laptop; 'phone' asks the PC bridge to act on the handset. */
   @State targetRole: string = '';
-  /** Bumped when a downloaded frame lands, so the chat re-renders. */
   @State imageTick: number = 0;
   @State plans: ScheduledTask[] = [];
   @State memories: MemoryItem[] = [];
@@ -920,6 +919,7 @@ struct LaptopIndex {
     const context = getContext(this) as common.UIAbilityContext;
     // The choice of machine rides on the request, not on the conversation.
     this.agent.runtime.setTarget(this.targetRole);
+    // Show the question at once; waiting for the run made the pane look dead.
     const running: Promise<void> = this.chat.send(text);
     this.turns = this.chat.turns.slice();
     this.prefetchImages();

@@ -81,7 +81,15 @@ export default class EntryAbility extends UIAbility {
     }
     const read = (key: string): string => {
       const value = params[key];
-      return typeof value === 'string' ? value : '';
+      if (typeof value === 'string') {
+        return value;
+      }
+      // `aa start --ps` can hand a numeric or boolean literal back as that
+      // type: hopa.tunnel=1 arrives as the number 1, not "1".
+      if (typeof value === 'number' || typeof value === 'boolean') {
+        return `${value}`;
+      }
+      return '';
     };
     const provider = read('hopa.provider');
     const baseUrl = read('hopa.base_url');

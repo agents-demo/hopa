@@ -30,6 +30,8 @@ export struct SettingsPage {
   @State bridgeUrl: string = '';
   @State bridgeToken: string = '';
   @State bridgeStatus: string = 'not connected';
+  @StorageLink('hopa.bridgeDeviceReady') bridgeDeviceReady: boolean = false;
+  @StorageLink('hopa.bridgeTunnelKnown') bridgeTunnelKnown: boolean = false;
   @State pairCode: string = '';
   @State appearance: string = 'system';
   @State profile: string = 'everyday';
@@ -107,7 +109,17 @@ export struct SettingsPage {
     }
     this.bridgeStatus = 'checking...';
     const ok: boolean = await AgentService.get().testBridge();
-    this.bridgeStatus = ok ? 'connected' : `unreachable: ${AgentService.get().bridgeFailure()}`;
+    this.bridgeDeviceReady = AgentService.get().bridge.tunnelIsReady();
+    this.bridgeTunnelKnown = AgentService.get().bridge.tunnelIsReported();
+    this.bridgeStatus = ok ? this.bridgeDetail() : `unreachable: ${AgentService.get().bridgeFailure()}`;
+  }
+
+  /** "connected" is enough for a local bridge; a relay can be up with no device. */
+  private bridgeDetail(): string {
+    if (!this.bridgeTunnelKnown) {
+      return 'connected';
+    }
+    return this.bridgeDeviceReady ? 'connected (device ready)' : 'reachable (device offline)';
   }
 
   private async loadA11yList(): Promise<void> {
@@ -199,13 +211,16 @@ export struct SettingsPage {
     } else {
       AgentService.get().configureBridge(this.bridgeUrl, this.bridgeToken);
     }
+    TunnelClient.get().configure(this.bridgeUrl, this.bridgeToken);
     if (!AgentService.get().isBridgeConfigured()) {
       this.bridgeStatus = 'enter URL and token';
       return;
     }
     this.bridgeStatus = 'checking...';
     const ok: boolean = await AgentService.get().testBridge();
-    this.bridgeStatus = ok ? 'connected' : `unreachable: ${AgentService.get().bridgeFailure()}`;
+    this.bridgeDeviceReady = AgentService.get().bridge.tunnelIsReady();
+    this.bridgeTunnelKnown = AgentService.get().bridge.tunnelIsReported();
+    this.bridgeStatus = ok ? this.bridgeDetail() : `unreachable: ${AgentService.get().bridgeFailure()}`;
     if (ok) {
       this.persist();
     }
@@ -683,9 +698,13 @@ export struct SettingsPage {
                 .fontColor($r('app.color.text_primary'))
                 .layoutWeight(1)
               if (AgentService.get().isBridgeConfigured()) {
-                Text(this.bridgeLive ? 'Reachable' : 'No answer')
+                Text(this.bridgeLive
+                  ? (this.bridgeTunnelKnown
+                    ? (this.bridgeDeviceReady ? 'Device ready' : 'Relay only')
+                    : 'Reachable')
+                  : 'No answer')
                   .fontSize(11)
-                  .fontColor(this.bridgeLive
+                  .fontColor(this.bridgeLive && (!this.bridgeTunnelKnown || this.bridgeDeviceReady)
                     ? $r('app.color.success')
                     : $r('app.color.warning'))
               }

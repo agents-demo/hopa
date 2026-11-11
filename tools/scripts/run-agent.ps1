@@ -55,9 +55,7 @@ $tunnelListen = $cfg['HOPA_TUNNEL_LISTEN']
 if (-not $tunnelListen) { $tunnelListen = '127.0.0.1:5556' }
 $tunnelSession = $cfg['HOPA_TUNNEL_SESSION']
 if (-not $tunnelSession) { $tunnelSession = 'default' }
-$tunnelEnabled = $cloudEnabled -and (
-    ($cfg['HOPA_TUNNEL'] -match '^(1|true|yes|on)$') -or ($bridgeTarget -eq $tunnelListen)
-)
+$tunnelEnabled = $cloudEnabled -and ($bridgeTarget -eq $tunnelListen)
 $pcAgent = Join-Path $root '.venv\Scripts\pc-agent.exe'
 
 function Test-Port([int]$value) {

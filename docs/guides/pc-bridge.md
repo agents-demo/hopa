@@ -229,6 +229,117 @@ Limits worth stating:
   `python -m hopa_pc_agent relay --host 0.0.0.0 --port $PORT`. The repository's
   `render.yaml` describes the same service for a Blueprint.
 
+## hdc over the relay (cable-free control)
+
+The relay removes the phone→PC hop, but `hdc` is host-initiated: the bridge
+still needs `hdc` to reach the phone. The tunnel adds that last hop as a binary
+WebSocket through the same relay, so the PC no longer needs USB or a shared LAN.
+
+```
+PC hdc ──TCP 127.0.0.1:5556 ── pc-agent hdc-tunnel ── WSS ──┐
+                                                          Render /tunnel
+HOPA app ──TCP 127.0.0.1:5555 ── TunnelClient ── WSS ──────┘
+```
+
+The phone dials **out**, so it works on mobile data and behind NAT. One session
+pairs one host and one phone; the host multiplexes numbered streams over one
+WebSocket. The relay forwards bytes and owns the `ready` / `waiting` status.
+
+### Enable it
+
+`.env` (untracked):
+
+```dotenv
+HOPA_TUNNEL=1
+HOPA_BRIDGE_TARGET=127.0.0.1:5556
+HOPA_TUNNEL_LISTEN=127.0.0.1:5556
+```
+
+`HOPA_DEVICE` stays the USB serial, because `update-phone.ps1` still installs
+over USB. `run-agent.ps1` starts `pc-agent hdc-tunnel` when
+`HOPA_BRIDGE_TARGET` equals `HOPA_TUNNEL_LISTEN`, and the bridge targets that
+address. `HOPA_TUNNEL=1` tells the app to start its side at launch; it does not
+start the PC tunnel by itself. Switching back to USB is one line: delete
+`HOPA_BRIDGE_TARGET` (or point it at the serial) and restart `run-agent.ps1`.
+`HOPA_DEVICE=127.0.0.1:5556` also works for a bridge-only setup; the scripts use
+`HOPA_BRIDGE_TARGET` so an install still knows the USB serial.
+
+In the app, **Settings → PHONE ACCESS → Cable-free control (hdc tunnel)** is the
+same switch. It persists in settings, starts only when you turn it on, and shows
+three states: relay, tunnel, device. `HOPA_TUNNEL=1` also enables it at launch
+(`aa start --ps hopa.tunnel 1`).
+
+### Start, check, stop
+
+```powershell
+.\tools\scripts\run-agent.ps1            # bridge + cloud link + hdc tunnel
+.\tools\scripts\run-agent.ps1 -Status    # should show "tunnel: ready"
+.\tools\scripts\run-agent.ps1 -Stop
+```
+
+The app must be running with the toggle on. `GET /health` on the relay reports:
+
+```json
+{"tunnel":{"sessions":1,"host":true,"phone":true,"ready":true}}
+```
+
+`host=true` means the PC tunnel is connected; `phone=true` means the app is
+connected; `ready=true` means both are paired. `host=true, phone=false` is the
+usual "app was closed or suspended" state.
+
+Manual verification:
+
+```powershell
+hdc tconn 127.0.0.1:5556
+hdc -t 127.0.0.1:5556 shell "echo tunnel-ok"
+```
+
+`hdc` marks an idle TCP target **Offline** after a quiet period. The bridge
+calls `tconn` and replays the command once when that happens, so `/observe`,
+`/screenshot`, `/foreground` and the input endpoints keep working. If you use
+raw `hdc` commands instead of the bridge, run `hdc tconn` again after a pause.
+
+### Background and reconnects
+
+- The tunnel holds the same continuous task as a running agent. It requests
+  `dataTransfer` plus `multiDeviceConnection` (the latter matches a PC↔phone
+  control channel; `dataTransfer` alone is suspended when an idle tunnel moves
+  no bytes), with a `dataTransfer` fallback on older builds. The task is
+  ref-counted, so a run and the tunnel can share it; turning the tunnel off does
+  not stop a run and vice versa.
+- The app retries 2 s → 4 s → 8 s → 16 s → 30 s. The PC retries 5 s → 30 s.
+  A Render restart or cold start is survived without re-pairing; the tokens do
+  not change.
+- If the relay reports `phone=false`, open the app or turn the toggle off/on.
+  If it reports `host=false`, check `run-agent.ps1 -Status` and the PC process.
+- **`ready=true` but device commands fail.** HarmonyOS can freeze the app's JS
+  and TCP handlers while the WebSocket remains open. Bring HOPA to the
+  foreground; if `hdc` still says `Bind target session is dead`, reset the local
+  server with `hdc kill`, `hdc start`, then `hdc tconn 127.0.0.1:5556`. The
+  bridge then retries the command.
+- A wrong token is rejected with `401` before the upgrade. The relay logs the
+  path without its query; the tunnel client logs no token, payload or screen
+  text.
+
+### Failure modes
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| `tunnel: host=true phone=false` | app closed, suspended, or toggle off | open HOPA, turn the toggle on |
+| `tunnel: host=false phone=true` | `hdc-tunnel` process stopped | `run-agent.ps1 -Restart` |
+| `ready=false` but both true | stale side reconnecting | wait one retry interval |
+| `hdc` target Offline | idle TCP target | the bridge re-runs `tconn` automatically; raw hdc users run it manually |
+| `401` on the WebSocket | token mismatch | check `HOPA_BRIDGE_TOKEN` on Render and in `.env` |
+| Device unreachable in the app | app cannot open `127.0.0.1:5555` | check that HOPA is installed and running; the retail build cannot execute a pushed binary (SELinux) |
+| `ready=true` but `observe` 500 / `tconn` dead session | HarmonyOS froze the app while the socket stayed open | open HOPA; then `hdc kill`, `hdc start`, `hdc tconn 127.0.0.1:5556` |
+| Tunnel dies with the screen off | continuous task refused | check notification permission and `KEEP_BACKGROUND_RUNNING` |
+
+**Security:** with the toggle on, the relay carries full device control. Keep
+`HOPA_BRIDGE_TOKEN` and `HOPA_LINK_TOKEN` secret, use TLS (the default), and
+turn the toggle off when you do not need remote control. The hdc key is a
+second, independent gate. A compromised relay is a compromised phone while the
+tunnel is enabled.
+
 ## Security
 
 - Pairing is per device, but the pool is **one trust domain**: a paired phone

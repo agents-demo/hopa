@@ -128,14 +128,39 @@ class Hdc:
         cmd.extend(str(arg) for arg in args)
         return cmd
 
-    def run(
-        self,
-        *args: str,
-        timeout: float | None = None,
-        check: bool = True,
-    ) -> HdcResult:
-        cmd = self.command(*args)
-        effective_timeout = self.timeout if timeout is None else timeout
+    def _is_network_target(self) -> bool:
+        # A USB target is a serial such as 63Q0226113049275. A tunneled or
+        # wireless target is host:port.
+        return bool(self.target) and ":" in str(self.target)
+
+    @staticmethod
+    def _needs_reconnect(stdout: str, stderr: str) -> bool:
+        text = f"{stdout}\n{stderr}".lower()
+        return (
+            "device not found or connected" in text
+            or "connect-key" in text
+            or "connect failed" in text
+        )
+
+    def _ensure_target(self) -> None:
+        """Re-attach an idle TCP target. hdc drops it after a quiet period."""
+        if not self._is_network_target():
+            return
+        cmd = [self._resolve(), "tconn", str(self.target)]
+        try:
+            subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=8,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            # The retry will surface the real failure.
+            pass
+
+    def _execute(self, cmd: list[str], timeout: float) -> HdcResult:
         try:
             proc = subprocess.run(
                 cmd,
@@ -143,14 +168,34 @@ class Hdc:
                 text=True,
                 encoding="utf-8",
                 errors="replace",
-                timeout=effective_timeout,
+                timeout=timeout,
             )
         except FileNotFoundError as exc:
             raise HdcError(f"hdc executable not found: {self._resolve()}") from exc
         except subprocess.TimeoutExpired as exc:
-            raise HdcError(f"hdc timed out after {effective_timeout}s: {' '.join(cmd)}") from exc
+            raise HdcError(f"hdc timed out after {timeout}s: {' '.join(cmd)}") from exc
+        return HdcResult(proc.stdout or "", proc.stderr or "", proc.returncode)
 
-        result = HdcResult(proc.stdout or "", proc.stderr or "", proc.returncode)
+    def run(
+        self,
+        *args: str,
+        timeout: float | None = None,
+        check: bool = True,
+        ensure: bool = True,
+    ) -> HdcResult:
+        cmd = self.command(*args)
+        effective_timeout = self.timeout if timeout is None else timeout
+        result = self._execute(cmd, effective_timeout)
+        if (
+            ensure
+            and self._is_network_target()
+            and self._needs_reconnect(result.stdout, result.stderr)
+        ):
+            # The tunnel keeps the target registered but hdc marks it offline
+            # after a quiet period. tconn is cheap; replaying the command once
+            # makes `observe` and `foreground` survive that state.
+            self._ensure_target()
+            result = self._execute(cmd, effective_timeout)
         if check and result.returncode != 0:
             detail = result.stderr.strip() or result.stdout.strip()
             raise HdcError(
