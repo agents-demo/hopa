@@ -69,9 +69,17 @@ if ($missing.Count -gt 0) {
     throw "Fill these in $EnvFile first: $($missing -join ', ')"
 }
 
-# Start the bridge if it is not already listening.
-$bridgeUri = [Uri]$cfg['HOPA_BRIDGE_URL']
+# The phone talks to HOPA_BRIDGE_URL. Locally that is the bridge itself; in
+# cloud mode it is the relay, and the bridge plus cloud-link run on this PC.
+# HOPA_LOCAL_BRIDGE_URL is where cloud-link reaches the bridge.
+$phoneUrl = $cfg['HOPA_BRIDGE_URL']
+$localUrl = $cfg['HOPA_LOCAL_BRIDGE_URL']
+if (-not $localUrl) { $localUrl = $phoneUrl }
+$bridgeUri = [Uri]$localUrl
 $port = if ($bridgeUri.Port -gt 0) { $bridgeUri.Port } else { 80 }
+$isLoopback = $phoneUrl -match '^https?://(127\.0\.0\.1|localhost)(:|/|$)'
+
+# Start the bridge if it is not already listening.
 $listening = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue
 if (-not $listening) {
     $pcAgent = Join-Path $root '.venv\Scripts\pc-agent.exe'
@@ -94,10 +102,30 @@ if (-not $listening) {
     if (-not $listening) { throw 'The PC bridge did not start.' }
 }
 
-# The phone reaches the PC over the USB reverse tunnel.
-$forwards = & $hdc -t $target fport ls 2>&1 | Out-String
-if ($forwards -notmatch "tcp:$port") {
-    & $hdc -t $target rport "tcp:$port" "tcp:$port" 2>&1 | Out-Null
+if (-not $isLoopback -and $cfg['HOPA_RELAY_URL'] -and $cfg['HOPA_LINK_TOKEN']) {
+    # Cloud mode: the phone reaches the public relay, and this PC dials out to
+    # it. The long-poll is also what keeps a free Render instance awake.
+    $running = Get-CimInstance Win32_Process | Where-Object {
+        $_.CommandLine -and $_.CommandLine -match 'cloud-link' -and
+        $_.CommandLine -match [regex]::Escape($cfg['HOPA_RELAY_URL'])
+    }
+    if (-not $running) {
+        Write-Host "Starting cloud link to $($cfg['HOPA_RELAY_URL'])..."
+        Start-Process -FilePath (Join-Path $root '.venv\Scripts\pc-agent.exe') -WindowStyle Hidden -ArgumentList @(
+            'cloud-link',
+            '--relay', $cfg['HOPA_RELAY_URL'],
+            '--link-token', $cfg['HOPA_LINK_TOKEN'],
+            '--local', $localUrl,
+            '--local-token', $cfg['HOPA_BRIDGE_TOKEN']
+        )
+        Start-Sleep -Seconds 2
+    }
+} else {
+    # Local mode: the phone reaches the PC over the USB reverse tunnel.
+    $forwards = & $hdc -t $target fport ls 2>&1 | Out-String
+    if ($forwards -notmatch "tcp:$port") {
+        & $hdc -t $target rport "tcp:$port" "tcp:$port" 2>&1 | Out-Null
+    }
 }
 
 $parameters = [ordered]@{

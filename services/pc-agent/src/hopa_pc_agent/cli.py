@@ -257,6 +257,10 @@ def _cmd_bridge(args: argparse.Namespace, device: Device) -> int:
     state_path = None
     if not args.no_state and args.port > 0:
         state_path = args.state or str(Path.home() / ".hopa" / f"bridge-{args.port}.json")
+    from .chat_store import ChatStore
+
+    chats_path = args.chats or str(Path.home() / ".hopa" / "chats.json")
+    chats = ChatStore(chats_path)
     try:
         server = BridgeServer(
             device,
@@ -267,6 +271,7 @@ def _cmd_bridge(args: argparse.Namespace, device: Device) -> int:
             token_ttl=ttl_hours * 3600,
             sessions_key=args.sessions_key,
             state_path=state_path,
+            chats=chats,
         )
     except BridgeError as exc:
         print(f"pc-agent: {exc}", file=sys.stderr)
@@ -280,6 +285,7 @@ def _cmd_bridge(args: argparse.Namespace, device: Device) -> int:
         kept = "kept a live pair" if server.restored else "new pair"
         print(f"state: {state_path} ({kept})", flush=True)
     print(f"sessions key (read-only): {server.sessions_key}", flush=True)
+    print(f"conversations: {chats_path} (rev {chats.rev})", flush=True)
     try:
         while True:
             time.sleep(3600)

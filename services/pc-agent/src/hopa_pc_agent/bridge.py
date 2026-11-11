@@ -20,6 +20,8 @@ Endpoints (JSON):
     POST /refresh              {"refresh": str} -> {"token", "refresh", "expires_in"}
     GET  /sessions             -> {"sessions": [...], "updated": unix}
     POST /sessions             {"sessions": [...]} -> {"ok", "count"}
+    GET  /chats                -> {"rev", "sessions": [...]}
+    POST /chats                {"sessions": [...]} -> {"rev", "sessions": [...]}
 
 Access tokens expire (12 h by default) and every pair or refresh rotates both
 tokens, so a leaked token stops working once the phone refreshes.
@@ -41,6 +43,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
+from .chat_store import ChatStore
 from .device import Device
 
 
@@ -318,6 +321,12 @@ class _Handler(BaseHTTPRequestHandler):
         return data
 
     def do_GET(self) -> None:  # noqa: N802
+        if self.path == "/chats":
+            if not self._authorized_sessions():
+                self._send(401, {"error": "unauthorized"})
+                return
+            self._send(200, self.bridge.chats.snapshot())
+            return
         if self.path == "/sessions":
             if not self._authorized_sessions():
                 self._send(401, {"error": "unauthorized"})
@@ -344,6 +353,20 @@ class _Handler(BaseHTTPRequestHandler):
             return
         if self.path == "/refresh":
             self._handle_refresh()
+            return
+        if self.path == "/chats":
+            if not self._authorized():
+                length = int(self.headers.get("Content-Length", "0") or 0)
+                if length:
+                    self.rfile.read(length)
+                self._send(401, {"error": "unauthorized"})
+                return
+            try:
+                data = self._read_json()
+            except BridgeError as exc:
+                self._send(400, {"error": str(exc)})
+                return
+            self._send(200, self.bridge.chats.merge(data.get("sessions")))
             return
         if not self._authorized():
             # Drain the body so the client does not see a connection reset.
@@ -532,11 +555,13 @@ class BridgeServer:
         token_ttl: float = 12 * 60 * 60,
         sessions_key: str = "",
         state_path: str | Path | None = None,
+        chats: ChatStore | None = None,
     ) -> None:
         if not token:
             raise BridgeError("a token is required")
         self.device = device
         self.token = token
+        self.chats = chats if chats is not None else ChatStore()
         self.refresh_token = secrets.token_urlsafe(32)
         self.token_ttl = token_ttl
         self.token_issued_at = time.monotonic()
