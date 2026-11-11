@@ -10,7 +10,8 @@ import { HopaMark, EmptyHero, StepChips, ChatFormat, Character, KeyStore, Settin
 import { LaptopChat, LaptopTurn } from '../services/LaptopChat';
 import { LaptopAgent, demoApproval } from '../services/LaptopAgent';
 
-import { LaptopSessions, LaptopSession } from '../services/LaptopSessions';
+import { LaptopSession, LaptopSessions } from '../services/LaptopSessions';
+import { LaptopImages } from '../services/LaptopImages';
 import { LaptopApp } from '../services/LaptopLauncher';
 import { LaptopVoice } from '../services/LaptopVoice';
 import { ChatRail, RailHistory } from '../components/ChatRail';
@@ -109,6 +110,8 @@ struct LaptopIndex {
   @State replayTurn: string = '';
   @State replayIndex: number = 0;
   @State undoNote: string = '';
+  /** Bumped when a downloaded frame lands, so the chat re-renders. */
+  @State imageTick: number = 0;
   @State plans: ScheduledTask[] = [];
   @State memories: MemoryItem[] = [];
   @State skills: Skill[] = [];
@@ -121,6 +124,7 @@ struct LaptopIndex {
   @State renameDraft: string = '';
   private ctrlHeld: boolean = false;
   private bridgeTimer: number = -1;
+  private images: LaptopImages = new LaptopImages();
   @State planDraft: string = '';
   @State planEvery: number = 3600000;
   @State address: string = LaptopIndex.START_URL;
@@ -187,6 +191,7 @@ struct LaptopIndex {
       const session: LaptopSession = store.current();
       this.chat.turns = session.turns.slice();
       this.turns = session.turns.slice();
+      this.prefetchImages();
       this.lastLatency = session.lastLatency;
       this.lastTokens = session.lastTokens;
       this.refreshSessions();
@@ -194,6 +199,7 @@ struct LaptopIndex {
       // Without this the first publish is silently dropped on a fresh install.
     notificationManager.requestEnableNotification(context).catch(() => {});
     this.agent.launcher.attach(context);
+    this.images.attach(context, this.agent.chatSync);
       this.agent.launcher.loadInstalled().then(() => {
         this.apps = this.agent.launcher.apps();
       }).catch(() => {
@@ -499,8 +505,35 @@ struct LaptopIndex {
     return rows;
   }
 
-  private isLastAnswer(turn: LaptopTurn): boolean {
-    for (let i = this.turns.length - 1; i >= 0; i--) {
+  /** Ask for any frame this conversation carries but this laptop lacks. */
+  private prefetchImages(): void {
+    const ids: string[] = [];
+    for (const turn of this.turns) {
+      if (turn.role !== 'assistant') {
+        continue;
+      }
+      const id: string = ChatFormat.metaValue(turn.text, 'shotId');
+      if (id.length > 0) {
+        ids.push(id);
+      }
+    }
+    if (ids.length === 0) {
+      return;
+    }
+    this.images.ensure(ids).then((changed: boolean) => {
+      if (changed) {
+        this.imageTick += 1;
+      }
+    });
+  }
+
+  /** The local file for a turn's artefact, or '' until it exists. */
+  private shotFor(turn: LaptopTurn): string {
+    const tick: number = this.imageTick;
+    return tick >= 0 ? this.images.path(ChatFormat.metaValue(turn.text, 'shotId')) : '';
+  }
+
+  private isLastAnswer(turn: LaptopTurn): boolean {    for (let i = this.turns.length - 1; i >= 0; i--) {
       if (this.turns[i].role === 'assistant') {
         return this.turns[i].id === turn.id;
       }
@@ -604,6 +637,7 @@ struct LaptopIndex {
     const session: LaptopSession = this.store.current();
     this.chat.turns = session.turns.slice();
     this.turns = session.turns.slice();
+    this.prefetchImages();
     this.refreshLastQuestion();
   }
 
@@ -715,6 +749,7 @@ struct LaptopIndex {
     const session: LaptopSession = this.store.current();
     this.chat.turns = session.turns.slice();
     this.turns = session.turns.slice();
+    this.prefetchImages();
     this.lastLatency = session.lastLatency;
     this.lastTokens = session.lastTokens;
     this.error = '';
@@ -837,9 +872,11 @@ struct LaptopIndex {
     // Show the question at once; waiting for the run made the pane look dead.
     const running: Promise<void> = this.chat.send(text);
     this.turns = this.chat.turns.slice();
+    this.prefetchImages();
     this.lastQuestion = this.chat.lastQuestion;
     await running;
     this.turns = this.chat.turns.slice();
+    this.prefetchImages();
     this.error = this.chat.error;
     this.lastQuestion = this.chat.lastQuestion;
     this.lastLatency = this.chat.lastLatencyMs;
@@ -2438,6 +2475,16 @@ struct LaptopIndex {
               .fontColor($r('app.color.text_primary'))
               .width('100%')
               .copyOption(CopyOptions.LocalDevice)
+          }
+          if (this.shotFor(turn).length > 0) {
+            Image(`file://${this.shotFor(turn)}`)
+              .width('100%')
+              .constraintSize({ maxWidth: 420 })
+              .aspectRatio(1.5)
+              .objectFit(ImageFit.Cover)
+              .borderRadius(10)
+              .border({ width: 1, color: $r('app.color.divider') })
+              .margin({ top: 4 })
           }
           Row({ space: 10 }) {
             Text('HOPA on this laptop')

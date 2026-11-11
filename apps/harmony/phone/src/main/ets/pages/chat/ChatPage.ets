@@ -472,6 +472,7 @@ export struct ChatPage {
     this.failed = low.includes("couldn't") || low.includes('failed') || low.includes('error');
     const steps: string[] = service.runtime.lastSteps();
     let shotPath: string = '';
+    let shotId: string = '';
     // Only keep a screenshot when the run touched another app. A text answer
     // would otherwise show HOPA's own chat under "What HOPA saw".
     if (!AppFocus.active && service.lastRunHadActions() && service.isBridgeConfigured()) {
@@ -488,6 +489,9 @@ export struct ChatPage {
             const buffer: ArrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
             fs.writeSync(file.fd, buffer);
             fs.closeSync(file);
+            // The shared store is what lets the laptop open this frame; a
+            // sandbox path would mean nothing there.
+            shotId = await service.uploadShot(shot.substring(marker + 7));
           } catch (error) {
             shotPath = '';
             hilog.warn(0x0000, 'HOPA', `shot save failed: ${error}`);
@@ -502,6 +506,9 @@ export struct ChatPage {
     }
     if (shotPath.length > 0) {
       meta.push(`shot=${shotPath}`);
+    }
+    if (shotId.length > 0) {
+      meta.push(`shotId=${shotId}`);
     }
     const shown: string = this.failed ? Character.failure(reply, this.profileName) : reply;
     this.characterLine = Character.quip(!this.failed, steps.length, this.profileName);
