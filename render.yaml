@@ -1,0 +1,23 @@
+# One public relay for the PC bridge. See docs/guides/pc-bridge.md.
+#
+# The PC still owns hdc and the conversation store; this service only forwards
+# authenticated phone requests to the linked PC. HOPA_BRIDGE_TOKEN and
+# HOPA_LINK_TOKEN are secrets and must be set in the Render dashboard.
+services:
+  - type: web
+    name: hopa-relay
+    runtime: python
+    plan: free
+    region: singapore
+    buildCommand: pip install --no-deps ./services/pc-agent
+    startCommand: python -m hopa_pc_agent relay --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12"
+      - key: HOPA_BRIDGE_TOKEN
+        sync: false
+      - key: HOPA_LINK_TOKEN
+        sync: false
+      - key: HOPA_PAIR_CODE
+        value: "246810"

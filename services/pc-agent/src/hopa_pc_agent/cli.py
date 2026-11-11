@@ -134,6 +134,44 @@ def build_parser() -> argparse.ArgumentParser:
         help="hours an access token stays valid before the phone refreshes it",
     )
 
+    relay = sub.add_parser(
+        "relay",
+        help="serve the public relay that a local bridge dials into",
+    )
+    relay.add_argument("--host", default="0.0.0.0")
+    relay.add_argument("--port", type=int, default=int(os.environ.get("PORT", "8790")))
+    relay.add_argument("--token", default=os.environ.get("HOPA_BRIDGE_TOKEN", ""))
+    relay.add_argument("--link-token", default=os.environ.get("HOPA_LINK_TOKEN", ""))
+    relay.add_argument("--pair-code", default=os.environ.get("HOPA_PAIR_CODE", ""))
+    relay.add_argument("--token-ttl-hours", type=float, default=12.0)
+    relay.add_argument(
+        "--wait-seconds",
+        type=float,
+        default=45.0,
+        help="how long a phone request waits for the PC before a 504",
+    )
+    relay.add_argument(
+        "--poll-seconds",
+        type=float,
+        default=25.0,
+        help="PC long-poll interval; also the keep-alive cadence",
+    )
+
+    link = sub.add_parser(
+        "cloud-link",
+        help="keep a local bridge reachable through a relay",
+    )
+    link.add_argument("--relay", default=os.environ.get("HOPA_RELAY_URL", ""))
+    link.add_argument("--link-token", default=os.environ.get("HOPA_LINK_TOKEN", ""))
+    link.add_argument("--local", default="http://127.0.0.1:8765")
+    link.add_argument(
+        "--local-token",
+        default="",
+        help="token for the local bridge; empty forwards the phone's own",
+    )
+    link.add_argument("--poll-seconds", type=float, default=25.0)
+    link.add_argument("--local-timeout", type=float, default=120.0)
+
     return parser
 
 
@@ -219,6 +257,10 @@ def _cmd_bridge(args: argparse.Namespace, device: Device) -> int:
     state_path = None
     if not args.no_state and args.port > 0:
         state_path = args.state or str(Path.home() / ".hopa" / f"bridge-{args.port}.json")
+    from .chat_store import ChatStore
+
+    chats_path = args.chats or str(Path.home() / ".hopa" / "chats.json")
+    chats = ChatStore(chats_path)
     try:
         server = BridgeServer(
             device,
@@ -229,6 +271,7 @@ def _cmd_bridge(args: argparse.Namespace, device: Device) -> int:
             token_ttl=ttl_hours * 3600,
             sessions_key=args.sessions_key,
             state_path=state_path,
+            chats=chats,
         )
     except BridgeError as exc:
         print(f"pc-agent: {exc}", file=sys.stderr)
@@ -242,6 +285,7 @@ def _cmd_bridge(args: argparse.Namespace, device: Device) -> int:
         kept = "kept a live pair" if server.restored else "new pair"
         print(f"state: {state_path} ({kept})", flush=True)
     print(f"sessions key (read-only): {server.sessions_key}", flush=True)
+    print(f"conversations: {chats_path} (rev {chats.rev})", flush=True)
     try:
         while True:
             time.sleep(3600)
@@ -409,6 +453,17 @@ def main(argv: list[str] | None = None) -> int:
         pass
     parser = build_parser()
     args = parser.parse_args(argv)
+    if args.command in ("relay", "cloud-link"):
+        # These two run where hdc does not exist (Render) or drive another
+        # process, so they must not build a Device first.
+        from .relay import RelayError, serve_link, serve_relay
+
+        runner = serve_relay if args.command == "relay" else serve_link
+        try:
+            return runner(args)
+        except (RelayError, ValueError) as exc:
+            print(f"pc-agent: {exc}", file=sys.stderr)
+            return 2
     try:
         device = _make_device(args)
         return _dispatch(args, device)
