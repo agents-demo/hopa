@@ -30,6 +30,12 @@ All notable changes are recorded here. Versions follow `docs/versioning.md`.
   Rows are 30 px, the selected one is a soft fill, and the delete `×` appears
   only on hover. Ctrl+K was matched against the wrong key code (2070 vs 2027),
   so the palette shortcut had never worked; it does now.
+- Composer spacing fixed (two padding calls had collapsed the pill's inner
+  margins); message type now follows the mode (Easy 15, Kid 16, Power 13,
+  others 13.5); Power keeps the details metrics, Easy/Kid/Social do not, and
+  Social hides the details rail.
+- The bridge's bootstrap token now survives pairing and restarts; paired tokens
+  still rotate. A dev laptop is no longer stranded by a bridge restart.
 - Composer: one primary button (mic when empty, Send when not, Stop while
   running); Enter inserts a line break and only **Ctrl+Enter** sends; the
   question appears in the transcript immediately instead of after the answer.

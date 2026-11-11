@@ -286,6 +286,8 @@ class _Handler(BaseHTTPRequestHandler):
         presented = self._presented_token()
         if hmac.compare_digest(presented, self.bridge.sessions_key):
             return True
+        if hmac.compare_digest(presented, self.bridge._base_token):
+            return True
         return hmac.compare_digest(presented, self.bridge.token) and self.bridge.token_live()
 
     def _presented_token(self) -> str:
@@ -295,6 +297,9 @@ class _Handler(BaseHTTPRequestHandler):
 
     def _authorized(self) -> bool:
         presented = self._presented_token()
+        # The bootstrap token never expires; a paired token must still be live.
+        if hmac.compare_digest(presented, self.bridge._base_token):
+            return True
         if not hmac.compare_digest(presented, self.bridge.token):
             return False
         return self.bridge.token_live()

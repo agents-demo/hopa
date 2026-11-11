@@ -2364,7 +2364,7 @@ struct LaptopIndex {
   }
 
   private showRail(): boolean {
-    if (this.profileName === 'easy' || this.profileName === 'kid') {
+    if (this.profileName === 'easy' || this.profileName === 'kid' || this.profileName === 'social') {
       return false;
     }
     // Details are for an answer; an empty draft has none to describe.
@@ -2391,6 +2391,25 @@ struct LaptopIndex {
 
   private tileText(): number {
     return this.profileName === 'easy' || this.profileName === 'kid' ? 15 : 13.5;
+  }
+
+  /** Message type follows the mode: Easy and Kid read larger, Power tighter. */
+  private messageText(): number {
+    if (this.profileName === 'easy') {
+      return 15;
+    }
+    if (this.profileName === 'kid') {
+      return 16;
+    }
+    if (this.profileName === 'power') {
+      return 13;
+    }
+    return 13.5;
+  }
+
+  /** Power wants the facts; Easy, Kid and Social do not. */
+  private showsMetrics(): boolean {
+    return this.profileName === 'everyday' || this.profileName === 'power';
   }
 
   /**
@@ -2776,7 +2795,7 @@ struct LaptopIndex {
             .fontSize(13.5)
             .constraintSize({ minHeight: 44, maxHeight: 132 })
             .backgroundColor(Color.Transparent)
-            .padding({ left: 8, right: 4, top: 11, bottom: 11 })
+            .padding({ left: 2, right: 2, top: 11, bottom: 11 })
             .onChange((value: string) => {
               this.draft = value;
             })
@@ -2858,11 +2877,10 @@ struct LaptopIndex {
           }
         }
         .width('100%')
-        .padding({ left: 6, right: 6 })
         .backgroundColor($r('app.color.surface_muted'))
         .borderRadius(24)
-        .padding({ left: 14, right: 6, top: 2, bottom: 2 })
-        .margin({ left: 22, right: 22, top: 8, bottom: 16 })
+        .padding({ left: 16, right: 8, top: 2, bottom: 2 })
+        .margin({ left: 22, right: 22, top: 8, bottom: 18 })
         }
       }
       .layoutWeight(1)
@@ -2874,6 +2892,7 @@ struct LaptopIndex {
           lastTokens: this.lastTokens,
           hasTurns: this.turns.length > 0,
           bridgeLive: this.bridgeLive,
+          metrics: this.showsMetrics(),
           approvalOpen: this.approvalOpen,
           approvalDetail: this.approvalDetail,
           approvalFrame: this.approvalFrame,

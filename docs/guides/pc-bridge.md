@@ -188,8 +188,12 @@ copy-paste without a leading dash (which `aa start --ps` eats).
 - Every `POST` requires `Authorization: Bearer <token>`; comparison is
   constant-time. `/pair` and `/refresh` are the only unauthenticated writes and
   are rate-limited.
-- Access tokens expire (12 h by default) and both tokens rotate on every pair or
-  refresh.
+- **The bootstrap token never expires** and keeps working after pairing and after
+  a restart: a dev laptop holds it, and rotating it away stranded the shell. It
+  is a local secret printed at start — treat it like a password. Paired tokens
+  still rotate on every pair or refresh and retire their predecessor.
+- Paired access tokens expire (12 h by default) and both tokens rotate on every
+  pair or refresh.
 - Default bind is `127.0.0.1`. There is **no TLS**; do not expose the port to an
   untrusted network.
 - The bridge can tap and type anything the device shows. Treat the tokens like

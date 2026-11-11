@@ -12,6 +12,7 @@ export struct ChatRail {
   @Prop hasTurns: boolean = false;
   /** True when a PC bridge is configured, so the screen is really readable. */
   @Prop bridgeLive: boolean = false;
+  @Prop metrics: boolean = true;
   @Prop approvalOpen: boolean = false;
   @Prop approvalDetail: string = '';
   /** The last frame the bridge captured before this step: evidence, not decoration. */
@@ -103,7 +104,7 @@ export struct ChatRail {
             .textOverflow({ overflow: TextOverflow.Ellipsis })
             .width('100%')
           // No stopwatch, no line: a synced answer simply has no timing here.
-          if (this.lastLatency > 0) {
+          if (this.metrics && this.lastLatency > 0) {
             Text(`${(this.lastLatency / 1000).toFixed(1)} s  \u00b7  ${this.lastTokens} tokens`)
               .fontSize(10.5)
               .fontColor($r('app.color.text_hint'))

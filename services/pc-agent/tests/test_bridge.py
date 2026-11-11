@@ -79,6 +79,12 @@ class FakeDevice:
         self.calls.append(("swipe", *args, velocity))
 
 
+def test_the_bootstrap_token_keeps_working_after_pairing(bridge):
+    server, _device = bridge
+    server.issue_tokens()
+    assert "nodes" in _call(server, "/observe", {}, token="secret")
+
+
 def test_stop_closes_the_app(bridge):
     server, device = bridge
     body = _call(server, "/stop", {"bundle": "com.huawei.hmos.settings"})
@@ -282,10 +288,9 @@ def test_pair_rotates_and_returns_a_session(bridge) -> None:
     assert session["token"] and session["token"] != "secret"
     assert len(session["refresh"]) >= 32
     assert session["expires_in"] > 0
-    # The bootstrap token is replaced the moment the phone pairs.
-    with pytest.raises(urllib.error.HTTPError) as error:
-        _call(server, "/observe", {}, token="secret")
-    assert error.value.code == 401
+    # The bootstrap token stays valid: a dev laptop holds it and must not be
+    # stranded by a restart. The paired token is the rotating one.
+    assert "WLAN" in _call(server, "/observe", {}, token="secret")["text"]
     assert "WLAN" in _call(server, "/observe", {}, token=session["token"])["text"]
 
 
