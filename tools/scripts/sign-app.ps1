@@ -7,12 +7,17 @@
 #   .\scripts\sign-app.ps1                 # sign
 #   .\scripts\sign-app.ps1 -Install        # sign and install on the connected device
 #   .\scripts\sign-app.ps1 -Udids <udid>   # override the embedded device ids
+#   .\scripts\sign-app.ps1 -UnsignedHap <hap> -SignedHap <hap> -Target <id>
+#                                          # sign a module (e.g. the laptop HAP)
 #
 # Everything it generates lives in signing/ (gitignored).
 param(
     [switch]$Install,
     [string[]]$Udids = @(),
-    [string]$BundleName = 'com.hopa.agent'
+    [string]$BundleName = 'com.hopa.agent',
+    [string]$UnsignedHap = '',
+    [string]$SignedHap = '',
+    [string]$Target = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -26,8 +31,16 @@ $profileKeyAlias = 'openharmony application profile debug'
 $appChain = Join-Path $signing 'app-chain.cer'
 $profileJson = Join-Path $signing 'profile.json'
 $profileP7b = Join-Path $signing 'profile.p7b'
-$unsigned = Join-Path $root 'apps\harmony\phone\build\default\outputs\default\entry-default-unsigned.hap'
-$signed = Join-Path $root 'apps\harmony\phone\build\default\outputs\default\entry-default-signed.hap'
+$unsigned = if ($UnsignedHap.Length -gt 0) {
+    (Resolve-Path $UnsignedHap).Path
+} else {
+    Join-Path $root 'apps\harmony\phone\build\default\outputs\default\entry-default-unsigned.hap'
+}
+$signed = if ($SignedHap.Length -gt 0) {
+    $SignedHap
+} else {
+    Join-Path $root 'apps\harmony\phone\build\default\outputs\default\entry-default-signed.hap'
+}
 
 # The Java tools log INFO to stderr. With $ErrorActionPreference = 'Stop' that
 # would abort the run, so native calls go through this wrapper.
@@ -180,7 +193,12 @@ if ($Udids.Count -eq 0) {
         $previous = $ErrorActionPreference
         $ErrorActionPreference = 'Continue'
         try {
-            $output = & $hdc shell 'bm get --udid' 2>&1 | Out-String
+            $udidArgs = @()
+            if ($Target.Length -gt 0) {
+                $udidArgs = @('-t', $Target)
+            }
+            $udidArgs += @('shell', 'bm get --udid')
+            $output = & $hdc @udidArgs 2>&1 | Out-String
         } finally {
             $ErrorActionPreference = $previous
         }
@@ -251,7 +269,12 @@ Write-Host "Signed: $signed"
 if ($Install) {
     $hdc = Resolve-Hdc
     if (-not $hdc) { throw 'hdc not found; cannot install.' }
-    $code = Invoke-Native -FilePath $hdc -Arguments @('install', '-r', $signed)
+    $installArgs = @()
+    if ($Target.Length -gt 0) {
+        $installArgs = @('-t', $Target)
+    }
+    $installArgs += @('install', '-r', $signed)
+    $code = Invoke-Native -FilePath $hdc -Arguments $installArgs
     if ($code -ne 0) { throw 'install failed' }
     Write-Host 'Installed on the connected device.'
 }

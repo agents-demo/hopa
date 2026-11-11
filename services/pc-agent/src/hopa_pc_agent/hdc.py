@@ -140,7 +140,33 @@ class Hdc:
             "device not found or connected" in text
             or "connect-key" in text
             or "connect failed" in text
+            or "session is dead" in text
         )
+
+    @staticmethod
+    def _session_is_dead(stdout: str, stderr: str) -> bool:
+        return "session is dead" in f"{stdout}\n{stderr}".lower()
+
+    def _reset_hdc_server(self) -> None:
+        """Clear a dead target session. Only used for a network target.
+
+        ``hdc tconn`` returns "already connected" while the session is dead, so
+        a full server reset is the only local remedy. This briefly drops other
+        hdc targets; they reconnect through their own tconn/USB path.
+        """
+        exe = self._resolve()
+        for verb in ("kill", "start"):
+            try:
+                subprocess.run(
+                    [exe, verb],
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
+                    timeout=10,
+                )
+            except (OSError, subprocess.TimeoutExpired):
+                return
 
     def _ensure_target(self) -> None:
         """Re-attach an idle TCP target. hdc drops it after a quiet period."""
@@ -196,6 +222,13 @@ class Hdc:
             # makes `observe` and `foreground` survive that state.
             self._ensure_target()
             result = self._execute(cmd, effective_timeout)
+            if self._session_is_dead(result.stdout, result.stderr):
+                # The phone was suspended long enough for the hdc session to
+                # die. tconn says "already connected"; reset the local server,
+                # re-attach, and replay once more.
+                self._reset_hdc_server()
+                self._ensure_target()
+                result = self._execute(cmd, effective_timeout)
         if check and result.returncode != 0:
             detail = result.stderr.strip() or result.stdout.strip()
             raise HdcError(

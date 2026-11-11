@@ -314,9 +314,9 @@ raw `hdc` commands instead of the bridge, run `hdc tconn` again after a pause.
   If it reports `host=false`, check `run-agent.ps1 -Status` and the PC process.
 - **`ready=true` but device commands fail.** HarmonyOS can freeze the app's JS
   and TCP handlers while the WebSocket remains open. Bring HOPA to the
-  foreground; if `hdc` still says `Bind target session is dead`, reset the local
-  server with `hdc kill`, `hdc start`, then `hdc tconn 127.0.0.1:5556`. The
-  bridge then retries the command.
+  foreground. If the hdc session died, the bridge resets the local hdc server
+  once (`hdc kill`, `hdc start`, `hdc tconn 127.0.0.1:5556`) and replays the
+  command automatically.
 - A wrong token is rejected with `401` before the upgrade. The relay logs the
   path without its query; the tunnel client logs no token, payload or screen
   text.
@@ -331,7 +331,7 @@ raw `hdc` commands instead of the bridge, run `hdc tconn` again after a pause.
 | `hdc` target Offline | idle TCP target | the bridge re-runs `tconn` automatically; raw hdc users run it manually |
 | `401` on the WebSocket | token mismatch | check `HOPA_BRIDGE_TOKEN` on Render and in `.env` |
 | Device unreachable in the app | app cannot open `127.0.0.1:5555` | check that HOPA is installed and running; the retail build cannot execute a pushed binary (SELinux) |
-| `ready=true` but `observe` 500 / `tconn` dead session | HarmonyOS froze the app while the socket stayed open | open HOPA; then `hdc kill`, `hdc start`, `hdc tconn 127.0.0.1:5556` |
+| `ready=true` but `observe` 500 / `tconn` dead session | HarmonyOS froze the app while the socket stayed open | open HOPA; the bridge resets hdc and replays once |
 | Tunnel dies with the screen off | continuous task refused | check notification permission and `KEEP_BACKGROUND_RUNNING` |
 
 **Security:** with the toggle on, the relay carries full device control. Keep
