@@ -5,11 +5,10 @@ from __future__ import annotations
 import json
 import re
 import shlex
-import tempfile
 import time
 from pathlib import Path
 
-from .errors import DeviceError
+from .errors import DeviceError, HdcError
 from .hdc import Hdc
 from .layout import Layout, parse_layout
 
@@ -73,45 +72,74 @@ class Device:
     # -- observation ---------------------------------------------------------
 
     def dump_layout(self, *, include_attrs: bool = False, timeout: float | None = None) -> Layout:
+        marker_start = "__HOPA_BEGIN__"
+        marker_end = "__HOPA_END__"
         last_error: Exception | None = None
-        for attempt in range(2):
+        for attempt in range(3):
             remote = self._remote("layout", ".json")
-            command = f"uitest dumpLayout -p {shlex.quote(remote)}"
+            # One hdc command per observation. A tunneled target drops its
+            # session after a handful of commands, and dump + file recv + rm
+            # costs three of them. Dumping, reading and cleaning up in a single
+            # shell keeps `/observe` to one command.
+            command = (
+                f"uitest dumpLayout -p {shlex.quote(remote)} >/dev/null 2>&1; "
+                f"echo {marker_start}; cat {shlex.quote(remote)}; echo; "
+                f"echo {marker_end}; rm -f {shlex.quote(remote)}"
+            )
             if include_attrs:
-                command += " -a"
+                command = command.replace("dumpLayout -p", "dumpLayout -a -p")
             try:
                 output = self.hdc.shell(command, timeout=timeout)
-                if "failed" in output.lower():
-                    raise DeviceError(f"uitest dumpLayout failed: {output.strip()}")
-                with tempfile.TemporaryDirectory(prefix="hopa-layout-") as tmp:
-                    local = Path(tmp) / "layout.json"
-                    self.hdc.file_recv(remote, local, timeout=timeout)
-                    if not local.exists() or local.stat().st_size == 0:
-                        raise DeviceError("layout dump produced no file")
-                    data = json.loads(local.read_text(encoding="utf-8"))
-                return parse_layout(data)
+                start = output.find(marker_start)
+                end = output.find(marker_end, start + 1) if start >= 0 else -1
+                if start < 0 or end < 0:
+                    raise DeviceError("layout dump produced no file")
+                payload = output[start + len(marker_start) : end].strip()
+                if not payload:
+                    raise DeviceError("layout dump produced no file")
+                data = json.loads(payload)
+                layout = parse_layout(data)
+                if not layout.roots:
+                    raise DeviceError("layout dump had no nodes")
+                return layout
             except json.JSONDecodeError as exc:
                 last_error = DeviceError(f"layout dump is not valid JSON: {exc}")
-            except DeviceError as exc:
+            except (DeviceError, HdcError) as exc:
+                last_error = exc
+            if attempt < 2:
+                # Restart the local hdc server before replaying. `tconn` alone
+                # says "already connected" on a session that returns nothing.
+                recover = getattr(self.hdc, "recover", None)
+                if callable(recover):
+                    recover()
+                time.sleep(0.4)
+        raise last_error or DeviceError("layout dump failed")
+
+    def screenshot(self, local_path: str | Path | None = None) -> Path:
+        last_error: Exception | None = None
+        for attempt in range(2):
+            remote = self._remote("screen", ".jpeg")
+            try:
+                self.hdc.shell(f"snapshot_display -f {shlex.quote(remote)}")
+                if local_path:
+                    destination = Path(local_path)
+                else:
+                    destination = Path(f"screen_{int(time.time())}.jpeg")
+                self.hdc.file_recv(remote, destination)
+                data = destination.read_bytes()
+                if len(data) < 1024 or not data.startswith(b"\xff\xd8"):
+                    raise DeviceError("screenshot produced no image")
+                return destination
+            except (DeviceError, HdcError, OSError) as exc:
                 last_error = exc
             finally:
                 self.hdc.shell(f"rm -f {shlex.quote(remote)}", check=False)
             if attempt == 0:
-                time.sleep(0.7)
-        raise last_error or DeviceError("layout dump failed")
-
-    def screenshot(self, local_path: str | Path | None = None) -> Path:
-        remote = self._remote("screen", ".jpeg")
-        self.hdc.shell(f"snapshot_display -f {shlex.quote(remote)}")
-        try:
-            if local_path:
-                destination = Path(local_path)
-            else:
-                destination = Path(f"screen_{int(time.time())}.jpeg")
-            self.hdc.file_recv(remote, destination)
-        finally:
-            self.hdc.shell(f"rm -f {shlex.quote(remote)}", check=False)
-        return destination
+                recover = getattr(self.hdc, "recover", None)
+                if callable(recover):
+                    recover()
+                time.sleep(0.4)
+        raise last_error or DeviceError("screenshot failed")
 
     # -- input ---------------------------------------------------------------
 

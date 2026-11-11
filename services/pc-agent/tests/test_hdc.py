@@ -106,3 +106,21 @@ def test_usb_target_never_resets_hdc(monkeypatch) -> None:
     hdc.run("shell", "echo hi")
 
     assert resets == []
+
+
+def test_recover_resets_only_network_targets(monkeypatch) -> None:
+    network = Hdc(hdc_path="hdc", target="127.0.0.1:5556")
+    resets: list[bool] = []
+    ensured: list[bool] = []
+    monkeypatch.setattr(network, "_reset_hdc_server", lambda: resets.append(True))
+    monkeypatch.setattr(network, "_ensure_target", lambda: ensured.append(True))
+
+    assert network.recover() is True
+    assert resets == [True]
+    assert ensured == [True]
+
+    usb = Hdc(hdc_path="hdc", target="63Q0226113049275")
+    monkeypatch.setattr(usb, "_reset_hdc_server", lambda: resets.append(False))
+
+    assert usb.recover() is False
+    assert resets == [True]

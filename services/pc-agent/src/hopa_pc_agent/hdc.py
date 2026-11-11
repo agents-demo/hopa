@@ -10,6 +10,7 @@ from __future__ import annotations
 import os
 import shutil
 import subprocess
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -185,6 +186,22 @@ class Hdc:
         except (OSError, subprocess.TimeoutExpired):
             # The retry will surface the real failure.
             pass
+
+    def recover(self) -> bool:
+        """Hard-reset the local hdc server and re-attach a TCP target.
+
+        A tunneled target can outlive its session: ``tconn`` reports "already
+        connected" while the next command returns an empty result instead of
+        an error. Restarting the local server is the only reliable reset.
+        USB targets are left alone. Returns True when a reset was performed.
+        """
+        if not self._is_network_target():
+            return False
+        self._reset_hdc_server()
+        self._ensure_target()
+        # Give the freshly started server a moment to accept the target.
+        time.sleep(0.4)
+        return True
 
     def _execute(self, cmd: list[str], timeout: float) -> HdcResult:
         try:

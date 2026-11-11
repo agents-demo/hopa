@@ -226,6 +226,22 @@ export class TunnelClient {
     return `${base}/tunnel?role=phone&session=${SESSION}`;
   }
 
+  /**
+   * Native WebSocket callbacks can hand back an error with no `message`.
+   * Reading `err.message.length` then throws inside the callback and takes the
+   * whole app down, so every handler goes through this guard.
+   */
+  private static errorText(error: BusinessError | undefined, fallback: string): string {
+    if (error === undefined || error === null) {
+      return fallback;
+    }
+    const message: string | undefined = error.message;
+    if (typeof message !== 'string' || message.length === 0) {
+      return fallback;
+    }
+    return message;
+  }
+
   private connect(): void {
     if (!this.enabled || this.connecting || this.url.length === 0) {
       return;
@@ -240,7 +256,7 @@ export class TunnelClient {
     this.ws = ws;
     ws.on('open', (err: BusinessError, value: Object) => {
       if (err) {
-        this.fail(`open: ${err.message}`);
+        this.fail(TunnelClient.errorText(err, 'websocket open failed'));
         return;
       }
       this.connecting = false;
@@ -250,7 +266,7 @@ export class TunnelClient {
     });
     ws.on('message', (err: BusinessError, value: string | ArrayBuffer) => {
       if (err) {
-        this.fail(`message: ${err.message}`);
+        this.fail(TunnelClient.errorText(err, 'websocket message failed'));
         return;
       }
       if (typeof value === 'string') {
@@ -259,10 +275,10 @@ export class TunnelClient {
       this.onFrame(value as ArrayBuffer);
     });
     ws.on('close', (err: BusinessError, value: webSocket.CloseResult) => {
-      this.disconnected(err ? `closed: ${err.message}` : 'closed');
+      this.disconnected(TunnelClient.errorText(err, 'closed'));
     });
     ws.on('error', (err: BusinessError) => {
-      this.fail(err.message.length > 0 ? err.message : 'websocket error');
+      this.fail(TunnelClient.errorText(err, 'websocket error'));
     });
     ws.connect(this.url, {
       header: { 'Authorization': `Bearer ${this.token}` }
@@ -271,7 +287,7 @@ export class TunnelClient {
         this.fail('websocket refused');
       }
     }).catch((err: BusinessError) => {
-      this.fail(err.message.length > 0 ? err.message : 'websocket connect failed');
+      this.fail(TunnelClient.errorText(err, 'websocket connect failed'));
     });
   }
 

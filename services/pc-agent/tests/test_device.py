@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 from hopa_pc_agent.device import Device
 
 
@@ -119,3 +121,32 @@ def test_press_key() -> None:
 def test_devices_delegates() -> None:
     hdc = FakeHdc()
     assert Device(hdc=hdc).devices() == ["fake-device"]  # type: ignore[arg-type]
+
+
+def test_dump_layout_recovers_from_an_empty_pull() -> None:
+    class FlakyHdc(FakeHdc):
+        def __init__(self) -> None:
+            super().__init__()
+            self.recovers = 0
+            self.dumps = 0
+
+        def shell(self, command: str, *, check: bool = True, timeout: float | None = None) -> str:
+            self.calls.append(command)
+            if "__HOPA_BEGIN__" not in command:
+                return ""
+            self.dumps += 1
+            if self.dumps == 1:
+                return ""
+            body = json.dumps({"attributes": {"text": "hi"}, "children": []})
+            return f"__HOPA_BEGIN__\n{body}\n__HOPA_END__\n"
+
+        def recover(self) -> bool:
+            self.recovers += 1
+            return True
+
+    hdc = FlakyHdc()
+    layout = Device(hdc=hdc).dump_layout()  # type: ignore[arg-type]
+
+    assert hdc.recovers == 1
+    assert hdc.dumps == 2
+    assert layout.roots[0].text == "hi"
