@@ -49,6 +49,7 @@ export struct ChatRail {
   @Prop approvalFrame: string = '';
   @Prop canUndo: boolean = false;
   onCopy: () => void = () => {};
+  onCopyRun: (text: string) => void = (text: string) => {};
   onRetry: () => void = () => {};
   onUndo: () => void = () => {};
   onOpenActivity: () => void = () => {};
@@ -267,6 +268,26 @@ export struct ChatRail {
     return this.runs.length > 6 ? this.runs.slice(this.runs.length - 6) : this.runs;
   }
 
+  /** A plain-text receipt of the run, for pasting into a report or a ticket. */
+  private receipt(): string {
+    const lines: string[] = [];
+    let ms: number = 0;
+    let failed: number = 0;
+    for (const run of this.runs) {
+      ms += run.durationMs;
+      const ok: boolean = run.status === RunStatus.Executed;
+      if (!ok) {
+        failed += 1;
+      }
+      const detail: string = this.outcome(run).length > 0 ? this.outcome(run) : this.verb(run);
+      lines.push(`${ok ? '\u2713' : '\u2715'} ${detail} (${this.seconds(run.durationMs)})`);
+    }
+    const count: number = this.runs.length;
+    const head: string = failed > 0 ? `Failed at step ${this.firstFailure()}` : 'Succeeded';
+    const meta: string = `${count === 1 ? '1 step' : `${count} steps`} \u00b7 ${this.seconds(ms)}`;
+    return `${head} \u00b7 ${meta}\n${lines.join('\n')}`;
+  }
+
   @Builder
   StepRow(run: RunRecord, index: number) {
     Row({ space: 8 }) {
@@ -355,12 +376,16 @@ export struct ChatRail {
         this.Label(this.title())
         Blank()
         if (!this.approvalOpen && !this.busy) {
-          if (this.hasAnswer) {
-            this.Verb('Copy', this.onCopy)
+          if (this.runs.length > 0) {
+            this.Verb('Copy run', () => {
+              this.onCopyRun(this.receipt());
+            })
+          } else if (this.hasAnswer) {
+            this.Verb('Copy answer', this.onCopy)
           }
-          this.Verb('Retry', this.onRetry)
+          this.Verb('Ask again', this.onRetry)
           if (this.canUndo) {
-            this.Verb('Undo', this.onUndo)
+            this.Verb('Close app', this.onUndo)
           }
         }
       }

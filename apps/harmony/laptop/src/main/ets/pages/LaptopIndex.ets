@@ -3066,6 +3066,9 @@ struct LaptopIndex {
           onCopy: () => {
             this.copyAnswer();
           },
+          onCopyRun: (text: string) => {
+            this.copyText(text);
+          },
           onRetry: () => {
             this.retryRun();
           },
