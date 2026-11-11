@@ -1312,6 +1312,7 @@ struct LaptopIndex {
       .fontColor(this.view === target
         ? $r('app.color.text_primary')
         : $r('app.color.text_hint'))
+      .focusable(true)
       .onClick(() => {
         this.view = this.view === target ? 'chat' : target;
         if (this.view === 'plans') {
@@ -2489,6 +2490,7 @@ struct LaptopIndex {
         .height(30)
         .padding({ left: 10, right: 10 })
         .borderRadius(8)
+        .focusable(true)
         .onClick(() => {
           this.newChat();
         })
@@ -2578,6 +2580,7 @@ struct LaptopIndex {
                 ? $r('app.color.surface')
                 : Color.Transparent)
               .borderRadius(7)
+              .focusable(true)
               .onHover((isHover: boolean) => {
                 this.hoveredSession = isHover ? session.id : '';
               })
