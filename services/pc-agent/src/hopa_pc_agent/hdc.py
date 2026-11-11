@@ -239,11 +239,13 @@ class Hdc:
             # makes `observe` and `foreground` survive that state.
             self._ensure_target()
             result = self._execute(cmd, effective_timeout)
-            if self._session_is_dead(result.stdout, result.stderr):
+            if self._needs_reconnect(result.stdout, result.stderr):
                 # The phone was suspended long enough for the hdc session to
-                # die. tconn says "already connected"; reset the local server,
-                # re-attach, and replay once more.
+                # die. `tconn` says "already connected" and the command still
+                # reports "Device not found"; reset the local server, re-attach,
+                # and replay once more.
                 self._reset_hdc_server()
+                time.sleep(0.4)
                 self._ensure_target()
                 result = self._execute(cmd, effective_timeout)
         if check and result.returncode != 0:

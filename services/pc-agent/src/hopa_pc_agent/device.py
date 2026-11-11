@@ -221,30 +221,61 @@ class Device:
         match = re.search(r'"mainElement(?:Name)?"\s*:\s*"([^"]+)"', dump)
         return match.group(1) if match else ""
 
-    def launch(self, bundle: str, ability: str = "") -> None:
+    def launch(self, bundle: str, ability: str = "", raise_window: bool = False) -> None:
         # The catalogue ability can be device-specific; always keep a fallback
         # list and a bundle-only start, so one stale name cannot block a launch.
         def probe() -> str:
             try:
-                return self.hdc.shell(f"bm dump -n {shlex.quote(bundle)}", check=False, timeout=12)
+                # Read only the launcher-ability line. A full `bm dump` is tens
+                # of kilobytes and the tunnel can truncate it; a one-line result
+                # is what actually keeps the first launch after idle reliable.
+                return self.hdc.shell(
+                    f"bm dump -n {shlex.quote(bundle)} 2>/dev/null "
+                    "| grep -m1 -E '\"mainElement(Name)?\"'",
+                    check=False,
+                    timeout=12,
+                )
             except HdcError:
                 return ""
 
+        def transport_error(text: str) -> bool:
+            low = text.lower()
+            return (
+                "device not found" in low
+                or "connect-key" in low
+                or "connect failed" in low
+                or "session is dead" in low
+            )
+
         manifest = probe()
-        if not manifest.strip():
-            # A tunneled target can answer with nothing (or not at all) while
-            # still looking connected. Without the manifest the correct ability
-            # cannot be resolved, so reset the session and ask once more.
+        if not manifest.strip() or transport_error(manifest):
+            # A tunneled target can answer with nothing, a transport error, or
+            # not at all while still looking connected. Reset the session and
+            # ask once more.
             recover = getattr(self.hdc, "recover", None)
             if callable(recover):
                 recover()
             manifest = probe()
-        if not manifest.strip():
-            raise DeviceError(
-                f"the phone did not answer while reading {bundle}; retry when the tunnel is ready"
-            )
-        if "error:" in manifest.lower():
-            raise DeviceError(f"{bundle} is not installed on this phone")
+        if not manifest.strip() or transport_error(manifest):
+            check = ""
+            try:
+                check = self.hdc.shell(
+                    f"bm dump -n {shlex.quote(bundle)} 2>&1 | head -2",
+                    check=False,
+                    timeout=8,
+                )
+            except HdcError:
+                check = ""
+            if "error:" in check.lower():
+                raise DeviceError(f"{bundle} is not installed on this phone")
+            if not check.strip() or transport_error(check):
+                raise DeviceError(
+                    f"the phone did not answer while reading {bundle}; "
+                    "retry when the tunnel is ready"
+                )
+            # The device answered and the app exists, but this build has no
+            # mainElement line: keep the legacy ability fallbacks below.
+            manifest = ""
         candidates: list[str] = []
         resolved = self.main_ability(bundle, manifest)
         if resolved:
@@ -262,10 +293,15 @@ class Device:
         errors: list[str] = []
         for attempt in range(2):
             for name in candidates:
+                command = f"aa start -a {shlex.quote(name)} -b {shlex.quote(bundle)}"
+                if raise_window:
+                    # -N raises an existing singleton window instead of only
+                    # delivering the intent to the mission.
+                    command += " -N"
                 try:
                     result = self.hdc.run(
                         "shell",
-                        f"aa start -a {shlex.quote(name)} -b {shlex.quote(bundle)}",
+                        command,
                         check=False,
                         timeout=15,
                     )

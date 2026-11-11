@@ -234,6 +234,11 @@ foreground hdc calls are now bounded (12–15 s) and recover once, so a stale
 tunnel session cannot push the bridge past the app's 45 s read timeout. Device
 failures show "That app would not open..." instead of blaming the PC bridge.
 
+Returning to HOPA uses `aa start ... -N`, which raises the existing window
+without restarting the app (same pid, chat state kept). `/focus` never
+cold-restarts `com.hopa.agent`; a restart would kill the run that is asking to
+come back and lose the answer.
+
 ---
 
 ## 6. Laptop (remaining)

@@ -286,6 +286,7 @@ class HdcTunnel:
                 stream = self._next_stream
                 self._next_stream = 1 if stream >= MAX_STREAM_ID else stream + 1
                 self._streams[stream] = client
+            print(f"hdc-tunnel: stream {stream} open", flush=True)
             if not self._send(open_frame(stream)):
                 return
             client.settimeout(1.0)
@@ -307,6 +308,7 @@ class HdcTunnel:
                     if current is client:
                         self._streams.pop(stream, None)
                 self._send(close_frame(stream))
+                print(f"hdc-tunnel: stream {stream} closed", flush=True)
             try:
                 client.close()
             except OSError:
@@ -352,8 +354,12 @@ class HdcTunnel:
             kind = frame[0]
             if kind == STATUS:
                 if frame[1:] == READY:
+                    if not self._ready.is_set():
+                        print("hdc-tunnel: phone ready", flush=True)
                     self._ready.set()
                 elif frame[1:] == WAITING:
+                    if self._ready.is_set():
+                        print("hdc-tunnel: phone waiting", flush=True)
                     self._ready.clear()
                 continue
             if len(frame) < 5:

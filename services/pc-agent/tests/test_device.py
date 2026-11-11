@@ -109,7 +109,7 @@ def test_launch_and_stop() -> None:
     device = Device(hdc=hdc)  # type: ignore[arg-type]
     device.launch("com.example.app", ability="MainAbility")
     device.stop("com.example.app")
-    assert hdc.calls[0] == "bm dump -n com.example.app"
+    assert hdc.calls[0].startswith("bm dump -n com.example.app")
     assert "aa start" in hdc.calls[1]
     assert hdc.calls[-1] == "aa force-stop com.example.app"
 
@@ -169,6 +169,28 @@ def test_launch_uses_the_resolved_main_ability() -> None:
     assert hdc.starts == ["shell aa start -a com.huawei.hmos.clock.phone -b com.huawei.hmos.clock"]
 
 
+def test_launch_raise_window_adds_the_raise_flag() -> None:
+    class RaiseHdc(FakeHdc):
+        def __init__(self) -> None:
+            super().__init__()
+            self.starts: list[str] = []
+
+        def shell(self, command: str, *, check: bool = True, timeout: float | None = None) -> str:
+            self.calls.append(command)
+            if command.startswith("bm dump"):
+                return '{"mainElementName": "EntryAbility"}'
+            return ""
+
+        def run(self, *args: str, **kwargs: object) -> FakeHdc.Result:
+            self.starts.append(" ".join(str(arg) for arg in args))
+            return FakeHdc.Result()
+
+    hdc = RaiseHdc()
+    Device(hdc=hdc).launch("com.hopa.agent", raise_window=True)  # type: ignore[arg-type]
+
+    assert hdc.starts == ["shell aa start -a EntryAbility -b com.hopa.agent -N"]
+
+
 def test_launch_recovers_when_the_manifest_is_empty() -> None:
     class ColdHdc(FakeHdc):
         def __init__(self) -> None:
@@ -195,6 +217,39 @@ def test_launch_recovers_when_the_manifest_is_empty() -> None:
             return FakeHdc.Result()
 
     hdc = ColdHdc()
+    Device(hdc=hdc).launch("com.huawei.hmos.clock")  # type: ignore[arg-type]
+
+    assert hdc.recovers == 1
+    assert hdc.probes == 2
+    assert hdc.starts == ["shell aa start -a com.huawei.hmos.clock.phone -b com.huawei.hmos.clock"]
+
+
+def test_launch_recovers_from_a_transport_error_probe() -> None:
+    class FlakyHdc(FakeHdc):
+        def __init__(self) -> None:
+            super().__init__()
+            self.probes = 0
+            self.recovers = 0
+            self.starts: list[str] = []
+
+        def shell(self, command: str, *, check: bool = True, timeout: float | None = None) -> str:
+            self.calls.append(command)
+            if command.startswith("bm dump"):
+                self.probes += 1
+                if self.probes == 1:
+                    return "[Fail][E001005] Device not found or connected"
+                return '"mainElementName": "com.huawei.hmos.clock.phone"'
+            return ""
+
+        def recover(self) -> bool:
+            self.recovers += 1
+            return True
+
+        def run(self, *args: str, **kwargs: object) -> FakeHdc.Result:
+            self.starts.append(" ".join(str(arg) for arg in args))
+            return FakeHdc.Result()
+
+    hdc = FlakyHdc()
     Device(hdc=hdc).launch("com.huawei.hmos.clock")  # type: ignore[arg-type]
 
     assert hdc.recovers == 1
