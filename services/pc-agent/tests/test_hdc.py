@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from hopa_pc_agent.hdc import Hdc, parse_targets
+from hopa_pc_agent.hdc import Hdc, HdcResult, parse_targets
 
 
 def test_parse_targets_skips_empty_marker() -> None:
@@ -35,3 +35,35 @@ def test_command_includes_target() -> None:
 def test_command_without_target() -> None:
     hdc = Hdc(hdc_path="hdc")
     assert hdc.command("list", "targets") == ["hdc", "list", "targets"]
+
+
+def test_network_target_retries_after_offline(monkeypatch) -> None:
+    hdc = Hdc(hdc_path="hdc", target="127.0.0.1:5556")
+    calls: list[list[str]] = []
+    ensured: list[bool] = []
+
+    def fake_execute(cmd: list[str], timeout: float) -> HdcResult:
+        calls.append(cmd)
+        if len(calls) == 1:
+            return HdcResult("", "[Fail][E001005] Device not found or connected", 0)
+        return HdcResult("ok", "", 0)
+
+    monkeypatch.setattr(hdc, "_execute", fake_execute)
+    monkeypatch.setattr(hdc, "_ensure_target", lambda: ensured.append(True))
+
+    result = hdc.run("shell", "echo hi")
+
+    assert result.stdout == "ok"
+    assert ensured == [True]
+    assert len(calls) == 2
+
+
+def test_usb_target_is_not_reconnected(monkeypatch) -> None:
+    hdc = Hdc(hdc_path="hdc", target="63Q0226113049275")
+    ensured: list[bool] = []
+    monkeypatch.setattr(hdc, "_ensure_target", lambda: ensured.append(True))
+    monkeypatch.setattr(hdc, "_execute", lambda cmd, timeout: HdcResult("ok", "", 0))
+
+    hdc.run("shell", "echo hi")
+
+    assert ensured == []

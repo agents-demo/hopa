@@ -40,6 +40,8 @@ export class BridgeMonitor {
     const ok: boolean = await service.bridge.health();
     BridgeMonitor.checking = false;
     AppStorage.setOrCreate<boolean>('hopa.bridgeOnline', ok);
+    AppStorage.setOrCreate<boolean>('hopa.bridgeTunnelKnown', service.bridge.tunnelIsReported());
+    AppStorage.setOrCreate<boolean>('hopa.bridgeDeviceReady', service.bridge.tunnelIsReady());
     return ok;
   }
 }

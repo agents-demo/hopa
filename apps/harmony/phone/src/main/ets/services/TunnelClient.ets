@@ -4,6 +4,7 @@ import { webSocket, socket } from '@kit.NetworkKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { SettingsStore, StoredSettings } from './SettingsStore';
 import { BridgeSessionStore, BridgeSessionRecord } from './BridgeSessionStore';
+import { AgentService } from './AgentService';
 
 const DOMAIN: number = 0x0000;
 const TAG: string = 'HOPA';
@@ -63,6 +64,7 @@ export class TunnelClient {
   private token: string = '';
   private retry: number = 0;
   private retryTimer: number = -1;
+  private keepAlive: boolean = false;
 
   static get(): TunnelClient {
     if (TunnelClient.instance === undefined) {
@@ -117,13 +119,15 @@ export class TunnelClient {
       return;
     }
     let token: string = this.token.length > 0 ? this.token : stored.bridgeToken;
-    try {
-      const session: BridgeSessionRecord = await BridgeSessionStore.load();
-      if (session.token.length > 0) {
-        token = session.token;
+    if (this.token.length === 0) {
+      try {
+        const session: BridgeSessionRecord = await BridgeSessionStore.load();
+        if (session.token.length > 0) {
+          token = session.token;
+        }
+      } catch (error) {
+        // Keep the stored fallback.
       }
-    } catch (error) {
-      // Keep the stored fallback.
     }
     this.configure(stored.bridgeUrl, token);
     this.enabled = true;
@@ -141,11 +145,38 @@ export class TunnelClient {
       this.publish();
       return;
     }
+    await this.keepAwake();
     this.connect();
+  }
+
+  /**
+   * A background WebSocket is suspended when HarmonyOS freezes the app. The
+   * existing continuous task is ref-counted, so a run and the tunnel can share
+   * it without one ending the other.
+   */
+  private async keepAwake(): Promise<void> {
+    if (this.keepAlive || this.context === undefined) {
+      return;
+    }
+    this.keepAlive = true;
+    const service = AgentService.get();
+    service.background.setContext(this.context);
+    await service.background.begin();
+  }
+
+  private releaseAwake(): void {
+    if (!this.keepAlive) {
+      return;
+    }
+    this.keepAlive = false;
+    AgentService.get().background.end().catch((error: BusinessError) => {
+      hilog.warn(DOMAIN, TAG, `tunnel: background stop failed ${error.message}`);
+    });
   }
 
   stop(): void {
     this.enabled = false;
+    this.releaseAwake();
     this.retry = 0;
     if (this.retryTimer >= 0) {
       clearTimeout(this.retryTimer);
