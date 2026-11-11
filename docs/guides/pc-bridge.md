@@ -129,6 +129,15 @@ hdc -t 3QC0225821000268 rport tcp:8767 tcp:8767
 `-Stop`), and `deploy.ps1` calls it, so a bridge that died does not silently
 turn into "PC bridge offline" after an install.
 
+For the 2-in-1 alone, `tools\scripts\run-laptop.ps1` starts the laptop bridge on
+8767, adds `hdc rport tcp:8767`, and launches `LaptopAbility` with the bridge
+and model settings from `.env`. It reads `HOPA_LAPTOP_DEVICE`,
+`HOPA_LAPTOP_BRIDGE_PORT`, `HOPA_LAPTOP_BRIDGE_TOKEN` and
+`HOPA_LAPTOP_BRIDGE_URL` (defaults: the current MateBook, 8767, `hopalaptop`,
+`http://127.0.0.1:8767`). Use `-Status`, `-Restart`, `-Stop`, `-NoLaunch` or
+`-ResetForward` when the USB forward is stale. A healthy run prints the bridge,
+laptop, app, reverse-port and `/whoami` state.
+
 Then in the laptop app: **Settings -> PC BRIDGE**, address
 `http://127.0.0.1:8767`, the key the bridge printed, **Connect**. The status
 reads `Connected.` only after a real `/health` answer; otherwise it shows the
