@@ -183,6 +183,52 @@ every restart requires a fresh pair. A port of `0` (tests) never writes state.
 `hopareadonly-8766` / `hopareadonly-8767` so both shells can be configured by
 copy-paste without a leading dash (which `aa start --ps` eats).
 
+## Cloud relay (Render)
+
+A phone on mobile data cannot reach a PC behind a home router, and `hdc` cannot
+run in the cloud without a device. The relay flips the direction: the PC dials
+**out** to a public HTTPS service, and the phone talks to that service.
+
+```bash
+# cloud: one process, no device, no hdc
+pc-agent relay --host 0.0.0.0 --port "$PORT" \
+    --token <phone-token> --link-token <link-token> --pair-code 246810
+
+# PC: the bridge keeps its hdc and its conversation store
+pc-agent bridge --port 8765 --token <phone-token>
+pc-agent cloud-link --relay https://<service>.onrender.com \
+    --link-token <link-token> --local http://127.0.0.1:8765 \
+    --local-token <phone-token>
+```
+
+Point the phone's bridge URL at the relay (`https://...onrender.com`). The
+phone token, `/pair` and `/refresh` work exactly as they do locally: the relay
+authenticates and forwards verbatim, so the device lock, rate limits, run
+records and `/chats` all stay in the bridge that owns them.
+
+**The long-poll is also the keep-alive.** Render's free tier spins a web
+service down after 15 minutes without inbound traffic. `cloud-link` holds
+`GET /link/poll` for up to `--poll-seconds` (25 s by default) and immediately
+polls again, so a running PC is inbound traffic every ≤25 s and the relay stays
+awake. When the PC stops, the relay sleeps, which is the honest behaviour. Use
+`GET /health` to see `linked` and `link_age_seconds`; a cold start after a long
+pause takes roughly 30–60 s, so the first phone action may report offline.
+
+Limits worth stating:
+
+- The relay forwards to **one** linked PC. The multi-device `BridgePool` still
+  runs on that PC, behind a single bridge.
+- Everything the phone can do still requires the PC to be awake: the cloud has
+  no `hdc`, so it cannot tap, type or observe on its own.
+- The link token never leaves the PC and the relay logs paths, not bodies.
+- Free instances come from a monthly hour pool; one always-on service uses
+  about 730 of the 750 hours. A second free service left running also will not
+  fit.
+- On Render, create a **Web Service** from the repo with build
+  `pip install --no-deps ./services/pc-agent` and start
+  `python -m hopa_pc_agent relay --host 0.0.0.0 --port $PORT`. The repository's
+  `render.yaml` describes the same service for a Blueprint.
+
 ## Security
 
 - Every `POST` requires `Authorization: Bearer <token>`; comparison is

@@ -6,6 +6,12 @@ All notable changes are recorded here. Versions follow `docs/versioning.md`.
 
 ### Added
 
+- A cloud relay for the bridge: `pc-agent relay` runs on a public web service
+  and `pc-agent cloud-link` keeps a PC dialled out to it, so the phone works
+  without a USB tunnel or a port forward. The relay forwards verbatim, so the
+  device lock, tokens, run records and `/chats` stay on the PC. Its 25-second
+  long-poll is also the keep-alive that stops Render's free tier from sleeping;
+  `/health` reports `linked` and `link_age_seconds`.
 - Bridge token rotation: `/pair` returns an access token plus a refresh token
   and `expires_in`; every pair or refresh rotates both. The phone stores the
   pair in Asset Store and renews silently when a request comes back
