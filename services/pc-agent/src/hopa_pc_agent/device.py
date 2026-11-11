@@ -50,7 +50,15 @@ class Device:
         Only the mission section is considered: a service extension can also say
         ``state #FOREGROUND`` and would otherwise be mistaken for the app.
         """
-        text = self.hdc.shell("aa dump -a", timeout=10)
+        try:
+            text = self.hdc.shell("aa dump -a", timeout=10)
+        except HdcError:
+            # A stale tunnel target can make the first read time out. Reset it
+            # once; the next read tells the truth.
+            recover = getattr(self.hdc, "recover", None)
+            if callable(recover):
+                recover()
+            text = self.hdc.shell("aa dump -a", timeout=10)
         start = text.find("current mission lists")
         end = text.find("ExtensionRecords")
         if start < 0:
@@ -208,17 +216,37 @@ class Device:
                 dump = self.hdc.shell(f"bm dump -n {shlex.quote(bundle)}", check=False)
             except Exception:  # noqa: BLE001
                 return ""
-        match = re.search(r'"mainElement"\s*:\s*"([^"]+)"', dump)
+        # HarmonyOS versions name this field differently: mainElement on some
+        # builds, mainElementName on others (the Clock app uses the latter).
+        match = re.search(r'"mainElement(?:Name)?"\s*:\s*"([^"]+)"', dump)
         return match.group(1) if match else ""
 
     def launch(self, bundle: str, ability: str = "") -> None:
         # The catalogue ability can be device-specific; always keep a fallback
         # list and a bundle-only start, so one stale name cannot block a launch.
-        probe = self.hdc.shell(f"bm dump -n {shlex.quote(bundle)}", check=False)
-        if "error:" in probe.lower():
+        def probe() -> str:
+            try:
+                return self.hdc.shell(f"bm dump -n {shlex.quote(bundle)}", check=False, timeout=12)
+            except HdcError:
+                return ""
+
+        manifest = probe()
+        if not manifest.strip():
+            # A tunneled target can answer with nothing (or not at all) while
+            # still looking connected. Without the manifest the correct ability
+            # cannot be resolved, so reset the session and ask once more.
+            recover = getattr(self.hdc, "recover", None)
+            if callable(recover):
+                recover()
+            manifest = probe()
+        if not manifest.strip():
+            raise DeviceError(
+                f"the phone did not answer while reading {bundle}; retry when the tunnel is ready"
+            )
+        if "error:" in manifest.lower():
             raise DeviceError(f"{bundle} is not installed on this phone")
         candidates: list[str] = []
-        resolved = self.main_ability(bundle, probe)
+        resolved = self.main_ability(bundle, manifest)
         if resolved:
             candidates.append(resolved)
         if ability:
@@ -234,11 +262,16 @@ class Device:
         errors: list[str] = []
         for attempt in range(2):
             for name in candidates:
-                result = self.hdc.run(
-                    "shell",
-                    f"aa start -a {shlex.quote(name)} -b {shlex.quote(bundle)}",
-                    check=False,
-                )
+                try:
+                    result = self.hdc.run(
+                        "shell",
+                        f"aa start -a {shlex.quote(name)} -b {shlex.quote(bundle)}",
+                        check=False,
+                        timeout=15,
+                    )
+                except HdcError as exc:
+                    errors.append(f"{name}: {exc}")
+                    continue
                 output = f"{result.stdout}\n{result.stderr}".strip()
                 if "successfully" in output.lower():
                     return

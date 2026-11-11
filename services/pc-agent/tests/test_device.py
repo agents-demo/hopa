@@ -20,6 +20,8 @@ class FakeHdc:
 
     def shell(self, command: str, *, check: bool = True, timeout: float | None = None) -> str:
         self.calls.append(command)
+        if command.startswith("bm dump -n"):
+            return '{"mainElement": "EntryAbility"}'
         return ""
 
     def list_targets(self, timeout: float | None = None) -> list[str]:
@@ -121,6 +123,83 @@ def test_press_key() -> None:
 def test_devices_delegates() -> None:
     hdc = FakeHdc()
     assert Device(hdc=hdc).devices() == ["fake-device"]  # type: ignore[arg-type]
+
+
+def test_main_ability_reads_main_element_name() -> None:
+    class DumpHdc(FakeHdc):
+        def shell(self, command: str, *, check: bool = True, timeout: float | None = None) -> str:
+            self.calls.append(command)
+            return '{"mainElementName": "com.huawei.hmos.clock.phone"}'
+
+    hdc = DumpHdc()
+    assert Device(hdc=hdc).main_ability("com.huawei.hmos.clock") == (  # type: ignore[arg-type]
+        "com.huawei.hmos.clock.phone"
+    )
+
+
+def test_main_ability_reads_legacy_main_element() -> None:
+    class DumpHdc(FakeHdc):
+        def shell(self, command: str, *, check: bool = True, timeout: float | None = None) -> str:
+            self.calls.append(command)
+            return '{"mainElement": "EntryAbility"}'
+
+    hdc = DumpHdc()
+    assert Device(hdc=hdc).main_ability("com.example.app") == "EntryAbility"  # type: ignore[arg-type]
+
+
+def test_launch_uses_the_resolved_main_ability() -> None:
+    class LaunchHdc(FakeHdc):
+        def __init__(self) -> None:
+            super().__init__()
+            self.starts: list[str] = []
+
+        def shell(self, command: str, *, check: bool = True, timeout: float | None = None) -> str:
+            self.calls.append(command)
+            if command.startswith("bm dump"):
+                return '{"mainElementName": "com.huawei.hmos.clock.phone"}'
+            return ""
+
+        def run(self, *args: str, **kwargs: object) -> FakeHdc.Result:
+            self.starts.append(" ".join(str(arg) for arg in args))
+            return FakeHdc.Result()
+
+    hdc = LaunchHdc()
+    Device(hdc=hdc).launch("com.huawei.hmos.clock")  # type: ignore[arg-type]
+
+    assert hdc.starts == ["shell aa start -a com.huawei.hmos.clock.phone -b com.huawei.hmos.clock"]
+
+
+def test_launch_recovers_when_the_manifest_is_empty() -> None:
+    class ColdHdc(FakeHdc):
+        def __init__(self) -> None:
+            super().__init__()
+            self.probes = 0
+            self.recovers = 0
+            self.starts: list[str] = []
+
+        def shell(self, command: str, *, check: bool = True, timeout: float | None = None) -> str:
+            self.calls.append(command)
+            if command.startswith("bm dump"):
+                self.probes += 1
+                if self.probes == 1:
+                    return ""
+                return '{"mainElementName": "com.huawei.hmos.clock.phone"}'
+            return ""
+
+        def recover(self) -> bool:
+            self.recovers += 1
+            return True
+
+        def run(self, *args: str, **kwargs: object) -> FakeHdc.Result:
+            self.starts.append(" ".join(str(arg) for arg in args))
+            return FakeHdc.Result()
+
+    hdc = ColdHdc()
+    Device(hdc=hdc).launch("com.huawei.hmos.clock")  # type: ignore[arg-type]
+
+    assert hdc.recovers == 1
+    assert hdc.probes == 2
+    assert hdc.starts == ["shell aa start -a com.huawei.hmos.clock.phone -b com.huawei.hmos.clock"]
 
 
 def test_dump_layout_recovers_from_an_empty_pull() -> None:
