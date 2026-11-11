@@ -11,6 +11,13 @@ class OpenAiRequestBody {
   model: string = '';
   temperature: number = 0.2;
   messages: OpenAiMessage[] = [];
+  /**
+   * A reasoning model spends output tokens before it writes a word of answer.
+   * Left at the provider default, the budget ran out during the reasoning and
+   * `content` came back empty, which reached the chat as no answer at all.
+   */
+  max_tokens: number = 2048;
+  reasoning_effort: string = 'low';
 }
 
 class OpenAiChoiceMessage {
@@ -19,6 +26,7 @@ class OpenAiChoiceMessage {
 
 class OpenAiChoice {
   message: OpenAiChoiceMessage = new OpenAiChoiceMessage();
+  finish_reason: string = '';
 }
 
 class OpenAiResponseBody {
@@ -84,7 +92,14 @@ export class OpenAiCompatibleClient implements ModelClient {
         result.tokens = parsed.usage.total_tokens;
       }
       if (parsed.choices.length > 0) {
-        result.text = parsed.choices[0].message.content;
+        const choice = parsed.choices[0];
+        result.text = choice.message.content;
+        if (result.text.trim().length === 0) {
+          // Say why instead of handing an empty turn to the chat.
+          result.error = choice.finish_reason === 'length'
+            ? 'the model ran out of output tokens while thinking'
+            : 'the model returned an empty answer';
+        }
       } else {
         result.error = 'model returned no choices';
       }

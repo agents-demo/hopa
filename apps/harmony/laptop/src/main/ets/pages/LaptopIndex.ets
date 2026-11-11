@@ -192,7 +192,8 @@ struct LaptopIndex {
       this.store.save(context);
       const session: LaptopSession = store.current();
       this.chat.turns = session.turns.slice();
-      this.turns = session.turns.slice();
+      this.markInterrupted();
+      this.turns = this.chat.turns.slice();
       this.prefetchImages();
       this.lastLatency = session.lastLatency;
       this.lastTokens = session.lastTokens;
@@ -662,6 +663,30 @@ struct LaptopIndex {
     this.refreshLastQuestion();
   }
 
+  /**
+   * A question with no answer means the shell died mid-run - the memory manager
+   * reaps it when another app takes the foreground. On return, say that instead
+   * of showing a chat that looks like it ignored the request.
+   */
+  private markInterrupted(): void {
+    const turns: LaptopTurn[] = this.chat.turns;
+    if (turns.length === 0) {
+      return;
+    }
+    const last: LaptopTurn = turns[turns.length - 1];
+    if (last.role !== 'user') {
+      return;
+    }
+    const reply = new LaptopTurn();
+    reply.id = `t\u00b7${Date.now()}\u00b7${Math.floor(Math.random() * 1e6)}`;
+    reply.at = Date.now();
+    reply.role = 'assistant';
+    reply.text = 'I was stopped before I could answer: the system closed me while ' +
+      'I was working in another app. Ask again and I will retry.';
+    turns.push(reply);
+    this.store.commit(turns, this.lastLatency, this.lastTokens);
+  }
+
   /** The rail and the retry both read this; adopted turns must update it. */
   private refreshLastQuestion(): void {
     this.lastQuestion = '';
@@ -880,6 +905,19 @@ struct LaptopIndex {
   }
 
   /** Hold the app alive while a run works and the user is in another app. */
+  private async keepAliveBounded(run: boolean): Promise<void> {
+    let timer: number = -1;
+    const guard: Promise<void> = new Promise<void>(
+      (resolve: (value: void) => void) => {
+        timer = setTimeout(resolve, 5000);
+      });
+    try {
+      await Promise.race([this.keepAlive(run), guard]);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
   private async keepAlive(run: boolean): Promise<void> {
     const context = getContext(this) as common.UIAbilityContext;
     try {
@@ -896,12 +934,15 @@ struct LaptopIndex {
         });
         await backgroundTaskManager.startBackgroundRunning(
           context, backgroundTaskManager.BackgroundMode.DATA_TRANSFER, agent);
+        console.info('HOPA: background task started');
       } else {
         await backgroundTaskManager.stopBackgroundRunning(context);
       }
     } catch (error) {
       // Without it the run still works while HOPA is in front; it is a shield,
-      // not a requirement.
+      // not a requirement. The code matters: 9800004 says the mode is refused.
+      const failure = error as Error;
+      console.info(`HOPA: background task failed ${failure.message}`);
     }
   }
 
@@ -919,6 +960,11 @@ struct LaptopIndex {
     const context = getContext(this) as common.UIAbilityContext;
     // The choice of machine rides on the request, not on the conversation.
     this.agent.runtime.setTarget(this.targetRole);
+    // Hold a background task BEFORE the run: the first action opens another app,
+    // and the memory manager reaps this shell the moment that app takes the
+    // foreground. Requesting the task after the run started was too late - the
+    // launch happens within the first seconds and the process died mid-run.
+    await this.keepAliveBounded(true);
     // Show the question at once; waiting for the run made the pane look dead.
     const running: Promise<void> = this.chat.send(text);
     this.turns = this.chat.turns.slice();
@@ -941,9 +987,6 @@ struct LaptopIndex {
     } catch (error) {
       // The turn is local; a later sync will carry it.
     }
-    // A courtesy, never a gate: awaiting this API left the composer busy when
-    // the background task could not be started.
-    this.keepAlive(true).catch(() => {});
     // A rejected or stalled run must never leave the composer locked with no
     // answer: the first version awaited the run and cleared `busy` only on the
     // happy path, so one bad turn froze the shell until the app was restarted.

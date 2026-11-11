@@ -75,7 +75,9 @@ export class LaptopChat {
         throw new Error('no model key yet');
       }
       this.onTurnStart(user.id);
+      console.info(`HOPA: send start ${prompt.length} chars`);
       const replyText: string = await this.bounded(this.runtime.run(prompt));
+      console.info(`HOPA: run done ${replyText.length} chars, ${this.runtime.lastSteps().length} steps`);
       this.lastLatencyMs = this.runtime.getLastDurationMs();
       this.lastTokens = this.runtime.getLastTokens();
       this.totalTokens += this.lastTokens;
@@ -96,6 +98,7 @@ export class LaptopChat {
       reply.steps = this.runtime.lastSteps().slice();
       this.turns.push(reply);
     } catch (error) {
+      console.info(`HOPA: send error ${(error as Error).message}`);
       this.error = `${(error as Error).message}`;
       const reply = new LaptopTurn();
       reply.role = 'assistant';
@@ -104,6 +107,7 @@ export class LaptopChat {
         : 'I could not reach the model. Check the key and endpoint under Settings.';
       this.turns.push(reply);
     }
+    console.info(`HOPA: send finished, turns ${this.turns.length}`);
     this.busy = false;
   }
 
@@ -118,6 +122,7 @@ export class LaptopChat {
     const guard: Promise<string> = new Promise<string>(
       (resolve: (value: string) => void, reject: (reason: Error) => void) => {
         timer = setTimeout(() => {
+          console.info('HOPA: bounded timer fired, cancelling');
           if (this.runtime !== undefined) {
             this.runtime.cancel();
           }
