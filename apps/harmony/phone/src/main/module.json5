@@ -57,7 +57,8 @@
           "floating"
         ],
         "backgroundModes": [
-          "dataTransfer"
+          "dataTransfer",
+          "multiDeviceConnection"
         ],
         "exported": true,
         "skills": [

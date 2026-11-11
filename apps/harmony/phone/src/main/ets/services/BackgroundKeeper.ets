@@ -50,11 +50,27 @@ export class BackgroundKeeper implements RuntimeBackground {
       };
       const agent: WantAgent = await wantAgent.getWantAgent(info);
       this.agent = agent;
-      await backgroundTaskManager.startBackgroundRunning(
-        context,
-        backgroundTaskManager.BackgroundMode.DATA_TRANSFER,
-        agent
-      );
+      // dataTransfer alone is suspended when an idle tunnel moves no bytes.
+      // multi-device connection matches a PC<->phone control channel and is
+      // requested alongside it; older builds fall back to dataTransfer.
+      try {
+        await backgroundTaskManager.startBackgroundRunning(
+          context,
+          ['dataTransfer', 'multiDeviceConnection'],
+          agent
+        );
+      } catch (multiError) {
+        hilog.warn(
+          0x0000,
+          'HOPA',
+          `background: multi-device mode refused ${multiError}; using dataTransfer`
+        );
+        await backgroundTaskManager.startBackgroundRunning(
+          context,
+          backgroundTaskManager.BackgroundMode.DATA_TRANSFER,
+          agent
+        );
+      }
       this.running = true;
       hilog.info(0x0000, 'HOPA', 'background: continuous task started');
     } catch (error) {
