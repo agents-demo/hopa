@@ -170,6 +170,14 @@ export class AgentLoop {
       }
 
       messages.push(new ModelMessage('assistant', response.text));
+      if (launch.length > 0 && outcome.executed && outcome.observation.success) {
+        // Let the foreground hand-over finish. Observing during the transition
+        // runs a device-side layout dump while the ability is being backgrounded,
+        // and the resource scheduler then suspends the shell (lifecycle timeout).
+        await new Promise<void>((resolve: () => void) => {
+          setTimeout(resolve, 1500);
+        });
+      }
       screen = await this.capture();
       messages.push(
         new ModelMessage(

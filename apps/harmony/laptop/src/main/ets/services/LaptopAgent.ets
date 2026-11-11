@@ -157,6 +157,9 @@ export class LaptopAgent {
       new BridgeScreenSource(this.bridge, gates)
     );
     this.runtime.setHomeAbility('LaptopAbility');
+    // No step thumbnails here: the bridge frame is the user's own screen, and
+    // taking one right after a launch is what suspended this shell mid-run.
+    this.runtime.setCaptureStepFrames(false);
     this.schedules.bindRunner(
       (goal: string): Promise<string> => this.runtime.run(goal),
       (): boolean => this.runtime.isBusy()

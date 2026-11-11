@@ -61,6 +61,8 @@ export class AgentRuntime {
   private lastStepLabels: string[] = [];
   private lastTypedLength: number = 0;
   private lastStepShots: string[] = [];
+  /** Off on hosts that already show the screen; see recordStep. */
+  private captureStepFrames: boolean = true;
   private lastStepShotIds: string[] = [];
   private matchedSkillId: string = '';
   private activeRuns: number = 0;
@@ -139,9 +141,24 @@ export class AgentRuntime {
     if (!outcome.action.kind.startsWith('ui.') && !outcome.action.kind.startsWith('web.')) {
       return;
     }
+    // A launch hands the foreground over in the same instant this step is
+    // recorded. Every bridge call here runs hdc on this very device (foreground
+    // query, layout dump, screenshot), so asking for one now competes with the
+    // activity transition and the resource scheduler suspends the shell. The
+    // launch needs no frame anyway: the app is what the user is looking at.
+    if (outcome.action.kind === 'ui.launch') {
+      return;
+    }
     try {
       const foreground: string = await this.bridge.foregroundBundle();
       if (foreground.length === 0 || foreground === 'com.hopa.agent') {
+        return;
+      }
+      // The frame is for the phone's approval card. On a desktop the user is
+      // already looking at the screen, and asking the bridge for a device
+      // screenshot right after a launch is what got this shell suspended
+      // (lifecycle timeout) before it could answer.
+      if (!this.captureStepFrames) {
         return;
       }
       const shot: string = await this.bridge.screenshot(960);
@@ -152,6 +169,10 @@ export class AgentRuntime {
     } catch (error) {
       // A frame is optional; never fail a run for it.
     }
+  }
+
+  setCaptureStepFrames(enabled: boolean): void {
+    this.captureStepFrames = enabled;
   }
 
   stepShots(): string[] {
