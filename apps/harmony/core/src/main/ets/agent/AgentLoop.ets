@@ -26,6 +26,13 @@ export class AgentLoop {
   private cancelled: boolean = false;
   private answer: string = '';
   private surfaceAvailable: boolean = true;
+  /**
+   * Hosts that cannot execute in the background (a desktop shell) stop the loop
+   * at a launch: the launch hands the foreground away, and everything after it
+   * would run while the app is backgrounded - which the scheduler freezes.
+   */
+  private stopAfterLaunch: boolean = false;
+  private stoppedAfterLaunch: boolean = false;
 
   constructor(
     executor: ActionExecutor,
@@ -78,6 +85,10 @@ export class AgentLoop {
   /** A plain-text reply when the model answers instead of proposing an action. */
   getAnswer(): string {
     return this.answer;
+  }
+
+  setStopAfterLaunch(stop: boolean): void {
+    this.stopAfterLaunch = stop;
   }
 
   setSurfaceAvailable(available: boolean): void {
@@ -137,6 +148,7 @@ export class AgentLoop {
       }
 
       const launch: string = AgentLoop.launchBundle(action);
+      this.stoppedAfterLaunch = false;
       if (launch.length > 0 && launched.indexOf(launch) >= 0) {
         // HarmonyOS refuses a UIAbility start from the background, so a second
         // launch of the same app cannot succeed. Keep the first result and let
@@ -167,6 +179,12 @@ export class AgentLoop {
       await this.onStep(outcome);
       if (launch.length > 0 && outcome.executed && outcome.observation.success) {
         launched.push(launch);
+        if (this.stopAfterLaunch) {
+          // Do not observe or ask the model again: this app is already in the
+          // background now, and any further work here is what gets it frozen.
+          this.stoppedAfterLaunch = true;
+          break;
+        }
       }
 
       messages.push(new ModelMessage('assistant', response.text));
@@ -198,7 +216,7 @@ export class AgentLoop {
     // A run that used every step on actions, or stopped on a failed one, used
     // to return an empty answer: the chat drew nothing and the question looked
     // ignored. Ask once more for text only, then fall back to what happened.
-    if (this.answer.trim().length === 0 && !this.cancelled) {
+    if (this.answer.trim().length === 0 && !this.cancelled && !this.stoppedAfterLaunch) {
       this.answer = await this.finalAnswer(messages);
     }
     if (this.answer.trim().length === 0) {

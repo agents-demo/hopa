@@ -163,6 +163,9 @@ export class LaptopAgent {
     // No step thumbnails here: the bridge frame is the user's own screen, and
     // taking one right after a launch is what suspended this shell mid-run.
     this.runtime.setCaptureStepFrames(false);
+    // Stop at a launch: this shell is frozen if it keeps working once another
+    // app owns the foreground, so the turn ends with "opened X" instead.
+    this.runtime.setStopAfterLaunch(true);
     this.schedules.bindRunner(
       (goal: string): Promise<string> => this.runtime.run(goal),
       (): boolean => this.runtime.isBusy()

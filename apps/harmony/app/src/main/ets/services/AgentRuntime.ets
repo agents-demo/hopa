@@ -63,6 +63,7 @@ export class AgentRuntime {
   private lastStepShots: string[] = [];
   /** Off on hosts that already show the screen; see recordStep. */
   private captureStepFrames: boolean = true;
+  private stopAfterLaunch: boolean = false;
   private lastStepShotIds: string[] = [];
   private matchedSkillId: string = '';
   private activeRuns: number = 0;
@@ -106,6 +107,7 @@ export class AgentRuntime {
       maxSteps,
       this.screen
     );
+    this.loop.setStopAfterLaunch(this.stopAfterLaunch);
     this.loop.onStep = (outcome: ActionOutcome): Promise<void> => {
       return this.recordStep(outcome);
     };
@@ -169,6 +171,14 @@ export class AgentRuntime {
     } catch (error) {
       // A frame is optional; never fail a run for it.
     }
+  }
+
+  /** True on a shell that must not keep working once it is backgrounded. */
+  setStopAfterLaunch(stop: boolean): void {
+    if (this.loop !== undefined) {
+      this.loop.setStopAfterLaunch(stop);
+    }
+    this.stopAfterLaunch = stop;
   }
 
   setCaptureStepFrames(enabled: boolean): void {
