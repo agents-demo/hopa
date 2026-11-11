@@ -33,7 +33,12 @@ with no USB connection.
 >    `LaptopAbility.onForeground` and `LaptopIndex.startIfWanted` paths).
 > 5. The laptop USB is offline; restore it with `tmode usb`/reboot if a
 >    rebuild or log inspection is needed.
-> 6. The WIP is committed on `feat/laptop-tunnel` (draft PR); see §3/§5.
+> 6. The WIP is committed on `feat/laptop-tunnel` (draft PR #26); see §3/§5.
+>
+> **Stop point (2026-11-11):** work is committed on `feat/laptop-tunnel`
+> (draft PR #26). The live PC pool and host tunnels are still running; the
+> phone app may need a foreground wake. The laptop USB is offline (TCP mode)
+> and its app tunnel is absent. Resume at the immediate next steps above.
 
 ---
 
@@ -122,7 +127,7 @@ Current branch after this commit:
 ```text
 feat/laptop-tunnel
 feat: add the laptop tunnel client and cloud runner (WIP)
-draft PR (to be created)
+draft PR #26 — https://github.com/agents-demo/hopa/pull/26
 ```
 
 PR #25 (`feat/tunnel-links`) is **merged and deployed**.
