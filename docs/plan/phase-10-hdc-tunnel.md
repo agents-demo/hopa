@@ -148,6 +148,25 @@ builds that reject the pair.
 6. If the relay is compromised, what stops it from driving the phone? The hdc
    key is the only remaining gate; is that enough?
 
+**Answers (2026-11-11):**
+
+1. **Yes.** The app uid connected to `127.0.0.1:5555`; `hdc shell` over the
+   tunnel returned uid 2000.
+2. **No fresh pairing.** The PC's existing hdc key worked; `hdc tconn
+   127.0.0.1:5556` connected without a code.
+3. **The same hdcd.** The tunneled target served shell, `uitest`, and
+   `snapshot_display`, exactly like the USB target.
+4. **Partly.** The WebSocket survives a 10-minute screen-off run, but
+   HarmonyOS suspends the app's JS/TCP handlers after a few minutes. The relay
+   can report `ready` while new OPEN streams time out; foregrounding HOPA and
+   resetting the local hdc server recovers it. This is the one blocked box.
+5. **No observed limit.** The free plan carried the tunnel for 10 minutes and
+   the 100-command burst with 32 KiB chunks; application keepalives every 15 s
+   kept the socket alive.
+6. **It is a full control path while enabled.** The hdc key is a second gate,
+   not a substitute for a trustworthy relay. Keep the toggle off when remote
+   control is not needed.
+
 ## 8. Acceptance criteria
 
 - With the phone on mobile data, no USB cable and the PC on a different network,
