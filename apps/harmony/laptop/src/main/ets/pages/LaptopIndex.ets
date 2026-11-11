@@ -2733,7 +2733,7 @@ struct LaptopIndex {
           }
           .layoutWeight(1)
           .width('100%')
-          .padding({ left: 22, right: 22 })
+          .padding({ left: 22, right: 22, bottom: 10 })
           .scrollBar(BarState.Off)
         }
         if (this.error.length > 0) {
@@ -2885,7 +2885,8 @@ struct LaptopIndex {
           }
         }
         .width('100%')
-        .backgroundColor($r('app.color.surface_muted'))
+        .backgroundColor($r('app.color.surface'))
+        .border({ width: 1, color: $r('app.color.divider') })
         .borderRadius(24)
         .padding({ left: 16, right: 8, top: 2, bottom: 2 })
         .margin({ left: 22, right: 22, top: 8, bottom: 18 })
