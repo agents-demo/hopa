@@ -60,6 +60,12 @@ $poolEnabled = $cfg['HOPA_POOL'] -match '^(1|true|yes|on)$'
 $devicesPath = $cfg['HOPA_DEVICES']
 if (-not $devicesPath) { $devicesPath = Join-Path $env:USERPROFILE '.hopa\devices.json' }
 $laptopDevice = $cfg['HOPA_LAPTOP_DEVICE']
+$laptopTunnelEnabled = $cloudEnabled -and ($cfg['HOPA_LAPTOP_TUNNEL'] -match '^(1|true|yes|on)$')
+$laptopTunnelListen = $cfg['HOPA_LAPTOP_TUNNEL_LISTEN']
+if (-not $laptopTunnelListen) { $laptopTunnelListen = '127.0.0.1:5557' }
+$laptopTunnelSession = $cfg['HOPA_LAPTOP_TUNNEL_SESSION']
+if (-not $laptopTunnelSession) { $laptopTunnelSession = 'laptop' }
+$laptopTarget = if ($laptopTunnelEnabled) { $laptopTunnelListen } else { $laptopDevice }
 $pcAgent = Join-Path $root '.venv\Scripts\pc-agent.exe'
 
 function Write-PoolFile {
@@ -75,9 +81,9 @@ function Write-PoolFile {
             state  = (Join-Path $stateDir 'bridge-8765-phone.json')
         }
     }
-    if ($laptopDevice) {
+    if ($laptopTarget) {
         $entries += [ordered]@{
-            serial = $laptopDevice
+            serial = $laptopTarget
             token  = $cfg['HOPA_BRIDGE_TOKEN']
             role   = '2in1'
             state  = (Join-Path $stateDir 'bridge-8765-2in1.json')
@@ -138,11 +144,25 @@ function Stop-Tunnel {
     }
 }
 
+function Get-LaptopTunnelProcess {
+    if (-not $laptopTunnelEnabled) { return @() }
+    return @(Get-CimInstance Win32_Process | Where-Object {
+        $_.CommandLine -and $_.CommandLine -match 'hdc-tunnel' -and
+        $_.CommandLine -match [regex]::Escape($laptopTunnelListen)
+    })
+}
+
+function Stop-LaptopTunnel {
+    foreach ($process in (Get-LaptopTunnelProcess)) {
+        Stop-Process -Id $process.ProcessId -Force -ErrorAction SilentlyContinue
+    }
+}
+
 function Show-Status {
     $bridgeState = if (Test-Port $port) { 'up' } else { 'down' }
     if ($poolEnabled) {
         $poolTargets = "phone=$bridgeTarget"
-        if ($laptopDevice) { $poolTargets = "$poolTargets, 2in1=$laptopDevice" }
+        if ($laptopTarget) { $poolTargets = "$poolTargets, 2in1=$laptopTarget" }
         Write-Host "bridge:     $localUrl ($bridgeState, pool: $poolTargets)"
     } else {
         Write-Host "bridge:     $localUrl ($bridgeState, target $bridgeTarget)"
@@ -160,6 +180,11 @@ function Show-Status {
         Write-Host "hd tunnel:  $tunnelListen ($tunnelState)"
     } else {
         Write-Host 'hd tunnel:  off (set HOPA_BRIDGE_TARGET to the tunnel address to enable)'
+    }
+    if ($laptopTunnelEnabled) {
+        $laptopTunnels = @(Get-LaptopTunnelProcess)
+        $laptopTunnelState = if ($laptopTunnels.Count -gt 0) { "running (pid $($laptopTunnels[0].ProcessId))" } else { 'not running' }
+        Write-Host "hd tunnel 2: $laptopTunnelListen ($laptopTunnelState)"
     }
     Write-Host "phone:      $phoneUrl"
     if ($cloudEnabled) {
@@ -188,15 +213,17 @@ if ($Status) {
 if ($Stop) {
     Stop-CloudLink
     Stop-Tunnel
+    Stop-LaptopTunnel
     Stop-Bridge $port
     Start-Sleep -Seconds 1
-    Write-Host 'stopped the bridge, cloud link and hdc tunnel'
+    Write-Host 'stopped the bridge, cloud link and hdc tunnels'
     exit 0
 }
 
 if ($Restart) {
     Stop-CloudLink
     Stop-Tunnel
+    Stop-LaptopTunnel
     Stop-Bridge $port
     Start-Sleep -Seconds 2
 }
@@ -252,6 +279,18 @@ if ($tunnelEnabled -and @(Get-TunnelProcess).Count -eq 0) {
         '--link-token', $cfg['HOPA_LINK_TOKEN'],
         '--listen', $tunnelListen,
         '--session', $tunnelSession
+    ) | Out-Null
+    Start-Sleep -Seconds 2
+}
+
+if ($laptopTunnelEnabled -and @(Get-LaptopTunnelProcess).Count -eq 0) {
+    Write-Host "Starting laptop hdc tunnel on $laptopTunnelListen..."
+    Start-Process -FilePath $pcAgent -WindowStyle Hidden -ArgumentList @(
+        'hdc-tunnel',
+        '--relay', $relayUrl,
+        '--link-token', $cfg['HOPA_LINK_TOKEN'],
+        '--listen', $laptopTunnelListen,
+        '--session', $laptopTunnelSession
     ) | Out-Null
     Start-Sleep -Seconds 2
 }

@@ -167,12 +167,14 @@ function Start-LaptopApp {
     if (-not ($targets -contains $device)) {
         throw "The laptop $device is not connected by USB."
     }
+    $tunnelParam = if ($cloud) { '1' } else { '' }
     $parameters = [ordered]@{
         'hopa.bridge_url'      = $appUrl
         'hopa.bridge_key'      = $token
         'hopa.laptop_key'      = $cfg['HOPA_MODEL_API_KEY']
         'hopa.laptop_endpoint' = $cfg['HOPA_MODEL_BASE_URL']
         'hopa.laptop_model'    = $cfg['HOPA_MODEL_NAME']
+        'hopa.laptop_tunnel'   = $tunnelParam
     }
     & $hdc -t $device shell "aa force-stop $bundle" 2>&1 | Out-Null
     Start-Sleep -Milliseconds 500
