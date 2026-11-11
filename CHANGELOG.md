@@ -109,15 +109,34 @@ All notable changes are recorded here. Versions follow `docs/versioning.md`.
   `app` / `phone` / `laptop` split, so the CI gates measure the real modules
   again; the four files that were already over budget are listed as
   grandfathered debt in the remaining-work table.
-- The laptop rail now describes **the run**, not the conversation: `WHAT HOPA
-  DID` (steps with a human verb, the outcome, the duration and a failed/blocked
-  tag), `WHAT HOPA SAW` (the frame that was read, with its time), `THIS ANSWER`
-  (measured only) and the bridge's real status. Sections appear only when they
-  have data; a turn the phone ran shows its recorded step chips instead of
-  pretending to have local run records.
+- The laptop rail is now an inspector **card**, not a third column: it mounts
+  only when there is a run, a consent or a measurement, and a plain chat keeps
+  the width. Anatomy: `THIS RUN` / `LAST RUN` / `YOUR OK` title, a status line
+  (`Succeeded · 3 steps · 4.2 s`, `Failed at step 2`, `Working…`), quiet
+  `Copy · Retry · Undo` ghost verbs, numbered steps with the outcome and duration,
+  the frame that was read (selectable per step), up to four earlier runs in the
+  same chat with a link to Activity, measured cost when it exists, and a pinned
+  bridge line. An older run says `Earlier: …` so the pane never lies about which
+  answer it describes.
 - Copy, Retry and Undo move from under the last bubble into the rail header.
   Undo is offered only for a launch that actually executed; the old row under
   the answer is gone, so the centre carries words and the rail carries verbs.
+- The header is silent while the PC bridge is healthy, as every modern shell
+  is; only the exception earns chrome (`No bridge · Set up`, which opens
+  Settings). The permanent status dot and the word "Bridge" are gone.
+
+### Fixed
+
+- Opening a system app (Settings, Browser) failed with "could not open … here"
+  because `getLaunchWantForBundleSync` does not resolve them on this build. The
+  launcher now falls back to an explicit ability Want (`<bundle>.MainAbility`,
+  `<bundle>.EntryAbility`, then the bare names), so the action HOPA was asked
+  for actually happens.
+- Answers written on the phone leaked their machine line into the chat as
+  `⟦meta⟧steps=✓ …`, because the laptop stripped only ASCII `[meta]`. The shell
+  now reads the same stored form as the phone (`ChatFormat.textOf` /
+  `stepsOf`), so the line disappears and its steps become real steps in the
+  rail — which is also why the pane can show a phone-run answer again.
 
 ### Fixed
 

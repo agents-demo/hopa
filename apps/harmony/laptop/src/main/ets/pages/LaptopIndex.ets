@@ -13,7 +13,7 @@ import { LaptopAgent, demoApproval } from '../services/LaptopAgent';
 import { LaptopSessions, LaptopSession } from '../services/LaptopSessions';
 import { LaptopApp } from '../services/LaptopLauncher';
 import { LaptopVoice } from '../services/LaptopVoice';
-import { ChatRail } from '../components/ChatRail';
+import { ChatRail, RailHistory } from '../components/ChatRail';
 import { CommandPalette } from '../components/CommandPalette';
 import { LaptopFirstRun } from '../services/LaptopFirstRun';
 
@@ -408,71 +408,123 @@ struct LaptopIndex {
     return shots;
   }
 
-  /** The runs behind the answer on screen, oldest first. */
-  private lastRuns(): RunRecord[] {
-    let userId: string = '';
-    let since: number = 0;
-    let until: number = 0;
+  /** The last question in this conversation. */
+  private lastUserTurn(): LaptopTurn | undefined {
     for (let i = this.turns.length - 1; i >= 0; i--) {
-      const turn: LaptopTurn = this.turns[i];
-      if (turn.role === 'assistant' && until === 0 && turn.at > 0) {
-        until = turn.at + 2000;
+      if (this.turns[i].role === 'user') {
+        return this.turns[i];
       }
-      if (turn.role === 'user') {
-        userId = turn.id;
-        since = turn.at;
+    }
+    return undefined;
+  }
+
+  /**
+   * The runs caused by one question.
+   *
+   * Ids are authoritative when they match; the shared store can re-key a turn,
+   * so a run that started between this question and the next one also belongs
+   * to it. That keeps the trace attached to the answer even after a merge.
+   */
+  private runsFor(turn: LaptopTurn): RunRecord[] {
+    let nextAt: number = 0;
+    for (let i = 0; i < this.turns.length; i++) {
+      if (this.turns[i].id === turn.id) {
+        if (i + 1 < this.turns.length) {
+          nextAt = this.turns[i + 1].at;
+        }
         break;
       }
     }
-    if (until === 0) {
-      until = Date.now();
+    const until: number = nextAt > 0 ? nextAt : turn.at + 300000;
+    const picked: RunRecord[] = [];
+    for (const run of this.runs) {
+      const sameTurn: boolean = run.turnId.length > 0 && run.turnId === turn.id;
+      const inWindow: boolean = turn.at > 0 && run.startedAt >= turn.at - 500 && run.startedAt < until;
+      if (sameTurn || inWindow) {
+        picked.push(run);
+      }
     }
-    const byId: RunRecord[] = userId.length > 0
-      ? this.runs.filter((run: RunRecord) => run.turnId === userId)
-      : [];
-    // The shared store can re-key a turn, so ids are not enough. A run that
-    // started between the question and the answer belongs to that answer.
-    const picked: RunRecord[] = byId.length > 0
-      ? byId
-      : (since > 0
-        ? this.runs.filter((run: RunRecord) => run.startedAt >= since - 500 && run.startedAt <= until)
-        : []);
     picked.sort((a: RunRecord, b: RunRecord) => a.startedAt - b.startedAt);
     return picked;
+  }
+
+  /** The newest question in this chat that actually caused actions. */
+  private paneTurn(): LaptopTurn | undefined {
+    for (let i = this.turns.length - 1; i >= 0; i--) {
+      const turn: LaptopTurn = this.turns[i];
+      if (turn.role === 'user' && this.runsFor(turn).length > 0) {
+        return turn;
+      }
+    }
+    return undefined;
+  }
+
+  private paneRuns(): RunRecord[] {
+    const turn: LaptopTurn | undefined = this.paneTurn();
+    return turn === undefined ? [] : this.runsFor(turn);
+  }
+
+  /** True when the pane's run belongs to the answer on screen. */
+  private paneIsCurrent(): boolean {
+    const turn: LaptopTurn | undefined = this.paneTurn();
+    const last: LaptopTurn | undefined = this.lastUserTurn();
+    if (turn === undefined || last === undefined) {
+      return true;
+    }
+    return turn.id === last.id;
+  }
+
+  /** The question behind a run that is not the last answer. */
+  private paneContext(): string {
+    const turn: LaptopTurn | undefined = this.paneTurn();
+    if (turn === undefined || this.paneIsCurrent()) {
+      return '';
+    }
+    return turn.text;
+  }
+
+  /** Other actions in this conversation, newest first, so the pane is never a void. */
+  private paneHistory(): RailHistory[] {
+    const current: LaptopTurn | undefined = this.paneTurn();
+    const rows: RailHistory[] = [];
+    for (let i = this.turns.length - 1; i >= 0; i--) {
+      const turn: LaptopTurn = this.turns[i];
+      if (turn.role !== 'user') {
+        continue;
+      }
+      if (current !== undefined && turn.id === current.id) {
+        continue;
+      }
+      const picked: RunRecord[] = this.runsFor(turn);
+      if (picked.length === 0) {
+        continue;
+      }
+      const last: RunRecord = picked[picked.length - 1];
+      rows.push(new RailHistory(turn.text, last.startedAt, last.status === RunStatus.Executed));
+      if (rows.length >= 3) {
+        break;
+      }
+    }
+    return rows;
   }
 
   /** Step chips survive a cross-device sync; run records do not. */
   private lastAnswerSteps(): string[] {
     for (let i = this.turns.length - 1; i >= 0; i--) {
-      if (this.turns[i].role === 'assistant') {
-        return this.turns[i].steps;
+      const turn: LaptopTurn = this.turns[i];
+      if (turn.role === 'assistant') {
+        if (turn.steps.length > 0) {
+          return turn.steps;
+        }
+        // A phone-run answer keeps its steps in the stored meta line.
+        return ChatFormat.stepsOf(turn.text);
       }
     }
     return [];
   }
 
-  private lastShot(): string {
-    const picked: RunRecord[] = this.lastRuns();
-    for (let i = picked.length - 1; i >= 0; i--) {
-      if (picked[i].shot.length > 0) {
-        return picked[i].shot;
-      }
-    }
-    return '';
-  }
-
-  private lastShotAt(): number {
-    const picked: RunRecord[] = this.lastRuns();
-    for (let i = picked.length - 1; i >= 0; i--) {
-      if (picked[i].shot.length > 0) {
-        return picked[i].startedAt;
-      }
-    }
-    return 0;
-  }
-
   private undoableRun(): RunRecord | undefined {
-    const picked: RunRecord[] = this.lastRuns();
+    const picked: RunRecord[] = this.paneRuns();
     for (let i = picked.length - 1; i >= 0; i--) {
       const run: RunRecord = picked[i];
       if (run.kind === 'ui.launch' && run.status === RunStatus.Executed &&
@@ -617,17 +669,9 @@ struct LaptopIndex {
 
   /** Phone turns carry a [meta] line; the laptop shows the words only. */
   private cleanRemote(text: string): string {
-    const lines: string[] = text.split('\n');
-    const kept: string[] = [];
-    for (const line of lines) {
-      const trimmed: string = line.trim();
-      // A phone turn carries a machine block; only the words belong on screen.
-      if (trimmed.includes('[meta]') || trimmed.startsWith('shot=') || trimmed.startsWith('ref=')) {
-        continue;
-      }
-      kept.push(line);
-    }
-    return kept.join('\n').trim();
+    // One interpretation of a stored message, shared with the phone: the
+    // ⟦meta⟧ line (steps/shot) is parsed there, not guessed at here.
+    return ChatFormat.textOf(text);
   }
 
   private focusRoot(): void {
@@ -1061,6 +1105,26 @@ struct LaptopIndex {
           this.toggleMaximize();
         }))
 
+      // Silence when the link is healthy, as every 2026 shell does; only the
+      // exception earns chrome. This chip is also the way back to Settings.
+      if (!this.bridgeLive) {
+        Row({ space: 5 }) {
+          Row()
+            .width(6)
+            .height(6)
+            .borderRadius(3)
+            .backgroundColor($r('app.color.warning'))
+          Text('No bridge \u00b7 Set up')
+            .fontSize(10)
+            .fontColor($r('app.color.text_hint'))
+        }
+        .padding({ left: 8, right: 8, top: 4, bottom: 4 })
+        .borderRadius(8)
+        .onClick(() => {
+          this.view = 'chat';
+          this.settingsOpen = true;
+        })
+      }
 
       if (!this.showSidebar()) {
         Text('\u2630')
@@ -2449,11 +2513,18 @@ struct LaptopIndex {
     if (this.profileName === 'easy' || this.profileName === 'kid' || this.profileName === 'social') {
       return false;
     }
-    // Details are for an answer; an empty draft has none to describe.
-    if (this.turns.length === 0 && !this.approvalOpen) {
+    if (this.winWidth < 940) {
       return false;
     }
-    return this.winWidth >= 940;
+    // The pane earns its width: mount it only when it has something the chat
+    // cannot show. Otherwise the conversation keeps the space.
+    if (this.approvalOpen || this.busy) {
+      return true;
+    }
+    if (this.paneRuns().length > 0 || this.lastAnswerSteps().length > 0) {
+      return true;
+    }
+    return this.showsMetrics() && this.lastLatency > 0;
   }
 
   /** Easy and Kid read larger; Power and Social stay tight. */
@@ -2978,14 +3049,15 @@ struct LaptopIndex {
       .height('100%')
       if (this.showRail()) {
         ChatRail({
-          runs: this.lastRuns(),
+          runs: this.paneRuns(),
           steps: this.lastAnswerSteps(),
-          shot: this.lastShot(),
-          shotAt: this.lastShotAt(),
+          contextTitle: this.paneContext(),
+          history: this.paneHistory(),
           busy: this.busy,
+          hasAnswer: this.turns.length > 0 && this.turns[this.turns.length - 1].role === 'assistant',
           canUndo: this.undoableRun() !== undefined,
-          lastLatency: this.lastLatency,
-          lastTokens: this.lastTokens,
+          lastLatency: this.paneIsCurrent() ? this.lastLatency : 0,
+          lastTokens: this.paneIsCurrent() ? this.lastTokens : 0,
           bridgeLive: this.bridgeLive,
           metrics: this.showsMetrics(),
           approvalOpen: this.approvalOpen,
@@ -2999,6 +3071,9 @@ struct LaptopIndex {
           },
           onUndo: () => {
             this.undoLastRun();
+          },
+          onOpenActivity: () => {
+            this.view = 'activity';
           },
           onAllow: () => {
             this.approvalOpen = false;
