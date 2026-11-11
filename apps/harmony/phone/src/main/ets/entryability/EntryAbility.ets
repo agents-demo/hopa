@@ -10,6 +10,7 @@ import { IntentInbox } from '../services/IntentInbox';
 import { BridgeSessionStore } from '../services/BridgeSessionStore';
 import { TrustedApps } from '../services/TrustedApps';
 import { Character } from '../services/Character';
+import { TunnelClient } from '../services/TunnelClient';
 
 const DOMAIN: number = 0x0000;
 const TAG: string = 'HOPA';
@@ -88,6 +89,11 @@ export default class EntryAbility extends UIAbility {
     const apiKey = read('hopa.api_key');
     const bridgeUrl = read('hopa.bridge_url');
     const bridgeToken = read('hopa.bridge_token');
+    const tunnelFlag = read('hopa.tunnel');
+    const tunnelSet: boolean = tunnelFlag.length > 0;
+    const tunnelOn: boolean = tunnelFlag === '1' ||
+      tunnelFlag.toLowerCase() === 'true' ||
+      tunnelFlag.toLowerCase() === 'on';
 
     if (baseUrl.length > 0 || model.length > 0 || apiKey.length > 0) {
       AgentService.get().configureModel(
@@ -100,6 +106,7 @@ export default class EntryAbility extends UIAbility {
     }
     if (bridgeUrl.length > 0 && bridgeToken.length > 0) {
       AgentService.get().configureBridge(bridgeUrl, bridgeToken);
+      TunnelClient.get().configure(bridgeUrl, bridgeToken);
       this.rememberBridge(bridgeUrl, bridgeToken);
     }
     SettingsStore.load(this.context).then((stored: StoredSettings) => {
@@ -114,7 +121,7 @@ export default class EntryAbility extends UIAbility {
       // The trust list is optional.
     });
 
-    SettingsStore.load(this.context).then((stored: StoredSettings) => {
+    SettingsStore.load(this.context).then(async (stored: StoredSettings) => {
       if (provider.length > 0) {
         stored.provider = provider;
       }
@@ -130,7 +137,17 @@ export default class EntryAbility extends UIAbility {
       if (bridgeToken.length > 0) {
         stored.bridgeToken = bridgeToken;
       }
-      return SettingsStore.save(this.context, stored);
+      if (tunnelSet) {
+        stored.tunnel = tunnelOn;
+      }
+      await SettingsStore.save(this.context, stored);
+      if (tunnelSet) {
+        if (tunnelOn) {
+          await TunnelClient.get().startIfWanted(this.context);
+        } else {
+          TunnelClient.get().stop();
+        }
+      }
     }).catch(() => {
       hilog.warn(DOMAIN, TAG, 'Failed to persist launch config');
     });
@@ -165,6 +182,7 @@ export default class EntryAbility extends UIAbility {
 
   onForeground(): void {
     AppFocus.active = true;
+    TunnelClient.get().wake();
     hilog.info(DOMAIN, TAG, 'Foreground');
   }
 
@@ -174,6 +192,7 @@ export default class EntryAbility extends UIAbility {
   }
 
   onDestroy(): void {
+    TunnelClient.get().stop();
     hilog.info(DOMAIN, TAG, 'Destroyed');
   }
 }
