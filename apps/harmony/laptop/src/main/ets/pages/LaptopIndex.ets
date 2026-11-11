@@ -11,6 +11,7 @@ import { LaptopChat, LaptopTurn } from '../services/LaptopChat';
 import { LaptopAgent, demoApproval } from '../services/LaptopAgent';
 
 import { LaptopSessions, LaptopSession } from '../services/LaptopSessions';
+import { LaptopApp } from '../services/LaptopLauncher';
 import { LaptopVoice } from '../services/LaptopVoice';
 import { ChatRail } from '../components/ChatRail';
 import { CommandPalette } from '../components/CommandPalette';
@@ -112,6 +113,8 @@ struct LaptopIndex {
   @State memories: MemoryItem[] = [];
   @State skills: Skill[] = [];
   @State memoryDraft: string = '';
+  @State apps: LaptopApp[] = [];
+  @State launchNote: string = '';
   @State hoveredSession: string = '';
   private ctrlHeld: boolean = false;
   @State planDraft: string = '';
@@ -183,6 +186,12 @@ struct LaptopIndex {
       this.lastTokens = session.lastTokens;
       this.refreshSessions();
       this.syncChats();
+      this.agent.launcher.attach(context);
+      this.agent.launcher.loadInstalled().then(() => {
+        this.apps = this.agent.launcher.apps();
+      }).catch(() => {
+        this.apps = [];
+      });
       this.agent.memory.load(context).then(() => {
         this.memories = this.agent.memory.all().slice();
       }).catch(() => {});
@@ -895,7 +904,7 @@ struct LaptopIndex {
           .maxLines(1)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
           .constraintSize({ maxWidth: 320 })
-        Text('Running on this laptop')
+        Text(this.subtitle())
           .fontSize(10)
           .fontColor($r('app.color.text_hint'))
       }
@@ -911,61 +920,7 @@ struct LaptopIndex {
         .gesture(TapGesture({ count: 2 }).onAction(() => {
           this.toggleMaximize();
         }))
-      // Destinations, not conversations: one menu beside the title.
-      Text('Tools')
-        .fontSize(10.5)
-        .fontColor(this.view === 'chat' && !this.settingsOpen
-          ? $r('app.color.text_hint')
-          : $r('app.color.text_primary'))
-        .padding({ left: 9, right: 9, top: 5, bottom: 5 })
-        .backgroundColor($r('app.color.surface'))
-        .borderRadius(9)
-        .bindMenu([
-          {
-            value: 'Log',
-            action: () => {
-              this.view = 'activity';
-            }
-          },
-          {
-            value: 'Plans',
-            action: () => {
-              this.plans = this.agent.schedules.tasks().slice();
-              this.view = 'plans';
-            }
-          },
-          {
-            value: 'Capabilities',
-            action: () => {
-              this.view = 'abilities';
-            }
-          },
-          {
-            value: 'Usage',
-            action: () => {
-              this.view = 'usage';
-            }
-          },
-          {
-            value: 'Memory',
-            action: () => {
-              this.view = 'memory';
-            }
-          },
-          {
-            value: 'Skills',
-            action: () => {
-              this.view = 'skills';
-            }
-          },
-          {
-            value: 'Web',
-            action: () => {
-              this.agent.browser.attach(this.web);
-              this.view = 'browser';
-            }
-          }
-        ])
+
 
       if (!this.showSidebar()) {
         Text('New')
@@ -1301,6 +1256,101 @@ struct LaptopIndex {
     .padding({ left: 22, right: 22, top: 18, bottom: 28 })
     .backgroundColor($r('app.color.bg'))
     .alignItems(HorizontalAlign.Start)
+  }
+
+  @Builder
+  NavItem(label: string, target: string) {
+    Text(label)
+      .fontSize(10.5)
+      .fontColor(this.view === target
+        ? $r('app.color.text_primary')
+        : $r('app.color.text_hint'))
+      .onClick(() => {
+        this.view = this.view === target ? 'chat' : target;
+        if (this.view === 'plans') {
+          this.plans = this.agent.schedules.tasks().slice();
+        }
+      })
+  }
+
+  @Builder
+  LaunchpadPane() {
+    Column({ space: 10 }) {
+      Row() {
+        Text('Launchpad')
+          .fontSize(16)
+          .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_primary'))
+        Blank()
+        Text('Apps installed here that HOPA knows')
+          .fontSize(10.5)
+          .fontColor($r('app.color.text_hint'))
+      }
+      .width('100%')
+
+      if (this.launchNote.length > 0) {
+        Text(this.launchNote)
+          .fontSize(11)
+          .fontColor($r('app.color.text_hint'))
+          .width('100%')
+      }
+
+      if (this.apps.length === 0) {
+        Text('No known app is installed on this laptop, or the list is still loading.')
+          .fontSize(12)
+          .lineHeight(18)
+          .fontColor($r('app.color.text_hint'))
+          .width('100%')
+      } else {
+        Grid() {
+          ForEach(this.apps, (app: LaptopApp) => {
+            GridItem() {
+              Column({ space: 6 }) {
+                Text(app.label.substring(0, 1).toUpperCase())
+                  .fontSize(18)
+                  .fontWeight(FontWeight.Bold)
+                  .fontColor($r('app.color.primary'))
+                  .width(34)
+                  .height(34)
+                  .textAlign(TextAlign.Center)
+                  .backgroundColor($r('app.color.primary_soft'))
+                  .borderRadius(10)
+                Text(app.label)
+                  .fontSize(11)
+                  .fontColor($r('app.color.text_primary'))
+                  .maxLines(1)
+                  .textOverflow({ overflow: TextOverflow.Ellipsis })
+                  .width('100%')
+                  .textAlign(TextAlign.Center)
+              }
+              .width('100%')
+              .height(92)
+              .justifyContent(FlexAlign.Center)
+              .backgroundColor($r('app.color.surface'))
+              .borderRadius(10)
+              .onClick(() => {
+                this.openApp(app);
+              })
+            }
+          }, (app: LaptopApp) => app.bundle)
+        }
+        .columnsTemplate('1fr 1fr 1fr 1fr')
+        .columnsGap(8)
+        .rowsGap(8)
+        .layoutWeight(1)
+        .width('100%')
+      }
+    }
+    .layoutWeight(1)
+    .width('100%')
+    .padding({ left: 22, right: 22, top: 8 })
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  private async openApp(app: LaptopApp): Promise<void> {
+    this.launchNote = `Opening ${app.label}\u2026`;
+    const opened: boolean = await this.agent.launcher.launch(app.bundle);
+    this.launchNote = opened ? `Opened ${app.label}.` : `${app.label} would not open.`;
   }
 
   @Builder
@@ -2162,6 +2212,35 @@ struct LaptopIndex {
     return Math.min(108, Math.max(64, this.winWidth * 0.085));
   }
 
+  /** The name is never off screen for long: it rides in the header's second line. */
+  private subtitle(): string {
+    if (this.view === 'activity') {
+      return 'HOPA \u00b7 Activity';
+    }
+    if (this.view === 'plans') {
+      return 'HOPA \u00b7 Plans';
+    }
+    if (this.view === 'memory') {
+      return 'HOPA \u00b7 Memory';
+    }
+    if (this.view === 'skills') {
+      return 'HOPA \u00b7 Skills';
+    }
+    if (this.view === 'usage') {
+      return 'HOPA \u00b7 Usage';
+    }
+    if (this.view === 'abilities') {
+      return 'HOPA \u00b7 Capabilities';
+    }
+    if (this.view === 'launchpad') {
+      return 'HOPA \u00b7 Launchpad';
+    }
+    if (this.view === 'browser') {
+      return 'HOPA \u00b7 Browser';
+    }
+    return 'HOPA \u00b7 Running on this laptop';
+  }
+
   private showSidebar(): boolean {
     // Kid is a different shape of app: one thread, no history browser.
     if (this.profileName === 'kid') {
@@ -2299,31 +2378,37 @@ struct LaptopIndex {
 
       Scroll() {
         Column({ space: 2 }) {
-          Row({ space: 4 }) {
+          Stack({ alignContent: Alignment.End }) {
             TextInput({ text: this.query, placeholder: 'Search' })
+              .width('100%')
               .height(34)
               .fontSize(12)
               .backgroundColor($r('app.color.surface_muted'))
               .border({ width: 1, color: $r('app.color.divider') })
               .borderRadius(8)
-              .padding({ left: 8, right: 8, top: 0, bottom: 0 })
+              .padding({ left: 8, right: 52, top: 0, bottom: 0 })
               .placeholderColor($r('app.color.text_hint'))
-              .layoutWeight(1)
               .onChange((value: string) => {
                 this.query = value;
               })
+            // Decoration, not a button: the hint lives inside the field.
             Text('Ctrl K')
               .fontSize(9.5)
               .fontColor($r('app.color.text_hint'))
-              .padding({ left: 6, right: 6, top: 3, bottom: 3 })
-              .backgroundColor($r('app.color.surface'))
-              .borderRadius(5)
-              .onClick(() => {
-                this.paletteOpen = true;
-              })
+              .opacity(0.45)
+              .margin({ right: 9 })
+              .hitTestBehavior(HitTestMode.None)
           }
           .width('100%')
           .margin({ bottom: 6 })
+
+          Row({ space: 10 }) {
+            this.NavItem('Activity', 'activity')
+            this.NavItem('Plans', 'plans')
+            this.NavItem('Capabilities', 'abilities')
+          }
+          .width('100%')
+          .padding({ left: 4, right: 4, top: 2, bottom: 6 })
 
           ForEach(this.sessionGroups(), (group: SessionGroup) => {
             Text(group.label.toUpperCase())
@@ -2338,7 +2423,7 @@ struct LaptopIndex {
               Row({ space: 6 }) {
                 Text(session.title)
                   .fontSize(12.5)
-                  .fontColor(session.id === this.currentId
+                  .fontColor(session.id === this.currentId && this.view === 'chat' && !this.settingsOpen
                     ? $r('app.color.text_primary')
                     : $r('app.color.text_secondary'))
                   .maxLines(1)
@@ -2357,7 +2442,7 @@ struct LaptopIndex {
               .width('100%')
               .height(30)
               .padding({ left: 8, right: 8 })
-              .backgroundColor(session.id === this.currentId
+              .backgroundColor(session.id === this.currentId && this.view === 'chat' && !this.settingsOpen
                 ? $r('app.color.surface')
                 : Color.Transparent)
               .borderRadius(7)
@@ -2380,14 +2465,14 @@ struct LaptopIndex {
       .align(Alignment.TopStart)
 
       Column({ space: 2 }) {
-        Row() {
+        Row({ space: 8 }) {
+          Text('\u2699')
+            .fontSize(12)
+            .fontColor($r('app.color.text_hint'))
           Text('Settings')
             .fontSize(12)
             .fontColor($r('app.color.text_secondary'))
           Blank()
-          Text('\u2699')
-            .fontSize(13)
-            .fontColor($r('app.color.text_hint'))
         }
         .width('100%')
         .padding({ left: 8, right: 8, top: 6, bottom: 6 })
@@ -2425,7 +2510,9 @@ struct LaptopIndex {
       }
       Column() {
         this.Header()
-        if (this.view === 'abilities') {
+        if (this.view === 'launchpad') {
+          this.LaunchpadPane()
+        } else if (this.view === 'abilities') {
           this.CapabilitiesPane()
         } else if (this.view === 'usage') {
           this.UsagePane()
@@ -2743,6 +2830,15 @@ struct LaptopIndex {
           },
           onSettings: () => {
             this.settingsOpen = true;
+          },
+          onGo: (target: string) => {
+            this.view = target;
+            if (target === 'plans') {
+              this.plans = this.agent.schedules.tasks().slice();
+            }
+            if (target === 'browser') {
+              this.agent.browser.attach(this.web);
+            }
           },
           onClose: () => {
             this.paletteOpen = false;

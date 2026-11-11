@@ -8,6 +8,8 @@
 export struct CommandPalette {
   onNewChat: () => void = () => {};
   onSettings: () => void = () => {};
+  /** Every destination lives here, so the sidebar can stay about conversations. */
+  onGo: (target: string) => void = () => {};
   onClose: () => void = () => {};
 
   @Builder
@@ -47,10 +49,33 @@ export struct CommandPalette {
         this.Row('New chat', () => {
           this.onNewChat();
         })
+        this.Row('Activity', () => {
+          this.onGo('activity');
+        })
+        this.Row('Plans', () => {
+          this.onGo('plans');
+        })
+        this.Row('Capabilities', () => {
+          this.onGo('abilities');
+        })
+        this.Row('Memory', () => {
+          this.onGo('memory');
+        })
+        this.Row('Skills', () => {
+          this.onGo('skills');
+        })
+        this.Row('Usage', () => {
+          this.onGo('usage');
+        })
+        this.Row('Launchpad', () => {
+          this.onGo('launchpad');
+        })
+        this.Row('Browser', () => {
+          this.onGo('browser');
+        })
         this.Row('Settings', () => {
           this.onSettings();
         })
-        this.Row('Close', () => {})
       }
       .width(420)
       .padding(10)

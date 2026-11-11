@@ -1,7 +1,9 @@
 import {
   Action,
+  ActionCapability,
   ActionExecutor,
   ApprovalPolicy,
+  Observation,
   RunStore
 } from '@hopa/core';
 import {
@@ -21,6 +23,7 @@ import {
 } from '@hopa/app';
 import { LaptopApprovals } from './LaptopApprovals';
 import { LaptopBrowser } from './LaptopBrowser';
+import { LaptopLauncher } from './LaptopLauncher';
 import { RunArchive } from '@hopa/app';
 
 /**
@@ -69,6 +72,37 @@ class LaptopGates implements RemoteUiGates {
   }
 }
 
+/**
+ * Opening an app on this machine, with no bridge in the way.
+ *
+ * It sits before the bridge capability, so a local launch wins; the bridge
+ * stays for taps, typing and screen reading.
+ */
+class LocalLaunchCapability implements ActionCapability {
+  private launcher: LaptopLauncher;
+
+  constructor(launcher: LaptopLauncher) {
+    this.launcher = launcher;
+  }
+
+  canHandle(kind: string): boolean {
+    return kind === 'ui.launch';
+  }
+
+  async execute(action: Action): Promise<Observation> {
+    const bundle: string = action.app.length > 0
+      ? action.app
+      : (action.target.startsWith('com.') ? action.target : '');
+    if (bundle.length === 0) {
+      return Observation.fail('ui.launch needs the app bundle in app');
+    }
+    const opened: boolean = await this.launcher.launch(bundle);
+    return opened
+      ? Observation.ok(`opened ${bundle} on this laptop`)
+      : Observation.fail(`could not open ${bundle} here`);
+  }
+}
+
 export class LaptopAgent {
   readonly runtime: AgentRuntime;
   readonly memory: MemoryStore = new MemoryStore();
@@ -77,6 +111,7 @@ export class LaptopAgent {
   readonly bridge: BridgeClient = new BridgeClient();
   readonly runs: RunStore = new RunStore();
   readonly browser: LaptopBrowser = new LaptopBrowser();
+  readonly launcher: LaptopLauncher = new LaptopLauncher();
   readonly schedules: ScheduleService = new ScheduleService();
   readonly archive: RunArchive = new RunArchive(this.runs);
   readonly chatSync: ChatSync = new ChatSync();
@@ -95,6 +130,7 @@ export class LaptopAgent {
       this.approvals,
       this.runs
     );
+    executor.registerCapability(new LocalLaunchCapability(this.launcher));
     executor.registerCapability(new RemoteUiCapability(this.bridge, gates));
     this.executor = executor;
     this.runtime = new AgentRuntime(
