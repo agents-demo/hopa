@@ -95,6 +95,17 @@ All notable changes are recorded here. Versions follow `docs/versioning.md`.
   a laptop-bodied launcher icon in the module, and a 960x620 minimum window so
   the sidebar, rail and composer cannot be crushed.
 
+### Changed
+
+- The composer is inset by padding on a wrapper `Row` and fills the rest with
+  `layoutWeight(1)`, so its edges sit exactly on the message column (left under
+  the HOPA mark, right where the answer and the user bubble end) at every
+  window width. `width('100%')` plus padding or margin overflowed the parent
+  and was clipped, which made earlier attempts look uninset.
+- The laptop details rail no longer echoes the last request — it is already the
+  centre of the screen. The rail now carries only facts the conversation cannot
+  show: measured timing when one exists, and the bridge's real status.
+
 ## 0.1.0 — 2026-11-06
 
 ### Added

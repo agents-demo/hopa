@@ -2316,7 +2316,6 @@ struct LaptopIndex {
         }
         .layoutWeight(1)
         .alignItems(HorizontalAlign.Start)
-        .padding({ right: 40 })
       }
       .width('100%')
       .alignItems(VerticalAlign.Top)
@@ -2796,6 +2795,10 @@ struct LaptopIndex {
             .width('100%')
             .padding({ left: 22, right: 22, bottom: 4 })
         } else {
+        // The gutter lives on a wrapper Row and the pill fills what is left.
+        // width('100%') + padding/margin overflows its parent in ArkUI and the
+        // margin gets clipped, which is why earlier attempts looked uninset.
+        Row() {
         Row({ space: 6 }) {
           TextArea({ text: this.draft, placeholder: 'Ask HOPA\u2026' })
             .id('hopa-composer')
@@ -2884,22 +2887,24 @@ struct LaptopIndex {
             })
           }
         }
-        .width('100%')
+        .layoutWeight(1)
         .backgroundColor($r('app.color.surface'))
         .border({ width: 1, color: $r('app.color.divider') })
         .borderRadius(24)
-        .padding({ left: 16, right: 8, top: 2, bottom: 2 })
-        .margin({ left: 22, right: 22, top: 8, bottom: 18 })
+        .padding({ left: 20, right: 8, top: 3, bottom: 3 })
+        }
+        .width('100%')
+        // Same gutter as the message list, so the field starts under the HOPA
+        // mark and ends where the answer text ends.
+        .padding({ left: 22, right: 22, top: 8, bottom: 18 })
         }
       }
       .layoutWeight(1)
       .height('100%')
       if (this.showRail()) {
         ChatRail({
-          lastQuestion: this.lastQuestion,
           lastLatency: this.lastLatency,
           lastTokens: this.lastTokens,
-          hasTurns: this.turns.length > 0,
           bridgeLive: this.bridgeLive,
           metrics: this.showsMetrics(),
           approvalOpen: this.approvalOpen,

@@ -6,10 +6,8 @@
  */
 @Component
 export struct ChatRail {
-  @Prop lastQuestion: string = '';
   @Prop lastLatency: number = 0;
   @Prop lastTokens: number = 0;
-  @Prop hasTurns: boolean = false;
   /** True when a PC bridge is configured, so the screen is really readable. */
   @Prop bridgeLive: boolean = false;
   @Prop metrics: boolean = true;
@@ -87,42 +85,28 @@ export struct ChatRail {
           Divider().color($r('app.color.divider'))
         }
 
-        Column({ space: 6 }) {
-          this.Label('DETAILS')
-          Text('Your request')
-            .fontSize(9.5)
-            .fontColor($r('app.color.text_hint'))
-            .width('100%')
-
-          Text(this.lastQuestion.length > 0 ? this.lastQuestion : 'Nothing yet.')
-            .fontSize(12.5)
-            .lineHeight(18)
-            .fontColor(this.lastQuestion.length > 0
-              ? $r('app.color.text_primary')
-              : $r('app.color.text_hint'))
-            .maxLines(3)
-            .textOverflow({ overflow: TextOverflow.Ellipsis })
-            .width('100%')
-          // No stopwatch, no line: a synced answer simply has no timing here.
-          if (this.metrics && this.lastLatency > 0) {
+        // Facts the centre pane does not already show: how long the answer
+        // took and what it cost, and only when they were actually measured.
+        // Echoing the user's own words here was just a second copy of the chat.
+        if (this.metrics && this.lastLatency > 0) {
+          Column({ space: 6 }) {
+            this.Label('THIS ANSWER')
             Text(`${(this.lastLatency / 1000).toFixed(1)} s  \u00b7  ${this.lastTokens} tokens`)
-              .fontSize(10.5)
-              .fontColor($r('app.color.text_hint'))
+              .fontSize(11)
+              .fontColor($r('app.color.text_secondary'))
               .width('100%')
           }
-        }
-        .width('100%')
-        .alignItems(HorizontalAlign.Start)
+          .width('100%')
+          .alignItems(HorizontalAlign.Start)
 
-        Divider().color($r('app.color.divider'))
+          Divider().color($r('app.color.divider'))
+        }
 
         Column({ space: 6 }) {
           this.Label('WHAT HOPA SEES')
           Text(this.bridgeLive
-            ? 'The screen of this laptop, through the PC bridge, and only what it reads when you ask. Every action asks first.'
-            : (this.hasTurns
-              ? 'The conversation only. Connect the PC bridge in Settings to let HOPA read the screen and act on this laptop.'
-              : 'Your words only. Connect the PC bridge in Settings to let HOPA see the screen.'))
+            ? 'PC bridge connected. HOPA can read this screen when you ask, and every action asks first.'
+            : 'PC bridge not connected. HOPA sees only this conversation; connect the bridge in Settings to let it read the screen.')
             .fontSize(11)
             .lineHeight(17)
             .fontColor($r('app.color.text_secondary'))
