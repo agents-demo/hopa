@@ -151,7 +151,7 @@ export class LaptopSessions {
     const kept: string[] = [];
     for (const line of lines) {
       const trimmed: string = line.trim();
-      if (trimmed.startsWith('[meta]') || trimmed.startsWith('shot=') || trimmed.startsWith('ref=')) {
+      if (trimmed.includes('[meta]') || trimmed.startsWith('shot=') || trimmed.startsWith('ref=')) {
         continue;
       }
       kept.push(line);

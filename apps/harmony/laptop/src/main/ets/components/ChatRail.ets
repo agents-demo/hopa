@@ -92,10 +92,7 @@ export struct ChatRail {
             .fontSize(9.5)
             .fontColor($r('app.color.text_hint'))
             .width('100%')
-          Text('Your request')
-            .fontSize(9.5)
-            .fontColor($r('app.color.text_hint'))
-            .width('100%')
+
           Text(this.lastQuestion.length > 0 ? this.lastQuestion : 'Nothing yet.')
             .fontSize(12.5)
             .lineHeight(18)

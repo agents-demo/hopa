@@ -116,6 +116,8 @@ struct LaptopIndex {
   @State apps: LaptopApp[] = [];
   @State launchNote: string = '';
   @State hoveredSession: string = '';
+  @State renameId: string = '';
+  @State renameDraft: string = '';
   private ctrlHeld: boolean = false;
   @State planDraft: string = '';
   @State planEvery: number = 3600000;
@@ -512,7 +514,7 @@ struct LaptopIndex {
     for (const line of lines) {
       const trimmed: string = line.trim();
       // A phone turn carries a machine block; only the words belong on screen.
-      if (trimmed.startsWith('[meta]') || trimmed.startsWith('shot=') || trimmed.startsWith('ref=')) {
+      if (trimmed.includes('[meta]') || trimmed.startsWith('shot=') || trimmed.startsWith('ref=')) {
         continue;
       }
       kept.push(line);
@@ -574,6 +576,27 @@ struct LaptopIndex {
     this.error = '';
     this.refreshLastQuestion();
     this.refreshSessions();
+  }
+
+  /** Rename is local to the shared store: title is last-writer-wins. */
+  private async renameSession(id: string): Promise<void> {
+    const title: string = this.renameDraft.trim();
+    this.renameId = '';
+    this.renameDraft = '';
+    if (title.length === 0) {
+      return;
+    }
+    for (const session of this.store.list) {
+      if (session.id === id) {
+        session.title = title;
+        session.updated = Date.now();
+        break;
+      }
+    }
+    const context = getContext(this) as common.UIAbilityContext;
+    await this.store.save(context);
+    this.refreshSessions();
+    this.syncChats();
   }
 
   private deleteSession(id: string): void {
@@ -2452,13 +2475,25 @@ struct LaptopIndex {
                   .textOverflow({ overflow: TextOverflow.Ellipsis })
                   .layoutWeight(1)
                 if (this.hoveredSession === session.id) {
-                  Text('\u00d7')
-                    .fontSize(12)
+                  Text('\u22ef')
+                    .fontSize(13)
                     .fontColor($r('app.color.text_hint'))
-                    .padding({ left: 4, right: 2 })
-                    .onClick(() => {
-                      this.deleteSession(session.id);
-                    })
+                    .padding({ left: 6, right: 2 })
+                    .bindMenu([
+                      {
+                        value: 'Rename',
+                        action: () => {
+                          this.renameId = session.id;
+                          this.renameDraft = session.title;
+                        }
+                      },
+                      {
+                        value: 'Delete',
+                        action: () => {
+                          this.deleteSession(session.id);
+                        }
+                      }
+                    ])
                 }
               }
               .width('100%')
@@ -2779,6 +2814,60 @@ struct LaptopIndex {
     .onAreaChange((oldValue: Area, newValue: Area) => {
       this.winWidth = Number(newValue.width.toString());
     })
+      if (this.renameId.length > 0) {
+        Column()
+          .width('100%')
+          .height('100%')
+          .backgroundColor('#66000000')
+          .onClick(() => {
+            this.renameId = '';
+          })
+        Column({ space: 10 }) {
+          Text('Rename conversation')
+            .fontSize(15)
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.text_primary'))
+          TextInput({ text: this.renameDraft, placeholder: 'Name' })
+            .height(38)
+            .fontSize(13)
+            .backgroundColor($r('app.color.surface_muted'))
+            .borderRadius(9)
+            .onChange((value: string) => {
+              this.renameDraft = value;
+            })
+            .onSubmit(() => {
+              this.renameSession(this.renameId);
+            })
+          Row({ space: 8 }) {
+            Text('Cancel')
+              .fontSize(12.5)
+              .fontColor($r('app.color.text_primary'))
+              .padding({ left: 14, right: 14, top: 7, bottom: 7 })
+              .backgroundColor($r('app.color.surface_muted'))
+              .borderRadius(12)
+              .onClick(() => {
+                this.renameId = '';
+              })
+            Text('Save')
+              .fontSize(12.5)
+              .fontWeight(FontWeight.Medium)
+              .fontColor($r('app.color.on_primary'))
+              .padding({ left: 16, right: 16, top: 7, bottom: 7 })
+              .backgroundColor($r('app.color.primary'))
+              .borderRadius(12)
+              .onClick(() => {
+                this.renameSession(this.renameId);
+              })
+          }
+          .width('100%')
+        }
+        .width(300)
+        .padding(18)
+        .backgroundColor($r('app.color.surface'))
+        .borderRadius(14)
+        .border({ width: 1, color: $r('app.color.divider') })
+        .alignItems(HorizontalAlign.Start)
+      }
       if (this.pinPrompt) {
         Column()
           .width('100%')
