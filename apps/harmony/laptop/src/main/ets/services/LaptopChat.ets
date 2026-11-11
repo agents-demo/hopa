@@ -75,7 +75,7 @@ export class LaptopChat {
         throw new Error('no model key yet');
       }
       this.onTurnStart(user.id);
-      const replyText: string = await this.runtime.run(prompt);
+      const replyText: string = await this.bounded(this.runtime.run(prompt));
       this.lastLatencyMs = this.runtime.getLastDurationMs();
       this.lastTokens = this.runtime.getLastTokens();
       this.totalTokens += this.lastTokens;
@@ -83,17 +83,52 @@ export class LaptopChat {
       reply.id = this.newTurnId();
       reply.at = Date.now();
       reply.role = 'assistant';
-      reply.text = replyText;
+      // An empty answer used to become an empty bubble: the thinking row
+      // vanished and the chat looked like it had ignored the question.
+      const answer: string = replyText.trim();
+      if (answer.length > 0) {
+        reply.text = answer;
+      } else if (this.runtime.lastSteps().length > 0) {
+        reply.text = 'I did the steps above but did not get a final answer. Ask again and I will continue.';
+      } else {
+        reply.text = 'I did not get an answer back from the model. Check the key and endpoint under Settings, then ask again.';
+      }
       reply.steps = this.runtime.lastSteps().slice();
       this.turns.push(reply);
     } catch (error) {
       this.error = `${(error as Error).message}`;
       const reply = new LaptopTurn();
       reply.role = 'assistant';
-      reply.text = 'I could not reach the model. Check the key and endpoint under Settings.';
+      reply.text = this.error.length > 0
+        ? `I stopped: ${this.error}.`
+        : 'I could not reach the model. Check the key and endpoint under Settings.';
       this.turns.push(reply);
     }
     this.busy = false;
+  }
+
+  /**
+   * A run has to end. The model call carries its own socket timeouts, but a
+   * loop that keeps retrying can still spin for minutes and leave the shell
+   * busy with no answer. After two minutes the run is cancelled and the turn
+   * says so, which is better than a composer that never unlocks.
+   */
+  private async bounded(work: Promise<string>): Promise<string> {
+    let timer: number = -1;
+    const guard: Promise<string> = new Promise<string>(
+      (resolve: (value: string) => void, reject: (reason: Error) => void) => {
+        timer = setTimeout(() => {
+          if (this.runtime !== undefined) {
+            this.runtime.cancel();
+          }
+          reject(new Error('it ran longer than two minutes, so I stopped it'));
+        }, 120000);
+      });
+    try {
+      return await Promise.race([work, guard]);
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
   /** Ask the last question again, replacing its answer. */

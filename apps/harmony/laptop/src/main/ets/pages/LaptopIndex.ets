@@ -930,23 +930,37 @@ struct LaptopIndex {
     // Put the question in the shared store before the model runs. A finished
     // action with no turn behind it has nowhere for its steps or frame to live.
     this.store.commit(this.chat.turns, this.chat.lastLatencyMs, this.chat.lastTokens);
-    await this.store.save(context);
+    try {
+      await this.store.save(context);
+    } catch (error) {
+      // The turn is still on screen; the store retries on the next change.
+    }
     this.refreshSessions();
     try {
       await this.store.syncNow();
     } catch (error) {
       // The turn is local; a later sync will carry it.
     }
-    await this.keepAlive(true);
-    await running;
-    this.keepAlive(false);
+    // A courtesy, never a gate: awaiting this API left the composer busy when
+    // the background task could not be started.
+    this.keepAlive(true).catch(() => {});
+    // A rejected or stalled run must never leave the composer locked with no
+    // answer: the first version awaited the run and cleared `busy` only on the
+    // happy path, so one bad turn froze the shell until the app was restarted.
+    try {
+      await running;
+    } catch (error) {
+      this.error = `${(error as Error).message}`;
+    } finally {
+      this.keepAlive(false).catch(() => {});
+      this.busy = false;
+    }
     this.turns = this.chat.turns.slice();
     this.prefetchImages();
-    this.error = this.chat.error;
+    this.error = this.chat.error.length > 0 ? this.chat.error : this.error;
     this.lastQuestion = this.chat.lastQuestion;
     this.lastLatency = this.chat.lastLatencyMs;
     this.lastTokens = this.chat.lastTokens;
-    this.busy = false;
     this.scrollToEnd();
     if (this.speakReplies && this.chat.turns.length > 0) {
       const last = this.chat.turns[this.chat.turns.length - 1];
