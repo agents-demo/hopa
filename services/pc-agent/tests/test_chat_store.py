@@ -66,12 +66,25 @@ def test_turns_without_ids_merge_by_content(tmp_path):
 def test_a_repeated_thread_collapses_on_load(tmp_path):
     path = tmp_path / "chats.json"
     block = [turn("u", "question", role="user"), turn("a", "answer", role="assistant")]
-    path.write_text(json.dumps({
-        "rev": 3,
-        "sessions": {"s1": {"id": "s1", "title": "x", "titleAt": 1, "created": 1,
-                             "updated": 2, "deletedAt": 0,
-                             "turns": block * 4}},
-    }), encoding="utf-8")
+    path.write_text(
+        json.dumps(
+            {
+                "rev": 3,
+                "sessions": {
+                    "s1": {
+                        "id": "s1",
+                        "title": "x",
+                        "titleAt": 1,
+                        "created": 1,
+                        "updated": 2,
+                        "deletedAt": 0,
+                        "turns": block * 4,
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
     store = ChatStore(path)
     assert len(store.snapshot()["sessions"][0]["turns"]) == 2
 
@@ -98,21 +111,36 @@ def test_rev_grows_only_on_a_real_change(tmp_path):
 
 def test_sessions_are_newest_first(tmp_path):
     store = ChatStore(tmp_path / "chats.json")
-    store.merge([
-        session("old", turns=[turn("a", "x", at=10)]),
-        session("new", turns=[turn("b", "y", at=90)]),
-    ])
+    store.merge(
+        [
+            session("old", turns=[turn("a", "x", at=10)]),
+            session("new", turns=[turn("b", "y", at=90)]),
+        ]
+    )
     assert [item["id"] for item in store.snapshot()["sessions"]] == ["new", "old"]
 
 
 def test_a_hand_written_file_is_readable(tmp_path):
     path = tmp_path / "chats.json"
-    path.write_text(json.dumps({
-        "rev": 4,
-        "sessions": {"s1": {"id": "s1", "title": "x", "titleAt": 1, "created": 1,
-                             "updated": 2, "deletedAt": 0,
-                             "turns": [turn("t1", "hello")]}},
-    }), encoding="utf-8")
+    path.write_text(
+        json.dumps(
+            {
+                "rev": 4,
+                "sessions": {
+                    "s1": {
+                        "id": "s1",
+                        "title": "x",
+                        "titleAt": 1,
+                        "created": 1,
+                        "updated": 2,
+                        "deletedAt": 0,
+                        "turns": [turn("t1", "hello")],
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
     store = ChatStore(path)
     assert store.rev == 4
     assert store.snapshot()["sessions"][0]["turns"][0]["text"] == "hello"

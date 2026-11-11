@@ -181,12 +181,14 @@ class ChatStore:
                 if key in known:
                     continue
                 known.add(key)
-                turns.append({
-                    "id": str(turn.get("id", "")),
-                    "role": str(turn.get("role", "")),
-                    "text": str(turn.get("text", "")),
-                    "at": int(turn.get("at", 0) or 0),
-                })
+                turns.append(
+                    {
+                        "id": str(turn.get("id", "")),
+                        "role": str(turn.get("role", "")),
+                        "text": str(turn.get("text", "")),
+                        "at": int(turn.get("at", 0) or 0),
+                    }
+                )
                 changed = True
 
         try:

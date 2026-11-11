@@ -249,7 +249,7 @@ def list_voices() -> list[str]:
     return [line.strip() for line in result.stdout.splitlines() if line.strip()]
 
 
-def speak_wav(text: str, voice: str = '') -> bytes:
+def speak_wav(text: str, voice: str = "") -> bytes:
     """Render `text` to a WAV file with the PC's speech synthesiser."""
     with tempfile.TemporaryDirectory(prefix="hopa-tts-") as tmp:
         target = Path(tmp) / "reply.wav"
@@ -295,7 +295,7 @@ class _Handler(BaseHTTPRequestHandler):
     def _presented_token(self) -> str:
         header = self.headers.get("Authorization", "")
         prefix = "Bearer "
-        return header[len(prefix):] if header.startswith(prefix) else ""
+        return header[len(prefix) :] if header.startswith(prefix) else ""
 
     def _authorized(self) -> bool:
         presented = self._presented_token()
@@ -322,10 +322,13 @@ class _Handler(BaseHTTPRequestHandler):
             if not self._authorized_sessions():
                 self._send(401, {"error": "unauthorized"})
                 return
-            self._send(200, {
-                "sessions": self.bridge.sessions,
-                "updated": self.bridge.sessions_updated,
-            })
+            self._send(
+                200,
+                {
+                    "sessions": self.bridge.sessions,
+                    "updated": self.bridge.sessions_updated,
+                },
+            )
             return
         if self.path != "/health":
             self._send(404, {"error": "not found"})

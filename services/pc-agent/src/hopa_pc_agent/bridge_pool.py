@@ -59,7 +59,7 @@ class BridgePool:
         self.roles: dict[str, str] = {}
         for entry in devices:
             serial = str(entry["serial"])
-            device = (device_factory(serial) if device_factory else Device(target=serial))
+            device = device_factory(serial) if device_factory else Device(target=serial)
             node = BridgeServer(
                 device,
                 str(entry["token"]),
@@ -214,18 +214,21 @@ class _PoolHandler(BaseHTTPRequestHandler):
             self._send(400, {"error": target})
             return
         header = self.headers.get("Authorization", "")
-        presented = header[len("Bearer "):] if header.startswith("Bearer ") else ""
+        presented = header[len("Bearer ") :] if header.startswith("Bearer ") else ""
         if not self.pool.authorized_any(presented):
             self._send(401, {"error": "unauthorized"})
             return
-        self._send(200, {
-            "sessions": node.sessions,
-            "updated": node.sessions_updated,
-        })
+        self._send(
+            200,
+            {
+                "sessions": node.sessions,
+                "updated": node.sessions_updated,
+            },
+        )
 
     def _authorized_any(self) -> bool:
         header = self.headers.get("Authorization", "")
-        presented = header[len("Bearer "):] if header.startswith("Bearer ") else ""
+        presented = header[len("Bearer ") :] if header.startswith("Bearer ") else ""
         return self.pool.authorized_any(presented)
 
     def do_GET(self) -> None:  # noqa: N802
@@ -246,13 +249,16 @@ class _PoolHandler(BaseHTTPRequestHandler):
             self._cross_sessions(read_role)
             return
         if self.path == "/health":
-            self._send(200, {
-                "ok": True,
-                "devices": [
-                    {"serial": serial, "role": role}
-                    for role, serial in sorted(self.pool.roles.items())
-                ],
-            })
+            self._send(
+                200,
+                {
+                    "ok": True,
+                    "devices": [
+                        {"serial": serial, "role": role}
+                        for role, serial in sorted(self.pool.roles.items())
+                    ],
+                },
+            )
             return
         self._forward(self.path, self._role(), b"")
 

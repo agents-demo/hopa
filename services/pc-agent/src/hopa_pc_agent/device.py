@@ -168,8 +168,7 @@ class Device:
         code = self._KEY_CODES.get(key.strip().lower(), key)
         safe = shlex.quote(code)
         self.hdc.shell(
-            f"i=0; while [ $i -lt {count} ]; do uitest uiInput keyEvent {safe}; "
-            f"i=$((i+1)); done"
+            f"i=0; while [ $i -lt {count} ]; do uitest uiInput keyEvent {safe}; i=$((i+1)); done"
         )
 
     # -- app lifecycle -------------------------------------------------------

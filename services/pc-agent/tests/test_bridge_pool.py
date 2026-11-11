@@ -113,8 +113,15 @@ def test_sessions_goes_to_the_phone(pool):
 def test_cross_read_uses_the_callers_own_credential(pool):
     server, _ = pool
     # The phone (phone token) asks for the laptop's snapshot.
-    status, body = call(server, "/sessions", role="phone", token="phone-token", method="GET",
-                        payload=None, read="2in1")
+    status, body = call(
+        server,
+        "/sessions",
+        role="phone",
+        token="phone-token",
+        method="GET",
+        payload=None,
+        read="2in1",
+    )
     assert status == 200
     assert body["sessions"] == []
 

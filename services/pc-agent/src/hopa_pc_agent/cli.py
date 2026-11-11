@@ -115,7 +115,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--devices",
         default="",
         help="JSON file listing several devices; one listener serves them all "
-             "(entry: serial, token, pair, role, state, sessions_key)",
+        "(entry: serial, token, pair, role, state, sessions_key)",
     )
     bridge.add_argument(
         "--state",

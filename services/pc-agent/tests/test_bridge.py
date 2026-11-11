@@ -157,8 +157,13 @@ def bridge():
         server.stop()
 
 
-def _call(server: BridgeServer, path: str, payload: dict | None = None, token: str = "secret",
-          timeout: float = 3.0):
+def _call(
+    server: BridgeServer,
+    path: str,
+    payload: dict | None = None,
+    token: str = "secret",
+    timeout: float = 3.0,
+):
     url = f"http://127.0.0.1:{server.port}{path}"
     data = None if payload is None else json.dumps(payload).encode("utf-8")
     request = urllib.request.Request(url, data=data, method="POST" if data else "GET")
