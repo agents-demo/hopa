@@ -58,7 +58,17 @@ export class ChatSync {
   private where: SyncUrls = new SyncUrls();
 
   configure(url: string, token: string, role: string): void {
-    let clean: string = url.trim();
+    // Same scrub as BridgeClient: an IME leaves spaces, zero-width marks or a
+    // capitalised scheme, and the http client then rejects the URL outright.
+    let clean: string = url
+      .replace(new RegExp('[\\u200B-\\u200D\\uFEFF\\u00A0\\u3000]', 'g'), '')
+      .replace(new RegExp('\\s+', 'g'), '')
+      .replace(new RegExp('[^\\x21-\\x7E]', 'g'), '')
+      .trim();
+    const scheme: number = clean.indexOf('://');
+    if (scheme > 0) {
+      clean = clean.substring(0, scheme).toLowerCase() + clean.substring(scheme);
+    }
     if (clean.length > 0 && !clean.startsWith('http://') && !clean.startsWith('https://')) {
       clean = `http://${clean}`;
     }

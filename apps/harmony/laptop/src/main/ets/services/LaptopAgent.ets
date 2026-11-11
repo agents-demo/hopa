@@ -137,8 +137,11 @@ export class LaptopAgent {
       this.approvals,
       this.runs
     );
-    // Read at call time: the runtime is built below this line, and the target
-    // changes per request.
+    // Launch locally only when there is no bridge to do it. With a bridge, the
+    // PC runs `aa start` on this device, so HOPA keeps the foreground - the same
+    // path the phone uses. Launching locally hands the foreground to the other
+    // app, and the observation that follows then collides with the transition
+    // (the scheduler suspends the shell). Read at call time on purpose.
     executor.registerCapability(new LocalLaunchCapability(
       this.launcher,
       (): boolean => this.runtime.targetRole().length === 0

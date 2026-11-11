@@ -1,5 +1,5 @@
 import { bundleManager, common, Want } from '@kit.AbilityKit';
-import { APP_CATALOG, CatalogApp } from '@hopa/app';
+import { APP_CATALOG, BridgeClient, CatalogApp } from '@hopa/app';
 
 /**
  * Opening an app on this laptop.
@@ -17,6 +17,7 @@ export class LaptopApp {
 
 export class LaptopLauncher {
   private context: common.UIAbilityContext | undefined = undefined;
+  private bridge: BridgeClient | undefined = undefined;
   private installedCache: Map<string, boolean> = new Map<string, boolean>();
   /**
    * The catalog is shared with the phone, so it names the phone's bundles.
@@ -35,6 +36,11 @@ export class LaptopLauncher {
 
   attach(context: common.UIAbilityContext): void {
     this.context = context;
+  }
+
+  /** With a bridge, the PC starts the app: HOPA keeps its own foreground. */
+  attachBridge(bridge: BridgeClient): void {
+    this.bridge = bridge;
   }
 
   private knowable(): CatalogApp[] {
@@ -94,6 +100,16 @@ export class LaptopLauncher {
       return false;
     }
     for (const name of this.bundlesFor(bundle)) {
+      const bridge: BridgeClient | undefined = this.bridge;
+      if (bridge !== undefined && bridge.isConfigured()) {
+        // Same path the phone takes: the PC runs `aa start`, so this shell is
+        // never the one handing over the foreground. Doing that locally and
+        // then observing through hdc is what got it suspended mid-run.
+        if (await bridge.launch(name)) {
+          return true;
+        }
+        continue;
+      }
       try {
         const want: Want = bundleManager.getLaunchWantForBundleSync(name);
         await context.startAbility(want);

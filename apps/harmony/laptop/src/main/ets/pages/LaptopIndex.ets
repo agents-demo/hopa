@@ -203,6 +203,7 @@ struct LaptopIndex {
       // Without this the first publish is silently dropped on a fresh install.
     notificationManager.requestEnableNotification(context).catch(() => {});
     this.agent.launcher.attach(context);
+    this.agent.launcher.attachBridge(this.agent.bridge);
     this.images.attach(context, this.agent.chatSync);
       this.agent.launcher.loadInstalled().then(() => {
         this.apps = this.agent.launcher.apps();
