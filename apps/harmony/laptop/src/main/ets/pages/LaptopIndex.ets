@@ -683,8 +683,9 @@ struct LaptopIndex {
     reply.id = `t\u00b7${Date.now()}\u00b7${Math.floor(Math.random() * 1e6)}`;
     reply.at = Date.now();
     reply.role = 'assistant';
-    reply.text = 'I was stopped before I could answer: the system suspended me while ' +
-      'I was working in another app. Asking again now.';
+    reply.text = 'I was stopped before I could answer: the system suspended this ' +
+      'window while I was working in another app. The action you asked for may ' +
+      'have run; ask again to see the result.';
     turns.push(reply);
     this.store.commit(turns, this.lastLatency, this.lastTokens);
     // Deliberately no automatic resume: the platform freezes this shell whenever

@@ -111,6 +111,11 @@ export class ConversationService {
 
   private adopt(sessions: SyncSession[]): void {
     const active: string = this.history.currentId();
+    // The open chat may be a brand-new, still-empty one. toSync() never sends an
+    // empty session, so the merge cannot know it; without keeping it here, adopt
+    // switched the user straight back to the last conversation the moment they
+    // pressed "+".
+    const openLocal: ChatSession | undefined = this.history.current();
     const kept: ChatSession[] = [];
     for (const wire of sessions) {
       if (wire.deletedAt > 0) {
@@ -142,12 +147,18 @@ export class ConversationService {
         break;
       }
     }
+    let nextActive: string = active;
     if (!stillThere) {
-      this.history.select(kept[0].id);
+      if (openLocal !== undefined) {
+        kept.unshift(openLocal);
+        nextActive = openLocal.id;
+      } else {
+        nextActive = kept[0].id;
+      }
     }
     const rebuilt = ChatHistory.fromJson(JSON.stringify({
       sessions: kept,
-      currentId: stillThere ? active : kept[0].id,
+      currentId: nextActive,
       counter: kept.length
     }));
     this.history = rebuilt;
