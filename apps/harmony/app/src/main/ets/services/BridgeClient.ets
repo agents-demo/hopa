@@ -91,6 +91,8 @@ export class BridgeClient {
   private foreground: string = '';
   /** 'phone' or '2in1': which device this client wants when one port serves both. */
   private role: string = '';
+  /** '' means "the machine that asked"; otherwise the device to act on. */
+  private target: string = '';
 
   /**
    * A bare host and `localhost` are normalised here: a reverse port listens on
@@ -126,6 +128,11 @@ export class BridgeClient {
     this.role = role.trim();
   }
 
+  /** Ask the pool to act on another device; '' means this one. */
+  setTarget(role: string): void {
+    this.target = role.trim();
+  }
+
   setSessionSink(sink: BridgeSessionSink): void {
     this.sessionSink = sink;
   }
@@ -159,7 +166,7 @@ export class BridgeClient {
         'Authorization': `Bearer ${this.token}`
       };
       if (this.role.length > 0) {
-        authHeader['X-Hopa-Role'] = this.role;
+        authHeader['X-Hopa-Role'] = this.target.length > 0 ? this.target : this.role;
       }
       if (method === http.RequestMethod.POST) {
         authHeader['Content-Type'] = 'application/json';

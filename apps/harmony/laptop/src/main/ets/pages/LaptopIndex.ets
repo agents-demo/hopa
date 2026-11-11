@@ -111,6 +111,8 @@ struct LaptopIndex {
   @State replayTurn: string = '';
   @State replayIndex: number = 0;
   @State undoNote: string = '';
+  /** '' acts on this laptop; 'phone' asks the PC bridge to act on the handset. */
+  @State targetRole: string = '';
   /** Bumped when a downloaded frame lands, so the chat re-renders. */
   @State imageTick: number = 0;
   @State plans: ScheduledTask[] = [];
@@ -916,7 +918,8 @@ struct LaptopIndex {
     this.draft = '';
     this.busy = true;
     const context = getContext(this) as common.UIAbilityContext;
-    // Show the question at once; waiting for the run made the pane look dead.
+    // The choice of machine rides on the request, not on the conversation.
+    this.agent.runtime.setTarget(this.targetRole);
     const running: Promise<void> = this.chat.send(text);
     this.turns = this.chat.turns.slice();
     this.prefetchImages();
@@ -3079,6 +3082,19 @@ struct LaptopIndex {
         // margin gets clipped, which is why earlier attempts looked uninset.
         Row() {
         Row({ space: 6 }) {
+          if (this.agent.isBridgeConfigured()) {
+            Text(this.targetRole === 'phone' ? 'Phone' : 'Laptop')
+              .fontSize(10)
+              .fontColor(this.targetRole === 'phone'
+                ? $r('app.color.primary')
+                : $r('app.color.text_hint'))
+              .padding({ left: 8, right: 8, top: 5, bottom: 5 })
+              .backgroundColor($r('app.color.surface_muted'))
+              .borderRadius(8)
+              .onClick(() => {
+                this.targetRole = this.targetRole === 'phone' ? '' : 'phone';
+              })
+          }
           TextArea({ text: this.draft, placeholder: 'Ask HOPA\u2026' })
             .id('hopa-composer')
             .layoutWeight(1)

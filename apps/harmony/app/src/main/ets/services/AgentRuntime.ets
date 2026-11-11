@@ -273,8 +273,12 @@ export class AgentRuntime {
     return this.skills.draftFrom(this.lastGoal, this.lastTranscript);
   }
 
-  async run(goal: string): Promise<string> {
-    this.activeRuns += 1;
+  /** '' means this device; otherwise the device the run should act on. */
+  setTarget(role: string): void {
+    this.bridge.setTarget(role);
+  }
+
+  async run(goal: string): Promise<string> {    this.activeRuns += 1;
     try {
       return await this.runInner(goal);
     } finally {
