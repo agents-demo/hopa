@@ -195,6 +195,16 @@ export class AgentLoop {
       }
     }
 
+    // A run that used every step on actions, or stopped on a failed one, used
+    // to return an empty answer: the chat drew nothing and the question looked
+    // ignored. Ask once more for text only, then fall back to what happened.
+    if (this.answer.trim().length === 0 && !this.cancelled) {
+      this.answer = await this.finalAnswer(messages);
+    }
+    if (this.answer.trim().length === 0) {
+      this.answer = AgentLoop.summarize(outcomes);
+    }
+
     return outcomes;
   }
 
@@ -203,6 +213,42 @@ export class AgentLoop {
       return new Screen();
     }
     return this.source.capture();
+  }
+
+  /** One last text-only turn when the loop ran out of steps or stopped. */
+  private async finalAnswer(messages: ModelMessage[]): Promise<string> {
+    const request = new ModelRequest();
+    request.messages = this.budget.trim(messages.concat([
+      new ModelMessage(
+        'user',
+        'No more actions are available. Answer the user now in plain text, using ' +
+        'what the observations above showed. Do not propose another action.'
+      )
+    ]));
+    try {
+      const response: ModelResponse = await this.model.complete(request);
+      this.tokensUsed += response.tokens;
+      const text: string = response.text.trim();
+      if (text.length === 0 || ActionParser.parse(text) !== undefined) {
+        return '';
+      }
+      return text;
+    } catch (error) {
+      return '';
+    }
+  }
+
+  /** The truth when the model cannot speak: what the run actually did. */
+  private static summarize(outcomes: ActionOutcome[]): string {
+    if (outcomes.length === 0) {
+      return 'I could not get an answer for that. Try asking in a different way.';
+    }
+    const last: ActionOutcome = outcomes[outcomes.length - 1];
+    const detail: string = last.observation.detail.length > 0 ? ` ${last.observation.detail}` : '';
+    if (last.observation.success) {
+      return `I did that: ${last.observation.summary}.${detail}`;
+    }
+    return `I stopped at ${last.action.kind}: ${last.observation.summary}${detail}.`;
   }
 
   /** The lower-case bundle a launch action asks for, or '' for other actions. */

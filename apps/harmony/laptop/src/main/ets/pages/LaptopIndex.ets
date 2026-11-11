@@ -687,7 +687,10 @@ struct LaptopIndex {
       'I was working in another app. Asking again now.';
     turns.push(reply);
     this.store.commit(turns, this.lastLatency, this.lastTokens);
-    this.resumeInterrupted(last.text);
+    // Deliberately no automatic resume: the platform freezes this shell whenever
+    // it is backgrounded while a run is still executing (verified with the
+    // background task granted), so a retry just repeats the same suspend. The
+    // notice is the honest end of that turn.
   }
 
   /**
