@@ -129,6 +129,9 @@ export default class LaptopAbility extends UIAbility {
       }
     }
     const uri: string = want.uri ?? '';
+    if (uri.startsWith('hopa://activity')) {
+      AppStorage.setOrCreate<string>('hopa.laptop.view', 'activity');
+    }
     if (uri.startsWith('hopa://ask')) {
       const marker: number = uri.indexOf('text=');
       if (marker >= 0) {

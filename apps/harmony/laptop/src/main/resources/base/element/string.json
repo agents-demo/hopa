@@ -13,6 +13,14 @@
       "value": "HOPA"
     },
     {
+      "name": "shortcut_ask",
+      "value": "Ask HOPA"
+    },
+    {
+      "name": "shortcut_activity",
+      "value": "Activity"
+    },
+    {
       "name": "mic_reason",
       "value": "So you can talk to HOPA instead of typing"
     }

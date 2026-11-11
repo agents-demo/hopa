@@ -259,6 +259,11 @@ struct LaptopIndex {
     if (this.pending.length > 0) {
       this.onPending();
     }
+    const wantedView: string = AppStorage.get<string>('hopa.laptop.view') ?? '';
+    if (wantedView.length > 0) {
+      AppStorage.setOrCreate<string>('hopa.laptop.view', '');
+      this.view = wantedView;
+    }
     const pageAsk: string = AppStorage.get<string>('hopa.laptop.pageAsk') ?? '';
     if (pageAsk.length > 0) {
       AppStorage.setOrCreate<string>('hopa.laptop.pageAsk', '');
