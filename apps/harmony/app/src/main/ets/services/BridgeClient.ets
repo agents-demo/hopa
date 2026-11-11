@@ -106,11 +106,38 @@ export class BridgeClient {
   private target: string = '';
 
   /**
-   * A bare host and `localhost` are normalised here: a reverse port listens on
+   * Text a person typed, made safe for `http.request` and for a header.
+   *
+   * An IME or a paste can leave zero-width marks, a non-breaking space or
+   * full-width punctuation in a field. The http client then rejects the whole
+   * URL with "Invalid URL format or missing URL", which reads exactly like an
+   * unreachable bridge and sends everyone hunting the tunnel. Only printable
+   * ASCII belongs in a URL or a token, so strip everything else here.
+   */
+  private static cleanText(value: string): string {
+    return value
+      .replace(new RegExp('[\\u200B-\\u200D\\uFEFF\\u00A0\\u3000]', 'g'), '')
+      .replace(new RegExp('[^\\x21-\\x7E]', 'g'), '')
+      .trim();
+  }
+
+  /**
+   * A bare host and `localhost` are normalised too: a reverse port listens on
    * 127.0.0.1, while `localhost` can resolve to ::1 and be refused.
    */
   private static normalize(url: string): string {
-    let clean: string = url.trim();
+    const ascii: string = url
+      .replace(/[\uFF1A]/g, ':')
+      .replace(/[\uFF0F]/g, '/')
+      .replace(/[\uFF0E]/g, '.')
+      .replace(/\s+/g, '');
+    let clean: string = BridgeClient.cleanText(ascii);
+    // "Http ://host" is what an auto-capitalising IME makes of "http://host";
+    // the space is gone by now, so a lower-cased scheme is the whole repair.
+    const scheme: number = clean.indexOf('://');
+    if (scheme > 0) {
+      clean = clean.substring(0, scheme).toLowerCase() + clean.substring(scheme);
+    }
     if (clean.length > 0 && !clean.startsWith('http://') && !clean.startsWith('https://')) {
       clean = `http://${clean}`;
     }
@@ -123,14 +150,14 @@ export class BridgeClient {
 
   configure(url: string, token: string): void {
     this.baseUrl = BridgeClient.normalize(url);
-    this.token = token.trim();
+    this.token = BridgeClient.cleanText(token).replace(/^Bearer\s+/i, '');
     this.refresh = '';
   }
 
   /** A paired session: the access token plus the token that renews it. */
   configureSession(url: string, token: string, refresh: string): void {
     this.baseUrl = BridgeClient.normalize(url);
-    this.token = token.trim();
+    this.token = BridgeClient.cleanText(token).replace(/^Bearer\s+/i, '');
     this.refresh = refresh.trim();
   }
 

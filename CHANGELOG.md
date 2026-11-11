@@ -151,6 +151,16 @@ All notable changes are recorded here. Versions follow `docs/versioning.md`.
 
 ### Fixed
 
+- A bridge address typed with an IME could carry a capitalised scheme and a
+  space (`Http ://127.0.0.1:8766`), and the client prefixed `http://` to it, so
+  the host became `"Http "` and every request failed as *failed to resolve the
+  host name* — or, before that, as *invalid URL format*, which reads like a dead
+  tunnel. `BridgeClient` now strips zero-width marks, non-breaking spaces and
+  full-width punctuation, removes whitespace inside the address, and lower-cases
+  the scheme; the key gets the same scrub, so a pasted token works too.
+- The laptop's "no bridge" exception now sits beside **Settings** in the sidebar,
+  with the missing-key link, instead of floating in the title bar where it read
+  as part of the window chrome.
 - Opening a system app (Settings, Browser) failed with "could not open … here"
   because `getLaunchWantForBundleSync` does not resolve them on this build. The
   launcher now falls back to an explicit ability Want (`<bundle>.MainAbility`,

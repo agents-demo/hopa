@@ -1212,25 +1212,8 @@ struct LaptopIndex {
         }))
 
       // Silence when the link is healthy, as every 2026 shell does; only the
-      // exception earns chrome. This chip is also the way back to Settings.
-      if (!this.bridgeLive) {
-        Row({ space: 5 }) {
-          Row()
-            .width(6)
-            .height(6)
-            .borderRadius(3)
-            .backgroundColor($r('app.color.warning'))
-          Text('No bridge \u00b7 Set up')
-            .fontSize(10)
-            .fontColor($r('app.color.text_hint'))
-        }
-        .padding({ left: 8, right: 8, top: 4, bottom: 4 })
-        .borderRadius(8)
-        .onClick(() => {
-          this.view = 'chat';
-          this.settingsOpen = true;
-        })
-      }
+      // exception earns chrome, and it lives beside Settings with the missing
+      // key rather than in the title bar.
 
       if (!this.showSidebar()) {
         Text('\u2630')
@@ -2933,6 +2916,19 @@ struct LaptopIndex {
             .width('100%')
             .padding({ left: 8, top: 4 })
             .onClick(() => {
+              this.settingsOpen = true;
+            })
+        }
+        // The exception sits here, beside the missing key, not in the title bar.
+        if (!this.bridgeLive) {
+          Text('No bridge \u00b7 Set up')
+            .fontSize(11)
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.warning'))
+            .width('100%')
+            .padding({ left: 8, top: 4 })
+            .onClick(() => {
+              this.settingsTab = 'bridge';
               this.settingsOpen = true;
             })
         }
