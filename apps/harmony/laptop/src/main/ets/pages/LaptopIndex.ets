@@ -125,6 +125,7 @@ struct LaptopIndex {
   private static readonly START_URL: string = 'https://example.com';
   @State pageTitle: string = '';
   @State pageError: string = '';
+  @State visited: string[] = [];
   @State pageQuestion: string = '';
   private web: webview.WebviewController = new webview.WebviewController();
   @State speakReplies: boolean = false;
@@ -1837,7 +1838,28 @@ struct LaptopIndex {
   @Builder
   BrowserPane() {
     Column({ space: 8 }) {
-      Row({ space: 8 }) {
+      Row({ space: 6 }) {
+        Text('\u2190')
+          .fontSize(14)
+          .fontColor($r('app.color.text_hint'))
+          .padding({ left: 6, right: 6 })
+          .onClick(() => {
+            this.web.backward();
+          })
+        Text('\u2192')
+          .fontSize(14)
+          .fontColor($r('app.color.text_hint'))
+          .padding({ left: 6, right: 6 })
+          .onClick(() => {
+            this.web.forward();
+          })
+        Text('\u21bb')
+          .fontSize(13)
+          .fontColor($r('app.color.text_hint'))
+          .padding({ left: 6, right: 6 })
+          .onClick(() => {
+            this.web.refresh();
+          })
         TextInput({ text: this.address, placeholder: 'Type an address, then press Enter' })
           .layoutWeight(1)
           .height(34)
@@ -1886,7 +1908,35 @@ struct LaptopIndex {
           this.pageTitle = this.web.getTitle();
           this.agent.browser.attach(this.web);
           this.agent.browser.note(url, this.pageTitle);
+          this.pageError = '';
+          if (url.length > 0 && (this.visited.length === 0 || this.visited[0] !== url)) {
+            const recent: string[] = [url];
+            for (const seen of this.visited) {
+              if (seen !== url && recent.length < 6) {
+                recent.push(seen);
+              }
+            }
+            this.visited = recent;
+          }
         })
+
+      if (this.visited.length > 0) {
+        Row({ space: 6 }) {
+          ForEach(this.visited, (url: string) => {
+            Text(this.shortUrl(url))
+              .fontSize(10)
+              .fontColor($r('app.color.text_hint'))
+              .padding({ left: 8, right: 8, top: 4, bottom: 4 })
+              .backgroundColor($r('app.color.surface_muted'))
+              .borderRadius(8)
+              .onClick(() => {
+                this.address = url;
+                this.openAddress();
+              })
+          }, (url: string) => 'visited-' + url)
+        }
+        .width('100%')
+      }
 
       if (this.pageError.length > 0) {
         Text(this.pageError)
@@ -1936,6 +1986,15 @@ struct LaptopIndex {
     this.draft = question;
     await this.send();
     this.view = 'chat';
+  }
+
+  /** A chip shows the host and the first path segment, not the whole URL. */
+  private shortUrl(url: string): string {
+    let clean: string = url.replace('https://', '').replace('http://', '');
+    if (clean.endsWith('/')) {
+      clean = clean.substring(0, clean.length - 1);
+    }
+    return clean.length > 32 ? `${clean.substring(0, 32)}\u2026` : clean;
   }
 
   private openAddress(): void {
