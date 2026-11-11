@@ -199,6 +199,31 @@ Invoke-WebRequest -Method Post `
 To prove cable-free: unplug the USB cable, then run the same calls. `hdc list
 targets` will show the phone USB as `Offline`; the cloud calls still work.
 
+### 5.4 Model configuration
+
+The model also comes from `.env` (`HOPA_MODEL_PROVIDER`, `HOPA_MODEL_BASE_URL`,
+`HOPA_MODEL_NAME`, `HOPA_MODEL_API_KEY`). A launch can set and persist it:
+
+```powershell
+hdc shell "aa start -a EntryAbility -b com.hopa.agent --ps hopa.provider $($cfg['HOPA_MODEL_PROVIDER']) --ps hopa.base_url $($cfg['HOPA_MODEL_BASE_URL']) --ps hopa.model $($cfg['HOPA_MODEL_NAME']) --ps hopa.api_key $($cfg['HOPA_MODEL_API_KEY']) --ps hopa.bridge_url $relay --ps hopa.bridge_token $($cfg['HOPA_BRIDGE_TOKEN']) --ps hopa.tunnel 1"
+```
+
+`applyLaunchConfig` saves the key to secure storage (`KeyStore`), so a later
+cold start without parameters keeps the model. AppBoot now prefers the stored
+provider/endpoint/model instead of overwriting them with the hardcoded
+DeepSeek defaults.
+
+Current phone settings (Settings → MODEL):
+
+```text
+Provider:    deepseek
+Endpoint:    https://api.deepseek.com
+Model name:  deepseek-flash
+API key:     loaded (stored securely)
+```
+
+`Capabilities` shows `deepseek-flash — PC bridge` under "Ready on this phone".
+
 ---
 
 ## 6. Laptop (remaining)

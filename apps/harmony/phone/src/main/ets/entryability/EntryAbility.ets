@@ -11,6 +11,7 @@ import { BridgeSessionStore } from '../services/BridgeSessionStore';
 import { TrustedApps } from '../services/TrustedApps';
 import { Character } from '../services/Character';
 import { TunnelClient } from '../services/TunnelClient';
+import { KeyStore } from '../services/KeyStore';
 
 const DOMAIN: number = 0x0000;
 const TAG: string = 'HOPA';
@@ -111,6 +112,17 @@ export default class EntryAbility extends UIAbility {
         model,
         6
       );
+      if (apiKey.length > 0) {
+        // A key supplied at launch must survive the next cold start too, or
+        // the app greets the user with "no model configured" again.
+        KeyStore.save(apiKey).then((saved: boolean) => {
+          if (!saved) {
+            hilog.warn(DOMAIN, TAG, 'model key was not saved to secure storage');
+          }
+        }).catch(() => {
+          // The in-memory key still drives this run.
+        });
+      }
     }
     if (bridgeUrl.length > 0 && bridgeToken.length > 0) {
       AgentService.get().configureBridge(bridgeUrl, bridgeToken);
