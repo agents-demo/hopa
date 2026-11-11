@@ -24,6 +24,18 @@ const LAPTOP_KEY_ALIAS: string = 'hopa_laptop_key';
  * This shell runs the agent on the laptop itself. It never drives the phone,
  * and it never borrows the phone's key.
  */
+class CapabilityRow {
+  label: string = '';
+  status: string = '';
+  detail: string = '';
+
+  constructor(label: string, status: string, detail: string) {
+    this.label = label;
+    this.status = status;
+    this.detail = detail;
+  }
+}
+
 class UsageRow {
   label: string = '';
   value: string = '';
@@ -923,6 +935,12 @@ struct LaptopIndex {
             }
           },
           {
+            value: 'Capabilities',
+            action: () => {
+              this.view = 'abilities';
+            }
+          },
+          {
             value: 'Usage',
             action: () => {
               this.view = 'usage';
@@ -1283,6 +1301,87 @@ struct LaptopIndex {
     .padding({ left: 22, right: 22, top: 18, bottom: 28 })
     .backgroundColor($r('app.color.bg'))
     .alignItems(HorizontalAlign.Start)
+  }
+
+  @Builder
+  CapabilitiesPane() {
+    Column({ space: 8 }) {
+      Row() {
+        Text('Capabilities')
+          .fontSize(16)
+          .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_primary'))
+        Blank()
+        Text('What this laptop can actually do')
+          .fontSize(10.5)
+          .fontColor($r('app.color.text_hint'))
+      }
+      .width('100%')
+
+      List({ space: 6 }) {
+        ForEach(this.capabilityRows(), (row: CapabilityRow) => {
+          ListItem() {
+            Column({ space: 3 }) {
+              Row({ space: 8 }) {
+                Text(row.label)
+                  .fontSize(12.5)
+                  .fontColor($r('app.color.text_primary'))
+                  .layoutWeight(1)
+                Text(row.status)
+                  .fontSize(9.5)
+                  .fontColor(row.status === 'yes'
+                    ? $r('app.color.success')
+                    : (row.status === 'bridge' ? $r('app.color.warning') : $r('app.color.text_hint')))
+                  .padding({ left: 7, right: 7, top: 2, bottom: 2 })
+                  .backgroundColor($r('app.color.surface_muted'))
+                  .borderRadius(6)
+              }
+              .width('100%')
+              Text(row.detail)
+                .fontSize(10.5)
+                .lineHeight(15)
+                .fontColor($r('app.color.text_secondary'))
+                .width('100%')
+            }
+            .width('100%')
+            .padding(10)
+            .backgroundColor($r('app.color.surface'))
+            .borderRadius(10)
+            .alignItems(HorizontalAlign.Start)
+          }
+        }, (row: CapabilityRow) => row.label + row.status)
+      }
+      .layoutWeight(1)
+      .width('100%')
+      .scrollBar(BarState.Off)
+    }
+    .layoutWeight(1)
+    .width('100%')
+    .padding({ left: 22, right: 22, top: 8 })
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  private capabilityRows(): CapabilityRow[] {
+    const rows: CapabilityRow[] = [];
+    rows.push(new CapabilityRow('Chat and answers', 'yes',
+      'Runs the same engine as the phone, on this machine.'));
+    rows.push(new CapabilityRow('Approvals', 'yes',
+      'Every sensitive action pauses in the right rail and waits for you.'));
+    rows.push(new CapabilityRow('Shared conversations', 'yes',
+      'One list on both devices, kept by the PC bridge.'));
+    rows.push(new CapabilityRow('Voice in and out', 'bridge',
+      'Records here; the PC transcribes and speaks.'));
+    rows.push(new CapabilityRow('Read this screen, tap and type', 'bridge',
+      'Through the PC bridge only; without it HOPA cannot see other windows.'));
+    rows.push(new CapabilityRow('Its own browser', 'yes',
+      'Opens pages itself and reads their text; no permission needed.'));
+    rows.push(new CapabilityRow('Plans and memory', 'yes',
+      'Schedules run while HOPA is open; memory and skills are yours to edit.'));
+    rows.push(new CapabilityRow('Accessibility tree', 'no',
+      'Needs the Huawei ACL, which this device has not been granted.'));
+    rows.push(new CapabilityRow('Calls and messages', 'no',
+      'A laptop has no telephony. This is phone-only by design.'));
+    return rows;
   }
 
   @Builder
@@ -2326,7 +2425,9 @@ struct LaptopIndex {
       }
       Column() {
         this.Header()
-        if (this.view === 'usage') {
+        if (this.view === 'abilities') {
+          this.CapabilitiesPane()
+        } else if (this.view === 'usage') {
           this.UsagePane()
         } else if (this.view === 'memory') {
           this.MemoryPane()
