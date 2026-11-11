@@ -327,14 +327,18 @@ export class AgentRuntime {
     );
     this.loop.resetCancel();
     hilog.info(0x0000, 'HOPA', `run: start goal=${goal.length} chars`);
+    let backgroundHeld: boolean = false;
     if (this.bridge.isConfigured()) {
       await this.background.begin();
+      backgroundHeld = true;
     }
     try {
       outcomes = await this.loop.run(goal);
     } catch (error) {
       await this.background.returnToForeground();
-      await this.background.end();
+      if (backgroundHeld) {
+        await this.background.end();
+      }
       return `Loop error: ${error}`;
     }
     // The loop may have left another app in front of HOPA. Bring HOPA back so
@@ -351,7 +355,9 @@ export class AgentRuntime {
         await this.background.returnToForeground();
       }
     }
-    await this.background.end();
+    if (backgroundHeld) {
+      await this.background.end();
+    }
     hilog.info(0x0000, 'HOPA', `run: done outcomes=${outcomes.length} tokens=${this.loop.getTokens()}`);
     for (const outcome of outcomes) {
       const target: string = outcome.action.app.length > 0

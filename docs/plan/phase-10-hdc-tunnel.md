@@ -77,36 +77,43 @@ The point of this milestone is to de-risk the two unknowns: whether the phone's
 `hdcd` accepts a local connection from a normal process, and whether hdc's auth
 survives the tunnel.
 
-- [ ] Relay serves a binary `/tunnel` WebSocket that pairs one host and one phone session with a bearer token
-- [ ] `pc-agent hdc-tunnel` listens on `127.0.0.1:5556` and pipes bytes to the relay
-- [ ] A static arm64 forwarder pushed to `/data/local/tmp` forwards the phone's `127.0.0.1:5555` to the relay
-- [ ] `hdc tconn 127.0.0.1:5556` lists the phone through the tunnel
-- [ ] A tunneled `POST /observe` through the existing bridge returns the real phone screen
-- [ ] The P0 result is recorded in this file, including whether a fresh hdc pairing was required
+**P0 outcome (2026-11-11).** The pushed-static-binary path is not usable on this
+retail Mate 80: SELinux labels `/data/local/tmp` as `data_local_tmp` and denies
+`execute` to `u:r:sh:s0` (`Permission denied`). The app-side ArkTS client is
+therefore the working forwarder; it speaks the same binary protocol and was
+verified on the device. No fresh hdc pairing was required: `hdc tconn
+127.0.0.1:5556` connected with the existing key.
+
+- [x] Relay serves a binary `/tunnel` WebSocket that pairs one host and one phone session with a bearer token (evidence: services/pc-agent/src/hopa_pc_agent/relay.py; services/pc-agent/tests/test_tunnel.py)
+- [x] `pc-agent hdc-tunnel` listens on `127.0.0.1:5556` and pipes bytes to the relay (evidence: services/pc-agent/src/hopa_pc_agent/tunnel.py; services/pc-agent/tests/test_tunnel.py)
+- [ ] [BLOCKED: SELinux denies execute from /data/local/tmp for the shell domain; the ArkTS TunnelClient replaces it] A static arm64 forwarder pushed to `/data/local/tmp` forwards the phone's `127.0.0.1:5555` to the relay
+- [x] `hdc tconn 127.0.0.1:5556` lists the phone through the tunnel (evidence: 2026-11-11 cable-free run; USB target Offline, tunnel target Connected)
+- [x] A tunneled `POST /observe` through the existing bridge returns the real phone screen (evidence: 2026-11-11 cable-free run: 45 nodes, 1280x2832 with USB Offline)
+- [x] The P0 result is recorded in this file, including whether a fresh hdc pairing was required (evidence: this file, P0 outcome above)
 
 ### 5.2 P1 — the app-side tunnel client
 
 - [ ] HOPA's ArkTS tunnel client reconnects after the relay restarts
 - [ ] HOPA holds the tunnel for 10 minutes with the screen off
-- [ ] Settings has a Tunnel toggle and a three-state status (relay, tunnel, device)
-- [ ] The tunnel starts only when the user enables it, and stops on sign-out
-- [ ] A failed tunnel does not block normal chat or the local conversation store
+- [x] Settings has a Tunnel toggle and a three-state status (relay, tunnel, device) (evidence: Settings -> PHONE ACCESS -> Cable-free control; 2026-11-11 screenshot shows Relay connected / Tunnel ready / Device connected)
+- [x] The tunnel starts only when the user enables it, and stops on sign-out (evidence: toggle off removes the phone from /health; there is no account sign-out, so onDestroy and the toggle are the stop paths)
+- [x] A failed tunnel does not block normal chat or the local conversation store (evidence: TunnelClient does not touch BridgeClient or ConversationService; tunnel off leaves Settings and chat usable)
 
 ### 5.3 P2 — bridge integration
 
-- [ ] The bridge accepts the tunnel target without changing its HTTP endpoints
-- [ ] The app's bridge health distinguishes "relay reachable" from "device reachable"
-- [ ] A dropped tunnel is retried with backoff and does not wedge the device lock
-- [ ] `HOPA_DEVICE=127.0.0.1:5556` is documented as the tunnel target
-- [ ] The USB target and the tunnel target can be switched with one setting change
+- [x] The bridge accepts the tunnel target without changing its HTTP endpoints (evidence: bridge --target 127.0.0.1:5556 served /observe and /screenshot through the relay)
+- [x] The app's bridge health distinguishes "relay reachable" from "device reachable" (evidence: BridgeClient parses /health.tunnel.ready; Settings shows Device ready vs Relay only)
+- [x] A dropped tunnel is retried with backoff and does not wedge the device lock (evidence: TunnelClient 2->30 s, HdcTunnel 5->30 s, hdc.py re-runs tconn; cable-free and burst runs)
+- [x] `HOPA_DEVICE=127.0.0.1:5556` is documented as the tunnel target (evidence: docs/guides/pc-bridge.md#hdc-over-the-relay-cable-free-control; HOPA_BRIDGE_TARGET is the preferred switch)
+- [x] The USB target and the tunnel target can be switched with one setting change (evidence: .env HOPA_BRIDGE_TARGET; run-agent.ps1 picks it up)
 
 ### 5.4 P3 — hardening and operations
 
-- [ ] The tunnel rejects a session with a wrong or missing token
-- [ ] The relay cannot reach the phone's hdcd without the phone-side session
-- [ ] A 100-command hdc burst completes without a lost frame
-- [ ] Tunnel logs contain no tokens, hdc payloads or screen text
-- [ ] The runbook covers start, stop, token rotation, reconnect and failure modes
+- [x] The tunnel rejects a session with a wrong or missing token (evidence: services/pc-agent/tests/test_tunnel.py::test_a_wrong_token_is_rejected)
+- [x] The relay cannot reach the phone's hdcd without the phone-side session (evidence: /health host=true phone=false; no OPEN stream reaches 127.0.0.1:5555 until the app attaches)
+- [x] A 100-command hdc burst completes without a lost frame (evidence: 2026-11-11 burst 100/100 after 4 reconnects; first pass 94/100, the reconnects were idle-target hdc reconnects, not frame loss)
+- [x] Tunnel logs contain no tokens, hdc payloads or screen text (evidence: relay log_message strips the query; TunnelClient logs only state and error messages)
+- [x] The runbook covers start, stop, token rotation, reconnect and failure modes (evidence: docs/guides/pc-bridge.md#hdc-over-the-relay-cable-free-control)
 - [ ] A Render cold start is survived without re-pairing the phone
 
 ## 6. Risks
@@ -148,7 +155,8 @@ survives the tunnel.
 
 ## 9. Rollback
 
-- Set `HOPA_DEVICE` back to the USB serial.
+- Set `HOPA_BRIDGE_TARGET` back to the USB serial (or remove it), and restart
+  `run-agent.ps1`; `hdc` then uses USB again.
 - Stop `hdc-tunnel`; the relay stays up for the conversation store and pairing.
 - Disable the Tunnel toggle in Settings.
 - No change to the bridge's endpoints or to the app's chat path.

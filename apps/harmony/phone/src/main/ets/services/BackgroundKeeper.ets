@@ -18,6 +18,8 @@ import { hilog } from '@kit.PerformanceAnalysisKit';
 export class BackgroundKeeper implements RuntimeBackground {
   private context: common.UIAbilityContext | undefined = undefined;
   private running: boolean = false;
+  /** The agent run and the tunnel can both need the task; it ends when both do. */
+  private holders: number = 0;
   private agent: WantAgent | undefined = undefined;
 
   setContext(context: common.UIAbilityContext): void {
@@ -29,6 +31,7 @@ export class BackgroundKeeper implements RuntimeBackground {
   }
 
   async begin(): Promise<void> {
+    this.holders += 1;
     if (this.running || this.context === undefined) {
       return;
     }
@@ -108,6 +111,11 @@ export class BackgroundKeeper implements RuntimeBackground {
   }
 
   async end(): Promise<void> {
+    this.holders = Math.max(0, this.holders - 1);
+    if (this.holders > 0) {
+      // A run finished, but the tunnel still needs the process alive.
+      return;
+    }
     if (!this.running || this.context === undefined) {
       return;
     }

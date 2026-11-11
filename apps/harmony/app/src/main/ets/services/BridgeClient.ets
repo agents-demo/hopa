@@ -17,8 +17,16 @@ class BridgeObservationBody {
   height: number = 0;
 }
 
+class BridgeTunnelBody {
+  ready: boolean = false;
+  host: boolean = false;
+  phone: boolean = false;
+}
+
 class BridgeOkBody {
   ok: boolean = false;
+  linked: boolean = false;
+  tunnel: BridgeTunnelBody | null = null;
 }
 
 class BridgeLaunchBody {
@@ -89,6 +97,9 @@ export class BridgeClient {
   private height: number = 0;
   private lastError: string = '';
   private foreground: string = '';
+  private tunnelReady: boolean = false;
+  private tunnelReported: boolean = false;
+  private relayLinked: boolean = false;
   /** 'phone' or '2in1': which device this client wants when one port serves both. */
   private role: string = '';
 
@@ -149,6 +160,20 @@ export class BridgeClient {
 
   lastFailure(): string {
     return this.lastError;
+  }
+
+  /** True only when the relay says a phone tunnel is paired, not merely up. */
+  tunnelIsReady(): boolean {
+    return this.tunnelReady;
+  }
+
+  /** False for a local bridge or an older relay that has no tunnel block. */
+  tunnelIsReported(): boolean {
+    return this.tunnelReported;
+  }
+
+  relayIsLinked(): boolean {
+    return this.relayLinked;
   }
 
   private async request(path: string, payload: string, method: http.RequestMethod): Promise<HttpAnswer> {
@@ -278,6 +303,9 @@ export class BridgeClient {
         const raw: string = await this.get('/health');
         const parsed = JSON.parse(raw) as BridgeOkBody;
         this.lastError = parsed.ok ? '' : 'bridge said not ok';
+        this.relayLinked = parsed.linked === true;
+        this.tunnelReported = parsed.tunnel !== null && parsed.tunnel !== undefined;
+        this.tunnelReady = this.tunnelReported && parsed.tunnel !== null && parsed.tunnel.ready === true;
         return parsed.ok;
       } catch (error) {
         this.lastError = `${(error as Error).message}`;
