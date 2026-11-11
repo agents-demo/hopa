@@ -172,6 +172,20 @@ def build_parser() -> argparse.ArgumentParser:
     link.add_argument("--poll-seconds", type=float, default=25.0)
     link.add_argument("--local-timeout", type=float, default=120.0)
 
+    tunnel = sub.add_parser(
+        "hdc-tunnel",
+        help="expose a local hdc TCP port through the relay (cable-free control)",
+    )
+    tunnel.add_argument("--relay", default=os.environ.get("HOPA_RELAY_URL", ""))
+    tunnel.add_argument("--link-token", default=os.environ.get("HOPA_LINK_TOKEN", ""))
+    tunnel.add_argument(
+        "--listen",
+        default="127.0.0.1:5556",
+        help="local TCP address hdc connects to (default 127.0.0.1:5556)",
+    )
+    tunnel.add_argument("--session", default="default")
+    tunnel.add_argument("--retry-seconds", type=float, default=5.0)
+
     return parser
 
 
@@ -447,9 +461,18 @@ def main(argv: list[str] | None = None) -> int:
         pass
     parser = build_parser()
     args = parser.parse_args(argv)
-    if args.command in ("relay", "cloud-link"):
-        # These run where hdc does not exist (a web service) or drive another
+    if args.command in ("relay", "cloud-link", "hdc-tunnel"):
+        # These run where hdc does not exist (Render) or drive another
         # process, so they must not build a Device first.
+        if args.command == "hdc-tunnel":
+            from .tunnel import serve_hdc_tunnel
+
+            try:
+                return serve_hdc_tunnel(args)
+            except ValueError as exc:
+                print(f"pc-agent: {exc}", file=sys.stderr)
+                return 2
+
         from .relay import RelayError, serve_link, serve_relay
 
         runner = serve_relay if args.command == "relay" else serve_link

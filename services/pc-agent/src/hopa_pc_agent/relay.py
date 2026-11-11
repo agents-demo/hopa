@@ -43,6 +43,10 @@ from collections import deque
 from dataclasses import dataclass, field
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
+from urllib.parse import parse_qs, urlsplit
+
+from .tunnel import TunnelRegistry
+from .ws import WebSocketError, server_handshake
 
 MAX_BODY_BYTES = 32 * 1024 * 1024
 MAX_QUEUED = 200
@@ -114,6 +118,7 @@ class Relay:
         self._pollers = 0
         self._pairs: deque[float] = deque(maxlen=20)
         self._refreshes: deque[float] = deque(maxlen=20)
+        self.tunnels = TunnelRegistry()
 
     # -- auth ---------------------------------------------------------------
 
@@ -230,6 +235,10 @@ class Relay:
 
 class _Handler(BaseHTTPRequestHandler):
     server_version = "hopa-relay/0.1"
+    # 101 Switching Protocols is an HTTP/1.1 response. Without this the
+    # BaseHTTPRequestHandler writes an HTTP/1.0 status line and some clients
+    # refuse the upgrade.
+    protocol_version = "HTTP/1.1"
 
     def log_message(self, format: str, *args: Any) -> None:  # noqa: A002
         # Path only: never log tokens or bodies.
@@ -275,9 +284,78 @@ class _Handler(BaseHTTPRequestHandler):
     def _send_json(self, status: int, payload: dict[str, Any]) -> None:
         self._send(status, json.dumps(payload).encode("utf-8"))
 
+    # -- the binary tunnel --------------------------------------------------
+
+    def _handle_tunnel(self) -> None:
+        # Every tunnel attempt owns the connection: a rejected upgrade must not
+        # fall back to HTTP keep-alive, or the handler blocks reading a request
+        # that will never come.
+        self.close_connection = True
+        parts = urlsplit(self.path)
+        query = parse_qs(parts.query)
+        role = (query.get("role", ["host"])[0] or "host").lower()
+        if role not in ("host", "phone"):
+            self._send_json(400, {"error": "role must be host or phone"})
+            return
+        session = (query.get("session", ["default"])[0] or "default").strip()
+        if (
+            not session
+            or len(session) > 64
+            or not all(char.isalnum() or char in "-_" for char in session)
+        ):
+            self._send_json(400, {"error": "bad session id"})
+            return
+        # A browser cannot set an Authorization header on a WebSocket, so the
+        # token may also arrive in the query. It is never logged: log_message
+        # strips the query string.
+        presented = self._presented() or query.get("token", [""])[0]
+        allowed = (
+            self.relay.link_authorized(presented)
+            if role == "host"
+            else self.relay.phone_authorized(presented)
+        )
+        if not allowed:
+            self._send_json(401, {"error": "unauthorized"})
+            return
+        if self.headers.get("Upgrade", "").lower() != "websocket":
+            self._send_json(426, {"error": "upgrade required"})
+            return
+        try:
+            ws = server_handshake(self)
+        except WebSocketError as exc:
+            self._send_json(400, {"error": str(exc)})
+            return
+        try:
+            self.relay.tunnels.serve(role, session, ws)
+        finally:
+            ws.close()
+
     # -- routes -------------------------------------------------------------
 
     def do_GET(self) -> None:  # noqa: N802
+        if self.path == "/tunnel":
+            self._handle_tunnel()
+            return
+        if self.path.startswith("/tunnel?"):
+            self._handle_tunnel()
+            return
+        if self.path == "/":
+            # A browser or an uptime probe should not need a token just to see
+            # that the relay is alive; /health is still the machine answer.
+            age = self.relay.linked_age()
+            self._send_json(
+                200,
+                {
+                    "ok": True,
+                    "role": "relay",
+                    "linked": age < 60.0,
+                    "health": "/health",
+                },
+            )
+            return
+        if self.path == "/favicon.ico":
+            self._send(204, b"")
+            return
         if self.path == "/health":
             age = self.relay.linked_age()
             queued, waiting = self.relay.counts()
@@ -290,6 +368,7 @@ class _Handler(BaseHTTPRequestHandler):
                     "link_age_seconds": None if age == float("inf") else round(age, 1),
                     "queued": queued,
                     "waiting": waiting,
+                    "tunnel": self.relay.tunnels.status(),
                 },
             )
             return
@@ -297,6 +376,18 @@ class _Handler(BaseHTTPRequestHandler):
             self._handle_link_get()
             return
         self._forward()
+
+    def do_HEAD(self) -> None:  # noqa: N802
+        # Browsers and uptime probes ask for / before anything else.
+        if self.path in ("/", "/health"):
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
+        self.send_response(404)
+        self.send_header("Content-Length", "0")
+        self.end_headers()
 
     def do_POST(self) -> None:  # noqa: N802
         if self.path == "/pair":
