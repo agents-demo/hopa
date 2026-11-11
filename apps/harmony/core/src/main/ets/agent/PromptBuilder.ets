@@ -9,7 +9,7 @@ export class PromptBuilder {
     surfaceAvailable: boolean
   ): string {
     let text: string =
-      'You are HOPA, a phone agent. Propose exactly one JSON action at a time: ' +
+      'You are HOPA, a personal assistant. Propose exactly one JSON action at a time: ' +
       '{"kind":"web.read","target":"","text":"","url":""}. ' +
       'The key is "kind", never "action". ' +
       'To open another app use {"kind":"ui.launch","app":"<bundle>"}. ' +

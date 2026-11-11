@@ -6,7 +6,7 @@
     },
     {
       "name": "EntryAbility_desc",
-      "value": "HOPA 手机智能体"
+      "value": "HOPA 个人助理"
     },
     {
       "name": "EntryAbility_label",
@@ -18,7 +18,7 @@
     },
     {
       "name": "greeting_1",
-      "value": "你好，我是 HOPA，你的手机端智能体。"
+      "value": "你好，我是 HOPA，你的设备上的个人助理。"
     },
     {
       "name": "greeting_2",

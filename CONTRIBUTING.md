@@ -49,6 +49,26 @@ The generated `AppCatalog.ets` is committed; CI fails if it is stale.
 - State the phase and the checkboxes it moves.
 - Add or update tests.
 - Update the docs that describe the changed contract.
+
+### The front door moves with the change
+
+`README.md`, its banner (`docs/media/banner-*.svg`) and `CHANGELOG.md` are part
+of the change, not a follow-up task:
+
+- A new capability, mode or setting gets its line in the README where a reader
+  would look for it.
+- A changed promise, tagline or product name changes the banner **and** the
+  README hero in the same commit.
+- A removed or renamed feature loses its README line; nothing left saying “soon”
+  about something that already shipped, or “works” about something that does not.
+- A screenshot that shows an older UI is replaced or deleted, never kept as
+  decoration.
+- When the banner is re-rendered, keep a proof image (for example
+  `tools/shots/banner-duo.png`) so the change can be reviewed without opening an
+  editor.
+
+A PR that changes behaviour without touching the front door is incomplete.
+
 - Do not include secrets, keys, screenshots of real accounts or patient data.
 
 Use the PR template in `.github/PULL_REQUEST_TEMPLATE.md`.

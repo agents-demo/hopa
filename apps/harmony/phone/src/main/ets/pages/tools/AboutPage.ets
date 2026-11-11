@@ -6,7 +6,7 @@ export struct AboutPage {
       Text('HOPA')
         .fontSize(26)
         .fontWeight(FontWeight.Bold)
-      Text('HarmonyOS phone agent.')
+      Text('HarmonyOS personal assistant.')
         .fontSize(13)
         .fontColor($r('app.color.text_secondary'))
       Text('Version 0.1.0')

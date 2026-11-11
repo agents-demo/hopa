@@ -1,0 +1,192 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 520" role="img" aria-label="HOPA — Say it. Done. You say it, HOPA does it inside your apps, and you see it done — all in the same HOPA chat.">
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FCFAF5"/>
+      <stop offset="0.55" stop-color="#F7F2E9"/>
+      <stop offset="1" stop-color="#F0E8DB"/>
+    </linearGradient>
+    <radialGradient id="warmGlow" cx="0.16" cy="0.42" r="0.6">
+      <stop offset="0" stop-color="#F4D4C2" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#F4D4C2" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="coralGlow" cx="0.62" cy="0.55" r="0.45">
+      <stop offset="0" stop-color="#F7C9AE" stop-opacity="0.4"/>
+      <stop offset="1" stop-color="#F7C9AE" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="coral" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F08A5B"/>
+      <stop offset="1" stop-color="#E8703A"/>
+    </linearGradient>
+    <linearGradient id="screen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#FAF7F1"/>
+    </linearGradient>
+    <pattern id="dots" width="26" height="26" patternUnits="userSpaceOnUse">
+      <circle cx="1.4" cy="1.4" r="1.4" fill="#B8A58E" opacity="0.16"/>
+    </pattern>
+    <filter id="soft" x="-35%" y="-35%" width="170%" height="170%">
+      <feDropShadow dx="0" dy="18" stdDeviation="20" flood-color="#6E4E36" flood-opacity="0.24"/>
+    </filter>
+    <filter id="mascotShadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#6E4E36" flood-opacity="0.2"/>
+    </filter>
+    <filter id="winShadow" x="-25%" y="-30%" width="150%" height="160%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#6E4E36" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="520" fill="url(#paper)"/>
+  <rect width="1600" height="520" fill="url(#dots)" opacity="0.55"/>
+  <rect width="1600" height="520" fill="url(#warmGlow)"/>
+  <rect width="1600" height="520" fill="url(#coralGlow)"/>
+
+  <!-- Copy -->
+  <g font-family="'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif">
+    <text x="216" y="176" font-size="104" font-weight="700" fill="#1C1B18" letter-spacing="-3">HOPA</text>
+    <text x="138" y="212" font-size="17" font-weight="600" fill="#8B8375" letter-spacing="0" textLength="358" lengthAdjust="spacing">HARMONYOS PERSONAL ASSISTANT</text>
+    <text x="140" y="292" font-size="50" font-weight="600" fill="#1C1B18" letter-spacing="-1.4">Say it. Done.</text>
+    <text x="140" y="334" font-size="21" fill="#4A443A">It uses your apps for you.</text>
+  </g>
+  <g font-family="'Segoe UI', Arial, sans-serif">
+    <rect x="140" y="360" width="204" height="46" rx="23" fill="url(#coral)" filter="url(#mascotShadow)"/>
+    <text x="164" y="389" font-size="14" font-weight="600" fill="#FFFFFF">Watch it do it</text>
+    <path d="M 302 378 L 318 378 M 311 371 L 318 378 L 311 385" stroke="#FFFFFF" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- The character in the lockup, standing on the wordmark baseline -->
+  <ellipse cx="165" cy="182" rx="30" ry="4.5" fill="#6E4E36" opacity="0.15"/>
+  <g transform="translate(109.2 78) scale(0.22)" filter="url(#mascotShadow)">
+    <path d="M 350 226 L 412 164" stroke="url(#coral)" stroke-width="32" stroke-linecap="round" fill="none"/>
+    <rect x="180" y="422" width="44" height="44" rx="14" fill="url(#coral)"/>
+    <rect x="266" y="422" width="44" height="44" rx="14" fill="url(#coral)"/>
+    <rect x="140" y="88" width="230" height="336" rx="72" fill="url(#coral)"/>
+    <rect x="173" y="130" width="164" height="232" rx="42" fill="#FFF9F0"/>
+    <rect x="212" y="204" width="26" height="58" rx="13" fill="#1C1B18"/>
+    <rect x="280" y="204" width="26" height="58" rx="13" fill="#1C1B18"/>
+    <path d="M 236 292 Q 261 312 286 292" stroke="#1C1B18" stroke-width="13" stroke-linecap="round" fill="none"/>
+  </g>
+
+  <!-- Frame 1 — HOPA -->
+  <g transform="translate(673 92) rotate(-4 135 200)">
+   <g font-family="'Segoe UI', Arial, sans-serif">
+     <circle cx="105.0" cy="-25.5" r="11" fill="url(#coral)"/>
+     <text x="105.0" y="-21" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF">1</text>
+     <text x="125.0" y="-22" font-size="14" font-weight="600" fill="#1C1B18">You say it</text>
+   </g>
+   <g filter="url(#soft)">
+    <rect width="270" height="400" rx="36" fill="#FFFFFF" stroke="#E3DACB" stroke-width="2"/>
+    <rect x="12" y="14" width="246" height="372" rx="26" fill="url(#screen)"/>
+    <rect x="104" y="6" width="62" height="7" rx="3.5" fill="#CFC5B6"/>
+    <g font-family="'Segoe UI', Arial, sans-serif">
+      <text x="26" y="44" font-size="9" fill="#8B8375">9:41</text>
+      <rect x="22" y="53" width="22" height="22" rx="6" fill="url(#coral)"/>
+      <rect x="25.5" y="56.5" width="15" height="15" rx="4.5" fill="#FFF9F0"/>
+      <rect x="28.5" y="60" width="3.4" height="6.5" rx="1.7" fill="#1C1B18"/>
+      <rect x="34.1" y="60" width="3.4" height="6.5" rx="1.7" fill="#1C1B18"/>
+      <path d="M 29.5 69.5 Q 33 71.5 36.5 69.5" stroke="#1C1B18" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+      <text x="50" y="70" font-size="11" font-weight="700" fill="#1C1B18">HOPA</text>
+      <rect x="58" y="86" width="176" height="52" rx="14" fill="url(#coral)"/>
+      <text x="72" y="106" font-size="10.5" font-weight="600" fill="#FFFFFF">Tell Alice I’m running</text>
+      <text x="72" y="122" font-size="10.5" font-weight="600" fill="#FFFFFF">10 minutes late.</text>
+      <rect x="26" y="150" width="150" height="28" rx="14" fill="#F1ECE2"/>
+      <text x="38" y="168.5" font-size="9.5" fill="#1C1B18">On it — Alice on WhatsApp.</text>
+      <text x="26" y="200" font-size="8" fill="#8B8375">HOPA works in the background</text>
+      <rect x="26" y="330" width="218" height="40" rx="20" fill="#FFFFFF" stroke="#EDE4D6"/>
+      <text x="42" y="355" font-size="9.5" fill="#B9B0A2">Ask HOPA…</text>
+    </g></g>
+  </g>
+
+  <!-- Frame 2 — still HOPA; the app is a window docked inside the chat -->
+  <g transform="translate(933 92)">
+   <g font-family="'Segoe UI', Arial, sans-serif">
+     <circle cx="36.5" cy="-25.5" r="11" fill="url(#coral)"/>
+     <text x="36.5" y="-21" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF">2</text>
+     <text x="56.5" y="-22" font-size="14" font-weight="600" fill="#1C1B18">HOPA does it inside your apps</text>
+   </g>
+   <g filter="url(#soft)">
+    <rect width="270" height="400" rx="36" fill="#FFFFFF" stroke="#E3DACB" stroke-width="2"/>
+    <rect x="12" y="14" width="246" height="372" rx="26" fill="url(#screen)"/>
+    <rect x="104" y="6" width="62" height="7" rx="3.5" fill="#CFC5B6"/>
+    <g font-family="'Segoe UI', Arial, sans-serif">
+      <text x="26" y="44" font-size="9" fill="#8B8375">10:41</text>
+      <rect x="22" y="53" width="22" height="22" rx="6" fill="url(#coral)"/>
+      <rect x="25.5" y="56.5" width="15" height="15" rx="4.5" fill="#FFF9F0"/>
+      <rect x="28.5" y="60" width="3.4" height="6.5" rx="1.7" fill="#1C1B18"/>
+      <rect x="34.1" y="60" width="3.4" height="6.5" rx="1.7" fill="#1C1B18"/>
+      <path d="M 29.5 69.5 Q 33 71.5 36.5 69.5" stroke="#1C1B18" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+      <text x="50" y="70" font-size="11" font-weight="700" fill="#1C1B18">HOPA</text>
+
+      <rect x="58" y="86" width="176" height="52" rx="14" fill="url(#coral)"/>
+      <text x="72" y="106" font-size="10.5" font-weight="600" fill="#FFFFFF">Tell Alice I’m running</text>
+      <text x="72" y="122" font-size="10.5" font-weight="600" fill="#FFFFFF">10 minutes late.</text>
+
+      <rect x="20" y="146" width="206" height="44" rx="13" fill="#FBE9DC"/>
+      <text x="32" y="162" font-size="9" fill="#5E574C">Writing your reply in</text>
+      <text x="32" y="176" font-size="9" font-weight="600" fill="#1C1B18">WhatsApp — for Alice.</text>
+
+      <g filter="url(#winShadow)">
+        <rect x="96" y="198" width="156" height="108" rx="10" fill="#FFFFFF" stroke="#DED4C3" stroke-width="1.2"/>
+        <path d="M 96 208 Q 96 198 106 198 L 242 198 Q 252 198 252 208 L 252 214 L 96 214 Z" fill="#F6F1E8"/>
+      </g>
+      <circle cx="107" cy="206" r="3" fill="#2E9E6B"/>
+      <text x="115" y="209" font-size="7.5" font-weight="600" fill="#1C1B18">WhatsApp · Alice</text>
+
+      <rect x="104" y="222" width="92" height="20" rx="8" fill="#F1ECE2"/>
+      <text x="112" y="236" font-size="7.5" fill="#1C1B18">Where are you?</text>
+
+      <rect x="104" y="248" width="140" height="22" rx="8" fill="#FBE9DC"/>
+      <text x="110" y="263" font-size="7.5" fill="#1C1B18">Running 10 minutes late.</text>
+
+      <text x="104" y="282" font-size="6.5" fill="#8B8375">draft — not sent</text>
+      <circle cx="106" cy="294" r="2" fill="#E8703A"/>
+      <circle cx="113" cy="294" r="2" fill="#E8703A" opacity="0.7"/>
+      <circle cx="120" cy="294" r="2" fill="#E8703A" opacity="0.4"/>
+      <text x="130" y="297" font-size="7" fill="#8B8375">HOPA is typing in WhatsApp</text>
+
+      <text x="24" y="322" font-size="7.5" fill="#8B8375">You are still in HOPA — WhatsApp is just a window.</text>
+
+      <rect x="26" y="330" width="218" height="40" rx="20" fill="#FFFFFF" stroke="#EDE4D6"/>
+      <text x="42" y="355" font-size="9.5" fill="#B9B0A2">Ask HOPA…</text>
+    </g>
+   </g>
+  </g>
+
+  <!-- Frame 3 — the receipt, in the same chat -->
+  <g transform="translate(1203 92) rotate(4 135 200)">
+   <g font-family="'Segoe UI', Arial, sans-serif">
+     <circle cx="68.0" cy="-25.5" r="11" fill="url(#coral)"/>
+     <text x="68.0" y="-21" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF">3</text>
+     <text x="88.0" y="-22" font-size="14" font-weight="600" fill="#1C1B18">You see it done</text>
+   </g>
+   <g filter="url(#soft)">
+    <rect width="270" height="400" rx="36" fill="#FFFFFF" stroke="#E3DACB" stroke-width="2"/>
+    <rect x="12" y="14" width="246" height="372" rx="26" fill="url(#screen)"/>
+    <rect x="104" y="6" width="62" height="7" rx="3.5" fill="#CFC5B6"/>
+    <g font-family="'Segoe UI', Arial, sans-serif">
+      <text x="26" y="44" font-size="9" fill="#8B8375">10:42</text>
+      <rect x="22" y="53" width="22" height="22" rx="6" fill="url(#coral)"/>
+      <rect x="25.5" y="56.5" width="15" height="15" rx="4.5" fill="#FFF9F0"/>
+      <rect x="28.5" y="60" width="3.4" height="6.5" rx="1.7" fill="#1C1B18"/>
+      <rect x="34.1" y="60" width="3.4" height="6.5" rx="1.7" fill="#1C1B18"/>
+      <path d="M 29.5 69.5 Q 33 71.5 36.5 69.5" stroke="#1C1B18" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+      <text x="50" y="70" font-size="11" font-weight="700" fill="#1C1B18">HOPA</text>
+
+      <rect x="58" y="86" width="176" height="46" rx="14" fill="url(#coral)"/>
+      <text x="72" y="105" font-size="9.5" font-weight="600" fill="#FFFFFF">Tell Alice I’m running</text>
+      <text x="72" y="120" font-size="9.5" font-weight="600" fill="#FFFFFF">10 minutes late.</text>
+
+      <rect x="24" y="146" width="222" height="92" rx="14" fill="#FFFFFF" stroke="#EDE4D6"/>
+      <circle cx="50" cy="176" r="15" fill="url(#coral)"/>
+      <path d="M 43 176 L 48 181 L 58 170" stroke="#FFFFFF" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="74" y="172" font-size="13" font-weight="700" fill="#1C1B18">Sent to Alice</text>
+      <text x="74" y="188" font-size="8.5" fill="#8B8375">via WhatsApp · 1 step</text>
+      <text x="74" y="203" font-size="8" fill="#8B8375">10:42 · done in the background</text>
+
+      <text x="24" y="262" font-size="8" fill="#8B8375">The receipt stays in your chat.</text>
+
+      <rect x="24" y="344" width="220" height="38" rx="19" fill="#FFFFFF" stroke="#EDE4D6"/>
+      <text x="40" y="367" font-size="9.5" fill="#B9B0A2">Ask HOPA…</text>
+    </g></g>
+  </g>
+
+</svg>

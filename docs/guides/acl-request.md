@@ -26,7 +26,7 @@ Accept the privacy notes, select
 
 ## Usage scenario (copy this)
 
-HOPA is a user-invoked phone agent. When the user asks it to operate an
+HOPA is a user-invoked personal assistant. When the user asks it to operate an
 installed app - for example "open Weibo and read the latest post" or "send
 Alice the message I dictated" - HOPA's AccessibilityExtensionAbility reads the
 accessibility tree of the currently visible screen and performs a tap, type,
@@ -43,7 +43,7 @@ user-selected model endpoint.
 HarmonyOS gives third-party apps no other on-device way to read and operate
 another app's UI. Screen capture plus input injection is not available to
 ordinary apps, and the PC bridge requires a computer, which defeats the purpose
-of a phone agent. The accessibility extension is the only transparent,
+of a personal assistant. The accessibility extension is the only transparent,
 user-enabled mechanism: the user turns it on in Settings, sees HOPA's actions,
 and can revoke it at any time. The app is phone and tablet, API 22+, and the
 permission is used only when the user asks HOPA to operate an app.

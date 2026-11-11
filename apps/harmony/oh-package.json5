@@ -1,6 +1,6 @@
 {
   "modelVersion": "6.1.1",
-  "description": "HOPA - HarmonyOS On-device Phone Agent",
+  "description": "HOPA - HarmonyOS Personal Assistant",
   "dependencies": {},
   "devDependencies": {}
 }

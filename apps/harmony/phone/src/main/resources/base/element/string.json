@@ -6,7 +6,7 @@
     },
     {
       "name": "EntryAbility_desc",
-      "value": "HOPA phone agent"
+      "value": "HOPA personal assistant"
     },
     {
       "name": "mic_reason",
@@ -26,7 +26,7 @@
     },
     {
       "name": "greeting_1",
-      "value": "Hi - I am HOPA, your on-device phone agent."
+      "value": "Hi - I am HOPA, your on-device personal assistant."
     },
     {
       "name": "greeting_2",

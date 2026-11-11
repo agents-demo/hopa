@@ -6,7 +6,7 @@ export struct McpServersPage {
       Text('On this phone')
         .fontSize(16)
         .fontWeight(FontWeight.Bold)
-      Text('This build does not run an MCP server on the device. The app is a client of the PC agent, not a server.')
+      Text('This build does not run an MCP server on the device. The app is a client of the PC companion, not a server.')
         .fontSize(12)
         .fontColor($r('app.color.text_secondary'))
       Text('On the computer')

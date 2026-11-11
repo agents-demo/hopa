@@ -1,6 +1,6 @@
 # Abuse, refusal and content policy
 
-HOPA is a general-purpose phone agent. It must refuse clear abuse and hand
+HOPA is a general-purpose personal assistant. It must refuse clear abuse and hand
 professional or verification work back to the user.
 
 ## Disallowed tasks

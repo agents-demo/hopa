@@ -107,6 +107,18 @@ All notable changes are recorded here. Versions follow `docs/versioning.md`.
 
 ### Changed
 
+- The product is named for what it is: **HOPA — the HarmonyOS Personal
+  Assistant**. Every string a person reads says "assistant" — the phone's ten
+  locales, About, the welcome tour, the recap card and the system prompt — and
+  "agent", "phone" and "on-device" are gone from the product's own description.
+  The code keeps its `agent` names; only the claim changed.
+- The front page is the banner plus one promise. `docs/media/banner-2026-duo.svg`
+  shows a single request in three frames — **You say it**, **HOPA does it inside
+  your apps**, **You see it done** — where the middle frame is still HOPA with the
+  other app docked as a window inside the chat, its draft marked *not sent* until
+  it is. The README leads with what a person wants (their apps, their money) and
+  keeps the two devices as the later payoff. `CONTRIBUTING.md` and the PR
+  template now require the banner and the README to move in the same change.
 - The composer is inset by padding on a wrapper `Row` and fills the rest with
   `layoutWeight(1)`, so its edges sit exactly on the message column (left under
   the HOPA mark, right where the answer and the user bubble end) at every

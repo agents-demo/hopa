@@ -59,7 +59,7 @@ export struct RecapCard {
           .maxLines(4)
       }
       Divider().color('#141C1B18')
-      Text('HarmonyOS On-device Phone Agent')
+      Text('HarmonyOS Personal Assistant')
         .fontSize(9)
         .fontColor('#6B6A63')
         .letterSpacing(0.4)

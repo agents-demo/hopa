@@ -72,9 +72,9 @@ export class Character {
       return 'What are we doing today?';
     }
     if (Character.tone === 'direct') {
-      return 'Your agent. Ask.';
+      return 'Your assistant. Ask.';
     }
-    return 'Your agent. Ask for anything.';
+    return 'Your assistant. Ask for anything.';
   }
 
   /**

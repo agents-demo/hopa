@@ -14,7 +14,7 @@ export struct WelcomePage {
         .fontSize(26)
         .fontWeight(FontWeight.Bold)
         .fontColor($r('app.color.text_primary'))
-      Text('A phone agent that can open apps, read the screen and tap for you.')
+      Text('A personal assistant that can open apps, read the screen and tap for you.')
         .fontSize(13)
         .lineHeight(19)
         .fontColor($r('app.color.text_secondary'))

@@ -304,7 +304,7 @@ export struct SocialHome {
 
       Column({ space: 6 }) {
         Row({ space: 6 }) {
-          Text('THE AGENT')
+          Text('THE ASSISTANT')
             .fontSize(9)
             .fontWeight(FontWeight.Bold)
             .fontColor(this.accent())
