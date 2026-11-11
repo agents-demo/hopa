@@ -111,6 +111,21 @@ def test_health_reports_the_link(relay_server):
     assert health["link_age_seconds"] is not None
 
 
+def test_root_and_head_are_public(relay_server):
+    _relay, server = relay_server
+    base = f"http://127.0.0.1:{server.port}"
+
+    status, body = _call(f"{base}/")
+    assert status == 200
+    assert body["role"] == "relay"
+    assert body["health"] == "/health"
+
+    for path in ("/", "/health"):
+        request = urllib.request.Request(f"{base}{path}", method="HEAD")
+        with urllib.request.urlopen(request, timeout=5) as response:
+            assert response.status == 200
+
+
 def test_pair_and_refresh(relay_server):
     relay, server = relay_server
     base = f"http://127.0.0.1:{server.port}"

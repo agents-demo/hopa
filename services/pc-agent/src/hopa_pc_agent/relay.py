@@ -278,6 +278,23 @@ class _Handler(BaseHTTPRequestHandler):
     # -- routes -------------------------------------------------------------
 
     def do_GET(self) -> None:  # noqa: N802
+        if self.path == "/":
+            # A browser or an uptime probe should not need a token just to see
+            # that the relay is alive; /health is still the machine answer.
+            age = self.relay.linked_age()
+            self._send_json(
+                200,
+                {
+                    "ok": True,
+                    "role": "relay",
+                    "linked": age < 60.0,
+                    "health": "/health",
+                },
+            )
+            return
+        if self.path == "/favicon.ico":
+            self._send(204, b"")
+            return
         if self.path == "/health":
             age = self.relay.linked_age()
             queued, waiting = self.relay.counts()
@@ -297,6 +314,18 @@ class _Handler(BaseHTTPRequestHandler):
             self._handle_link_get()
             return
         self._forward()
+
+    def do_HEAD(self) -> None:  # noqa: N802
+        # Browsers and uptime probes ask for / before anything else.
+        if self.path in ("/", "/health"):
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
+        self.send_response(404)
+        self.send_header("Content-Length", "0")
+        self.end_headers()
 
     def do_POST(self) -> None:  # noqa: N802
         if self.path == "/pair":
