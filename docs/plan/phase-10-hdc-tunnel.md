@@ -108,7 +108,7 @@ builds that reject the pair.
 
 - [x] The bridge accepts the tunnel target without changing its HTTP endpoints (evidence: bridge --target 127.0.0.1:5556 served /observe and /screenshot through the relay)
 - [x] The app's bridge health distinguishes "relay reachable" from "device reachable" (evidence: BridgeClient parses /health.tunnel.ready; Settings shows Device ready vs Relay only)
-- [x] A dropped tunnel is retried with backoff and does not wedge the device lock (evidence: TunnelClient 2->30 s, HdcTunnel 5->30 s, hdc.py re-runs tconn; cable-free and burst runs)
+- [x] A dropped tunnel is retried with backoff and does not wedge the device lock (evidence: TunnelClient 2->30 s, HdcTunnel 5->30 s, hdc.py re-runs tconn and resets a dead session; unit tests in tests/test_hdc.py)
 - [x] `HOPA_DEVICE=127.0.0.1:5556` is documented as the tunnel target (evidence: docs/guides/pc-bridge.md#hdc-over-the-relay-cable-free-control; HOPA_BRIDGE_TARGET is the preferred switch)
 - [x] The USB target and the tunnel target can be switched with one setting change (evidence: .env HOPA_BRIDGE_TARGET; run-agent.ps1 picks it up)
 
