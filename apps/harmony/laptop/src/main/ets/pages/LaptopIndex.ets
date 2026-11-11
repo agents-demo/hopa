@@ -335,15 +335,6 @@ struct LaptopIndex {
     }
   }
 
-  private async retryRun(): Promise<void> {
-    await this.chat.retry();
-    this.turns = this.chat.turns.slice();
-    this.lastQuestion = this.chat.lastQuestion;
-    this.lastLatency = this.chat.lastLatencyMs;
-    this.lastTokens = this.chat.lastTokens;
-    this.busy = this.chat.busy;
-  }
-
   private copyText(text: string): void {
     try {
       const data = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, text);
@@ -508,9 +499,17 @@ struct LaptopIndex {
     return rows;
   }
 
-  /** Step chips survive a cross-device sync; run records do not. */
-  private lastAnswerSteps(): string[] {
+  private isLastAnswer(turn: LaptopTurn): boolean {
     for (let i = this.turns.length - 1; i >= 0; i--) {
+      if (this.turns[i].role === 'assistant') {
+        return this.turns[i].id === turn.id;
+      }
+    }
+    return false;
+  }
+
+  /** Step chips survive a cross-device sync; run records do not. */
+  private lastAnswerSteps(): string[] {    for (let i = this.turns.length - 1; i >= 0; i--) {
       const turn: LaptopTurn = this.turns[i];
       if (turn.role === 'assistant') {
         if (turn.steps.length > 0) {
@@ -533,15 +532,6 @@ struct LaptopIndex {
       }
     }
     return undefined;
-  }
-
-  private copyAnswer(): void {
-    for (let i = this.turns.length - 1; i >= 0; i--) {
-      if (this.turns[i].role === 'assistant') {
-        this.copyText(this.cleanRemote(this.turns[i].text));
-        return;
-      }
-    }
   }
 
   private undoLastRun(): void {
@@ -2449,9 +2439,21 @@ struct LaptopIndex {
               .width('100%')
               .copyOption(CopyOptions.LocalDevice)
           }
-          Text('HOPA on this laptop')
-            .fontSize(9.5)
-            .fontColor($r('app.color.text_hint'))
+          Row({ space: 10 }) {
+            Text('HOPA on this laptop')
+              .fontSize(9.5)
+              .fontColor($r('app.color.text_hint'))
+            if (this.isLastAnswer(turn)) {
+              Text('Copy')
+                .fontSize(9.5)
+                .fontColor($r('app.color.text_hint'))
+                .hoverEffect(HoverEffect.Highlight)
+                .onClick(() => {
+                  this.copyText(this.cleanRemote(turn.text));
+                })
+            }
+          }
+          .alignItems(VerticalAlign.Center)
         }
         .layoutWeight(1)
         .alignItems(HorizontalAlign.Start)
@@ -2956,6 +2958,12 @@ struct LaptopIndex {
             .onChange((value: string) => {
               this.draft = value;
             })
+            // Layered on purpose: the key handler covers a physical keyboard
+            // (with Shift for a line break); onSubmit covers Enter arriving
+            // through the input method, which some 2-in-1 builds do instead.
+            .onSubmit(() => {
+              this.send();
+            })
             .onKeyEvent((event: KeyEvent) => {
               if (this.handleShortcut(event)) {
                 return true;
@@ -3054,8 +3062,6 @@ struct LaptopIndex {
           contextTitle: this.paneContext(),
           history: this.paneHistory(),
           busy: this.busy,
-          hasAnswer: this.turns.length > 0 && this.turns[this.turns.length - 1].role === 'assistant',
-          canUndo: this.undoableRun() !== undefined,
           lastLatency: this.paneIsCurrent() ? this.lastLatency : 0,
           lastTokens: this.paneIsCurrent() ? this.lastTokens : 0,
           bridgeLive: this.bridgeLive,
@@ -3063,18 +3069,6 @@ struct LaptopIndex {
           approvalOpen: this.approvalOpen,
           approvalDetail: this.approvalDetail,
           approvalFrame: this.approvalFrame,
-          onCopy: () => {
-            this.copyAnswer();
-          },
-          onCopyRun: (text: string) => {
-            this.copyText(text);
-          },
-          onRetry: () => {
-            this.retryRun();
-          },
-          onUndo: () => {
-            this.undoLastRun();
-          },
           onOpenActivity: () => {
             this.view = 'activity';
           },

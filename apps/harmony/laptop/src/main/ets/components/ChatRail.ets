@@ -42,16 +42,10 @@ export struct ChatRail {
   /** Other runs in this conversation, newest first. */
   @Prop history: RailHistory[] = [];
   @Prop busy: boolean = false;
-  @Prop hasAnswer: boolean = false;
   @Prop approvalOpen: boolean = false;
   @Prop approvalDetail: string = '';
   /** The last frame the bridge captured before this step: evidence, not decoration. */
   @Prop approvalFrame: string = '';
-  @Prop canUndo: boolean = false;
-  onCopy: () => void = () => {};
-  onCopyRun: (text: string) => void = (text: string) => {};
-  onRetry: () => void = () => {};
-  onUndo: () => void = () => {};
   onOpenActivity: () => void = () => {};
   onAllow: () => void = () => {};
   onDeny: () => void = () => {};
@@ -66,20 +60,6 @@ export struct ChatRail {
       .fontWeight(FontWeight.Bold)
       .fontColor($r('app.color.text_hint'))
       .letterSpacing(0.8)
-  }
-
-  @Builder
-  Verb(label: string, action: () => void) {
-    // Ghost verbs: the filled surface belongs to consent, not to a copy link.
-    Text(label)
-      .fontSize(10.5)
-      .fontColor($r('app.color.text_secondary'))
-      .padding({ left: 6, right: 6, top: 3, bottom: 3 })
-      .borderRadius(6)
-      .hoverEffect(HoverEffect.Highlight)
-      .onClick(() => {
-        action();
-      })
   }
 
   private seconds(ms: number): string {
@@ -268,26 +248,7 @@ export struct ChatRail {
     return this.runs.length > 6 ? this.runs.slice(this.runs.length - 6) : this.runs;
   }
 
-  /** A plain-text receipt of the run, for pasting into a report or a ticket. */
-  private receipt(): string {
-    const lines: string[] = [];
-    let ms: number = 0;
-    let failed: number = 0;
-    for (const run of this.runs) {
-      ms += run.durationMs;
-      const ok: boolean = run.status === RunStatus.Executed;
-      if (!ok) {
-        failed += 1;
-      }
-      const detail: string = this.outcome(run).length > 0 ? this.outcome(run) : this.verb(run);
-      lines.push(`${ok ? '\u2713' : '\u2715'} ${detail} (${this.seconds(run.durationMs)})`);
-    }
-    const count: number = this.runs.length;
-    const head: string = failed > 0 ? `Failed at step ${this.firstFailure()}` : 'Succeeded';
-    const meta: string = `${count === 1 ? '1 step' : `${count} steps`} \u00b7 ${this.seconds(ms)}`;
-    return `${head} \u00b7 ${meta}\n${lines.join('\n')}`;
-  }
-
+  /** A plain-text receipt is gone with the verbs; the pane observes, it does not command. */
   @Builder
   StepRow(run: RunRecord, index: number) {
     Row({ space: 8 }) {
@@ -375,19 +336,6 @@ export struct ChatRail {
       Row({ space: 6 }) {
         this.Label(this.title())
         Blank()
-        if (!this.approvalOpen && !this.busy) {
-          if (this.runs.length > 0) {
-            this.Verb('Copy run', () => {
-              this.onCopyRun(this.receipt());
-            })
-          } else if (this.hasAnswer) {
-            this.Verb('Copy answer', this.onCopy)
-          }
-          this.Verb('Ask again', this.onRetry)
-          if (this.canUndo) {
-            this.Verb('Close app', this.onUndo)
-          }
-        }
       }
       .width('100%')
       .alignItems(VerticalAlign.Center)
