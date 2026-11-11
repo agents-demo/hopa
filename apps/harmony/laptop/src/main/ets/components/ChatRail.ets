@@ -156,7 +156,7 @@ export struct ChatRail {
     return 0;
   }
 
-  private statusText(): string {
+  private statusHead(): string {
     if (this.approvalOpen) {
       return 'Needs your OK';
     }
@@ -164,18 +164,28 @@ export struct ChatRail {
       return 'Working\u2026';
     }
     if (this.runs.length > 0) {
+      return this.firstFailure() > 0 ? `Failed at step ${this.firstFailure()}` : 'Succeeded';
+    }
+    if (this.steps.length > 0) {
+      return 'Ran on another device';
+    }
+    if (this.metrics && this.lastLatency > 0) {
+      return 'Answered';
+    }
+    return '';
+  }
+
+  private statusFacts(): string {
+    if (this.runs.length > 0) {
       const count: number = this.runs.length;
-      const steps: string = count === 1 ? '1 step' : `${count} steps`;
-      const failed: number = this.firstFailure();
-      const head: string = failed > 0 ? `Failed at step ${failed}` : 'Succeeded';
-      return `${head} \u00b7 ${steps} \u00b7 ${this.seconds(this.totalMs())}`;
+      return `${count === 1 ? '1 step' : `${count} steps`} \u00b7 ${this.seconds(this.totalMs())}`;
     }
     if (this.steps.length > 0) {
       const count: number = this.steps.length;
-      return `${count === 1 ? '1 step' : `${count} steps`} \u00b7 from the device that ran it`;
+      return `${count === 1 ? '1 step' : `${count} steps`} \u00b7 no local record`;
     }
     if (this.metrics && this.lastLatency > 0) {
-      return `Answered \u00b7 ${(this.lastLatency / 1000).toFixed(1)} s`;
+      return `${(this.lastLatency / 1000).toFixed(1)} s`;
     }
     return '';
   }
@@ -261,14 +271,14 @@ export struct ChatRail {
   StepRow(run: RunRecord, index: number) {
     Row({ space: 8 }) {
       Text(`${index + 1}`)
-        .fontSize(9)
+        .fontSize(9.5)
         .fontWeight(FontWeight.Medium)
-        .fontColor(this.dot(run.status))
-        .width(16)
-        .height(16)
+        .fontColor($r('app.color.on_primary'))
+        .width(18)
+        .height(18)
         .textAlign(TextAlign.Center)
-        .border({ width: 1, color: this.dot(run.status) })
-        .borderRadius(8)
+        .backgroundColor(this.dot(run.status))
+        .borderRadius(9)
       Column({ space: 1 }) {
         Text(this.verb(run))
           .fontSize(11.5)
@@ -313,14 +323,17 @@ export struct ChatRail {
   }
 
   @Builder
-  ChipRow(step: string) {
+  ChipRow(step: string, index: number) {
     Row({ space: 8 }) {
-      Row()
-        .width(6)
-        .height(6)
-        .borderRadius(3)
+      Text(`${index + 1}`)
+        .fontSize(9.5)
+        .fontWeight(FontWeight.Medium)
+        .fontColor($r('app.color.on_primary'))
+        .width(18)
+        .height(18)
+        .textAlign(TextAlign.Center)
         .backgroundColor(step.startsWith('\u2715') ? $r('app.color.danger') : $r('app.color.success'))
-        .margin({ top: 5 })
+        .borderRadius(9)
       Text(step.length > 2 ? step.substring(2) : step)
         .fontSize(11.5)
         .lineHeight(16)
@@ -354,34 +367,42 @@ export struct ChatRail {
       .width('100%')
       .alignItems(VerticalAlign.Center)
 
-      Row({ space: 6 }) {
-        Row()
-          .width(6)
-          .height(6)
-          .borderRadius(3)
-          .backgroundColor(this.statusTint())
-        Column({ space: 2 }) {
-          Text(this.statusText())
-            .fontSize(11)
-            .fontColor($r('app.color.text_secondary'))
-            .width('100%')
+      Column({ space: 3 }) {
+        Row({ space: 7 }) {
+          Row()
+            .width(7)
+            .height(7)
+            .borderRadius(4)
+            .backgroundColor(this.statusTint())
+          Text(this.statusHead())
+            .fontSize(15)
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.text_primary'))
+            .letterSpacing(-0.2)
             .maxLines(2)
-          if (this.contextTitle.length > 0) {
-            Text(`Earlier: ${this.contextTitle}`)
-              .fontSize(10)
-              .lineHeight(14)
-              .fontColor($r('app.color.text_hint'))
-              .maxLines(2)
-              .textOverflow({ overflow: TextOverflow.Ellipsis })
-              .width('100%')
-          }
+            .layoutWeight(1)
         }
-        .layoutWeight(1)
-        .alignItems(HorizontalAlign.Start)
+        .width('100%')
+        .alignItems(VerticalAlign.Center)
+        if (this.statusFacts().length > 0) {
+          Text(this.statusFacts())
+            .fontSize(10.5)
+            .fontColor($r('app.color.text_hint'))
+            .width('100%')
+        }
+        if (this.contextTitle.length > 0) {
+          Text(`Earlier: ${this.contextTitle}`)
+            .fontSize(10)
+            .lineHeight(14)
+            .fontColor($r('app.color.text_hint'))
+            .maxLines(2)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+            .width('100%')
+        }
       }
       .width('100%')
       .padding({ top: 6, bottom: 4 })
-      .alignItems(VerticalAlign.Top)
+      .alignItems(HorizontalAlign.Start)
 
       Column({ space: 10 }) {
         if (this.approvalOpen) {
@@ -433,12 +454,13 @@ export struct ChatRail {
             }
             .width('100%')
             .padding(10)
-            .backgroundColor($r('app.color.surface'))
+            .backgroundColor($r('app.color.surface_muted'))
             .borderRadius(10)
             .border({ width: 1, color: $r('app.color.primary_soft') })
             .alignItems(HorizontalAlign.Start)
           }
 
+          if (!this.busy) {
           if (this.runs.length > 0) {
             Column({ space: 2 }) {
               ForEach(this.shownRuns(), (run: RunRecord, index: number) => {
@@ -449,7 +471,7 @@ export struct ChatRail {
           } else if (this.steps.length > 0) {
             Column({ space: 6 }) {
               ForEach(this.steps, (step: string, index: number) => {
-                this.ChipRow(step)
+                this.ChipRow(step, index)
               }, (step: string, index: number) => `${index}-${step}`)
             }
             .width('100%')
@@ -530,6 +552,7 @@ export struct ChatRail {
             .width('100%')
             .padding({ top: 8 })
           }
+          }
         }
         .width('100%')
         .layoutWeight(1)
@@ -560,14 +583,14 @@ export struct ChatRail {
     .width('100%')
     .height('100%')
     .padding({ left: 14, right: 14, top: 12, bottom: 10 })
-    .backgroundColor($r('app.color.surface_alt'))
+    .backgroundColor($r('app.color.surface'))
     .border({ width: 1, color: $r('app.color.divider') })
     .borderRadius(14)
     .alignItems(HorizontalAlign.Start)
     }
     .width(258)
     .height('100%')
-    .padding({ left: 10, right: 10, top: 12, bottom: 12 })
+    .padding({ left: 10, right: 10, top: 68, bottom: 12 })
     .backgroundColor(Color.Transparent)
     .alignItems(HorizontalAlign.Start)
   }
