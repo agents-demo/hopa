@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import json
 import urllib.error
 import urllib.request
@@ -7,6 +8,7 @@ import urllib.request
 import pytest
 
 from hopa_pc_agent.bridge_pool import BridgePool
+from hopa_pc_agent.images import ImageStore
 
 
 class FakeHdc:
@@ -49,13 +51,18 @@ class FakeDevice:
 
 
 @pytest.fixture()
-def pool():
+def pool(tmp_path):
     devices = {"1111": FakeDevice(), "2222": FakeDevice()}
     entries = [
         {"serial": "1111", "token": "phone-token", "role": "phone", "pair": "123456"},
         {"serial": "2222", "token": "pc-token", "role": "2in1", "pair": "123456"},
     ]
-    server = BridgePool(entries, port=0, device_factory=lambda serial: devices[serial])
+    server = BridgePool(
+        entries,
+        port=0,
+        device_factory=lambda serial: devices[serial],
+        images=ImageStore(tmp_path),
+    )
     server.start()
     try:
         yield server, devices
@@ -153,3 +160,50 @@ def test_wrong_token_is_rejected_by_the_device_server(pool):
     with pytest.raises(urllib.error.HTTPError) as error:
         call(server, "/tap", role="2in1", token="phone-token", payload={"x": 1, "y": 2})
     assert error.value.code == 401
+
+
+def test_an_image_uploaded_by_the_phone_reads_on_the_laptop(pool):
+    server, _ = pool
+    raw = b"\xff\xd8\xff\xe0a-small-frame"
+    status, receipt = call(
+        server,
+        "/images",
+        token="phone-token",
+        payload={"mime": "image/jpeg", "data": base64.b64encode(raw).decode("ascii")},
+    )
+    assert status == 200
+    assert receipt["bytes"] == len(raw)
+    request = urllib.request.Request(
+        f"http://127.0.0.1:{server.port}/images/{receipt['id']}",
+        headers={"Authorization": "Bearer pc-token"},
+        method="GET",
+    )
+    with urllib.request.urlopen(request, timeout=5) as response:
+        assert response.status == 200
+        assert response.headers["Content-Type"] == "image/jpeg"
+        assert response.read() == raw
+
+
+def test_an_image_needs_a_token(pool):
+    server, _ = pool
+    status, _ = call(
+        server,
+        "/images",
+        token="phone-token",
+        payload={"mime": "image/png", "data": base64.b64encode(b"x").decode("ascii")},
+    )
+    assert status == 200
+    request = urllib.request.Request(
+        f"http://127.0.0.1:{server.port}/images/missing",
+        method="GET",
+    )
+    with pytest.raises(urllib.error.HTTPError) as caught:
+        urllib.request.urlopen(request, timeout=5)
+    assert caught.value.code == 401
+
+
+def test_a_bad_base64_image_is_refused(pool):
+    server, _ = pool
+    with pytest.raises(urllib.error.HTTPError) as caught:
+        call(server, "/images", token="phone-token", payload={"mime": "image/jpeg", "data": "!!!"})
+    assert caught.value.code == 400

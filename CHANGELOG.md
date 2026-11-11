@@ -94,6 +94,10 @@ All notable changes are recorded here. Versions follow `docs/versioning.md`.
 - The 2in1 package is now honest about its target: `2in1` and `tablet` only,
   a laptop-bodied launcher icon in the module, and a 960x620 minimum window so
   the sidebar, rail and composer cannot be crushed.
+- The bridge now keeps a **shared image store** (`POST /images` by content
+  hash, `GET /images/<id>` behind the device token, `~/.hopa/images`). It is
+  the transport a phone's run screenshot needs before the laptop can show it:
+  a sandbox path means nothing on another device.
 
 ### Changed
 
