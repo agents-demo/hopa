@@ -224,6 +224,16 @@ API key:     loaded (stored securely)
 
 `Capabilities` shows `deepseek-flash — PC bridge` under "Ready on this phone".
 
+### 5.5 Launching apps
+
+HOPA resolves the launcher ability from `bm dump -n` using `mainElementName`
+and the legacy `mainElement`. The Clock app's launcher ability is
+`com.huawei.hmos.clock.phone`; its `EntryAbility` is not exported, so guessing
+`EntryAbility`/`MainAbility` fails with a visibility error. Launch and
+foreground hdc calls are now bounded (12–15 s) and recover once, so a stale
+tunnel session cannot push the bridge past the app's 45 s read timeout. Device
+failures show "That app would not open..." instead of blaming the PC bridge.
+
 ---
 
 ## 6. Laptop (remaining)
