@@ -120,6 +120,7 @@ struct LaptopIndex {
   @State sidebarOpen: boolean = false;
   @State renameDraft: string = '';
   private ctrlHeld: boolean = false;
+  private bridgeTimer: number = -1;
   @State planDraft: string = '';
   @State planEvery: number = 3600000;
   @State address: string = LaptopIndex.START_URL;
@@ -317,6 +318,13 @@ struct LaptopIndex {
   }
 
   /** The notification's Stop button lands here through the ability. */
+  aboutToDisappear(): void {
+    if (this.bridgeTimer >= 0) {
+      clearInterval(this.bridgeTimer);
+      this.bridgeTimer = -1;
+    }
+  }
+
   onCancelFlag(): void {
     if (this.cancelFlag !== '1') {
       return;
