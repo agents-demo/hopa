@@ -7,8 +7,7 @@ import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import pytest
-
-from hopa_bridge.ws import (
+from hopa_wire.ws import (
     OP_BINARY,
     WebSocketClient,
     WebSocketError,

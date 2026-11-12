@@ -46,8 +46,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 from urllib.parse import parse_qs, urlsplit
 
+from hopa_wire.ws import WebSocketError, server_handshake
+
 from .tunnel import TunnelRegistry
-from .ws import WebSocketError, server_handshake
 
 MAX_BODY_BYTES = 32 * 1024 * 1024
 MAX_QUEUED = 200

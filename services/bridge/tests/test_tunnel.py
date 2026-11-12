@@ -9,22 +9,21 @@ import time
 import urllib.request
 
 import pytest
-
-from hopa_bridge.relay import Relay, RelayServer
-from hopa_bridge.tunnel import (
+from hopa_wire.tunnel import (
     CLOSE,
     DATA,
     OPEN,
     READY,
     STATUS,
     WAITING,
-    HdcTunnel,
-    TunnelRegistry,
     close_frame,
     data_frame,
     parse_stream,
 )
-from hopa_bridge.ws import WebSocketClient, WebSocketError
+from hopa_wire.ws import WebSocketClient, WebSocketError
+
+from hopa_bridge.relay import Relay, RelayServer
+from hopa_bridge.tunnel import HdcTunnel, TunnelRegistry
 
 PHONE = "phone-token"
 LINK = "link-token"

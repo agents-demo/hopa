@@ -1,98 +1,34 @@
-"""Carry an hdc byte stream through the relay as a binary WebSocket tunnel.
+"""The PC half of the tunnel: a local TCP listener that pipes to the relay.
 
-The phone and the PC both dial *out* to the relay, so neither needs an inbound
-port. One session pairs one phone side with one host side. The host
-multiplexes its local hdc TCP connections onto numbered streams:
-
-    OPEN   [type][stream]
-    DATA   [type][stream][bytes]
-    CLOSE  [type][stream]
-    STATUS [type][b"ready" | b"waiting"]        (relay -> both sides)
-
-The relay forwards OPEN/DATA/CLOSE verbatim between the two sides and owns
-STATUS. Frame boundaries are not meaningful: the byte order is what matters.
+The relay side lives in services/relay; the framing and TunnelSide live in
+hopa_wire (ADR-0010).
 """
 
 from __future__ import annotations
 
 import socket
-import struct
 import threading
 import time
-from dataclasses import dataclass, field
 from typing import Any
 from urllib.parse import quote
 
-from .ws import WebSocketClient, WebSocketConnection, WebSocketError
-
-OPEN = 0x01
-DATA = 0x02
-CLOSE = 0x03
-STATUS = 0x04
-
-MAX_CHUNK = 32 * 1024
-MAX_STREAM_ID = 0xFFFFFFFF
-READY = b"ready"
-WAITING = b"waiting"
-
-_STREAM = struct.Struct("!I")
-
-
-def _frame(kind: int, stream: int) -> bytes:
-    return struct.pack("!BI", kind, stream)
-
-
-def open_frame(stream: int) -> bytes:
-    return _frame(OPEN, stream)
-
-
-def close_frame(stream: int) -> bytes:
-    return _frame(CLOSE, stream)
-
-
-def data_frame(stream: int, payload: bytes) -> bytes:
-    return _frame(DATA, stream) + payload
-
-
-def status_frame(ready: bool) -> bytes:
-    return bytes([STATUS]) + (READY if ready else WAITING)
-
-
-def parse_stream(payload: bytes) -> int:
-    if len(payload) < 5:
-        raise ValueError("tunnel frame is too short")
-    return _STREAM.unpack(payload[1:5])[0]
-
-
-@dataclass(eq=False)
-class TunnelSide:
-    """One WebSocket in a tunnel session."""
-
-    role: str
-    session: str
-    ws: WebSocketConnection
-    attached_at: float = field(default_factory=time.time)
-    _closed: bool = False
-    _lock: threading.Lock = field(default_factory=threading.Lock)
-
-    @property
-    def closed(self) -> bool:
-        return self._closed
-
-    def send(self, frame: bytes) -> None:
-        if self._closed:
-            return
-        try:
-            self.ws.send_binary(frame)
-        except (OSError, WebSocketError, ValueError):
-            self.close()
-
-    def close(self) -> None:
-        with self._lock:
-            if self._closed:
-                return
-            self._closed = True
-        self.ws.close()
+from hopa_wire.tunnel import (
+    CLOSE,
+    DATA,
+    MAX_CHUNK,
+    MAX_STREAM_ID,
+    OPEN,
+    READY,
+    STATUS,
+    WAITING,
+    TunnelSide,
+    close_frame,
+    data_frame,
+    open_frame,
+    parse_stream,
+    status_frame,
+)
+from hopa_wire.ws import WebSocketClient, WebSocketConnection, WebSocketError
 
 
 class TunnelRegistry:

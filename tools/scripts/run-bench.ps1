@@ -25,7 +25,7 @@ if (Test-Path $venv) {
 $results = Join-Path $root 'evals\bench\results\latest.json'
 & $pythonExe @pythonPrefix -c "import hopa_bridge, hopa_bench" 2>$null
 if ($LASTEXITCODE -ne 0) {
-    & $pythonExe @pythonPrefix -m pip install -e (Join-Path $root 'services\bridge') -e (Join-Path $root 'evals\bench')
+    & $pythonExe @pythonPrefix -m pip install -e (Join-Path $root 'packages\wire', 'services\bridge') -e (Join-Path $root 'evals\bench')
     if ($LASTEXITCODE -ne 0) { throw 'pip install failed' }
 }
 

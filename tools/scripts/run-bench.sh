@@ -17,7 +17,7 @@ else
 fi
 
 "$PY" -c "import hopa_bridge, hopa_bench" 2>/dev/null || {
-  "$PY" -m pip install -e "$ROOT/services/bridge" -e "$ROOT/evals/bench"
+  "$PY" -m pip install -e "$ROOT/packages/wire" "$ROOT/services/bridge" -e "$ROOT/evals/bench"
 }
 
 "$PY" -m hopa_bench run --tasks "$ROOT/evals/bench/tasks" --out "$RESULTS" "$@"
