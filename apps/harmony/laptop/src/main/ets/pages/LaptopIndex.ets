@@ -3455,12 +3455,14 @@ struct LaptopIndex {
               // Path draws a stroke unless told otherwise, and the default
               // stroke is black: without strokeWidth(0) the arrow had a hairline
               // outline that made it look like a glyph, not a control.
+              // 22x24 in a 44 pt circle: at 18x20 the arrow read as a glyph, not a
+              // button. The head is half the width, the shaft is 6.4 wide.
               Path()
-                .commands('M 9 0 L 18 8.5 L 12.4 8.5 L 12.4 20 L 5.6 20 L 5.6 8.5 L 0 8.5 Z')
+                .commands('M 11 0 L 22 10.5 L 15.2 10.5 L 15.2 24 L 6.8 24 L 6.8 10.5 L 0 10.5 Z')
                 .fill($r('app.color.on_primary'))
                 .strokeWidth(0)
-                .width(18)
-                .height(20)
+                .width(22)
+                .height(24)
             }
             .width(44)
             .height(44)
