@@ -275,10 +275,17 @@ Decision (ADR-0008): **the command stays `pc-agent`**; `hopa-bridge` is the alia
 - [x] `pytest services/bridge` + `pytest evals` -> 362 passed; `ruff check`
       clean; 20 bench tasks valid.
 - [x] `python -m hopa_bridge --help` works; `pc-agent --help` works (alias).
-- [ ] Device smoke: `devices`, `observe`, `screenshot` - BLOCKED: `hdc list
-      targets` is empty (both devices off USB).
-- [ ] Bridge smoke + laptop `Connected.` - BLOCKED: same reason.
-- [ ] Relay smoke against the Render preview (render.yaml changed here).
+- [x] Device smoke on both devices: `devices` lists both serials, `screenshot`
+      saved for the laptop, `dump` parsed the laptop's Settings screen, `apps`
+      listed 2-in-1 bundles. (evidence: bridge-shot.png, bridge-layout.json)
+- [x] Bridge smoke + laptop `Connected.`: Settings -> Bridge reads `Connected.`
+      and the footer reads `Bridge connected - every action asks first.`
+      (evidence: device screenshot e2e14)
+- [x] Cross-device E2E on the installed builds: from the laptop, target `Phone`,
+      ask "open douyin and tell me what you see"; Douyin opens on the phone
+      (minor-mode sheet visible), the answer returns in the laptop chat, and the
+      run pane reads `Succeeded, 1 step, 3.7 s`. (evidence: x2/x3 screenshots)
+- [ ] Relay smoke against the Render preview (render.yaml changes in R4, not R3).
 - [ ] CI green; evidence PR + run id.
 
 Risk: medium-high. Rollback: revert the atomic commit, `pip uninstall hopa-bridge`,
@@ -432,6 +439,21 @@ Risk: low.
       and `check-tree.py` accepts the two new folders.
 
 Risk: none.
+
+## R10. Fixes the E2E exposed
+
+- [ ] Interruption resume must not start a run once a newer question exists, and
+      its action must attach to its own turn. Today a resumed "open Douyin" ran
+      after "Line a / Line b" was sent and the Douyin action appeared under that
+      turn. (evidence: x2 screenshot, run pane under the Line a/Line b bubble)
+- [ ] The send arrow must come from an asset, not `Path`: `Path` draws at its
+      command extent and ignores width/height, so two "make it bigger" edits
+      changed nothing. (evidence: fdcc67b, 02284a4)
+- [ ] Retire the one-release aliases when the refactor ships: drop `pc-agent`,
+      `hopa-agent`, update the run scripts and the docs to hopa-bridge and
+      hopa-baseline.
+
+Risk: low (two UI/loop fixes and a rename cleanup).
 
 ## Acceptance gates
 
