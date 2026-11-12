@@ -29,21 +29,22 @@ cadence differs.
 | `tools/shots` | stays | README media |
 | `tools/signing` | stays | app signing, gitignored |
 | `docs/` | **split** | `architecture/`, `adr/`, `contracts/`, `guides/` mostly stay; `operations/` for services moves |
-| `evals/` | **decide before the split** | see below |
+| `evals/` | services repo | it imports `hopa_bridge` today; moving it keeps the app repo free of service code |
 
-## The evals decision (must be made first)
+## Decisions taken
 
-`evals/bench` and `evals/baseline` import `hopa_bridge` directly (`runner.py`,
-`cli.py`, tests). Two honest options:
-
-- **Move `evals/` with the services.** It measures the loop and the device plane;
-  simplest and keeps the import. The app repo then has no service dependency.
-- **Keep `evals/` in the app repo and make it a client**: it talks to the bridge
-  and the backend over their HTTP contracts (`/observe`, `/tap`, `/runs`), as an
-  Android or Windows client would. More work, but it proves the contract.
-
-Do not split with the current import in place: that leaves the app repository
-depending on a repository it does not contain.
+- **`evals/` moves with the services.** It imports `hopa_bridge` (`runner.py`,
+  `cli.py`, tests), so it belongs where that code lives. The app repository then
+  has no service dependency. It can later become an HTTP client, but that is not
+  a precondition for the split.
+- **`tools/` is split by what it drives.** A script that runs
+  `python -m hopa_bridge`, installs `./services/bridge`, or reads service code
+  moves with the services. A script that only builds/installs the app stays.
+  No script in the app repository may reference `services/` by path.
+- **`docs/` is split by subject.** Service docs (bridge, relay, wire, protocols,
+  operations, data-flow, service ADRs) move; product, UX, setup, signing and the
+  app ADRs stay.
+- **`contracts/` is shared by version**, not copied and not owned by either side.
 
 ## The tools decision (same rule)
 
@@ -59,10 +60,12 @@ not part of this runbook.
 
 - [ ] `services/wire` is published (or consumed from git) with a version, and
       the bridge/relay depend on that version, not a path.
-- [ ] `evals/` either moves with the services or talks over HTTP; it must not
-      import `hopa_bridge` across the split.
-- [ ] `tools/scripts` are split into app tools and service tools, with no script
-      in the app repository referencing `services/`.
+- [ ] `evals/` moves with the services (decided); the app repo keeps no import
+      of `hopa_bridge`.
+- [ ] `tools/scripts` and `tools/checks` are split, with no script in the app
+      repository referencing `services/`.
+- [ ] Service docs are moved with the services; the app repo keeps product,
+      setup and signing docs.
 - [ ] `contracts/` is consumed as a versioned artifact; clients are generated
       from it.
 - [ ] No service imports another by path: `check-structure.py` already rejects
