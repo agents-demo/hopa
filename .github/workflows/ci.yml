@@ -59,6 +59,8 @@ jobs:
         run: python tools/checks/check-openapi.py
       - name: Tree rules
         run: python tools/checks/check-tree.py
+      - name: Render blueprint
+        run: python tools/checks/check-render.py
       - name: Documentation links
         run: python tools/checks/check-links.py
       - name: Generated app catalogue is current
