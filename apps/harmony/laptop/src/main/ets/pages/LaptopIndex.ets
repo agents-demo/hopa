@@ -3452,17 +3452,14 @@ struct LaptopIndex {
             })
           } else if (this.draft.trim().length > 0) {
             Stack({ alignContent: Alignment.Center }) {
-              // Path draws a stroke unless told otherwise, and the default
-              // stroke is black: without strokeWidth(0) the arrow had a hairline
-              // outline that made it look like a glyph, not a control.
-              // 22x24 in a 44 pt circle: at 18x20 the arrow read as a glyph, not a
-              // button. The head is half the width, the shaft is 6.4 wide.
-              Path()
-                .commands('M 11 0 L 22 10.5 L 15.2 10.5 L 15.2 24 L 6.8 24 L 6.8 10.5 L 0 10.5 Z')
-                .fill($r('app.color.on_primary'))
-                .strokeWidth(0)
+              // An SVG asset, not Path: Path draws at its command extent and
+              // ignores width/height, so the arrow stayed 18 pt wide through two
+              // "make it bigger" edits. Image scales to the size it is given.
+              Image($r('app.media.ic_arrow_up'))
                 .width(22)
-                .height(24)
+                .height(22)
+                .fillColor($r('app.color.on_primary'))
+                .objectFit(ImageFit.Contain)
             }
             .width(44)
             .height(44)
