@@ -10,6 +10,7 @@ import {
   AgentRuntime,
   BridgeClient,
   BridgeScreenSource,
+  BridgeSessionSink,
   ChatSync,
   ScheduleService,
   MemoryStore,
@@ -175,6 +176,20 @@ export class LaptopAgent {
   /** Points the bridge capability at a running `pc-agent bridge`. */
   configureBridge(url: string, token: string): void {
     this.bridge.configure(url, token);
+    this.chatSync.configure(url, token, '2in1');
+  }
+
+  /**
+   * A paired session, not a copied key.
+   *
+   * Pair tokens expire after twelve hours and every refresh rotates them, so a
+   * laptop holding a pasted token silently loses the bridge overnight. With the
+   * refresh token the client renews itself, and the sink writes the new pair
+   * back to settings so the next start still works.
+   */
+  configureBridgeSession(url: string, token: string, refresh: string, sink: BridgeSessionSink): void {
+    this.bridge.configureSession(url, token, refresh);
+    this.bridge.setSessionSink(sink);
     this.chatSync.configure(url, token, '2in1');
   }
 

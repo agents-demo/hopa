@@ -8,7 +8,8 @@ import { notificationManager } from '@kit.NotificationKit';
 import { wantAgent, WantAgent } from '@kit.AbilityKit';
 import { backgroundTaskManager } from '@kit.BackgroundTasksKit';
 import { webview } from '@kit.ArkWeb';
-import { HopaMark, EmptyHero, StepChips, ChatFormat, Character, KeyStore, SettingsStore, StoredSettings } from '@hopa/app';
+import { HopaMark, EmptyHero, StepChips, ChatFormat, Character, KeyStore, SettingsStore, StoredSettings,
+  BridgeClient, BridgeSession, BridgeSessionSink } from '@hopa/app';
 import { LaptopChat, LaptopTurn } from '../services/LaptopChat';
 import { LaptopAgent, demoApproval } from '../services/LaptopAgent';
 
@@ -78,6 +79,31 @@ class RunGroup {
   records: RunRecord[] = [];
 }
 
+/**
+ * Writes a rotated pair back to settings.
+ *
+ * The bridge issues a new access token on every refresh; without this the saved
+ * key would be the one that just stopped working.
+ */
+class LaptopSessionSink implements BridgeSessionSink {
+  private context: common.UIAbilityContext;
+
+  constructor(context: common.UIAbilityContext) {
+    this.context = context;
+  }
+
+  async save(token: string, refresh: string): Promise<void> {
+    try {
+      const stored: StoredSettings = await SettingsStore.load(this.context);
+      stored.bridgeToken = token;
+      stored.bridgeRefresh = refresh;
+      await SettingsStore.save(this.context, stored);
+    } catch (error) {
+      // The session in memory still works; only the next start would suffer.
+    }
+  }
+}
+
 @Entry
 @Component
 struct LaptopIndex {
@@ -97,6 +123,7 @@ struct LaptopIndex {
   @State sessions: LaptopSession[] = [];
   @State bridgeUrl: string = '';
   @State bridgeToken: string = '';
+  @State pairCode: string = '';
   @State bridgeStatus: string = '';
   @State bridgeLive: boolean = false;
   @State approvalOpen: boolean = false;
@@ -126,6 +153,7 @@ struct LaptopIndex {
   @State sidebarOpen: boolean = false;
   @State renameDraft: string = '';
   private ctrlHeld: boolean = false;
+  private shiftHeld: boolean = false;
   private bridgeTimer: number = -1;
   private images: LaptopImages = new LaptopImages();
   @State planDraft: string = '';
@@ -251,7 +279,7 @@ struct LaptopIndex {
       this.bridgeUrl = stored.bridgeUrl;
       this.bridgeToken = stored.bridgeToken;
       if (stored.bridgeUrl.length > 0 && stored.bridgeToken.length > 0) {
-        this.agent.configureBridge(stored.bridgeUrl, stored.bridgeToken);
+        this.attachBridge(stored);
         this.checkBridge();
       }
       KeyStore.load(LAPTOP_KEY_ALIAS).then((key: string) => {
@@ -306,8 +334,10 @@ struct LaptopIndex {
       this.listening = false;
       const heard: string = await this.voice.stop(this.agent);
       if (heard.length > 0) {
+        // Dictation fills the box; it never sends. You read it, edit it, and
+        // press Enter yourself.
         this.draft = heard;
-        await this.send();
+        this.error = '';
       } else {
         this.error = this.agent.isBridgeConfigured()
           ? 'I did not catch that. Try again, a little closer.'
@@ -928,10 +958,59 @@ struct LaptopIndex {
       this.bridgeUrl = stored.bridgeUrl;
       this.bridgeToken = stored.bridgeToken;
       if (stored.bridgeUrl.length > 0 && stored.bridgeToken.length > 0) {
-        this.agent.configureBridge(stored.bridgeUrl, stored.bridgeToken);
+        this.attachBridge(stored);
         this.checkBridge();
       }
     }
+  }
+
+  /** Paired when there is a refresh token; a pasted key has none. */
+  private attachBridge(stored: StoredSettings): void {
+    if (stored.bridgeRefresh.length > 0) {
+      const context = getContext(this) as common.UIAbilityContext;
+      this.agent.configureBridgeSession(stored.bridgeUrl, stored.bridgeToken, stored.bridgeRefresh,
+        new LaptopSessionSink(context));
+    } else {
+      this.agent.configureBridge(stored.bridgeUrl, stored.bridgeToken);
+    }
+  }
+
+  /**
+   * Trade the short code from the bridge output for a token pair.
+   *
+   * Copying a key by hand goes stale in twelve hours; the code is stable and the
+   * pair it returns renews itself, which is what makes the bridge reachable on a
+   * second morning without touching Settings.
+   */
+  private async pairBridge(): Promise<void> {
+    const url: string = this.bridgeUrl.trim();
+    const code: string = this.pairCode.trim();
+    if (url.length === 0 || code.length === 0) {
+      this.bridgeStatus = 'Enter the address and the code the bridge printed.';
+      return;
+    }
+    this.bridgeStatus = 'Pairing\u2026';
+    const session: BridgeSession = await BridgeClient.pair(url, code);
+    if (session.token.length === 0) {
+      this.bridgeStatus = 'That code did not work. Check the bridge output.';
+      return;
+    }
+    const context = getContext(this) as common.UIAbilityContext;
+    try {
+      const stored: StoredSettings = await SettingsStore.load(context);
+      stored.bridgeUrl = url;
+      stored.bridgeToken = session.token;
+      stored.bridgeRefresh = session.refresh;
+      await SettingsStore.save(context, stored);
+    } catch (error) {
+      this.bridgeStatus = `The pair worked but could not be saved: ${(error as Error).message}`;
+      return;
+    }
+    this.bridgeUrl = url;
+    this.bridgeToken = session.token;
+    this.pairCode = '';
+    this.agent.configureBridgeSession(url, session.token, session.refresh, new LaptopSessionSink(context));
+    await this.checkBridge();
   }
 
   /** Hold the app alive while a run works and the user is in another app. */
@@ -1029,7 +1108,9 @@ struct LaptopIndex {
       this.error = 'Add a model key to send. Settings is in the sidebar.';
       return;
     }
-    const text: string = this.draft;
+    // A line break added with Shift+Enter leaves trailing whitespace; the
+    // question itself is the text between the words.
+    const text: string = this.draft.trim();
     this.draft = '';
     this.busy = true;
     const context = getContext(this) as common.UIAbilityContext;
@@ -1173,6 +1254,9 @@ struct LaptopIndex {
     const stored: StoredSettings = await SettingsStore.load(context);
     stored.bridgeUrl = url;
     stored.bridgeToken = token;
+    // A pasted key has no refresh companion; keeping the old one would renew
+    // the session the user just replaced.
+    stored.bridgeRefresh = '';
     await SettingsStore.save(context, stored);
     if (url.length === 0 || token.length === 0) {
       this.bridgeLive = false;
@@ -1622,6 +1706,38 @@ struct LaptopIndex {
           .onSubmit(() => {
             this.saveBridge();
           })
+
+        this.FieldLabel('Pair code')
+        Text('Coming back after the key expired? Enter the code the bridge printed; the key it returns renews itself.')
+          .fontSize(10.5)
+          .lineHeight(15)
+          .fontColor($r('app.color.text_hint'))
+          .width('100%')
+        Row({ space: 10 }) {
+          TextInput({ text: this.pairCode, placeholder: 'from the bridge output' })
+            .layoutWeight(1)
+            .height(38)
+            .fontSize(12.5)
+            .backgroundColor($r('app.color.surface'))
+            .borderRadius(9)
+            .onChange((value: string) => {
+              this.pairCode = value;
+            })
+            .onSubmit(() => {
+              this.pairBridge();
+            })
+          Text('Pair')
+            .fontSize(12.5)
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.primary'))
+            .padding({ left: 16, right: 16, top: 9, bottom: 9 })
+            .backgroundColor($r('app.color.primary_soft'))
+            .borderRadius(14)
+            .onClick(() => {
+              this.pairBridge();
+            })
+        }
+        .width('100%')
 
         Row({ space: 12 }) {
           Text('Connect')
@@ -3229,6 +3345,10 @@ struct LaptopIndex {
           }
           TextArea({ text: this.draft, placeholder: 'Ask HOPA\u2026' })
             .id('hopa-composer')
+            // NEW_LINE is the TextArea default: it swallows Enter, so onSubmit
+            // never fired and the message sat unsent. Send is the action; a
+            // newline stays available as Shift+Enter (handled below).
+            .enterKeyType(EnterKeyType.Send)
             .layoutWeight(1)
             .fontSize(13.5)
             .constraintSize({ minHeight: 44, maxHeight: 132 })
@@ -3240,56 +3360,99 @@ struct LaptopIndex {
             // Layered on purpose: the key handler covers a physical keyboard
             // (with Shift for a line break); onSubmit covers Enter arriving
             // through the input method, which some 2-in-1 builds do instead.
+            // Enter with enterKeyType=Send arrives here, not as a raw key
+            // event, so the Shift decision has to be made here too. The flag is
+            // cleared once used: a missed Shift key-up must not leave every
+            // later Enter making a newline instead of sending.
             .onSubmit(() => {
+              const shift: boolean = this.shiftHeld;
+              this.shiftHeld = false;
+              if (shift) {
+                this.draft = this.draft + '\n';
+                return;
+              }
               this.send();
             })
             .onKeyEvent((event: KeyEvent) => {
               if (this.handleShortcut(event)) {
                 return true;
               }
+              // Track Shift from its own key events. Asking the event for its
+              // modifier state is the call that took this shell down once; the
+              // same reason handleShortcut tracks Ctrl by hand.
+              if (event.keyCode === 2047 || event.keyCode === 2048) {
+                this.shiftHeld = event.type === KeyType.Down;
+                return false;
+              }
               if (event.type !== KeyType.Down || event.keyCode !== 2054) {
                 return;
               }
-              // The chat convention, same as Slack or ChatGPT on a desktop:
-              // Enter sends, Shift+Enter starts a new line.
-              const shift: boolean = event.getModifierKeyState
-                ? event.getModifierKeyState(['shift'])
-                : false;
+              // The 2026 chat convention: Enter sends, Shift+Enter makes a line.
+              const shift: boolean = this.shiftHeld;
+              this.shiftHeld = false;
               if (shift) {
                 return false;
               }
               this.send();
               return true;
             })
-          // One button, three states: speak when the field is empty, send when
-          // it is not, stop while a run is going. Two buttons was clutter.
+          // One button, four states, one shape: an arrow up when there is
+          // something to send, a square while a run goes, a square while
+          // listening, a microphone when the field is empty. That is the 2026
+          // chat convention - the round control at the end of the field - and
+          // it matches the mic that was already a circle here.
           if (this.busy) {
-            Button('Stop')
-              .height(44)
-              .fontSize(13)
-              .backgroundColor($r('app.color.surface_muted'))
-              .fontColor($r('app.color.text_primary'))
-              .onClick(() => {
-                this.chat.cancel();
-              })
+            Stack({ alignContent: Alignment.Center }) {
+              Row()
+                .width(12)
+                .height(12)
+                .borderRadius(2.5)
+                .backgroundColor($r('app.color.text_primary'))
+            }
+            .width(44)
+            .height(44)
+            .borderRadius(22)
+            .backgroundColor($r('app.color.surface_muted'))
+            .accessibilityText('Stop')
+            .onClick(() => {
+              this.chat.cancel();
+            })
           } else if (this.listening) {
-            Button('Stop')
-              .height(44)
-              .fontSize(13)
-              .backgroundColor($r('app.color.surface_alt'))
-              .fontColor($r('app.color.danger'))
-              .onClick(() => {
-                this.toggleMic();
-              })
+            Stack({ alignContent: Alignment.Center }) {
+              Row()
+                .width(12)
+                .height(12)
+                .borderRadius(2.5)
+                .backgroundColor($r('app.color.danger'))
+            }
+            .width(44)
+            .height(44)
+            .borderRadius(22)
+            .backgroundColor($r('app.color.surface_alt'))
+            .accessibilityText('Stop listening')
+            .onClick(() => {
+              this.toggleMic();
+            })
           } else if (this.draft.trim().length > 0) {
-            Button('Send')
-              .height(44)
-              .fontSize(13)
-              .backgroundColor($r('app.color.primary'))
-              .fontColor($r('app.color.on_primary'))
-              .onClick(() => {
-                this.send();
-              })
+            Stack({ alignContent: Alignment.Center }) {
+              // Path draws a stroke unless told otherwise, and the default
+              // stroke is black: without strokeWidth(0) the arrow had a hairline
+              // outline that made it look like a glyph, not a control.
+              Path()
+                .commands('M 9 0 L 18 8.5 L 12.4 8.5 L 12.4 20 L 5.6 20 L 5.6 8.5 L 0 8.5 Z')
+                .fill($r('app.color.on_primary'))
+                .strokeWidth(0)
+                .width(18)
+                .height(20)
+            }
+            .width(44)
+            .height(44)
+            .borderRadius(22)
+            .backgroundColor($r('app.color.primary'))
+            .accessibilityText('Send')
+            .onClick(() => {
+              this.send();
+            })
           } else {
             Stack({ alignContent: Alignment.Center }) {
               Column()

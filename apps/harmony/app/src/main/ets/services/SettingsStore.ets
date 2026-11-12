@@ -26,6 +26,8 @@ export class StoredSettings {
   kidStars: number = 0;
   bridgeUrl: string = '';
   bridgeToken: string = '';
+  /** Renews an expired pair token; without it a laptop breaks every 12 hours. */
+  bridgeRefresh: string = '';
   /** Opt-in: expose this phone's hdc port through the cloud relay. */
   tunnel: boolean = false;
   lastTokens: number = 0;
@@ -129,6 +131,10 @@ export class SettingsStore {
     if (typeof bridgeToken === 'string') {
       settings.bridgeToken = bridgeToken;
     }
+    const bridgeRefresh = await store.get('bridge_refresh', settings.bridgeRefresh);
+    if (typeof bridgeRefresh === 'string') {
+      settings.bridgeRefresh = bridgeRefresh;
+    }
     const tunnel = await store.get('tunnel', settings.tunnel);
     if (typeof tunnel === 'boolean') {
       settings.tunnel = tunnel;
@@ -167,6 +173,7 @@ export class SettingsStore {
     await store.put('kid_stars', settings.kidStars);
     await store.put('bridge_url', settings.bridgeUrl);
     await store.put('bridge_token', settings.bridgeToken);
+    await store.put('bridge_refresh', settings.bridgeRefresh);
     await store.put('tunnel', settings.tunnel);
     await store.put('last_tokens', settings.lastTokens);
     await store.put('last_duration_ms', settings.lastDurationMs);
