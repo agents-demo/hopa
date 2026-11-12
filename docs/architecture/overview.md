@@ -62,8 +62,16 @@ hopa-bridge (Python) ── hdc ──► emulator / phone
    │  dump layout, tap, type, swipe, screenshot, launch
    └─ CLI + MCP stdio server
 
+hopa-relay (Python, services/relay) ◄── long-poll ── hopa-bridge cloud-link
+   ▲ phone over HTTPS                                │ hdc + device
+   └──────────────────────────────────────────────────┘
+
 bench (HOPA-Bench) ── uses hopa-bridge ──► scored tasks (5 now; 20 at M2; 50 at v2)
 ```
+
+The WebSocket codec and tunnel framing are shared by both halves through
+`packages/wire` (`hopa-wire`); neither the PC nor the relay imports the other
+(ADR-0009, ADR-0010).
 
 `hopa-bridge` is the **G1 PoC** control path. The shipping agent uses
 `capabilities/accessibility` (once the ACL is granted), `capabilities/browser`, and
