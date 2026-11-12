@@ -72,7 +72,7 @@ Start with the top-level question, then the layer below it (ADR-0007):
 | a long-running thing that answers requests or drives a device | `services/` | `backend/`, `bridge/`, `relay/`, `brain/` |
 | a task, a score, a reference driver | `evals/` | `bench/`, `baseline/` |
 | a wire format both sides must agree on | `contracts/` | `openapi/`, `schemas/` |
-| code two services both import | `packages/` | `wire/` (ADR-0010) |
+| code the services both import | `services/wire/` | shared, not deployed (ADR-0012) |
 | a build, sign or check step | `tools/` | `scripts/`, `checks/`, `signing/` |
 | the reason something is the way it is | `docs/` | `adr/`, `architecture/`, `guides/` |
 

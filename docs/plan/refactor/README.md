@@ -49,6 +49,7 @@ hopa/
 ├─ services/                # what runs with nobody watching
 │  ├─ bridge/               # device plane (R3)
 │  ├─ relay/                # cloud relay server half (R4)
+│  ├─ wire/                 # shared WebSocket/tunnel code, not deployed (ADR-0012)
 │  ├─ brain/                # Kotlin knowledge router (exists, unchanged)
 │  └─ backend/              # reserved: README + ADR-0011, no package yet
 ├─ evals/                   # how we know it got better (R1)
@@ -63,8 +64,9 @@ hopa/
 ```
 
 `services/brain` is an existing, documented service and moves in neither R3 nor
-R4; it is listed so the tree is honest. `services/backend` is deliberately **not**
-created in this plan (R7 records the boundary in an ADR only).
+R4; it is listed so the tree is honest. `services/backend` is reserved (README +
+ADR-0011, no package). `services/wire` is the shared library: the services
+repository split moves all of `services/` together (ADR-0012).
 
 ## 2. Current state, measured 2026-11-12
 
@@ -298,10 +300,12 @@ Goal: the relay host installs only relay code; a PC still keeps `cloud-link` and
 
 ### R4a. The shared wire package
 
-- [x] `packages/wire` (ADR-0010): `ws.py` moved, tunnel frames and `TunnelSide`.
-- [x] `check-tree.py` allows `packages/`; layers/CONTRIBUTING/README map updated.
+- [x] `services/wire` (ADR-0010): `ws.py` moved, tunnel frames and `TunnelSide`.
+- [x] `check-tree.py` allows the shared package and the docs name it; it was
+      later moved from `packages/wire` to `services/wire` so the services
+      repository split takes it along (ADR-0012).
 - [x] CI and run scripts install the wire package first.
-- [x] Evidence: commit 732d83b; `pytest services/bridge packages/wire` 139 passed.
+- [x] Evidence: commit 732d83b; `pytest services/bridge services/wire` 139 passed.
 
 ### R4b. The two halves
 
@@ -318,14 +322,14 @@ Goal: the relay host installs only relay code; a PC still keeps `cloud-link` and
 - [x] Tests split: relay suite in `services/relay/tests`, the tunnel/CLI tests in
   the bridge. The two `LinkClient` end-to-end tests import the relay test fixture;
   that is test-only coupling, the runtime direction stays bridge -> wire.
-- [x] `render.yaml`: build `./packages/wire ./services/relay`, start
+- [x] `render.yaml`: build `./services/wire ./services/relay`, start
   `python -m hopa_relay relay`. CI installs, lints and tests the relay package.
 
 ### R4c. Gates
 
-- [x] `pytest services/relay services/bridge packages/wire` -> 139 passed.
+- [x] `pytest services/relay services/bridge services/wire` -> 139 passed.
 - [x] Clean-venv proof of the deploy command: `pip install --no-deps
-      ./packages/wire ./services/relay`, then `python -m hopa_relay relay` and
+      ./services/wire ./services/relay`, then `python -m hopa_relay relay` and
       `/health` returns `role: relay`. (evidence: port 8792 run)
 - [x] Local relay: `python -m hopa_relay relay --host 127.0.0.1 --port 8791` and
   `GET /health` -> `{"ok": true, "role": "relay", ...}`.
@@ -382,7 +386,7 @@ later without changing the API.
 - [x] `check-structure.py` gains a Python rule: only `hdc.py`, `device.py` and
       `device_harmony.py` may import `hdc`.
 - [x] Tests: the fake device implements the port; `services/bridge services/relay
-      packages/wire` -> 139 passed.
+      services/wire` -> 139 passed.
 - [x] Hardware: `devices` lists both serials, one screenshot saved, one `dump`
       parsed on the 2-in-1.
 - [x] `docs/guides/adding-a-platform.md` names the real files and the shell/pull

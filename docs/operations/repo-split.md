@@ -12,7 +12,7 @@ Status: **runbook, not executed.** The tree is already split by deployable
 | `hopa-backend` | `services/backend` | the loop, accounts, keys, memory, schedules |
 | `hopa-bridge` | `services/bridge` | device plane (hdc/adb/UIA adapters) |
 | `hopa-relay` | `services/relay` | the cloud relay |
-| `hopa-wire` (library) | `packages/wire` | published versioned package |
+| `hopa-wire` (library) | `services/wire` | published versioned package |
 | `hopa-contracts` (data) | `contracts/` | versioned OpenAPI + schemas, generated clients |
 
 `services/brain` (Kotlin) moves with the backend or becomes its own service; it is
@@ -54,11 +54,11 @@ git filter-repo --path services/bridge --path-relative-to=. \
 # then push that history into the new repository's main
 ```
 
-For `packages/wire`, filter on `packages/wire` and add the package's own
+For `services/wire`, filter on `services/wire` and add the package's own
 `README.md`/`pyproject.toml` at the root of the new repository:
 
 ```bash
-git filter-repo --path packages/wire --path-relative-to=packages/wire
+git filter-repo --path services/wire --path-relative-to=services/wire
 ```
 
 Keep `contracts/` in a repository of its own **only when a client ships on its

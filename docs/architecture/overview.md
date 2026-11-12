@@ -70,7 +70,7 @@ bench (HOPA-Bench) ── uses hopa-bridge ──► scored tasks (5 now; 20 at 
 ```
 
 The WebSocket codec and tunnel framing are shared by both halves through
-`packages/wire` (`hopa-wire`); neither the PC nor the relay imports the other
+`services/wire` (`hopa-wire`); neither the PC nor the relay imports the other
 (ADR-0009, ADR-0010).
 
 `hopa-bridge` is the **G1 PoC** control path. The shipping agent uses

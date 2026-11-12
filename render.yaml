@@ -9,7 +9,7 @@ services:
     runtime: python
     plan: free
     region: singapore
-    buildCommand: pip install --no-deps ./packages/wire ./services/relay
+    buildCommand: pip install --no-deps ./services/wire ./services/relay
     startCommand: python -m hopa_relay relay --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:

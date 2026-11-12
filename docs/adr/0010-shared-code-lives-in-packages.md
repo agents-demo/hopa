@@ -1,6 +1,6 @@
 # ADR-0010 - Shared code lives in `packages/`, not in a service
 
-- Status: accepted
+- Status: superseded by ADR-0012 (location only)
 - Date: 2026-11-12
 
 ## Context

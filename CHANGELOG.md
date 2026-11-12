@@ -2,8 +2,9 @@
 
 ## Unreleased - apps / services / evals
 
-- The repository is split by deployable: `apps/`, `services/`, `packages/`,
-  `evals/`, `contracts/`, `tools/`, `docs/` (ADR-0007, ADR-0010).
+- The repository is split by deployable: `apps/`, `services/`, `evals/`,
+  `contracts/`, `tools/`, `docs/` (ADR-0007). Shared service code is
+  `services/wire` so the services repository split takes it along (ADR-0012).
 - `harness/` is `evals/` (`bench`, `baseline`); `services/pc-agent` is
   `services/bridge`; the relay is its own deployable in `services/relay`; the
   WebSocket/tunnel code is `hopa-wire` (ADR-0009, ADR-0010).

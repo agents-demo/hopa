@@ -35,7 +35,7 @@ def test_the_repository_blueprint_is_consistent():
 def test_a_missing_build_path_is_reported(tmp_path):
     checker = _load()
     blueprint = _blueprint(
-        tmp_path, "pip install --no-deps ./packages/wire", "python -m json.tool"
+        tmp_path, "pip install --no-deps ./services/wire", "python -m json.tool"
     )
     problems = checker.check(blueprint, tmp_path)
     assert any("missing path" in problem for problem in problems)
@@ -43,12 +43,12 @@ def test_a_missing_build_path_is_reported(tmp_path):
 
 def test_an_existing_path_and_module_pass(tmp_path):
     checker = _load()
-    (tmp_path / "packages" / "wire" / "src" / "hopa_wire").mkdir(parents=True)
-    (tmp_path / "packages" / "wire" / "src" / "hopa_wire" / "__init__.py").write_text(
+    (tmp_path / "services" / "wire" / "src" / "hopa_wire").mkdir(parents=True)
+    (tmp_path / "services" / "wire" / "src" / "hopa_wire" / "__init__.py").write_text(
         ""
     )
     blueprint = _blueprint(
-        tmp_path, "pip install ./packages/wire", "python -m hopa_wire"
+        tmp_path, "pip install ./services/wire", "python -m hopa_wire"
     )
     assert checker.check(blueprint, tmp_path) == []
 

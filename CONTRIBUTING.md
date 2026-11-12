@@ -94,7 +94,7 @@ Ask which top level answers the question, then pick the layer (ADR-0007):
 | a long-running service, a device driver, a relay | `services/` (`bridge/`, `relay/`, `brain/`, later `backend/`) |
 | a task, a score, a reference driver | `evals/` (`bench/`, `baseline/`) |
 | a wire format both sides share | `contracts/` (`openapi/`, `schemas/`) |
-| code two services both import | `packages/` (`wire/`) |
+| code the services both import | `services/wire/` |
 | a build, sign or check step | `tools/` (`scripts/`, `checks/`, `signing/`) |
 | why something is the way it is | `docs/` (`adr/`, `architecture/`, `guides/`) |
 

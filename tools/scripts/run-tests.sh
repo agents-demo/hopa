@@ -17,17 +17,17 @@ fi
 
 echo "=== installing Python packages (editable) ==="
 "$PY" -m pip install -U pip
-"$PY" -m pip install -e "$ROOT/packages/wire" "$ROOT/services/bridge" -e "$ROOT/evals/bench[dev]" -e "$ROOT/evals/baseline[dev]"
+"$PY" -m pip install -e "$ROOT/services/wire" "$ROOT/services/bridge" -e "$ROOT/evals/bench[dev]" -e "$ROOT/evals/baseline[dev]"
 
 echo "=== Python tests ==="
-"$PY" -m pytest "$ROOT/packages/wire" "$ROOT/services/bridge" "$ROOT/evals/bench" "$ROOT/evals/baseline" "$ROOT/tools/scripts" -q
+"$PY" -m pytest "$ROOT/services/wire" "$ROOT/services/bridge" "$ROOT/evals/bench" "$ROOT/evals/baseline" "$ROOT/tools/scripts" -q
 
 echo "=== agent coverage ==="
 "$PY" -m pytest "$ROOT/evals/baseline" --cov=hopa_baseline --cov-report=term --cov-fail-under=80 -q
 
 echo "=== ruff ==="
-"$PY" -m ruff check "$ROOT/packages/wire" "$ROOT/services/bridge" "$ROOT/evals/bench" "$ROOT/evals/baseline"
-"$PY" -m ruff format --check "$ROOT/packages/wire" "$ROOT/services/bridge" "$ROOT/evals/bench" "$ROOT/evals/baseline"
+"$PY" -m ruff check "$ROOT/services/wire" "$ROOT/services/bridge" "$ROOT/evals/bench" "$ROOT/evals/baseline"
+"$PY" -m ruff format --check "$ROOT/services/wire" "$ROOT/services/bridge" "$ROOT/evals/bench" "$ROOT/evals/baseline"
 
 echo "=== plan lint ==="
 "$PY" "$ROOT/tools/scripts/plan-status.py" --lint

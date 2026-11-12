@@ -244,7 +244,7 @@ Limits worth stating:
   about 730 of the 750 hours. A second free service left running also will not
   fit.
 - On Render, create a **Web Service** from the repo with build
-  `pip install --no-deps ./packages/wire ./services/relay` and start
+  `pip install --no-deps ./services/wire ./services/relay` and start
   `python -m hopa_relay relay --host 0.0.0.0 --port $PORT`. The repository's
   `render.yaml` describes the same service for a Blueprint.
 

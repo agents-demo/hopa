@@ -29,7 +29,7 @@ Three forces pull the loop to a server:
   model key. Their only coupling is `contracts/` (OpenAPI + schemas).
 - **The bridge remains the device plane**, alongside the relay, and never gains
   product logic. It may be deployed per user PC or hosted for a device farm.
-- **Shared code is versioned, not copied**: `packages/wire` is published as
+- **Shared code is versioned, not copied**: `services/wire` is published as
   `hopa-wire`; `contracts/` is published as a versioned artifact with generated
   clients. A backend, a bridge and a relay depend on a version, not a path.
 - The split order is **backend first, then bridge/relay**, because the backend is

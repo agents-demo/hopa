@@ -206,7 +206,7 @@ after what it does.
 ## 5. Target Python and Kotlin
 
 > Executed parts: `services/bridge` and `services/relay` are already split (ADR-0009),
-> `packages/wire` is shared (ADR-0010), and the bridge has a `DevicePort` seam
+> `services/wire` is shared (ADR-0010), and the bridge has a `DevicePort` seam
 > (`device_port.py`, `device_harmony.py`). The tree below is the *next* folder pass:
 > the bridge's transport/device/api split and the baseline's domain/runtime split.
 > `services/backend` appears only when the loop moves (ADR-0011).
@@ -214,7 +214,7 @@ after what it does.
 
 
 ```
-packages/wire/src/hopa_wire/            # shared, versioned (ADR-0010)
+services/wire/src/hopa_wire/            # shared, versioned (ADR-0010)
 ├─ ws.py
 └─ tunnel.py
 

@@ -27,7 +27,7 @@ supersede it. Format:
 | [0007](0007-top-level-taxonomy.md) | Top-level taxonomy and what "agent" means | accepted |
 | [0008](0008-python-distribution-renames.md) | Python distribution renames and CLI aliases | accepted |
 | [0009](0009-relay-is-a-server-half.md) | The relay is a server half; the PC keeps its tunnel client | accepted |
-| [0010](0010-shared-code-lives-in-packages.md) | Shared code lives in `packages/`, not in a service | accepted |
+| [0010](0010-shared-code-lives-in-packages.md) | Shared code lives in `packages/`, not in a service | superseded by 0012 |
 
 Create the next ADR by copying the template below.
 
