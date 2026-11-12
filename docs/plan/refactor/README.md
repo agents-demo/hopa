@@ -421,17 +421,17 @@ Risk: low.
 
 ## R9. Reserve the platform folders (README only)
 
-- [ ] `apps/android/README.md`: Kotlin/Compose shell; `AccessibilityService`
-      adapter implements `DevicePort`; talks only over `contracts/`; no loop.
-- [ ] `apps/windows/README.md`: WinUI + UI Automation adapter; same rules.
-- [ ] `services/bridge/README.md` (or `docs/guides/adding-a-platform.md`): the
-      checklist — implement `DevicePort`, register `platform`, handler tests on
-      the fake, hardware evidence.
-- [ ] Gate: links green (after R8's link-check extension).
+- [x] `apps/android/README.md`: thin client, Compose shell, `AccessibilityService`
+      adapter implementing `DevicePort`, contract-only traffic, first steps.
+- [x] `apps/windows/README.md`: WinUI shell, UI Automation adapter, the sparse-tree
+      rule, contract-only traffic.
+- [x] `docs/guides/adding-a-platform.md`: the `DevicePort` method table, the four
+      honesty rules, and the checklist (adapter, registry platform value, fake
+      adapter tests, hardware evidence, contract note).
+- [x] Gate: `check-links.py` 0 broken (it now covers `apps/**/README.md` from R8)
+      and `check-tree.py` accepts the two new folders.
 
 Risk: none.
-
----
 
 ## Acceptance gates
 
