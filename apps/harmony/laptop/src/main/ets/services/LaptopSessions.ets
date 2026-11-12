@@ -72,7 +72,21 @@ export class LaptopSessions {
     if (this.sync === undefined || !this.sync.isConfigured()) {
       return;
     }
-    const merged: SyncSession[] = await this.sync.push(this.toSync());
+    let merged: SyncSession[] = [];
+    try {
+      merged = await this.sync.push(this.toSync());
+    } catch (error) {
+      // A push can fail on a big thread list; that must not stop us from
+      // reading the store, or a deletion made elsewhere never arrives.
+      merged = [];
+    }
+    if (merged.length === 0) {
+      try {
+        merged = await this.sync.pull();
+      } catch (error) {
+        return;
+      }
+    }
     if (merged.length === 0) {
       return;
     }
@@ -151,7 +165,10 @@ export class LaptopSessions {
         break;
       }
     }
-    if (!stillThere && localActive !== undefined && localActive.turns.length > 0) {
+    // Only an unfinished draft may be kept when the merge does not know it.
+    // A conversation WITH turns that is absent from the store was deleted
+    // elsewhere; re-adding it here resurrected it on every sync.
+    if (!stillThere && localActive !== undefined && localActive.turns.length === 0) {
       // The merge does not know the conversation you are in yet (its push and
       // this pull crossed). Keep it and stay on it: jumping to another chat is
       // how a finished run used to disappear from the screen.

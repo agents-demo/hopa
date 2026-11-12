@@ -131,7 +131,7 @@ export const APP_CATALOG: CatalogApp[] = [
     verified: true,
     ability: "MainAbility",
     purpose: "Feed, search, profile, messages, shopping.",
-    actions: ["Liking, commenting, following, posting and buying are public or paid actions: ask first.", "Purchases inside Douyin are payments: always ask, show the total.", "Web fallback: https://www.douyin.com."],
+    actions: ["Liking, commenting, following, posting and buying are public or paid actions: ask first.", "Purchases inside Douyin are payments: always ask, show the total.", "Open the app itself, not the website."],
   },
   {
     name: "files",

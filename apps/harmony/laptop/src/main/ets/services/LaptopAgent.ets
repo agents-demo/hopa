@@ -10,6 +10,7 @@ import {
   AgentRuntime,
   BridgeClient,
   BridgeScreenSource,
+  BridgeSessionSink,
   ChatSync,
   ScheduleService,
   MemoryStore,
@@ -80,13 +81,20 @@ class LaptopGates implements RemoteUiGates {
  */
 class LocalLaunchCapability implements ActionCapability {
   private launcher: LaptopLauncher;
+  private isLocal: () => boolean;
 
-  constructor(launcher: LaptopLauncher) {
+  constructor(launcher: LaptopLauncher, isLocal: () => boolean) {
     this.launcher = launcher;
+    this.isLocal = isLocal;
   }
 
+  /**
+   * Only this machine's launches. A run aimed at the phone must reach the
+   * phone's launcher through the bridge, with the phone's bundle name - taking
+   * it locally is how "open Douyin on the phone" failed on the laptop.
+   */
   canHandle(kind: string): boolean {
-    return kind === 'ui.launch';
+    return kind === 'ui.launch' && this.isLocal();
   }
 
   async execute(action: Action): Promise<Observation> {
@@ -130,7 +138,15 @@ export class LaptopAgent {
       this.approvals,
       this.runs
     );
-    executor.registerCapability(new LocalLaunchCapability(this.launcher));
+    // Launch locally only when there is no bridge to do it. With a bridge, the
+    // PC runs `aa start` on this device, so HOPA keeps the foreground - the same
+    // path the phone uses. Launching locally hands the foreground to the other
+    // app, and the observation that follows then collides with the transition
+    // (the scheduler suspends the shell). Read at call time on purpose.
+    executor.registerCapability(new LocalLaunchCapability(
+      this.launcher,
+      (): boolean => this.runtime.targetRole().length === 0
+    ));
     executor.registerCapability(new RemoteUiCapability(this.bridge, gates));
     this.executor = executor;
     this.runtime = new AgentRuntime(
@@ -145,6 +161,12 @@ export class LaptopAgent {
       new BridgeScreenSource(this.bridge, gates)
     );
     this.runtime.setHomeAbility('LaptopAbility');
+    // No step thumbnails here: the bridge frame is the user's own screen, and
+    // taking one right after a launch is what suspended this shell mid-run.
+    this.runtime.setCaptureStepFrames(false);
+    // Stop at a launch: this shell is frozen if it keeps working once another
+    // app owns the foreground, so the turn ends with "opened X" instead.
+    this.runtime.setStopAfterLaunch(true);
     this.schedules.bindRunner(
       (goal: string): Promise<string> => this.runtime.run(goal),
       (): boolean => this.runtime.isBusy()
@@ -154,6 +176,20 @@ export class LaptopAgent {
   /** Points the bridge capability at a running `pc-agent bridge`. */
   configureBridge(url: string, token: string): void {
     this.bridge.configure(url, token);
+    this.chatSync.configure(url, token, '2in1');
+  }
+
+  /**
+   * A paired session, not a copied key.
+   *
+   * Pair tokens expire after twelve hours and every refresh rotates them, so a
+   * laptop holding a pasted token silently loses the bridge overnight. With the
+   * refresh token the client renews itself, and the sink writes the new pair
+   * back to settings so the next start still works.
+   */
+  configureBridgeSession(url: string, token: string, refresh: string, sink: BridgeSessionSink): void {
+    this.bridge.configureSession(url, token, refresh);
+    this.bridge.setSessionSink(sink);
     this.chatSync.configure(url, token, '2in1');
   }
 

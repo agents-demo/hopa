@@ -1,5 +1,5 @@
 import { bundleManager, common, Want } from '@kit.AbilityKit';
-import { APP_CATALOG, CatalogApp } from '@hopa/app';
+import { APP_CATALOG, BridgeClient, CatalogApp } from '@hopa/app';
 
 /**
  * Opening an app on this laptop.
@@ -17,10 +17,30 @@ export class LaptopApp {
 
 export class LaptopLauncher {
   private context: common.UIAbilityContext | undefined = undefined;
+  private bridge: BridgeClient | undefined = undefined;
   private installedCache: Map<string, boolean> = new Map<string, boolean>();
+  /**
+   * The catalog is shared with the phone, so it names the phone's bundles.
+   * A few apps ship under a different name on the 2-in-1; the launcher is the
+   * only place that knows the difference.
+   */
+  private static readonly DEVICE_ALIASES: Record<string, string> = {
+    'com.ss.hm.ugc.aweme': 'com.ss.ohpc.ugc.aweme'
+  };
+
+  /** The bundle this machine would install for a catalog bundle. */
+  private bundlesFor(bundle: string): string[] {
+    const alias: string = LaptopLauncher.DEVICE_ALIASES[bundle] ?? '';
+    return alias.length > 0 ? [bundle, alias] : [bundle];
+  }
 
   attach(context: common.UIAbilityContext): void {
     this.context = context;
+  }
+
+  /** With a bridge, the PC starts the app: HOPA keeps its own foreground. */
+  attachBridge(bridge: BridgeClient): void {
+    this.bridge = bridge;
   }
 
   private knowable(): CatalogApp[] {
@@ -41,12 +61,17 @@ export class LaptopLauncher {
   /** Ask the system which catalog apps exist, once, and remember it. */
   async loadInstalled(): Promise<void> {
     for (const entry of this.knowable()) {
-      try {
-        await bundleManager.getBundleInfo(entry.bundle, 0);
-        this.installedCache.set(entry.bundle, true);
-      } catch (error) {
-        this.installedCache.set(entry.bundle, false);
+      let present: boolean = false;
+      for (const bundle of this.bundlesFor(entry.bundle)) {
+        try {
+          await bundleManager.getBundleInfo(bundle, 0);
+          present = true;
+          break;
+        } catch (error) {
+          // Try the next name this device might use.
+        }
       }
+      this.installedCache.set(entry.bundle, present);
     }
   }
 
@@ -74,28 +99,40 @@ export class LaptopLauncher {
     if (context === undefined || bundle.length === 0) {
       return false;
     }
-    try {
-      const want: Want = bundleManager.getLaunchWantForBundleSync(bundle);
-      await context.startAbility(want);
-      return true;
-    } catch (error) {
-      // The resolver does not answer for every system app on this build
-      // (Settings and Browser are the known ones). The explicit ability is
-      // still a plain Want, so fall back to the names HarmonyOS ships.
-    }
-    const candidates: string[] = [
-      `${bundle}.MainAbility`,
-      `${bundle}.EntryAbility`,
-      'EntryAbility',
-      'MainAbility'
-    ];
-    for (const name of candidates) {
+    for (const name of this.bundlesFor(bundle)) {
+      const bridge: BridgeClient | undefined = this.bridge;
+      if (bridge !== undefined && bridge.isConfigured()) {
+        // Same path the phone takes: the PC runs `aa start`, so this shell is
+        // never the one handing over the foreground. Doing that locally and
+        // then observing through hdc is what got it suspended mid-run.
+        if (await bridge.launch(name)) {
+          return true;
+        }
+        continue;
+      }
       try {
-        const want: Want = { bundleName: bundle, abilityName: name };
+        const want: Want = bundleManager.getLaunchWantForBundleSync(name);
         await context.startAbility(want);
         return true;
       } catch (error) {
-        // Try the next ability name.
+        // The resolver does not answer for every system app on this build
+        // (Settings and Browser are the known ones). The explicit ability is
+        // still a plain Want, so fall back to the names HarmonyOS ships.
+      }
+      const abilities: string[] = [
+        `${name}.MainAbility`,
+        `${name}.EntryAbility`,
+        'EntryAbility',
+        'MainAbility'
+      ];
+      for (const ability of abilities) {
+        try {
+          const want: Want = { bundleName: name, abilityName: ability };
+          await context.startAbility(want);
+          return true;
+        } catch (error) {
+          // Try the next ability name.
+        }
       }
     }
     return false;

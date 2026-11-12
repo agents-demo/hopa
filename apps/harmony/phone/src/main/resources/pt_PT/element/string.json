@@ -6,7 +6,7 @@
     },
     {
       "name": "EntryAbility_desc",
-      "value": "Agente telefonico HOPA"
+      "value": "Assistente pessoal HOPA"
     },
     {
       "name": "EntryAbility_label",
@@ -18,7 +18,7 @@
     },
     {
       "name": "greeting_1",
-      "value": "Ola, sou a HOPA, o seu agente no telefone."
+      "value": "Olá, sou a HOPA, o seu assistente pessoal no dispositivo."
     },
     {
       "name": "greeting_2",

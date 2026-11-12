@@ -6,7 +6,7 @@
     },
     {
       "name": "EntryAbility_desc",
-      "value": "HOPA phone agent"
+      "value": "HOPA パーソナルアシスタント"
     },
     {
       "name": "EntryAbility_label",
@@ -18,7 +18,7 @@
     },
     {
       "name": "greeting_1",
-      "value": "こんにちは。HOPA、あなたのスマートフォンエージェントです。"
+      "value": "こんにちは、HOPAです。この端末のパーソナルアシスタントです。"
     },
     {
       "name": "greeting_2",

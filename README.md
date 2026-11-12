@@ -1,12 +1,13 @@
 ﻿<div align="center">
 
-<img src="docs/media/banner-2026.svg" alt="HOPA - Say it. HOPA does it." width="100%" />
+<a href="docs/media/HOPA-demo-2026.mp4"><img src="docs/media/banner-2026-duo.svg" alt="HOPA — Say it. Done. HarmonyOS Personal Assistant." width="100%" /></a>
 
 <br/><br/>
 
-[![Status](https://img.shields.io/badge/status-working%20prototype-orange.svg)](docs/history/status-2026-11-07.md)
+[![Status](https://img.shields.io/badge/status-working%20prototype-orange.svg)](docs/status/backlog.md)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/HarmonyOS-6.1%20%2F%20API%2024-0A59F7.svg)](docs/guides/setup.md)
+[![Platform](https://img.shields.io/badge/HarmonyOS-6.1%2B%20%C2%B7%20verified%20on%207.0-0A59F7.svg)](docs/guides/setup.md)
+[![Tests](https://img.shields.io/badge/pc--agent-121%20tests-brightgreen.svg)](services/pc-agent/tests)
 
 </div>
 
@@ -14,72 +15,72 @@
 
 **You have better things to do than tap through menus.**
 
-<sub>HOPA — the HarmonyOS On-device Phone Agent.</sub>
+Say what you want in your own words. HOPA uses your apps for you: opens them,
+taps, reads and answers. Then it tells you what happened — and it asks before
+money moves.
 
-HOPA is a phone agent for HarmonyOS. Say what you want in your own words. It
-opens the app or the website, reads the screen, taps, types and scrolls — then
-tells you what happened.
+**▶ [Watch the 62-second demo](docs/media/HOPA-demo-2026.mp4)** — HOPA saying
+hello, then the real Bilibili app and a real Weibo post, end to end.
 
-Before money moves, it stops and asks. Every time.
+> **Working prototype on HarmonyOS 7.0.** Chat, browsing, app control through the
+> PC bridge, the run pane and the payment gate are real. Next in line: local app
+> control (Huawei's ACL), MCP tool calling and Chinese.
+> [What comes next →](docs/status/backlog.md)
 
-HOPA has three places: **Chat** to ask, **Activity** to see what it did, and
-**Capabilities** to see what it can use.
-
-> **Today:** a working prototype on a Huawei Mate 80. Chat, the browser, app
-> control through the PC companion and the payment gate are real. Fully
-> on-device app control waits for Huawei's accessibility ACL.
-> [The honest details →](docs/history/status-2026-11-07.md)
-
-## Meet HOPA
+## What it looks like
 
 <table>
 <tr>
-<td width="30%" align="center" valign="middle">
+<td width="25%" align="center" valign="top">
 
-<img src="docs/media/mascot.svg" alt="HOPA, the little coral phone with feet" width="220" />
+<img src="docs/media/home-2026.jpeg" alt="HOPA home: the smiling living-phone mascot and three example asks" height="420" />
+
+<br/><sub><b>Home.</b> One sentence, three gentle suggestions.</sub>
 
 </td>
-<td valign="middle">
+<td width="25%" align="center" valign="top">
 
-**The little phone with feet.**
+<img src="docs/media/chat-bilibili-2026.jpeg" alt="HOPA chat: the most popular Bilibili videos with play counts" height="420" />
 
-**HOPA** stands for **HarmonyOS On-device Phone Agent**.
+<br/><sub><b>Bilibili.</b> Read the feed, answer with play counts.</sub>
 
-It blinks while it waits. It taps while it works. It hops when something
-actually gets done. HOPA is not a chatbot in a box; it is the part of the phone
-that does the tapping — and it stays out of the way when there is nothing to do.
+</td>
+<td width="25%" align="center" valign="top">
 
-In Chinese, the idea is simple: **动口不动手** — speak, don’t tap.
+<img src="docs/media/chat-weibo-2026.jpeg" alt="HOPA chat: a Weibo post confirmation before publishing" height="420" />
+
+<br/><sub><b>Weibo.</b> Draft the post, ask before publishing.</sub>
+
+</td>
+<td width="25%" align="center" valign="top">
+
+<img src="docs/media/activity-2026.jpeg" alt="HOPA Activity: recent actions, runs, usage and scheduled plans" height="420" />
+
+<br/><sub><b>Activity.</b> A receipt for every action.</sub>
 
 </td>
 </tr>
 </table>
 
-## A first look
+## Why it is different
 
-**▶ [Watch the 62-second demo](docs/media/HOPA-demo-2026.mp4)** — the banner, HOPA saying hello, then the real Bilibili app and a real Weibo post, end to end.
+- **It has hands.** Not a chat that describes taps — a runtime that taps, types,
+  launches and reads, then checks the screen actually changed.
+- **Money always asks.** A payment is a decision with the item, the total and the
+  seller in plain words — never a remembered "yes", never after the fact.
 
 <table>
 <tr>
-<td width="33%" align="center" valign="top">
+<td width="26%" align="center" valign="middle">
 
-<img src="docs/media/home-2026.jpeg" alt="HOPA home: the smiling living-phone mascot and three example asks" height="560" />
-
-<br/><sub><b>Home.</b> One sentence, three gentle suggestions, and a mascot that smiles back.</sub>
+<img src="docs/media/mascot.svg" alt="HOPA, the little coral phone with feet" width="160" />
 
 </td>
-<td width="33%" align="center" valign="top">
+<td valign="middle">
 
-<img src="docs/media/chat-bilibili-2026.jpeg" alt="HOPA chat: the most popular Bilibili videos with play counts" height="560" />
-
-<br/><sub><b>Bilibili.</b> HOPA reads the feed and answers with the most popular videos, play counts and comments.</sub>
-
-</td>
-<td width="33%" align="center" valign="top">
-
-<img src="docs/media/chat-weibo-2026.jpeg" alt="HOPA chat: a Weibo post confirmation before publishing" height="560" />
-
-<br/><sub><b>Weibo.</b> HOPA drafts the post and asks before publishing. Nothing public happens without your yes.</sub>
+**The little phone with feet.** HOPA stands for *HarmonyOS Personal Assistant*.
+It blinks while it waits, taps while it works, and hops only when something is
+actually done. In Chinese, the idea is **动口不动手** — speak, don’t tap.
 
 </td>
 </tr>
@@ -87,176 +88,168 @@ In Chinese, the idea is simple: **动口不动手** — speak, don’t tap.
 
 ## What you can ask
 
-| Apps | The web |
+| On the phone | On the web |
 |---|---|
 | “Send Alice ‘running 10 minutes late’ on WeChat.”<br/>“Check my messages on Feishu.”<br/>“Find a charger on Xianyu.” | “What are the top stories on Zhihu?”<br/>“What’s trending on Xiaohongshu?”<br/>“Summarize the top videos on Bilibili.” |
 
-<sub>Site examples run in the browser HOPA opens for you. App examples need that
-app installed; HOPA says when a bundle is missing instead of guessing.</sub>
-
-It also remembers facts and skills you choose to keep.
+Site examples run in the browser HOPA opens for you. App examples need that app
+installed; HOPA names a missing app instead of guessing. It also remembers facts
+and skills you choose to keep.
 
 ## Money is different
 
 > “Order the cheapest one in my cart.”
 
 HOPA shows the item, the total and the seller. You choose **Deny** or **Allow**.
-Nothing is paid without you, and a payment is never remembered as a yes.
+Nothing is paid without you, and a payment is never remembered as a yes. The
+approval is written in your language — “Confirm payment?” — never in raw action
+names.
 
-The approval is written in your language — “Confirm payment?” — never in raw
-action names.
+## And when your work moves to a laptop
 
-## Launchpad: apps and sites
+HOPA started on the phone. It also runs on a HarmonyOS 2-in-1, and the two are
+one conversation: ask in your hand, open the laptop, and the same thread is
+there — with the same answer, the same steps and the same picture of what it did.
 
-<table>
-<tr>
-<td width="50%" align="center" valign="top">
-
-<img src="docs/media/launchpad-top-2026.jpeg" alt="HOPA Launchpad showing Alipay, Baidu and Bilibili verified" height="560" />
-
-<br/><sub><b>Launchpad.</b> 35 apps, 26 verified on the test phone. Alipay, Baidu and Bilibili are now openable.</sub>
-
-</td>
-<td width="50%" align="center" valign="top">
-
-<img src="docs/media/launchpad-sites-2026.jpeg" alt="HOPA Launchpad sites: 小红书, 微博, 抖音, 知乎 and 豆瓣" height="560" />
-
-<br/><sub><b>Chinese sites.</b> 小红书, 微博, 抖音, 知乎, 豆瓣 and more open in the browser HOPA controls.</sub>
-
-</td>
-</tr>
-<tr>
-<td width="50%" align="center" valign="top">
-
-<img src="docs/media/launchpad-douyin-2026.jpeg" alt="HOPA Launchpad showing Camera, Clock and Douyin verified" height="560" />
-
-<br/><sub><b>Chinese apps.</b> Camera, Clock and Douyin are real, verified entries now.</sub>
-
-</td>
-<td width="50%" align="center" valign="top">
-
-<img src="docs/media/launchpad-music-2026.jpeg" alt="HOPA Launchpad showing JD, Kuaishou, Music, Notes and Petal Maps" height="560" />
-
-<br/><sub><b>More Chinese apps.</b> JD, Kuaishou, Music, Notes and Petal Maps are verified too.</sub>
-
-</td>
-</tr>
-</table>
-
-## What it did
+On the desk the answer gets a **run pane** beside it: `THIS RUN` with numbered
+steps and durations, `WHAT HOPA SAW` — the frame it read at each step — earlier
+runs in the same chat, and the cost when it was measured. A run can also choose
+its machine — this phone or this laptop — so “open Settings” can act on either,
+and the result still lands in the same conversation.
 
 <table>
 <tr>
-<td width="50%" align="center" valign="top">
+<td width="55%" align="center" valign="top">
 
-<img src="docs/media/activity-2026.jpeg" alt="HOPA Activity: recent actions, runs, usage and scheduled plans" height="560" />
+<b>The two devices, one conversation</b>
+
+<a href="docs/media/duo-laptop-phone.mp4"><img src="docs/media/duo-laptop-phone.png" alt="HOPA on the laptop: ask it to open Douyin on the phone and tell you what it sees; the phone opens Douyin, the laptop answers. Click for the 20-second clip." width="100%" /></a>
+
+<sub><b>? 20 seconds:</b> asked on the laptop, run on the phone, answered in the
+same chat - and the phone goes back to where it was. <i>Click the picture to play
+it.</i></sub>
 
 </td>
 <td valign="middle">
 
-**A receipt for every action.**
+**What it keeps honest**
 
-**Activity** shows what HOPA just did, the full run behind it, and what is
-scheduled next. Payment decisions are listed as decisions, not hidden in a log.
-The mascot sits at the top and tells you whether HOPA is ready or still working.
-
-</td>
-</tr>
-</table>
-
-## Settings that tell the truth
-
-<table>
-<tr>
-<td width="33%" align="center" valign="top">
-
-<img src="docs/media/settings-2026.jpeg" alt="HOPA Settings: model, phone access and the PC bridge" height="560" />
-
-<br/><sub><b>Settings.</b> The model, the phone access path and the bridge state, all in one place.</sub>
-
-</td>
-<td width="33%" align="center" valign="top">
-
-<img src="docs/media/model-2026.jpeg" alt="HOPA model card: provider, endpoint, model and a loaded hidden key" height="560" />
-
-<br/><sub><b>Model.</b> A loaded key is hidden. The field stays blank; leave it blank to keep the key.</sub>
-
-</td>
-<td width="33%" align="center" valign="top">
-
-<img src="docs/media/phone-2026.jpeg" alt="HOPA Phone access: on-device control and PC bridge status" height="560" />
-
-<br/><sub><b>Phone access.</b> On-device control says “not granted” instead of pretending. The bridge shows its real state.</sub>
+- Every number is measured; a failed step is named.
+- The bridge line says whether the machine is reachable.
+- If the run shown is older than the answer, the title says `LAST RUN` and names
+  the question it belonged to.
 
 </td>
 </tr>
 </table>
 
-A loaded model key is **hidden on purpose**. The field is blank, the label says
-the key is loaded, and leaving it blank keeps it. Enter a new key only when you
-want to replace it.
+## Five modes, one behaviour
 
-Usage is stored across restarts: actions, decisions, tokens and time. It shows a
-friendly empty state until there is something real to report, instead of a wall
-of zeroes.
+| Mode | Reading | Where it runs |
+|---|---|---|
+| **Everyday** | 13.5 pt | rail/metrics where there is room |
+| **Easy** | 15 pt | fewer controls; no rail |
+| **Power** | 13 pt | metrics, schedules |
+| **Social** | 13 pt | no rail, no metrics |
+| **Kid** | 16 pt | no history, parent PIN to leave |
+
+The presentation adapts to the screen; the rules do not. Kid blocks payments and
+public posts on the phone, and gates the desk behind a parent PIN.
+
+## How it fits together
+
+```mermaid
+flowchart TB
+  subgraph Phone["Phone · HarmonyOS"]
+    direction LR
+    P1[Chat]
+    P2[Activity]
+    P3[Capabilities]
+  end
+  subgraph Desk["Laptop · HarmonyOS"]
+    direction LR
+    D1[Sidebar]
+    D2[Chat + run pane]
+    D3[Activity · Plans]
+  end
+  subgraph PC["A PC"]
+    B["pc-agent bridge
+    /chats · /images · /screenshot"]
+  end
+  Phone -->|hdc reverse tunnel · or cloud relay| B
+  Desk -->|same tunnel| B
+  B -->|hdc| T["phone / this laptop
+  taps · types · reads · launches"]
+```
+
+The bridge is the only part that touches a device, and the only part that keeps
+state. It lives on a PC — usually the laptop, but it is a separate process, not a
+feature of one app.
+
+- **One store.** `GET/POST /chats` merges by content (`role:at:text`), with
+  tombstones for deletes, so either app can start or finish a thread.
+- **One image store.** Frames are content-addressed on the PC (`/images`), so a
+  screenshot taken on the phone is shown on the desk. A path inside one device's
+  sandbox would mean nothing on the other.
+- **One bridge.** A pooled listener serves every device, routes by
+  `X-Hopa-Role` or `/d/<serial>/…`, and authorises each caller once.
+- **No cloud account.** For a phone away from the cable, `pc-agent relay` on a
+  public host plus `pc-agent cloud-link` on the PC keeps the same store and
+  tokens where they belong.
 
 ## Get started
 
-**1. Put HOPA on your phone.**
+**1. Build the app.**
 
-Today the app is built and signed from source. On a retail Huawei phone, start
-with [Install on a phone](docs/guides/install-phone.md) — HarmonyOS installs HAPs
-through AppGallery or `hdc`, not by tapping a download.
+```powershell
+.\tools\scripts\build.ps1
+.\tools\scripts\deploy.ps1
+```
 
-<sub>The prebuilt [0.1.0 release](https://github.com/michaelatamuk/hopa/releases/tag/v0.1.0)
-is signed for the emulator, not for a retail phone. Rebuild and sign with your
-Huawei profile to install it on a Mate 80.</sub>
+`deploy.ps1` installs the right HAP per device, restores the reverse tunnel and
+starts the bridge. There are two HAPs, one per device, from one codebase.
+Installing on a retail phone is its own guide:
+[Install on a phone](docs/guides/install-phone.md).
 
-**2. Connect a model.**
+**2. Connect a model.** Open **Capabilities → Settings**, pick a provider
+(OpenAI-compatible, Anthropic, Gemini or DeepSeek), enter endpoint, model and
+key. A loaded key stays loaded; leave the field blank to keep it.
 
-Open **Capabilities → Settings**, pick a provider (OpenAI-compatible, Anthropic,
-Gemini or DeepSeek), enter the endpoint, the model name and your key. If a key
-is already loaded, leave the field blank to keep it.
-
-**3. Give it hands.**
-
-On a phone that allows it, enable the accessibility service. On the current test
-phone Huawei's ACL is still pending, so app control uses the small PC companion:
-start `pc-agent bridge`, forward the port, then connect it in **Settings → PC
-bridge**. The companion lends HOPA its hands from your computer; it runs on your
-machine, not in the cloud.
+**3. Give it hands.** Enable the accessibility service where Huawei allows it.
+On the current test phones the ACL is pending, so app control goes through the
+PC bridge: start it with `tools\scripts\bridges.ps1`, then connect in
+**Settings → Bridge** — or tap **Use the HOPA cloud relay** to fill the relay
+address in one tap.
 
 **4. Ask.**
 
-> “What’s trending on Bilibili today?”
->
-> “Open Settings and show me Wi-Fi.”
->
+> “What’s trending on Bilibili today?” · “Open Settings and show me Wi-Fi.” ·
 > “Draft a one-line message to my team.”
 
 ## Good to know
 
-- HOPA sees the screen you see. It cannot work while it is fully closed.
-- It will not guess an app it does not know. 9 of the 35 catalogue apps do not
-  have a verified HarmonyOS bundle yet.
-- Login, CAPTCHA and verification codes stay with you.
+- HOPA sees the screen you see, while the app is open.
+- Unknown apps are named, not guessed.
+- Login, CAPTCHA and verification codes stay with you. Passwords and OTPs are
+  never typed.
 - Some apps block automation; HOPA stops and hands over.
-- The PC companion is for a trusted network.
-- The little mascot is not decoration: it shows thinking, waiting, success and
-  failure, and it celebrates only when an action actually completed.
+- The bridge is for a trusted network, and pairing one device means it may act
+  on the others in the pool.
+- The mascot shows thinking, waiting, success and failure — and celebrates only
+  when an action actually completed.
 
 ### Where it is today
 
-| Works | Needs a device or data |
-|---|---|
-| Chat, browser, memory, skills, plans, batch, runs and export | Untethered app control until Huawei grants the ACL |
-| App control through the PC companion | Speech |
-| A website task from Chat: open Bilibili, read it and summarize | System reminders |
-| Payment approval with a plain-language sheet | Verified bundles for 9 other apps |
-| Usage that survives a restart | |
+| Works | Partial | Next |
+|---|---|---|
+| Chat, memory, skills, plans, batch, runs, export | Speech (phone) | MCP tool calling |
+| App control through the PC bridge | On-device app control (Huawei ACL) | Chinese copy on both apps |
+| Shared store, image store, relay, run-on-any-device choice | Desk mode depth (`Easy`/`Kid` are type-and-chrome today) | Taskbar jump actions |
+| Run pane on the desk with steps, evidence, cost | Compact run view on the phone | Window repaint after long idle |
 
-Read the dated, per-capability state in
-[docs/product/coverage.md](docs/product/coverage.md).
+The dated, per-capability detail is in
+[docs/product/coverage.md](docs/product/coverage.md); the remaining work with
+effort is in [docs/status/backlog.md](docs/status/backlog.md).
 
 ## For developers
 
@@ -267,26 +260,10 @@ Read the dated, per-capability state in
 
 **Build and install**
 
-One shot (build + sign + install + launch):
-
 ```powershell
-.\tools\scripts\run-on-device.ps1
-```
-
-```bash
-./tools/scripts/run-on-device.sh
-```
-
-Or run the steps yourself:
-
-```powershell
-.\tools\scripts\build.ps1
-.\tools\scripts\sign-app.ps1 -Install
-```
-
-```bash
-./tools/scripts/build.sh
-./tools/scripts/sign-app.sh --install
+.\tools\scripts\build.ps1      # both HAPs
+.\tools\scripts\deploy.ps1     # install per device, tunnels, bridge
+.\tools\scripts\bridges.ps1    # the bridge alone (start/stop/status)
 ```
 
 **Test**
@@ -295,34 +272,35 @@ Or run the steps yourself:
 .\tools\scripts\run-tests.ps1
 ```
 
-```bash
-./tools/scripts/run-tests.sh
-```
+The bridge suite alone: `pytest services/pc-agent` — **121 tests** today,
+including the pooled bridge, the shared store, the image store and the relay.
+CI also runs ruff, the structure and link checks, the generated-catalogue check
+and a secret/license scan.
 
 **What is where**
 
-- `apps/harmony/` — the shippable ArkTS app (UI, agent loop, gate, router).
-- `services/pc-agent/` — the PC companion: device control, CLI, MCP, bridge.
+- `apps/harmony/app/` — the shared kit: runtime, chat formatting, bridge
+  client, conversation contracts.
+- `apps/harmony/core/` — the core: loop, gate, executor, run records.
+- `apps/harmony/phone/` — the phone app (module `entry`).
+- `apps/harmony/laptop/` — the laptop app (module `laptop`).
+- `services/pc-agent/` — the PC companion and bridge: device control, store,
+  images, relay.
 - `services/brain/` — the Kotlin reference brain for routing and knowledge.
 - `harness/` — the reference loop and HOPA-Bench.
-- `docs/` — setup, architecture, contracts and the honest status.
+- `docs/` — setup, architecture, contracts and the status.
 
-**A few useful links**
+**Links**
 
 - [Setup and toolchain](docs/guides/setup.md)
 - [Build, sign and install](docs/guides/build-and-sign.md)
-- [PC companion guide](docs/guides/pc-bridge.md)
+- [PC bridge, tunnels and the cloud relay](docs/guides/pc-bridge.md)
 - [Architecture](docs/architecture/overview.md)
-- [App knowledge](docs/reference/knowledge.md)
-- [Bundles on a device](docs/reference/bundles.md)
 - [Safety model](docs/reference/safety.md)
-- [Current status](docs/history/status-2026-11-07.md)
+- [Status and remaining work](docs/status/backlog.md)
 
-The app is ArkTS only. Python and Kotlin are development and PC-side tools;
-they are not packaged into the HAP. CI runs the Python and Kotlin suites, the
-structure and link checks, the generated-catalogue check, and a secret/license
-scan. The HAP and ArkTS jobs need a mirrored Huawei toolchain and are
-conditional; the workflow skips them with a warning rather than pretending.
+The apps are ArkTS only. Python and Kotlin are development and PC-side tools;
+they are not packaged into the HAP.
 
 </details>
 

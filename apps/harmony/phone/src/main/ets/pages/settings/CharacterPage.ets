@@ -138,7 +138,7 @@ export struct CharacterPage {
           .fontSize(22)
           .fontWeight(FontWeight.Bold)
           .fontColor($r('app.color.text_primary'))
-        Text('Your phone agent. Adult, capable, a little dry.')
+        Text('Your personal assistant. Adult, capable, a little dry.')
           .fontSize(12)
           .fontColor($r('app.color.text_secondary'))
       }

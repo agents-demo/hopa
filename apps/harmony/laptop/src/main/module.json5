@@ -50,6 +50,16 @@
         // Below this the sidebar, rail and composer stop fitting honestly.
         "minWindowWidth": 960,
         "minWindowHeight": 620,
+        // A run opens another app, so HOPA is in the background while it acts.
+        // Without a declared mode here `startBackgroundRunning` is refused and
+        // the system suspends the shell mid-run: the answer never gets written.
+        // `taskKeeping` is the 2-in-1 mode that keeps a task alive when another
+        // app takes the foreground. Without it the memory manager reaped this
+        // shell the moment Douyin started (HandleAppDied), mid-run.
+        "backgroundModes": [
+          "taskKeeping",
+          "dataTransfer"
+        ],
         "exported": true,
         "skills": [
           {

@@ -1,8 +1,11 @@
-import { APP_CATALOG, SITE_CATALOG } from './AppCatalog';
+import { APP_CATALOG } from './AppCatalog';
 
 /**
- * The catalogue block for the model: what each app is for and how to start it,
- * plus the sites that can be opened in the built-in browser.
+ * The catalogue block for the model: what each app is for and how to start it.
+ *
+ * There is deliberately no "open the website instead" route: the runtimes have
+ * no web capability, so naming one only made the model stop at
+ * "no capability for web.navigate" while the app was right there.
  */
 export class AppCatalogPrompt {
   static text(): string {
@@ -22,12 +25,7 @@ export class AppCatalogPrompt {
       }
     }
     lines.push('');
-    lines.push('SITES (https only; open with web.navigate when network is on):');
-    for (const site of SITE_CATALOG) {
-      if (site.domains.length > 0) {
-        lines.push(`${site.display}: ${site.domains[0]}`);
-      }
-    }
+    lines.push('Open an app with ui.launch and the bundle above. There is no web capability: when a site is wanted, open its app.');
     return lines.join('\n');
   }
 }

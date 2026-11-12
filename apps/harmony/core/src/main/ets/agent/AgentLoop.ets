@@ -26,6 +26,13 @@ export class AgentLoop {
   private cancelled: boolean = false;
   private answer: string = '';
   private surfaceAvailable: boolean = true;
+  /**
+   * Hosts that cannot execute in the background (a desktop shell) stop the loop
+   * at a launch: the launch hands the foreground away, and everything after it
+   * would run while the app is backgrounded - which the scheduler freezes.
+   */
+  private stopAfterLaunch: boolean = false;
+  private stoppedAfterLaunch: boolean = false;
 
   constructor(
     executor: ActionExecutor,
@@ -78,6 +85,10 @@ export class AgentLoop {
   /** A plain-text reply when the model answers instead of proposing an action. */
   getAnswer(): string {
     return this.answer;
+  }
+
+  setStopAfterLaunch(stop: boolean): void {
+    this.stopAfterLaunch = stop;
   }
 
   setSurfaceAvailable(available: boolean): void {
@@ -137,6 +148,7 @@ export class AgentLoop {
       }
 
       const launch: string = AgentLoop.launchBundle(action);
+      this.stoppedAfterLaunch = false;
       if (launch.length > 0 && launched.indexOf(launch) >= 0) {
         // HarmonyOS refuses a UIAbility start from the background, so a second
         // launch of the same app cannot succeed. Keep the first result and let
@@ -167,9 +179,23 @@ export class AgentLoop {
       await this.onStep(outcome);
       if (launch.length > 0 && outcome.executed && outcome.observation.success) {
         launched.push(launch);
+        if (this.stopAfterLaunch) {
+          // Do not observe or ask the model again: this app is already in the
+          // background now, and any further work here is what gets it frozen.
+          this.stoppedAfterLaunch = true;
+          break;
+        }
       }
 
       messages.push(new ModelMessage('assistant', response.text));
+      if (launch.length > 0 && outcome.executed && outcome.observation.success) {
+        // Let the foreground hand-over finish. Observing during the transition
+        // runs a device-side layout dump while the ability is being backgrounded,
+        // and the resource scheduler then suspends the shell (lifecycle timeout).
+        await new Promise<void>((resolve: () => void) => {
+          setTimeout(resolve, 1500);
+        });
+      }
       screen = await this.capture();
       messages.push(
         new ModelMessage(
@@ -187,6 +213,16 @@ export class AgentLoop {
       }
     }
 
+    // A run that used every step on actions, or stopped on a failed one, used
+    // to return an empty answer: the chat drew nothing and the question looked
+    // ignored. Ask once more for text only, then fall back to what happened.
+    if (this.answer.trim().length === 0 && !this.cancelled && !this.stoppedAfterLaunch) {
+      this.answer = await this.finalAnswer(messages);
+    }
+    if (this.answer.trim().length === 0) {
+      this.answer = AgentLoop.summarize(outcomes);
+    }
+
     return outcomes;
   }
 
@@ -195,6 +231,42 @@ export class AgentLoop {
       return new Screen();
     }
     return this.source.capture();
+  }
+
+  /** One last text-only turn when the loop ran out of steps or stopped. */
+  private async finalAnswer(messages: ModelMessage[]): Promise<string> {
+    const request = new ModelRequest();
+    request.messages = this.budget.trim(messages.concat([
+      new ModelMessage(
+        'user',
+        'No more actions are available. Answer the user now in plain text, using ' +
+        'what the observations above showed. Do not propose another action.'
+      )
+    ]));
+    try {
+      const response: ModelResponse = await this.model.complete(request);
+      this.tokensUsed += response.tokens;
+      const text: string = response.text.trim();
+      if (text.length === 0 || ActionParser.parse(text) !== undefined) {
+        return '';
+      }
+      return text;
+    } catch (error) {
+      return '';
+    }
+  }
+
+  /** The truth when the model cannot speak: what the run actually did. */
+  private static summarize(outcomes: ActionOutcome[]): string {
+    if (outcomes.length === 0) {
+      return 'I could not get an answer for that. Try asking in a different way.';
+    }
+    const last: ActionOutcome = outcomes[outcomes.length - 1];
+    const detail: string = last.observation.detail.length > 0 ? ` ${last.observation.detail}` : '';
+    if (last.observation.success) {
+      return `I did that: ${last.observation.summary}.${detail}`;
+    }
+    return `I stopped at ${last.action.kind}: ${last.observation.summary}${detail}.`;
   }
 
   /** The lower-case bundle a launch action asks for, or '' for other actions. */

@@ -6,7 +6,7 @@
     },
     {
       "name": "EntryAbility_desc",
-      "value": "HOPA 휴대폰 에이전트"
+      "value": "HOPA 개인 비서"
     },
     {
       "name": "EntryAbility_label",
@@ -18,7 +18,7 @@
     },
     {
       "name": "greeting_1",
-      "value": "안녕하세요. 저는 휴대폰 에이전트 HOPA입니다."
+      "value": "안녕하세요, HOPA입니다. 이 기기의 개인 비서입니다."
     },
     {
       "name": "greeting_2",

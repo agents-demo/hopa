@@ -61,6 +61,9 @@ export class AgentRuntime {
   private lastStepLabels: string[] = [];
   private lastTypedLength: number = 0;
   private lastStepShots: string[] = [];
+  /** Off on hosts that already show the screen; see recordStep. */
+  private captureStepFrames: boolean = true;
+  private stopAfterLaunch: boolean = false;
   private lastStepShotIds: string[] = [];
   private matchedSkillId: string = '';
   private activeRuns: number = 0;
@@ -104,6 +107,7 @@ export class AgentRuntime {
       maxSteps,
       this.screen
     );
+    this.loop.setStopAfterLaunch(this.stopAfterLaunch);
     this.loop.onStep = (outcome: ActionOutcome): Promise<void> => {
       return this.recordStep(outcome);
     };
@@ -139,9 +143,24 @@ export class AgentRuntime {
     if (!outcome.action.kind.startsWith('ui.') && !outcome.action.kind.startsWith('web.')) {
       return;
     }
+    // A launch hands the foreground over in the same instant this step is
+    // recorded. Every bridge call here runs hdc on this very device (foreground
+    // query, layout dump, screenshot), so asking for one now competes with the
+    // activity transition and the resource scheduler suspends the shell. The
+    // launch needs no frame anyway: the app is what the user is looking at.
+    if (outcome.action.kind === 'ui.launch') {
+      return;
+    }
     try {
       const foreground: string = await this.bridge.foregroundBundle();
       if (foreground.length === 0 || foreground === 'com.hopa.agent') {
+        return;
+      }
+      // The frame is for the phone's approval card. On a desktop the user is
+      // already looking at the screen, and asking the bridge for a device
+      // screenshot right after a launch is what got this shell suspended
+      // (lifecycle timeout) before it could answer.
+      if (!this.captureStepFrames) {
         return;
       }
       const shot: string = await this.bridge.screenshot(960);
@@ -152,6 +171,18 @@ export class AgentRuntime {
     } catch (error) {
       // A frame is optional; never fail a run for it.
     }
+  }
+
+  /** True on a shell that must not keep working once it is backgrounded. */
+  setStopAfterLaunch(stop: boolean): void {
+    if (this.loop !== undefined) {
+      this.loop.setStopAfterLaunch(stop);
+    }
+    this.stopAfterLaunch = stop;
+  }
+
+  setCaptureStepFrames(enabled: boolean): void {
+    this.captureStepFrames = enabled;
   }
 
   stepShots(): string[] {
@@ -278,6 +309,11 @@ export class AgentRuntime {
     this.bridge.setTarget(role);
   }
 
+  /** '' means this device; otherwise the device the run should act on. */
+  targetRole(): string {
+    return this.bridge.targetRole();
+  }
+
   async run(goal: string): Promise<string> {    this.activeRuns += 1;
     try {
       return await this.runInner(goal);
@@ -330,6 +366,10 @@ export class AgentRuntime {
       `route: ${match.target === undefined ? 'none' : match.target.display} score=${match.score}`
     );
     this.loop.resetCancel();
+    // Stop at a launch only when THIS shell performs it. A run aimed at the
+    // phone is driven over the bridge: this window never loses the foreground,
+    // so it must keep going and read the result back.
+    this.loop.setStopAfterLaunch(this.stopAfterLaunch && this.bridge.targetRole().length === 0);
     hilog.info(0x0000, 'HOPA', `run: start goal=${goal.length} chars`);
     let backgroundHeld: boolean = false;
     if (this.bridge.isConfigured()) {
@@ -349,7 +389,11 @@ export class AgentRuntime {
     // the answer is visible when the run finishes. The system blocks a
     // background app from starting its own UIAbility, so ask the PC bridge to
     // run `aa start` for HOPA first; the local path is the fallback.
-    if (this.leftHopa(outcomes)) {
+    // Only bring HOPA back when THIS window was the one that moved. A run on
+    // another device leaves this shell in front already; focusing there started
+    // HOPA on that device instead, so the phone jumped from Douyin to whatever
+    // page its own HOPA was last showing (Settings).
+    if (this.leftHopa(outcomes) && this.bridge.targetRole().length === 0) {
       let returned: boolean = false;
       if (this.bridge.isConfigured()) {
         returned = await this.bridge.focus('com.hopa.agent', this.homeAbility);

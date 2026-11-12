@@ -107,6 +107,18 @@ All notable changes are recorded here. Versions follow `docs/versioning.md`.
 
 ### Changed
 
+- The product is named for what it is: **HOPA — the HarmonyOS Personal
+  Assistant**. Every string a person reads says "assistant" — the phone's ten
+  locales, About, the welcome tour, the recap card and the system prompt — and
+  "agent", "phone" and "on-device" are gone from the product's own description.
+  The code keeps its `agent` names; only the claim changed.
+- The front page is the banner plus one promise. `docs/media/banner-2026-duo.svg`
+  shows a single request in three frames — **You say it**, **HOPA does it inside
+  your apps**, **You see it done** — where the middle frame is still HOPA with the
+  other app docked as a window inside the chat, its draft marked *not sent* until
+  it is. The README leads with what a person wants (their apps, their money) and
+  keeps the two devices as the later payoff. `CONTRIBUTING.md` and the PR
+  template now require the banner and the README to move in the same change.
 - The composer is inset by padding on a wrapper `Row` and fills the rest with
   `layoutWeight(1)`, so its edges sit exactly on the message column (left under
   the HOPA mark, right where the answer and the user bubble end) at every
@@ -139,6 +151,25 @@ All notable changes are recorded here. Versions follow `docs/versioning.md`.
 
 ### Fixed
 
+- "Open Douyin" failed on the laptop with `could not open com.ss.hm.ugc.aweme
+  here`: the shared catalog names the phone's bundle, while the 2-in-1 installs
+  Douyin as `com.ss.ohpc.ugc.aweme`. The laptop launcher now carries a
+  device-alias map and tries both names, in the installed list and in the
+  launch itself.
+- A launch aimed at the phone was executed on the laptop: `LocalLaunchCapability`
+  answered every `ui.launch` before the bridge capability, so the target device
+  never saw the request. It now declines when the run targets another device and
+  lets `RemoteUiCapability` forward it with that device's own bundle name.
+- A bridge address typed with an IME could carry a capitalised scheme and a
+  space (`Http ://127.0.0.1:8766`), and the client prefixed `http://` to it, so
+  the host became `"Http "` and every request failed as *failed to resolve the
+  host name* — or, before that, as *invalid URL format*, which reads like a dead
+  tunnel. `BridgeClient` now strips zero-width marks, non-breaking spaces and
+  full-width punctuation, removes whitespace inside the address, and lower-cases
+  the scheme; the key gets the same scrub, so a pasted token works too.
+- The laptop's "no bridge" exception now sits beside **Settings** in the sidebar,
+  with the missing-key link, instead of floating in the title bar where it read
+  as part of the window chrome.
 - Opening a system app (Settings, Browser) failed with "could not open … here"
   because `getLaunchWantForBundleSync` does not resolve them on this build. The
   launcher now falls back to an explicit ability Want (`<bundle>.MainAbility`,
