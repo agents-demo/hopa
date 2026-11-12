@@ -303,14 +303,27 @@ Goal: the relay host installs only relay code; a PC still keeps `cloud-link` and
 - [ ] Move tests: `test_relay.py`, `test_tunnel.py` (split: registry vs HdcTunnel),
       `test_ws.py`; keep fake sockets local.
 - [ ] `render.yaml`: build `./services/relay`, start `python -m hopa_relay relay`.
-      Own commit, preview deploy first.
+      Own commit; the deploy gate is deferred (see below).
 - [ ] Deprecation: `hopa-bridge relay` prints "moved to hopa-relay" and exits 2 for
       one release.
 - [ ] Docs: `guides/pc-bridge.md`, `architecture/overview.md` diagram,
       `reference/protocols.md` (R5).
 - [ ] CI: install + ruff + pytest for `services/relay`.
-- [ ] Gates: relay `/health` locally and on the preview; bridge and eval suites
-      green; `run-agent.ps1 hdc-tunnel` still works (PC half intact).
+- [ ] Gates that can be proven without a hosting account:
+      - [ ] `pip install --no-deps ./services/relay` in a clean venv (the same
+            build command the blueprint uses);
+      - [ ] `python -m hopa_relay relay --host 127.0.0.1 --port <free>` and
+            `GET /health` on that port (same start command, local host);
+      - [ ] bridge and eval suites green; `run-agent.ps1 hdc-tunnel` still works
+            (the PC half is intact).
+- [ ] `tools/checks/check-render.py`: `render.yaml` parses and every path and
+      command in it points at something that exists, so a rename cannot silently
+      break the deploy. Added to CI.
+- [ ] [DEFERRED: no deploy access] Render preview healthy. Owner: whoever holds
+      the Render account. They verify the preview, then production; nobody without
+      that access may tick this box.
+- [ ] Evidence: CI run id, a `curl` of the local relay `/health`, and the
+      check-render output.
 
 Risk: medium (prod deploy). Rollback: revert package commit, then render commit,
 then redeploy; `pip uninstall hopa-relay`.
@@ -322,27 +335,25 @@ then redeploy; `pip uninstall hopa-relay`.
 No runtime change. Written against `bridge.py` + `bridge_pool.py`, since the
 `api/` split does not exist yet.
 
-- [ ] `contracts/openapi/bridge.v1.yaml` covering the **actual** surface:
+- [x] `contracts/openapi/bridge.v1.yaml` covers the real surface, 21 paths:
       `/health`, `/whoami`, `/pair`, `/refresh`, `/observe`, `/tap`, `/type`,
-      `/swipe`, `/screenshot`, `/launch`, `/foreground`, `/key`, `/stop`,
-      `/focus`, `/voices`, `/images/{id}`, `GET|POST /chats`, `GET|POST /sessions`,
-      `/transcribe`, `/speak`, and the `/d/{serial}/{path}` prefix routes.
-      (No `/apps` — CLI only. No `/mcp` — stdio server, not HTTP.)
-- [ ] Document auth in the spec: base token vs paired token; `X-Hopa-Role` for
-      routing; `X-Hopa-Read` for cross-reads; error body shape and status codes.
-- [ ] `contracts/openapi/README.md`: how it is reviewed; a path change updates
-      the spec in the same PR.
-- [ ] `tools/checks/check-openapi.py` scoped to `bridge.py` + `bridge_pool.py`,
-      with an explicit allowance for `/d/{serial}/` prefix routes; a unit test for
-      the checker in `tools/scripts/test_check_openapi.py`.
-- [ ] `docs/reference/protocols.md`: index of bridge HTTP, brain HTTP, MCP, relay,
-      and the four schemas. Replace the existing `protocols` row in
-      `docs/README.md` (it currently points at `guides/pc-bridge.md`).
-- [ ] Gate: `check-openapi.py`, links green.
+      `/swipe`, `/screenshot`, `/launch`, `/foreground`, `/stop`, `/focus`,
+      `/key`, `/voices`, `/images`, `/images/{id}`, `GET|POST /chats`,
+      `GET|POST /sessions`, `/transcribe`, `/speak`. (evidence: checker reports
+      "ok 21 spec path(s), 20 code route(s), 1 prefix route(s)")
+- [x] Auth is in the spec: bearer token, bootstrap vs paired token, the 12-hour
+      lifetime, `X-Hopa-Role` routing, `X-Hopa-Read`, error body.
+- [x] `contracts/openapi/README.md`: same-PR rule, both-directions check, prefix
+      routes, versioning.
+- [x] `tools/checks/check-openapi.py` reads the `self.path ==` chain in
+      `bridge.py` + `bridge_pool.py`, allows declared prefixes, fails both ways;
+      unit tests in `tools/scripts/test_check_openapi.py` (5 tests).
+- [x] `docs/reference/protocols.md` indexes bridge HTTP, relay, brain, MCP and the
+      four schemas; the `protocols` row in `docs/README.md` now points at it.
+- [x] CI step "Bridge contract"; `check-links.py` and `pytest tools/scripts`
+      green. (evidence: `pytest tools/scripts` -> 23 passed)
 
-Risk: low. Deferred decision: `/v1` prefix (record it; do not do it here).
-
----
+Risk: low. Deferred decision: `/v1` prefix (recorded; not done here).
 
 ## R6. A device seam in the bridge — protocol only, no folder split
 

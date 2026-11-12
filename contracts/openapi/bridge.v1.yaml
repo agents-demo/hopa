@@ -1,0 +1,515 @@
+openapi: 3.0.3
+info:
+  title: HOPA bridge
+  version: "1.0"
+  description: |
+    Device control plane for a HarmonyOS phone or 2-in-1, driven over hdc + uitest.
+
+    Two servers speak this API:
+
+    - a **bridge** bound to one device (`hopa_bridge.bridge`), and
+    - a **pool** bound to many devices (`hopa_bridge.bridge_pool`), which routes
+      each request to one device by `X-Hopa-Role`, by `X-Hopa-Read`, or by the
+      `/d/{serial}/...` path prefix.
+
+    Everything except `/pair` and `/refresh` needs a bearer token. The bootstrap
+    token never expires; a paired token expires after twelve hours and rotates on
+    every pair or refresh.
+
+    Paths here are the surface the client code uses. The `/d/{serial}` form is a
+    routing prefix, not a second API: it is reserved in `x-path-prefixes` below.
+servers:
+  - url: http://127.0.0.1:8766
+    description: Local reverse port (laptop) or relay endpoint
+security:
+  - bearerAuth: []
+paths:
+  /health:
+    get:
+      summary: Liveness, and the devices the pool knows
+      security: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  devices:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        serial: { type: string }
+                        role: { type: string }
+  /whoami:
+    get:
+      summary: Proves the bearer token
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  devices:
+                    type: array
+                    items: { type: string }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /pair:
+    post:
+      summary: Trade the pairing code for a token pair
+      description: Routed by `X-Hopa-Role` on a pool; the code is per device.
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/Role"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code: { type: string }
+      responses:
+        "200":
+          description: Issued
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Session" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /refresh:
+    post:
+      summary: Renew an expired pair
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh]
+              properties:
+                refresh: { type: string }
+      responses:
+        "200":
+          description: Issued
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Session" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /observe:
+    post:
+      summary: Current screen as text nodes with bounds
+      responses:
+        "200":
+          description: Observation
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /screenshot:
+    post:
+      summary: JPEG of the screen, optionally scaled
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                width: { type: integer, minimum: 0 }
+      responses:
+        "200":
+          description: Base64 image
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mime: { type: string }
+                  image: { type: string, description: base64 }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /tap:
+    post:
+      summary: Tap a point
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [x, y]
+              properties:
+                x: { type: integer }
+                y: { type: integer }
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /type:
+    post:
+      summary: Type text, optionally after tapping a point
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text: { type: string }
+                x: { type: integer }
+                y: { type: integer }
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /swipe:
+    post:
+      summary: Swipe between two points
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [from_x, from_y, to_x, to_y]
+              properties:
+                from_x: { type: integer }
+                from_y: { type: integer }
+                to_x: { type: integer }
+                to_y: { type: integer }
+                velocity: { type: integer, default: 600 }
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /key:
+    post:
+      summary: Press a named key, optionally repeated
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                count: { type: integer, minimum: 1, maximum: 120, default: 1 }
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /foreground:
+    post:
+      summary: Bundle name of the foreground app
+      responses:
+        "200":
+          description: Foreground
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  bundle: { type: string }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /launch:
+    post:
+      summary: Start an app and report what came to the front
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bundle]
+              properties:
+                bundle: { type: string }
+                ability: { type: string }
+      responses:
+        "200":
+          description: Launched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  foreground: { type: string }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /stop:
+    post:
+      summary: Stop an app
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bundle]
+              properties:
+                bundle: { type: string }
+      responses:
+        "200":
+          description: Stopped
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  stopped: { type: string }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /focus:
+    post:
+      summary: Raise an app, with one cold restart as fallback
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bundle]
+              properties:
+                bundle: { type: string }
+                ability: { type: string }
+      responses:
+        "200":
+          description: Focus attempt
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  foreground: { type: string }
+                  restarted: { type: boolean }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /transcribe:
+    post:
+      summary: Speech to text on the PC
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [audio]
+              properties:
+                audio: { type: string, description: base64 WAV }
+      responses:
+        "200":
+          description: Transcript
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  text: { type: string }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /speak:
+    post:
+      summary: Text to speech on the PC
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text: { type: string, maxLength: 1200 }
+                voice: { type: string }
+      responses:
+        "200":
+          description: WAV
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mime: { type: string }
+                  audio: { type: string, description: base64 WAV }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /voices:
+    post:
+      summary: Voices available for /speak
+      responses:
+        "200":
+          description: Voices
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  voices:
+                    type: array
+                    items: { type: object, additionalProperties: true }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /chats:
+    get:
+      summary: The shared conversation store
+      parameters:
+        - $ref: "#/components/parameters/Read"
+      responses:
+        "200":
+          description: Store
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChatStore" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      summary: Merge sessions and tombstones into the store
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ChatStore" }
+      responses:
+        "200":
+          description: Store after the merge
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChatStore" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /sessions:
+    get:
+      summary: The phone's conversation snapshot (read-only cross-read)
+      parameters:
+        - $ref: "#/components/parameters/Read"
+      responses:
+        "200":
+          description: Snapshot
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessions:
+                    type: array
+                    items: { type: object, additionalProperties: true }
+                  updated: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      summary: Replace the snapshot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sessions]
+              properties:
+                sessions:
+                  type: array
+                  items: { type: object, additionalProperties: true }
+      responses:
+        "200":
+          description: Stored
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  count: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /images:
+    post:
+      summary: Store an image, return its id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data: { type: string, description: base64 }
+                mime: { type: string }
+      responses:
+        "200":
+          description: Stored
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /images/{id}:
+    get:
+      summary: Fetch a stored image
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Image bytes
+          content:
+            image/jpeg: { schema: { type: string, format: binary } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  parameters:
+    Role:
+      name: X-Hopa-Role
+      in: header
+      required: false
+      description: Which device a pooled bridge routes this request to (`phone`, `2in1`).
+      schema: { type: string }
+    Read:
+      name: X-Hopa-Read
+      in: header
+      required: false
+      description: Read another device's snapshot through the pool.
+      schema: { type: string }
+  responses:
+    Ok:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              ok: { type: boolean }
+    Unauthorized:
+      description: Missing, expired or wrong token
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+  schemas:
+    Error:
+      type: object
+      properties:
+        error: { type: string }
+    Session:
+      type: object
+      properties:
+        token: { type: string }
+        refresh: { type: string }
+        expires_in: { type: integer }
+    ChatStore:
+      type: object
+      properties:
+        rev: { type: integer }
+        updated: { type: integer }
+        sessions:
+          type: array
+          items: { type: object, additionalProperties: true }
+x-path-prefixes:
+  - /d/{serial}

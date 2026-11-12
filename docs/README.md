@@ -26,7 +26,7 @@ The docs are grouped by what they answer. Pick the section, then the file.
 | File | Question |
 |---|---|
 | [contracts/](contracts/observation.md) | What are the observation, action and error contracts? |
-| [protocols](guides/pc-bridge.md) | Which HTTP and MCP endpoints exist? |
+| [protocols](reference/protocols.md) | Which HTTP and MCP endpoints exist? |
 | [bundles.md](reference/bundles.md) | Which HarmonyOS bundle belongs to which app? |
 | [knowledge.md](reference/knowledge.md) | How is app/site knowledge written? |
 | [skills.md](reference/skills.md) | How are skills written? |
