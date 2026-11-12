@@ -1,4 +1,4 @@
-"""Executes benchmark tasks against a device using the pc-agent library."""
+"""Executes benchmark tasks against a device using the hopa-bridge library."""
 
 from __future__ import annotations
 

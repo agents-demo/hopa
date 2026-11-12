@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Bridge-driven UI smoke test.
 
-Runs against a live `pc-agent bridge` and the HOPA app on the phone:
+Runs against a live `hopa-bridge bridge` and the HOPA app on the phone:
 
   py -3 tools/scripts/ui-smoke.py --url http://127.0.0.1:8766 --token hopaphone
 

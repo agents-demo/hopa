@@ -24,7 +24,7 @@ was executed in. For the current rules, read `layers.md`.
 | Harmony core | 18 source `.ets` | `Types.ets` (5 types), `Skills.ets` (2 classes), `Schedules.ets` (2 classes) | folderless: domain, agent loop, gate, model clients and stores sit side by side |
 | Harmony capabilities | 4 modules | `a11y/A11yBridge.ets`, 248 lines | `a11y`/`web` abbreviations; `RemoteBridge` + `RemoteUiCapability` live in `entry/service` instead of a capability |
 | Python evaluation rig | 37 `.py` in `agent` | `observation.py`, 376 | flat package; domain, loop, safety and integrations mixed |
-| Python device | 17 `.py` in `pc-agent` | `mcp_server.py`, 274 | flat package; transport, device actions, API and CLI mixed |
+| Python device | 17 `.py` in `hopa-bridge` | `mcp_server.py`, 274 | flat package; transport, device actions, API and CLI mixed |
 | Kotlin brain | 13 `.kt` | `Server.kt`, 231 | already single-purpose files, but no packages |
 | Docs | 43 `.md` | `rebuild-plan.md`, **73 KB** | flat `docs/`; plans, guides, reference and history in one folder |
 | Tooling | 24 files in `scripts` | `sign-app.ps1`, 232 | one folder for build, signing, catalog, plan, bench and release |
@@ -65,7 +65,7 @@ hopa/
 ├─ apps/
 │  └─ harmony/                 # DevEco project root (today: app/)
 ├─ services/
-│  ├─ pc-agent/                # hopa_bridge (today: pc-agent/)
+│  ├─ hopa-bridge/                # hopa_bridge (today: hopa-bridge/)
 │  └─ brain/                   # Kotlin knowledge router (today: brain/)
 ├─ evals/
 │  ├─ agent/                   # hopa_baseline reference loop (today: agent/)
@@ -375,7 +375,7 @@ behaviour changes in phases 1-8.
 | 1 | Docs | create tree, `git mv` files, split rebuild-plan, fix links, add link check | low | M |
 | 2 | Tooling | move `scripts/` + `signing/` to `tools/`, update CI and docs | low | S |
 | 3 | Contracts | move `schemas/` to `contracts/schemas/`, update references | low | S |
-| 4 | Python packages | move `agent/`, `pc-agent/`, `bench/` under `evals/` and `services/`, update pyprojects + CI | medium | M |
+| 4 | Python packages | move `agent/`, `hopa-bridge/`, `bench/` under `evals/` and `services/`, update pyprojects + CI | medium | M |
 | 5 | Brain packages | group Kotlin files into packages, update tests | low | S |
 | 6 | Harmony root | move `app/` -> `apps/harmony/`, update scripts + CI + docs | medium | M |
 | 7 | LLM boundary | extract `capabilities/llm`, keep core pure, move client tests | medium | M |

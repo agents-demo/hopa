@@ -15,7 +15,7 @@ a scored task format, a runner, and example tasks.
 
 This repository is the G1 seed:
 
-- ✅ `pc-agent` CLI + MCP server (dump, tap, type, swipe, screenshot, launch).
+- ✅ `hopa-bridge` CLI + MCP server (dump, tap, type, swipe, screenshot, launch).
 - ✅ `evals/bench/` task format, runner, stub model, and example tasks.
 - ✅ `apps/harmony/` scaffold with `core/` action gate + host unit tests.
 
@@ -24,7 +24,7 @@ Remaining to close G1:
 - Grow HOPA-Bench to a scored suite over the target apps, with a scoring protocol
   and a reproducible baseline report.
 - Run the suite on a physical HarmonyOS 6+ phone (the emulator is a proxy).
-- Wire `pc-agent` MCP into the model-serving infrastructure.
+- Wire `hopa-bridge` MCP into the model-serving infrastructure.
 - Record baseline success rate, median step latency, and failure taxonomy.
 - Validate the payment-refusal tasks (the gate must block every payment until
   confirmed).

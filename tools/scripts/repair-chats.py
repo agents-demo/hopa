@@ -58,7 +58,7 @@ def main() -> int:
         Path(sys.argv[1]) if len(sys.argv) > 1 else Path.home() / ".hopa" / "chats.json"
     )
     if not path.exists():
-        print(f"pc-agent: no store at {path}", file=sys.stderr)
+        print(f"hopa-bridge: no store at {path}", file=sys.stderr)
         return 2
     sessions, before, after = repair(path)
     print(f"{path}: {sessions} sessions, turns {before} -> {after}")

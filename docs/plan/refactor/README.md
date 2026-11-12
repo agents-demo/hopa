@@ -440,20 +440,29 @@ Risk: low.
 
 Risk: none.
 
-## R10. Fixes the E2E exposed
+## R10. Fixes and cleanups after the E2E
 
-- [ ] Interruption resume must not start a run once a newer question exists, and
-      its action must attach to its own turn. Today a resumed "open Douyin" ran
-      after "Line a / Line b" was sent and the Douyin action appeared under that
-      turn. (evidence: x2 screenshot, run pane under the Line a/Line b bubble)
-- [ ] The send arrow must come from an asset, not `Path`: `Path` draws at its
-      command extent and ignores width/height, so two "make it bigger" edits
-      changed nothing. (evidence: fdcc67b, 02284a4)
-- [ ] Retire the one-release aliases when the refactor ships: drop `pc-agent`,
-      `hopa-agent`, update the run scripts and the docs to hopa-bridge and
-      hopa-baseline.
+- [x] The send arrow comes from an SVG asset, not `Path`: `Path` draws at its
+      command extent and ignores width/height, so two size edits changed nothing.
+      (evidence: fdcc67b, 02284a4)
+- [x] One-release aliases retired: `services/bridge` exposes only `hopa-bridge`,
+      `evals/baseline` only `hopa-baseline`; the CLI `prog` and error prefixes say
+      hopa-bridge; the run scripts resolve `hopa-bridge.exe`; live docs, README,
+      PR template and `ui-smoke` follow. Frozen history and ADR-0008 keep the old
+      names on purpose. (evidence: `hopa-bridge --version`, `hopa-relay --help`,
+      `hopa-baseline --version`; 362 tests)
+- [x] Cross-distribution dependencies declared: `evals/bench` and `evals/baseline`
+      depend on `hopa-bridge`; bridge and relay depend on `hopa-wire`; the install
+      order is in each README and in CI. (evidence: pyproject files)
+- [x] The resume theory corrected: `resumeInterrupted` has no callers, and the run
+      pane showed the Douyin action under the new turn, so that was the model
+      repeating a previous action on a nonsense prompt, not a resume bug. No code
+      change was made on a false premise.
+- [ ] Follow-up (not this refactor): a prompt/eval task so a nonsense prompt does
+      not repeat the previous action, and delete the dead `resumeInterrupted` when
+      the Harmony app is next touched.
 
-Risk: low (two UI/loop fixes and a rename cleanup).
+Risk: low. Rollback: revert the rename commit and reinstall the aliases.
 
 ## Acceptance gates
 

@@ -66,7 +66,7 @@ if (-not $laptopTunnelListen) { $laptopTunnelListen = '127.0.0.1:5557' }
 $laptopTunnelSession = $cfg['HOPA_LAPTOP_TUNNEL_SESSION']
 if (-not $laptopTunnelSession) { $laptopTunnelSession = 'laptop' }
 $laptopTarget = if ($laptopTunnelEnabled) { $laptopTunnelListen } else { $laptopDevice }
-$pcAgent = Join-Path $root '.venv\Scripts\pc-agent.exe'
+$pcAgent = Join-Path $root '.venv\Scripts\hopa-bridge.exe'
 
 function Write-PoolFile {
     if (-not $poolEnabled) { return }
@@ -118,7 +118,7 @@ function Stop-Bridge([int]$value) {
         Stop-Process -Id $listener.OwningProcess -Force -ErrorAction SilentlyContinue
     }
     Get-CimInstance Win32_Process | Where-Object {
-        $_.CommandLine -and $_.CommandLine -match 'pc-agent' -and
+        $_.CommandLine -and $_.CommandLine -match 'hopa-bridge' -and
         $_.CommandLine -match '\bbridge\b' -and
         $_.CommandLine -match "--port $value"
     } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
@@ -229,7 +229,7 @@ if ($Restart) {
 }
 
 if (-not (Test-Path $pcAgent)) {
-    throw "pc-agent not found at $pcAgent. Install services\bridge into .venv first."
+    throw "hopa-bridge not found at $pcAgent. Install services\bridge into .venv first."
 }
 
 if (-not (Test-Port $port)) {
@@ -253,7 +253,7 @@ if (-not (Test-Port $port)) {
         if (Test-Port $port) { break }
     }
     if (-not (Test-Port $port)) {
-        throw 'The bridge did not start. Check that pc-agent is installed and the port is free.'
+        throw 'The bridge did not start. Check that hopa-bridge is installed and the port is free.'
     }
 }
 

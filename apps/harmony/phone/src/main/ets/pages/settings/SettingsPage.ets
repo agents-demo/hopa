@@ -764,7 +764,7 @@ export struct SettingsPage {
                 .textOverflow({ overflow: TextOverflow.Ellipsis })
             }
             .width('100%')
-            Text('Run "pc-agent bridge" on the PC. Used only when accessibility is unavailable.')
+            Text('Run "hopa-bridge bridge" on the PC. Used only when accessibility is unavailable.')
               .fontSize(10)
               .fontColor($r('app.color.text_hint'))
             Divider().color($r('app.color.divider'))

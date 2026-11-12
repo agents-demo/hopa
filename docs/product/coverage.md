@@ -24,7 +24,7 @@ code.
 | Batch | Works | Sequential goals, stop between items, per-item duration. |
 | Runs and export | Works | History, approval/payment flags, per-run detail, JSON export. |
 | Models | Works | OpenAI-compatible, Anthropic, Gemini, DeepSeek. The key is memory-only. |
-| PC tools | Works | `pc-agent` CLI, MCP stdio server and the HTTP bridge. |
+| PC tools | Works | `hopa-bridge` CLI, MCP stdio server and the HTTP bridge. |
 | Speech | Not available | No `CoreSpeechKit` in this SDK/image. |
 | JavaScript sandbox | Works | Isolated `about:blank` WebView, offline. |
 | Python/WASM/Linux sandbox | Not built | The optional Python/WASM assets are not bundled; Linux is out of scope. |

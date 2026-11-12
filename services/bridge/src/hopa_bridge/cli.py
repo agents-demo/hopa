@@ -1,4 +1,4 @@
-"""``pc-agent`` command line interface."""
+"""``hopa-bridge`` command line interface."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ KNOWN_APPS = {
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="pc-agent",
+        prog="hopa-bridge",
         description="Control a HarmonyOS device over hdc + uitest.",
     )
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
@@ -228,10 +228,10 @@ def _cmd_bridge(args: argparse.Namespace, device: Device) -> int:
         try:
             entries = json.loads(Path(args.devices).read_text(encoding="utf-8-sig"))
         except (OSError, ValueError) as exc:
-            print(f"pc-agent: cannot read {args.devices}: {exc}", file=sys.stderr)
+            print(f"hopa-bridge: cannot read {args.devices}: {exc}", file=sys.stderr)
             return 2
         if not isinstance(entries, list) or not entries:
-            print("pc-agent: --devices needs a non-empty JSON list", file=sys.stderr)
+            print("hopa-bridge: --devices needs a non-empty JSON list", file=sys.stderr)
             return 2
         try:
             pool = BridgePool(
@@ -242,7 +242,7 @@ def _cmd_bridge(args: argparse.Namespace, device: Device) -> int:
                 chats=chats,
             )
         except (BridgeError, ValueError, KeyError) as exc:
-            print(f"pc-agent: {exc}", file=sys.stderr)
+            print(f"hopa-bridge: {exc}", file=sys.stderr)
             return 2
         pool.start()
         print(f"bridge listening on http://{args.host}:{pool.port} (pool)", flush=True)
@@ -284,7 +284,7 @@ def _cmd_bridge(args: argparse.Namespace, device: Device) -> int:
             state_path=state_path,
         )
     except BridgeError as exc:
-        print(f"pc-agent: {exc}", file=sys.stderr)
+        print(f"hopa-bridge: {exc}", file=sys.stderr)
         return 2
     server.start()
     print(f"bridge listening on http://{args.host}:{server.port}", flush=True)
@@ -471,7 +471,7 @@ def main(argv: list[str] | None = None) -> int:
             try:
                 return serve_hdc_tunnel(args)
             except ValueError as exc:
-                print(f"pc-agent: {exc}", file=sys.stderr)
+                print(f"hopa-bridge: {exc}", file=sys.stderr)
                 return 2
 
         if args.command == "relay":
@@ -490,13 +490,13 @@ def main(argv: list[str] | None = None) -> int:
         try:
             return serve_link(args)
         except (RelayError, ValueError) as exc:
-            print(f"pc-agent: {exc}", file=sys.stderr)
+            print(f"hopa-bridge: {exc}", file=sys.stderr)
             return 2
     try:
         device = _make_device(args)
         return _dispatch(args, device)
     except HopaError as exc:
-        print(f"pc-agent: {exc}", file=sys.stderr)
+        print(f"hopa-bridge: {exc}", file=sys.stderr)
         return 2
     except KeyboardInterrupt:
         return 130

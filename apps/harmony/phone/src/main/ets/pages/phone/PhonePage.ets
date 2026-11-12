@@ -103,7 +103,7 @@ export struct PhonePage {
                   : $r('app.color.warning'))
             }
             .width('100%')
-            Text('Runs pc-agent on your PC and sends taps over the USB tunnel or Wi-Fi.')
+            Text('Runs hopa-bridge on your PC and sends taps over the USB tunnel or Wi-Fi.')
               .fontSize(11)
               .lineHeight(16)
               .fontColor($r('app.color.text_hint'))
@@ -124,7 +124,7 @@ export struct PhonePage {
               .fontSize(13)
               .fontWeight(FontWeight.Medium)
               .fontColor($r('app.color.text_primary'))
-            Text('1. On the PC: pc-agent bridge --host 127.0.0.1 --port 8766 --token <token>')
+            Text('1. On the PC: hopa-bridge bridge --host 127.0.0.1 --port 8766 --token <token>')
               .fontSize(11)
               .fontColor($r('app.color.text_hint'))
             Text('2. Forward the port with hdc rport tcp:8766 tcp:8766.')

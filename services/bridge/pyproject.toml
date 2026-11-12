@@ -24,8 +24,6 @@ dev = ["pytest>=8.0", "ruff>=0.6"]
 
 [project.scripts]
 hopa-bridge = "hopa_bridge.cli:main"
-# One-release alias: the command name users and scripts already know.
-pc-agent = "hopa_bridge.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/"

@@ -273,7 +273,7 @@ class HdcTunnel:
 
 
 def serve_hdc_tunnel(args: Any) -> int:
-    """CLI entry point for ``pc-agent hdc-tunnel``."""
+    """CLI entry point for ``hopa-bridge hdc-tunnel``."""
     relay_url = str(getattr(args, "relay", ""))
     token = str(getattr(args, "link_token", ""))
     if not relay_url:

@@ -1,7 +1,7 @@
 # HOPA-Bench
 
 A tiny, device-driven benchmark for HarmonyOS GUI agents. Tasks are data
-(YAML or JSON); the runner uses `pc-agent` to observe and act on a real
+(YAML or JSON); the runner uses `hopa-bridge` to observe and act on a real
 emulator/device.
 
 > The shipped `StubModel` replays each task's scripted `steps`. That exercises the
@@ -55,7 +55,7 @@ Required: `id`, `goal`, `app`, and a valid `success` check. `steps` are optional
 ## Usage
 
 ```bash
-# from bench/ (pc-agent must be installed in the same environment)
+# from bench/ (hopa-bridge must be installed in the same environment)
 bench list
 bench validate
 bench run                       # all tasks, stub model

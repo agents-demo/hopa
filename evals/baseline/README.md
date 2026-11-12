@@ -14,7 +14,7 @@ path before the HarmonyOS toolchain and the accessibility ACL are available.
 ## Install
 
 ```bash
-python -m pip install -e ./pc-agent -e ./agent
+python -m pip install -e ./hopa-bridge -e ./agent
 ```
 
 ## Commands

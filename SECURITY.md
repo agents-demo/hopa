@@ -14,7 +14,7 @@ public issue for a vulnerability.
 
 Include:
 
-- affected component (`agent`, `pc-agent`, `brain`, `app`);
+- affected component (`agent`, `hopa-bridge`, `brain`, `app`);
 - version or commit;
 - reproduction steps;
 - impact (data, payment, account, availability).

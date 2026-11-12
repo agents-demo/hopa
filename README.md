@@ -173,7 +173,7 @@ flowchart TB
     D3[Activity · Plans]
   end
   subgraph PC["A PC"]
-    B["pc-agent bridge
+    B["hopa-bridge bridge
     /chats · /images · /screenshot"]
   end
   Phone -->|hdc reverse tunnel · or cloud relay| B
@@ -193,8 +193,8 @@ feature of one app.
   sandbox would mean nothing on the other.
 - **One bridge.** A pooled listener serves every device, routes by
   `X-Hopa-Role` or `/d/<serial>/…`, and authorises each caller once.
-- **No cloud account.** For a phone away from the cable, `pc-agent relay` on a
-  public host plus `pc-agent cloud-link` on the PC keeps the same store and
+- **No cloud account.** For a phone away from the cable, `hopa-bridge relay` on a
+  public host plus `hopa-bridge cloud-link` on the PC keeps the same store and
   tokens where they belong.
 
 ## Get started

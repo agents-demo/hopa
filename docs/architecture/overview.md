@@ -15,7 +15,7 @@ Constraints that shape the design:
   require an ACL request + review. Plan a foreground-only fallback.
 - Cross-app GUI automation therefore needs an **AccessibilityExtensionAbility**
   (and, for background screens, `ACCESS_VIRTUAL_SCREEN`) or the external
-  `pc-agent` over `hdc` + `uitest` for development and evaluation.
+  `hopa-bridge` over `hdc` + `uitest` for development and evaluation.
 - **Custom-drawn UIs** defeat a pure accessibility tree, so perception needs
   **accessibility tree + OCR + vision**.
 - Irreversible actions (payment, send, delete) must be safe by construction.
@@ -58,14 +58,14 @@ Constraints that shape the design:
 Outside the app, for development and evaluation:
 
 ```
-pc-agent (Python) ── hdc ──► emulator / phone
+hopa-bridge (Python) ── hdc ──► emulator / phone
    │  dump layout, tap, type, swipe, screenshot, launch
    └─ CLI + MCP stdio server
 
-bench (HOPA-Bench) ── uses pc-agent ──► scored tasks (5 now; 20 at M2; 50 at v2)
+bench (HOPA-Bench) ── uses hopa-bridge ──► scored tasks (5 now; 20 at M2; 50 at v2)
 ```
 
-`pc-agent` is the **G1 PoC** control path. The shipping agent uses
+`hopa-bridge` is the **G1 PoC** control path. The shipping agent uses
 `capabilities/accessibility` (once the ACL is granted), `capabilities/browser`, and
 `capabilities/system`.
 
@@ -84,7 +84,7 @@ same observation, action, policy, executor and record contracts, in Python.
 | `hopa_baseline.models` | stub and OpenAI-compatible clients |
 | `hopa_baseline.records` | append-only hash-chained JSONL |
 
-`hopa-baseline observe` is the reference observation producer. `pc-agent dump`
+`hopa-baseline observe` is the reference observation producer. `hopa-bridge dump`
 stays the raw `uitest` command. The ArkTS port follows the same contracts and
 uses the same golden files (`contracts/schemas/`, `evals/baseline/tests/test_schemas.py`).
 
@@ -221,7 +221,7 @@ Extra ACL notes:
   signed with a profile that includes the restricted permission (ACL). The exact
   permission strings and profile steps must be verified with Huawei before
   implementation.
-- `pc-agent` does not need app permissions: it uses `hdc` + `uitest`, which the
+- `hopa-bridge` does not need app permissions: it uses `hdc` + `uitest`, which the
   developer enables on the device.
 
 ## 7. Model client

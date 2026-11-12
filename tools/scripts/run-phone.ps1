@@ -82,9 +82,9 @@ $isLoopback = $phoneUrl -match '^https?://(127\.0\.0\.1|localhost)(:|/|$)'
 # Start the bridge if it is not already listening.
 $listening = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue
 if (-not $listening) {
-    $pcAgent = Join-Path $root '.venv\Scripts\pc-agent.exe'
+    $pcAgent = Join-Path $root '.venv\Scripts\hopa-bridge.exe'
     if (-not (Test-Path $pcAgent)) {
-        throw "pc-agent not found at $pcAgent. Install services\\pc-agent into .venv first."
+        throw "hopa-bridge not found at $pcAgent. Install services\\hopa-bridge into .venv first."
     }
     Write-Host "Starting PC bridge on port $port..."
     Start-Process -FilePath $pcAgent -WindowStyle Hidden -ArgumentList @(
@@ -111,7 +111,7 @@ if (-not $isLoopback -and $cfg['HOPA_RELAY_URL'] -and $cfg['HOPA_LINK_TOKEN']) {
     }
     if (-not $running) {
         Write-Host "Starting cloud link to $($cfg['HOPA_RELAY_URL'])..."
-        Start-Process -FilePath (Join-Path $root '.venv\Scripts\pc-agent.exe') -WindowStyle Hidden -ArgumentList @(
+        Start-Process -FilePath (Join-Path $root '.venv\Scripts\hopa-bridge.exe') -WindowStyle Hidden -ArgumentList @(
             'cloud-link',
             '--relay', $cfg['HOPA_RELAY_URL'],
             '--link-token', $cfg['HOPA_LINK_TOKEN'],

@@ -222,7 +222,7 @@ Result files:
 ## 9. Python-side tooling
 
 ```powershell
-cd pc-agent
+cd services/bridge
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -U pip
@@ -235,13 +235,13 @@ cd ..\agent
 pip install -e ".[dev]"
 
 cd ..
-pc-agent devices
-pc-agent dump --out layout.json
+hopa-bridge devices
+hopa-bridge dump --out layout.json
 hopa-baseline observe --json
-pytest pc-agent
+pytest hopa-bridge
 pytest bench
 pytest agent
-ruff check pc-agent bench agent
+ruff check hopa-bridge bench agent
 ```
 
 ## 10. Troubleshooting

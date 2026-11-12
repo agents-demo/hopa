@@ -1,4 +1,4 @@
-"""Minimal MCP (Model Context Protocol) stdio server for pc-agent.
+"""Minimal MCP (Model Context Protocol) stdio server for hopa-bridge.
 
 Implements the JSON-RPC subset that MCP clients need: ``initialize``, ``ping``,
 ``tools/list`` and ``tools/call``. Messages are newline-delimited JSON on stdio,

@@ -4,13 +4,13 @@ Status: **wired into the app and verified end to end on the Pura 90 emulator.**
 
 This is the M4 fallback: when the on-device accessibility service cannot be
 enabled, the phone app drives other apps through this server on the PC, which
-uses `hdc` + `uitest`. It is the same control path as `pc-agent`, behind a
+uses `hdc` + `uitest`. It is the same control path as `hopa-bridge`, behind a
 token-authenticated HTTP API.
 
 ## Run
 
 ```bash
-pc-agent bridge --port 8765 --pair-code 246810
+hopa-bridge bridge --port 8765 --pair-code 246810
 # prints:
 # bridge listening on http://127.0.0.1:8765
 # token: <generated>
@@ -63,7 +63,7 @@ wizard is the path that stores a rotating pair.
 single process serves the phone and the 2-in-1:
 
 ```bash
-pc-agent bridge --port 8766 --devices devices.json
+hopa-bridge bridge --port 8766 --devices devices.json
 ```
 
 The file is a list; one entry per device:
@@ -203,12 +203,12 @@ run in the cloud without a device. The relay flips the direction: the PC dials
 
 ```bash
 # cloud: one process, no device, no hdc
-pc-agent relay --host 0.0.0.0 --port "$PORT" \
+hopa-bridge relay --host 0.0.0.0 --port "$PORT" \
     --token <phone-token> --link-token <link-token> --pair-code 246810
 
 # PC: the bridge keeps its hdc and its conversation store
-pc-agent bridge --port 8765 --token <phone-token>
-pc-agent cloud-link --relay https://<service>.onrender.com \
+hopa-bridge bridge --port 8765 --token <phone-token>
+hopa-bridge cloud-link --relay https://<service>.onrender.com \
     --link-token <link-token> --local http://127.0.0.1:8765 \
     --local-token <phone-token>
 ```
@@ -284,7 +284,7 @@ still needs `hdc` to reach the phone. The tunnel adds that last hop as a binary
 WebSocket through the same relay, so the PC no longer needs USB or a shared LAN.
 
 ```
-PC hdc ──TCP 127.0.0.1:5556 ── pc-agent hdc-tunnel ── WSS ──┐
+PC hdc ──TCP 127.0.0.1:5556 ── hopa-bridge hdc-tunnel ── WSS ──┐
                                                           Render /tunnel
 HOPA app ──TCP 127.0.0.1:5555 ── TunnelClient ── WSS ──────┘
 ```
@@ -304,7 +304,7 @@ HOPA_TUNNEL_LISTEN=127.0.0.1:5556
 ```
 
 `HOPA_DEVICE` stays the USB serial, because `update-phone.ps1` still installs
-over USB. `run-agent.ps1` starts `pc-agent hdc-tunnel` when
+over USB. `run-agent.ps1` starts `hopa-bridge hdc-tunnel` when
 `HOPA_BRIDGE_TARGET` equals `HOPA_TUNNEL_LISTEN`, and the bridge targets that
 address. `HOPA_TUNNEL=1` tells the app to start its side at launch; it does not
 start the PC tunnel by itself. Switching back to USB is one line: delete
@@ -471,7 +471,7 @@ read them without the phone opening a port:
 ## Tests
 
 ```bash
-pytest pc-agent          # includes test_bridge.py
+pytest hopa-bridge          # includes test_bridge.py
 ```
 
 The tests run a real HTTP server on an ephemeral port with a fake device.

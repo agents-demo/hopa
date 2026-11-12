@@ -10,7 +10,7 @@ name: CI
 #    instead of pretending to build.
 # 2. `hvigorw test` (Local Test) is NOT supported on Linux. The core unit tests
 #    therefore run on a macOS runner; the HAP build runs on Linux as requested.
-# 3. pc-agent and bench are pure Python and run on Linux with no toolchain.
+# 3. hopa-bridge and bench are pure Python and run on Linux with no toolchain.
 
 on:
   push:

@@ -5,7 +5,7 @@ checked on the Pura 90 emulator (HarmonyOS 6.1.1, API 24) or, where the row
 says Mate 80, on the Mate 80 (HarmonyOS 6.0, API 22) on 2026-11-08 with:
 
 ```bash
-pc-agent apps
+hopa-bridge apps
 hdc shell bm dump -n <bundle>
 hdc shell aa start -a <ability> -b <bundle>
 hdc shell uitest dumpLayout -p /data/local/tmp/layout.json
@@ -25,7 +25,7 @@ name cannot be checked here.
 | Files | `com.huawei.hmos.files` | verified | launched, Browse screen read; ability `EntryAbility` |
 | Gallery | `com.huawei.hmos.photos` | verified | launched, "Gallery" title read; ability `com.huawei.hmos.photos.MainAbility` |
 | Contacts / Phone | `com.ohos.contacts` | verified | launched, Phone/Contacts/Favorites tabs read; ability `com.ohos.contacts.EntryAbility` |
-| AppGallery | `com.huawei.hmsapp.appgallery` | verified | present in `pc-agent apps`, bundle dump ok; ability `MainAbility` |
+| AppGallery | `com.huawei.hmsapp.appgallery` | verified | present in `hopa-bridge apps`, bundle dump ok; ability `MainAbility` |
 | Camera | `com.huawei.hmos.camera` | verified (Mate 80) | bundle dump; ability `com.huawei.hmos.camera.MainAbility` |
 | Clock | `com.huawei.hmos.clock` | verified (Mate 80) | bundle dump; ability `com.huawei.hmos.clock.phone` |
 | Music | `com.huawei.hmsapp.music` | verified (Mate 80) | bundle dump; ability `MainAbility` |
@@ -101,7 +101,7 @@ does not edit `APP.md`; add `bundle_verified` only after a launch smoke test.
 ## How to re-check on another device
 
 ```bash
-pc-agent apps
+hopa-bridge apps
 for b in com.huawei.hmos.settings com.huawei.hmos.calendar; do
   hdc shell bm dump -n "$b" | head
 done

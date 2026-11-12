@@ -66,10 +66,10 @@ hvigorw assembleHap --no-daemon
 cd apps/harmony
 hvigorw test -p module=core@default --no-daemon -p coverage=false
 
-# pc-agent + bench
-cd pc-agent && python -m pytest
+# hopa-bridge + bench
+cd services/bridge && python -m pytest
 cd bench   && python -m pytest
-ruff check pc-agent bench
+ruff check hopa-bridge bench
 ```
 
 - Put pure logic tests in `<module>/src/test/*.test.ets` and **register every suite

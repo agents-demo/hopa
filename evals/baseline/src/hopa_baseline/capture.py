@@ -1,4 +1,4 @@
-"""Capture an observation from a real device through ``pc-agent``."""
+"""Capture an observation from a real device through ``hopa-bridge``."""
 
 from __future__ import annotations
 

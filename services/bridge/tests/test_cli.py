@@ -44,7 +44,7 @@ def test_main_returns_error_for_missing_hdc(monkeypatch, capsys) -> None:
     monkeypatch.setenv("HOPA_HDC", "C:/definitely/not/here/hdc.exe")
     code = main(["--hdc", "C:/definitely/not/here/hdc.exe", "devices"])
     assert code == 2
-    assert "pc-agent:" in capsys.readouterr().err
+    assert "hopa-bridge:" in capsys.readouterr().err
 
 
 def test_parser_bridge_defaults() -> None:

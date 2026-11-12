@@ -19,10 +19,10 @@ one checked side as **decided**; both checked is an error.
 ## Before you open a PR
 
 ```bash
-python -m pip install -e ./pc-agent -e ./bench[dev] -e ./agent[dev]
-ruff check pc-agent bench agent
-ruff format --check pc-agent bench agent
-pytest pc-agent bench agent
+python -m pip install -e ./services/bridge -e ./bench[dev] -e ./agent[dev]
+ruff check hopa-bridge bench agent
+ruff format --check hopa-bridge bench agent
+pytest hopa-bridge bench agent
 python tools/scripts/plan-status.py --lint
 python tools/scripts/build-app-catalog.py --check
 python -m hopa_bench validate --tasks evals/bench/tasks
