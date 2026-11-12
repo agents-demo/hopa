@@ -1006,55 +1006,6 @@ struct LaptopIndex {
       return;
     }
     this.bridgeStatus = 'Pairing\u2026';
-    const session: BridgeSession = await BridgeClient.pair(url, code);
-    if (session.token.length === 0) {
-      this.bridgeStatus = 'That code did not work. Check the bridge output.';
-      return;
-    }
-    const context = getContext(this) as common.UIAbilityContext;
-    try {
-      const stored: StoredSettings = await SettingsStore.load(context);
-      stored.bridgeUrl = url;
-      stored.bridgeToken = session.token;
-      stored.bridgeRefresh = session.refresh;
-      await SettingsStore.save(context, stored);
-    } catch (error) {
-      this.bridgeStatus = `The pair worked but could not be saved: ${(error as Error).message}`;
-      return;
-    }
-    this.bridgeUrl = url;
-    this.bridgeToken = session.token;
-    this.pairCode = '';
-    this.agent.configureBridgeSession(url, session.token, session.refresh, new LaptopSessionSink(context));
-    await this.checkBridge();
-  }
-
-  /** Paired when there is a refresh token; a pasted key has none. */
-  private attachBridge(stored: StoredSettings): void {
-    if (stored.bridgeRefresh.length > 0) {
-      const context = getContext(this) as common.UIAbilityContext;
-      this.agent.configureBridgeSession(stored.bridgeUrl, stored.bridgeToken, stored.bridgeRefresh,
-        new LaptopSessionSink(context));
-    } else {
-      this.agent.configureBridge(stored.bridgeUrl, stored.bridgeToken);
-    }
-  }
-
-  /**
-   * Trade the short code from the bridge output for a token pair.
-   *
-   * Copying a key by hand goes stale in twelve hours; the code is stable and the
-   * pair it returns renews itself, which is what makes the bridge reachable on a
-   * second morning without touching Settings.
-   */
-  private async pairBridge(): Promise<void> {
-    const url: string = this.bridgeUrl.trim();
-    const code: string = this.pairCode.trim();
-    if (url.length === 0 || code.length === 0) {
-      this.bridgeStatus = 'Enter the address and the code the bridge printed.';
-      return;
-    }
-    this.bridgeStatus = 'Pairing\u2026';
     // The bridge is a pool: the role is what routes this pair to the 2-in-1.
     const session: BridgeSession = await BridgeClient.pair(url, code, '2in1');
     if (session.token.length === 0) {
