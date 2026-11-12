@@ -675,6 +675,15 @@ class BridgeServer:
     def token_live(self) -> bool:
         return time.monotonic() - self.token_issued_at < self.token_ttl
 
+    @property
+    def base_token(self) -> str:
+        """The token from the device catalogue; never rotated.
+
+        The cloud link and local tooling use this credential, so it has to
+        survive the phone's pair/refresh rotation.
+        """
+        return self._base_token
+
     def issue_tokens(self) -> dict[str, Any]:
         """Rotate both tokens; the previous pair stops working immediately."""
         with self.pair_lock:

@@ -109,6 +109,9 @@ Fixes in `services/pc-agent`:
 - **One** cloud link and **one** shared conversation store.
 - The laptop's local `8767` bridge is a fallback, not a second relay.
 - Both app tunnels dial **out**, so neither device needs an inbound port.
+- The pool keeps accepting the device catalogue token even after the phone
+  rotates its access token on pair/refresh; the cloud link uses that catalogue
+  token, so without it every relayed request would return 401 after a rotation.
 
 ---
 
