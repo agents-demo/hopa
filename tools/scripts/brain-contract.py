@@ -56,7 +56,9 @@ def request(url: str, payload: dict | None = None) -> tuple[int, dict]:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--jar", default=str(ROOT / "services" / "brain" / "build" / "brain.jar"))
+    parser.add_argument(
+        "--jar", default=str(ROOT / "services" / "brain" / "build" / "brain.jar")
+    )
     parser.add_argument("--gson", default=str(ROOT / ".tools" / "gson-2.11.0.jar"))
     args = parser.parse_args()
 
@@ -91,8 +93,12 @@ def main() -> int:
             },
         )
         assert status == 200, decision
-        schema = json.loads((ROOT / "contracts" / "schemas" / "decision.schema.json").read_text("utf-8"))
-        action_schema = json.loads((ROOT / "contracts" / "schemas" / "action.schema.json").read_text("utf-8"))
+        schema = json.loads(
+            (ROOT / "contracts" / "schemas" / "decision.schema.json").read_text("utf-8")
+        )
+        action_schema = json.loads(
+            (ROOT / "contracts" / "schemas" / "action.schema.json").read_text("utf-8")
+        )
         registry = Registry().with_resources(
             [
                 ("action.schema.json", Resource.from_contents(action_schema)),

@@ -77,7 +77,9 @@ def report(apps: list[dict[str, str]], installed: set[str]) -> str:
         bundle = app["bundle"] if app["bundle"] else "(no bundle)"
         present = "yes" if app["bundle"] and app["bundle"] in installed else "no"
         verified = "yes" if app["verified"] else "-"
-        lines.append(f"{app['display']:20.20s} {bundle:42.42s} {present:10s} {verified}")
+        lines.append(
+            f"{app['display']:20.20s} {bundle:42.42s} {present:10s} {verified}"
+        )
     with_bundle = sum(1 for app in apps if app["bundle"])
     present = sum(1 for app in apps if app["bundle"] and app["bundle"] in installed)
     missing = sum(1 for app in apps if app["bundle"] and app["bundle"] not in installed)
@@ -93,7 +95,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--hdc", default="hdc", help="hdc executable")
     parser.add_argument("--device", default="", help="device id for hdc -t")
-    parser.add_argument("--input", default="", help="read bm dump -a output from a file")
+    parser.add_argument(
+        "--input", default="", help="read bm dump -a output from a file"
+    )
     parser.add_argument(
         "--check",
         action="store_true",
@@ -109,7 +113,9 @@ def main() -> int:
             command += ["-t", args.device]
         command += ["shell", "bm dump -a"]
         try:
-            result = subprocess.run(command, check=True, capture_output=True, text=True, timeout=60)
+            result = subprocess.run(
+                command, check=True, capture_output=True, text=True, timeout=60
+            )
         except (OSError, subprocess.SubprocessError) as error:
             print(f"could not read the device: {error}", file=sys.stderr)
             return 2

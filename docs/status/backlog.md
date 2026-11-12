@@ -62,3 +62,16 @@ py -3 tools/scripts/repair-chats.py
 Laptop launch hooks: `--ps hopa.bridge_url`, `hopa.bridge_key`, `hopa.ask`,
 `hopa.new 1`, `hopa.page_ask`, `hopa.laptop.new`. Phone: `hopa.bridge_url`,
 `hopa.bridge_token`, `hopa.ask`.
+
+## Refactor baseline (2026-11-12)
+
+Before `docs/plan/refactor/` starts, HEAD is green on the gates the refactor will
+lean on, at commit `4e5787e` plus the R0 changes:
+
+- `python tools/scripts/build-app-catalog.py --check` -> "35 apps and 21 sites are current"
+- `pytest tools/scripts` -> 18 passed
+- `pytest services harness tools/scripts` -> 380 passed (root `pytest.ini` uses
+  `--import-mode=importlib`, which removes the duplicate `test_cli.py` collision)
+- `ruff check services harness tools` -> All checks passed
+- Editable installs were uninstalled and reinstalled from path, so a console
+  script cannot silently run pre-move code.

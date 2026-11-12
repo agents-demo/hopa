@@ -64,6 +64,23 @@ the background. Without a bridge, the local `AppLauncher` launches.
 
 ## Where does a new thing go?
 
+Start with the top-level question, then the layer below it (ADR-0007):
+
+| The new thing is... | Top level | Then |
+|---|---|---|
+| a screen, a widget, a device adapter for a platform | `apps/` | `harmony|android|windows/` |
+| a long-running thing that answers requests or drives a device | `services/` | `backend/`, `bridge/`, `relay/`, `brain/` |
+| a task, a score, a reference driver | `evals/` | `bench/`, `baseline/` |
+| a wire format both sides must agree on | `contracts/` | `openapi/`, `schemas/` |
+| a build, sign or check step | `tools/` | `scripts/`, `checks/`, `signing/` |
+| the reason something is the way it is | `docs/` | `adr/`, `architecture/`, `guides/` |
+
+`apps/` ships, `services/` runs, `evals/` measures, `contracts/` binds, `tools/`
+builds, `docs/` explains. **`agent` is a product word**; evaluation code is a
+baseline or a driver.
+
+Then, inside `apps/harmony`:
+
 | The new thing is... | Put it in... |
 |---|---|
 | a value type (action, observation, record) | `core/src/main/ets/domain/` |

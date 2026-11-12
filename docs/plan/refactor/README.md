@@ -1,0 +1,506 @@
+# Refactor plan: apps, services, evals
+
+Status: **revised after critique; execution starts at R0.**
+Written 2026-11-12; revised same day (critique pass recorded in §9).
+Scope: structure and naming only. No behaviour change, no new platform code.
+
+Three futures this prepares for:
+
+1. **Android HOPA** and **Windows HOPA** as additional `apps/`.
+2. The **bridge as a real backend** (device plane + relay), later a separate repo.
+3. **evals/** as the place quality is measured, instead of `harness/`.
+
+Kept out of `docs/plan/*.md` on purpose: `tools/scripts/plan-status.py` globs
+that folder non-recursively, so this work does not enter the M-milestone gate.
+Count it with:
+
+```bash
+python tools/scripts/plan-status.py --plan docs/plan/refactor
+python tools/scripts/plan-status.py --plan docs/plan/refactor --lint
+```
+
+## 0. Rules
+
+- Every `[x]` carries `(evidence: ...)` on the same line: command output, CI run
+  id, PR number, or device screenshot. No evidence, no tick.
+- One phase = one mergeable change. **Each rename is one atomic commit**: the
+  move, the imports, the pyproject edit and the CI paths land together, because
+  CI installs by path and a "move only" commit cannot be green.
+- `git mv` for tracked files, so blame survives. Caches and `.idea` are untracked
+  and are cleaned, not moved.
+- New paths exist before old ones only where a transition needs both (console
+  script aliases). Everywhere else the old path is gone in the same commit.
+- `docs/history/` and ticked `docs/plan/phase-*` evidence are **frozen**. They may
+  keep old paths; everything else must not.
+- **`agent` is a product word.** Evaluation code is a *baseline* or a *driver*.
+- No junk drawers: `utils/`, `helpers/`, `common/`, `misc/`, `shared/`.
+- `docs/architecture/layers.md` remains the authority for import direction.
+- Decision boxes come in pairs with the literal marker
+  `(one of the two must be checked)`; conditional work is prose.
+
+## 1. Target tree
+
+```
+hopa/
+├─ apps/                    # what a person holds
+│  ├─ harmony/              # DevEco workspace (exists)
+│  ├─ android/              # README first (R9)
+│  └─ windows/              # README first (R9)
+├─ services/                # what runs with nobody watching
+│  ├─ bridge/               # device plane (R3)
+│  ├─ relay/                # cloud relay server half (R4)
+│  ├─ brain/                # Kotlin knowledge router (exists, unchanged)
+│  └─ backend/              # planned; only an ADR in R7, no package yet
+├─ evals/                   # how we know it got better (R1)
+│  ├─ bench/
+│  └─ baseline/
+├─ contracts/
+│  ├─ openapi/              # bridge.v1.yaml (R5)
+│  └─ schemas/              # 4 JSON schemas (exists)
+├─ tools/                   # scripts/, checks/, signing/
+├─ docs/
+└─ harness/                 # must not exist after R1
+```
+
+`services/brain` is an existing, documented service and moves in neither R3 nor
+R4; it is listed so the tree is honest. `services/backend` is deliberately **not**
+created in this plan (R7 records the boundary in an ADR only).
+
+## 2. Current state, measured 2026-11-12
+
+| Fact | Value / correction |
+|---|---|
+| Harmony project root | `apps/harmony/` (`build-profile.json5`, `hvigorfile.ts`, `oh-package.json5`) |
+| `core` purity | 0 `@kit.*` / `@ohos.*` imports under `core/src/main` |
+| Python **distributions** | `hopa-pc-agent`, `hopa-agent`, `hopa-bench` |
+| Python **console scripts** | `pc-agent`, `hopa-agent`, `bench` |
+| Package dirs | `hopa_pc_agent/`, `hopa_agent/`, `hopa_bench/` |
+| Bridge package contents | `bridge.py`, `bridge_pool.py`, `chat_store.py`, `cli.py`, `device.py`, `hdc.py`, `images.py`, `layout.py`, `mcp_server.py`, `relay.py`, `tunnel.py`, `ws.py`, `apps.py`, `errors.py`, `__init__.py`, `__main__.py` |
+| Import graph (inner) | `bridge → chat_store, device`; `bridge_pool → bridge, chat_store, device, images`; `device → hdc, layout, errors`; `mcp_server → device, errors`; `relay → tunnel → ws`; `cli → device, layout, errors` |
+| Direct hdc use from the API | `bridge.py` calls `device.hdc.shell` / `file_recv` (≈ lines 150, 153) — the seam in R6 must cover this |
+| Relay is one deployable, two halves | `relay.py` (server: `Relay`, serve loop), `tunnel.py` (`TunnelRegistry` **and** PC-side `HdcTunnel`), `ws.py` (frame codec) |
+| PC-only commands | `cloud-link` and `hdc-tunnel` (used by `run-agent.ps1`), so they stay on the PC |
+| Relay deploy | `render.yaml`: `pip install --no-deps ./services/pc-agent`, `python -m hopa_pc_agent relay` |
+| Stale root project | `app/` has **2 tracked files** (`code-linter.json5`, `entry/src/main/resources/.../color.json`), 0 `.ets`; `.idea/` is untracked/ignored |
+| CI Python paths | `.github/workflows/ci.yml` install/ruff/pytest/validate lines |
+| Scripts with paths | `run-tests.ps1`, `run-tests.sh`, `run-bench.ps1`, `run-bench.sh`, `run-agent.ps1`, `run-phone.ps1`, `run-laptop.ps1`, `bridges.ps1` |
+| Docs carrying `harness` | 29 files under `docs/` plus `README.md`, `CLAUDE.md`, `CONTRIBUTING.md`, `SECURITY.md` (prose, not a path), `.github/PULL_REQUEST_TEMPLATE.md` |
+| OpenAPI | none; 4 JSON schemas only |
+| Root pytest config | none — `pytest services <evals>` collides on duplicate `test_cli.py` basenames |
+| Baseline state at HEAD | `build-app-catalog.py --check` exits 1 (stale `AppCatalog.ets`); `pytest tools/scripts` 1 failed / 17 passed; repo-wide `ruff` red (defaults, not per-package config) |
+
+## 3. Non-goals
+
+- No change to bridge HTTP paths, auth, payloads, ChatSync rules, prompts or UI.
+- No Android/Windows code; R9 creates folder READMEs only.
+- No `services/backend` package, no runtime move (R7 is an ADR).
+- No rewrite of `docs/history/` or ticked evidence in `docs/plan/phase-*`.
+
+---
+
+## R0. Make HEAD green, reset the env, record decisions
+
+Baseline first: every "CI green" box after a rename is meaningless if HEAD is red.
+
+### R0.1 Baseline is green
+
+- [x] Regenerate the app catalogue: `python tools/scripts/build-app-catalog.py`
+      then `--check` exits 0. (evidence: "35 apps and 21 sites are current")
+- [x] Fix `pytest tools/scripts` (was failing on the stale catalogue).
+      (evidence: `pytest tools/scripts` -> 18 passed)
+- [x] Add a root `pytest.ini` with `addopts = --import-mode=importlib` so
+      `pytest services evals` does not collide on the two `test_cli.py` files.
+      (evidence: `pytest services harness tools/scripts` -> 380 passed)
+- [x] Replace the repo-wide ruff gate with path-scoped commands; fix the four
+      `ruff check` errors and format `tools/` so the scoped gate is clean.
+      (evidence: `ruff check services harness tools` -> All checks passed;
+      `ruff format --check services harness tools` -> 159 files already formatted)
+- [x] Record the green baseline in `docs/status/backlog.md` with the commands and
+      the commit. (evidence: "Refactor baseline (2026-11-12)" section)
+
+### R0.2 Environment reset (stale editable installs)
+
+- [x] `pip uninstall -y hopa-pc-agent hopa-agent hopa-bench`. (evidence: three
+      "Successfully uninstalled" lines)
+- [x] Delete stale console wrappers and metadata from the global site-packages
+      (the uninstall removes them; verified by the reinstall below).
+- [x] Reinstall from paths and prove the three CLIs run against the current tree.
+      (evidence: `python -m hopa_pc_agent --help`, `-m hopa_agent --help`,
+      `-m hopa_bench --help` all print their usage)
+- [x] Do not rely on alias proofs before this reset. (evidence: recorded here)
+
+### R0.3 Decisions (write them, then move)
+
+- [x] ADR `docs/adr/0007-top-level-taxonomy.md` written and indexed.
+      (evidence: docs/adr/README.md table row 0007)
+- [x] ADR `docs/adr/0008-python-distribution-renames.md` written and indexed.
+      (evidence: docs/adr/README.md table row 0008)
+- [x] ADR `docs/adr/0009-relay-is-a-server-half.md` written and indexed.
+      (evidence: docs/adr/README.md table row 0009)
+- [x] `docs/architecture/layers.md`: top-level routing table, "agent is a product
+      word", and the second-level table kept. (evidence: layers.md "Where does a
+      new thing go?" section)
+
+Verification: `check-links.py` green; `plan-status --plan docs/plan/refactor --lint`
+green. Risk: none (docs + regenerate). Rollback: revert the R0 commit.
+
+---
+
+## R1. `harness/` → `evals/`, and `hopa_agent` → `hopa_baseline`
+
+One atomic commit: move + imports + pyproject + CI + scripts + docs.
+
+### R1.1 Move and rename
+
+- [ ] `git mv harness evals`
+- [ ] `git mv evals/agent evals/baseline`
+- [ ] `git mv evals/baseline/src/hopa_agent evals/baseline/src/hopa_baseline`
+- [ ] Rewrite imports in `evals/baseline/**` (src + tests + conftest).
+- [ ] `evals/baseline/pyproject.toml`: `name = "hopa-baseline"`, description
+      without "agent", `[project.scripts] hopa-baseline = "hopa_baseline.cli:main"`
+      **and** `hopa-agent = "hopa_baseline.cli:main"` (one release),
+      `known-first-party = ["hopa_baseline"]`.
+- [ ] `evals/bench/pyproject.toml`: `known-first-party` updated; description kept.
+- [ ] CI coverage flag `--cov=hopa_baseline`; job name updated.
+- [ ] `evals/bench/tasks` needs **no** prose edit (0 occurrences of "agent");
+      verify instead of editing.
+
+### R1.2 References (complete list, verified by critique)
+
+- [ ] `.github/workflows/ci.yml`: install paths, ruff targets, pytest targets,
+      `validate --tasks evals/bench/tasks`, coverage flag, job name.
+- [ ] `.github/dependabot.yml`: `/evals/baseline`, `/evals/bench`.
+- [ ] `tools/scripts/run-tests.ps1` **and** `run-tests.sh` (install, lint, pytest).
+- [ ] `tools/scripts/run-bench.ps1` (results path, install, task path) **and**
+      `run-bench.sh` (install, `import hopa_agent` probe, task path).
+- [ ] `.gitleaks.toml` allowlist `agent/tests/.*` → `evals/baseline/tests/.*`
+      (otherwise secret-scan fixtures become live input).
+- [ ] `.gitignore`: replace dead `bench/results/` + `bench/artifacts/` with
+      `evals/bench/results/` + `evals/bench/artifacts/`; keep the six committed
+      result JSONs deliberately (note it in the ADR) or untrack them — pick one.
+- [ ] `README.md` (badge, diagram, tree, “reference loop” lines), `CLAUDE.md`,
+      `CONTRIBUTING.md`, `.github/PULL_REQUEST_TEMPLATE.md`.
+- [ ] `SECURITY.md`: prose only ("restart the harness") — rename the noun.
+- [ ] `docs/adr/0001-brain-hosting.md`, `0005-pc-tethered-vs-standalone.md`
+      (ADRs are live documents, not frozen history).
+- [ ] `docs/architecture/{overview,target-structure}.md` (§“harness” + §5 paths +
+      §14 open decision) and `layers.md` if it names the harness.
+- [ ] `docs/contracts/{action,observation}.md`, `docs/reference/{abuse,safety,
+      threat-model,bundles,brain}.md`, `docs/guides/{setup,device-testing}.md`,
+      `docs/product/{roadmap,bench,bench-results-v0,coverage}.md`,
+      `docs/operations/{owners,acl-request}.md`, `docs/status/backlog.md`.
+- [ ] `docs/plan/README.md` evidence table (§3, not §1.4) and
+      `appendix-a-port-matrix.md`, `appendix-e-open-questions.md`,
+      `phase-10-hdc-tunnel.md` prose; keep ticked evidence lines as written.
+- [ ] `docs/history/*`: frozen — append one pointer note at the end of
+      `docs/history/port-log.md` only.
+
+### R1.3 Gates
+
+- [ ] `rg -n "hopa_agent"` returns 0 **outside** `docs/history/**` and ticked
+      `docs/plan/phase-*` lines (state the exclusion in the commit message).
+- [ ] `rg -n "harness"` → every remaining hit classified as frozen or fixed.
+- [ ] Fresh install and proof: `pip install -e "./evals/bench[dev]" -e "./evals/baseline[dev]"`,
+      `hopa-baseline --help`, `hopa-agent --help` (alias), `bench --help`.
+- [ ] `pytest evals`; `ruff check evals services`; `ruff format --check evals services`.
+- [ ] `python -m hopa_bench validate --tasks evals/bench/tasks`.
+- [ ] `check-structure.py --strict`, `check-links.py`, `plan-status.py --lint`,
+      `build-app-catalog.py --check`, `license-check.py`, `pytest tools/scripts`.
+- [ ] CI green; evidence: PR + run id.
+
+Risk: medium (many references). Rollback: revert the single atomic commit;
+then `pip uninstall` the new distributions and reinstall (pip does not remove the
+old `*.dist-info` on a rename).
+
+---
+
+## R2. Delete the stale root `app/`
+
+- [ ] Prove nothing references it: `rg -n 'app[\\/](entry|build|code-linter)'`
+      over `.github/`, `tools/`, `docs/`, `*.md`, `*.ps1`, `*.py`, `*.json5`.
+      (Verified during critique: no references outside this plan.)
+- [ ] `tools/scripts/build.ps1` succeeds **before** deletion.
+- [ ] `git rm -r -- app` (removes the 2 tracked files) **and** `git clean -fd app`
+      (removes ignored `.idea/`, so the folder is really gone).
+- [ ] Confirm no `.gitignore` entry existed solely for it (all app patterns are
+      `**/…`); the dead entries are fixed in R1, not here.
+- [ ] `README.md` tree: no root `app/`.
+- [ ] Gates: HAP build, `check-links.py`, CI green.
+
+Risk: low. Detector: the HAP build fails immediately if anything depended on it.
+
+---
+
+## R3. `services/pc-agent` → `services/bridge`, package `hopa_bridge`
+
+One atomic commit (move + imports + pyproject + CI + scripts + docs).
+
+### R3.1 Move and rename
+
+- [ ] `git mv services/pc-agent services/bridge`
+- [ ] `git mv services/bridge/src/hopa_pc_agent services/bridge/src/hopa_bridge`
+- [ ] Rewrite imports in `services/bridge/**` **and in `evals/**`** (the bench and
+      baseline import `hopa_pc_agent`: `test_runner.py`, `test_predicates.py`,
+      `runner.py`, `cli.py`, `observation.py`, `executor.py`, `capture.py`,
+      `conftest.py`, `test_schemas.py`, `test_safety.py`, `test_runtime.py`,
+      `test_observation.py`, `test_adversarial.py`).
+- [ ] `services/bridge/pyproject.toml`: `name = "hopa-bridge"`,
+      `hopa-bridge = "hopa_bridge.cli:main"` + `pc-agent = "hopa_bridge.cli:main"`,
+      `known-first-party = ["hopa_bridge"]`; description updated.
+- [ ] User-visible strings decided in ADR 0008: `cli.py` `prog=`, error prefixes
+      (`tests/test_cli.py` asserts them), `mcp_server.py` `SERVER_NAME`
+      (`tests/test_mcp.py` asserts the literal), `BridgeWizard.ets` command line.
+- [ ] `render.yaml`: install `./services/bridge`, run `python -m hopa_bridge relay`
+      (only if R0 chose "fold relay"; otherwise this line changes in R4).
+- [ ] Declare the cross-distribution relationship honestly: bench/baseline import
+      `hopa_bridge` but declare no dependency. Add a dev extra note and the
+      install-order line in each README (a path dependency cannot live in a
+      published pyproject).
+- [ ] `services/bridge/README.md`: title, install, CLI examples.
+
+### R3.2 References
+
+- [ ] Scripts: `run-agent.ps1`, `run-phone.ps1`, `run-laptop.ps1`, `bridges.ps1`,
+      `run-bench.ps1`, `run-bench.sh`, `run-tests.ps1`, `run-tests.sh`.
+      Note: `bridges.ps1` runs `py -3 -m hopa_pc_agent`, not `pc-agent.exe`;
+      `run-agent.ps1`/`run-laptop.ps1` also match on the process name.
+- [ ] `.github/workflows/ci.yml`, `.github/dependabot.yml`.
+- [ ] `README.md` (badge, diagram, five prose sites), `CLAUDE.md`, `CONTINUE.md`,
+      `CONTRIBUTING.md`, `CHANGELOG.md`, `.github/PULL_REQUEST_TEMPLATE.md`,
+      `.env.example`.
+- [ ] `docs/operations/sbom.json` (three distribution names) and
+      `docs/operations/owners.md`.
+- [ ] `docs/architecture/data-flow.md` (already stale line), `overview.md`,
+      `target-structure.md` §5, `docs/guides/{setup,pc-bridge}.md`,
+      `docs/reference/{bundles,safety,threat-model,abuse,brain}.md`,
+      `docs/product/{coverage,roadmap}.md`, `docs/plan/appendix-*`.
+- [ ] `tools/scripts/ui-smoke.py`, `tools/scripts/repair-chats.py` strings.
+- [ ] `CODEOWNERS`: add `/services/bridge/` and `/evals/`; remove dead `/agent/`
+      and `/schemas/`.
+- [ ] `docs/history/*`: frozen; no edits.
+
+### R3.3 Gates
+
+- [ ] `rg -n "hopa_pc_agent"` → 0 outside `docs/history/**` and ticked
+      `docs/plan/phase-*` lines.
+- [ ] Fresh install, then `pytest services/bridge` with the same test count as
+      before the move; `python -m hopa_bridge --help` lists the same subcommands;
+      `pc-agent --help` works (alias).
+- [ ] Device smoke: `hopa-bridge devices`, one `observe`, one `screenshot`.
+- [ ] Bridge smoke: `hopa-bridge bridge --port 8766`, `/health` lists both
+      devices; laptop app shows `Connected.` (device evidence).
+- [ ] Relay smoke (because `render.yaml` may change here): local
+      `python -m hopa_bridge relay` `/health`; Render preview healthy if the
+      render line moved in this phase.
+- [ ] All R1.3 tooling gates repeated.
+
+Risk: medium-high. Rollback: revert the atomic commit, `pip uninstall` the renamed
+distribution, reinstall, and — if `render.yaml` moved here — revert it and
+redeploy before closing the rollback.
+
+---
+
+## R4. Split the relay **server half** into `services/relay`
+
+Goal: the relay host installs only relay code; a PC still keeps `cloud-link` and
+`hdc-tunnel`, so a PC never needs the relay package.
+
+- [ ] Confirm the cut with `rg -n "class |^def " services/bridge/src/hopa_bridge/{relay,tunnel,ws}.py`:
+      server: `Relay`, serve loop, `TunnelRegistry`; PC: `HdcTunnel`,
+      `serve_hdc_tunnel`, `cloud-link`.
+- [ ] `services/relay/src/hopa_relay/` takes the server half + `ws.py`; the PC half
+      stays as `services/bridge/src/hopa_bridge/tunnel_pc.py` (renamed file, same
+      behaviour).
+- [ ] `services/relay/pyproject.toml`: `name = "hopa-relay"`,
+      `hopa-relay = "hopa_relay.cli:main"`, no dependency on the bridge.
+- [ ] Split the CLI: relay subcommands out of `hopa_bridge/cli.py` into
+      `hopa_relay/cli.py`; `cloud-link` and `hdc-tunnel` stay in the bridge CLI.
+      Two argparse roots, no shared `common/` module (duplicate ≤10 lines if needed).
+- [ ] Move tests: `test_relay.py`, `test_tunnel.py` (split: registry vs HdcTunnel),
+      `test_ws.py`; keep fake sockets local.
+- [ ] `render.yaml`: build `./services/relay`, start `python -m hopa_relay relay`.
+      Own commit, preview deploy first.
+- [ ] Deprecation: `hopa-bridge relay` prints "moved to hopa-relay" and exits 2 for
+      one release.
+- [ ] Docs: `guides/pc-bridge.md`, `architecture/overview.md` diagram,
+      `reference/protocols.md` (R5).
+- [ ] CI: install + ruff + pytest for `services/relay`.
+- [ ] Gates: relay `/health` locally and on the preview; bridge and eval suites
+      green; `run-agent.ps1 hdc-tunnel` still works (PC half intact).
+
+Risk: medium (prod deploy). Rollback: revert package commit, then render commit,
+then redeploy; `pip uninstall hopa-relay`.
+
+---
+
+## R5. Freeze the bridge API in `contracts/` (against the real files)
+
+No runtime change. Written against `bridge.py` + `bridge_pool.py`, since the
+`api/` split does not exist yet.
+
+- [ ] `contracts/openapi/bridge.v1.yaml` covering the **actual** surface:
+      `/health`, `/whoami`, `/pair`, `/refresh`, `/observe`, `/tap`, `/type`,
+      `/swipe`, `/screenshot`, `/launch`, `/foreground`, `/key`, `/stop`,
+      `/focus`, `/voices`, `/images/{id}`, `GET|POST /chats`, `GET|POST /sessions`,
+      `/transcribe`, `/speak`, and the `/d/{serial}/{path}` prefix routes.
+      (No `/apps` — CLI only. No `/mcp` — stdio server, not HTTP.)
+- [ ] Document auth in the spec: base token vs paired token; `X-Hopa-Role` for
+      routing; `X-Hopa-Read` for cross-reads; error body shape and status codes.
+- [ ] `contracts/openapi/README.md`: how it is reviewed; a path change updates
+      the spec in the same PR.
+- [ ] `tools/checks/check-openapi.py` scoped to `bridge.py` + `bridge_pool.py`,
+      with an explicit allowance for `/d/{serial}/` prefix routes; a unit test for
+      the checker in `tools/scripts/test_check_openapi.py`.
+- [ ] `docs/reference/protocols.md`: index of bridge HTTP, brain HTTP, MCP, relay,
+      and the four schemas. Replace the existing `protocols` row in
+      `docs/README.md` (it currently points at `guides/pc-bridge.md`).
+- [ ] Gate: `check-openapi.py`, links green.
+
+Risk: low. Deferred decision: `/v1` prefix (record it; do not do it here).
+
+---
+
+## R6. A device seam in the bridge — protocol only, no folder split
+
+`device.py` cannot become `device/` while the module `device.py` exists (Windows
+case-insensitive FS). So R6 adds a protocol and adapters **in flat files**; the
+folder split is a later, separate plan.
+
+- [ ] `services/bridge/src/hopa_bridge/device_port.py`: `DevicePort` protocol —
+      `observe`, `tap`, `type`, `swipe`, `screenshot`, `launch`, `foreground`,
+      `apps`, `serial`, `platform`.
+- [ ] `device_harmony.py`: adapter over today's `device.py`, covering the direct
+      `device.hdc.shell` / `file_recv` calls in `bridge.py`.
+- [ ] `bridge.py` / `bridge_pool.py` take a `DevicePort`; only `device_harmony.py`
+      imports `hdc.py`.
+- [ ] Registry gains `platform` (default `harmony`) next to `role`; existing
+      `devices.json` unchanged.
+- [ ] Tests: reuse the existing `FakeDevice` (`evals/baseline/tests/conftest.py`)
+      — relocate or wrap it, do not add a third fake.
+- [ ] `check-structure.py`: add a Python rule "only `device_harmony.py` imports
+      `hdc`" — this is new code, not a retarget of existing rules.
+- [ ] Gates: `pytest services/bridge`; hardware observe/tap/screenshot; laptop
+      app unaffected.
+
+Risk: medium. Rollback: revert the single commit; no data changes.
+
+---
+
+## R7. Record the backend boundary (ADR only, no package)
+
+- [ ] ADR `docs/adr/0010-loop-ownership.md`: the loop stays on the device until a
+      backend runtime exists; client apps talk over `contracts/`; `services/backend`
+      is a future phase with its own plan.
+- [ ] `docs/architecture/target-structure.md` gets a "superseded by" note on the
+      parts this plan changes (top-level names, harness).
+- [ ] No package, no CI job, no `runtime/` stub.
+
+Risk: none. Rollback: revert the doc commit.
+
+---
+
+## R8. Rules, docs, and the checks that keep the tree honest
+
+- [ ] `tools/checks/check-tree.py`: dirs only, skip dot-directories
+      (`.hopa`, `.tools`, `.idea`, `.pytest_cache`, `.ruff_cache`); allow-list
+      top level; fail if `harness/` exists or a junk folder name appears.
+- [ ] `tools/scripts/test_check_tree.py`: one passing and one failing fixture.
+- [ ] Extend `check-links.py` to `contracts/**`, `apps/**/README.md`,
+      `services/**/README.md` — otherwise "links green" says nothing about the new
+      files.
+- [ ] `README.md` tree equals §1; `CONTRIBUTING.md` gains "where does a new file go?";
+      `CLAUDE.md` paths refreshed; `docs/plan/README.md` links this plan.
+- [ ] `docs/architecture/{overview,layers,data-flow}.md` updated.
+- [ ] Gate: `check-tree.py`, `check-structure.py --strict`, `check-links.py`,
+      `plan-status --plan docs/plan/refactor --lint`, `pytest tools/scripts`.
+
+Risk: low.
+
+---
+
+## R9. Reserve the platform folders (README only)
+
+- [ ] `apps/android/README.md`: Kotlin/Compose shell; `AccessibilityService`
+      adapter implements `DevicePort`; talks only over `contracts/`; no loop.
+- [ ] `apps/windows/README.md`: WinUI + UI Automation adapter; same rules.
+- [ ] `services/bridge/README.md` (or `docs/guides/adding-a-platform.md`): the
+      checklist — implement `DevicePort`, register `platform`, handler tests on
+      the fake, hardware evidence.
+- [ ] Gate: links green (after R8's link-check extension).
+
+Risk: none.
+
+---
+
+## Acceptance gates
+
+| Gate | Command | Applies after |
+|---|---|---|
+| Python suites | per package, as CI does: `pytest services/bridge`, `pytest evals/bench`, `pytest evals/baseline`; plus `pytest services evals` once R0 adds `--import-mode=importlib` | R0 |
+| Lint (scoped) | `ruff check services evals tools` / `ruff format --check …` | R0 |
+| Structure | `python tools/checks/check-structure.py --strict` | every phase |
+| Tree | `python tools/checks/check-tree.py` | R8+ |
+| Contracts | `python tools/checks/check-openapi.py` | R5+ |
+| Links | `python tools/checks/check-links.py` (extended in R8) | every phase |
+| Plan | `python tools/scripts/plan-status.py --plan docs/plan/refactor --lint` | every phase |
+| Catalogue | `python tools/scripts/build-app-catalog.py --check` | every phase |
+| Build | `tools/scripts/build.ps1` | R2, R3 |
+| Device | laptop app `Connected.` + one observe/tap | R3, R6 |
+| Relay | `/health` on preview and on the PC half's `hdc-tunnel` | R4 |
+
+## Rollback model
+
+Each rename is **one** atomic commit (move + imports + pyproject + CI), so the
+rollback is `git revert <sha>` followed by `pip uninstall` of the new
+distributions and a reinstall — pip keeps the old `*.dist-info` and console
+wrappers otherwise. R4 adds a second commit for `render.yaml`; revert that first,
+then the package commit, then redeploy. R6 and R7 are single commits with no data
+migration.
+
+## Open decisions
+
+- [x] CLI naming (one of the two must be checked)
+      - [x] `pc-agent` primary, `hopa-bridge` alias. (evidence: ADR-0008)
+      - [ ] `hopa-bridge` primary, `pc-agent` alias for one release.
+- [x] Relay timing (one of the two must be checked)
+      - [x] R4 separate, after R3. (evidence: ADR-0009)
+      - [ ] R4 folded into R3.
+- [x] `apps/harmony/app` naming (one of the two must be checked)
+      - [x] keep `app/`. (evidence: R0 decision, least churn)
+      - [ ] rename to `shell/`.
+- [x] `/v1` path prefix (one of the two must be checked)
+      - [x] after the backend exists. (evidence: R0 decision)
+      - [ ] now, inside R5.
+
+## 9. Critique log
+
+A read-only sub-agent reviewed the first draft and verified it against the repo.
+Accepted corrections, all folded into the text above:
+
+1. ADR numbers 0006+ were taken; this plan now starts at 0007.
+2. R5/R6 were written against a folder layout that does not exist; both now target
+   the real flat files, and R6 no longer merges three modules.
+3. The endpoint list was wrong (`/apps`, `/mcp` invented; `/key`, `/stop`,
+   `/focus`, `/voices`, `/images`, `/d/<serial>/` missing); corrected.
+4. R4's "clean cut" was false — `tunnel.py` holds both halves and `cloud-link` is
+   a PC command; the phase now moves the server half only.
+5. `rg → 0` gates were impossible because of frozen evidence; exclusions are now
+   explicit.
+6. Missing references added: `run-tests.sh`, `run-bench.sh`, `run-bench.ps1`,
+   `known-first-party`, `.gitleaks.toml`, `.gitignore` dead entries, ADRs 0001/0005,
+   plan appendices, `sbom.json`, `CHANGELOG.md`, `CONTINUE.md`, `.env.example`,
+   `BridgeWizard.ets`, `mcp_server.py`, `cli.py`, `CODEOWNERS`, five `README.md`
+   sites, `docs/README.md`.
+7. The "move commit is green" claim was impossible; each rename is now one atomic
+   commit and the rollback model was rewritten.
+8. HEAD was red; R0 now makes it green (catalogue, `pytest tools/scripts`, scoped
+   ruff, root pytest `--import-mode=importlib`) before any move.
+9. Stale editable installs could fake the alias proof; R0.2 resets them.
+10. `git rm -r app` left the folder; now `git rm -r --` + `git clean -fd`.
+11. R7 (backend skeleton) was over-engineered; it is now an ADR only.
+12. `check-tree.py` was over-scoped; it now looks at directory names only and
+    skips dot-directories.
+13. Decision-pair markers and conditional-box lint rules are now satisfied.
+
+Rejected/deferred: none. The critique's "split R6 into two plans" is honoured by
+scoping R6 to the protocol only.

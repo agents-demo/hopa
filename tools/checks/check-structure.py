@@ -75,11 +75,15 @@ def check_barrels(errors: list[str]) -> None:
         APP / "core/Index.ets",
         APP / "app/Index.ets",  # the shared kit's package root
         APP / "phone/src/main/ets/pages/Index.ets",  # ArkUI entry page, not a barrel
-    } | {path / "Index.ets" for path in (APP / "capabilities").iterdir() if path.is_dir()}
+    } | {
+        path / "Index.ets" for path in (APP / "capabilities").iterdir() if path.is_dir()
+    }
     for path in APP.rglob("Index.ets"):
         if path in allowed:
             continue
-        if any(part in {"build", "oh_modules", ".preview", ".test"} for part in path.parts):
+        if any(
+            part in {"build", "oh_modules", ".preview", ".test"} for part in path.parts
+        ):
             continue
         errors.append(f"{path.relative_to(ROOT)}: Index.ets outside a package root")
 
@@ -102,10 +106,14 @@ def size_report() -> tuple[list[str], list[str]]:
             lines = len(path.read_text(encoding="utf-8").splitlines())
             relative = path.relative_to(ROOT)
             if relative.as_posix() in GRANDFATHERED:
-                warnings.append(f"{relative}: {lines} lines, already over the {budget} budget")
+                warnings.append(
+                    f"{relative}: {lines} lines, already over the {budget} budget"
+                )
                 continue
             if lines > budget * 2:
-                violations.append(f"{relative}: {lines} lines (limit {budget}, hard {budget * 2})")
+                violations.append(
+                    f"{relative}: {lines} lines (limit {budget}, hard {budget * 2})"
+                )
             elif lines > budget:
                 warnings.append(f"{relative}: {lines} lines (limit {budget})")
     return warnings, violations

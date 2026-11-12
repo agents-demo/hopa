@@ -24,6 +24,9 @@ supersede it. Format:
 | [0004](0004-acl-strategy.md) | ACL strategy and foreground fallback | accepted |
 | [0005](0005-pc-tethered-vs-standalone.md) | PC-tethered vs standalone product split | accepted |
 | [0006](0006-model-provider-and-budget.md) | Model provider, transport and budget | accepted |
+| [0007](0007-top-level-taxonomy.md) | Top-level taxonomy and what "agent" means | accepted |
+| [0008](0008-python-distribution-renames.md) | Python distribution renames and CLI aliases | accepted |
+| [0009](0009-relay-is-a-server-half.md) | The relay is a server half; the PC keeps its tunnel client | accepted |
 
 Create the next ADR by copying the template below.
 

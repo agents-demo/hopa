@@ -54,7 +54,9 @@ def repair(path: Path) -> tuple[int, int, int]:
 
 
 def main() -> int:
-    path = Path(sys.argv[1]) if len(sys.argv) > 1 else Path.home() / ".hopa" / "chats.json"
+    path = (
+        Path(sys.argv[1]) if len(sys.argv) > 1 else Path.home() / ".hopa" / "chats.json"
+    )
     if not path.exists():
         print(f"pc-agent: no store at {path}", file=sys.stderr)
         return 2

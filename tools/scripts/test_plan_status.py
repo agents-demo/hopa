@@ -25,9 +25,7 @@ def write_plan(tmp_path: Path, body: str) -> Path:
 def test_counts_checked_and_unchecked(tmp_path: Path) -> None:
     plan = write_plan(
         tmp_path,
-        "# Plan\n\n"
-        "- [x] done (evidence: PR 1)\n"
-        "- [ ] open\n",
+        "# Plan\n\n- [x] done (evidence: PR 1)\n- [ ] open\n",
     )
     report = plan_status.parse(plan)
     assert report["done"] == 1

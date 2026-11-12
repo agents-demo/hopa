@@ -23,7 +23,17 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 KNOWLEDGE = ROOT / "services" / "brain" / "knowledge" / "apps"
 SITES = ROOT / "services" / "brain" / "knowledge" / "sites"
-TARGET = ROOT / "apps" / "harmony" / "app" / "src" / "main" / "ets" / "services" / "AppCatalog.ets"
+TARGET = (
+    ROOT
+    / "apps"
+    / "harmony"
+    / "app"
+    / "src"
+    / "main"
+    / "ets"
+    / "services"
+    / "AppCatalog.ets"
+)
 
 MAX_PURPOSE = 200
 MAX_ACTION = 120
@@ -80,7 +90,7 @@ def parse_body(text: str) -> tuple[str, list[str]]:
             flush_paragraph()
             flush_bullet()
             continue
-        if stripped.startswith("- ") or stripped.startswith("* "):
+        if stripped.startswith(("- ", "* ")):
             flush_paragraph()
             flush_bullet()
             bullet = stripped[2:]
@@ -153,7 +163,9 @@ def collect_sites() -> list[dict]:
                 "aliases": parse_list(fields.get("aliases", "[]")),
                 "validated": fields.get("validated", "pending"),
                 "purpose": shorten(paragraph, MAX_PURPOSE),
-                "actions": [shorten(action, MAX_ACTION) for action in bullets[:MAX_ACTIONS]],
+                "actions": [
+                    shorten(action, MAX_ACTION) for action in bullets[:MAX_ACTIONS]
+                ],
             }
         )
     entries.sort(key=lambda item: item["display"].lower())

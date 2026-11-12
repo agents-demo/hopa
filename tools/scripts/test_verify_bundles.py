@@ -20,7 +20,10 @@ def _module():
 def test_parse_installed_reads_bm_dump_lines() -> None:
     module = _module()
     text = "ID: 100:\n\tcom.hopa.agent\n\tcom.huawei.hmos.settings\n\tnot a bundle\n"
-    assert module.parse_installed(text) == {"com.hopa.agent", "com.huawei.hmos.settings"}
+    assert module.parse_installed(text) == {
+        "com.hopa.agent",
+        "com.huawei.hmos.settings",
+    }
 
 
 def test_front_matter_and_catalogue() -> None:
@@ -46,7 +49,12 @@ def test_front_matter_and_catalogue() -> None:
 def test_report_counts_installed_and_missing() -> None:
     module = _module()
     apps = [
-        {"display": "One", "bundle": "com.example.one", "verified": "2026-11-08", "name": "one"},
+        {
+            "display": "One",
+            "bundle": "com.example.one",
+            "verified": "2026-11-08",
+            "name": "one",
+        },
         {"display": "Two", "bundle": "com.example.two", "verified": "", "name": "two"},
         {"display": "Three", "bundle": "", "verified": "", "name": "three"},
     ]
