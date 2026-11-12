@@ -388,18 +388,18 @@ later without changing the API.
 Risk: medium (signature change inside the bridge). Rollback: revert the single
 commit; no data changes.
 
-## R7. Record the backend boundary (ADR only, no package)
+## R7. Record the backend boundary (ADR + runbook, no package)
 
-- [ ] ADR `docs/adr/0010-loop-ownership.md`: the loop stays on the device until a
-      backend runtime exists; client apps talk over `contracts/`; `services/backend`
-      is a future phase with its own plan.
-- [ ] `docs/architecture/target-structure.md` gets a "superseded by" note on the
-      parts this plan changes (top-level names, harness).
-- [ ] No package, no CI job, no `runtime/` stub.
+- [x] ADR-0011: the loop is a server concern; today it stays on the device until
+  services/backend exists; clients are thin; the bridge stays the device plane;
+  shared code is versioned, not copied.
+- [x] docs/operations/repo-split.md: target repositories, preconditions, order
+  (backend, wire, bridge/relay, apps), git filter-repo mechanics, per-repo CI
+  and the rollback tag.
+- [x] ADR-0011 is in the index; no services/backend package, no CI job, no
+  runtime stub (the ADR explains why a stub would be worse than nothing).
 
-Risk: none. Rollback: revert the doc commit.
-
----
+Risk: none. Rollback: revert the docs commit.
 
 ## R8. Rules, docs, and the checks that keep the tree honest
 
