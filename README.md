@@ -121,10 +121,13 @@ and the result still lands in the same conversation.
 <tr>
 <td width="55%" align="center" valign="top">
 
-<b>The desk pane</b>
+<b>The two devices, one conversation</b>
 
-<sub>A capture of the laptop app is on its way. The pane is described above and
-used in the demo.</sub>
+<a href="docs/media/duo-laptop-phone.mp4"><img src="docs/media/duo-laptop-phone.png" alt="HOPA on the laptop: ask it to open Douyin on the phone and tell you what it sees; the phone opens Douyin, the laptop answers. Click for the 20-second clip." width="100%" /></a>
+
+<sub><b>? 20 seconds:</b> asked on the laptop, run on the phone, answered in the
+same chat - and the phone goes back to where it was. <i>Click the picture to play
+it.</i></sub>
 
 </td>
 <td valign="middle">
