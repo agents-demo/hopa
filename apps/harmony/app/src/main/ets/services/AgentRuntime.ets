@@ -389,7 +389,11 @@ export class AgentRuntime {
     // the answer is visible when the run finishes. The system blocks a
     // background app from starting its own UIAbility, so ask the PC bridge to
     // run `aa start` for HOPA first; the local path is the fallback.
-    if (this.leftHopa(outcomes)) {
+    // Only bring HOPA back when THIS window was the one that moved. A run on
+    // another device leaves this shell in front already; focusing there started
+    // HOPA on that device instead, so the phone jumped from Douyin to whatever
+    // page its own HOPA was last showing (Settings).
+    if (this.leftHopa(outcomes) && this.bridge.targetRole().length === 0) {
       let returned: boolean = false;
       if (this.bridge.isConfigured()) {
         returned = await this.bridge.focus('com.hopa.agent', this.homeAbility);

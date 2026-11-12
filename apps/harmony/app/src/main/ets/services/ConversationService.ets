@@ -149,7 +149,7 @@ export class ConversationService {
     }
     let nextActive: string = active;
     if (!stillThere) {
-      if (openLocal !== undefined) {
+      if (openLocal !== undefined && openLocal.entries.length === 0) {
         kept.unshift(openLocal);
         nextActive = openLocal.id;
       } else {
