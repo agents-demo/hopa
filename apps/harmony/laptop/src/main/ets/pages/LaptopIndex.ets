@@ -3455,10 +3455,11 @@ struct LaptopIndex {
               // An SVG asset, not Path: Path draws at its command extent and
               // ignores width/height, so the arrow stayed 18 pt wide through two
               // "make it bigger" edits. Image scales to the size it is given.
+              // Thin, rounded stroke - the weight the mic beside it already has.
+              // A filled, square-jointed arrow read like a 2016 upload glyph.
               Image($r('app.media.ic_arrow_up'))
                 .width(22)
                 .height(22)
-                .fillColor($r('app.color.on_primary'))
                 .objectFit(ImageFit.Contain)
             }
             .width(44)
