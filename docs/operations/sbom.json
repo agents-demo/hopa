@@ -4,7 +4,7 @@
   "version": 1,
   "created": "2026-11-06",
   "components": [
-    { "name": "hopa-agent", "version": "0.1.0", "license": "Apache-2.0", "scope": "dev" },
+    { "name": "hopa-baseline", "version": "0.1.0", "license": "Apache-2.0", "scope": "dev" },
     { "name": "hopa-pc-agent", "version": "0.1.0", "license": "Apache-2.0", "scope": "dev" },
     { "name": "hopa-bench", "version": "0.1.0", "license": "Apache-2.0", "scope": "dev" },
     { "name": "hopa-brain", "version": "0.1.0", "license": "Apache-2.0", "scope": "dev" },

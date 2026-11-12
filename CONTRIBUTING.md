@@ -25,7 +25,7 @@ ruff format --check pc-agent bench agent
 pytest pc-agent bench agent
 python tools/scripts/plan-status.py --lint
 python tools/scripts/build-app-catalog.py --check
-python -m hopa_bench validate --tasks harness/bench/tasks
+python -m hopa_bench validate --tasks evals/bench/tasks
 ```
 
 For an ArkTS change, also run the core Local Tests on a machine with DevEco.

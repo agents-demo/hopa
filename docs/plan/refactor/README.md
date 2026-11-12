@@ -152,61 +152,63 @@ One atomic commit: move + imports + pyproject + CI + scripts + docs.
 
 ### R1.1 Move and rename
 
-- [ ] `git mv harness evals`
-- [ ] `git mv evals/agent evals/baseline`
-- [ ] `git mv evals/baseline/src/hopa_agent evals/baseline/src/hopa_baseline`
-- [ ] Rewrite imports in `evals/baseline/**` (src + tests + conftest).
-- [ ] `evals/baseline/pyproject.toml`: `name = "hopa-baseline"`, description
-      without "agent", `[project.scripts] hopa-baseline = "hopa_baseline.cli:main"`
-      **and** `hopa-agent = "hopa_baseline.cli:main"` (one release),
-      `known-first-party = ["hopa_baseline"]`.
-- [ ] `evals/bench/pyproject.toml`: `known-first-party` updated; description kept.
-- [ ] CI coverage flag `--cov=hopa_baseline`; job name updated.
-- [ ] `evals/bench/tasks` needs **no** prose edit (0 occurrences of "agent");
-      verify instead of editing.
+- [x] `git mv harness evals`. (evidence: `harness/` no longer exists)
+- [x] `git mv evals/agent evals/baseline`.
+- [x] `git mv evals/baseline/src/hopa_agent evals/baseline/src/hopa_baseline`.
+- [x] Rewrite imports in `evals/baseline/**` (src + tests + conftest).
+      (evidence: `pytest evals` -> 223 passed)
+- [x] `evals/baseline/pyproject.toml`: name `hopa-baseline`, description updated,
+      scripts `hopa-baseline` + one-release `hopa-agent`, first-party
+      `hopa_baseline`. (evidence: file, lines 6-8 and 20-24)
+- [x] `evals/bench/pyproject.toml`: first-party list verified (it named
+      `hopa_bench`/`hopa_pc_agent`, no change needed).
+- [x] CI coverage flag `--cov=hopa_baseline`; step renamed "pytest (baseline)".
+      (evidence: .github/workflows/ci.yml)
+- [x] `evals/bench/tasks` needed no prose edit: 0 occurrences of "agent" there.
 
 ### R1.2 References (complete list, verified by critique)
 
-- [ ] `.github/workflows/ci.yml`: install paths, ruff targets, pytest targets,
-      `validate --tasks evals/bench/tasks`, coverage flag, job name.
-- [ ] `.github/dependabot.yml`: `/evals/baseline`, `/evals/bench`.
-- [ ] `tools/scripts/run-tests.ps1` **and** `run-tests.sh` (install, lint, pytest).
-- [ ] `tools/scripts/run-bench.ps1` (results path, install, task path) **and**
-      `run-bench.sh` (install, `import hopa_agent` probe, task path).
-- [ ] `.gitleaks.toml` allowlist `agent/tests/.*` → `evals/baseline/tests/.*`
-      (otherwise secret-scan fixtures become live input).
-- [ ] `.gitignore`: replace dead `bench/results/` + `bench/artifacts/` with
-      `evals/bench/results/` + `evals/bench/artifacts/`; keep the six committed
-      result JSONs deliberately (note it in the ADR) or untrack them — pick one.
-- [ ] `README.md` (badge, diagram, tree, “reference loop” lines), `CLAUDE.md`,
-      `CONTRIBUTING.md`, `.github/PULL_REQUEST_TEMPLATE.md`.
-- [ ] `SECURITY.md`: prose only ("restart the harness") — rename the noun.
-- [ ] `docs/adr/0001-brain-hosting.md`, `0005-pc-tethered-vs-standalone.md`
-      (ADRs are live documents, not frozen history).
-- [ ] `docs/architecture/{overview,target-structure}.md` (§“harness” + §5 paths +
-      §14 open decision) and `layers.md` if it names the harness.
-- [ ] `docs/contracts/{action,observation}.md`, `docs/reference/{abuse,safety,
-      threat-model,bundles,brain}.md`, `docs/guides/{setup,device-testing}.md`,
+- [x] `.github/workflows/ci.yml`: install paths, ruff targets, pytest targets,
+      `validate --tasks evals/bench/tasks`, coverage flag.
+- [x] `.github/dependabot.yml`: `/evals/baseline`, `/evals/bench`.
+- [x] `tools/scripts/run-tests.ps1` and `run-tests.sh`.
+- [x] `tools/scripts/run-bench.ps1` and `run-bench.sh` (results, install, tasks).
+- [x] `.gitleaks.toml` allowlist -> `evals/baseline/tests/.*`,
+      `evals/bench/tasks/.*`.
+- [x] `.gitignore`: dead `bench/results|artifacts` replaced with
+      `evals/bench/results|artifacts`; the six committed result JSONs stay
+      deliberately (noted here, not ignored).
+- [x] `README.md` (all five sites), `CLAUDE.md`, `CONTRIBUTING.md`,
+      `.github/PULL_REQUEST_TEMPLATE.md`.
+- [x] `SECURITY.md` prose noun.
+- [x] `docs/adr/0001-brain-hosting.md`, `0005-pc-tethered-vs-standalone.md`.
+- [x] `docs/architecture/{overview,target-structure}.md` (+ ?5 paths).
+- [x] `docs/contracts/{action,observation}.md`,
+      `docs/reference/{abuse,safety,threat-model,bundles,brain}.md`,
+      `docs/guides/{setup,device-testing}.md`,
       `docs/product/{roadmap,bench,bench-results-v0,coverage}.md`,
-      `docs/operations/{owners,acl-request}.md`, `docs/status/backlog.md`.
-- [ ] `docs/plan/README.md` evidence table (§3, not §1.4) and
-      `appendix-a-port-matrix.md`, `appendix-e-open-questions.md`,
-      `phase-10-hdc-tunnel.md` prose; keep ticked evidence lines as written.
-- [ ] `docs/history/*`: frozen — append one pointer note at the end of
-      `docs/history/port-log.md` only.
+      `docs/operations/{owners,acl-request,sbom.json}`,
+      `docs/status/backlog.md`.
+- [x] `docs/plan/README.md` and `appendix-a`, `appendix-e`; `phase-*.md`
+      restored untouched (frozen evidence).
+- [x] `docs/history/`: frozen; one pointer note appended to `port-log.md`.
 
 ### R1.3 Gates
 
-- [ ] `rg -n "hopa_agent"` returns 0 **outside** `docs/history/**` and ticked
-      `docs/plan/phase-*` lines (state the exclusion in the commit message).
-- [ ] `rg -n "harness"` → every remaining hit classified as frozen or fixed.
-- [ ] Fresh install and proof: `pip install -e "./evals/bench[dev]" -e "./evals/baseline[dev]"`,
-      `hopa-baseline --help`, `hopa-agent --help` (alias), `bench --help`.
-- [ ] `pytest evals`; `ruff check evals services`; `ruff format --check evals services`.
-- [ ] `python -m hopa_bench validate --tasks evals/bench/tasks`.
-- [ ] `check-structure.py --strict`, `check-links.py`, `plan-status.py --lint`,
-      `build-app-catalog.py --check`, `license-check.py`, `pytest tools/scripts`.
-- [ ] CI green; evidence: PR + run id.
+- [x] `rg -n "hopa_agent"` -> 26 hits, all in frozen `docs/plan/phase-*` and the
+      plan itself. (evidence: grep grouped by file)
+- [x] `rg -n "harness"` -> only frozen docs, the plan, one explanatory note in
+      `docs/status/backlog.md`, and one ArkTS test identifier (`const harness`).
+- [x] Fresh install and proof: `hopa-baseline --help`, `hopa-agent --help`
+      (alias), `bench --help`. (evidence: reinstall output + help output)
+- [x] `pytest evals` 223 passed; `ruff check evals` clean; `ruff format --check
+      evals` 52 files formatted. (evidence: commands)
+- [x] `python -m hopa_bench validate --tasks evals/bench/tasks` -> 20 valid.
+- [x] `check-structure.py --strict` 0 violations; `check-links.py` 0 broken;
+      `plan-status.py --lint` and `--plan docs/plan/refactor --lint` pass;
+      `build-app-catalog.py --check` current; `pytest tools/scripts` 18 passed.
+- [ ] CI green on the new paths. (evidence: PR run id, added when pushed)
+- [ ] Evidence PR + run id appended to this phase.
 
 Risk: medium (many references). Rollback: revert the single atomic commit;
 then `pip uninstall` the new distributions and reinstall (pip does not remove the

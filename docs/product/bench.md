@@ -30,7 +30,7 @@ Failure taxonomy: `target_not_found`, `unsupported_action`, `schema`, `device`,
 ## Run
 
 ```bash
-bench run --tasks harness/bench/tasks --json --out .hopa/bench-v0.json
+bench run --tasks evals/bench/tasks --json --out .hopa/bench-v0.json
 bench report --input .hopa/bench-v0.json --out docs/product/bench-results-v0.md
 ```
 
@@ -39,7 +39,7 @@ It does not invent a device result; if no device ran, the report says zero.
 
 ## Reproducibility
 
-- Task files are versioned in `harness/bench/tasks`.
+- Task files are versioned in `evals/bench/tasks`.
 - The stub model is deterministic.
 - Pin the app version, locale, time zone and network state.
 - A headline number needs at least 3 runs (30 for a public claim).

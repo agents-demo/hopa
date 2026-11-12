@@ -6,7 +6,7 @@
 ## Context
 
 The repository has grown to a HarmonyOS app, a Python bridge, a Kotlin brain
-service, a Python evaluation harness and a set of contracts. Two future clients
+service, a Python evaluation rig and a set of contracts. Two future clients
 (Android, Windows) and a possible backend make the top level carry more weight
 than it does today.
 
@@ -36,7 +36,7 @@ Three problems motivated this record:
 
 - **`agent` is a product word**: `apps/harmony/core/agent`, and later
   `services/backend/runtime`. Evaluation code is a *baseline* or a *driver*.
-- `evals/` replaces `harness/`. The evaluation driver lives in
+- `evals/` replaces `evals/`. The evaluation driver lives in
   `evals/baseline/`; the tasks, runner and scoring in `evals/bench/`.
 - `services/bridge` and `services/relay` are separate deployables (see ADR-0009).
 - Dependency direction is one-way: `apps → contracts`; `services → contracts`;
@@ -51,9 +51,9 @@ Three problems motivated this record:
   above, and a CI check fails when a new top-level folder appears.
 - Android and Windows are `apps/android` and `apps/windows`; the platform-specific
   work is a device adapter in the bridge, not a fork of the app.
-- Old documents that name `harness/` are updated once, except frozen history.
+- Old documents that name `evals/` are updated once, except frozen history.
 - The target structure recorded in `docs/architecture/target-structure.md` is
-  superseded where it disagrees (top-level names, harness).
+  superseded where it disagrees (top-level names, the harness rename).
 
 ## Alternatives considered
 

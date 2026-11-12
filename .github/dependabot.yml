@@ -1,11 +1,11 @@
 version: 2
 updates:
   - package-ecosystem: pip
-    directory: "/harness/agent"
+    directory: "/evals/baseline"
     schedule:
       interval: weekly
   - package-ecosystem: pip
-    directory: "/harness/bench"
+    directory: "/evals/bench"
     schedule:
       interval: weekly
   - package-ecosystem: pip

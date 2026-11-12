@@ -17,17 +17,17 @@ fi
 
 echo "=== installing Python packages (editable) ==="
 "$PY" -m pip install -U pip
-"$PY" -m pip install -e "$ROOT/services/pc-agent" -e "$ROOT/harness/bench[dev]" -e "$ROOT/harness/agent[dev]"
+"$PY" -m pip install -e "$ROOT/services/pc-agent" -e "$ROOT/evals/bench[dev]" -e "$ROOT/evals/baseline[dev]"
 
 echo "=== Python tests ==="
-"$PY" -m pytest "$ROOT/services/pc-agent" "$ROOT/harness/bench" "$ROOT/harness/agent" "$ROOT/tools/scripts" -q
+"$PY" -m pytest "$ROOT/services/pc-agent" "$ROOT/evals/bench" "$ROOT/evals/baseline" "$ROOT/tools/scripts" -q
 
 echo "=== agent coverage ==="
-"$PY" -m pytest "$ROOT/harness/agent" --cov=hopa_agent --cov-report=term --cov-fail-under=80 -q
+"$PY" -m pytest "$ROOT/evals/baseline" --cov=hopa_baseline --cov-report=term --cov-fail-under=80 -q
 
 echo "=== ruff ==="
-"$PY" -m ruff check "$ROOT/services/pc-agent" "$ROOT/harness/bench" "$ROOT/harness/agent"
-"$PY" -m ruff format --check "$ROOT/services/pc-agent" "$ROOT/harness/bench" "$ROOT/harness/agent"
+"$PY" -m ruff check "$ROOT/services/pc-agent" "$ROOT/evals/bench" "$ROOT/evals/baseline"
+"$PY" -m ruff format --check "$ROOT/services/pc-agent" "$ROOT/evals/bench" "$ROOT/evals/baseline"
 
 echo "=== plan lint ==="
 "$PY" "$ROOT/tools/scripts/plan-status.py" --lint

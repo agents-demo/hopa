@@ -22,12 +22,12 @@ if (Test-Path $venv) {
     throw 'Python 3.11+ not found.'
 }
 
-$results = Join-Path $root 'harness\bench\results\latest.json'
+$results = Join-Path $root 'evals\bench\results\latest.json'
 & $pythonExe @pythonPrefix -c "import hopa_pc_agent, hopa_bench" 2>$null
 if ($LASTEXITCODE -ne 0) {
-    & $pythonExe @pythonPrefix -m pip install -e (Join-Path $root 'services\pc-agent') -e (Join-Path $root 'harness\bench')
+    & $pythonExe @pythonPrefix -m pip install -e (Join-Path $root 'services\pc-agent') -e (Join-Path $root 'evals\bench')
     if ($LASTEXITCODE -ne 0) { throw 'pip install failed' }
 }
 
-& $pythonExe @pythonPrefix -m hopa_bench run --tasks (Join-Path $root 'harness\bench\tasks') --out $results @BenchArgs
+& $pythonExe @pythonPrefix -m hopa_bench run --tasks (Join-Path $root 'evals\bench\tasks') --out $results @BenchArgs
 exit $LASTEXITCODE

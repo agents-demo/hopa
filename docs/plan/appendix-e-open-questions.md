@@ -11,7 +11,7 @@ project.
 - [ ] The ACL decision arrives before Phase 4 exit; otherwise the fallback ships
 - [ ] A physical HarmonyOS phone is available for the whole project
 - [ ] The model provider stays reachable and within budget
-- [ ] The `pc-agent` `hdc` + `uitest` harness is acceptable for enterprise use
+- [ ] The `pc-agent` `hdc` + `uitest` evaluation rig is acceptable for enterprise use
 - [ ] The upstream licence permits the planned reuse
 - [ ] AppGallery accepts a foreground-only automation app, or sideloading is acceptable
 - [ ] Chinese and English are the only launch locales

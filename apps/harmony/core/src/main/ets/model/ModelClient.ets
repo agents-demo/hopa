@@ -25,7 +25,7 @@ export interface ModelClient {
   complete(request: ModelRequest): Promise<ModelResponse>;
 }
 
-/** Deterministic model used by tests and by the benchmark harness. */
+/** Deterministic model used by tests and by the benchmark rig. */
 export class StubModelClient implements ModelClient {
   private reply: string;
   private tokens: number;

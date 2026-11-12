@@ -7,7 +7,7 @@
 
 There are two useful products with the same brain and different bodies:
 
-- a PC-driven harness for development, evaluation and enterprise;
+- a PC-driven evaluation rig for development, evaluation and enterprise;
 - an on-device app for ordinary users.
 
 Treating them as one product hides the dependency on the ACL.

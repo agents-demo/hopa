@@ -65,8 +65,8 @@ node_modules/
 package-lock.json
 
 # Benchmark artifacts
-bench/results/
-bench/artifacts/
+evals/bench/results/
+evals/bench/artifacts/
 artifacts/
 
 # OS / editor noise

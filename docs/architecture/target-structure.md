@@ -23,7 +23,7 @@ was executed in. For the current rules, read `layers.md`.
 | Harmony services | 14 `.ets` in `entry/service` | `AgentService.ets`, **527 lines** | one singleton owns model setup, runs, batch, schedules, exports, approvals, bridge, memory and skills |
 | Harmony core | 18 source `.ets` | `Types.ets` (5 types), `Skills.ets` (2 classes), `Schedules.ets` (2 classes) | folderless: domain, agent loop, gate, model clients and stores sit side by side |
 | Harmony capabilities | 4 modules | `a11y/A11yBridge.ets`, 248 lines | `a11y`/`web` abbreviations; `RemoteBridge` + `RemoteUiCapability` live in `entry/service` instead of a capability |
-| Python harness | 37 `.py` in `agent` | `observation.py`, 376 | flat package; domain, loop, safety and integrations mixed |
+| Python evaluation rig | 37 `.py` in `agent` | `observation.py`, 376 | flat package; domain, loop, safety and integrations mixed |
 | Python device | 17 `.py` in `pc-agent` | `mcp_server.py`, 274 | flat package; transport, device actions, API and CLI mixed |
 | Kotlin brain | 13 `.kt` | `Server.kt`, 231 | already single-purpose files, but no packages |
 | Docs | 43 `.md` | `rebuild-plan.md`, **73 KB** | flat `docs/`; plans, guides, reference and history in one folder |
@@ -67,8 +67,8 @@ hopa/
 ├─ services/
 │  ├─ pc-agent/                # hopa_pc_agent (today: pc-agent/)
 │  └─ brain/                   # Kotlin knowledge router (today: brain/)
-├─ harness/
-│  ├─ agent/                   # hopa_agent reference loop (today: agent/)
+├─ evals/
+│  ├─ agent/                   # hopa_baseline reference loop (today: agent/)
 │  └─ bench/                   # hopa_bench (today: bench/)
 ├─ contracts/
 │  └─ schemas/                 # today: schemas/
@@ -91,9 +91,9 @@ hopa/
 └─ .gitleaks.toml
 ```
 
-Why `apps/` + `services/` + `harness/`: it answers "what runs where" before you
+Why `apps/` + `services/` + `evals/`: it answers "what runs where" before you
 open a folder. The only shippable app is `apps/harmony`; the PC services are
-not shipped with it; the harness evaluates agents and never ships.
+not shipped with it; the rig evaluates agents and never ships.
 
 ## 4. Target Harmony app
 
@@ -216,7 +216,7 @@ services/pc-agent/src/hopa_pc_agent/
 ├─ api/mcp_server.py                # MCP stdio server
 └─ cli/ (main.py, device_commands.py, bridge_commands.py, app_commands.py)
 
-harness/agent/src/hopa_agent/
+evals/baseline/src/hopa_baseline/
 ├─ domain/ (actions.py, observation.py, records.py, models.py)
 ├─ runtime/ (loop.py, executor.py, runtime.py, capture.py, limits.py)
 ├─ safety/ (policy.py, refusal.py)
@@ -233,7 +233,7 @@ services/brain/src/main/kotlin/hopa/brain/
 ├─ demo/DemoEntries.kt
 └─ knowledge/ (data: apps/, sites/, skills/ stay as data, not code)
 
-harness/bench/src/hopa_bench/
+evals/bench/src/hopa_bench/
 ├─ tasks.py, runner.py, scoring.py, cli.py
 ├─ tasks/                          # the 20 task files
 └─ results/                        # gitignored
@@ -375,7 +375,7 @@ behaviour changes in phases 1-8.
 | 1 | Docs | create tree, `git mv` files, split rebuild-plan, fix links, add link check | low | M |
 | 2 | Tooling | move `scripts/` + `signing/` to `tools/`, update CI and docs | low | S |
 | 3 | Contracts | move `schemas/` to `contracts/schemas/`, update references | low | S |
-| 4 | Python packages | move `agent/`, `pc-agent/`, `bench/` under `harness/` and `services/`, update pyprojects + CI | medium | M |
+| 4 | Python packages | move `agent/`, `pc-agent/`, `bench/` under `evals/` and `services/`, update pyprojects + CI | medium | M |
 | 5 | Brain packages | group Kotlin files into packages, update tests | low | S |
 | 6 | Harmony root | move `app/` -> `apps/harmony/`, update scripts + CI + docs | medium | M |
 | 7 | LLM boundary | extract `capabilities/llm`, keep core pure, move client tests | medium | M |
@@ -414,8 +414,8 @@ the navigation shell is stable.
 
 ## 14. Open decisions
 
-1. **Top-level names.** Recommended `apps/harmony`, `services/*`, `harness/*`.
-   Alternative: keep `app/` and only add `services/` + `harness/`.
+1. **Top-level names.** Recommended `apps/harmony`, `services/*`, `evals/*`.
+   Alternative: keep `app/` and only add `services/` + `evals/`.
 2. **Core purity.** Recommended: move the HTTP model clients to
    `capabilities/llm`. Alternative: keep them in `core/model` and weaken the
    rule to "core may use @kit.NetworkKit".

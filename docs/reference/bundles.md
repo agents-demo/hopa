@@ -69,7 +69,7 @@ but never launch by a guessed package. Replace `UNCONFIRMED` only after
 | Xiaohongshu | `com.xingin.xhs` | to confirm |
 | Zhihu | `com.zhihu.android` | to confirm |
 
-## Bench tasks (`harness/bench/tasks`)
+## Bench tasks (`evals/bench/tasks`)
 
 | Task | Bundle | Status |
 |---|---|---|

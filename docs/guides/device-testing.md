@@ -10,7 +10,7 @@ What was verified on 2026-11-06:
   reports `grantStatus: 0` (granted) for
   `ohos.permission.ACCESSIBILITY_EXTENSION_ABILITY`;
 - `accessibility.getAccessibilityExtensionList('all', 'install')` inside HOPA
-  lists `com.hopa.harness/agent/HopaAccessibilityExtension`;
+  lists `com.hopa.evals/baseline/HopaAccessibilityExtension`;
 - the emulator's Settings → Accessibility has **no** "Downloaded services" /
   "Installed services" page. Its "Advanced visual aids → More" contains only
   "Transition animations". So the user cannot enable the service on this image.

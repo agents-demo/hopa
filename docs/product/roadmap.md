@@ -16,7 +16,7 @@ a scored task format, a runner, and example tasks.
 This repository is the G1 seed:
 
 - ✅ `pc-agent` CLI + MCP server (dump, tap, type, swipe, screenshot, launch).
-- ✅ `harness/bench/` task format, runner, stub model, and example tasks.
+- ✅ `evals/bench/` task format, runner, stub model, and example tasks.
 - ✅ `apps/harmony/` scaffold with `core/` action gate + host unit tests.
 
 Remaining to close G1:

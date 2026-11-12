@@ -22,7 +22,7 @@ second reviewer before M5.
 
 | Skill | Level | Notes |
 |---|---|---|
-| Python | strong | harness, bench, contracts |
+| Python | strong | evaluation rig, bench, contracts |
 | Kotlin/JVM | partial | router and HTTP service; full port not started |
 | ArkTS / ArkUI | gap | no build has run |
 | HarmonyOS accessibility | gap | ACL not filed, no device |

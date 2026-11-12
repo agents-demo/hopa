@@ -1,6 +1,6 @@
 # Threat model (v1)
 
-Scope: the HOPA app, the PC harness and the JVM brain service.
+Scope: the HOPA app, the PC evaluation rig and the JVM brain service.
 
 ## Assets
 

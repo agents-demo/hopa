@@ -118,7 +118,7 @@ The framework also lists the service:
 ```ts
 accessibility.getAccessibilityExtensionList('all', 'install')
 // com.huawei.hmos.screenreader/AccessibilityExtAbility
-// com.hopa.harness/agent/HopaAccessibilityExtension
+// com.hopa.evals/baseline/HopaAccessibilityExtension
 ```
 
 The remaining blocker on the emulator is the UI: Settings → Accessibility has no

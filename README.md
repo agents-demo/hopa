@@ -287,7 +287,7 @@ and a secret/license scan.
 - `services/pc-agent/` — the PC companion and bridge: device control, store,
   images, relay.
 - `services/brain/` — the Kotlin reference brain for routing and knowledge.
-- `harness/` — the reference loop and HOPA-Bench.
+- `evals/` — the reference loop and HOPA-Bench.
 - `docs/` — setup, architecture, contracts and the status.
 
 **Links**

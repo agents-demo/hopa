@@ -3,7 +3,7 @@
 set -euo pipefail
 
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
-RESULTS="$ROOT/harness/bench/results/latest.json"
+RESULTS="$ROOT/evals/bench/results/latest.json"
 
 if [ -x "$ROOT/.venv/bin/python" ]; then
   PY="$ROOT/.venv/bin/python"
@@ -17,7 +17,7 @@ else
 fi
 
 "$PY" -c "import hopa_pc_agent, hopa_bench" 2>/dev/null || {
-  "$PY" -m pip install -e "$ROOT/services/pc-agent" -e "$ROOT/harness/bench"
+  "$PY" -m pip install -e "$ROOT/services/pc-agent" -e "$ROOT/evals/bench"
 }
 
-"$PY" -m hopa_bench run --tasks "$ROOT/harness/bench/tasks" --out "$RESULTS" "$@"
+"$PY" -m hopa_bench run --tasks "$ROOT/evals/bench/tasks" --out "$RESULTS" "$@"

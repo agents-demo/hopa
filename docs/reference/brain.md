@@ -87,16 +87,16 @@ The same lexical rules are ported to the shipped app in
 `apps/harmony/core/src/main/ets/router/AppRouter.ets` (`AppRouterTest`). The
 Kotlin service stays the reference used by the contract tests.
 
-## PC harness integration
+## PC evaluation rig integration
 
-The harness asks the brain for the **first** action, then delegates later steps to the model:
+The rig asks the brain for the **first** action, then delegates later steps to the model:
 
 ```bash
 # terminal 1: the brain
 java -cp "services/brain/build/brain.jar;.tools/gson-2.11.0.jar" hopa.brain.http.ServerKt 8731
 
 # terminal 2: the loop, with the brain in front of the model
-hopa-agent run "open settings" --model openai --brain http://127.0.0.1:8731
+hopa-baseline run "open settings" --model openai --brain http://127.0.0.1:8731
 ```
 
 Or set `HOPA_BRAIN_URL`. `BrainFirstModel` behaves as follows:

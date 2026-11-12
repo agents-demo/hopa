@@ -7,12 +7,12 @@
 
 A pure-Kotlin decision core already exists (387 files). Reimplementing it in ArkTS
 before the loop is proven would delay every safety and bench result. The
-HarmonyOS app cannot host a JVM, but the PC harness can.
+HarmonyOS app cannot host a JVM, but the PC evaluation rig can.
 
 ## Decision
 
 1. **M1–M2:** run the loop on the PC. The reference implementation is Python
-   (`harness/agent/`); the Kotlin brain is extracted into a standalone JVM service
+   (`evals/baseline/`); the Kotlin brain is extracted into a standalone JVM service
    with no `android.*` imports and an HTTP `POST /decide` contract.
 2. **M3+:** port the same contract to ArkTS in `apps/harmony/core`. The JVM service
    becomes optional behind a feature flag.
@@ -22,7 +22,7 @@ HarmonyOS app cannot host a JVM, but the PC harness can.
 ## Consequences
 
 - The phone app is ArkTS only; no JVM, no Python, no `proot`.
-- The PC harness is a first-class deliverable, not a throwaway.
+- The PC evaluation rig is a first-class deliverable, not a throwaway.
 - Two implementations must be kept in parity; contract tests are mandatory.
 - `docs/history/port-log.md` records every ported module.
 

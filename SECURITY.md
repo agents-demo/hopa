@@ -53,7 +53,7 @@ Out of scope:
 
 1. Create a new key at the provider.
 2. Update the environment or HUKS entry.
-3. Restart the harness or app.
+3. Restart the rig or app.
 4. Revoke the old key.
 5. Check records and logs for the old key prefix; purge if found.
 

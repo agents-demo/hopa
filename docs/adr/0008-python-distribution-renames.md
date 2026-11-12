@@ -11,8 +11,8 @@ past layout:
 | Distribution | Package | Console script | Path today |
 |---|---|---|---|
 | `hopa-pc-agent` | `hopa_pc_agent` | `pc-agent` | `services/pc-agent` |
-| `hopa-agent` | `hopa_agent` | `hopa-agent` | `harness/agent` |
-| `hopa-bench` | `hopa_bench` | `bench` | `harness/bench` |
+| `hopa-baseline` | `hopa_baseline` | `hopa-baseline` | `evals/baseline` |
+| `hopa-bench` | `hopa_bench` | `bench` | `evals/bench` |
 
 The command names are user-visible: `docs/guides/pc-bridge.md`,
 `docs/guides/setup.md`, `tools/scripts/run-*.ps1|sh`, the laptop's
@@ -30,7 +30,7 @@ Renaming a distribution is not a pure folder move: pip keeps the old
   **`pc-agent` stays the primary name in the scripts and docs for this release**;
   the alias exists so nothing breaks on the day of the move.
 - `evals/baseline`: distribution **`hopa-baseline`**, package **`hopa_baseline`**,
-  console scripts **`hopa-baseline`** and, for one release, **`hopa-agent`**.
+  console scripts **`hopa-baseline`** and, for one release, **`hopa-baseline`**.
 - `evals/bench`: distribution and script stay **`hopa-bench`** / **`bench`**.
 - User-visible strings change with the package: `cli.py` `prog=` and error
   prefixes, `mcp_server.py` `SERVER_NAME`, the wizard command in
@@ -43,7 +43,7 @@ Renaming a distribution is not a pure folder move: pip keeps the old
 
 ## Consequences
 
-- `pip uninstall -y hopa-pc-agent hopa-agent hopa-bench` is a required step of the
+- `pip uninstall -y hopa-pc-agent hopa-baseline hopa-bench` is a required step of the
   refactor, before the alias can be trusted.
 - The SBOM, `CHANGELOG.md` and `.env.example` mention distribution names and move
   with them.

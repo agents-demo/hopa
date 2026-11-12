@@ -4,7 +4,7 @@ An **observation** is the only picture of the screen the model sees. It is
 redacted, hashable and scoped to one moment.
 
 - Schema: [`contracts/schemas/observation.schema.json`](../../contracts/schemas/observation.schema.json)
-- Producer: `hopa-agent observe` on the PC harness; the ArkTS a11y capability on
+- Producer: `hopa-baseline observe` on the PC evaluation rig; the ArkTS a11y capability on
   device.
 - Consumer: the loop, the approval policy, the run record.
 
@@ -54,7 +54,7 @@ A node has `ref`, `type`, `text`, `description`, `id`, `bounds`, `clickable`,
 
 ## Redaction
 
-Before the text leaves the process, the harness removes:
+Before the text leaves the process, the rig removes:
 
 - email addresses;
 - phone numbers;
@@ -82,7 +82,7 @@ missing. Text is capped at 6,000 characters.
 
 `uitest` bounds are physical pixels `[x1, y1, x2, y2]`. The center is
 `((x1+x2)/2, (y1+y2)/2)` rounded down. `density` and `rotation` are carried so
-a future renderer can convert them; the current harness does not scale.
+a future renderer can convert them; the current evaluation rig does not scale.
 
 ## Compatibility
 
@@ -92,6 +92,6 @@ a future renderer can convert them; the current harness does not scale.
 
 ## Verification
 
-- `harness/agent/tests/test_observation.py`
-- `harness/agent/tests/test_schemas.py`
-- `hopa-agent observe --json`
+- `evals/baseline/tests/test_observation.py`
+- `evals/baseline/tests/test_schemas.py`
+- `hopa-baseline observe --json`

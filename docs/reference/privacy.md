@@ -31,7 +31,7 @@ preferred over leaks.
 ## Export and delete
 
 - Records are plain JSONL and can be copied.
-- `hopa-agent records --path … --json` exports them.
+- `hopa-baseline records --path … --json` exports them.
 - Delete the file and the screenshots directory to remove local history.
 - In-app export/delete is not built yet.
 

@@ -30,7 +30,7 @@ included where they differ.
 | hdc | 3.2.0f | |
 | HarmonyOS Emulator | 26.0.0.402 | |
 | Bundled Node.js | 24.14.1 (LTS line) | do not replace the bundled copy |
-| Python | 3.12.x (>= 3.11) | for `services/pc-agent/`, `harness/bench/` and `harness/agent/` |
+| Python | 3.12.x (>= 3.11) | for `services/pc-agent/`, `evals/bench/` and `evals/baseline/` |
 
 Official version overview:
 <https://developer.huawei.com/consumer/en/doc/doccenter-release-notes/overview-2600>
@@ -207,7 +207,7 @@ cd apps/harmony
 hvigorw assembleHap --no-daemon
 
 # reference observation (device required)
-hopa-agent observe --json
+hopa-baseline observe --json
 
 # core unit tests (Windows/macOS only; NOT supported on Linux)
 hvigorw test -p module=core@default --no-daemon -p coverage=false
@@ -237,7 +237,7 @@ pip install -e ".[dev]"
 cd ..
 pc-agent devices
 pc-agent dump --out layout.json
-hopa-agent observe --json
+hopa-baseline observe --json
 pytest pc-agent
 pytest bench
 pytest agent
