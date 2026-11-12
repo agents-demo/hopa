@@ -13,7 +13,16 @@ SUFFIXES = (".md", ".json", ".yaml", ".yml", ".ets", ".py")
 
 def markdown_files() -> list[Path]:
     files = list(ROOT.glob("*.md")) + list((ROOT / "docs").rglob("*.md"))
-    return [path for path in files if "node_modules" not in path.parts]
+    files += list((ROOT / "contracts").rglob("*.md"))
+    for area in ("apps", "services", "evals", "tools"):
+        files += list((ROOT / area).rglob("README.md"))
+    return [
+        path
+        for path in files
+        if "node_modules" not in path.parts
+        and "oh_modules" not in path.parts
+        and "build" not in path.parts
+    ]
 
 
 def main() -> int:

@@ -84,6 +84,24 @@ Use the PR template in `.github/PULL_REQUEST_TEMPLATE.md`.
 - New action kinds must be added to the schema, the validator, the policy and
   the tests in the same PR.
 
+## Where does a new file go?
+
+Ask which top level answers the question, then pick the layer (ADR-0007):
+
+| The new thing is... | Top level |
+|---|---|
+| a screen, a widget, a platform adapter | `apps/` (`harmony/`, later `android/`, `windows/`) |
+| a long-running service, a device driver, a relay | `services/` (`bridge/`, `relay/`, `brain/`, later `backend/`) |
+| a task, a score, a reference driver | `evals/` (`bench/`, `baseline/`) |
+| a wire format both sides share | `contracts/` (`openapi/`, `schemas/`) |
+| a build, sign or check step | `tools/` (`scripts/`, `checks/`, `signing/`) |
+| why something is the way it is | `docs/` (`adr/`, `architecture/`, `guides/`) |
+
+Inside the Harmony app, `docs/architecture/layers.md` has the second table
+(core / capabilities / entry). Two rules are absolute: `core` imports no
+`@kit.*`, and nothing imports `evals/` - it is a measuring instrument, not a
+library.
+
 ## Style
 
 - Python: ruff, line length 100, `from __future__ import annotations`.

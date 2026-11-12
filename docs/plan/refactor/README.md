@@ -396,22 +396,28 @@ Risk: none. Rollback: revert the doc commit.
 
 ## R8. Rules, docs, and the checks that keep the tree honest
 
-- [ ] `tools/checks/check-tree.py`: dirs only, skip dot-directories
-      (`.hopa`, `.tools`, `.idea`, `.pytest_cache`, `.ruff_cache`); allow-list
-      top level; fail if `harness/` exists or a junk folder name appears.
-- [ ] `tools/scripts/test_check_tree.py`: one passing and one failing fixture.
-- [ ] Extend `check-links.py` to `contracts/**`, `apps/**/README.md`,
-      `services/**/README.md` — otherwise "links green" says nothing about the new
-      files.
-- [ ] `README.md` tree equals §1; `CONTRIBUTING.md` gains "where does a new file go?";
-      `CLAUDE.md` paths refreshed; `docs/plan/README.md` links this plan.
-- [ ] `docs/architecture/{overview,layers,data-flow}.md` updated.
-- [ ] Gate: `check-tree.py`, `check-structure.py --strict`, `check-links.py`,
-      `plan-status --plan docs/plan/refactor --lint`, `pytest tools/scripts`.
+- [x] `tools/checks/check-tree.py`: directory names only; skips dot-directories
+      and build/vendor output; allow-lists the top level; fails on `harness/` and
+      on `utils|helpers|common|misc|shared` at any depth.
+      (evidence: `0 tree violation(s)`)
+- [x] `tools/scripts/test_check_tree.py`: five tests - the real repo, an unknown
+      top-level folder, `harness/`, a nested junk drawer, and ignored build/dot
+      directories. (evidence: 5 passed)
+- [x] `check-links.py` extended to `contracts/**` and to `README.md` under
+      `apps/`, `services/`, `evals/`, `tools/`. It immediately found a stale
+      `../docs/brain.md` in `services/brain/README.md`, now
+      `../../docs/reference/brain.md`.
+- [x] `README.md` repository map includes `contracts/` and `tools/`;
+      `CONTRIBUTING.md` gained the "where does a new file go?" table (top level
+      then layer, with the two absolute rules); `CLAUDE.md` paths refreshed in
+      R1/R3; `docs/plan/README.md` links this plan without adding boxes to the
+      M-plan. (evidence: links 0 broken)
+- [x] `docs/architecture/layers.md` routes by top level (R0); `overview.md` and
+      `data-flow.md` follow the new paths (R1/R3).
+- [x] CI step "Tree rules"; gates green: `check-tree`, `check-structure
+      --strict`, `check-links`, `plan-status --lint`, `pytest tools/scripts`.
 
 Risk: low.
-
----
 
 ## R9. Reserve the platform folders (README only)
 

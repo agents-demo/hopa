@@ -8,6 +8,12 @@ HOPA keeps its own name, UI and NOTICE.
 
 ---
 
+
+> Structural work that is not part of the M-milestones lives in
+> [refactor/README.md](refactor/README.md) (apps/services/evals taxonomy,
+> bridge and relay split, OpenAPI freeze). It has its own checkboxes and is
+> counted with `python tools/scripts/plan-status.py --plan docs/plan/refactor`.
+
 ## 1. How to use this document
 
 ### 1.1 Checkbox rules
