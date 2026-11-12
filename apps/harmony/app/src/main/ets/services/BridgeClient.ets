@@ -515,8 +515,14 @@ export class BridgeClient {
     }
   }
 
-  /** Trade the short pairing code shown by the PC for a token pair. */
-  static async pair(url: string, code: string): Promise<BridgeSession> {
+  /**
+   * Trade the short pairing code shown by the PC for a token pair.
+   *
+   * The bridge is a pool, and an unauthenticated pair is routed by role. Without
+   * the role a laptop pair lands on the phone's device entry: the code is
+   * rejected, or a phone token is handed back to a 2-in-1.
+   */
+  static async pair(url: string, code: string, role: string = ''): Promise<BridgeSession> {
     const session = new BridgeSession();
     let base: string = url.trim();
     while (base.endsWith('/')) {
@@ -527,9 +533,13 @@ export class BridgeClient {
     }
     const client = http.createHttp();
     try {
+      const header: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (role.length > 0) {
+        header['X-Hopa-Role'] = role;
+      }
       const options: http.HttpRequestOptions = {
         method: http.RequestMethod.POST,
-        header: { 'Content-Type': 'application/json' },
+        header: header,
         extraData: JSON.stringify({ code: code.trim() }),
         expectDataType: http.HttpDataType.ARRAY_BUFFER,
         connectTimeout: 8000,
