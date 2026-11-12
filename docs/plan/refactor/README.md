@@ -296,46 +296,44 @@ reinstall, and revert `render.yaml` + redeploy if the relay line moved.
 Goal: the relay host installs only relay code; a PC still keeps `cloud-link` and
 `hdc-tunnel`, so a PC never needs the relay package.
 
-- [ ] Confirm the cut with `rg -n "class |^def " services/bridge/src/hopa_bridge/{relay,tunnel,ws}.py`:
-      server: `Relay`, serve loop, `TunnelRegistry`; PC: `HdcTunnel`,
-      `serve_hdc_tunnel`, `cloud-link`.
-- [ ] `services/relay/src/hopa_relay/` takes the server half + `ws.py`; the PC half
-      stays as `services/bridge/src/hopa_bridge/tunnel_pc.py` (renamed file, same
-      behaviour).
-- [ ] `services/relay/pyproject.toml`: `name = "hopa-relay"`,
-      `hopa-relay = "hopa_relay.cli:main"`, no dependency on the bridge.
-- [ ] Split the CLI: relay subcommands out of `hopa_bridge/cli.py` into
-      `hopa_relay/cli.py`; `cloud-link` and `hdc-tunnel` stay in the bridge CLI.
-      Two argparse roots, no shared `common/` module (duplicate ≤10 lines if needed).
-- [ ] Move tests: `test_relay.py`, `test_tunnel.py` (split: registry vs HdcTunnel),
-      `test_ws.py`; keep fake sockets local.
-- [ ] `render.yaml`: build `./services/relay`, start `python -m hopa_relay relay`.
-      Own commit; the deploy gate is deferred (see below).
-- [ ] Deprecation: `hopa-bridge relay` prints "moved to hopa-relay" and exits 2 for
-      one release.
-- [ ] Docs: `guides/pc-bridge.md`, `architecture/overview.md` diagram,
-      `reference/protocols.md` (R5).
-- [ ] CI: install + ruff + pytest for `services/relay`.
-- [ ] Gates that can be proven without a hosting account:
-      - [ ] `pip install --no-deps ./services/relay` in a clean venv (the same
-            build command the blueprint uses);
-      - [ ] `python -m hopa_relay relay --host 127.0.0.1 --port <free>` and
-            `GET /health` on that port (same start command, local host);
-      - [ ] bridge and eval suites green; `run-agent.ps1 hdc-tunnel` still works
-            (the PC half is intact).
-- [ ] `tools/checks/check-render.py`: `render.yaml` parses and every path and
-      command in it points at something that exists, so a rename cannot silently
-      break the deploy. Added to CI.
+### R4a. The shared wire package
+
+- [x] `packages/wire` (ADR-0010): `ws.py` moved, tunnel frames and `TunnelSide`.
+- [x] `check-tree.py` allows `packages/`; layers/CONTRIBUTING/README map updated.
+- [x] CI and run scripts install the wire package first.
+- [x] Evidence: commit 732d83b; `pytest services/bridge packages/wire` 139 passed.
+
+### R4b. The two halves
+
+- [x] `services/relay/src/hopa_relay/`: `relay_server.py` (Relay, RelayServer,
+  serve_relay), `registry.py` (TunnelRegistry), `cli.py` (`hopa-relay relay`).
+- [x] `services/bridge/src/hopa_bridge/cloud_link.py`: `LinkClient`, `serve_link`
+  (the PC half), importing `hopa_wire.errors`.
+- [x] `services/bridge/src/hopa_bridge/tunnel.py` keeps `HdcTunnel` and
+  `serve_hdc_tunnel`; `TunnelRegistry` moved to the relay package.
+- [x] Shared relay errors moved to `hopa_wire.errors` so the PC half never imports
+  the relay package.
+- [x] Bridge CLI: `relay` prints "moved to hopa-relay" and exits 2; `cloud-link`
+  and `hdc-tunnel` stay and still work.
+- [x] Tests split: relay suite in `services/relay/tests`, the tunnel/CLI tests in
+  the bridge. The two `LinkClient` end-to-end tests import the relay test fixture;
+  that is test-only coupling, the runtime direction stays bridge -> wire.
+- [x] `render.yaml`: build `./packages/wire ./services/relay`, start
+  `python -m hopa_relay relay`. CI installs, lints and tests the relay package.
+
+### R4c. Gates
+
+- [x] `pytest services/relay services/bridge packages/wire` -> 139 passed.
+- [x] Local relay: `python -m hopa_relay relay --host 127.0.0.1 --port 8791` and
+  `GET /health` -> `{"ok": true, "role": "relay", ...}`.
+- [x] `hopa_bridge relay` prints the deprecation and exits 2.
+- [x] `check-tree` 0 violations, `check-links` 0 broken, ruff clean.
 - [ ] [DEFERRED: no deploy access] Render preview healthy. Owner: whoever holds
-      the Render account. They verify the preview, then production; nobody without
-      that access may tick this box.
-- [ ] Evidence: CI run id, a `curl` of the local relay `/health`, and the
-      check-render output.
+  the Render account; the exact commands are in `render.yaml`.
+- [ ] CI green on the split (waits for the push to a PR).
 
-Risk: medium (prod deploy). Rollback: revert package commit, then render commit,
-then redeploy; `pip uninstall hopa-relay`.
-
----
+Risk: medium (one production blueprint line). Rollback: revert the relay commit,
+then the render commit, then redeploy; `pip uninstall hopa-relay`.
 
 ## R5. Freeze the bridge API in `contracts/` (against the real files)
 

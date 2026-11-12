@@ -10,8 +10,9 @@ import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import pytest
+from hopa_bridge.cloud_link import LinkClient
 
-from hopa_bridge.relay import LinkClient, Relay, RelayError, RelayServer, RelayTimeout
+from hopa_relay.relay_server import Relay, RelayError, RelayServer, RelayTimeout
 
 PHONE = "phone-token"
 LINK = "link-token"

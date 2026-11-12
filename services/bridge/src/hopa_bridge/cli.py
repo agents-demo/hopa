@@ -473,11 +473,21 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"pc-agent: {exc}", file=sys.stderr)
                 return 2
 
-        from .relay import RelayError, serve_link, serve_relay
+        if args.command == "relay":
+            # Moved in R4: the cloud half is its own deployable (ADR-0009).
+            print(
+                "hopa-bridge: the relay moved to the hopa-relay command; "
+                "run 'hopa-relay relay'",
+                file=sys.stderr,
+            )
+            return 2
 
-        runner = serve_relay if args.command == "relay" else serve_link
+        from hopa_wire.errors import RelayError
+
+        from .cloud_link import serve_link
+
         try:
-            return runner(args)
+            return serve_link(args)
         except (RelayError, ValueError) as exc:
             print(f"pc-agent: {exc}", file=sys.stderr)
             return 2
