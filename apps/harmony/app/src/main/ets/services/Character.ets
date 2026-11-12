@@ -91,6 +91,15 @@ export class Character {
       low.includes('model not') || low.includes('model refused')) {
       return 'The model refused the key. Fix it in Settings, Model. The rest of HOPA still works.';
     }
+    // A bridge HTTP 5xx carrying a DeviceError means the bridge answered and
+    // the phone refused the action. Do not blame the bridge for that.
+    if (low.includes('not installed')) {
+      return 'That app is not installed on this phone.';
+    }
+    if (low.includes('deviceerror') || low.includes('failed to launch') ||
+      low.includes('error code:')) {
+      return 'That app would not open on this phone. The details are in Settings, Logs.';
+    }
     if (low.includes('bridge')) {
       return 'The PC bridge stopped answering. Start it on the computer and I will retry.';
     }

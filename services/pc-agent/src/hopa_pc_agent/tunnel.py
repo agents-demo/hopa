@@ -71,6 +71,7 @@ class TunnelSide:
     role: str
     session: str
     ws: WebSocketConnection
+    attached_at: float = field(default_factory=time.time)
     _closed: bool = False
     _lock: threading.Lock = field(default_factory=threading.Lock)
 
@@ -155,12 +156,21 @@ class TunnelRegistry:
             self.detach(side)
 
     def status(self) -> dict[str, Any]:
+        now = time.time()
+
+        def age(side: TunnelSide | None) -> float | None:
+            if side is None:
+                return None
+            return round(max(0.0, now - side.attached_at), 1)
+
         with self._lock:
             sessions = [
                 {
                     "session": name,
                     "host": "host" in sides,
                     "phone": "phone" in sides,
+                    "host_age_seconds": age(sides.get("host")),
+                    "phone_age_seconds": age(sides.get("phone")),
                 }
                 for name, sides in self._sessions.items()
             ]
@@ -286,6 +296,7 @@ class HdcTunnel:
                 stream = self._next_stream
                 self._next_stream = 1 if stream >= MAX_STREAM_ID else stream + 1
                 self._streams[stream] = client
+            print(f"hdc-tunnel: stream {stream} open", flush=True)
             if not self._send(open_frame(stream)):
                 return
             client.settimeout(1.0)
@@ -307,6 +318,7 @@ class HdcTunnel:
                     if current is client:
                         self._streams.pop(stream, None)
                 self._send(close_frame(stream))
+                print(f"hdc-tunnel: stream {stream} closed", flush=True)
             try:
                 client.close()
             except OSError:
@@ -352,8 +364,12 @@ class HdcTunnel:
             kind = frame[0]
             if kind == STATUS:
                 if frame[1:] == READY:
+                    if not self._ready.is_set():
+                        print("hdc-tunnel: phone ready", flush=True)
                     self._ready.set()
                 elif frame[1:] == WAITING:
+                    if self._ready.is_set():
+                        print("hdc-tunnel: phone waiting", flush=True)
                     self._ready.clear()
                 continue
             if len(frame) < 5:

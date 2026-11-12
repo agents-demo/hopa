@@ -2,6 +2,7 @@ import { AbilityConstant, UIAbility, Want } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { window } from '@kit.ArkUI';
 import { preferences } from '@kit.ArkData';
+import { LaptopTunnel } from '../services/LaptopTunnel';
 
 const DOMAIN: number = 0x0000;
 const TAG: string = 'HOPA-Laptop';
@@ -70,6 +71,7 @@ export default class LaptopAbility extends UIAbility {
   }
   onForeground(): void {
     AppStorage.setOrCreate<boolean>('hopa.laptop.focused', true);
+    LaptopTunnel.get().wake();
   }
 
   onBackground(): void {
@@ -114,6 +116,16 @@ export default class LaptopAbility extends UIAbility {
       }
       if (typeof bridgeKey === 'string' && bridgeKey.length > 0) {
         AppStorage.setOrCreate<string>('hopa.laptop.bridgeToken', bridgeKey);
+      }
+      const tunnelValue = params['hopa.laptop_tunnel'];
+      const tunnelText = typeof tunnelValue === 'string'
+        ? tunnelValue
+        : (typeof tunnelValue === 'number' || typeof tunnelValue === 'boolean')
+          ? `${tunnelValue}`
+          : '';
+      if (tunnelText === '1' || tunnelText.toLowerCase() === 'true' ||
+        tunnelText.toLowerCase() === 'on') {
+        AppStorage.setOrCreate<string>('hopa.laptop.tunnelWanted', '1');
       }
       const demo = params['hopa.approval_demo'];
       if (typeof demo === 'string' && demo === '1') {
@@ -193,5 +205,9 @@ export default class LaptopAbility extends UIAbility {
       hilog.info(DOMAIN, TAG, 'decor height: %{public}d', decorHeight);
       this.restoreWindow(mainWindow);
     });
+  }
+
+  onDestroy(): void {
+    LaptopTunnel.get().stop();
   }
 }

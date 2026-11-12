@@ -62,8 +62,8 @@ class FakeDevice:
     def type_text(self, text: str, *, x=None, y=None) -> None:
         self.calls.append(("type", text, x, y))
 
-    def launch(self, bundle: str, ability: str = "") -> None:
-        self.calls.append(("launch", bundle, ability))
+    def launch(self, bundle: str, ability: str = "", raise_window: bool = False) -> None:
+        self.calls.append(("launch", bundle, ability, raise_window))
         if self.raise_after_stop and not self.stopped:
             return
         self.foreground_bundle = bundle
@@ -97,17 +97,29 @@ def test_focus_restarts_when_the_window_does_not_raise(bridge):
     # The first launch takes the intent but never raises the window; only a
     # cold restart does. That is the singleton case seen on the 2in1.
     device.raise_after_stop = True
-    body = _call(server, "/focus", {"bundle": "com.hopa.agent"}, timeout=20)
+    body = _call(server, "/focus", {"bundle": "com.huawei.hmos.clock"}, timeout=20)
     assert body["ok"] is True
     assert body["restarted"] is True
-    assert device.stopped is True
+    assert ("stop", "com.huawei.hmos.clock") in device.calls
 
 
 def test_focus_does_not_restart_a_working_launch(bridge):
     server, device = bridge
-    body = _call(server, "/focus", {"bundle": "com.hopa.agent"})
+    body = _call(server, "/focus", {"bundle": "com.huawei.hmos.clock"})
     assert body["restarted"] is False
     assert device.stopped is False
+    assert any(call[0] == "launch" and call[3] is True for call in device.calls)
+
+
+def test_focus_never_cold_restarts_hopa(bridge):
+    server, device = bridge
+    # Even when the window query says the raise did not land, restarting HOPA
+    # would kill the run that is asking to come back and lose its answer.
+    device.raise_after_stop = True
+    body = _call(server, "/focus", {"bundle": "com.hopa.agent"}, timeout=20)
+    assert body["restarted"] is False
+    assert device.stopped is False
+    assert all(call[0] != "stop" for call in device.calls)
 
 
 def test_pair_survives_a_restart(tmp_path):
@@ -261,7 +273,7 @@ def test_tap_and_type_and_launch(bridge) -> None:
     assert device.calls == [
         ("tap", 5, 6),
         ("type", "hi", 1, 2),
-        ("launch", "com.x", ""),
+        ("launch", "com.x", "", False),
         ("key", "Back"),
         ("swipe", 1, 2, 3, 4, 600),
     ]

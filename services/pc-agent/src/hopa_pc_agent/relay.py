@@ -22,6 +22,7 @@ Two consequences worth spelling out:
 Endpoints on the relay::
 
     GET  /health          public: is a PC linked, and how stale is it?
+    GET  /ui              public: the browser status page (same data as /health)
     POST /pair            six-digit code -> token pair
     POST /refresh          refresh token -> a fresh pair
     GET  /link/poll       PC only: long-poll for the next request
@@ -51,6 +52,236 @@ from .ws import WebSocketError, server_handshake
 MAX_BODY_BYTES = 32 * 1024 * 1024
 MAX_QUEUED = 200
 PAIR_ATTEMPTS_PER_MINUTE = 5
+
+# The browser view. It is deliberately self-contained: no CDN, no build step,
+# no token. It only reads /health, so it shows the same numbers the machine
+# endpoints report and cannot act on the relay.
+_UI_PAGE = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>HOPA Relay</title>
+<style>
+  :root {
+    --bg: #0a0f1e;
+    --panel: #131a2e;
+    --panel-2: #0f1627;
+    --line: #24304f;
+    --text: #e8edf9;
+    --muted: #94a1bf;
+    --ok: #2fcc71;
+    --warn: #f0b42f;
+    --bad: #e05b5b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    padding: 32px 20px 56px;
+    background:
+      radial-gradient(1200px 600px at 15% -10%, #1b2748 0%, transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, #142035 0%, transparent 55%),
+      var(--bg);
+    color: var(--text);
+    font: 15px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  main { width: min(860px, 100%); margin: 0 auto; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px 14px; }
+  h1 { margin: 0; font-size: 22px; letter-spacing: 0.2px; }
+  h1 span { color: var(--muted); font-weight: 500; }
+  #updated {
+    margin-left: auto; color: var(--muted); font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 22px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 7px 12px; border: 1px solid var(--line); border-radius: 999px;
+    background: var(--panel-2); color: var(--muted); font-size: 13px;
+  }
+  .chip b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .devices { display: grid; gap: 14px; }
+  .card {
+    border: 1px solid var(--line); border-radius: 14px; background: var(--panel);
+    padding: 18px 20px 8px; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+  }
+  .card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .card-head h2 { margin: 0; font-size: 17px; }
+  .card-head code { color: var(--muted); font-size: 12px; }
+  .badge {
+    margin-left: auto; padding: 3px 10px; border-radius: 999px;
+    font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px;
+  }
+  .badge.ok { color: #062; background: rgba(47, 204, 113, 0.18); }
+  .badge.warn { color: var(--warn); background: rgba(240, 180, 47, 0.14); }
+  .row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 0; border-top: 1px solid var(--line); font-size: 14px;
+  }
+  .row .name { color: var(--muted); min-width: 132px; }
+  .row .state { font-weight: 600; }
+  .row .age {
+    margin-left: auto; color: var(--muted);
+    font-variant-numeric: tabular-nums; font-size: 13px;
+  }
+  .led { width: 9px; height: 9px; border-radius: 50%; background: var(--bad); flex: none; }
+  .led.on { background: var(--ok); box-shadow: 0 0 0 4px rgba(47, 204, 113, 0.14); }
+  .empty {
+    border: 1px dashed var(--line); border-radius: 14px; padding: 34px 20px;
+    text-align: center; color: var(--muted);
+  }
+  footer { margin-top: 26px; color: var(--muted); font-size: 12px; text-align: center; }
+  footer a { color: #8aa4d6; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>HOPA <span>relay</span></h1>
+    <div id="updated">loading…</div>
+  </header>
+
+  <div class="chips">
+    <span class="chip">
+      <span class="led" id="link-led"></span>PC link <b id="link-state">…</b>
+    </span>
+    <span class="chip">Queued <b id="queued">–</b></span>
+    <span class="chip">Waiting <b id="waiting">–</b></span>
+  </div>
+
+  <section class="devices" id="devices"></section>
+
+  <footer>Refreshes every 3 s · <a href="/health">/health</a></footer>
+</main>
+<script>
+(function () {
+  var LABELS = { default: "Phone", laptop: "Laptop" };
+  var POLL_MS = 3000;
+
+  function label(session) {
+    if (LABELS[session]) return LABELS[session];
+    return session.charAt(0).toUpperCase() + session.slice(1);
+  }
+
+  function human(seconds) {
+    if (seconds === null || seconds === undefined) return "";
+    var s = Math.max(0, Math.round(seconds));
+    if (s < 60) return s + "s";
+    var m = Math.floor(s / 60);
+    if (m < 60) return m + "m";
+    var h = Math.floor(m / 60);
+    if (h < 24) return h + "h " + (m % 60) + "m";
+    return Math.floor(h / 24) + "d " + (h % 24) + "h";
+  }
+
+  function row(name, on, age) {
+    var row = document.createElement("div");
+    row.className = "row";
+
+    var led = document.createElement("span");
+    led.className = "led" + (on ? " on" : "");
+
+    var nameEl = document.createElement("span");
+    nameEl.className = "name";
+    nameEl.textContent = name;
+
+    var state = document.createElement("span");
+    state.className = "state";
+    state.textContent = on ? "connected" : "not connected";
+
+    row.appendChild(led);
+    row.appendChild(nameEl);
+    row.appendChild(state);
+
+    if (on && age !== null && age !== undefined) {
+      var ageEl = document.createElement("span");
+      ageEl.className = "age";
+      ageEl.textContent = "for " + human(age);
+      row.appendChild(ageEl);
+    }
+    return row;
+  }
+
+  function card(entry) {
+    var ready = entry.host && entry.phone;
+    var box = document.createElement("article");
+    box.className = "card";
+
+    var head = document.createElement("div");
+    head.className = "card-head";
+
+    var title = document.createElement("h2");
+    title.textContent = label(entry.session);
+
+    var code = document.createElement("code");
+    code.textContent = entry.session;
+
+    var badge = document.createElement("span");
+    badge.className = "badge " + (ready ? "ok" : "warn");
+    badge.textContent = ready ? "ready" : (entry.host || entry.phone ? "partial" : "idle");
+
+    head.appendChild(title);
+    head.appendChild(code);
+    head.appendChild(badge);
+
+    box.appendChild(head);
+    box.appendChild(row("PC tunnel", entry.host, entry.host_age_seconds));
+    box.appendChild(row(label(entry.session) + " app", entry.phone, entry.phone_age_seconds));
+    return box;
+  }
+
+  function render(data) {
+    document.getElementById("queued").textContent = data.queued;
+    document.getElementById("waiting").textContent = data.waiting;
+
+    document.getElementById("link-state").textContent = data.linked ? "connected" : "offline";
+    document.getElementById("link-led").className = "led" + (data.linked ? " on" : "");
+
+    var host = document.getElementById("devices");
+    host.textContent = "";
+
+    var links = (data.tunnel && data.tunnel.links) || [];
+    links.sort(function (a, b) {
+      if (a.session === "default") return -1;
+      if (b.session === "default") return 1;
+      return a.session < b.session ? -1 : 1;
+    });
+
+    if (!links.length) {
+      var empty = document.createElement("div");
+      empty.className = "empty";
+      empty.textContent = "No device session is connected.";
+      host.appendChild(empty);
+    } else {
+      links.forEach(function (entry) { host.appendChild(card(entry)); });
+    }
+
+    document.getElementById("updated").textContent = "updated " + new Date().toLocaleTimeString();
+  }
+
+  function fail() {
+    document.getElementById("updated").textContent = "relay unreachable — retrying";
+    document.getElementById("link-led").className = "led";
+    document.getElementById("link-state").textContent = "unknown";
+  }
+
+  function tick() {
+    fetch("/health", { headers: { Accept: "application/json" }, cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error(String(r.status)); return r.json(); })
+      .then(render)
+      .catch(fail)
+      .then(function () { setTimeout(tick, POLL_MS); });
+  }
+
+  tick();
+})();
+</script>
+</body>
+</html>
+"""
 
 
 class RelayError(Exception):
@@ -288,6 +519,15 @@ class _Handler(BaseHTTPRequestHandler):
     def _send_json(self, status: int, payload: dict[str, Any]) -> None:
         self._send(status, json.dumps(payload).encode("utf-8"))
 
+    def _send_html(self, html: str) -> None:
+        body = html.encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(body)
+
     # -- the binary tunnel --------------------------------------------------
 
     def _handle_tunnel(self) -> None:
@@ -344,8 +584,11 @@ class _Handler(BaseHTTPRequestHandler):
             self._handle_tunnel()
             return
         if self.path == "/":
-            # A browser or an uptime probe should not need a token just to see
-            # that the relay is alive; /health is still the machine answer.
+            # A browser wants the status page; scripts and uptime probes want
+            # JSON. Content negotiation keeps both working on the bare URL.
+            if "text/html" in self.headers.get("Accept", "").lower():
+                self._send_html(_UI_PAGE)
+                return
             age = self.relay.linked_age()
             self._send_json(
                 200,
@@ -354,8 +597,12 @@ class _Handler(BaseHTTPRequestHandler):
                     "role": "relay",
                     "linked": age < 60.0,
                     "health": "/health",
+                    "ui": "/ui",
                 },
             )
+            return
+        if self.path.split("?")[0] in ("/ui", "/ui/"):
+            self._send_html(_UI_PAGE)
             return
         if self.path == "/favicon.ico":
             self._send(204, b"")
@@ -383,9 +630,9 @@ class _Handler(BaseHTTPRequestHandler):
 
     def do_HEAD(self) -> None:  # noqa: N802
         # Browsers and uptime probes ask for / before anything else.
-        if self.path in ("/", "/health"):
+        if self.path.split("?")[0] in ("/", "/health", "/ui", "/ui/"):
             self.send_response(200)
-            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("Content-Length", "0")
             self.end_headers()
             return

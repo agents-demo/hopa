@@ -304,6 +304,67 @@ they are not packaged into the HAP.
 
 </details>
 
+## One relay, two devices
+
+HOPA runs both the phone shell and the laptop shell through **one** Render relay.
+There is one `/tunnel` endpoint; the phone and laptop use separate tunnel
+**sessions** (`default` and `laptop`). The PC runs one bridge pool on 8765 and
+one `hdc-tunnel` per session (5556 for the phone, 5557 for the laptop); the pool
+routes requests by `X-Hopa-Role` (`phone` or `2in1`).
+
+```mermaid
+flowchart LR
+    subgraph Devices["Devices"]
+        Phone["Phone HOPA<br/>role: phone"]
+        Laptop["Laptop HOPA<br/>role: 2in1"]
+        PhoneHdcd["phone hdcd<br/>127.0.0.1:5555"]
+        LaptopHdcd["laptop hdcd<br/>127.0.0.1:5555"]
+    end
+
+    subgraph Cloud["One Render relay"]
+        Relay["hopa-relay.onrender.com<br/>/tunnel + bridge API"]
+        PhoneSession[("session: default")]
+        LaptopSession[("session: laptop")]
+    end
+
+    subgraph PC["PC"]
+        Link["cloud-link"]
+        Pool["bridge pool :8765<br/>routes by X-Hopa-Role"]
+        PhoneTunnel["hdc-tunnel :5556"]
+        LaptopTunnel["hdc-tunnel :5557"]
+    end
+
+    Phone -- "HTTPS bridge calls" --> Relay
+    Laptop -- "HTTPS bridge calls" --> Relay
+    Relay -- "long-poll" --> Link
+    Link --> Pool
+    Pool -- "phone" --> PhoneTunnel
+    Pool -- "2in1" --> LaptopTunnel
+    Phone -- "WSS tunnel" --> PhoneSession
+    PhoneTunnel -- "WSS host" --> PhoneSession
+    Phone -- "TCP 127.0.0.1:5555" --> PhoneHdcd
+    Laptop -- "WSS tunnel" --> LaptopSession
+    LaptopTunnel -- "WSS host" --> LaptopSession
+    Laptop -- "TCP 127.0.0.1:5555" --> LaptopHdcd
+```
+
+| Piece | Count | Note |
+|---|---|---|
+| Render relay | **1** | one service, one `/tunnel` endpoint |
+| Tunnel sessions | **2** | `default` = phone, `laptop` = laptop |
+| PC hdc tunnels | **2** | `127.0.0.1:5556` and `127.0.0.1:5557` |
+| PC bridge pools | **1** | port 8765, routes by `X-Hopa-Role` |
+| Conversation stores | **1** | the pool's `/chats` is shared |
+
+The laptop's local 8767 bridge is a fallback, not a second relay. On a fresh
+laptop, `hdc tmode port 5555` opens the device-side hdcd TCP port (it reboots
+the laptop once); after that the laptop app's tunnel can reach
+`127.0.0.1:5555` and the PC needs no USB.
+
+`.\tools\scripts\run-agent.ps1` starts the pool, cloud link and both hdc
+tunnels. `.\tools\scripts\run-laptop.ps1` launches the laptop in cloud mode
+(`HOPA_LAPTOP_CLOUD=1`); `-Local` keeps the 8767 fallback.
+
 ## Contributing
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md). Run the tests before a pull request.
