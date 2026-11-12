@@ -990,7 +990,8 @@ struct LaptopIndex {
       return;
     }
     this.bridgeStatus = 'Pairing\u2026';
-    const session: BridgeSession = await BridgeClient.pair(url, code);
+    // The bridge is a pool: the role is what routes this pair to the 2-in-1.
+    const session: BridgeSession = await BridgeClient.pair(url, code, '2in1');
     if (session.token.length === 0) {
       this.bridgeStatus = 'That code did not work. Check the bridge output.';
       return;
