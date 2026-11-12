@@ -207,8 +207,8 @@ One atomic commit: move + imports + pyproject + CI + scripts + docs.
 - [x] `check-structure.py --strict` 0 violations; `check-links.py` 0 broken;
       `plan-status.py --lint` and `--plan docs/plan/refactor --lint` pass;
       `build-app-catalog.py --check` current; `pytest tools/scripts` 18 passed.
-- [ ] CI green on the new paths. (evidence: PR run id, added when pushed)
-- [ ] Evidence PR + run id appended to this phase.
+- [x] CI green on the new paths. (evidence: PR #29, run 43244042592)
+- [x] Evidence: PR #29, run 43244042592 (all jobs green; macOS Local Test skipped).
 
 Risk: medium (many references). Rollback: revert the single atomic commit;
 then `pip uninstall` the new distributions and reinstall (pip does not remove the
@@ -226,7 +226,7 @@ old `*.dist-info` on a rename).
       removed the ignored `.idea/`; `Test-Path app` -> `False`.
 - [x] No `.gitignore` entry existed solely for it (all app patterns are `**/...`).
 - [x] `README.md` tree has no root `app/`.
-- [ ] CI green for the deletion. (evidence: PR run id, added when pushed)
+- [x] CI green for the deletion. (evidence: PR #29, run 43244042592)
 
 Risk: low. Detector: the HAP build fails immediately if anything depended on it.
 
@@ -285,8 +285,8 @@ Decision (ADR-0008): **the command stays `pc-agent`**; `hopa-bridge` is the alia
       ask "open douyin and tell me what you see"; Douyin opens on the phone
       (minor-mode sheet visible), the answer returns in the laptop chat, and the
       run pane reads `Succeeded, 1 step, 3.7 s`. (evidence: x2/x3 screenshots)
-- [ ] Relay smoke against the Render preview (render.yaml changes in R4, not R3).
-- [ ] CI green; evidence PR + run id.
+- [ ] [DEFERRED: no deploy access] Relay smoke against the Render preview.
+- [x] CI green; PR #29, run 43244042592.
 
 Risk: medium-high. Rollback: revert the atomic commit, `pip uninstall hopa-bridge`,
 reinstall, and revert `render.yaml` + redeploy if the relay line moved.
@@ -333,7 +333,7 @@ Goal: the relay host installs only relay code; a PC still keeps `cloud-link` and
 - [x] `check-tree` 0 violations, `check-links` 0 broken, ruff clean.
 - [ ] [DEFERRED: no deploy access] Render preview healthy. Owner: whoever holds
   the Render account; the exact commands are in `render.yaml`.
-- [ ] CI green on the split (waits for the push to a PR).
+- [x] CI green on the split. (evidence: PR #29, run 43244042592)
 
 Risk: medium (one production blueprint line). Rollback: revert the relay commit,
 then the render commit, then redeploy; `pip uninstall hopa-relay`.
