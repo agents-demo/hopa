@@ -87,20 +87,20 @@ export class AppBoot {
       }
     }
     if (key.length >= 10) {
-      service.configureModel(
-        'deepseek',
-        'https://api.deepseek.com/v1',
-        key,
-        'deepseek-v4-flash',
-        14
-      );
-      // Keep the Settings form in step with the model that is actually active.
-      if (stored.provider !== 'deepseek' ||
-        stored.endpoint !== 'https://api.deepseek.com/v1' ||
-        stored.model !== 'deepseek-v4-flash') {
-        stored.provider = 'deepseek';
-        stored.endpoint = 'https://api.deepseek.com/v1';
-        stored.model = 'deepseek-v4-flash';
+      // Prefer the model settings already on disk. The untouched OpenAI
+      // defaults only mean the user never chose one, so use the DeepSeek
+      // defaults in that case and remember them.
+      const untouched: boolean = stored.provider === 'openai' &&
+        stored.endpoint === 'https://api.openai.com/v1' &&
+        stored.model === 'gpt-4o-mini';
+      const provider: string = untouched ? 'deepseek' : stored.provider;
+      const endpoint: string = untouched ? 'https://api.deepseek.com/v1' : stored.endpoint;
+      const model: string = untouched ? 'deepseek-v4-flash' : stored.model;
+      service.configureModel(provider, endpoint, key, model, 14);
+      if (untouched) {
+        stored.provider = provider;
+        stored.endpoint = endpoint;
+        stored.model = model;
         await SettingsStore.save(context, stored);
       }
     }

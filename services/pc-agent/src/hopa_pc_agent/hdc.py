@@ -10,6 +10,7 @@ from __future__ import annotations
 import os
 import shutil
 import subprocess
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -186,6 +187,22 @@ class Hdc:
             # The retry will surface the real failure.
             pass
 
+    def recover(self) -> bool:
+        """Hard-reset the local hdc server and re-attach a TCP target.
+
+        A tunneled target can outlive its session: ``tconn`` reports "already
+        connected" while the next command returns an empty result instead of
+        an error. Restarting the local server is the only reliable reset.
+        USB targets are left alone. Returns True when a reset was performed.
+        """
+        if not self._is_network_target():
+            return False
+        self._reset_hdc_server()
+        self._ensure_target()
+        # Give the freshly started server a moment to accept the target.
+        time.sleep(0.4)
+        return True
+
     def _execute(self, cmd: list[str], timeout: float) -> HdcResult:
         try:
             proc = subprocess.run(
@@ -222,11 +239,13 @@ class Hdc:
             # makes `observe` and `foreground` survive that state.
             self._ensure_target()
             result = self._execute(cmd, effective_timeout)
-            if self._session_is_dead(result.stdout, result.stderr):
+            if self._needs_reconnect(result.stdout, result.stderr):
                 # The phone was suspended long enough for the hdc session to
-                # die. tconn says "already connected"; reset the local server,
-                # re-attach, and replay once more.
+                # die. `tconn` says "already connected" and the command still
+                # reports "Device not found"; reset the local server, re-attach,
+                # and replay once more.
                 self._reset_hdc_server()
+                time.sleep(0.4)
                 self._ensure_target()
                 result = self._execute(cmd, effective_timeout)
         if check and result.returncode != 0:

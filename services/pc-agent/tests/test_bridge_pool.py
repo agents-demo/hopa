@@ -94,6 +94,18 @@ def test_health_lists_both_devices(pool):
     assert roles == {"phone", "2in1"}
 
 
+def test_pool_keeps_accepting_the_base_token_after_pairing(pool):
+    server, _ = pool
+    phone = server.nodes["1111"]
+    phone.issue_tokens()
+
+    # The cloud link and local tooling keep using the catalogue token; only the
+    # phone rotates. Losing the base token here breaks every cloud request.
+    assert server.authorized_any("phone-token") is True
+    assert server.authorized_any(phone.token) is True
+    assert server.authorized_any("wrong-token") is False
+
+
 def test_role_routes_the_tap(pool):
     server, devices = pool
     assert call(server, "/tap", role="2in1", token="pc-token", payload={"x": 10, "y": 20})[0] == 200

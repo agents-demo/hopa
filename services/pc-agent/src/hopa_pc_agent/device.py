@@ -5,11 +5,10 @@ from __future__ import annotations
 import json
 import re
 import shlex
-import tempfile
 import time
 from pathlib import Path
 
-from .errors import DeviceError
+from .errors import DeviceError, HdcError
 from .hdc import Hdc
 from .layout import Layout, parse_layout
 
@@ -51,7 +50,15 @@ class Device:
         Only the mission section is considered: a service extension can also say
         ``state #FOREGROUND`` and would otherwise be mistaken for the app.
         """
-        text = self.hdc.shell("aa dump -a", timeout=10)
+        try:
+            text = self.hdc.shell("aa dump -a", timeout=10)
+        except HdcError:
+            # A stale tunnel target can make the first read time out. Reset it
+            # once; the next read tells the truth.
+            recover = getattr(self.hdc, "recover", None)
+            if callable(recover):
+                recover()
+            text = self.hdc.shell("aa dump -a", timeout=10)
         start = text.find("current mission lists")
         end = text.find("ExtensionRecords")
         if start < 0:
@@ -73,45 +80,74 @@ class Device:
     # -- observation ---------------------------------------------------------
 
     def dump_layout(self, *, include_attrs: bool = False, timeout: float | None = None) -> Layout:
+        marker_start = "__HOPA_BEGIN__"
+        marker_end = "__HOPA_END__"
         last_error: Exception | None = None
-        for attempt in range(2):
+        for attempt in range(3):
             remote = self._remote("layout", ".json")
-            command = f"uitest dumpLayout -p {shlex.quote(remote)}"
+            # One hdc command per observation. A tunneled target drops its
+            # session after a handful of commands, and dump + file recv + rm
+            # costs three of them. Dumping, reading and cleaning up in a single
+            # shell keeps `/observe` to one command.
+            command = (
+                f"uitest dumpLayout -p {shlex.quote(remote)} >/dev/null 2>&1; "
+                f"echo {marker_start}; cat {shlex.quote(remote)}; echo; "
+                f"echo {marker_end}; rm -f {shlex.quote(remote)}"
+            )
             if include_attrs:
-                command += " -a"
+                command = command.replace("dumpLayout -p", "dumpLayout -a -p")
             try:
                 output = self.hdc.shell(command, timeout=timeout)
-                if "failed" in output.lower():
-                    raise DeviceError(f"uitest dumpLayout failed: {output.strip()}")
-                with tempfile.TemporaryDirectory(prefix="hopa-layout-") as tmp:
-                    local = Path(tmp) / "layout.json"
-                    self.hdc.file_recv(remote, local, timeout=timeout)
-                    if not local.exists() or local.stat().st_size == 0:
-                        raise DeviceError("layout dump produced no file")
-                    data = json.loads(local.read_text(encoding="utf-8"))
-                return parse_layout(data)
+                start = output.find(marker_start)
+                end = output.find(marker_end, start + 1) if start >= 0 else -1
+                if start < 0 or end < 0:
+                    raise DeviceError("layout dump produced no file")
+                payload = output[start + len(marker_start) : end].strip()
+                if not payload:
+                    raise DeviceError("layout dump produced no file")
+                data = json.loads(payload)
+                layout = parse_layout(data)
+                if not layout.roots:
+                    raise DeviceError("layout dump had no nodes")
+                return layout
             except json.JSONDecodeError as exc:
                 last_error = DeviceError(f"layout dump is not valid JSON: {exc}")
-            except DeviceError as exc:
+            except (DeviceError, HdcError) as exc:
+                last_error = exc
+            if attempt < 2:
+                # Restart the local hdc server before replaying. `tconn` alone
+                # says "already connected" on a session that returns nothing.
+                recover = getattr(self.hdc, "recover", None)
+                if callable(recover):
+                    recover()
+                time.sleep(0.4)
+        raise last_error or DeviceError("layout dump failed")
+
+    def screenshot(self, local_path: str | Path | None = None) -> Path:
+        last_error: Exception | None = None
+        for attempt in range(2):
+            remote = self._remote("screen", ".jpeg")
+            try:
+                self.hdc.shell(f"snapshot_display -f {shlex.quote(remote)}")
+                if local_path:
+                    destination = Path(local_path)
+                else:
+                    destination = Path(f"screen_{int(time.time())}.jpeg")
+                self.hdc.file_recv(remote, destination)
+                data = destination.read_bytes()
+                if len(data) < 1024 or not data.startswith(b"\xff\xd8"):
+                    raise DeviceError("screenshot produced no image")
+                return destination
+            except (DeviceError, HdcError, OSError) as exc:
                 last_error = exc
             finally:
                 self.hdc.shell(f"rm -f {shlex.quote(remote)}", check=False)
             if attempt == 0:
-                time.sleep(0.7)
-        raise last_error or DeviceError("layout dump failed")
-
-    def screenshot(self, local_path: str | Path | None = None) -> Path:
-        remote = self._remote("screen", ".jpeg")
-        self.hdc.shell(f"snapshot_display -f {shlex.quote(remote)}")
-        try:
-            if local_path:
-                destination = Path(local_path)
-            else:
-                destination = Path(f"screen_{int(time.time())}.jpeg")
-            self.hdc.file_recv(remote, destination)
-        finally:
-            self.hdc.shell(f"rm -f {shlex.quote(remote)}", check=False)
-        return destination
+                recover = getattr(self.hdc, "recover", None)
+                if callable(recover):
+                    recover()
+                time.sleep(0.4)
+        raise last_error or DeviceError("screenshot failed")
 
     # -- input ---------------------------------------------------------------
 
@@ -180,17 +216,68 @@ class Device:
                 dump = self.hdc.shell(f"bm dump -n {shlex.quote(bundle)}", check=False)
             except Exception:  # noqa: BLE001
                 return ""
-        match = re.search(r'"mainElement"\s*:\s*"([^"]+)"', dump)
+        # HarmonyOS versions name this field differently: mainElement on some
+        # builds, mainElementName on others (the Clock app uses the latter).
+        match = re.search(r'"mainElement(?:Name)?"\s*:\s*"([^"]+)"', dump)
         return match.group(1) if match else ""
 
-    def launch(self, bundle: str, ability: str = "") -> None:
+    def launch(self, bundle: str, ability: str = "", raise_window: bool = False) -> None:
         # The catalogue ability can be device-specific; always keep a fallback
         # list and a bundle-only start, so one stale name cannot block a launch.
-        probe = self.hdc.shell(f"bm dump -n {shlex.quote(bundle)}", check=False)
-        if "error:" in probe.lower():
-            raise DeviceError(f"{bundle} is not installed on this phone")
+        def probe() -> str:
+            try:
+                # Read only the launcher-ability line. A full `bm dump` is tens
+                # of kilobytes and the tunnel can truncate it; a one-line result
+                # is what actually keeps the first launch after idle reliable.
+                return self.hdc.shell(
+                    f"bm dump -n {shlex.quote(bundle)} 2>/dev/null "
+                    "| grep -m1 -E '\"mainElement(Name)?\"'",
+                    check=False,
+                    timeout=12,
+                )
+            except HdcError:
+                return ""
+
+        def transport_error(text: str) -> bool:
+            low = text.lower()
+            return (
+                "device not found" in low
+                or "connect-key" in low
+                or "connect failed" in low
+                or "session is dead" in low
+            )
+
+        manifest = probe()
+        if not manifest.strip() or transport_error(manifest):
+            # A tunneled target can answer with nothing, a transport error, or
+            # not at all while still looking connected. Reset the session and
+            # ask once more.
+            recover = getattr(self.hdc, "recover", None)
+            if callable(recover):
+                recover()
+            manifest = probe()
+        if not manifest.strip() or transport_error(manifest):
+            check = ""
+            try:
+                check = self.hdc.shell(
+                    f"bm dump -n {shlex.quote(bundle)} 2>&1 | head -2",
+                    check=False,
+                    timeout=8,
+                )
+            except HdcError:
+                check = ""
+            if "error:" in check.lower():
+                raise DeviceError(f"{bundle} is not installed on this phone")
+            if not check.strip() or transport_error(check):
+                raise DeviceError(
+                    f"the phone did not answer while reading {bundle}; "
+                    "retry when the tunnel is ready"
+                )
+            # The device answered and the app exists, but this build has no
+            # mainElement line: keep the legacy ability fallbacks below.
+            manifest = ""
         candidates: list[str] = []
-        resolved = self.main_ability(bundle, probe)
+        resolved = self.main_ability(bundle, manifest)
         if resolved:
             candidates.append(resolved)
         if ability:
@@ -206,11 +293,21 @@ class Device:
         errors: list[str] = []
         for attempt in range(2):
             for name in candidates:
-                result = self.hdc.run(
-                    "shell",
-                    f"aa start -a {shlex.quote(name)} -b {shlex.quote(bundle)}",
-                    check=False,
-                )
+                command = f"aa start -a {shlex.quote(name)} -b {shlex.quote(bundle)}"
+                if raise_window:
+                    # -N raises an existing singleton window instead of only
+                    # delivering the intent to the mission.
+                    command += " -N"
+                try:
+                    result = self.hdc.run(
+                        "shell",
+                        command,
+                        check=False,
+                        timeout=15,
+                    )
+                except HdcError as exc:
+                    errors.append(f"{name}: {exc}")
+                    continue
                 output = f"{result.stdout}\n{result.stderr}".strip()
                 if "successfully" in output.lower():
                     return

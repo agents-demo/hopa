@@ -144,6 +144,8 @@ class BridgePool:
         for node in self.nodes.values():
             if hmac.compare_digest(presented, node.sessions_key):
                 return True
+            if hmac.compare_digest(presented, node.base_token):
+                return True
             if hmac.compare_digest(presented, node.token) and node.token_live():
                 return True
         return False

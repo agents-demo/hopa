@@ -123,11 +123,48 @@ def test_root_and_head_are_public(relay_server):
     assert status == 200
     assert body["role"] == "relay"
     assert body["health"] == "/health"
+    assert body["ui"] == "/ui"
 
-    for path in ("/", "/health"):
+    for path in ("/", "/health", "/ui"):
         request = urllib.request.Request(f"{base}{path}", method="HEAD")
         with urllib.request.urlopen(request, timeout=5) as response:
             assert response.status == 200
+
+
+def _get_text(base: str, path: str, accept: str) -> tuple[int, str, str]:
+    request = urllib.request.Request(f"{base}{path}", headers={"Accept": accept})
+    with urllib.request.urlopen(request, timeout=5) as response:
+        return response.status, response.headers.get("Content-Type", ""), response.read().decode()
+
+
+def test_the_status_page_is_html_without_a_token(relay_server):
+    _relay, server = relay_server
+    base = f"http://127.0.0.1:{server.port}"
+
+    status, content_type, body = _get_text(base, "/ui", "text/html")
+
+    assert status == 200
+    assert content_type.startswith("text/html")
+    assert "<title>HOPA Relay</title>" in body
+    # The page reads /health; it must not embed credentials.
+    assert "/health" in body
+    assert CODE not in body
+    assert PHONE not in body
+    assert LINK not in body
+
+
+def test_a_browser_on_the_root_gets_the_status_page(relay_server):
+    _relay, server = relay_server
+    base = f"http://127.0.0.1:{server.port}"
+
+    status, content_type, _body = _get_text(base, "/", "text/html,application/xhtml+xml")
+    assert status == 200
+    assert content_type.startswith("text/html")
+
+    status, content_type, body = _get_text(base, "/", "application/json")
+    assert status == 200
+    assert content_type.startswith("application/json")
+    assert json.loads(body)["role"] == "relay"
 
 
 def test_pair_and_refresh(relay_server):

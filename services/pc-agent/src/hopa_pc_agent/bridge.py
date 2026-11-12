@@ -500,15 +500,16 @@ class _Handler(BaseHTTPRequestHandler):
             # HOPA opened. Fall back to one cold restart, then say so.
             bundle = str(data["bundle"])
             ability = str(data.get("ability", ""))
-            device.launch(bundle, ability=ability)
+            device.launch(bundle, ability=ability, raise_window=True)
             foreground = _wait_for_foreground(device, bundle, timeout=2.0)
             restarted = False
-            if foreground != bundle:
-                # A cold start is the only reliable raise on this window
-                # manager; do not wait on the foreground query to finish it.
+            if foreground != bundle and bundle != "com.hopa.agent":
+                # A cold start is the only reliable raise on some window
+                # managers, but never restart HOPA: it is the run asking to
+                # come back, and a restart would lose the answer.
                 device.stop(bundle)
                 time.sleep(0.5)
-                device.launch(bundle, ability=ability)
+                device.launch(bundle, ability=ability, raise_window=True)
                 restarted = True
                 foreground = _wait_for_foreground(device, bundle, timeout=2.0)
             # The foreground query is not dependable on a 2in1 desktop; a
@@ -673,6 +674,15 @@ class BridgeServer:
 
     def token_live(self) -> bool:
         return time.monotonic() - self.token_issued_at < self.token_ttl
+
+    @property
+    def base_token(self) -> str:
+        """The token from the device catalogue; never rotated.
+
+        The cloud link and local tooling use this credential, so it has to
+        survive the phone's pair/refresh rotation.
+        """
+        return self._base_token
 
     def issue_tokens(self) -> dict[str, Any]:
         """Rotate both tokens; the previous pair stops working immediately."""

@@ -10,6 +10,7 @@ import { webview } from '@kit.ArkWeb';
 import { HopaMark, EmptyHero, StepChips, ChatFormat, Character, KeyStore, SettingsStore, StoredSettings } from '@hopa/app';
 import { LaptopChat, LaptopTurn } from '../services/LaptopChat';
 import { LaptopAgent, demoApproval } from '../services/LaptopAgent';
+import { LaptopTunnel } from '../services/LaptopTunnel';
 
 import { LaptopSession, LaptopSessions } from '../services/LaptopSessions';
 import { LaptopImages } from '../services/LaptopImages';
@@ -251,6 +252,9 @@ struct LaptopIndex {
         this.agent.configureBridge(stored.bridgeUrl, stored.bridgeToken);
         this.checkBridge();
       }
+      LaptopTunnel.get().startIfWanted(context).catch(() => {
+        // The bridge remains usable when the tunnel cannot start.
+      });
       KeyStore.load(LAPTOP_KEY_ALIAS).then((key: string) => {
         this.keyPresent = key.length > 0;
         this.chat.configure(this.provider, this.endpoint, this.modelName, key);
@@ -840,8 +844,10 @@ struct LaptopIndex {
     const injectedModel: string = AppStorage.get<string>('hopa.laptop.model') ?? '';
     const injectedBridgeUrl: string = AppStorage.get<string>('hopa.laptop.bridgeUrl') ?? '';
     const injectedBridgeToken: string = AppStorage.get<string>('hopa.laptop.bridgeToken') ?? '';
+    const injectedTunnel: boolean =
+      (AppStorage.get<string>('hopa.laptop.tunnelWanted') ?? '') === '1';
     if (injectedEndpoint.length === 0 && injectedModel.length === 0 && injectedKey.length === 0 &&
-      injectedBridgeUrl.length === 0 && injectedBridgeToken.length === 0) {
+      injectedBridgeUrl.length === 0 && injectedBridgeToken.length === 0 && !injectedTunnel) {
       return;
     }
     const context = getContext(this) as common.UIAbilityContext;
@@ -876,6 +882,16 @@ struct LaptopIndex {
         this.agent.configureBridge(stored.bridgeUrl, stored.bridgeToken);
         this.checkBridge();
       }
+    }
+    if (injectedTunnel) {
+      const tunnelSettings: StoredSettings = await SettingsStore.load(context);
+      tunnelSettings.tunnel = true;
+      await SettingsStore.save(context, tunnelSettings);
+      if (tunnelSettings.bridgeUrl.length > 0 && tunnelSettings.bridgeToken.length > 0) {
+        LaptopTunnel.get().configure(tunnelSettings.bridgeUrl, tunnelSettings.bridgeToken);
+        await LaptopTunnel.get().start();
+      }
+      AppStorage.setOrCreate<string>('hopa.laptop.tunnelWanted', '');
     }
   }
 
