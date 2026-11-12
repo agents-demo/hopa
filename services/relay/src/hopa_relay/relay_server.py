@@ -780,5 +780,3 @@ def serve_relay(args: Any) -> int:
     finally:
         server.stop()
     return 0
-
-

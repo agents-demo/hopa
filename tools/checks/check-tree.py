@@ -18,7 +18,16 @@ from __future__ import annotations
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-TOP_LEVEL = {"apps", "services", "packages", "evals", "contracts", "tools", "docs", ".github"}
+TOP_LEVEL = {
+    "apps",
+    "services",
+    "packages",
+    "evals",
+    "contracts",
+    "tools",
+    "docs",
+    ".github",
+}
 JUNK = {"utils", "helpers", "common", "misc", "shared"}
 SKIP = {
     "build",

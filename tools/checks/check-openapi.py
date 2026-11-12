@@ -70,7 +70,9 @@ def compare(
             continue
         if any(route.startswith(p) for p in prefix):
             continue
-        if route in declared_prefix or any(route.startswith(p) for p in declared_prefix):
+        if route in declared_prefix or any(
+            route.startswith(p) for p in declared_prefix
+        ):
             continue
         missing_from_code.append(route)
     return missing_from_spec, missing_from_code
@@ -85,10 +87,14 @@ def main() -> int:
             continue
         literal, prefix = code_routes(sources)
         spec, declared_prefix = spec_routes(spec_path)
-        missing_from_spec, missing_from_code = compare(literal, prefix, spec, declared_prefix)
+        missing_from_spec, missing_from_code = compare(
+            literal, prefix, spec, declared_prefix
+        )
 
         for route in missing_from_spec:
-            print(f"FAIL  {spec_path.name}: handled in code, absent from the spec: {route}")
+            print(
+                f"FAIL  {spec_path.name}: handled in code, absent from the spec: {route}"
+            )
         for route in missing_from_code:
             print(f"FAIL  {spec_path.name}: in the spec, not handled in code: {route}")
         if missing_from_spec or missing_from_code:

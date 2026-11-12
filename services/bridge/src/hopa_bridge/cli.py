@@ -477,8 +477,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "relay":
             # Moved in R4: the cloud half is its own deployable (ADR-0009).
             print(
-                "hopa-bridge: the relay moved to the hopa-relay command; "
-                "run 'hopa-relay relay'",
+                "hopa-bridge: the relay moved to the hopa-relay command; run 'hopa-relay relay'",
                 file=sys.stderr,
             )
             return 2

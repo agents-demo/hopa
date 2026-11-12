@@ -31,9 +31,7 @@ class HarmonyDevice:
     def tap(self, x: int, y: int) -> None:
         self._device.tap(x, y)
 
-    def swipe(
-        self, from_x: int, from_y: int, to_x: int, to_y: int, *, velocity: int = 600
-    ) -> None:
+    def swipe(self, from_x: int, from_y: int, to_x: int, to_y: int, *, velocity: int = 600) -> None:
         self._device.swipe(from_x, from_y, to_x, to_y, velocity=velocity)
 
     def type_text(self, text: str, *, x: int | None = None, y: int | None = None) -> None:
