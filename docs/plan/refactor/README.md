@@ -50,7 +50,7 @@ hopa/
 │  ├─ bridge/               # device plane (R3)
 │  ├─ relay/                # cloud relay server half (R4)
 │  ├─ brain/                # Kotlin knowledge router (exists, unchanged)
-│  └─ backend/              # planned; only an ADR in R7, no package yet
+│  └─ backend/              # reserved: README + ADR-0011, no package yet
 ├─ evals/                   # how we know it got better (R1)
 │  ├─ bench/
 │  └─ baseline/
@@ -461,9 +461,12 @@ Risk: none.
       pane showed the Douyin action under the new turn, so that was the model
       repeating a previous action on a nonsense prompt, not a resume bug. No code
       change was made on a false premise.
-- [ ] Follow-up (not this refactor): a prompt/eval task so a nonsense prompt does
-      not repeat the previous action, and delete the dead `resumeInterrupted` when
-      the Harmony app is next touched.
+- [x] Dead `resumeInterrupted` removed from `LaptopIndex` (no callers), with the
+      unused `preferences` import; HAP build green afterwards.
+- [ ] Follow-up (product, not this refactor): a prompt/eval task so a nonsense
+      prompt does not repeat the previous action. Recorded in
+      `docs/status/backlog.md`; it needs the model/prompt work, not a structural
+      change.
 
 Risk: low. Rollback: revert the rename commit and reinstall the aliases.
 

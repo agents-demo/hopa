@@ -75,3 +75,11 @@ lean on, at commit `4e5787e` plus the R0 changes:
 - `ruff check services evals tools` -> All checks passed
 - Editable installs were uninstalled and reinstalled from path, so a console
   script cannot silently run pre-move code.
+
+## Known behaviour (from the 2026-11-12 E2E)
+
+- A nonsense prompt can make the model repeat the previous turn's action: after
+  the Douyin run was interrupted, sending `Line a / Line b` produced an
+  `ui.launch` of Douyin as the answer. The run pane attached it to that turn, so
+  this is model behaviour, not a resume path (`resumeInterrupted` had no callers
+  and is deleted). Fixing it is a prompt/eval task, not a structural one.

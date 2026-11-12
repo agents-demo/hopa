@@ -1,5 +1,4 @@
 import { common } from '@kit.AbilityKit';
-import { preferences } from '@kit.ArkData';
 import { RunRecord, RunStatus, ScheduledTask, Skill } from '@hopa/core';
 import { MemoryItem } from '@hopa/app';
 import { window } from '@kit.ArkUI';
@@ -726,29 +725,6 @@ struct LaptopIndex {
     // it is backgrounded while a run is still executing (verified with the
     // background task granted), so a retry just repeats the same suspend. The
     // notice is the honest end of that turn.
-  }
-
-  /**
-   * The system suspends this shell ~0.4 s after an action opens another app and
-   * recovers it two seconds later. Finishing the question on that return is the
-   * only reliable behaviour a third-party 2-in-1 app can offer; the guard stops
-   * a second suspend from looping forever.
-   */
-  private resumeInterrupted(prompt: string): void {
-    if (prompt.trim().length === 0) {
-      return;
-    }
-    const context = getContext(this) as common.UIAbilityContext;
-    preferences.getPreferences(context, 'hopa_laptop').then(async (store) => {
-      const last = await store.get('resume_at', 0);
-      const since: number = typeof last === 'number' ? last : 0;
-      if (Date.now() - since < 180000) {
-        return;
-      }
-      await store.put('resume_at', Date.now());
-      await store.flush();
-      this.whenReady(prompt, Date.now());
-    }).catch(() => {});
   }
 
   /** The rail and the retry both read this; adopted turns must update it. */
