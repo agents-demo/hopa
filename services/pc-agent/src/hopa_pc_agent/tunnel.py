@@ -71,6 +71,7 @@ class TunnelSide:
     role: str
     session: str
     ws: WebSocketConnection
+    attached_at: float = field(default_factory=time.time)
     _closed: bool = False
     _lock: threading.Lock = field(default_factory=threading.Lock)
 
@@ -155,12 +156,21 @@ class TunnelRegistry:
             self.detach(side)
 
     def status(self) -> dict[str, Any]:
+        now = time.time()
+
+        def age(side: TunnelSide | None) -> float | None:
+            if side is None:
+                return None
+            return round(max(0.0, now - side.attached_at), 1)
+
         with self._lock:
             sessions = [
                 {
                     "session": name,
                     "host": "host" in sides,
                     "phone": "phone" in sides,
+                    "host_age_seconds": age(sides.get("host")),
+                    "phone_age_seconds": age(sides.get("phone")),
                 }
                 for name, sides in self._sessions.items()
             ]

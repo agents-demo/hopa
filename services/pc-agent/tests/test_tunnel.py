@@ -165,6 +165,19 @@ def test_relay_exposes_tunnel_status(relay_server):
     assert health["links"] == []
 
 
+def test_status_reports_how_long_each_side_has_been_attached():
+    registry = TunnelRegistry()
+    registry.attach("host", "default", _FakeWs())  # type: ignore[arg-type]
+
+    link = registry.status()["links"][0]
+
+    assert link["session"] == "default"
+    assert link["host"] is True
+    assert link["phone"] is False
+    assert link["phone_age_seconds"] is None
+    assert 0 <= link["host_age_seconds"] < 5
+
+
 class _FakeWs:
     def __init__(self) -> None:
         self.frames: list[bytes] = []

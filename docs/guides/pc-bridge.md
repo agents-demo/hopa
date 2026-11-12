@@ -226,6 +226,13 @@ awake. When the PC stops, the relay sleeps, which is the honest behaviour. Use
 `GET /health` to see `linked` and `link_age_seconds`; a cold start after a long
 pause takes roughly 30–60 s, so the first phone action may report offline.
 
+**Status page.** Open the service URL in a browser (`/` or `/ui`) for a
+self-contained page that refreshes every 3 s: the cloud link, the queue, and one
+card per tunnel session showing whether the PC tunnel and the app side are
+connected and for how long. It needs no token and reads only `/health`; scripts
+and uptime probes still get JSON from `/` when they do not ask for `text/html`,
+and `/health` is unchanged.
+
 Limits worth stating:
 
 - The relay forwards to **one** linked PC. The multi-device `BridgePool` still
