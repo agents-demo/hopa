@@ -205,9 +205,28 @@ after what it does.
 
 ## 5. Target Python and Kotlin
 
+> Executed parts: `services/bridge` and `services/relay` are already split (ADR-0009),
+> `packages/wire` is shared (ADR-0010), and the bridge has a `DevicePort` seam
+> (`device_port.py`, `device_harmony.py`). The tree below is the *next* folder pass:
+> the bridge's transport/device/api split and the baseline's domain/runtime split.
+> `services/backend` appears only when the loop moves (ADR-0011).
+
+
+
 ```
+packages/wire/src/hopa_wire/            # shared, versioned (ADR-0010)
+├─ ws.py
+└─ tunnel.py
+
+services/relay/src/hopa_relay/          # cloud half (ADR-0009)
+├─ relay_server.py
+├─ registry.py
+└─ cli.py
+
 services/bridge/src/hopa_bridge/
 ├─ errors.py
+├─ device_port.py               # the seam Android/Windows implement
+├─ device_harmony.py
 ├─ transport/hdc.py                 # process wrapper only
 ├─ device/device.py                 # taps, typing, launch
 ├─ device/layout.py                 # parsing and querying the UI tree
