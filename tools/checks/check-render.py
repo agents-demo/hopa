@@ -27,7 +27,9 @@ MODULE_TOKEN = re.compile(r"python\s+-m\s+([A-Za-z_][\w.]*)")
 def module_exists(name: str) -> bool:
     package = name.replace(".", "/")
     for base in (ROOT / "services", ROOT / "packages"):
-        if (base / package / "__init__.py").exists() or (base / f"{package}.py").exists():
+        if (base / package / "__init__.py").exists() or (
+            base / f"{package}.py"
+        ).exists():
             return True
         for candidate in base.glob("*/src"):
             if (candidate / package / "__init__.py").exists():
