@@ -400,6 +400,8 @@ commit; no data changes.
 - [x] ADR-0011: the loop is a server concern; today it stays on the device until
   services/backend exists; clients are thin; the bridge stays the device plane;
   shared code is versioned, not copied.
+- [x] Assignment decided (2026-11-13): evals/, the service half of tools/ and the
+  service docs move with services/; contracts/ is shared by version.
 - [x] docs/operations/repo-split.md: target repositories, preconditions, order
   (backend, wire, bridge/relay, apps), git filter-repo mechanics, per-repo CI
   and the rollback tag.
