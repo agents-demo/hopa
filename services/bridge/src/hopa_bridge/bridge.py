@@ -45,7 +45,7 @@ from pathlib import Path
 from typing import Any
 
 from .chat_store import ChatStore
-from .device import Device
+from .device_port import DevicePort
 
 
 class BridgeError(Exception):
@@ -101,7 +101,7 @@ def _node_payload(node: Any, ref: str, width: int = 0, height: int = 0) -> dict[
     }
 
 
-def _observe(device: Device) -> dict[str, Any]:
+def _observe(device: DevicePort) -> dict[str, Any]:
     layout = device.dump_layout()
     width = 0
     height = 0
@@ -129,7 +129,7 @@ def _observe(device: Device) -> dict[str, Any]:
     }
 
 
-def _wait_for_foreground(device: Device, bundle: str, timeout: float = 6.0) -> str:
+def _wait_for_foreground(device: DevicePort, bundle: str, timeout: float = 6.0) -> str:
     """Poll the foreground bundle after a launch; '' when it cannot be confirmed."""
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
@@ -142,15 +142,15 @@ def _wait_for_foreground(device: Device, bundle: str, timeout: float = 6.0) -> s
     return ""
 
 
-def _screenshot(device: Device, width: int = 0) -> dict[str, Any]:
+def _screenshot(device: DevicePort, width: int = 0) -> dict[str, Any]:
     remote = "/data/local/tmp/hopa-bridge.jpeg"
     # The frame is evidence, not a wallpaper: cap it on the device so an app
     # window of any size cannot turn into a multi-megabyte capture.
     size = f" -w {width}" if width > 0 else ""
-    device.hdc.shell(f"snapshot_display -f {remote}{size}")
+    device.shell(f"snapshot_display -f {remote}{size}")
     with tempfile.TemporaryDirectory(prefix="hopa-shot-") as tmp:
         local = Path(tmp) / "screen.jpeg"
-        device.hdc.file_recv(remote, local)
+        device.pull(remote, local)
         raw = local.read_bytes()
     return {
         "mime": "image/jpeg",
@@ -560,7 +560,7 @@ class _Handler(BaseHTTPRequestHandler):
 class BridgeServer:
     def __init__(
         self,
-        device: Device,
+        device: DevicePort,
         token: str,
         *,
         host: str = "127.0.0.1",

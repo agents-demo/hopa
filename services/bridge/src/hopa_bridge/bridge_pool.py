@@ -35,6 +35,7 @@ from typing import Any
 from .bridge import BridgeServer
 from .chat_store import ChatStore
 from .device import Device
+from .device_harmony import HarmonyDevice
 from .images import ImageStore
 
 PHONE_ROLES = ("phone", "tablet")
@@ -63,7 +64,8 @@ class BridgePool:
         self.roles: dict[str, str] = {}
         for entry in devices:
             serial = str(entry["serial"])
-            device = device_factory(serial) if device_factory else Device(target=serial)
+            raw = device_factory(serial) if device_factory else Device(target=serial)
+            device = raw if isinstance(raw, HarmonyDevice) else HarmonyDevice(raw)
             node = BridgeServer(
                 device,
                 str(entry["token"]),
@@ -89,7 +91,7 @@ class BridgePool:
     @staticmethod
     def _device_role(device: Device) -> str:
         try:
-            kind = device.hdc.shell("param get const.product.devicetype").strip()
+            kind = device.shell("param get const.product.devicetype").strip()
         except Exception:  # noqa: BLE001 - a role is a convenience, not a must
             return ""
         if kind in ("phone", "tablet"):
@@ -290,7 +292,11 @@ class _PoolHandler(BaseHTTPRequestHandler):
                 {
                     "ok": True,
                     "devices": [
-                        {"serial": serial, "role": role}
+                        {
+                            "serial": serial,
+                            "role": role,
+                            "platform": self.pool.nodes[serial].device.platform,
+                        }
                         for role, serial in sorted(self.pool.roles.items())
                     ],
                 },

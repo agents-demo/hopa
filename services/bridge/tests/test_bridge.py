@@ -43,12 +43,20 @@ class FakeDevice:
     def __init__(self) -> None:
         self.calls: list[tuple] = []
         self.hdc = FakeHdc()
+        self.serial = "fake"
+        self.platform = "harmony"
         self.foreground_bundle = ""
         self.raise_after_stop = False
         self.stopped = False
 
     def devices(self) -> list[str]:
         return ["127.0.0.1:5555"]
+
+    def shell(self, command: str) -> str:
+        return self.hdc.shell(command)
+
+    def pull(self, remote: str, local: str) -> None:
+        self.hdc.file_recv(remote, local)
 
     def foreground(self) -> str:
         return self.foreground_bundle

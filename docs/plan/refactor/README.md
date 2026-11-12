@@ -360,31 +360,33 @@ No runtime change. Written against `bridge.py` + `bridge_pool.py`, since the
 
 Risk: low. Deferred decision: `/v1` prefix (recorded; not done here).
 
-## R6. A device seam in the bridge — protocol only, no folder split
+## R6. A device seam in the bridge - protocol only, no folder split
 
-`device.py` cannot become `device/` while the module `device.py` exists (Windows
-case-insensitive FS). So R6 adds a protocol and adapters **in flat files**; the
-folder split is a later, separate plan.
+`device.py` cannot become `device/` while the module exists (Windows is
+case-insensitive), so the seam is added in flat files; the folder split can come
+later without changing the API.
 
-- [ ] `services/bridge/src/hopa_bridge/device_port.py`: `DevicePort` protocol —
-      `observe`, `tap`, `type`, `swipe`, `screenshot`, `launch`, `foreground`,
-      `apps`, `serial`, `platform`.
-- [ ] `device_harmony.py`: adapter over today's `device.py`, covering the direct
-      `device.hdc.shell` / `file_recv` calls in `bridge.py`.
-- [ ] `bridge.py` / `bridge_pool.py` take a `DevicePort`; only `device_harmony.py`
-      imports `hdc.py`.
-- [ ] Registry gains `platform` (default `harmony`) next to `role`; existing
-      `devices.json` unchanged.
-- [ ] Tests: reuse the existing `FakeDevice` (`evals/baseline/tests/conftest.py`)
-      — relocate or wrap it, do not add a third fake.
-- [ ] `check-structure.py`: add a Python rule "only `device_harmony.py` imports
-      `hdc`" — this is new code, not a retarget of existing rules.
-- [ ] Gates: `pytest services/bridge`; hardware observe/tap/screenshot; laptop
-      app unaffected.
+- [x] `services/bridge/src/hopa_bridge/device_port.py`: `DevicePort` Protocol with
+      `dump_layout`, `foreground`, `tap`, `swipe`, `type_text`, `press_key`,
+      `press_key_many`, `launch`, `stop`, `shell`, `pull`, `serial`, `platform`.
+- [x] `device_harmony.py`: `HarmonyDevice` wraps today's `Device` and owns the two
+      direct hdc calls (`shell`, `file_recv`) that `bridge.py` used to make.
+- [x] `bridge.py` imports `DevicePort`, never `Device` or `hdc`; the screenshot
+      path calls `device.shell` / `device.pull`.
+- [x] `bridge_pool.py` wraps whatever the factory returns in `HarmonyDevice` and
+      reports `platform` in `/health`.
+- [x] `cli.py` wraps at the composition root; bridge and CLI behaviour unchanged.
+- [x] `check-structure.py` gains a Python rule: only `hdc.py`, `device.py` and
+      `device_harmony.py` may import `hdc`.
+- [x] Tests: the fake device implements the port; `services/bridge services/relay
+      packages/wire` -> 139 passed.
+- [x] Hardware: `devices` lists both serials, one screenshot saved, one `dump`
+      parsed on the 2-in-1.
+- [x] `docs/guides/adding-a-platform.md` names the real files and the shell/pull
+      methods.
 
-Risk: medium. Rollback: revert the single commit; no data changes.
-
----
+Risk: medium (signature change inside the bridge). Rollback: revert the single
+commit; no data changes.
 
 ## R7. Record the backend boundary (ADR only, no package)
 

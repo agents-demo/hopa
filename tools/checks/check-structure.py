@@ -70,6 +70,23 @@ def check_capabilities(errors: list[str]) -> None:
                     )
 
 
+
+DEVICE_ROOT = ROOT / "services/bridge/src/hopa_bridge"
+# hdc is the HarmonyOS transport. The adapter is the only place allowed to know
+# it; the HTTP layer talks to DevicePort (docs/guides/adding-a-platform.md).
+HDC_OWNERS = {"hdc.py", "device.py", "device_harmony.py"}
+
+
+def check_device_seam(errors: list[str]) -> None:
+    for path in DEVICE_ROOT.glob("*.py"):
+        if path.name in HDC_OWNERS:
+            continue
+        text = path.read_text(encoding="utf-8")
+        if re.search(r"from\s+\.hdc\s+import|import\s+hdc\b", text):
+            errors.append(f"{path.relative_to(ROOT)}: imports hdc outside the adapter")
+
+
+
 def check_barrels(errors: list[str]) -> None:
     allowed = {
         APP / "core/Index.ets",
@@ -124,6 +141,7 @@ def main(argv: list[str]) -> int:
     errors: list[str] = []
     check_core(errors)
     check_capabilities(errors)
+    check_device_seam(errors)
     check_barrels(errors)
     warnings, violations = size_report()
 

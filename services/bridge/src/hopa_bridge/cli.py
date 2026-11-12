@@ -11,6 +11,7 @@ from typing import Any
 
 from . import __version__
 from .device import Device
+from .device_harmony import HarmonyDevice
 from .errors import HopaError
 from .layout import Layout
 
@@ -273,7 +274,7 @@ def _cmd_bridge(args: argparse.Namespace, device: Device) -> int:
         state_path = args.state or str(Path.home() / ".hopa" / f"bridge-{args.port}.json")
     try:
         server = BridgeServer(
-            device,
+            HarmonyDevice(device),
             token,
             host=args.host,
             port=args.port,
