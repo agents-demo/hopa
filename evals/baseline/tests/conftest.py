@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from hopa_baseline.observation import observation_from_layout
-from hopa_pc_agent.layout import parse_layout
+from hopa_bridge.layout import parse_layout
 
 SETTINGS = {
     "attributes": {"type": "Root", "bounds": "[0,0][1080,2400]", "text": ""},

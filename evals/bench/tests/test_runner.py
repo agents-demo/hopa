@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from hopa_bench.runner import Runner
 from hopa_bench.task import Action, SuccessCheck, Task
-from hopa_pc_agent.errors import HdcError
-from hopa_pc_agent.layout import parse_layout
+from hopa_bridge.errors import HdcError
+from hopa_bridge.layout import parse_layout
 
 LAYOUT = parse_layout(
     {

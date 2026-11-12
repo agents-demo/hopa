@@ -7,8 +7,8 @@ import urllib.request
 
 import pytest
 
-from hopa_pc_agent.bridge_pool import BridgePool
-from hopa_pc_agent.images import ImageStore
+from hopa_bridge.bridge_pool import BridgePool
+from hopa_bridge.images import ImageStore
 
 
 class FakeHdc:

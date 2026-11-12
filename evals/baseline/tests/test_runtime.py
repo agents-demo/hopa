@@ -5,7 +5,7 @@ import pytest
 from hopa_baseline.errors import ScrollLimit, TimeoutFailure
 from hopa_baseline.observation import observation_from_layout
 from hopa_baseline.runtime import dismiss_popup, recover, scroll_to, wait_for
-from hopa_pc_agent.layout import parse_layout
+from hopa_bridge.layout import parse_layout
 
 
 def test_wait_for_returns_immediately(settings_observation):

@@ -6,7 +6,7 @@ from hopa_baseline.observation import (
     observation_from_layout,
     redact,
 )
-from hopa_pc_agent.layout import parse_layout
+from hopa_bridge.layout import parse_layout
 
 from .conftest import SETTINGS
 

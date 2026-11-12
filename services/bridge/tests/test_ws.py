@@ -8,7 +8,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import pytest
 
-from hopa_pc_agent.ws import (
+from hopa_bridge.ws import (
     OP_BINARY,
     WebSocketClient,
     WebSocketError,

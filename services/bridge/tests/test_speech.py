@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from hopa_pc_agent import bridge
+from hopa_bridge import bridge
 
 
 def test_transcribe_wav_returns_engine_text(monkeypatch):

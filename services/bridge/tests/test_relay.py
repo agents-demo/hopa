@@ -11,7 +11,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import pytest
 
-from hopa_pc_agent.relay import LinkClient, Relay, RelayError, RelayServer, RelayTimeout
+from hopa_bridge.relay import LinkClient, Relay, RelayError, RelayServer, RelayTimeout
 
 PHONE = "phone-token"
 LINK = "link-token"

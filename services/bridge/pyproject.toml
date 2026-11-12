@@ -3,7 +3,7 @@ requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "hopa-pc-agent"
+name = "hopa-bridge"
 version = "0.1.0"
 description = "Control a HarmonyOS device over hdc + uitest (CLI and MCP server)."
 readme = "README.md"
@@ -23,7 +23,9 @@ dependencies = []
 dev = ["pytest>=8.0", "ruff>=0.6"]
 
 [project.scripts]
-pc-agent = "hopa_pc_agent.cli:main"
+hopa-bridge = "hopa_bridge.cli:main"
+# One-release alias: the command name users and scripts already know.
+pc-agent = "hopa_bridge.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/"
@@ -39,7 +41,7 @@ target-version = "py311"
 select = ["E", "F", "I", "UP", "B"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["hopa_pc_agent"]
+known-first-party = ["hopa_bridge"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

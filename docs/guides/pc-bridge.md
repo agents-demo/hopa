@@ -120,7 +120,7 @@ like the phone, so it gets the same treatment — with one difference: a bridge
 process serves **one** device, so the laptop needs its own instance and port.
 
 ```bash
-py -3 -m hopa_pc_agent --target 3QC0225821000268 bridge \
+py -3 -m hopa_bridge --target 3QC0225821000268 bridge \
     --port 8767 --token hopalaptop --pair-code 135790
 hdc -t 3QC0225821000268 rport tcp:8767 tcp:8767
 ```
@@ -244,8 +244,8 @@ Limits worth stating:
   about 730 of the 750 hours. A second free service left running also will not
   fit.
 - On Render, create a **Web Service** from the repo with build
-  `pip install --no-deps ./services/pc-agent` and start
-  `python -m hopa_pc_agent relay --host 0.0.0.0 --port $PORT`. The repository's
+  `pip install --no-deps ./services/bridge` and start
+  `python -m hopa_bridge relay --host 0.0.0.0 --port $PORT`. The repository's
   `render.yaml` describes the same service for a Blueprint.
 
 ### Both devices through one relay

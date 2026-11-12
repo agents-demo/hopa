@@ -6,7 +6,7 @@ from hopa_baseline.limits import ActionLimiter, RateLimit
 from hopa_baseline.models import OpenAIClient
 from hopa_baseline.observation import observation_from_layout
 from hopa_baseline.policy import ApprovalPolicy, Decision
-from hopa_pc_agent.layout import parse_layout
+from hopa_bridge.layout import parse_layout
 
 
 def _layout(*texts: str):

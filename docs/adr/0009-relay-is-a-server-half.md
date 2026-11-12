@@ -5,7 +5,7 @@
 
 ## Context
 
-`services/pc-agent` currently bundles two roles in one package:
+`services/bridge` currently bundles two roles in one package:
 
 - the **bridge**: observe/act on a device over `hdc` + `uitest`, the chat store,
   images, pairing and tokens;

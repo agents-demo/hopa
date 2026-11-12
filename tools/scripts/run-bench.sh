@@ -16,8 +16,8 @@ else
   exit 2
 fi
 
-"$PY" -c "import hopa_pc_agent, hopa_bench" 2>/dev/null || {
-  "$PY" -m pip install -e "$ROOT/services/pc-agent" -e "$ROOT/evals/bench"
+"$PY" -c "import hopa_bridge, hopa_bench" 2>/dev/null || {
+  "$PY" -m pip install -e "$ROOT/services/bridge" -e "$ROOT/evals/bench"
 }
 
 "$PY" -m hopa_bench run --tasks "$ROOT/evals/bench/tasks" --out "$RESULTS" "$@"

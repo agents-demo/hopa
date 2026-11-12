@@ -6,8 +6,8 @@ import os
 import sys
 from pathlib import Path
 
-from hopa_pc_agent.device import Device
-from hopa_pc_agent.errors import HopaError
+from hopa_bridge.device import Device
+from hopa_bridge.errors import HopaError
 
 from . import __version__
 from .brain import BrainClient, BrainFirstModel, installed_bundles

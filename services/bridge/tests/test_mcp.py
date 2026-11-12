@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 
-from hopa_pc_agent.mcp_server import McpServer
+from hopa_bridge.mcp_server import McpServer
 
 
 class FakeDevice:
@@ -13,7 +13,7 @@ class FakeDevice:
         return ["127.0.0.1:5555"]
 
     def dump_layout(self, *, include_attrs: bool = False):
-        from hopa_pc_agent.layout import parse_layout
+        from hopa_bridge.layout import parse_layout
 
         return parse_layout({"attributes": {"text": "Hello"}, "children": []})
 
@@ -62,7 +62,7 @@ def test_initialize_echoes_protocol_version() -> None:
     )
     assert response is not None
     assert response["result"]["protocolVersion"] == "2025-03-26"
-    assert response["result"]["serverInfo"]["name"] == "hopa-pc-agent"
+    assert response["result"]["serverInfo"]["name"] == "hopa-bridge"
 
 
 def test_tools_list_contains_core_tools() -> None:

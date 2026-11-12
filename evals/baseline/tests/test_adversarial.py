@@ -5,7 +5,7 @@ from hopa_baseline.errors import ActionError
 from hopa_baseline.executor import DeviceExecutor
 from hopa_baseline.observation import observation_from_layout
 from hopa_baseline.policy import ApprovalPolicy, Decision, RiskLevel
-from hopa_pc_agent.layout import parse_layout
+from hopa_bridge.layout import parse_layout
 
 from .conftest import PAYMENT
 

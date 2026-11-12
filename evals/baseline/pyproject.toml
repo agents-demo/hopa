@@ -31,7 +31,7 @@ target-version = "py311"
 select = ["E", "F", "I", "UP", "B"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["hopa_baseline", "hopa_pc_agent", "hopa_bench"]
+known-first-party = ["hopa_baseline", "hopa_bridge", "hopa_bench"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

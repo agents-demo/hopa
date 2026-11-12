@@ -10,13 +10,13 @@ past layout:
 
 | Distribution | Package | Console script | Path today |
 |---|---|---|---|
-| `hopa-pc-agent` | `hopa_pc_agent` | `pc-agent` | `services/pc-agent` |
+| `hopa-bridge` | `hopa_bridge` | `pc-agent` | `services/bridge` |
 | `hopa-baseline` | `hopa_baseline` | `hopa-baseline` | `evals/baseline` |
 | `hopa-bench` | `hopa_bench` | `bench` | `evals/bench` |
 
 The command names are user-visible: `docs/guides/pc-bridge.md`,
 `docs/guides/setup.md`, `tools/scripts/run-*.ps1|sh`, the laptop's
-`BridgeWizard.ets` (it prints `python -m hopa_pc_agent bridge …`), the MCP server
+`BridgeWizard.ets` (it prints `python -m hopa_bridge bridge …`), the MCP server
 name and the SBOM all carry them.
 
 Renaming a distribution is not a pure folder move: pip keeps the old
@@ -43,7 +43,7 @@ Renaming a distribution is not a pure folder move: pip keeps the old
 
 ## Consequences
 
-- `pip uninstall -y hopa-pc-agent hopa-baseline hopa-bench` is a required step of the
+- `pip uninstall -y hopa-bridge hopa-baseline hopa-bench` is a required step of the
   refactor, before the alias can be trusted.
 - The SBOM, `CHANGELOG.md` and `.env.example` mention distribution names and move
   with them.
@@ -52,7 +52,7 @@ Renaming a distribution is not a pure folder move: pip keeps the old
 
 ## Alternatives considered
 
-- **Keep `hopa_pc_agent` while the folder says `bridge`.** Rejected: the import
+- **Keep `hopa_bridge` while the folder says `bridge`.** Rejected: the import
   name is the first thing a reader sees, and `pc-agent` is not what it does for
   Android or Windows.
 - **Rename the CLI immediately.** Rejected: the wizard, four PowerShell scripts and

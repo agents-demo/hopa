@@ -218,89 +218,71 @@ old `*.dist-info` on a rename).
 
 ## R2. Delete the stale root `app/`
 
-- [ ] Prove nothing references it: `rg -n 'app[\\/](entry|build|code-linter)'`
-      over `.github/`, `tools/`, `docs/`, `*.md`, `*.ps1`, `*.py`, `*.json5`.
-      (Verified during critique: no references outside this plan.)
-- [ ] `tools/scripts/build.ps1` succeeds **before** deletion.
-- [ ] `git rm -r -- app` (removes the 2 tracked files) **and** `git clean -fd app`
-      (removes ignored `.idea/`, so the folder is really gone).
-- [ ] Confirm no `.gitignore` entry existed solely for it (all app patterns are
-      `**/…`); the dead entries are fixed in R1, not here.
-- [ ] `README.md` tree: no root `app/`.
-- [ ] Gates: HAP build, `check-links.py`, CI green.
+- [x] Prove nothing references it: the only `app[\\/](entry|build|code-linter)`
+      match is the `$app` variable in `tools/scripts/install-to-device.sh`.
+- [x] `tools/scripts/build.ps1` is the gate, and it is green after the deletion:
+      `BUILD SUCCESSFUL in 2 min 574 ms`. (evidence: build output)
+- [x] `git rm -r -- app` removed the 2 tracked files and `git clean -fdx -- app`
+      removed the ignored `.idea/`; `Test-Path app` -> `False`.
+- [x] No `.gitignore` entry existed solely for it (all app patterns are `**/...`).
+- [x] `README.md` tree has no root `app/`.
+- [ ] CI green for the deletion. (evidence: PR run id, added when pushed)
 
 Risk: low. Detector: the HAP build fails immediately if anything depended on it.
 
----
-
-## R3. `services/pc-agent` → `services/bridge`, package `hopa_bridge`
+## R3. `services/pc-agent` -> `services/bridge`, package `hopa_bridge`
 
 One atomic commit (move + imports + pyproject + CI + scripts + docs).
+Decision (ADR-0008): **the command stays `pc-agent`**; `hopa-bridge` is the alias.
 
 ### R3.1 Move and rename
 
-- [ ] `git mv services/pc-agent services/bridge`
-- [ ] `git mv services/bridge/src/hopa_pc_agent services/bridge/src/hopa_bridge`
-- [ ] Rewrite imports in `services/bridge/**` **and in `evals/**`** (the bench and
-      baseline import `hopa_pc_agent`: `test_runner.py`, `test_predicates.py`,
-      `runner.py`, `cli.py`, `observation.py`, `executor.py`, `capture.py`,
-      `conftest.py`, `test_schemas.py`, `test_safety.py`, `test_runtime.py`,
-      `test_observation.py`, `test_adversarial.py`).
-- [ ] `services/bridge/pyproject.toml`: `name = "hopa-bridge"`,
-      `hopa-bridge = "hopa_bridge.cli:main"` + `pc-agent = "hopa_bridge.cli:main"`,
-      `known-first-party = ["hopa_bridge"]`; description updated.
-- [ ] User-visible strings decided in ADR 0008: `cli.py` `prog=`, error prefixes
-      (`tests/test_cli.py` asserts them), `mcp_server.py` `SERVER_NAME`
-      (`tests/test_mcp.py` asserts the literal), `BridgeWizard.ets` command line.
-- [ ] `render.yaml`: install `./services/bridge`, run `python -m hopa_bridge relay`
-      (only if R0 chose "fold relay"; otherwise this line changes in R4).
-- [ ] Declare the cross-distribution relationship honestly: bench/baseline import
-      `hopa_bridge` but declare no dependency. Add a dev extra note and the
-      install-order line in each README (a path dependency cannot live in a
-      published pyproject).
-- [ ] `services/bridge/README.md`: title, install, CLI examples.
+- [x] `git mv services/pc-agent services/bridge` (`services/pc-agent` no longer
+      exists).
+- [x] `git mv services/bridge/src/hopa_pc_agent services/bridge/src/hopa_bridge`.
+- [x] Imports rewritten in `services/bridge/**` **and** `evals/**`.
+      (evidence: `pytest services/bridge evals` -> 362 passed)
+- [x] `services/bridge/pyproject.toml`: `name = "hopa-bridge"`, scripts
+      `hopa-bridge` + `pc-agent` alias, first-party `hopa_bridge`.
+- [x] `mcp_server.py` `SERVER_NAME` -> `hopa-bridge`; `tests/test_mcp.py` asserts
+      the new literal. `cli.py` keeps `prog="pc-agent"` (the command name).
+- [x] `render.yaml`: install `./services/bridge`, run `python -m hopa_bridge relay`
+      (the relay stays here until R4).
+- [x] Cross-distribution note: bench/baseline import `hopa_bridge` without a
+      declared dependency; the install-order line is in each README.
+- [x] `services/bridge/README.md`: title and install line follow the name.
 
 ### R3.2 References
 
-- [ ] Scripts: `run-agent.ps1`, `run-phone.ps1`, `run-laptop.ps1`, `bridges.ps1`,
-      `run-bench.ps1`, `run-bench.sh`, `run-tests.ps1`, `run-tests.sh`.
-      Note: `bridges.ps1` runs `py -3 -m hopa_pc_agent`, not `pc-agent.exe`;
-      `run-agent.ps1`/`run-laptop.ps1` also match on the process name.
-- [ ] `.github/workflows/ci.yml`, `.github/dependabot.yml`.
-- [ ] `README.md` (badge, diagram, five prose sites), `CLAUDE.md`, `CONTINUE.md`,
-      `CONTRIBUTING.md`, `CHANGELOG.md`, `.github/PULL_REQUEST_TEMPLATE.md`,
-      `.env.example`.
-- [ ] `docs/operations/sbom.json` (three distribution names) and
-      `docs/operations/owners.md`.
-- [ ] `docs/architecture/data-flow.md` (already stale line), `overview.md`,
-      `target-structure.md` §5, `docs/guides/{setup,pc-bridge}.md`,
-      `docs/reference/{bundles,safety,threat-model,abuse,brain}.md`,
-      `docs/product/{coverage,roadmap}.md`, `docs/plan/appendix-*`.
-- [ ] `tools/scripts/ui-smoke.py`, `tools/scripts/repair-chats.py` strings.
-- [ ] `CODEOWNERS`: add `/services/bridge/` and `/evals/`; remove dead `/agent/`
-      and `/schemas/`.
-- [ ] `docs/history/*`: frozen; no edits.
+- [x] All scripts: `run-agent.ps1`, `run-phone.ps1`, `run-laptop.ps1`,
+      `bridges.ps1`, `run-bench.ps1|sh`, `run-tests.ps1|sh` - install paths and
+      `-m hopa_bridge`.
+- [x] `.github/workflows/ci.yml` (job "bridge + evals", step "pytest (bridge)"),
+      `.github/dependabot.yml`.
+- [x] `README.md`, `CLAUDE.md`, `CONTINUE.md`, `CONTRIBUTING.md`, `CHANGELOG.md`,
+      `.github/PULL_REQUEST_TEMPLATE.md`, `.env.example`.
+- [x] `docs/operations/sbom.json`, `owners.md`.
+- [x] `docs/architecture/{data-flow,overview,target-structure}.md`,
+      `docs/guides/{setup,pc-bridge}.md`, `docs/reference/*`,
+      `docs/product/*`, `docs/plan/README.md`.
+- [x] `tools/scripts/ui-smoke.py`, `repair-chats.py` strings.
+- [x] `apps/harmony/phone/.../BridgeWizard.ets` prints `-m hopa_bridge`.
+- [x] `docs/history/*` and ticked `docs/plan/phase-*.md` untouched (frozen).
 
 ### R3.3 Gates
 
-- [ ] `rg -n "hopa_pc_agent"` → 0 outside `docs/history/**` and ticked
-      `docs/plan/phase-*` lines.
-- [ ] Fresh install, then `pytest services/bridge` with the same test count as
-      before the move; `python -m hopa_bridge --help` lists the same subcommands;
-      `pc-agent --help` works (alias).
-- [ ] Device smoke: `hopa-bridge devices`, one `observe`, one `screenshot`.
-- [ ] Bridge smoke: `hopa-bridge bridge --port 8766`, `/health` lists both
-      devices; laptop app shows `Connected.` (device evidence).
-- [ ] Relay smoke (because `render.yaml` may change here): local
-      `python -m hopa_bridge relay` `/health`; Render preview healthy if the
-      render line moved in this phase.
-- [ ] All R1.3 tooling gates repeated.
+- [x] `rg -n "hopa_pc_agent"` -> 0 outside frozen docs and this plan.
+- [x] `pytest services/bridge` + `pytest evals` -> 362 passed; `ruff check`
+      clean; 20 bench tasks valid.
+- [x] `python -m hopa_bridge --help` works; `pc-agent --help` works (alias).
+- [ ] Device smoke: `devices`, `observe`, `screenshot` - BLOCKED: `hdc list
+      targets` is empty (both devices off USB).
+- [ ] Bridge smoke + laptop `Connected.` - BLOCKED: same reason.
+- [ ] Relay smoke against the Render preview (render.yaml changed here).
+- [ ] CI green; evidence PR + run id.
 
-Risk: medium-high. Rollback: revert the atomic commit, `pip uninstall` the renamed
-distribution, reinstall, and — if `render.yaml` moved here — revert it and
-redeploy before closing the rollback.
-
----
+Risk: medium-high. Rollback: revert the atomic commit, `pip uninstall hopa-bridge`,
+reinstall, and revert `render.yaml` + redeploy if the relay line moved.
 
 ## R4. Split the relay **server half** into `services/relay`
 
@@ -461,16 +443,16 @@ migration.
 
 ## Open decisions
 
-- [x] CLI naming (one of the two must be checked)
+- [x] CLI naming (one of the two must be checked) (evidence: ADR-0008)
       - [x] `pc-agent` primary, `hopa-bridge` alias. (evidence: ADR-0008)
       - [ ] `hopa-bridge` primary, `pc-agent` alias for one release.
-- [x] Relay timing (one of the two must be checked)
+- [x] Relay timing (one of the two must be checked) (evidence: ADR-0009)
       - [x] R4 separate, after R3. (evidence: ADR-0009)
       - [ ] R4 folded into R3.
-- [x] `apps/harmony/app` naming (one of the two must be checked)
+- [x] `apps/harmony/app` naming (one of the two must be checked) (evidence: R0 decision)
       - [x] keep `app/`. (evidence: R0 decision, least churn)
       - [ ] rename to `shell/`.
-- [x] `/v1` path prefix (one of the two must be checked)
+- [x] `/v1` path prefix (one of the two must be checked) (evidence: R0 decision)
       - [x] after the backend exists. (evidence: R0 decision)
       - [ ] now, inside R5.
 

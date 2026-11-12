@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from hopa_bench.runner import Runner, classify_failure, layout_hash
 from hopa_bench.task import SuccessCheck, Task
-from hopa_pc_agent.layout import parse_layout
+from hopa_bridge.layout import parse_layout
 
 LAYOUT = parse_layout(
     {

@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from hopa_pc_agent.layout import parse_layout
+from hopa_bridge.layout import parse_layout
 
 jsonschema = pytest.importorskip("jsonschema")
 from jsonschema import Draft202012Validator  # noqa: E402

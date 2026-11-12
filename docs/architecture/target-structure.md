@@ -65,7 +65,7 @@ hopa/
 ├─ apps/
 │  └─ harmony/                 # DevEco project root (today: app/)
 ├─ services/
-│  ├─ pc-agent/                # hopa_pc_agent (today: pc-agent/)
+│  ├─ pc-agent/                # hopa_bridge (today: pc-agent/)
 │  └─ brain/                   # Kotlin knowledge router (today: brain/)
 ├─ evals/
 │  ├─ agent/                   # hopa_baseline reference loop (today: agent/)
@@ -206,7 +206,7 @@ after what it does.
 ## 5. Target Python and Kotlin
 
 ```
-services/pc-agent/src/hopa_pc_agent/
+services/bridge/src/hopa_bridge/
 ├─ errors.py
 ├─ transport/hdc.py                 # process wrapper only
 ├─ device/device.py                 # taps, typing, launch
@@ -239,7 +239,7 @@ evals/bench/src/hopa_bench/
 └─ results/                        # gitignored
 ```
 
-Tests mirror the package tree, e.g. `services/pc-agent/tests/device/test_layout.py`.
+Tests mirror the package tree, e.g. `services/bridge/tests/device/test_layout.py`.
 
 ## 6. Target docs
 

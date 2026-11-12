@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 
-from hopa_pc_agent.device import Device
+from hopa_bridge.device import Device
 
 
 class FakeHdc:

@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from hopa_pc_agent.bridge import BridgeError, BridgeServer
-from hopa_pc_agent.layout import parse_layout
+from hopa_bridge.bridge import BridgeError, BridgeServer
+from hopa_bridge.layout import parse_layout
 
 LAYOUT = parse_layout(
     {

@@ -18,7 +18,7 @@ from .device import Device
 from .errors import HopaError
 
 DEFAULT_PROTOCOL_VERSION = "2024-11-05"
-SERVER_NAME = "hopa-pc-agent"
+SERVER_NAME = "hopa-bridge"
 
 TOOLS: list[dict[str, Any]] = [
     {

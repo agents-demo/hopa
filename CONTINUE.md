@@ -74,7 +74,7 @@ return an empty result instead of an error. The old `dump_layout` used three
 commands (`uitest dumpLayout`, `hdc file recv`, `rm`) and silently accepted
 empty/spliced pulls, so `/observe` failed intermittently.
 
-Fixes in `services/pc-agent`:
+Fixes in `services/bridge`:
 
 - `Device.dump_layout` now runs **dump + cat + cleanup in one hdc shell
   command**, with `__HOPA_BEGIN__` / `__HOPA_END__` markers, and verifies the

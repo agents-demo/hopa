@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from hopa_pc_agent.apps import parse_installed_apps
-from hopa_pc_agent.device import Device
+from hopa_bridge.apps import parse_installed_apps
+from hopa_bridge.device import Device
 
 
 def test_bare_bundle_lines() -> None:

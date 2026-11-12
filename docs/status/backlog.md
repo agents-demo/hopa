@@ -2,7 +2,7 @@
 
 Updated 2026-11-11. Two shells: phone (`2SX0224410054549`) and MateBook 2-in-1
 (`3QC0225821000268`, HarmonyOS 7.0.0.111, API 26). Shared code lives in
-`@hopa/app`; the bridge is `services/pc-agent`.
+`@hopa/app`; the bridge is `services/bridge`.
 
 ## Where the daily experience stands
 

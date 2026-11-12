@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from hopa_pc_agent.layout import parse_layout
+from hopa_bridge.layout import parse_layout
 
 SAMPLE = {
     "attributes": {"type": "Root", "bounds": "[0,0][1080,2400]"},

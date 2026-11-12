@@ -22,7 +22,7 @@ if (-not (Test-Path $hdc)) {
     if (-not $cmd) { throw 'hdc not found.' }
     $hdc = $cmd.Source
 }
-$agentDir = Join-Path $root 'services\pc-agent'
+$agentDir = Join-Path $root 'services\bridge'
 $shots = Join-Path $env:TEMP 'hopa-shots'
 $bridgePort = 8766
 $phoneDevicePort = 8768
@@ -111,7 +111,7 @@ if (Test-Port $bridgePort) {
     Write-Host "  bridge already on $bridgePort; devices in $config"
 } else {
     $log = Join-Path $shots 'bridge.log'
-    $arguments = @('-3', '-m', 'hopa_pc_agent', 'bridge', '--port', "$bridgePort", '--devices', $config)
+    $arguments = @('-3', '-m', 'hopa_bridge', 'bridge', '--port', "$bridgePort", '--devices', $config)
     Start-Process -FilePath 'py' -ArgumentList $arguments -WorkingDirectory $agentDir `
         -WindowStyle Hidden -RedirectStandardOutput $log -RedirectStandardError "$log.err"
     Start-Sleep -Milliseconds 2000

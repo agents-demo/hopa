@@ -24,7 +24,7 @@ concurrency:
 
 jobs:
   python:
-    name: pc-agent + bench (Linux)
+    name: bridge + evals (Linux)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -34,13 +34,13 @@ jobs:
       - name: Install packages
         run: |
           python -m pip install -U pip
-          python -m pip install -e "./services/pc-agent" -e "./evals/bench[dev]" -e "./evals/baseline[dev]" "ruff>=0.6" "pytest>=8"
+          python -m pip install -e "./services/bridge" -e "./evals/bench[dev]" -e "./evals/baseline[dev]" "ruff>=0.6" "pytest>=8"
       - name: Ruff
-        run: ruff check services/pc-agent evals/bench evals/baseline
+        run: ruff check services/bridge evals/bench evals/baseline
       - name: Ruff format
-        run: ruff format --check services/pc-agent evals/bench evals/baseline
-      - name: pytest (pc-agent)
-        run: pytest services/pc-agent
+        run: ruff format --check services/bridge evals/bench evals/baseline
+      - name: pytest (bridge)
+        run: pytest services/bridge
       - name: pytest (bench)
         run: pytest evals/bench
       - name: pytest (baseline)

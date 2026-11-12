@@ -7,7 +7,7 @@
 [![Status](https://img.shields.io/badge/status-working%20prototype-orange.svg)](docs/status/backlog.md)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/HarmonyOS-6.1%2B%20%C2%B7%20verified%20on%207.0-0A59F7.svg)](docs/guides/setup.md)
-[![Tests](https://img.shields.io/badge/pc--agent-121%20tests-brightgreen.svg)](services/pc-agent/tests)
+[![Tests](https://img.shields.io/badge/pc--agent-121%20tests-brightgreen.svg)](services/bridge/tests)
 
 </div>
 
@@ -272,7 +272,7 @@ effort is in [docs/status/backlog.md](docs/status/backlog.md).
 .\tools\scripts\run-tests.ps1
 ```
 
-The bridge suite alone: `pytest services/pc-agent` — **121 tests** today,
+The bridge suite alone: `pytest services/bridge` — **121 tests** today,
 including the pooled bridge, the shared store, the image store and the relay.
 CI also runs ruff, the structure and link checks, the generated-catalogue check
 and a secret/license scan.
@@ -284,7 +284,7 @@ and a secret/license scan.
 - `apps/harmony/core/` — the core: loop, gate, executor, run records.
 - `apps/harmony/phone/` — the phone app (module `entry`).
 - `apps/harmony/laptop/` — the laptop app (module `laptop`).
-- `services/pc-agent/` — the PC companion and bridge: device control, store,
+- `services/bridge/` — the PC companion and bridge: device control, store,
   images, relay.
 - `services/brain/` — the Kotlin reference brain for routing and knowledge.
 - `evals/` — the reference loop and HOPA-Bench.

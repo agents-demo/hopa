@@ -21,14 +21,14 @@ if (Test-Path $venv) {
 Write-Host '=== installing Python packages (editable) ==='
 & $pythonExe @pythonPrefix -m pip install -U pip | Out-Host
 & $pythonExe @pythonPrefix -m pip install `
-    -e (Join-Path $root 'services\pc-agent') `
+    -e (Join-Path $root 'services\bridge') `
     -e (Join-Path $root 'evals\bench[dev]') `
     -e (Join-Path $root 'evals\baseline[dev]') | Out-Host
 if ($LASTEXITCODE -ne 0) { throw 'pip install failed' }
 
 Write-Host '=== Python tests ==='
 & $pythonExe @pythonPrefix -m pytest `
-    (Join-Path $root 'services\pc-agent') `
+    (Join-Path $root 'services\bridge') `
     (Join-Path $root 'evals\bench') `
     (Join-Path $root 'evals\baseline') `
     (Join-Path $root 'tools\scripts') -q
@@ -41,10 +41,10 @@ if ($LASTEXITCODE -ne 0) { throw 'agent coverage gate failed' }
 
 Write-Host '=== ruff ==='
 & $pythonExe @pythonPrefix -m ruff check `
-    (Join-Path $root 'services\pc-agent') (Join-Path $root 'evals\bench') (Join-Path $root 'evals\baseline')
+    (Join-Path $root 'services\bridge') (Join-Path $root 'evals\bench') (Join-Path $root 'evals\baseline')
 if ($LASTEXITCODE -ne 0) { throw 'ruff check failed' }
 & $pythonExe @pythonPrefix -m ruff format --check `
-    (Join-Path $root 'services\pc-agent') (Join-Path $root 'evals\bench') (Join-Path $root 'evals\baseline')
+    (Join-Path $root 'services\bridge') (Join-Path $root 'evals\bench') (Join-Path $root 'evals\baseline')
 if ($LASTEXITCODE -ne 0) { throw 'ruff format check failed' }
 
 Write-Host '=== plan lint ==='

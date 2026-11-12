@@ -229,7 +229,7 @@ if ($Restart) {
 }
 
 if (-not (Test-Path $pcAgent)) {
-    throw "pc-agent not found at $pcAgent. Install services\pc-agent into .venv first."
+    throw "pc-agent not found at $pcAgent. Install services\bridge into .venv first."
 }
 
 if (-not (Test-Port $port)) {

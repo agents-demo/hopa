@@ -8,8 +8,8 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
-from hopa_pc_agent.device import Device
-from hopa_pc_agent.errors import HopaError
+from hopa_bridge.device import Device
+from hopa_bridge.errors import HopaError
 
 from . import __version__
 from .report import aggregate, render_markdown

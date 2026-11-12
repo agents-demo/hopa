@@ -10,8 +10,8 @@ import urllib.request
 
 import pytest
 
-from hopa_pc_agent.relay import Relay, RelayServer
-from hopa_pc_agent.tunnel import (
+from hopa_bridge.relay import Relay, RelayServer
+from hopa_bridge.tunnel import (
     CLOSE,
     DATA,
     OPEN,
@@ -24,7 +24,7 @@ from hopa_pc_agent.tunnel import (
     data_frame,
     parse_stream,
 )
-from hopa_pc_agent.ws import WebSocketClient, WebSocketError
+from hopa_bridge.ws import WebSocketClient, WebSocketError
 
 PHONE = "phone-token"
 LINK = "link-token"

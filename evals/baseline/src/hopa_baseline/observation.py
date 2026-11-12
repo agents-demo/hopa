@@ -21,7 +21,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass, field
 from typing import Any
 
-from hopa_pc_agent.layout import Layout, Node
+from hopa_bridge.layout import Layout, Node
 
 REDACTED = "[redacted]"
 SCHEMA_VERSION = "1"

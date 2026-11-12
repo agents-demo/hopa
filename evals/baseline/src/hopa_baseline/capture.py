@@ -5,8 +5,8 @@ from __future__ import annotations
 import time
 from pathlib import Path
 
-from hopa_pc_agent.device import Device
-from hopa_pc_agent.layout import Layout
+from hopa_bridge.device import Device
+from hopa_bridge.layout import Layout
 
 from .observation import Observation, observation_from_layout
 

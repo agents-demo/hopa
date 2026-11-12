@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from hopa_pc_agent.hdc import Hdc, HdcResult, parse_targets
+from hopa_bridge.hdc import Hdc, HdcResult, parse_targets
 
 
 def test_parse_targets_skips_empty_marker() -> None:

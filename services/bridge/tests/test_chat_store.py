@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 
-from hopa_pc_agent.chat_store import ChatStore
+from hopa_bridge.chat_store import ChatStore
 
 
 def session(sid="s1", title="Hello", title_at=100, turns=None, deleted_at=0):

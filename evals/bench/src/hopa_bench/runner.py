@@ -7,9 +7,9 @@ import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
-from hopa_pc_agent.device import Device
-from hopa_pc_agent.errors import HopaError
-from hopa_pc_agent.layout import Layout, Node
+from hopa_bridge.device import Device
+from hopa_bridge.errors import HopaError
+from hopa_bridge.layout import Layout, Node
 
 from .model import Model, StubModel
 from .task import Action, Task

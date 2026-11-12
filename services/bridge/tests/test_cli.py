@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import time
 
-from hopa_pc_agent.bridge import BridgeServer
-from hopa_pc_agent.cli import _cmd_bridge, build_parser, main
+from hopa_bridge.bridge import BridgeServer
+from hopa_bridge.cli import _cmd_bridge, build_parser, main
 
 
 class _NoDevice:
