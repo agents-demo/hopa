@@ -324,6 +324,9 @@ Goal: the relay host installs only relay code; a PC still keeps `cloud-link` and
 ### R4c. Gates
 
 - [x] `pytest services/relay services/bridge packages/wire` -> 139 passed.
+- [x] Clean-venv proof of the deploy command: `pip install --no-deps
+      ./packages/wire ./services/relay`, then `python -m hopa_relay relay` and
+      `/health` returns `role: relay`. (evidence: port 8792 run)
 - [x] Local relay: `python -m hopa_relay relay --host 127.0.0.1 --port 8791` and
   `GET /health` -> `{"ok": true, "role": "relay", ...}`.
 - [x] `hopa_bridge relay` prints the deprecation and exits 2.
