@@ -8,20 +8,61 @@ Status: **runbook, not executed.** The tree is already split by deployable
 
 | Repository | Contains | Ships |
 |---|---|---|
-| `hopa` (stays) | `apps/harmony`, later `apps/android`, `apps/windows`; `evals/` | the client apps |
-| `hopa-backend` | `services/backend` | the loop, accounts, keys, memory, schedules |
-| `hopa-bridge` | `services/bridge` | device plane (hdc/adb/UIA adapters) |
-| `hopa-relay` | `services/relay` | the cloud relay |
-| `hopa-wire` (library) | `services/wire` | published versioned package |
+| `hopa` (stays) | `apps/harmony`, later `apps/android`, `apps/windows`; app-side `tools/` | the client apps |
+| `hopa-services` | all of `services/` (`bridge`, `relay`, `wire`, `brain`, later `backend`) | device plane, relay, loop |
+| `hopa-backend` (later, from `services/backend`) | the loop, accounts, keys, memory, schedules | the backend |
 | `hopa-contracts` (data) | `contracts/` | versioned OpenAPI + schemas, generated clients |
+
+Start with **one** services repository, not four: the pieces share `services/wire`
+and are easier to keep honest together. Split `backend` out later if its release
+cadence differs.
+
+## Folder-by-folder, at the first split
+
+| Folder | Goes to | Note |
+|---|---|---|
+| `services/` | services repo | `git filter-repo --path services` carries bridge, relay, wire and brain together |
+| `contracts/` | artifact + both repos | published (or tagged) and consumed by version; never copied |
+| `apps/` | stays | client code only |
+| `tools/scripts` | **split** | app: `build`, `deploy`, `install-to-device`, `build-app-catalog`, `plan-status`. services: `bridges`, `run-agent`, `run-bench`, `run-on-device`, `port-watch`, `repair-chats` |
+| `tools/checks` | **split** | `check-tree`/`check-structure` stay with the tree they police; `check-openapi`/`check-render` move with the services (they read service code) |
+| `tools/shots` | stays | README media |
+| `tools/signing` | stays | app signing, gitignored |
+| `docs/` | **split** | `architecture/`, `adr/`, `contracts/`, `guides/` mostly stay; `operations/` for services moves |
+| `evals/` | **decide before the split** | see below |
+
+## The evals decision (must be made first)
+
+`evals/bench` and `evals/baseline` import `hopa_bridge` directly (`runner.py`,
+`cli.py`, tests). Two honest options:
+
+- **Move `evals/` with the services.** It measures the loop and the device plane;
+  simplest and keeps the import. The app repo then has no service dependency.
+- **Keep `evals/` in the app repo and make it a client**: it talks to the bridge
+  and the backend over their HTTP contracts (`/observe`, `/tap`, `/runs`), as an
+  Android or Windows client would. More work, but it proves the contract.
+
+Do not split with the current import in place: that leaves the app repository
+depending on a repository it does not contain.
+
+## The tools decision (same rule)
+
+A script that runs `python -m hopa_bridge` or installs `./services/bridge` is a
+service tool and must move with the service. In the app repository, it becomes
+either an HTTP call to a running service or a documented external step. A script
+that stays must not reference `services/` by path.
 
 `services/brain` (Kotlin) moves with the backend or becomes its own service; it is
 not part of this runbook.
 
 ## What must be true before the split
 
-- [ ] `hopa-wire` is published (or consumed from git) with a version, and
-      `hopa-bridge` / `hopa-relay` depend on that version, not a path.
+- [ ] `services/wire` is published (or consumed from git) with a version, and
+      the bridge/relay depend on that version, not a path.
+- [ ] `evals/` either moves with the services or talks over HTTP; it must not
+      import `hopa_bridge` across the split.
+- [ ] `tools/scripts` are split into app tools and service tools, with no script
+      in the app repository referencing `services/`.
 - [ ] `contracts/` is consumed as a versioned artifact; clients are generated
       from it.
 - [ ] No service imports another by path: `check-structure.py` already rejects
