@@ -9,7 +9,21 @@ class InMemoryConversationStore : ConversationStore {
     private var counter = 0
 
     override suspend fun all(): List<Conversation> = mutex.withLock {
-        conversations.sortedByDescending { it.updatedAt }
+        conversations.filter { it.archivedAt == 0L }
+            .sortedWith(compareByDescending<Conversation> { it.pinned }.thenByDescending { it.updatedAt })
+    }
+
+    override suspend fun search(query: String): List<Conversation> = mutex.withLock {
+        val needle = query.trim()
+        if (needle.isEmpty()) {
+            conversations.filter { it.archivedAt == 0L }
+        } else {
+            conversations.filter { conversation ->
+                conversation.archivedAt == 0L &&
+                    (conversation.title.contains(needle, ignoreCase = true) ||
+                        conversation.messages.any { it.text.contains(needle, ignoreCase = true) })
+            }
+        }
     }
 
     override suspend fun create(): Conversation = mutex.withLock {
@@ -52,6 +66,26 @@ class InMemoryConversationStore : ConversationStore {
     override suspend fun delete(id: String) {
         mutex.withLock {
             conversations.removeAll { it.id == id }
+        }
+    }
+
+    override suspend fun deleteAll() = mutex.withLock {
+        conversations.clear()
+    }
+
+    override suspend fun restore(id: String) = Unit
+
+    override suspend fun setPinned(id: String, pinned: Boolean) = mutex.withLock {
+        val index = conversations.indexOfFirst { it.id == id }
+        if (index >= 0) {
+            conversations[index] = conversations[index].copy(pinned = pinned)
+        }
+    }
+
+    override suspend fun archive(id: String) = mutex.withLock {
+        val index = conversations.indexOfFirst { it.id == id }
+        if (index >= 0) {
+            conversations[index] = conversations[index].copy(archivedAt = System.currentTimeMillis())
         }
     }
 }

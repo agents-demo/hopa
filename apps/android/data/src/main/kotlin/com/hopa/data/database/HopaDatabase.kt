@@ -13,7 +13,7 @@ import com.hopa.data.database.entity.TurnEntity
 
 @Database(
     entities = [SessionEntity::class, TurnEntity::class, RunRecordEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = false,
 )
 abstract class HopaDatabase : RoomDatabase() {
@@ -25,6 +25,8 @@ abstract class HopaDatabase : RoomDatabase() {
 
     companion object {
         fun build(context: Context): HopaDatabase =
-            Room.databaseBuilder(context, HopaDatabase::class.java, "hopa.db").build()
+            Room.databaseBuilder(context, HopaDatabase::class.java, "hopa.db")
+                .addMigrations(Migrations.MIGRATION_1_2)
+                .build()
     }
 }

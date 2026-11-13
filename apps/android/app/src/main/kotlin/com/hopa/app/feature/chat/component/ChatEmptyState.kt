@@ -29,6 +29,8 @@ import java.util.Calendar
 @Composable
 fun ChatEmptyState(onQuick: (String) -> Unit) {
     var ideasOpen by remember { mutableStateOf(false) }
+    val ritualTitle = ritualTitle()
+    val ritualGoal = ritualGoal()
     val suggestions = listOf(
         "Open Bilibili and show me the 3 most popular videos",
         "Open Settings and show me Wi-Fi",
@@ -124,18 +126,20 @@ fun ChatEmptyState(onQuick: (String) -> Unit) {
                 text = if (ideasOpen) "Hide examples \u2193" else "Try an example \u2191",
                 onClick = { ideasOpen = !ideasOpen },
             )
-            Surface(
-                modifier = Modifier.padding(start = 8.dp),
-                onClick = { onQuick("What should I get done today?") },
-                color = HopaColor.SurfaceAlt,
-                shape = RoundedCornerShape(20.dp),
-            ) {
-                Text(
-                    "Morning brief?",
-                    fontSize = 12.5.sp,
-                    color = HopaColor.TextSecondary,
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
-                )
+            if (ritualTitle.isNotEmpty()) {
+                Surface(
+                    modifier = Modifier.padding(start = 8.dp),
+                    onClick = { onQuick(ritualGoal) },
+                    color = HopaColor.SurfaceAlt,
+                    shape = RoundedCornerShape(20.dp),
+                ) {
+                    Text(
+                        "$ritualTitle?",
+                        fontSize = 12.5.sp,
+                        color = HopaColor.TextSecondary,
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
+                    )
+                }
             }
         }
     }
@@ -154,6 +158,24 @@ private fun Pill(text: String, onClick: () -> Unit) {
             color = HopaColor.Primary,
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
         )
+    }
+}
+
+private fun ritualTitle(): String {
+    val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+    return when {
+        hour in 5..11 -> "Morning brief"
+        hour >= 18 -> "Evening close"
+        else -> ""
+    }
+}
+
+private fun ritualGoal(): String {
+    val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+    return when {
+        hour in 5..11 -> "What should I get done today?"
+        hour >= 18 -> "What did I get done today?"
+        else -> ""
     }
 }
 

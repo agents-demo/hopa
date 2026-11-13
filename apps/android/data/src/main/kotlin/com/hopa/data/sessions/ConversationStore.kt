@@ -3,6 +3,8 @@ package com.hopa.data.sessions
 interface ConversationStore {
     suspend fun all(): List<Conversation>
 
+    suspend fun search(query: String): List<Conversation>
+
     suspend fun create(): Conversation
 
     suspend fun append(id: String, message: ChatMessage)
@@ -10,4 +12,12 @@ interface ConversationStore {
     suspend fun rename(id: String, title: String)
 
     suspend fun delete(id: String)
+
+    suspend fun deleteAll()
+
+    suspend fun restore(id: String)
+
+    suspend fun setPinned(id: String, pinned: Boolean)
+
+    suspend fun archive(id: String)
 }

@@ -11,7 +11,13 @@ class RoomConversationStore(
     private val sessions = database.sessionDao()
     private val turns = database.turnDao()
 
-    override suspend fun all(): List<Conversation> = sessions.all().map { session ->
+    override suspend fun all(): List<Conversation> = conversations(sessions.all())
+
+    override suspend fun search(query: String): List<Conversation> =
+        conversations(sessions.search(query))
+
+    private suspend fun conversations(rows: List<SessionEntity>):
+        List<Conversation> = rows.map { session ->
         ConversationMapper.conversation(session, turns.forSession(session.id))
     }
 
@@ -43,5 +49,21 @@ class RoomConversationStore(
 
     override suspend fun delete(id: String) {
         sessions.tombstone(id, System.currentTimeMillis())
+    }
+
+    override suspend fun deleteAll() {
+        sessions.tombstoneAll(System.currentTimeMillis())
+    }
+
+    override suspend fun restore(id: String) {
+        sessions.restore(id)
+    }
+
+    override suspend fun setPinned(id: String, pinned: Boolean) {
+        sessions.setPinned(id, pinned)
+    }
+
+    override suspend fun archive(id: String) {
+        sessions.archive(id, System.currentTimeMillis())
     }
 }

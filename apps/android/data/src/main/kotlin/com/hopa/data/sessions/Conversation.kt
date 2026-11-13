@@ -6,4 +6,6 @@ data class Conversation(
     val messages: List<ChatMessage> = emptyList(),
     val updatedAt: Long = 0,
     val deletedAt: Long = 0,
+    val pinned: Boolean = false,
+    val archivedAt: Long = 0,
 )

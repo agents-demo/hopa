@@ -1,49 +1,39 @@
 package com.hopa.app.feature.conversations
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hopa.app.di.AppContainer
 import com.hopa.data.sessions.Conversation
-import kotlinx.coroutines.launch
 
 @Composable
 fun ConversationsRoute(
     container: AppContainer,
     onBack: () -> Unit,
 ) {
-    var conversations by remember { mutableStateOf<List<Conversation>>(emptyList()) }
-    var refresh by remember { mutableIntStateOf(0) }
-    val scope = rememberCoroutineScope()
-
-    LaunchedEffect(refresh) {
-        conversations = container.conversations.all()
-    }
-
+    val viewModel: ConversationsViewModel = viewModel(
+        factory = ConversationsViewModelFactory(container),
+    )
+    val state by viewModel.state.collectAsStateWithLifecycle()
     ConversationsScreen(
-        conversations = conversations,
+        state = state,
         onBack = onBack,
+        onQuery = viewModel::onQuery,
         onSelect = { id ->
-            container.selectedConversation.value = id
+            viewModel.select(id)
             onBack()
         },
-        onDelete = { id ->
-            scope.launch {
-                container.conversations.delete(id)
-                refresh += 1
-            }
-        },
         onNewChat = {
-            scope.launch {
-                val created = container.conversations.create()
-                container.selectedConversation.value = created.id
-                onBack()
-            }
+            viewModel.newChat { onBack() }
         },
+        onRename = viewModel::rename,
+        onDelete = viewModel::delete,
+        onUndoDelete = viewModel::undoDelete,
+        onTogglePin = { conversation: Conversation, pinned: Boolean ->
+            viewModel.setPinned(conversation, pinned)
+        },
+        onArchive = viewModel::archive,
+        onDeleteAll = viewModel::deleteAll,
     )
 }

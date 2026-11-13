@@ -20,6 +20,8 @@ object ConversationMapper {
             },
             updatedAt = session.updatedAt,
             deletedAt = session.deletedAt,
+            pinned = session.pinned,
+            archivedAt = session.archivedAt,
         )
 
     fun turn(sessionId: String, message: ChatMessage): TurnEntity =

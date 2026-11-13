@@ -9,4 +9,6 @@ data class SessionEntity(
     val title: String,
     val updatedAt: Long,
     val deletedAt: Long = 0,
+    val pinned: Boolean = false,
+    val archivedAt: Long = 0,
 )
