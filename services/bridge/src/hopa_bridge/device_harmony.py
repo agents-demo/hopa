@@ -5,8 +5,11 @@ Only this file and `device.py` may touch `hdc`; the HTTP layer imports the port.
 
 from __future__ import annotations
 
+import tempfile
+from pathlib import Path
 from typing import Any
 
+from .apps import parse_installed_apps
 from .device import Device
 
 
@@ -54,3 +57,15 @@ class HarmonyDevice:
 
     def pull(self, remote: str, local: str) -> None:
         self._device.hdc.file_recv(remote, local)
+
+    def screenshot(self, width: int = 0) -> tuple[str, bytes]:
+        remote = "/data/local/tmp/hopa-bridge.jpeg"
+        size = f" -w {width}" if width > 0 else ""
+        self.shell(f"snapshot_display -f {remote}{size}")
+        with tempfile.TemporaryDirectory(prefix="hopa-shot-") as tmp:
+            local = Path(tmp) / "screen.jpeg"
+            self.pull(remote, str(local))
+            return "image/jpeg", local.read_bytes()
+
+    def apps(self) -> list[dict[str, str]]:
+        return parse_installed_apps(self._device.hdc.shell("bm dump -a"))

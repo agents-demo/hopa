@@ -14,7 +14,7 @@ implementation; Android and Windows are adapters, not forks.
 | `tap(x, y)` | one pointer press |
 | `type(text, x?, y?)` | type, optionally after focusing a point |
 | `swipe(from_x, from_y, to_x, to_y, velocity)` | a drag |
-| `screenshot(width)` | a JPEG, optionally scaled |
+| `screenshot(width)` | a JPEG on HarmonyOS, a PNG on Android |
 | `launch(bundle, ability)` | start an app, then report what came forward |
 | `foreground()` | which app owns the screen |
 | `apps()` | installed apps as `{bundle, label}` |
@@ -40,6 +40,31 @@ Rules that keep the seam honest:
 - [ ] Update `contracts/openapi/bridge.v1.yaml` only if the wire shape changed.
 - [ ] Add the platform to `docs/reference/protocols.md` if it introduces a new
       transport.
+
+## Android (adb)
+
+The second adapter, `device_android.py`, sits on `adb.py`:
+
+| Need | How |
+|---|---|
+| tree | `uiautomator dump /data/local/tmp/hopa-bridge-ui.xml`, then `exec-out cat` |
+| tap/swipe | `input tap`, `input swipe` (duration from velocity) |
+| typing | `input text`; **ASCII only** — non-ASCII is refused with a pointer to the accessibility adapter or ADBKeyboard |
+| launch | `cmd package resolve-activity --brief`, then `am start -n`, else `monkey -p` |
+| stop | `am force-stop` |
+| foreground | `dumpsys window` (`mCurrentFocus`), then `dumpsys activity activities` |
+| screenshot | `exec-out screencap -p` → PNG |
+| apps | `pm list packages -3` |
+
+Run it with `hopa-bridge --platform android --target <serial> bridge ...`, or put
+`"platform": "android"` on a `--devices` entry. Role detection for Android is
+`phone`: the pool routes by serial for an Android target, and one process owns
+one handheld.
+
+**Hardware proof for this adapter:** 2026-11-13, `emulator-5554`, API 35 —
+`/observe` returned the Settings tree, `launch com.android.settings` moved the
+foreground, `/screenshot` returned a 144 590-byte PNG, `/apps` listed the
+installed package.
 
 ## Where the client lives
 

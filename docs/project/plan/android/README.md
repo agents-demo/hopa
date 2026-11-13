@@ -5,7 +5,7 @@ phone code (UI, core, capabilities, shared services, bridge); the checklist was
 reconciled with the code on 2026-11-13.
 Owner: TBD.
 
-Progress on 2026-11-13: **29 of 135 phase items (21.5%)**, **30 of 149 (20.1%)**
+Progress on 2026-11-13: **39 of 135 phase items (28.9%)**, **40 of 149 (26.8%)**
 with the Definition of done and the open decisions.
 
 Read that number correctly. It counts *finished items*, not effort: an item is
@@ -301,16 +301,16 @@ apps/android/
 
 ### A5. Bridge `adb` transport (10 d, `services/bridge`)
 
-- [ ] Design note first (0.5 d): `platform` field, CLI `--platform`, `/health` shape, role detection.
-- [ ] `adb` transport: devices/shell/exec-out, serial targeting, timeouts, retries.
-- [ ] `device_android.py`: `uiautomator dump` parser (active window only, importance filtering, idle-state failure), `input tap/swipe/text/keyevent`, `am start` via `resolve-activity`/`monkey`, `am force-stop`, `screencap -p`, `dumpsys window`, `pm list packages`.
-- [ ] `BridgePool`: factory accepts `platform`, no hardcoded `HarmonyDevice`; role/type detection per platform.
-- [ ] Non-ASCII typing: ADBKeyboard IME path or explicit refusal pointing to accessibility; document both.
-- [ ] `/apps` endpoint (`pm list packages -3` plus labels) and `apps()` on `DevicePort`; `screenshot()` on `DevicePort` (the handler exists, the protocol does not declare it).
-- [ ] Tests: layout fixtures, command construction, fake runner, pool routing; hardware smoke.
-- [ ] `contracts/openapi/bridge.v1.yaml`: add `platform` and `/apps`; keep existing paths stable.
-- [ ] `services/docs`: `adding-a-platform` updated with the adb reality.
-- [ ] Evidence: bridge lists an Android device with `platform: android`; observe/tap/screenshot work.
+- [x] Design note first (0.5 d): `platform` field, CLI `--platform`, `/health` shape, role detection. (evidence: docs/project/evidence/A5-bridge.md design section)
+- [x] `adb` transport: devices/shell/exec-out, serial targeting, timeouts, retries. (evidence: adb.py; test_adb.py)
+- [x] `device_android.py`: `uiautomator dump` parser (active window only, importance filtering, idle-state failure), `input tap/swipe/text/keyevent`, `am start` via `resolve-activity`/`monkey`, `am force-stop`, `screencap -p`, `dumpsys window`, `pm list packages`. (evidence: device_android.py; test_device_android.py)
+- [x] `BridgePool`: factory accepts `platform`, no hardcoded `HarmonyDevice`; role/type detection per platform. (evidence: bridge_pool.py builds AndroidDevice for platform=android)
+- [x] Non-ASCII typing: ADBKeyboard IME path or explicit refusal pointing to accessibility; document both. (evidence: AndroidDevice.type_text refuses with a pointer to accessibility; adding-a-platform)
+- [x] `/apps` endpoint (`pm list packages -3` plus labels) and `apps()` on `DevicePort`; `screenshot()` on `DevicePort` (the handler exists, the protocol does not declare it). (evidence: bridge /apps + DevicePort.screenshot/apps; test_bridge)
+- [x] Tests: layout fixtures, command construction, fake runner, pool routing; hardware smoke. (evidence: 139 bridge tests pass; hardware smoke in A5-bridge.md)
+- [x] `contracts/openapi/bridge.v1.yaml`: add `platform` and `/apps`; keep existing paths stable. (evidence: check-openapi.py ok, 22 paths)
+- [x] `services/docs`: `adding-a-platform` updated with the adb reality. (evidence: services/docs/guides/adding-a-platform.md Android section)
+- [x] Evidence: bridge lists an Android device with `platform: android`; observe/tap/screenshot work. (evidence: docs/project/evidence/A5-bridge.md)
 
 ### A6. `AdbDevice` adapter and bridge UX (7 d)
 

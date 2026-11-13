@@ -44,6 +44,7 @@ paths:
                       properties:
                         serial: { type: string }
                         role: { type: string }
+                        platform: { type: string }
   /whoami:
     get:
       summary: Proves the bearer token
@@ -216,6 +217,29 @@ paths:
                 type: object
                 properties:
                   bundle: { type: string }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /apps:
+    post:
+      summary: Installed third-party apps
+      description: |
+        Android returns `pm list packages -3`; HarmonyOS returns `bm dump -a`.
+        Labels fall back to the bundle name when the platform has no cheap way
+        to resolve them.
+      responses:
+        "200":
+          description: Apps
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  apps:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        bundle: { type: string }
+                        label: { type: string }
         "401": { $ref: "#/components/responses/Unauthorized" }
   /launch:
     post:

@@ -32,9 +32,11 @@ import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 
+from .adb import Adb
 from .bridge import BridgeServer
 from .chat_store import ChatStore
 from .device import Device
+from .device_android import AndroidDevice
 from .device_harmony import HarmonyDevice
 from .images import ImageStore
 
@@ -64,8 +66,17 @@ class BridgePool:
         self.roles: dict[str, str] = {}
         for entry in devices:
             serial = str(entry["serial"])
-            raw = device_factory(serial) if device_factory else Device(target=serial)
-            device = raw if isinstance(raw, HarmonyDevice) else HarmonyDevice(raw)
+            platform = str(entry.get("platform", "harmony")).strip().lower()
+            if device_factory:
+                raw = device_factory(serial)
+                if isinstance(raw, (HarmonyDevice, AndroidDevice)):
+                    device = raw
+                else:
+                    device = HarmonyDevice(raw)
+            elif platform == "android":
+                device = AndroidDevice(Adb(serial=serial))
+            else:
+                device = HarmonyDevice(Device(target=serial))
             node = BridgeServer(
                 device,
                 str(entry["token"]),
@@ -89,7 +100,11 @@ class BridgePool:
         self.thread: threading.Thread | None = None
 
     @staticmethod
-    def _device_role(device: Device) -> str:
+    def _device_role(device: Any) -> str:
+        if getattr(device, "platform", "") == "android":
+            # A tablet still answers the phone role: the pool routes one
+            # handheld per process, and the Android client asks by serial.
+            return "phone"
         try:
             kind = device.shell("param get const.product.devicetype").strip()
         except Exception:  # noqa: BLE001 - a role is a convenience, not a must

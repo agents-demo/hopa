@@ -58,6 +58,12 @@ class FakeDevice:
     def pull(self, remote: str, local: str) -> None:
         self.hdc.file_recv(remote, local)
 
+    def screenshot(self, width: int = 0) -> tuple[str, bytes]:
+        return "image/jpeg", FAKE_JPEG
+
+    def apps(self) -> list[dict[str, str]]:
+        return [{"bundle": "com.example.app", "label": "Example"}]
+
     def foreground(self) -> str:
         return self.foreground_bundle
 
@@ -327,6 +333,12 @@ def test_unknown_endpoint(bridge) -> None:
     with pytest.raises(urllib.error.HTTPError) as error:
         _call(server, "/nope", {})
     assert error.value.code == 400
+
+
+def test_apps_are_listed(bridge) -> None:
+    server, _ = bridge
+    result = _call(server, "/apps", {})
+    assert result["apps"] == [{"bundle": "com.example.app", "label": "Example"}]
 
 
 def test_screenshot_returns_base64(bridge) -> None:

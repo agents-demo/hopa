@@ -143,17 +143,11 @@ def _wait_for_foreground(device: DevicePort, bundle: str, timeout: float = 6.0) 
 
 
 def _screenshot(device: DevicePort, width: int = 0) -> dict[str, Any]:
-    remote = "/data/local/tmp/hopa-bridge.jpeg"
-    # The frame is evidence, not a wallpaper: cap it on the device so an app
-    # window of any size cannot turn into a multi-megabyte capture.
-    size = f" -w {width}" if width > 0 else ""
-    device.shell(f"snapshot_display -f {remote}{size}")
-    with tempfile.TemporaryDirectory(prefix="hopa-shot-") as tmp:
-        local = Path(tmp) / "screen.jpeg"
-        device.pull(remote, local)
-        raw = local.read_bytes()
+    # The frame is evidence, not a wallpaper: the adapter decides how to cap
+    # it, and the bridge only forwards the bytes.
+    mime, raw = device.screenshot(width)
     return {
-        "mime": "image/jpeg",
+        "mime": mime,
         "bytes": len(raw),
         "image": base64.b64encode(raw).decode("ascii"),
     }
@@ -465,6 +459,8 @@ class _Handler(BaseHTTPRequestHandler):
             return observation
         if self.path == "/foreground":
             return {"bundle": device.foreground()}
+        if self.path == "/apps":
+            return {"apps": device.apps()}
         if self.path == "/tap":
             print(f"tap {data.get('x')},{data.get('y')}", file=sys.stderr, flush=True)
             _retry(device.tap, int(data["x"]), int(data["y"]))

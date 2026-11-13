@@ -35,6 +35,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--target", help="hdc target/address (default: the only one)")
     parser.add_argument("--hdc", dest="hdc_path", help="path to the hdc executable")
     parser.add_argument("--timeout", type=float, default=60.0, help="command timeout (s)")
+    parser.add_argument(
+        "--platform",
+        choices=("harmony", "android"),
+        default="harmony",
+        help="device platform for the bridge (default: harmony)",
+    )
     parser.add_argument("--json", action="store_true", help="emit machine-readable JSON")
 
     sub = parser.add_subparsers(dest="command", required=True)
@@ -210,7 +216,7 @@ def _emit(args: argparse.Namespace, payload: Any, human: str) -> None:
         print(human)
 
 
-def _cmd_bridge(args: argparse.Namespace, device: Device) -> int:
+def _cmd_bridge(args: argparse.Namespace, device: Device | None) -> int:
     import secrets
     import time
 
@@ -273,8 +279,15 @@ def _cmd_bridge(args: argparse.Namespace, device: Device) -> int:
     if not args.no_state and args.port > 0:
         state_path = args.state or str(Path.home() / ".hopa" / f"bridge-{args.port}.json")
     try:
+        if getattr(args, "platform", "harmony") == "android":
+            from .adb import Adb
+            from .device_android import AndroidDevice
+
+            port_device: Any = AndroidDevice(Adb(serial=args.target or "", timeout=args.timeout))
+        else:
+            port_device = HarmonyDevice(device)  # type: ignore[arg-type]
         server = BridgeServer(
-            HarmonyDevice(device),
+            port_device,
             token,
             host=args.host,
             port=args.port,
@@ -356,7 +369,7 @@ def _cmd_launch(args: argparse.Namespace, device: Device) -> int:
     return 0
 
 
-def _dispatch(args: argparse.Namespace, device: Device) -> int:
+def _dispatch(args: argparse.Namespace, device: Device | None) -> int:
     command = args.command
 
     if command == "bridge":
@@ -492,6 +505,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"hopa-bridge: {exc}", file=sys.stderr)
             return 2
     try:
+        if args.command == "bridge" and getattr(args, "platform", "harmony") == "android":
+            return _dispatch(args, None)
         device = _make_device(args)
         return _dispatch(args, device)
     except HopaError as exc:

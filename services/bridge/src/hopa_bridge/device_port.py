@@ -42,3 +42,9 @@ class DevicePort(Protocol):
 
     def pull(self, remote: str, local: str) -> None:
         """Copy a file off the device (used for screenshots)."""
+
+    def screenshot(self, width: int = 0) -> tuple[str, bytes]:
+        """A screen capture and its MIME type; width 0 keeps the native size."""
+
+    def apps(self) -> list[dict[str, str]]:
+        """Installed third-party apps as ``[{bundle, label}]``."""
