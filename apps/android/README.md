@@ -22,7 +22,7 @@ It does **not** run the agent loop, hold a model key, or inline a prompt.
 | Device adapter | `AccessibilityService` + `UiAutomation` | `DevicePort` in `services/bridge` |
 
 `DevicePort` is the seam described in
-[adding a platform](../../docs/guides/adding-a-platform.md): `observe`, `tap`,
+[adding a platform](../../services/docs/guides/adding-a-platform.md): `observe`, `tap`,
 `type`, `swipe`, `screenshot`, `launch`, `foreground`, `apps`, plus `serial` and
 `platform`.
 

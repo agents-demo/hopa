@@ -14,6 +14,7 @@ SUFFIXES = (".md", ".json", ".yaml", ".yml", ".ets", ".py")
 def markdown_files() -> list[Path]:
     files = list(ROOT.glob("*.md")) + list((ROOT / "docs").rglob("*.md"))
     files += list((ROOT / "contracts").rglob("*.md"))
+    files += list((ROOT / "services" / "docs").rglob("*.md"))
     for area in ("apps", "services", "evals", "tools"):
         files += list((ROOT / area).rglob("README.md"))
     return [

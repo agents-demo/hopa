@@ -73,6 +73,9 @@ The WebSocket codec and tunnel framing are shared by both halves through
 `services/wire` (`hopa-wire`); neither the PC nor the relay imports the other
 (ADR-0009, ADR-0010).
 
+Service details — pairing, tunnels, protocols, the benchmark — live in
+[`services/docs/`](../../services/docs/README.md).
+
 `hopa-bridge` is the **G1 PoC** control path. The shipping agent uses
 `capabilities/accessibility` (once the ACL is granted), `capabilities/browser`, and
 `capabilities/system`.

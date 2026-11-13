@@ -1,79 +1,63 @@
 # HOPA documentation
 
-The docs are grouped by what they answer. Pick the section, then the file.
+Two hemispheres, one rule: if a document's subject is a service, it lives in
+[`services/docs/`](../services/docs/README.md) and moves with the services. If it
+is about the app, the product, or both, it lives here.
 
-## Architecture
+```
+docs/                      # app, product, and shared docs (this folder)
+services/docs/             # bridge, relay, wire, brain, evals
+```
 
-| File | Question |
-|---|---|
-| [overview.md](architecture/overview.md) | What is HOPA made of? |
-| [layers.md](architecture/layers.md) | What may import what? |
-| [data-flow.md](architecture/data-flow.md) | How does one goal become an action? |
-| [target-structure.md](architecture/target-structure.md) | Where is the code going, and why? |
-| [adr/](adr/README.md) | Why was a decision made? One ADR per decision. |
-
-## Guides
+## App and product
 
 | File | Question |
 |---|---|
-| [setup.md](guides/setup.md) | How do I build and run it? |
-| [build-and-sign.md](guides/build-and-sign.md) | How is the HAP signed and installed? |
-| [device-testing.md](guides/device-testing.md) | How do I test on the emulator or a phone? |
-| [pc-bridge.md](guides/pc-bridge.md) | How does the PC-tethered control work? |
+| [guides/setup.md](guides/setup.md) | How do I build and run the app? |
+| [guides/build-and-sign.md](guides/build-and-sign.md) | How is the HAP signed and installed? |
+| [guides/install-phone.md](guides/install-phone.md) | How does the app reach a phone? |
+| [guides/acl-request.md](guides/acl-request.md) | How is the accessibility ACL requested? |
+| [product/coverage.md](product/coverage.md) | What works today, and what is blocked? |
+| [product/roadmap.md](product/roadmap.md) | What comes next? |
+| [product/ux.md](product/ux.md) | What is the intended experience? |
 
-## Reference
-
-| File | Question |
-|---|---|
-| [contracts/](contracts/observation.md) | What are the observation, action and error contracts? |
-| [protocols](reference/protocols.md) | Which HTTP and MCP endpoints exist? |
-| [bundles.md](reference/bundles.md) | Which HarmonyOS bundle belongs to which app? |
-| [knowledge.md](reference/knowledge.md) | How is app/site knowledge written? |
-| [skills.md](reference/skills.md) | How are skills written? |
-| [safety.md](reference/safety.md) | What is the approval model? |
-| [threat-model.md](reference/threat-model.md) | What are the security limits? |
-| [privacy.md](reference/privacy.md) | What data is stored? |
-| [abuse.md](reference/abuse.md) | What is explicitly refused? |
-| [glossary.md](reference/glossary.md) | What do the words mean? |
-
-## Product
+## Shared (the app and the services both read these)
 
 | File | Question |
 |---|---|
-| [coverage.md](product/coverage.md) | What works today, and what is blocked? |
-| [roadmap.md](product/roadmap.md) | What comes next? |
-| [ux.md](product/ux.md) | What is the intended experience? |
-| [bench.md](product/bench.md) | How is the agent evaluated? |
-| [bench-results-v0.md](product/bench-results-v0.md) | What did the first bench run show? |
+| [architecture/overview.md](architecture/overview.md) | What is HOPA made of? |
+| [architecture/layers.md](architecture/layers.md) | What may import what? |
+| [architecture/data-flow.md](architecture/data-flow.md) | How does one goal become an action? |
+| [architecture/target-structure.md](architecture/target-structure.md) | Where is the code going, and why? |
+| [contracts/](contracts/observation.md) | Observation, action and error contracts |
+| [reference/bundles.md](reference/bundles.md) | Which HarmonyOS bundle belongs to which app? |
+| [reference/safety.md](reference/safety.md) | What is the approval model? |
+| [reference/threat-model.md](reference/threat-model.md) | What are the security limits? |
+| [reference/privacy.md](reference/privacy.md) | What data is stored? |
+| [reference/abuse.md](reference/abuse.md) | What is explicitly refused? |
+| [reference/glossary.md](reference/glossary.md) | What do the words mean? |
+| [adr/](adr/README.md) | Decisions that shaped both halves (service ADRs are linked there) |
 
-## Operations
+## Decisions
 
-| File | Question |
+- [adr/](adr/README.md) — one file per decision. ADR-0007 (taxonomy), ADR-0008
+  (renames) and ADR-0011 (loop ownership) are the three that explain the current
+  shape fastest.
+- Four service ADRs live in
+  [`services/docs/adr/`](../services/docs/adr/): 0009, 0010, 0012, 0013.
+
+## Operations, plan, history
+
+| Folder | Question |
 |---|---|
-| [release.md](operations/release.md) | How is a release cut? |
-| [versioning.md](operations/versioning.md) | How are versions numbered? |
-| [owners.md](operations/owners.md) | Who owns what? |
-| [acl-request.md](operations/acl-request.md) | What is in the Huawei ACL request? |
-| [definition-of-ready.md](operations/definition-of-ready.md) | When may a phase start? |
-| [sbom.json](operations/sbom.json) | What ships in the HAP? |
+| [operations/](operations/release.md) | How is it released, owned, versioned? |
+| [plan/README.md](plan/README.md) | The historical rebuild plan (M1–M6) |
+| [plan/refactor/README.md](plan/refactor/README.md) | The structural refactor and its evidence |
+| [history/](history/status-2026-11-07.md) | What was true on a given day (frozen) |
+| [status/backlog.md](status/backlog.md) | Known debts and behaviours |
 
-## Plan
+## Service docs
 
-| File | Question |
-|---|---|
-| [plan/README.md](plan/README.md) | How the plan is scored and used |
-| [plan/phase-*.md](plan/README.md) | One file per phase |
-| [plan/appendix-*.md](plan/README.md) | Port matrix, bench, contracts, audit log |
-
-## History
-
-| File | Question |
-|---|---|
-| [status-2026-11-07.md](history/status-2026-11-07.md) | What was true on that day? |
-| [baseline-2026-11-06.md](history/baseline-2026-11-06.md) | What machine and SDK was the baseline? |
-| [emulator-crash-2026-11-06.md](history/emulator-crash-2026-11-06.md) | What broke, and how? |
-| [port-log.md](history/port-log.md) | What ideas were reused? |
-| [knowledge-triage.md](history/knowledge-triage.md) | How is the app catalogue classified? |
-
-`history/` is a log. Current state lives in `history/status-*.md` only until the
-next snapshot replaces it; architecture and reference are the stable docs.
+Bridge, relay, wire, brain, evals and the service tools are documented in
+[`services/docs/`](../services/docs/README.md): pairing and tunnels, protocols,
+knowledge format, the benchmark, the platform checklist, and the split runbook.

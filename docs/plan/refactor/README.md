@@ -53,7 +53,8 @@ hopa/
 │  ├─ brain/                # Kotlin knowledge router (exists, unchanged)
 │  ├─ backend/              # reserved: README + ADR-0011, no package yet
 │  ├─ evals/                # bench/ + baseline/ (ADR-0013)
-│  └─ tools/                # scripts/ + checks/ that drive the services
+│  ├─ tools/                # scripts/ + checks/ that drive the services
+│  └─ docs/                 # guides, protocols, brain, bench, service ADRs
 ├─ contracts/
 │  ├─ openapi/              # bridge.v1.yaml (R5)
 │  └─ schemas/              # 4 JSON schemas (exists)
@@ -493,6 +494,9 @@ behind in the app repository.
       checker `ROOT`).
 - [x] ADR-0013 records the rule; ADR-0007 is marked superseded in part;
       `check-tree.py` rejects a returning top-level `evals/`.
+- [x] Service docs moved to `services/docs/` (guides, protocols, brain,
+      knowledge, skills, bench, repo-split, ADR 0009/0010/0012/0013); shared
+      docs stay in `docs/`; both indexes rewritten and links repaired.
 - [x] `pytest services/evals services/bridge services/relay services/wire` ->
       362 passed; ruff clean; tree, links, both contracts, render and plan lint
       green.

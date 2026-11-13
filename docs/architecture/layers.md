@@ -76,8 +76,9 @@ Start with the top-level question, then the layer below it (ADR-0007):
 | a build, sign or check step | `tools/` | `scripts/`, `checks/`, `signing/` |
 | the reason something is the way it is | `docs/` | `adr/`, `architecture/`, `guides/` |
 
-`apps/` ships, `services/` runs, `evals/` measures, `contracts/` binds, `tools/`
-builds, `docs/` explains. **`agent` is a product word**; evaluation code is a
+`apps/` ships, `services/` runs and carries its evaluation and tools
+(`services/evals`, `services/tools`), `contracts/` binds, `tools/` builds the
+app, `docs/` explains (service docs live in `services/docs`). **`agent` is a product word**; evaluation code is a
 baseline or a driver.
 
 Then, inside `apps/harmony`:

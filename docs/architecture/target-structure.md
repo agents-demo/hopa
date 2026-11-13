@@ -1,3 +1,9 @@
+> **Historical audit (2026-11-07).** This records the refactor that produced the
+> current folders and the reasoning behind it. The *live* tree is in
+> `docs/README.md` (app + shared) and `services/docs/README.md` (services), with
+> the rules in ADR-0007, ADR-0012 and ADR-0013. Where this document disagrees
+> with those, the ADRs win.
+
 # Target structure
 
 Status: **executed on 2026-11-07.** The tree below is the structure that now

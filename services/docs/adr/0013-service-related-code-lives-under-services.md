@@ -27,9 +27,11 @@ the split is one path.
   `.github`). A returning top-level `evals/` is a violation.
 - `tools/` keeps only app tooling: build, deploy, install, catalog, plan status,
   tests for those checks, shots, signing.
-- Docs stay at `docs/` until the split: they are the repository's index and many
-  links cross the boundary. At the split, the service docs move with the services
-  (listed in `docs/operations/repo-split.md`).
+- **Service docs live in `services/docs/`** (guides, protocols, brain, knowledge,
+  skills, bench, repo-split, the four service ADRs). Shared docs — architecture
+  map, contracts, safety/privacy/threat model, glossary, bundles — stay in
+  `docs/` because both halves read them. `docs/README.md` and
+  `services/docs/README.md` are the two indexes.
 
 ## Consequences
 
@@ -37,6 +39,7 @@ the split is one path.
   evaluation suite and the service tools in one move.
 - The app repository keeps no import of `hopa_bridge`.
 - CI paths and scripts use `services/evals/...` and `services/tools/...`.
+- The docs index has two hemispheres; the split has no documentation step left.
 
 ## Alternatives considered
 

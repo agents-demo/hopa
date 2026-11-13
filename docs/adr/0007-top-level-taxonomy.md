@@ -36,7 +36,7 @@ Three problems motivated this record:
 
 - **`agent` is a product word**: `apps/harmony/core/agent`, and later
   `services/backend/runtime`. Evaluation code is a *baseline* or a *driver*.
-- `evals/` replaces `evals/`. The evaluation driver lives in
+- `evals/` replaces `harness/`. The evaluation driver lives in
   `services/evals/baseline/`; the tasks, runner and scoring in `services/evals/bench/`.
 - `services/bridge` and `services/relay` are separate deployables (see ADR-0009).
 - Dependency direction is one-way: `apps → contracts`; `services → contracts`;

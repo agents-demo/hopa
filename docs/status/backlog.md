@@ -70,7 +70,8 @@ lean on, at commit `4e5787e` plus the R0 changes:
 
 - `python tools/scripts/build-app-catalog.py --check` -> "35 apps and 21 sites are current"
 - `pytest tools/scripts` -> 18 passed
-- `pytest services evals tools/scripts` -> 380 passed (run as `harness` before R1) (root `pytest.ini` uses
+- `pytest services/evals services/bridge services/relay services/wire tools/scripts`
+  -> passed (the suite ran as `harness` before R1); `pytest.ini` uses
   `--import-mode=importlib`, which removes the duplicate `test_cli.py` collision)
 - `ruff check services evals tools` -> All checks passed
 - Editable installs were uninstalled and reinstalled from path, so a console

@@ -294,7 +294,7 @@ and a secret/license scan.
 
 - [Setup and toolchain](docs/guides/setup.md)
 - [Build, sign and install](docs/guides/build-and-sign.md)
-- [PC bridge, tunnels and the cloud relay](docs/guides/pc-bridge.md)
+- [PC bridge, tunnels and the cloud relay](services/docs/guides/pc-bridge.md)
 - [Architecture](docs/architecture/overview.md)
 - [Safety model](docs/reference/safety.md)
 - [Status and remaining work](docs/status/backlog.md)

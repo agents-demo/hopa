@@ -5,11 +5,11 @@ where to look and what must not drift.
 
 | Protocol | Who talks | Transport | Contract |
 |---|---|---|---|
-| **Bridge HTTP** | `@hopa/app` (`BridgeClient`, `ChatSync`) → `services/bridge` | HTTP + JSON on `127.0.0.1:8766` (reverse port) or the relay | [`contracts/openapi/bridge.v1.yaml`](../../contracts/openapi/bridge.v1.yaml) |
+| **Bridge HTTP** | `@hopa/app` (`BridgeClient`, `ChatSync`) → `services/bridge` | HTTP + JSON on `127.0.0.1:8766` (reverse port) or the relay | [`contracts/openapi/bridge.v1.yaml`](../../../contracts/openapi/bridge.v1.yaml) |
 | **Relay** | phone → relay → PC | WebSocket, bearer token | `services/relay` (server half), `services/bridge/cloud_link.py` (PC half), `services/wire`; guide: [pc-bridge](../guides/pc-bridge.md) |
 | **Brain HTTP** | bridge / baseline → `services/brain` | HTTP + JSON | [brain](brain.md) |
 | **MCP** | any MCP client → `hopa-bridge mcp` | stdio, JSON-RPC | `services/bridge/mcp_server.py` |
-| **Action / observation / decision / run-record** | app, baseline, bench | JSON in memory and in logs | [`contracts/schemas/`](../../contracts/schemas) and [contracts](../contracts/action.md) |
+| **Action / observation / decision / run-record** | app, baseline, bench | JSON in memory and in logs | [`contracts/schemas/`](../../../../../docs/contracts/schemas) and [contracts](../../../docs/contracts/action.md) |
 
 ## Bridge HTTP rules
 
@@ -37,5 +37,5 @@ schedule; the decision is recorded in `docs/plan/refactor/README.md`.
 ## Related
 
 - [pc-bridge guide](../guides/pc-bridge.md) — how to run it, pair a device, tunnel.
-- [skills](skills.md), [privacy](privacy.md), [safety](safety.md) — what the device
+- [skills](skills.md), [privacy](../../../docs/reference/privacy.md), [safety](../../../docs/reference/safety.md) — what the device
   data may contain and what the gate does with it.

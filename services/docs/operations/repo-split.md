@@ -28,7 +28,7 @@ cadence differs.
 | `tools/checks` | split (done) | `check-tree`/`check-structure`/`check-links` stay; `services/tools/checks/` holds openapi and render |
 | `tools/shots` | stays | README media |
 | `tools/signing` | stays | app signing, gitignored |
-| `docs/` | **split** | `architecture/`, `adr/`, `contracts/`, `guides/` mostly stay; `operations/` for services moves |
+| `docs/` | split (done) | service docs already in `services/docs/`; shared architecture, contracts and policy stay in `docs/` |
 | `services/evals/` | services repo (already inside) | imports `hopa_bridge`; the app repo never sees it |
 
 ## Decisions taken
@@ -64,8 +64,8 @@ not part of this runbook.
       of `hopa_bridge`.
 - [ ] `tools/scripts` and `tools/checks` are split, with no script in the app
       repository referencing `services/`.
-- [ ] Service docs are moved with the services; the app repo keeps product,
-      setup and signing docs.
+- [x] Service docs are in `services/docs/`; the app repo keeps product, setup,
+      signing and the shared architecture/contracts/policy docs.
 - [ ] `contracts/` is consumed as a versioned artifact; clients are generated
       from it.
 - [ ] No service imports another by path: `check-structure.py` already rejects
