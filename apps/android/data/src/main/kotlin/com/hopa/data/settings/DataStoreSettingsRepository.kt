@@ -25,6 +25,7 @@ class DataStoreSettingsRepository(
             notifyAnswers = prefs[NOTIFY] ?: true,
             webEnabled = prefs[WEB] ?: true,
             selectedConversation = prefs[SELECTED] ?: "",
+            bridgeUrl = prefs[BRIDGE_URL] ?: "",
         )
     }
 
@@ -38,12 +39,17 @@ class DataStoreSettingsRepository(
             prefs[NOTIFY] = next.notifyAnswers
             prefs[WEB] = next.webEnabled
             prefs[SELECTED] = next.selectedConversation
+            prefs[BRIDGE_URL] = next.bridgeUrl
         }
     }
 
     override suspend fun modelKey(): String = secrets.get(MODEL_KEY)
 
     override suspend fun setModelKey(value: String) = secrets.set(MODEL_KEY, value)
+
+    override suspend fun bridgeToken(): String = secrets.get(BRIDGE_TOKEN)
+
+    override suspend fun setBridgeToken(value: String) = secrets.set(BRIDGE_TOKEN, value)
 
     private companion object {
         val PROVIDER = stringPreferencesKey("provider")
@@ -53,6 +59,8 @@ class DataStoreSettingsRepository(
         val NOTIFY = booleanPreferencesKey("notify_answers")
         val WEB = booleanPreferencesKey("web_enabled")
         val SELECTED = stringPreferencesKey("selected_conversation")
+        val BRIDGE_URL = stringPreferencesKey("bridge_url")
         const val MODEL_KEY = "model_key"
+        const val BRIDGE_TOKEN = "bridge_token"
     }
 }

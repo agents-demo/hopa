@@ -20,6 +20,7 @@ import com.hopa.data.sessions.RoomConversationStore
 import com.hopa.data.settings.DataStoreSettingsRepository
 import com.hopa.data.settings.SettingsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 
 class AppContainer(context: Context) {
     val context: Context = context.applicationContext
@@ -54,6 +55,42 @@ class AppContainer(context: Context) {
         model = model,
         device = device,
         executor = executor,
+        recorder = recorder,
+        clock = clock,
+        webAvailable = false,
+    )
+
+    /** A bridge-backed device when Settings has an address and a token. */
+    suspend fun bridgedDevice(): com.hopa.core.ports.DevicePort? {
+        val current = settings.settings.first()
+        if (current.bridgeUrl.isBlank()) {
+            return null
+        }
+        val token = settings.bridgeToken()
+        if (token.isBlank()) {
+            return null
+        }
+        return com.hopa.capabilities.bridge.AdbDevice(
+            client = com.hopa.capabilities.bridge.BridgeClient(current.bridgeUrl, token),
+            clock = clock,
+        )
+    }
+
+    /** One loop per device path, sharing the model, recorder and gate. */
+    fun loopFor(device: com.hopa.core.ports.DevicePort): AgentLoop = AgentLoop(
+        model = model,
+        device = device,
+        executor = ActionExecutor(
+            device = device,
+            browser = null,
+            system = AndroidSystemPort(context),
+            sandbox = null,
+            policy = policy,
+            approval = approval,
+            recorder = recorder,
+            factory = factory,
+            clock = clock,
+        ),
         recorder = recorder,
         clock = clock,
         webAvailable = false,

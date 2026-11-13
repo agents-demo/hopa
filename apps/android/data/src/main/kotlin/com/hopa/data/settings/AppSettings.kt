@@ -8,4 +8,5 @@ data class AppSettings(
     val notifyAnswers: Boolean = true,
     val webEnabled: Boolean = true,
     val selectedConversation: String = "",
+    val bridgeUrl: String = "",
 )

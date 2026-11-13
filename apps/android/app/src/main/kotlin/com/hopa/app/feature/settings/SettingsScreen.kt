@@ -36,7 +36,8 @@ import com.hopa.capabilities.llm.ProviderState
 fun SettingsScreen(
     state: SettingsUiState,
     onBack: () -> Unit,
-    onSave: (String, String, String, String, Boolean, Boolean) -> Unit,
+    onSave: (String, String, String, String, Boolean, Boolean, String, String) -> Unit,
+    onTestBridge: (String, String) -> Unit,
     onOpenCapabilities: () -> Unit,
     onOpenLaunchpad: () -> Unit,
     onOpenProfiles: () -> Unit,
@@ -47,6 +48,8 @@ fun SettingsScreen(
     var key by rememberSaveable { mutableStateOf("") }
     var notify by rememberSaveable { mutableStateOf(state.settings.notifyAnswers) }
     var web by rememberSaveable { mutableStateOf(state.settings.webEnabled) }
+    var bridgeUrl by rememberSaveable { mutableStateOf(state.settings.bridgeUrl) }
+    var bridgeKey by rememberSaveable { mutableStateOf("") }
 
     LaunchedEffect(state.settings, state.key) {
         provider = state.settings.provider
@@ -54,6 +57,7 @@ fun SettingsScreen(
         model = state.settings.model
         notify = state.settings.notifyAnswers
         web = state.settings.webEnabled
+        bridgeUrl = state.settings.bridgeUrl
         if (key.isEmpty()) {
             key = state.key
         }
@@ -120,8 +124,48 @@ fun SettingsScreen(
                 Text("Web capability")
                 Switch(checked = web, onCheckedChange = { web = it })
             }
+            Text("Bridge (PC)", style = MaterialTheme.typography.titleLarge)
+            OutlinedTextField(
+                value = bridgeUrl,
+                onValueChange = { bridgeUrl = it },
+                label = { Text("Bridge address, e.g. http://192.168.1.5:8766") },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            OutlinedTextField(
+                value = bridgeKey,
+                onValueChange = { bridgeKey = it },
+                label = { Text("Bridge token (stored in Keystore)") },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Button(
+                    onClick = { onTestBridge(bridgeUrl, bridgeKey) },
+                    enabled = !state.busy,
+                ) {
+                    Text("Test bridge")
+                }
+                Text(
+                    state.bridgeStatus ?: "adb acts on the PC; the phone just asks.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
             Button(
-                onClick = { onSave(provider, endpoint, model, key, notify, web) },
+                onClick = {
+                    onSave(
+                        provider,
+                        endpoint,
+                        model,
+                        key,
+                        notify,
+                        web,
+                        bridgeUrl,
+                        bridgeKey,
+                    )
+                },
                 enabled = !state.busy,
             ) {
                 Text(if (state.busy) "Saving\u2026" else "Save")

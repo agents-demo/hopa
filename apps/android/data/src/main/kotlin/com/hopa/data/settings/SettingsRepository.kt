@@ -10,4 +10,8 @@ interface SettingsRepository {
     suspend fun modelKey(): String
 
     suspend fun setModelKey(value: String)
+
+    suspend fun bridgeToken(): String
+
+    suspend fun setBridgeToken(value: String)
 }

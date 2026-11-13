@@ -124,7 +124,9 @@ class ChatViewModel(
                 ),
             )
             val history = conversation.messages.map { ModelMessage(it.role, it.text) }
-            val result = container.loop.run(
+            val bridged = runCatching { container.bridgedDevice() }.getOrNull()
+            val loop = if (bridged == null) container.loop else container.loopFor(bridged)
+            val result = loop.run(
                 runId = "run-$now",
                 traceId = UUID.randomUUID().toString(),
                 context = TurnContext(goal = text, history = history),

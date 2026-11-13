@@ -5,7 +5,7 @@ phone code (UI, core, capabilities, shared services, bridge); the checklist was
 reconciled with the code on 2026-11-13.
 Owner: TBD.
 
-Progress on 2026-11-13: **39 of 135 phase items (28.9%)**, **40 of 149 (26.8%)**
+Progress on 2026-11-13: **40 of 135 phase items (29.6%)**, **41 of 149 (27.5%)**
 with the Definition of done and the open decisions.
 
 Read that number correctly. It counts *finished items*, not effort: an item is
@@ -315,7 +315,7 @@ apps/android/
 ### A6. `AdbDevice` adapter and bridge UX (7 d)
 
 - [ ] `BridgeClient.kt`: per-method timeouts, one 401 refresh, URL/token scrub, role/target precedence.
-- [ ] `AdbDevice`: observe/tap/type/swipe/launch/stop/foreground/**screenshot**/**apps** (the last two call the bridge endpoints added in A5; `DevicePort` is extended there).
+- [x] `AdbDevice`: observe/tap/type/swipe/launch/stop/foreground/**screenshot**/**apps** (the last two call the bridge endpoints added in A5; `DevicePort` is extended there). (evidence: AdbDevice.kt + BridgeClientTest; docs/project/evidence/A6-client.md)
 - [ ] Pairing: code → token+refresh in Keystore; a **single token holder** shared with `ChatSync`.
 - [ ] Target selection: this device vs bridge device; persisted.
 - [ ] Connection UI: address, pair code, connect, `health` then `whoami`, honest failure reasons.
