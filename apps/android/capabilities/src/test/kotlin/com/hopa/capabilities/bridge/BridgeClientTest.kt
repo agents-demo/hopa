@@ -81,8 +81,7 @@ class BridgeClientTest {
     }
 
     @Test
-    fun pairing_returns_the_token_pair() = runBlocking {
-        server.enqueue(
+    fun pairing_returns_the_token_pair() = runBlocking {        server.enqueue(
             MockResponse().setBody(
                 """{"token":"t1","refresh":"r1","expires_in":43200}""",
             ),
@@ -93,6 +92,18 @@ class BridgeClientTest {
         assertEquals("r1", session.refresh)
         assertEquals(43_200L, session.expiresIn)
         assertEquals("""{"code":"123456"}""", server.takeRequest().body.readUtf8())
+    }
+
+    @Test
+    fun speech_is_sent_as_base64_and_the_text_comes_back() = runBlocking {
+        server.enqueue(MockResponse().setBody("""{"text":"open settings"}"""))
+        val wav = ByteArray(48) { 7 }
+        val text = BridgeClient(base, "token").transcribe(wav)
+
+        val request = server.takeRequest()
+        assertEquals("/transcribe", request.path)
+        assertTrue(request.body.readUtf8().contains("\"audio\""))
+        assertEquals("open settings", text)
     }
 
     @Test

@@ -42,6 +42,7 @@ class AppContainer(context: Context) {
     val approval = UiApprovalGateway(pendingApprovals)
     val factory = RunRecordFactory(clock)
     val device = AccessibilityDevice(context)
+    val voice = com.hopa.capabilities.voice.VoiceRecorder(context)
     val executor = ActionExecutor(
         device = device,
         browser = null,
@@ -95,6 +96,20 @@ class AppContainer(context: Context) {
             },
         )
         return com.hopa.capabilities.bridge.AdbDevice(client, clock)
+    }
+
+    /** Speech to text through the PC bridge; null when no bridge is configured. */
+    suspend fun transcribe(wav: ByteArray): String? {
+        val current = settings.settings.first()
+        if (current.bridgeUrl.isBlank()) {
+            return null
+        }
+        val token = settings.bridgeToken()
+        if (token.isBlank()) {
+            return null
+        }
+        return com.hopa.capabilities.bridge.BridgeClient(current.bridgeUrl, token)
+            .transcribe(wav)
     }
 
     /** The conversation half of the bridge, when one is configured. */

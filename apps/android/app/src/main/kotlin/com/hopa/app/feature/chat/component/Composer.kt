@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,8 +43,11 @@ fun Composer(
     busy: Boolean,
     onValueChange: (String) -> Unit,
     onSend: () -> Unit,
+    recording: Boolean = false,
+    transcribing: Boolean = false,
+    onMic: () -> Unit = {},
 ) {
-    val canSend = value.isNotBlank() && !busy
+    val canSend = value.isNotBlank() && !busy && !transcribing
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -84,7 +88,7 @@ fun Composer(
                 Box {
                     if (value.isEmpty()) {
                         Text(
-                            "Ask HOPA...",
+                            if (recording) "Listening\u2026" else "Ask HOPA...",
                             fontSize = 15.sp,
                             color = HopaColor.TextHint,
                         )
@@ -99,23 +103,39 @@ fun Composer(
                 .background(
                     color = when {
                         busy -> HopaColor.Danger
+                        recording -> HopaColor.Danger
+                        transcribing -> HopaColor.SurfaceMuted
                         canSend -> HopaColor.Primary
                         else -> HopaColor.SurfaceMuted
                     },
                     shape = CircleShape,
                 )
-                .clickable(enabled = canSend || busy) {
+                .clickable {
                     when {
                         busy -> Unit
                         canSend -> onSend()
+                        !transcribing -> onMic()
                     }
                 },
             contentAlignment = Alignment.Center,
         ) {
             when {
+                transcribing -> CircularProgressIndicator(
+                    modifier = Modifier.size(16.dp),
+                    strokeWidth = 2.dp,
+                    color = HopaColor.TextSecondary,
+                )
+
                 busy -> Icon(
                     Icons.Default.Stop,
                     contentDescription = "Stop",
+                    tint = HopaColor.OnPrimary,
+                    modifier = Modifier.size(16.dp),
+                )
+
+                recording -> Icon(
+                    Icons.Default.Stop,
+                    contentDescription = "Stop dictation",
                     tint = HopaColor.OnPrimary,
                     modifier = Modifier.size(16.dp),
                 )
@@ -129,7 +149,7 @@ fun Composer(
 
                 else -> Icon(
                     Icons.Default.Mic,
-                    contentDescription = "Speak",
+                    contentDescription = "Dictate",
                     tint = HopaColor.TextSecondary,
                     modifier = Modifier.size(20.dp),
                 )

@@ -38,6 +38,9 @@ fun ChatRoute(
         onApprove = viewModel::resolveApproval,
         onNewChat = viewModel::newChat,
         onOpenConversations = { chatsOpen = true },
+        onStartVoice = viewModel::startVoice,
+        onStopVoice = viewModel::stopVoice,
+        onDismissVoiceError = viewModel::dismissVoiceError,
     )
 
     if (chatsOpen) {

@@ -52,6 +52,53 @@ class ChatViewModel(
         _state.update { it.copy(input = text.trim()) }
     }
 
+    fun startVoice() {
+        if (_state.value.busy || _state.value.recording) {
+            return
+        }
+        if (!container.voice.hasPermission()) {
+            _state.update { it.copy(voiceError = "Microphone permission is off") }
+            return
+        }
+        if (!container.voice.start()) {
+            _state.update { it.copy(voiceError = "Could not start the microphone") }
+            return
+        }
+        _state.update { it.copy(recording = true, voiceError = null) }
+    }
+
+    fun stopVoice() {
+        if (!_state.value.recording) {
+            return
+        }
+        _state.update { it.copy(recording = false, transcribing = true) }
+        viewModelScope.launch {
+            val wav = runCatching { container.voice.stop() }.getOrNull()
+            if (wav == null) {
+                _state.update { it.copy(transcribing = false, voiceError = "Nothing was recorded") }
+                return@launch
+            }
+            val result = runCatching { container.transcribe(wav) }
+            val text = result.getOrNull()
+            _state.update {
+                it.copy(
+                    transcribing = false,
+                    input = text?.takeIf { value -> value.isNotBlank() } ?: it.input,
+                    voiceError = when {
+                        result.isFailure -> "Voice failed: ${result.exceptionOrNull()?.message}"
+                        text == null -> "Connect the bridge to dictate"
+                        text.isBlank() -> "I did not catch that"
+                        else -> null
+                    },
+                )
+            }
+        }
+    }
+
+    fun dismissVoiceError() {
+        _state.update { it.copy(voiceError = null) }
+    }
+
     fun newChat() {
         viewModelScope.launch {
             val created = container.conversations.create()

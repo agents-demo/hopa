@@ -127,6 +127,15 @@ class BridgeClient(
     suspend fun chats(): kotlinx.serialization.json.JsonObject =
         call("GET", "/chats", timeout = 45)
 
+    /** Speech to text through the PC; returns "" when the bridge heard nothing. */
+    suspend fun transcribe(wav: ByteArray): String {
+        val payload = buildJsonObject {
+            put("audio", java.util.Base64.getEncoder().encodeToString(wav))
+        }
+        val response = call("POST", "/transcribe", body = payload.toString(), timeout = 60)
+        return response["text"]?.jsonPrimitive?.contentOrNull.orEmpty()
+    }
+
     suspend fun postChats(
         sessions: kotlinx.serialization.json.JsonArray,
     ): kotlinx.serialization.json.JsonObject = call(

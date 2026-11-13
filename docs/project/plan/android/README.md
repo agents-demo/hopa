@@ -5,7 +5,7 @@ phone code (UI, core, capabilities, shared services, bridge); the checklist was
 reconciled with the code on 2026-11-13.
 Owner: TBD.
 
-Progress on 2026-11-13: **51 of 135 phase items (37.8%)**, **52 of 149 (34.9%)**
+Progress on 2026-11-13: **54 of 135 phase items (40.0%)**, **55 of 149 (36.9%)**
 with the Definition of done and the open decisions.
 
 Read that number correctly. It counts *finished items*, not effort: an item is
@@ -386,7 +386,7 @@ apps/android/
 
 ### A12. Voice, background, notifications (7 d)
 
-- [ ] `AudioRecord` 16 kHz mono → WAV → `/transcribe`; dictation inserts text only.
+- [x] `AudioRecord` 16 kHz mono → WAV → `/transcribe`; dictation inserts text only. (evidence: VoiceRecorder + WavFile + /transcribe; live on emulator; docs/project/evidence/A12-voice.md)
 - [ ] `/speak` playback; TTS fallback without a bridge; 600-char cap.
 - [ ] Foreground service `shortService` for a bounded run; ongoing notification id 1001 with a tap that opens the run; stop cancels the loop.
 - [ ] Notification permission denied path; test-notification action.
@@ -401,9 +401,9 @@ apps/android/
 - [ ] Launch-config hooks for automation (provider/endpoint/model/key/bridge URL/token) as `adb`-set extras, documented.
 - [ ] Emulator E2E per path; device E2E ("open Douyin and tell me what you see") on a real Android phone.
 - [ ] Conformance green on JVM and on-device.
-- [ ] Play policy note (accessibility + `<queries>` + FGS type); privacy note updated with what is captured.
+- [x] Play policy note (accessibility + `<queries>` + FGS type); privacy note updated with what is captured. (evidence: docs/reference/privacy.md Android inventory + Play policy note)
 - [ ] Signing: release keystore out of git, `keystore.properties` ignored; APK checksum.
-- [ ] Release checklist for Android in `operations/release.md`; release note in `project/releases/`.
+- [x] Release checklist for Android in `operations/release.md`; release note in `project/releases/`. (evidence: release.md Android section + docs/project/releases/0.1.0-android.md)
 - [ ] Evidence: signed APK on a clean phone; E2E report; policy note.
 
 ### A14. Cross-path QA and parity sign-off (10 d)

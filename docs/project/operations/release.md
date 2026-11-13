@@ -88,3 +88,48 @@ No dashboard is deployed yet.
 - Archive the signed HAP, SBOM, NOTICE and the bench report together.
 - Keep the source repository public and the fork as the build record.
 - Do not delete the knowledge version used by the release.
+
+## Android (0.1.0)
+
+The Android client ships as a sideloaded APK, independent of the HAP above.
+
+| Item | Value |
+|---|---|
+| Package | `com.hopa.android` |
+| Version | `0.1.0` (versionCode 1) |
+| minSdk / target | 30 / 35 |
+| Artifact | `hopa-0.1.0-debug.apk` (debug key) |
+| Release asset | `android-0.1.0-debug` in the fork's releases |
+
+Build and verify:
+
+```powershell
+cd apps/android
+.\gradlew.bat :core:check :capabilities:testDebugUnitTest :app:testDebugUnitTest :app:assembleDebug
+python tools/scripts/android-smoke.py --serial <serial>
+python tools/checks/check-android-structure.py
+```
+
+Release signing, when a keystore exists:
+
+1. Put `apps/android/keystore.properties` with `storeFile`, `storePassword`,
+   `keyAlias`, `keyPassword`; the file and the keystore are gitignored.
+2. `.\gradlew.bat :app:assembleRelease` then
+   `apksigner verify --print-certs ...` must print the release DN, not
+   `CN=Android Debug`.
+3. Keep the signed APK, its SHA-256 and the commit together.
+
+Publish:
+
+1. Copy `app-debug.apk` over the asset in `android-0.1.0-debug`.
+2. Update the release notes with the size, SHA-256 and commit.
+3. Record the same in `docs/project/releases/0.1.0-android.md`.
+
+Checklist for this release:
+
+- [x] Debug APK installs on an emulator and launches (smoke script).
+- [x] CI builds the APK, `:core:check` and the capabilities/app tests.
+- [x] Structure check, plan lint and links are clean.
+- [x] SHA-256 and commit recorded in the release notes.
+- [ ] Release keystore in CI (secrets) and a signed APK on a clean phone.
+- [ ] A real-phone accessibility run.

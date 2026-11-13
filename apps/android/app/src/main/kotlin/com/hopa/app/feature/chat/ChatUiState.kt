@@ -11,4 +11,7 @@ data class ChatUiState(
     val error: String? = null,
     val options: List<String> = emptyList(),
     val pendingApproval: ApprovalRequest? = null,
+    val recording: Boolean = false,
+    val transcribing: Boolean = false,
+    val voiceError: String? = null,
 )

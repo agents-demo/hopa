@@ -1,5 +1,9 @@
 package com.hopa.app.feature.chat
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -33,10 +37,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import com.hopa.app.feature.chat.component.ChatEmptyState
 import com.hopa.app.feature.chat.component.Composer
 import com.hopa.app.feature.chat.component.MessageBubble
@@ -60,9 +66,30 @@ fun ChatScreen(
     onApprove: (Boolean) -> Unit,
     onNewChat: () -> Unit,
     onOpenConversations: () -> Unit,
+    onStartVoice: () -> Unit,
+    onStopVoice: () -> Unit,
+    onDismissVoiceError: () -> Unit,
 ) {
     val messages = state.current?.messages.orEmpty()
     val listState = rememberLazyListState()
+    val context = LocalContext.current
+    val micPermission = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        if (granted) {
+            onStartVoice()
+        }
+    }
+    val requestMic = {
+        if (
+            ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            onStartVoice()
+        } else {
+            micPermission.launch(Manifest.permission.RECORD_AUDIO)
+        }
+    }
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
             listState.animateScrollToItem(messages.lastIndex)
@@ -174,6 +201,33 @@ fun ChatScreen(
                         busy = state.busy,
                         onValueChange = onInput,
                         onSend = onSend,
+                        recording = state.recording,
+                        transcribing = state.transcribing,
+                        onMic = {
+                            if (state.recording) {
+                                onStopVoice()
+                            } else {
+                                requestMic()
+                            }
+                        },
+                    )
+                }
+                if (state.transcribing) {
+                    Text(
+                        "Transcribing\u2026",
+                        fontSize = 11.sp,
+                        color = HopaColor.TextHint,
+                        modifier = Modifier.padding(start = 20.dp, bottom = 4.dp),
+                    )
+                }
+                state.voiceError?.let { error ->
+                    Text(
+                        error,
+                        fontSize = 11.sp,
+                        color = HopaColor.Danger,
+                        modifier = Modifier
+                            .clickable(onClick = onDismissVoiceError)
+                            .padding(start = 20.dp, end = 20.dp, bottom = 4.dp),
                     )
                 }
                 HopaBottomBar(

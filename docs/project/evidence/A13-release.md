@@ -24,3 +24,11 @@ Date: 2026-11-13. One item: the generated Kotlin catalogue.
 - Play policy and privacy notes for accessibility/`<queries>`/FGS.
 - Release signing, the release checklist and a clean-phone install.
 - No Android job in `.github/workflows/ci.yml`; only the Python checks run.
+
+## Update 2026-11-14: release note, checklist and policy notes
+
+- `docs/project/operations/release.md` has an Android section: build and test commands, keystore.properties signing, apksigner verification, publishing the asset and the checklist for this release.
+- `docs/project/releases/0.1.0-android.md` is the Android release note: package, versions, what ships, the emulator verification list and the known gaps.
+- `docs/reference/privacy.md` gained an Android data inventory (screen text/tree in memory, screenshots at most 1/s, microphone only while dictating, records limited to 100, Keystore token, no analytics) and a Play policy note (accessibility declaration and kill switch, queries only MAIN/LAUNCHER, planned shortService FGS, the documented cleartext trade-off).
+- Still open: release signing with a keystore in CI, a signed APK on a clean phone, evals platform/Android task, emulator/device E2E, on-device conformance, Play submission.
+
