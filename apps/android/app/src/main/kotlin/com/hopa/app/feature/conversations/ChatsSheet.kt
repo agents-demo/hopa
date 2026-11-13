@@ -22,8 +22,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -39,14 +41,17 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.widget.Toast
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hopa.app.di.AppContainer
@@ -56,6 +61,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,6 +76,9 @@ fun ChatsSheet(
         factory = ConversationsViewModelFactory(container),
     )
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var syncing by remember { mutableStateOf(false) }
     var searchOpen by remember { mutableStateOf(false) }
     var deleteTarget by remember { mutableStateOf<Conversation?>(null) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -101,6 +110,49 @@ fun ChatsSheet(
                     color = HopaColor.TextPrimary,
                     modifier = Modifier.weight(1f),
                 )
+                IconButton(
+                    onClick = {
+                        if (syncing) {
+                            return@IconButton
+                        }
+                        syncing = true
+                        scope.launch {
+                            val sync = runCatching { container.chatSync() }.getOrNull()
+                            val message = if (sync == null) {
+                                "Set a bridge first (Settings > Bridge)"
+                            } else {
+                                runCatching { sync.run() }.fold(
+                                    { report ->
+                                        val deleted = if (report.tombstoned > 0) {
+                                            ", ${report.tombstoned} deleted"
+                                        } else {
+                                            ""
+                                        }
+                                        "Synced: ${report.adopted} chats$deleted"
+                                    },
+                                    { error -> "Sync failed: ${error.message}" },
+                                )
+                            }
+                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                            viewModel.onQuery(state.query)
+                            syncing = false
+                        }
+                    },
+                ) {
+                    if (syncing) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp,
+                            color = HopaColor.Primary,
+                        )
+                    } else {
+                        Icon(
+                            Icons.Default.Sync,
+                            contentDescription = "Sync chats",
+                            tint = HopaColor.TextSecondary,
+                        )
+                    }
+                }
                 IconButton(
                     onClick = {
                         searchOpen = !searchOpen

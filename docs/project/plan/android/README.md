@@ -5,7 +5,7 @@ phone code (UI, core, capabilities, shared services, bridge); the checklist was
 reconciled with the code on 2026-11-13.
 Owner: TBD.
 
-Progress on 2026-11-13: **48 of 135 phase items (35.6%)**, **49 of 149 (32.9%)**
+Progress on 2026-11-13: **50 of 135 phase items (37.0%)**, **51 of 149 (34.2%)**
 with the Definition of done and the open decisions.
 
 Read that number correctly. It counts *finished items*, not effort: an item is
@@ -336,10 +336,10 @@ apps/android/
 
 ### A8. Data, sessions, sync (10 d)
 
-- [ ] Room: `sessions`, `turns`, `run_records`, `pending_approvals`; JSON field names compatible with `ChatSync`.
+- [x] Room: `sessions`, `turns`, `run_records`, `pending_approvals`; JSON field names compatible with `ChatSync`. (evidence: Room v3; ChatSyncJson matches ChatStore; docs/project/evidence/A8-data.md)
 - [x] Repository: new chat (reuse one draft), **selection persisted**, delete → persisted tombstone, delete-all, no resurrection. (evidence: RoomConversationStore.create reuses an empty draft; docs/project/evidence/A8-data.md)
 - [x] Titles from the first user message; active pinned; ordering by `updated`. (evidence: RoomConversationStore.append; SessionDao.all order)
-- [ ] `ChatSync`: push whole set, adopt merged snapshot, **pull fallback**, tombstone growth, draft protection, shared token holder.
+- [x] `ChatSync`: push whole set, adopt merged snapshot, **pull fallback**, tombstone growth, draft protection, shared token holder. (evidence: ChatSync + ChatSyncTest (5 cases) + live POST /chats; tombstone + pull fallback + draft protection)
 - [ ] Images: upload/download, cache, id only in synced turns, 4 MiB cap, stream to file.
 - [ ] Merge tests: delete on A + edit on B (resurrection), title conflict, id-less turns, rotation mid-sync, failure keeps local.
 - [ ] Evidence: two clients/bridge see one thread; delete propagates and stays deleted; failure keeps data.

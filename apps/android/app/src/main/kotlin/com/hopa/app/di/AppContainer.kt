@@ -97,6 +97,24 @@ class AppContainer(context: Context) {
         return com.hopa.capabilities.bridge.AdbDevice(client, clock)
     }
 
+    /** The conversation half of the bridge, when one is configured. */
+    suspend fun chatSync(): com.hopa.app.feature.sync.ChatSync? {
+        val current = settings.settings.first()
+        if (!current.useBridge || current.bridgeUrl.isBlank()) {
+            return null
+        }
+        val token = settings.bridgeToken()
+        if (token.isBlank()) {
+            return null
+        }
+        return com.hopa.app.feature.sync.ChatSync(
+            conversations = conversations,
+            transport = com.hopa.capabilities.bridge.BridgeChatTransport(
+                com.hopa.capabilities.bridge.BridgeClient(current.bridgeUrl, token),
+            ),
+        )
+    }
+
     /** One loop per device path, sharing the model, recorder and gate. */
     fun loopFor(device: com.hopa.core.ports.DevicePort): AgentLoop = AgentLoop(
         model = model,

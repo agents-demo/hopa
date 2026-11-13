@@ -25,6 +25,12 @@ interface SessionDao {
     @Query("SELECT * FROM sessions WHERE id = :id LIMIT 1")
     suspend fun byId(id: String): SessionEntity?
 
+    @Query("SELECT * FROM sessions ORDER BY updatedAt DESC")
+    suspend fun allRows(): List<SessionEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun replace(session: SessionEntity)
+
     @Query(
         "SELECT * FROM sessions WHERE deletedAt = 0 AND archivedAt = 0 " +
             "AND title = 'New chat' ORDER BY updatedAt DESC LIMIT 1",

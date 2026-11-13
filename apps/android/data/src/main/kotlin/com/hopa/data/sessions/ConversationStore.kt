@@ -3,6 +3,12 @@ package com.hopa.data.sessions
 interface ConversationStore {
     suspend fun all(): List<Conversation>
 
+    /** Live and tombstoned rows; sync needs the tombstones. */
+    suspend fun allWithDeleted(): List<Conversation>
+
+    /** Copy a session from a merged snapshot, appending only unknown turns. */
+    suspend fun adopt(session: Conversation)
+
     suspend fun search(query: String): List<Conversation>
 
     suspend fun create(): Conversation

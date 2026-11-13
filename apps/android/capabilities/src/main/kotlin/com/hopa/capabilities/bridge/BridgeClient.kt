@@ -124,6 +124,20 @@ class BridgeClient(
         }
     }
 
+    suspend fun chats(): kotlinx.serialization.json.JsonObject =
+        call("GET", "/chats", timeout = 45)
+
+    suspend fun postChats(
+        sessions: kotlinx.serialization.json.JsonArray,
+    ): kotlinx.serialization.json.JsonObject = call(
+        method = "POST",
+        path = "/chats",
+        body = buildJsonObject {
+            put("sessions", sessions)
+        }.toString(),
+        timeout = 45,
+    )
+
     private suspend fun call(
         method: String,
         path: String,

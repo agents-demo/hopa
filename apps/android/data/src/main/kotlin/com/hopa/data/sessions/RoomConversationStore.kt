@@ -13,6 +13,35 @@ class RoomConversationStore(
 
     override suspend fun all(): List<Conversation> = conversations(sessions.all())
 
+    override suspend fun allWithDeleted(): List<Conversation> = conversations(sessions.allRows())
+
+    override suspend fun adopt(session: Conversation) {
+        val existing = sessions.byId(session.id)
+        if (existing == null) {
+            sessions.replace(
+                SessionEntity(
+                    id = session.id,
+                    title = session.title.ifBlank { "New chat" },
+                    updatedAt = session.updatedAt,
+                    deletedAt = session.deletedAt,
+                    pinned = session.pinned,
+                    archivedAt = session.archivedAt,
+                ),
+            )
+        } else {
+            sessions.replace(
+                existing.copy(
+                    title = session.title.takeIf { it.isNotBlank() } ?: existing.title,
+                    updatedAt = maxOf(existing.updatedAt, session.updatedAt),
+                    deletedAt = maxOf(existing.deletedAt, session.deletedAt),
+                    pinned = existing.pinned || session.pinned,
+                    archivedAt = maxOf(existing.archivedAt, session.archivedAt),
+                ),
+            )
+        }
+        session.messages.forEach { turns.insert(ConversationMapper.turn(session.id, it)) }
+    }
+
     override suspend fun search(query: String): List<Conversation> =
         conversations(sessions.search(query))
 
