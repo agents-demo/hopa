@@ -86,10 +86,31 @@ the glyphs exactly.
 ## Not done yet
 
 - Bridge `adb` transport (A5) and `BridgeClient` (A6).
-- Accessibility service (A7).
-- Room persistence and chat sync (A8).
+- Accessibility service hardening (A7): typing and gestures exist; disclosure,
+  revocation handling, screenshot policy and tests do not.
+- Chat sync and images (A8); Room sessions, turns and run records already exist.
 - The full feature screens (A9-A11): per-profile shells, Activity detail, Plans,
   Usage, Memory, Skills, Browser, full Settings, share.
 - Voice, foreground service (A12), release signing (A13), parity QA (A14).
 - The approval sheet is implemented; actions that need the device still fail
   because the device ports are not connected.
+
+## Reconciled 2026-11-13
+
+The plan checklist was reconciled with the code. What changed since this note was
+written:
+
+- `:core:check` now runs `checkNoAndroidImports`, so the pure-JVM rule is
+  enforced by Gradle and not only by the Python check: `:core:checkNoAndroidImports`
+  exits 1 when a probe file imports `android.content.Context`, and is green after
+  the probe is removed.
+- Room persists sessions, turns and run records; the chat sheet, Activity and
+  Capabilities tabs follow the Harmony code, and the bottom bar no longer
+  disappears when a tab changes.
+- The mascot uses the Harmony cadence: 2 200 ms toggle with a 900 ms lift, eyes
+  closed for 150 ms every 4 200 ms.
+- Still absent: bridge/adb, voice, foreground service, ChatSync, release signing
+  and an Android job in CI.
+
+Counted on that date: 19 of 135 phase items (14.1%), 20 of 149 overall.
+

@@ -1,8 +1,23 @@
 # Android app development plan
 
-Status: **v2 after critique; not started.** Written 2026-11-13 from a full read of
-the HarmonyOS phone code (UI, core, capabilities, shared services, bridge).
+Status: **v3, in progress.** Written 2026-11-13 from a full read of the HarmonyOS
+phone code (UI, core, capabilities, shared services, bridge); the checklist was
+reconciled with the code on 2026-11-13.
 Owner: TBD.
+
+Progress on 2026-11-13: **19 of 135 phase items (14.1%)**, **20 of 149 (13.4%)**
+with the Definition of done and the open decisions.
+
+Read that number correctly. It counts *finished items*, not effort: an item is
+only checked when every behaviour it names exists and has an artifact behind it.
+The agent loop, the gate, hash-chained records, Room sessions, the accessibility
+adapter and the whole Harmony visual layer are built, but most of that work sits
+inside items that also require tests, gates or the second execution path. In
+developer-days the code written so far is closer to a third of the 145, yet no
+phase gate (A0-A14) has passed: that is the gap the remaining work has to close.
+
+Next: A5/A6 (bridge `adb`), then A12 (voice/FGS) and A10 (profile homes), then
+A14 (cross-path QA).
 
 Builds an Android client with the **whole agent loop inside the APK** (ADR-0016)
 that acts through **two paths** (ADR-0017): the PC bridge over `adb` (primary) and
@@ -227,12 +242,12 @@ apps/android/
 
 ### A0. Project, toolchain and Android prerequisites (5 d)
 
-- [ ] Gradle project with version catalog, JDK 17, AGP/Kotlin/Compose; `minSdk 30`, `targetSdk 35`.
-- [ ] Modules `app`, `core`, `capabilities`, `data`; a Gradle check rejects `android.*` in `core`.
+- [x] Gradle project with version catalog, JDK 17, AGP/Kotlin/Compose; `minSdk 30`, `targetSdk 35`. (evidence: docs/project/evidence/A0-android-running.md)
+- [x] Modules `app`, `core`, `capabilities`, `data`; a Gradle check rejects `android.*` in `core`. (evidence: settings.gradle.kts; :core:check runs checkNoAndroidImports)
 - [ ] ktlint/detekt + Android Lint; zero warnings on `core`.
-- [ ] Wrapper committed; `.gitignore` for SDK/keystores/build.
+- [x] Wrapper committed; `.gitignore` for SDK/keystores/build. (evidence: gradle/wrapper/*; root .gitignore)
 - [ ] **Cleartext policy**: `networkSecurityConfig` allowing private ranges only (bridge on LAN/loopback); no global cleartext.
-- [ ] **Package visibility**: `<queries>` for the catalogue and `getLaunchIntentForPackage`; no `QUERY_ALL_PACKAGES`.
+- [x] **Package visibility**: `<queries>` for the catalogue and `getLaunchIntentForPackage`; no `QUERY_ALL_PACKAGES`. (evidence: app/src/main/AndroidManifest.xml <queries>)
 - [ ] **FGS type**: `shortService` + `FOREGROUND_SERVICE` permission, `POST_NOTIFICATIONS` request and denied path.
 - [ ] `FileProvider` and SAF (`ACTION_CREATE_DOCUMENT`) wiring; no `file://` sharing.
 - [ ] Permission matrix in the manifest: INTERNET, RECORD_AUDIO, POST_NOTIFICATIONS, FGS, accessibility service declaration (disabled until A7).
@@ -241,21 +256,21 @@ apps/android/
 
 ### A1. Contracts and schema validation (5 d)
 
-- [ ] `core/contracts`: serializable `Observation`, `Action`, `Decision`, `RunRecord` matching the schemas exactly (names, nullability, unknown fields rejected).
+- [x] `core/contracts`: serializable `Observation`, `Action`, `Decision`, `RunRecord` matching the schemas exactly (names, nullability, unknown fields rejected). (evidence: ConformanceTest decodes every fixture with ignoreUnknownKeys = false)
 - [ ] JSON-Schema validation with `networknt/json-schema-validator` (draft 2020-12), including `action` `$ref` inside `decision`; pin the version.
 - [ ] `ObservationProducer` contract tests: pre-order refs, redaction cases, limits from `contracts/observation/limits.v1.json`, and the exact hash from `contracts/fixtures/observation-hash.json`.
 - [ ] Catalogue: generate the Kotlin file from `contracts/catalog/catalog.v1.json` (`build-app-catalog.py --kotlin`); no hand-written list. Fill the `android` platform map (package, activity) from `PackageManager`.
 - [ ] Schema-only conformance: every fixture's observation and decision validates or fails as declared; no semantic gate yet.
-- [ ] A named negative case: `ui.teleport` must fail with `E_SCHEMA`.
-- [ ] Evidence: JVM tests; the hash vector matches; an intentionally invalid fixture fails with the schema error.
+- [x] A named negative case: `ui.teleport` must fail with `E_SCHEMA`. (evidence: DecisionParserTest.rejects_an_unknown_kind)
+- [x] Evidence: JVM tests; the hash vector matches; an intentionally invalid fixture fails with the schema error. (evidence: docs/project/evidence/A1-contracts.md)
 
 ### A2. The loop (10 d)
 
 - [ ] `AgentLoop`: initial capture, system prompt, **up to 14 steps**, 1500 ms settle, duplicate-launch short-circuit, cancel at three checkpoints, final text-only call, `summarize`.
-- [ ] `ActionParser`: fenced/last-object parsing, the **schema's** kinds (not Harmony's 19), reject `finish`/`done`, ignore model payment flags, unknown kind → text.
+- [x] `ActionParser`/`DecisionParser`: fenced and last-object parsing, the **schema's** kinds (not Harmony's 19), reject `finish`/`done`, ignore model payment flags, unknown kind → `E_SCHEMA` (see A1). (evidence: core/src/test/kotlin/com/hopa/core/parser/DecisionParserTest.kt)
 - [ ] `PromptBuilder`: system text carrying every rule in `contracts/prompts/rules.v1.json` (generate Kotlin with `build-prompt-rules.py --kotlin` and assert the phrases in a test), memory/skill/app-catalogue blocks, router hint, screen rendering with 120 element lines.
 - [ ] `AppRouter` ported from `AppRouter.ets`; run `contracts/fixtures/routing.json` and reproduce every case.
-- [ ] `ContextBudget`: 24 000 chars, keep last 6, 400-char old lines, hard trim.
+- [x] `ContextBudget`: 24 000 chars, keep last 6, 400-char old lines, hard trim. (evidence: core/.../prompt/ContextBudget.kt; AgentLoop calls budget.fit)
 - [ ] `RunNarrator`: per-step sentences, tap grouping, failure phrasing.
 - [ ] `ObservationProducer` wired behind `ScreenSource` (bridge → accessibility 4 s guard → browser text).
 - [ ] Loop tests: payment stops at first step, cancel, token accounting, launch dedupe, 14-step cap, parser cases (from `ActionParser.test`), budget cases.
@@ -263,9 +278,9 @@ apps/android/
 
 ### A3. Gate, records, semantic conformance (8 d)
 
-- [ ] `ApprovalPolicy`: read `contracts/policy/approval.v1.json` (generate Kotlin with `build-policy-data.py --kotlin`), all lists and amount/merchant regexes, trusted-app rule against `system.sendMessage`, fail-closed; autonomous never bypasses payment.
-- [ ] `ActionExecutor`: guards → policy → approval → capability → verify → record; denial records; unsupported records.
-- [ ] `RunRecord` per **contract** with `prevHash`/`hash` (canonical JSON, `sha256:`), step index, trace id; seed pinned to `sha256("")`; `verifyChain` fails on tamper.
+- [x] `ApprovalPolicy`: read `contracts/policy/approval.v1.json` (generate Kotlin with `build-policy-data.py --kotlin`), all lists and amount/merchant regexes, trusted-app rule against `system.sendMessage`, fail-closed; autonomous never bypasses payment. (evidence: ApprovalPolicyTest (6 cases); ApprovalPolicyData generated)
+- [x] `ActionExecutor`: guards → policy → approval → capability → verify → record; denial records; unsupported records. (evidence: ActionExecutor.kt; denial and unsupported rows are recorded)
+- [x] `RunRecord` per **contract** with `prevHash`/`hash` (canonical JSON, `sha256:`), step index, trace id; seed pinned to `sha256("")`; `verifyChain` fails on tamper. (evidence: RunChainTest seals, verifies and fails on tamper)
 - [ ] Room `RunStore` (last 100, atomic), `beginTurn` always called.
 - [ ] Approval content: title/body, amount/merchant, highlight bounds, payment checkbox, remember-app for messages.
 - [ ] **Full conformance runner** (the six fixtures) with a fake capability per classification; a broken client fails the fixture name.
@@ -274,13 +289,13 @@ apps/android/
 
 ### A4. Model, keys, settings core (8 d)
 
-- [ ] OpenAI client: `max_tokens: 2048`, `reasoning_effort: low`, 30/60 s, token usage, empty-content errors.
+- [x] OpenAI client: `max_tokens: 2048`, `reasoning_effort: low`, 30/60 s, token usage, empty-content errors. (evidence: OpenAiClient.kt; ModelRequest defaults 2048/low)
 - [ ] Anthropic and Gemini clients; `ModelFactory`.
 - [ ] **LAN preset** (ADR-0019): any OpenAI-compatible endpoint on the private network (Ollama, llama.cpp, vLLM), optional key, reachability check with a short timeout; cleartext allowed only for private ranges (A0).
 - [ ] **Provider state**: `CLOUD`, `LAN`, `SHELL_ONLY`, `NO_MODEL`, with the reason; a turn that needs a model refuses before it starts instead of failing mid-run.
 - [ ] Keystore AES-GCM: `hopa_model_key`, `hopa_bridge_session`; no plaintext; no logging.
 - [ ] Settings repository (DataStore) with all 26 fields + `notifyAnswers` **persisted**; typed keys.
-- [ ] Model settings UI is only the form; no general Settings screen yet (A11).
+- [x] Model settings form: provider, endpoint, model, key, save. (evidence: app/src/main/kotlin/com/hopa/app/feature/settings/SettingsScreen.kt)
 - [ ] Tests: request body snapshot, error mapping, key round-trip, no secret in logs, settings round-trip, LAN unreachable state, shell-only refusal.
 - [ ] Evidence: a real turn using A2+A3; a LAN turn against a local server; unit tests green.
 
@@ -312,7 +327,7 @@ apps/android/
 - [ ] Service declaration, `accessibilityServiceInfo` (`canTakeScreenshot`, flags), disclosure screen, kill switch, self-package event filtering.
 - [ ] Tree capture → `ObservationProducer` (same observation as A6 for one fixture screen).
 - [ ] Gestures: tap/double/long/swipe/back/home/scroll via `dispatchGesture`.
-- [ ] Typing: `ACTION_SET_TEXT`, focus first, clipboard/IME fallback; non-ASCII.
+- [x] Typing: `ACTION_SET_TEXT`, focus first, clipboard/IME fallback; non-ASCII. (evidence: AccessibilityDevice.type: focus, SET_TEXT, clipboard paste)
 - [ ] Screenshot: `takeScreenshot` with `FLAG_SECURE` handling and ~1/s limit; tree-only fallback.
 - [ ] Service death/revocation: re-check `enabledServices` before each action; fail closed.
 - [ ] Background capture: only while the service is enabled and the app is in a run; disclosure text matches behaviour.
@@ -323,7 +338,7 @@ apps/android/
 
 - [ ] Room: `sessions`, `turns`, `run_records`, `pending_approvals`; JSON field names compatible with `ChatSync`.
 - [ ] Repository: new chat (reuse one draft), **selection persisted**, delete → persisted tombstone, delete-all, no resurrection.
-- [ ] Titles from the first user message; active pinned; ordering by `updated`.
+- [x] Titles from the first user message; active pinned; ordering by `updated`. (evidence: RoomConversationStore.append; SessionDao.all order)
 - [ ] `ChatSync`: push whole set, adopt merged snapshot, **pull fallback**, tombstone growth, draft protection, shared token holder.
 - [ ] Images: upload/download, cache, id only in synced turns, 4 MiB cap, stream to file.
 - [ ] Merge tests: delete on A + edit on B (resurrection), title conflict, id-less turns, rotation mid-sync, failure keeps local.
@@ -335,7 +350,7 @@ apps/android/
 - [ ] Top bar per screen; profile-aware bottom bar; chat sheet modal; approval as a **service-owned** pending state (survives rotation/process death, deny on death, timeout).
 - [ ] Chat: LazyColumn stable ids, bubbles, step chips, verification line, "What HOPA saw", changed chip, undo, retry, copy, share via `FileProvider`.
 - [ ] Composer: hardware Enter/Shift+Enter **and** IME action Send; four-state round control; dictation fills only; `imePadding`.
-- [ ] Empty state: greeting, 3 suggestions, examples toggle.
+- [x] Empty state: greeting, 3 suggestions, examples toggle. (evidence: docs/project/evidence/A9-chat.md)
 - [ ] Approval sheet: badge (read/sensitive/payment wording), amount/merchant, highlight crop, payment checkbox, remember-app for messages, deny/allow.
 - [ ] Accessibility: 48 dp targets, content descriptions, headings, 200% font scale, TalkBack pass on chat + approval.
 - [ ] State restoration: draft `rememberSaveable`; run and pending approval outside composition.
@@ -358,7 +373,7 @@ apps/android/
 - [ ] Runs: filters (all/payments/failed), detail with receipt, replay with filmstrip, batch, clear.
 - [ ] Usage: counters from `run_records`.
 - [ ] Plans: repeated-goal suggestions (≥2, 4–90 chars, max 3), intervals, list/delete; **decision**: in-process copy or WorkManager (see §13).
-- [ ] Capabilities hub: readiness + tiles.
+- [x] Capabilities hub: readiness + tiles. (evidence: docs/project/evidence/A11-screens.md)
 - [ ] Launchpad: render `contracts/catalog/catalog.v1.json`, apps/sites segments, search, verified/unverified; fill and use the `android` package/activity map; `PackageManager` launch with explicit intents.
 - [ ] Browser: WebView https-only, JS read/click/type, 20 000-char cap, in-app address bar.
 - [ ] Memory and Skills: add/delete/clear/export; skill use.
@@ -382,7 +397,7 @@ apps/android/
 ### A13. Evaluation, hardening, release (9 d)
 
 - [ ] `services/evals`: task `platform` field, Android bundle map, one Android task through the adb bridge.
-- [ ] `build-app-catalog.py --kotlin apps/android/.../AppCatalog.kt`: commit the generated Kotlin catalogue; CI `--check` keeps it current.
+- [x] `build-app-catalog.py --kotlin apps/android/.../AppCatalog.kt`: commit the generated Kotlin catalogue; CI `--check` keeps it current. (evidence: AppCatalog.kt generated; CI --check)
 - [ ] Launch-config hooks for automation (provider/endpoint/model/key/bridge URL/token) as `adb`-set extras, documented.
 - [ ] Emulator E2E per path; device E2E ("open Douyin and tell me what you see") on a real Android phone.
 - [ ] Conformance green on JVM and on-device.
