@@ -8,7 +8,6 @@ import com.hopa.app.di.AppContainer
 import com.hopa.app.feature.capabilities.CapabilitiesRoute
 import com.hopa.app.feature.chat.ChatRoute
 import com.hopa.app.feature.launchpad.LaunchpadRoute
-import com.hopa.app.feature.conversations.ConversationsRoute
 import com.hopa.app.feature.profiles.ProfilesRoute
 import com.hopa.app.feature.runs.RunsRoute
 import com.hopa.app.feature.settings.SettingsRoute
@@ -20,15 +19,8 @@ fun HopaNavHost(container: AppContainer) {
         composable(HopaDestination.CHAT) {
             ChatRoute(
                 container = container,
-                onOpenConversations = { navController.navigate(HopaDestination.CONVERSATIONS) },
                 onOpenActivity = { navController.navigate(HopaDestination.RUNS) },
                 onOpenCapabilities = { navController.navigate(HopaDestination.CAPABILITIES) },
-            )
-        }
-        composable(HopaDestination.CONVERSATIONS) {
-            ConversationsRoute(
-                container = container,
-                onBack = { navController.popBackStack() },
             )
         }
         composable(HopaDestination.SETTINGS) {

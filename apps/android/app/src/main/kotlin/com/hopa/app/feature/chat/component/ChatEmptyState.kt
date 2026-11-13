@@ -119,7 +119,7 @@ fun ChatEmptyState(onQuick: (String) -> Unit) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 12.dp),
+                .padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 6.dp),
             horizontalArrangement = Arrangement.Center,
         ) {
             Pill(

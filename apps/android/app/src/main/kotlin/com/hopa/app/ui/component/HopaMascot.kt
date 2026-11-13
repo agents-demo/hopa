@@ -18,8 +18,6 @@ import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -32,8 +30,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -190,15 +190,25 @@ fun HopaMascot(
         }
 
         if (bubble && sizeDp >= 56.dp) {
-            Surface(
+            Box(
                 modifier = Modifier
                     .offset(x = sizeDp * 0.38f, y = -sizeDp * 1.02f)
                     .requiredWidth(sizeDp * 1.70f)
-                    .requiredHeight(sizeDp * 0.99f),
-                color = HopaColor.Accent,
-                shape = RoundedCornerShape(24.dp),
-                shadowElevation = 2.dp,
+                    .requiredHeight(sizeDp * 0.99f)
+                    .graphicsLayer(rotationZ = -3f),
             ) {
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    val w = size.width
+                    val h = size.height
+                    val path = bubblePath(w, h)
+                    translate(left = w * 0.01f, top = h * 0.05f) {
+                        drawPath(path, color = Color(0x1A000000))
+                    }
+                    translate(left = w * 0.02f, top = h * 0.09f) {
+                        drawPath(path, color = Color(0x0F000000))
+                    }
+                    drawPath(path, color = HopaColor.Accent)
+                }
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -215,5 +225,27 @@ fun HopaMascot(
                 }
             }
         }
+    }
+}
+
+private fun bubblePath(w: Float, h: Float): Path {
+    val sx = w / 240f
+    val sy = h / 108f
+    fun x(value: Float) = value * sx
+    fun y(value: Float) = value * sy
+    return Path().apply {
+        moveTo(x(36f), y(2f))
+        lineTo(x(204f), y(2f))
+        arcTo(Rect(x(204f), y(2f), x(238f), y(36f)), -90f, 90f, false)
+        lineTo(x(238f), y(44f))
+        arcTo(Rect(x(204f), y(44f), x(238f), y(78f)), 0f, 90f, false)
+        lineTo(x(118f), y(78f))
+        cubicTo(x(104f), y(90f), x(80f), y(100f), x(44f), y(106f))
+        cubicTo(x(68f), y(94f), x(78f), y(86f), x(80f), y(78f))
+        lineTo(x(36f), y(78f))
+        arcTo(Rect(x(2f), y(44f), x(36f), y(78f)), 90f, 90f, false)
+        lineTo(x(2f), y(36f))
+        arcTo(Rect(x(2f), y(2f), x(36f), y(36f)), 180f, 90f, false)
+        close()
     }
 }
