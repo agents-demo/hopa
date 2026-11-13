@@ -254,7 +254,7 @@ jobs:
           fi
       - name: Core checks and debug APK
         working-directory: apps/android
-        run: ./gradlew :core:check :app:assembleDebug --no-daemon
+        run: ./gradlew :core:check :capabilities:testDebugUnitTest :app:assembleDebug --no-daemon
       - name: Android structure
         run: python3 tools/checks/check-android-structure.py
       - name: Upload APK
