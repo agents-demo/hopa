@@ -36,6 +36,7 @@ supersede it. Format:
 | [0016](0016-clients-own-the-loop.md) | Each client owns its agent loop | accepted |
 | [0017](0017-android-dual-execution.md) | Android acts through the bridge and on-device | accepted |
 | [0018](0018-shared-data-per-client-code.md) | Share the data and the fixtures, not the loop | accepted |
+| [0019](0019-offline-and-model-network.md) | The model needs a network; the shell does not | accepted |
 
 Create the next ADR by copying the template below.
 

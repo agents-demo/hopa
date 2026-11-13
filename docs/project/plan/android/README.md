@@ -38,6 +38,8 @@ stated target, and the artifact exists.
 - No invented features beyond parity plus platform necessities (insets, back,
   foreground service, share target).
 - No Play-only assumptions for the accessibility path.
+- No full-offline claim: the model needs a network or a LAN model (ADR-0019).
+  The shell, the data and the gate are offline.
 
 ## 3. Decisions taken
 
@@ -45,6 +47,7 @@ stated target, and the artifact exists.
 |---|---|
 | Each client owns its loop; shared schemas + fixtures | ADR-0016 |
 | Shared data (catalogue, policy, prompt rules, routing, hash) lives once | ADR-0018 |
+| Offline means shell + LAN model; on-device model is a spike | ADR-0019 |
 | Bridge/adb first, accessibility fallback | ADR-0017 |
 | Kotlin + Compose, `apps/android`, minSdk 30 / target 35 | this plan |
 | BYOK; key only in Keystore | ADR-0016 |
@@ -245,15 +248,17 @@ stops secrets reaching the prompt.
 - [ ] 17 policy cases + executor cases (denied, unsupported, approved payment, screen-diff verify).
 - [ ] Evidence: policy/executor/chain tests green; a tampered record fails; all six fixtures pass.
 
-### A4. Model, keys, settings core (6 d)
+### A4. Model, keys, settings core (8 d)
 
 - [ ] OpenAI client: `max_tokens: 2048`, `reasoning_effort: low`, 30/60 s, token usage, empty-content errors.
 - [ ] Anthropic and Gemini clients; `ModelFactory`.
+- [ ] **LAN preset** (ADR-0019): any OpenAI-compatible endpoint on the private network (Ollama, llama.cpp, vLLM), optional key, reachability check with a short timeout; cleartext allowed only for private ranges (A0).
+- [ ] **Provider state**: `CLOUD`, `LAN`, `SHELL_ONLY`, `NO_MODEL`, with the reason; a turn that needs a model refuses before it starts instead of failing mid-run.
 - [ ] Keystore AES-GCM: `hopa_model_key`, `hopa_bridge_session`; no plaintext; no logging.
 - [ ] Settings repository (DataStore) with all 26 fields + `notifyAnswers` **persisted**; typed keys.
 - [ ] Model settings UI is only the form; no general Settings screen yet (A11).
-- [ ] Tests: request body snapshot, error mapping, key round-trip, no secret in logs, settings round-trip.
-- [ ] Evidence: a real turn using A2+A3; unit tests green.
+- [ ] Tests: request body snapshot, error mapping, key round-trip, no secret in logs, settings round-trip, LAN unreachable state, shell-only refusal.
+- [ ] Evidence: a real turn using A2+A3; a LAN turn against a local server; unit tests green.
 
 ### A5. Bridge `adb` transport (10 d, `services/bridge`)
 
@@ -368,8 +373,18 @@ stops secrets reaching the prompt.
 - [ ] Action-kind matrix executed on both paths; unsupported kinds assert an honest failure.
 - [ ] Resurrection/tombstone, token rotation during sync, bridge death mid-run, accessibility revocation mid-run.
 - [ ] Performance: cold start, chat scroll with 300 messages, observation latency, 10-step run duration.
+- [ ] Provider matrix: one turn on cloud, one on a LAN model, and one with no model; the last must state `SHELL_ONLY` before it starts (ADR-0019).
 - [ ] Parity checklist against §4.1 signed off screen by screen; defects from §4.3 confirmed absent.
 - [ ] Evidence: `docs/project/evidence/A14-parity.md` with the table and links to artifacts.
+
+### S1. On-device model spike (6 d, optional, not in the total)
+
+Goal: decide with measurements, not enthusiasm, whether a model can live in the APK.
+
+- [ ] Candidate runtimes: llama.cpp JNI, MediaPipe LLM Inference, ONNX Runtime GenAI; one quantized 1–3B model with a redistributable licence.
+- [ ] Acceptance: ≥5 tokens/s on a mid-range phone, strict-JSON validity on ≥90% of 50 fixture prompts, peak RSS ≤3 GB, no thermal throttle in a 10-minute run, model download ≤2 GB or a documented Play Asset Delivery split.
+- [ ] Safety: the same local gate and the same conformance fixtures; a small model may not weaken payment.
+- [ ] Go/no-go note in `docs/project/evidence/S1-on-device.md`; a "no" is a valid result and leaves A4's LAN path as the offline answer.
 
 ---
 
@@ -450,7 +465,7 @@ evals task through the bridge. CI: Gradle job on every PR; emulator nightly.
 | A1 | 5 | A0 |
 | A2 | 10 | A1 |
 | A3 | 8 | A1, A2 |
-| A4 | 6 | A2, A3 |
+| A4 | 8 | A2, A3 |
 | A5 | 10 | A0 (separate developer) |
 | A6 | 7 | A4, A5 |
 | A7 | 16 | A3, A4 |
@@ -461,15 +476,17 @@ evals task through the bridge. CI: Gradle job on every PR; emulator nightly.
 | A12 | 7 | A4, A6, A7 |
 | A13 | 9 | A5…A12 |
 | A14 | 10 | A9…A13 |
-| **Total** | **143** | |
+| **Total** | **145** | |
 
-Range 130–150 depending on the accessibility surface and Play ambitions. One
+S1 is a 6-day optional spike, not part of the total; a "no" is a valid outcome.
+Range 132–152 with the LAN work and the optional spike. One
 developer: ~28–30 weeks. Two developers (one on A5/A13 tooling): ~16–18 weeks,
 because A9 → A10/A11 is a serial UI chain. Four phases are parallelizable:
 A5 with A2–A4, A10 with A11, A13 tooling with A11, A14 last.
 
 ## 13. Open decisions
 
+- [x] Offline promise: the shell works offline, answers need cloud or a LAN model; on-device is S1. (evidence: ADR-0019)
 - [ ] Distribution: sideload only for v1 vs Play with an accessibility declaration (A7/A13).
 - [ ] Plans: in-process copy vs WorkManager (A11).
 - [ ] Browser: full automation vs read-only until the JS bridge is proven (A11).

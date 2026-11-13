@@ -13,7 +13,9 @@ implementation is on the roadmap, not that it exists.
 | Launch / stop app | Want + `aa` | `am start` / `am force-stop` | `Intent` / `am` via shell | `Process.Start` / UIA |
 | Foreground app | Accessibility | `dumpsys window` | accessibility event | UIA focus |
 | Installed apps | bundle manager | `pm list packages` | `PackageManager` | registry / Start menu |
-| Model calls | on device | on device | on device | on device |
+| Model calls (cloud) | HTTPS from the client, BYOK | HTTPS, BYOK | HTTPS, BYOK | HTTPS, BYOK |
+| Model calls on LAN | any OpenAI-compatible endpoint (setting) | plan A4 preset | plan A4 preset | planned |
+| Offline shell (no model) | history, settings, records; no agent turn | same | same | same |
 | Voice in (transcribe) | bridge `/transcribe` | bridge `/transcribe` | `SpeechRecognizer` fallback | bridge or local |
 | Voice out (speak) | bridge `/speak` | bridge `/speak` | Android TTS | Windows SAPI |
 | Browser automation | ArkWeb pane | none (bridge has no browser) | WebView + JS bridge | WebView2 |

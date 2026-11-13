@@ -81,6 +81,20 @@ for the catalogue.
 - The APK maps to `apps/android/app/build/outputs/apk/release/`.
 - Versioning follows `docs/project/operations/versioning.md`.
 
+## Network and the model (ADR-0019)
+
+The app is not fully offline: the shell is, the model is not.
+
+| Tier | What works | Requirement |
+|---|---|---|
+| Shell | history, settings, records, catalogue, launchpad, accessibility inspection, deterministic quick commands | none |
+| LAN model | a full turn against an OpenAI-compatible server on the same network (Ollama, llama.cpp, vLLM), key optional | PC/server on the LAN; cleartext allowed only to private ranges |
+| Cloud | a full turn with the configured provider | internet + key |
+
+The client shows `cloud`, `LAN`, `shell only` or `no model`. A turn that needs a
+model refuses before it starts; it never queues and claims to be offline. The
+payment gate is local in every tier.
+
 ## Testing
 
 - Unit tests per module.
