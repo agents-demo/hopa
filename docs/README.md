@@ -71,8 +71,7 @@ These describe both halves, so they stay here rather than in either hemisphere:
 
 | Folder | Question |
 |---|---|
-| [plan/refactor/README.md](plan/refactor/README.md) | The active structural refactor, with evidence |
-| [plan/README.md](plan/README.md) | The historical rebuild plan (M1–M6) |
+| [plan/](plan/README.md) | The active refactor plan, and where the retired M1–M6 plan lives (tag `rebuild-plan-2026-11-13`) |
 | [status/backlog.md](status/backlog.md) | Known debts and behaviours |
 | [history/](history/README.md) | Archive of dated evidence: measurements, platform limits, provenance |
 | [releases/0.1.0.md](releases/0.1.0.md) | The 0.1.0 release note |

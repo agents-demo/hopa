@@ -41,7 +41,8 @@ Three problems motivated this record:
 - `services/bridge` and `services/relay` are separate deployables (see ADR-0009).
 - Dependency direction is one-way: `apps → contracts`; `services → contracts`;
   `evals → contracts` (and services as a client); **nothing imports `evals/`**.
-- `docs/history/` and ticked evidence in `docs/plan/phase-*.md` are frozen
+- `docs/history/` and the retired rebuild plan (tag `rebuild-plan-2026-11-13`)
+  are frozen
   evidence: they may keep old paths. Every other document tracks the tree.
 - No `utils/`, `helpers/`, `common/`, `misc/`, `shared/` anywhere.
 

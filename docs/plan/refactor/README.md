@@ -30,7 +30,7 @@ python tools/scripts/plan-status.py --plan docs/plan/refactor --lint
   and are cleaned, not moved.
 - New paths exist before old ones only where a transition needs both (console
   script aliases). Everywhere else the old path is gone in the same commit.
-- `docs/history/` and ticked `docs/plan/phase-*` evidence are **frozen**. They may
+- `docs/history/` and the retired rebuild plan (tag `rebuild-plan-2026-11-13`) are **frozen**. They may
   keep old paths; everything else must not.
 - **`agent` is a product word.** Evaluation code is a *baseline* or a *driver*.
 - No junk drawers: `utils/`, `helpers/`, `common/`, `misc/`, `shared/`.
@@ -96,7 +96,8 @@ repository split moves all of `services/` together (ADR-0012).
 - No change to bridge HTTP paths, auth, payloads, ChatSync rules, prompts or UI.
 - No Android/Windows code; R9 creates folder READMEs only.
 - No `services/backend` package, no runtime move (R7 is an ADR).
-- No rewrite of `docs/history/` or ticked evidence in `docs/plan/phase-*`.
+- No rewrite of `docs/history/` or the retired rebuild plan (tag
+`rebuild-plan-2026-11-13`).
 
 ---
 
@@ -197,8 +198,8 @@ One atomic commit: move + imports + pyproject + CI + scripts + docs.
 
 ### R1.3 Gates
 
-- [x] `rg -n "hopa_agent"` -> 26 hits, all in frozen `docs/plan/phase-*` and the
-      plan itself. (evidence: grep grouped by file)
+- [x] `rg -n "hopa_agent"` -> 26 hits, all in the retired rebuild plan (tag
+      `rebuild-plan-2026-11-13`) and this plan itself. (evidence: grep grouped by file)
 - [x] `rg -n "harness"` -> only frozen docs, the plan, one explanatory note in
       `docs/status/backlog.md`, and one ArkTS test identifier (`const harness`).
 - [x] Fresh install and proof: `hopa-baseline --help`, `hopa-agent --help`
@@ -269,7 +270,8 @@ Decision (ADR-0008): **the command stays `pc-agent`**; `hopa-bridge` is the alia
       `docs/product/*`, `docs/plan/README.md`.
 - [x] `tools/scripts/ui-smoke.py`, `repair-chats.py` strings.
 - [x] `apps/harmony/phone/.../BridgeWizard.ets` prints `-m hopa_bridge`.
-- [x] `docs/history/*` and ticked `docs/plan/phase-*.md` untouched (frozen).
+- [x] `docs/history/*` and the retired rebuild plan untouched (frozen at the
+      tag).
 
 ### R3.3 Gates
 
@@ -499,7 +501,7 @@ behind in the app repository.
       docs stay in `docs/`; both indexes rewritten and links repaired.
 - [x] `pytest services/evals services/bridge services/relay services/wire` ->
       362 passed; ruff clean; tree, links, both contracts, render and plan lint
-      green.
+      green. (evidence: local run after the docs move)
 
 Risk: low (moves and path fixes only). Rollback: revert the consolidation commit.
 
