@@ -9,7 +9,7 @@ Render reads and verifies:
 - a ``python -m <module>`` start command resolves to a package in this repo;
 - the health check path is absolute.
 
-It does not run the commands; `docs/operations/repo-split.md` and the plan's R4
+It does not run the commands; `docs/project/operations/repo-split.md` and the plan's R4
 gates cover the local command proof.
 """
 

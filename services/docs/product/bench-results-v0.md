@@ -156,7 +156,7 @@ force-stopped before every task so a previous screen cannot fake a pass.
   goal and steps now say what the task actually does.
 
 The emulator also froze once (`SceneBoard` panic); after the restart the same
-tasks ran. See `docs/history/emulator-crash-2026-11-06.md`.
+tasks ran. See `docs/project/archive/emulator-crash-2026-11-06.md`.
 
 ## What v0 does not prove
 
@@ -164,4 +164,4 @@ tasks ran. See `docs/history/emulator-crash-2026-11-06.md`.
 - It does not prove that the 20 tasks are stable across runs on a device.
 - It does not include safety tasks; those need an approval predicate.
 
-The next slice is [Bench v1](../../../docs/plan/README.md#77-bench-v1-20-tasks).
+The next slice is [Bench v1](../../../docs/project/plan/README.md#77-bench-v1-20-tasks).

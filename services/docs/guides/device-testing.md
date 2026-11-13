@@ -77,7 +77,7 @@ What the bridge reads from each node:
 
 1. File the accessibility ACL request for
    `ohos.permission.ACCESSIBILITY_EXTENSION_ABILITY` using
-   [docs/operations/acl-request.md](../../../docs/operations/acl-request.md).
+   [docs/project/operations/acl-request.md](../../../docs/project/operations/acl-request.md).
 2. After approval, add the permission to `requestPermissions` and the ACL to the
    debug/release profile, then declare the extension in
    `apps/harmony/capabilities/accessibility/src/main/module.json5`:

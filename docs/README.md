@@ -1,84 +1,67 @@
-# HOPA app documentation
+# HOPA documentation
 
-This folder documents the **HarmonyOS app** and the product around it. A few
-documents here are *shared* with the services because both halves read them
-(contracts, safety, the architecture map); everything that belongs to a service
-lives in [`services/docs/`](../services/docs/README.md) and is not repeated here.
+Five folders by what you are looking for:
 
-## Start here
+```
+docs/
+├─ design/     what it is and why (architecture, decisions, product)
+├─ guides/     how to do it (per platform; harmony today, android/windows later)
+├─ reference/  what a thing is called (contracts, bundles, glossary, policy)
+├─ project/    how we run it (plan, status, operations, releases, archive)
+└─ media/      pictures and clips
+```
 
-| File | Question |
-|---|---|
-| [guides/setup.md](guides/setup.md) | How do I build and run the app? |
-| [guides/build-and-sign.md](guides/build-and-sign.md) | How is the HAP signed and installed? |
-| [guides/install-phone.md](guides/install-phone.md) | How does the app reach a phone? |
-| [guides/acl-request.md](guides/acl-request.md) | How is the accessibility ACL requested? |
-| [product/ux.md](product/ux.md) | What is the intended experience? |
+Service documentation lives with the services: [`services/docs/`](../services/docs/README.md).
 
-## What the app can do
+## Design
 
 | File | Question |
 |---|---|
-| [product/coverage.md](product/coverage.md) | What works today, and what is blocked? |
-| [product/roadmap.md](product/roadmap.md) | What comes next? |
+| [architecture/overview.md](design/architecture/overview.md) | What is HOPA made of? |
+| [architecture/layers.md](design/architecture/layers.md) | What may import what? |
+| [architecture/data-flow.md](design/architecture/data-flow.md) | How does one goal become an action? |
+| [architecture/target-structure.md](design/architecture/target-structure.md) | The historical audit that produced the current folders |
+| [decisions/](design/decisions/README.md) | Why was a decision made? One ADR per decision |
+| [product/roadmap.md](design/product/roadmap.md) | What comes next? |
+| [product/coverage.md](design/product/coverage.md) | What works today, and what is blocked? |
+| [product/ux.md](design/product/ux.md) | What is the intended experience? |
 
-## The app inside
-
-| File | Question |
-|---|---|
-| [architecture/overview.md](architecture/overview.md) | What is the app made of? |
-| [architecture/layers.md](architecture/layers.md) | What may the app's layers import? |
-| [architecture/data-flow.md](architecture/data-flow.md) | How does one goal become an action? |
-| [architecture/target-structure.md](architecture/target-structure.md) | The historical audit that produced the current folders |
-
-The app's modules are `apps/harmony`: `core` (loop, gate, records), `capabilities`
-(accessibility, browser, llm, sandbox, system), `app` (shared kit), `phone` and
-`laptop` (the two shells).
-
-## Shared with the services
-
-These describe both halves, so they stay here rather than in either hemisphere:
+## Guides
 
 | File | Question |
 |---|---|
-| [contracts/](contracts/observation.md) | Observation, action and error contracts |
-| [reference/bundles.md](reference/bundles.md) | Which HarmonyOS bundle is which app? |
-| [reference/safety.md](reference/safety.md) | What is the approval model? |
-| [reference/threat-model.md](reference/threat-model.md) | What are the security limits? |
-| [reference/privacy.md](reference/privacy.md) | What data is stored? |
-| [reference/abuse.md](reference/abuse.md) | What is explicitly refused? |
-| [reference/glossary.md](reference/glossary.md) | What do the words mean? |
+| [harmony/setup.md](guides/harmony/setup.md) | How do I build and run the HarmonyOS app? |
+| [harmony/build-and-sign.md](guides/harmony/build-and-sign.md) | How is the HAP signed and installed? |
+| [harmony/install-phone.md](guides/harmony/install-phone.md) | How does the app reach a phone? |
+| [harmony/acl-request.md](guides/harmony/acl-request.md) | How is the accessibility ACL requested? |
 
-## Decisions
+`guides/android/` and `guides/windows/` appear when those apps do.
 
-[adr/](adr/README.md) — one file per decision. Read ADR-0007 (taxonomy), ADR-0008
-(renames) and ADR-0011 (loop ownership) first. The service decisions (0009, 0010,
-0012, 0013) are indexed there and live in
-[`services/docs/adr/`](../services/docs/adr/).
+## Reference
 
-## Running and releasing
-
-| Folder | Question |
+| File | Question |
 |---|---|
-| [operations/release.md](operations/release.md) | How is a release cut? |
-| [operations/versioning.md](operations/versioning.md) | How are versions numbered? |
-| [operations/owners.md](operations/owners.md) | Who owns what? |
-| [operations/definition-of-ready.md](operations/definition-of-ready.md) | When may a phase start? |
-| [operations/sbom.json](operations/sbom.json) | What ships in the HAP? |
-| [operations/acl-request.md](operations/acl-request.md) | What is in the Huawei ACL request? |
+| [contracts/](reference/contracts/observation.md) | Observation, action and error contracts |
+| [bundles.md](reference/bundles.md) | Which HarmonyOS bundle is which app? |
+| [glossary.md](reference/glossary.md) | What do the words mean? |
+| [safety.md](reference/safety.md) | What is the approval model? |
+| [threat-model.md](reference/threat-model.md) | What are the security limits? |
+| [privacy.md](reference/privacy.md) | What data is stored? |
+| [abuse.md](reference/abuse.md) | What is explicitly refused? |
 
-## Plan, status, history
+## Project
 
-| Folder | Question |
+| File | Question |
 |---|---|
-| [plan/](plan/README.md) | The active refactor plan, and where the retired M1–M6 plan lives (tag `rebuild-plan-2026-11-13`) |
-| [status/backlog.md](status/backlog.md) | Known debts and behaviours |
-| [history/](history/README.md) | Archive of dated evidence: measurements, platform limits, provenance |
-| [releases/0.1.0.md](releases/0.1.0.md) | The 0.1.0 release note |
-| [media/](media/banner-2026-duo.svg) | Banner, mascot, screenshots, clips |
+| [plan/README.md](project/plan/README.md) | The active plan, with evidence |
+| [status.md](project/status.md) | Where the daily experience stands, and known debts |
+| [operations/release.md](project/operations/release.md) | How is a release cut? |
+| [operations/versioning.md](project/operations/versioning.md) | How are versions numbered? |
+| [operations/owners.md](project/operations/owners.md) | Who owns what? |
+| [operations/sbom.json](project/operations/sbom.json) | What ships in the HAP? |
+| [releases/0.1.0.md](project/releases/0.1.0.md) | The 0.1.0 release note |
+| [archive/README.md](project/archive/README.md) | Dated evidence: measurements, platform limits, provenance |
 
-## Not here
+## Media
 
-Bridge, relay, wire, brain, evals and the service tools are documented in
-[`services/docs/`](../services/docs/README.md) — pairing and tunnels, protocols,
-knowledge format, the benchmark, the platform checklist and the split runbook.
+[media/](media/banner-2026-duo.svg) - banner, mascot, screenshots, clips.

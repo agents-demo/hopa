@@ -25,7 +25,7 @@ BUDGETS = {
 }
 # Files that were already over budget when the single `entry` module was split
 # into `app` / `phone` / `laptop`. They stay reported as open debt, not as new
-# drift: the list may only shrink. Tracked in docs/status/backlog.md.
+# drift: the list may only shrink. Tracked in docs/project/status.md.
 GRANDFATHERED = {
     "apps/harmony/phone/src/main/ets/pages/chat/ChatPage.ets",
     "apps/harmony/phone/src/main/ets/pages/settings/SettingsPage.ets",
@@ -72,7 +72,7 @@ def check_capabilities(errors: list[str]) -> None:
 
 DEVICE_ROOT = ROOT / "services/bridge/src/hopa_bridge"
 # hdc is the HarmonyOS transport. The adapter is the only place allowed to know
-# it; the HTTP layer talks to DevicePort (docs/guides/adding-a-platform.md).
+# it; the HTTP layer talks to DevicePort (docs/guides/harmony/adding-a-platform.md).
 HDC_OWNERS = {"hdc.py", "device.py", "device_harmony.py"}
 
 

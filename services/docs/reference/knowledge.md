@@ -73,7 +73,7 @@ non-HarmonyOS platform.
 - 21 web sites under `services/brain/knowledge/sites/`.
 - 6 skill manifests under `services/brain/knowledge/skills/`.
 - All are `validated: pending`.
-- The 23 third-party Android apps are triaged in `docs/history/knowledge-triage.md`; 1 is
+- The 23 third-party Android apps are triaged in `docs/project/archive/knowledge-triage.md`; 1 is
   replaced, 15 are catalogued with unconfirmed bundles, 7 are web-only.
 
 ## The `UNCONFIRMED` bundle

@@ -2,7 +2,7 @@
 
 ## The evidence rule
 
-A checkbox in [`docs/plan/README.md`](docs/plan/README.md) is done only when
+A checkbox in [`docs/project/plan/README.md`](docs/project/plan/README.md) is done only when
 the stated verification passes on the stated target. Append the evidence on the
 same line:
 
@@ -98,7 +98,7 @@ Ask which top level answers the question, then pick the layer (ADR-0007):
 | a build, sign or check step | `tools/` (`scripts/`, `checks/`, `signing/`) |
 | why something is the way it is | `docs/` (`adr/`, `architecture/`, `guides/`) |
 
-Inside the Harmony app, `docs/architecture/layers.md` has the second table
+Inside the Harmony app, `docs/design/architecture/layers.md` has the second table
 (core / capabilities / entry). Two rules are absolute: `core` imports no
 `@kit.*`, and nothing imports `evals/` - it is a measuring instrument, not a
 library.

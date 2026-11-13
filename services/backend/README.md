@@ -58,4 +58,4 @@ same rule the bridge and relay follow (`contracts/openapi/README.md`).
 
 The loop runs on the device (`apps/harmony/core/agent`, driven by
 `AgentRuntime`); the bridge is the device plane; the relay is transport. See
-`docs/architecture/overview.md` and `docs/operations/repo-split.md`.
+`docs/design/architecture/overview.md` and `docs/project/operations/repo-split.md`.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Count checkboxes in docs/plan and gate completion.
+"""Count checkboxes in docs/project/plan and gate completion.
 
 Usage:
     python scripts/plan-status.py
@@ -257,7 +257,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--plan",
         type=Path,
-        default=Path(__file__).resolve().parents[2] / "docs" / "plan",
+        default=Path(__file__).resolve().parents[2] / "docs" / "project" / "plan",
         help="path to the plan markdown file or its directory",
     )
     parser.add_argument(

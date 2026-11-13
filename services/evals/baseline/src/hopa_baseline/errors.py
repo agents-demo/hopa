@@ -1,6 +1,6 @@
 """Typed errors shared by the loop, the gate and the rig.
 
-The codes are the contract in ``docs/contracts/errors.md``. Every error carries
+The codes are the contract in ``docs/reference/contracts/errors.md``. Every error carries
 a retryable flag and a user-facing message key so the UI never has to parse an
 English string.
 """

@@ -4,9 +4,9 @@
 
 <br/><br/>
 
-[![Status](https://img.shields.io/badge/status-working%20prototype-orange.svg)](docs/status/backlog.md)
+[![Status](https://img.shields.io/badge/status-working%20prototype-orange.svg)](docs/project/status.md)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/HarmonyOS-6.1%2B%20%C2%B7%20verified%20on%207.0-0A59F7.svg)](docs/guides/setup.md)
+[![Platform](https://img.shields.io/badge/HarmonyOS-6.1%2B%20%C2%B7%20verified%20on%207.0-0A59F7.svg)](docs/guides/harmony/setup.md)
 [![Tests](https://img.shields.io/badge/pc--agent-121%20tests-brightgreen.svg)](services/bridge/tests)
 
 </div>
@@ -25,7 +25,7 @@ hello, then the real Bilibili app and a real Weibo post, end to end.
 > **Working prototype on HarmonyOS 7.0.** Chat, browsing, app control through the
 > PC bridge, the run pane and the payment gate are real. Next in line: local app
 > control (Huawei's ACL), MCP tool calling and Chinese.
-> [What comes next →](docs/status/backlog.md)
+> [What comes next →](docs/project/status.md)
 
 ## What it looks like
 
@@ -209,7 +209,7 @@ feature of one app.
 `deploy.ps1` installs the right HAP per device, restores the reverse tunnel and
 starts the bridge. There are two HAPs, one per device, from one codebase.
 Installing on a retail phone is its own guide:
-[Install on a phone](docs/guides/install-phone.md).
+[Install on a phone](docs/guides/harmony/install-phone.md).
 
 **2. Connect a model.** Open **Capabilities → Settings**, pick a provider
 (OpenAI-compatible, Anthropic, Gemini or DeepSeek), enter endpoint, model and
@@ -248,8 +248,8 @@ address in one tap.
 | Run pane on the desk with steps, evidence, cost | Compact run view on the phone | Window repaint after long idle |
 
 The dated, per-capability detail is in
-[docs/product/coverage.md](docs/product/coverage.md); the remaining work with
-effort is in [docs/status/backlog.md](docs/status/backlog.md).
+[docs/design/product/coverage.md](docs/design/product/coverage.md); the remaining work with
+effort is in [docs/project/status.md](docs/project/status.md).
 
 ## For developers
 
@@ -292,12 +292,12 @@ and a secret/license scan.
 
 **Links**
 
-- [Setup and toolchain](docs/guides/setup.md)
-- [Build, sign and install](docs/guides/build-and-sign.md)
+- [Setup and toolchain](docs/guides/harmony/setup.md)
+- [Build, sign and install](docs/guides/harmony/build-and-sign.md)
 - [PC bridge, tunnels and the cloud relay](services/docs/guides/pc-bridge.md)
-- [Architecture](docs/architecture/overview.md)
+- [Architecture](docs/design/architecture/overview.md)
 - [Safety model](docs/reference/safety.md)
-- [Status and remaining work](docs/status/backlog.md)
+- [Status and remaining work](docs/project/status.md)
 
 The apps are ArkTS only. Python and Kotlin are development and PC-side tools;
 they are not packaged into the HAP.

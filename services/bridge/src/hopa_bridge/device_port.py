@@ -2,7 +2,7 @@
 
 Every platform adapter implements this. The HTTP handlers import this Protocol,
 never `hdc` and never `Device`, so adding Android or Windows is a new adapter
-rather than a change to the API (ADR-0007, R6 in docs/plan/refactor).
+rather than a change to the API (ADR-0007, R6 in docs/project/plan/refactor).
 """
 
 from __future__ import annotations

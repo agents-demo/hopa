@@ -9,7 +9,7 @@ where to look and what must not drift.
 | **Relay** | phone → relay → PC | WebSocket, bearer token | `services/relay` (server half), `services/bridge/cloud_link.py` (PC half), `services/wire`; guide: [pc-bridge](../guides/pc-bridge.md) |
 | **Brain HTTP** | bridge / baseline → `services/brain` | HTTP + JSON | [brain](brain.md) |
 | **MCP** | any MCP client → `hopa-bridge mcp` | stdio, JSON-RPC | `services/bridge/mcp_server.py` |
-| **Action / observation / decision / run-record** | app, baseline, bench | JSON in memory and in logs | [`contracts/schemas/`](../../../../../docs/contracts/schemas) and [contracts](../../../docs/contracts/action.md) |
+| **Action / observation / decision / run-record** | app, baseline, bench | JSON in memory and in logs | [`contracts/schemas/`](../../../../../docs/reference/contracts/schemas) and [contracts](../../../docs/reference/contracts/action.md) |
 
 ## Bridge HTTP rules
 
@@ -32,7 +32,7 @@ where to look and what must not drift.
 The bridge is deployed to PC desktops and to one relay, and both move with the
 repository, so a breaking change can update every caller in one commit. The
 prefix becomes worthwhile when an Android or Windows client ships on its own
-schedule; the decision is recorded in `docs/plan/README.md`.
+schedule; the decision is recorded in `docs/project/plan/README.md`.
 
 ## Related
 

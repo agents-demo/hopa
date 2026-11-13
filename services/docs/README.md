@@ -59,13 +59,13 @@ repeated here.
 | [0012](adr/0012-shared-service-code-lives-under-services.md) | Shared service code lives under `services/` |
 | [0013](adr/0013-service-related-code-lives-under-services.md) | Everything service-related lives under `services/` |
 
-The central index in [`docs/adr/`](../../docs/adr/README.md) links back here.
+The central index in [`docs/design/decisions/`](../../docs/design/decisions/README.md) links back here.
 
 ## Contracts and policy are shared
 
 The wire formats and the safety/privacy rules bind both the app and the services,
 so they stay in `docs/` and are not duplicated: see
-[`contracts/`](../../docs/contracts/observation.md),
+[`contracts/`](../../docs/reference/contracts/observation.md),
 [`reference/safety.md`](../../docs/reference/safety.md) and
 [`reference/threat-model.md`](../../docs/reference/threat-model.md). The machine
 contracts are in [`contracts/openapi/`](../../contracts/openapi/README.md).
