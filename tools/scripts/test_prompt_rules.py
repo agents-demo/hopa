@@ -46,6 +46,17 @@ def test_generated_file_is_current() -> None:
     assert GENERATED.read_text(encoding="utf-8") == module.render(data)
 
 
+def test_kotlin_rendering_uses_the_same_rules() -> None:
+    module = _module()
+    data = json.loads(SOURCE.read_text(encoding="utf-8"))
+    output = module.render_kotlin(data)
+    assert "package com.hopa.prompt" in output
+    assert "data class PromptRule" in output
+    for rule in data["rules"]:
+        assert module.kotlin_string(rule["id"]) in output
+    assert module.kotlin_string("cost $5") == '"cost \\$5"'
+
+
 def test_client_test_is_wired() -> None:
     assert TEST.exists()
     index = (ROOT / "apps" / "harmony" / "core" / "src" / "test" / "List.test.ets").read_text(

@@ -1,5 +1,10 @@
 # HOPA roadmap (G1–G4)
 
+> **Delivery focus moved.** Android is the active client; Windows is next;
+> Harmony is frozen (ADR-0020). For Android, the active plan is
+> [`docs/project/plan/android/`](../../project/plan/android/README.md). This
+> page keeps the original public G1–G4 scope and is otherwise historical.
+
 > **Superseded for delivery tracking.**
 > [docs/project/plan/README.md](../../project/plan/README.md) is the working plan with checkboxes and
 > the definition of finished. This page keeps the original public G1–G4 scope.

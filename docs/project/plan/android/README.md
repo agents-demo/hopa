@@ -48,6 +48,7 @@ stated target, and the artifact exists.
 | Each client owns its loop; shared schemas + fixtures | ADR-0016 |
 | Shared data (catalogue, policy, prompt rules, routing, hash) lives once | ADR-0018 |
 | Offline means shell + LAN model; on-device model is a spike | ADR-0019 |
+| Android is the active client; Windows is next; Harmony is frozen | ADR-0020 |
 | Bridge/adb first, accessibility fallback | ADR-0017 |
 | Kotlin + Compose, `apps/android`, minSdk 30 / target 35 | this plan |
 | BYOK; key only in Keystore | ADR-0016 |
@@ -229,7 +230,7 @@ stops secrets reaching the prompt.
 
 - [ ] `AgentLoop`: initial capture, system prompt, **up to 14 steps**, 1500 ms settle, duplicate-launch short-circuit, cancel at three checkpoints, final text-only call, `summarize`.
 - [ ] `ActionParser`: fenced/last-object parsing, the **schema's** kinds (not Harmony's 19), reject `finish`/`done`, ignore model payment flags, unknown kind → text.
-- [ ] `PromptBuilder`: system text carrying every rule in `contracts/prompts/rules.v1.json` (assert the phrases in a test), memory/skill/app-catalogue blocks, router hint, screen rendering with 120 element lines.
+- [ ] `PromptBuilder`: system text carrying every rule in `contracts/prompts/rules.v1.json` (generate Kotlin with `build-prompt-rules.py --kotlin` and assert the phrases in a test), memory/skill/app-catalogue blocks, router hint, screen rendering with 120 element lines.
 - [ ] `AppRouter` ported from `AppRouter.ets`; run `contracts/fixtures/routing.json` and reproduce every case.
 - [ ] `ContextBudget`: 24 000 chars, keep last 6, 400-char old lines, hard trim.
 - [ ] `RunNarrator`: per-step sentences, tap grouping, failure phrasing.
@@ -239,7 +240,7 @@ stops secrets reaching the prompt.
 
 ### A3. Gate, records, semantic conformance (8 d)
 
-- [ ] `ApprovalPolicy`: read `contracts/policy/approval.v1.json` (generated Kotlin constant), all lists and amount/merchant regexes, trusted-app rule against `system.sendMessage`, fail-closed; autonomous never bypasses payment.
+- [ ] `ApprovalPolicy`: read `contracts/policy/approval.v1.json` (generate Kotlin with `build-policy-data.py --kotlin`), all lists and amount/merchant regexes, trusted-app rule against `system.sendMessage`, fail-closed; autonomous never bypasses payment.
 - [ ] `ActionExecutor`: guards → policy → approval → capability → verify → record; denial records; unsupported records.
 - [ ] `RunRecord` per **contract** with `prevHash`/`hash` (canonical JSON, `sha256:`), step index, trace id; seed pinned to `sha256("")`; `verifyChain` fails on tamper.
 - [ ] Room `RunStore` (last 100, atomic), `beginTurn` always called.

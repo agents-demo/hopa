@@ -1,5 +1,8 @@
 # HOPA documentation
 
+**Active client: Android. Next: Windows. Harmony is frozen (ADR-0020).**
+The Android plan is [`project/plan/android/`](project/plan/android/README.md).
+
 Five folders by what you are looking for:
 
 ```

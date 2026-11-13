@@ -86,6 +86,20 @@ def test_generated_file_is_current() -> None:
         assert f"export const {constant}" in output, constant
 
 
+def test_kotlin_rendering_uses_the_same_values() -> None:
+    module = _module()
+    data = _data()
+    output = module.render_kotlin(data)
+    assert "package com.hopa.policy" in output
+    assert "object ApprovalPolicyData" in output
+    for kind in data["paymentKinds"]:
+        assert module.kotlin_string(kind) in output
+    assert "Regex(" in output
+    assert "RegexOption.IGNORE_CASE" in output
+    assert module.kotlin_string("cost $5") == '"cost \\$5"'
+    assert module.kotlin_string("a\\s") == '"a\\\\s"'
+
+
 def test_policy_code_reads_the_generated_data() -> None:
     text = POLICY.read_text(encoding="utf-8")
     for constant in (

@@ -24,7 +24,12 @@ implementation is on the roadmap, not that it exists.
 | Chat sync | bridge `/chats` | bridge `/chats` | bridge `/chats` | bridge `/chats` |
 | Run survives backgrounding | background task + topmost window | n/a (runs on PC) | foreground service + FGS type | n/a (desktop) |
 | Run record shape | audit fields today; the contract's hash chain is not implemented in Harmony | contract chain (planned) | contract chain (planned) | contract chain (planned) |
-| Conformance fixtures | must pass | must pass | must pass | must pass |
+| Conformance fixtures | legacy exception (ADR-0020) | must pass | must pass | must pass |
+
+> **Harmony is frozen** (ADR-0020): its column describes the shipped app, not
+> the active roadmap. Android is the active client; **Windows is next**. Harmony
+> has no scheduled revival; if it returns, it starts with the contract adapter
+> and the fixtures.
 
 ## Rules
 

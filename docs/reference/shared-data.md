@@ -7,8 +7,8 @@ hand-edits its copy fails CI.
 | Data | Source | Generated into | Check |
 |---|---|---|---|
 | Apps and sites | `services/brain/knowledge/{apps,sites}` | `contracts/catalog/catalog.v1.json`, then `apps/harmony/app/.../AppCatalog.ets` (Kotlin on demand) | `build-app-catalog.py --check` |
-| Approval vocabulary | `contracts/policy/approval.v1.json` | `apps/harmony/core/.../gate/PolicyData.ets` | `build-policy-data.py --check` |
-| Prompt rules | `contracts/prompts/rules.v1.json` | `apps/harmony/core/.../agent/PromptRules.ets` | `build-prompt-rules.py --check` |
+| Approval vocabulary | `contracts/policy/approval.v1.json` | `apps/harmony/core/.../gate/PolicyData.ets`; Kotlin with `build-policy-data.py --kotlin` | `build-policy-data.py --check` |
+| Prompt rules | `contracts/prompts/rules.v1.json` | `apps/harmony/core/.../agent/PromptRules.ets`; Kotlin with `build-prompt-rules.py --kotlin` | `build-prompt-rules.py --check` |
 | Routing cases | `contracts/fixtures/routing.json` | tests, not code | `check-routing.py` |
 | Observation limits | `contracts/observation/limits.v1.json` | tests, not code | read by A1 tests |
 | Observation hash | `contracts/fixtures/observation-hash.json` | tests, not code | `check-observation-hash.py` |
