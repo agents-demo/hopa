@@ -21,7 +21,7 @@ implementation is on the roadmap, not that it exists.
 | Sandbox scripts | Pyodide/QuickJS | local | local (WebView JS) | local (JScript/QuickJS) |
 | Chat sync | bridge `/chats` | bridge `/chats` | bridge `/chats` | bridge `/chats` |
 | Run survives backgrounding | background task + topmost window | n/a (runs on PC) | foreground service + FGS type | n/a (desktop) |
-| Run record chain | `RunRecord` hash chain | same contract | same contract | same contract |
+| Run record shape | audit fields today; the contract's hash chain is not implemented in Harmony | contract chain (planned) | contract chain (planned) | contract chain (planned) |
 | Conformance fixtures | must pass | must pass | must pass | must pass |
 
 ## Rules

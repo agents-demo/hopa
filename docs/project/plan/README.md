@@ -448,8 +448,9 @@ Risk: low.
 
 ## R9. Reserve the platform folders (README only)
 
-- [x] `apps/android/README.md`: thin client, Compose shell, `AccessibilityService` (evidence: commit 946e639)
-      adapter implementing `DevicePort`, contract-only traffic, first steps.
+- [x] `apps/android/README.md`: Compose client that runs its own loop (ADR-0016), (evidence: commit 946e639)
+      with two `DevicePort` adapters — bridge/adb and `AccessibilityService` (ADR-0017);
+      behaviour shared through `contracts/` and fixtures.
 - [x] `apps/windows/README.md`: WinUI shell, UI Automation adapter, the sparse-tree (evidence: commit 946e639)
       rule, contract-only traffic.
 - [x] `docs/guides/harmony/adding-a-platform.md`: the `DevicePort` method table, the four (evidence: commit 946e639)

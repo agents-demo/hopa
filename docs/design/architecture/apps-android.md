@@ -1,8 +1,8 @@
 # The Android app
 
 Status: designed, not built. This page is the architecture the Android plan
-implements; the loop is per-client (ADR-0016) and execution has two paths
-(ADR-0017).
+implements: the loop runs **in the app** (ADR-0016), execution has two paths
+(ADR-0017), and the full phase plan is `docs/project/plan/android/`.
 
 ## Modules
 
