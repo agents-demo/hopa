@@ -5,6 +5,11 @@ frozen (ADR-0020).** The Harmony notes below describe the shipped app, not the
 active roadmap. Harmony debts are deferred maintenance, not prerequisites for
 Android or Windows.
 
+**Android now runs:** the debug app launches on an API 35 emulator with the loop,
+chat, settings, conversations, profiles, runs, capabilities and launchpad; the
+bridge, accessibility, Room persistence and approval sheet are next
+(`docs/project/evidence/A0-android-running.md`).
+
 Two shells: phone (`2SX0224410054549`) and MateBook 2-in-1
 (`3QC0225821000268`, HarmonyOS 7.0.0.111, API 26). Shared app code lives in
 `@hopa/app`; the services are `services/{bridge,relay,wire,brain,evals}`.

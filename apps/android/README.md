@@ -1,50 +1,52 @@
 # HOPA for Android
 
-**Status: reserved.** No code yet. This file exists so the folder answers "what
-goes here" before anyone writes the first line (ADR-0007).
+Status: **debug app running on an emulator.** This is the first vertical slice of
+the Android plan; it is not parity with the Harmony app yet.
 
-## What an Android HOPA is
+## What works
 
-A **full client**: it runs the whole agent loop, holds its own model key, and
-acts on the device (ADR-0016). Two execution paths behind one seam (ADR-0017):
+- The whole loop is in the APK (`core`), with contract types, parser, gate,
+  hash-chained records, prompt and 14-step budget.
+- Chat with a demo model, and with any OpenAI-compatible provider (cloud or LAN)
+  configured in Settings. The API key is stored in Android Keystore.
+- Conversations: create, select, rename in the store, delete.
+- Settings: provider, endpoint, model, key, notifications, web toggle.
+- Profiles: Everyday, Easy, Kid, Power, Social (selection; per-profile shells are
+  next).
+- Runs: recent records with classification, executed and verified flags.
+- Capabilities and Launchpad (installed apps, launch by package).
+- Structure check: one public declaration per file, package = folder, no Android
+  imports in `core`.
 
-- the PC bridge over `adb` (primary, the way `hdc` works on Harmony);
-- an on-device `AccessibilityService` (fallback, after an explicit grant).
+## Modules
 
-It shares behaviour with the other clients through `contracts/schemas` and
-`contracts/fixtures`, not through code.
+```
+apps/android/
+├─ app/            Compose shell, navigation, features, DI
+├─ core/           contracts, loop, parser, prompt, gate, records, ports
+├─ capabilities/   model clients, system intents, package catalogue, device
+├─ data/           settings, secrets, conversations
+└─ testing/        fakes for tests
+```
 
-The build plan, phases and effort: `docs/project/plan/android/README.md`.
+## Build and run
 
-## What is in the app
+```powershell
+cd apps/android
+.\gradlew.bat :app:assembleDebug
+.\gradlew.bat :core:test
+python ../../tools/checks/check-android-structure.py
+```
 
-| Part | Android implementation | Contract |
-|---|---|---|
-| Loop and gate | Kotlin, no Android imports | `contracts/schemas`, `contracts/fixtures` |
-| UI | Kotlin + Jetpack Compose | own state, shared JSON shapes |
-| Bridge adapter | OKHttp client to `services/bridge` (`adb` transport) | bridge OpenAPI |
-| On-device adapter | `AccessibilityService` + gestures | `DevicePort` semantics |
+The debug APK is `app/build/outputs/apk/debug/app-debug.apk`.
 
-The bridge's `DevicePort` is the seam described in
-[adding a platform](../../services/docs/guides/adding-a-platform.md). Today it has
-`dump_layout`, `foreground`, `tap`, `swipe`, `type_text`, `press_key`,
-`press_key_many`, `launch`, `stop`, `shell`, `pull`, plus `serial` and `platform`.
-The Android plan extends it with `screenshot` and `apps` (A6), since both the
-Harmony and the new `adb` adapters need them. The Android client itself defines a
-Kotlin port with observation/action methods; an adapter implements it either over
-HTTP or over `AccessibilityService`.
+`adb install` is blocked by the host security policy on this machine; the APK
+was installed through `pm install-create` / `install-write` / `install-commit`
+(see `docs/project/evidence/A0-android-running.md`). On a normal machine
+`adb install -r app-debug.apk` is the command.
 
-## Rules
+## Next
 
-1. No HarmonyOS imports and no copy of `apps/harmony/core` — the loop is
-   **reimplemented in Kotlin** and must pass the conformance fixtures.
-2. Every screen comes from the contract, never from scraping another app's files.
-3. Payment and destructive actions go through the same ask-first gate as the
-   phone; the adapter never decides.
-4. Nothing in this folder may be imported by `services/` or `evals/`.
-
-## First steps when work starts
-
-The ordered phases are in `docs/project/plan/android/README.md` (A0–A14). The
-first three checkboxes there are the ones to start with: the Gradle project, the
-contract types with schema validation, and the conformance runner on the JVM.
+Bridge `adb` adapter (A5), `BridgeClient` (A6), accessibility service (A7),
+Room persistence and sync (A8), approval sheet and the full feature screens
+(A9–A11), voice and foreground service (A12), release (A13).

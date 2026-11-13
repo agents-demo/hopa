@@ -198,6 +198,29 @@ phones / card numbers / OTPs redacted, 400-node cap keeping the focus path,
 `sha256` hash. This is what makes `observationHash` in run records real and what
 stops secrets reaching the prompt.
 
+### 5.4 Code structure (normative)
+
+```
+apps/android/
+├─ app/            Compose shell, navigation, features, DI
+├─ core/           contracts, loop, parser, prompt, gate, records, ports
+├─ capabilities/   model clients, system intents, package catalogue, device
+├─ data/           settings, secrets, conversations
+└─ testing/        fakes for tests
+```
+
+- **One public declaration per file**, and the file is named after it. Generated
+  catalogue/policy/prompt files are the only exemption.
+- **Package = folder**; `com.hopa.core.gate` lives only in `core/.../gate/`.
+- No `Utils.kt`, `Helpers.kt`, `Common.kt`, `Manager.kt`, `Misc.kt`.
+- Implementations are named by technology, not `Impl`: `RoomConversationStore`,
+  `KeystoreSecretStore`, `BridgeDevice`.
+- `core` is a JVM module with no `android.*`/`androidx.*` imports.
+- Features in `app` repeat `XRoute -> XScreen -> XViewModel -> XUiState`, with
+  components in `feature/<name>/component/`.
+- Tests mirror main packages.
+- `tools/checks/check-android-structure.py` enforces the rules in CI.
+
 ---
 
 ## 6. Phases

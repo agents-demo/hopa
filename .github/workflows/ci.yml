@@ -1,4 +1,4 @@
-name: CI
+﻿name: CI
 
 # Honest constraints of this workflow:
 #
@@ -61,6 +61,8 @@ jobs:
         run: python tools/checks/check-conformance.py
       - name: Routing fixtures
         run: python tools/checks/check-routing.py
+      - name: Android structure
+        run: python tools/checks/check-android-structure.py
       - name: Observation hash vector
         run: python tools/checks/check-observation-hash.py
       - name: Tree rules

@@ -1,4 +1,4 @@
-#!/usr/bin/env pwsh
+﻿#!/usr/bin/env pwsh
 # Run Python, brain and ArkTS tests, plus lint and plan checks (Windows).
 $ErrorActionPreference = 'Stop'
 
@@ -66,6 +66,8 @@ if ($LASTEXITCODE -ne 0) { throw 'prompt rules are stale' }
 if ($LASTEXITCODE -ne 0) { throw 'routing fixtures failed' }
 & $pythonExe @pythonPrefix (Join-Path $root 'tools\checks\check-observation-hash.py')
 if ($LASTEXITCODE -ne 0) { throw 'observation hash vector failed' }
+& $pythonExe @pythonPrefix (Join-Path $root 'tools\checks\check-android-structure.py')
+if ($LASTEXITCODE -ne 0) { throw 'Android structure failed' }
 
 Write-Host '=== brain tests ==='
 if (Test-Path (Join-Path $root '.tools\kotlinc\bin\kotlinc.bat')) {

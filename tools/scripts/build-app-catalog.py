@@ -309,16 +309,16 @@ def render_kotlin(data: dict) -> str:
         "val APP_CATALOG: List<CatalogApp> = listOf(",
     ]
     for app in data["apps"]:
-        harmony = app["platforms"].get("harmonyos", {})
+        android = app["platforms"].get("android", {})
         lines.append("    CatalogApp(")
         lines.append(f"        id = {kotlin_string(app['id'])},")
         lines.append(f"        display = {kotlin_string(app['display'])},")
         lines.append(f"        aliases = {kotlin_list(app['aliases'])},")
         lines.append(f"        purpose = {kotlin_string(app['purpose'])},")
         lines.append(f"        actions = {kotlin_list(app['actions'])},")
-        lines.append(f"        bundle = {kotlin_string(harmony.get('bundle', ''))},")
-        lines.append(f"        activity = {kotlin_string(harmony.get('ability', ''))},")
-        lines.append(f"        verified = {str(harmony.get('verified', False)).lower()},")
+        lines.append(f"        bundle = {kotlin_string(android.get('package', ''))},")
+        lines.append(f"        activity = {kotlin_string(android.get('activity', ''))},")
+        lines.append(f"        verified = {str(android.get('verified', False)).lower()},")
         lines.append("    ),")
     lines.append(")")
     lines.append("")

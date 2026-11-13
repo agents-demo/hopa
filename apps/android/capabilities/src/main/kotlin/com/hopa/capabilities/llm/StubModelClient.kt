@@ -1,0 +1,26 @@
+package com.hopa.capabilities.llm
+
+import com.hopa.core.model.ModelPort
+import com.hopa.core.model.ModelReply
+import com.hopa.core.model.ModelRequest
+import kotlinx.coroutines.delay
+
+class StubModelClient : ModelPort {
+    override suspend fun complete(request: ModelRequest): ModelReply {
+        delay(250)
+        val last = request.messages
+            .lastOrNull { it.role == "user" && !it.content.startsWith("SCREEN:") }
+            ?.content
+            .orEmpty()
+        val answer = when {
+            last.contains("2 plus 2", ignoreCase = true) -> "2 plus 2 is 4."
+            last.contains("hello", ignoreCase = true) -> "Hello. This is the local demo model. " +
+                "Add a provider key in Settings to use a real model."
+
+            last.isBlank() -> "Ask me something."
+            else -> "Demo model: I received \"${last.take(120)}\". " +
+                "Add a provider key in Settings to get real answers and run actions."
+        }
+        return ModelReply(answer)
+    }
+}

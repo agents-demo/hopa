@@ -86,3 +86,9 @@ desktop.ini
 # Local harness artifacts
 .hopa/
 tools/shots/
+
+# Android build output and local secrets
+**/.gradle/
+**/*.jks
+**/*.keystore
+**/keystore.properties
