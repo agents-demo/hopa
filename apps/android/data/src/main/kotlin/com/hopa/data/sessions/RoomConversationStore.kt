@@ -22,6 +22,11 @@ class RoomConversationStore(
     }
 
     override suspend fun create(): Conversation {
+        // Reuse one empty draft instead of piling up empty "New chat" rows.
+        val existing = sessions.draft()
+        if (existing != null && turns.forSession(existing.id).isEmpty()) {
+            return ConversationMapper.conversation(existing, emptyList())
+        }
         val now = System.currentTimeMillis()
         val session = SessionEntity(
             id = "c-$now-${UUID.randomUUID().toString().take(6)}",

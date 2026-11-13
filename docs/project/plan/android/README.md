@@ -5,7 +5,7 @@ phone code (UI, core, capabilities, shared services, bridge); the checklist was
 reconciled with the code on 2026-11-13.
 Owner: TBD.
 
-Progress on 2026-11-13: **47 of 135 phase items (34.8%)**, **48 of 149 (32.2%)**
+Progress on 2026-11-13: **48 of 135 phase items (35.6%)**, **49 of 149 (32.9%)**
 with the Definition of done and the open decisions.
 
 Read that number correctly. It counts *finished items*, not effort: an item is
@@ -337,7 +337,7 @@ apps/android/
 ### A8. Data, sessions, sync (10 d)
 
 - [ ] Room: `sessions`, `turns`, `run_records`, `pending_approvals`; JSON field names compatible with `ChatSync`.
-- [ ] Repository: new chat (reuse one draft), **selection persisted**, delete → persisted tombstone, delete-all, no resurrection.
+- [x] Repository: new chat (reuse one draft), **selection persisted**, delete → persisted tombstone, delete-all, no resurrection. (evidence: RoomConversationStore.create reuses an empty draft; docs/project/evidence/A8-data.md)
 - [x] Titles from the first user message; active pinned; ordering by `updated`. (evidence: RoomConversationStore.append; SessionDao.all order)
 - [ ] `ChatSync`: push whole set, adopt merged snapshot, **pull fallback**, tombstone growth, draft protection, shared token holder.
 - [ ] Images: upload/download, cache, id only in synced turns, 4 MiB cap, stream to file.

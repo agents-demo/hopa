@@ -34,9 +34,12 @@ class AppContainer(context: Context) {
     val busy = MutableStateFlow(false)
     val packages = AndroidPackageCatalog(context)
     val recorder = RoomRunRecorder(database.runRecordDao())
+    val pendingApprovals = com.hopa.data.approvals.RoomPendingApprovalStore(
+        database.pendingApprovalDao(),
+    )
     val clock = AndroidClock()
     val policy = ApprovalPolicy()
-    val approval = UiApprovalGateway()
+    val approval = UiApprovalGateway(pendingApprovals)
     val factory = RunRecordFactory(clock)
     val device = AccessibilityDevice(context)
     val executor = ActionExecutor(

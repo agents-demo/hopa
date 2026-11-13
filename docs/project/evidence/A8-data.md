@@ -1,22 +1,32 @@
-# A8 - sessions
+# A8 - sessions, approvals and the data layer
 
-Date: 2026-11-13. One item is complete: titles, pinning and ordering.
+Date: 2026-11-13/14.
 
-## Verified by reading the store
+## Done
 
-- `RoomConversationStore.create` makes a session titled `New chat`.
-- The first user message replaces the title with its first 40 characters.
-- `SessionDao.all` orders `pinned DESC, updatedAt DESC`; the chat sheet shows the
-  current chat in its own `Current` section above the date groups.
-- Delete writes `deletedAt`, delete-all writes it for every row, and `restore`
-  brings a row back, so a deletion is a persisted tombstone, not a silent drop.
-- The selected conversation is persisted in DataStore and re-selected on start.
+- **Sessions**: `sessions`, `turns`, `run_records`; titles from the first user
+  message (40 chars), pinned first, then `updatedAt`; delete writes `deletedAt`,
+  delete-all writes it for every row, `restore` brings a row back, so a deletion
+  is a persisted tombstone. The selected conversation is persisted in DataStore.
+- **Draft reuse (2026-11-14)**: `RoomConversationStore.create()` returns an
+  existing empty `New chat` row instead of adding another. `SessionDao.draft()`
+  finds it; the chat sheet already hides empty sessions.
+- **Pending approvals (2026-11-14)**: Room schema v3 adds `pending_approvals`
+  (`MIGRATION_2_3`). `UiApprovalGateway` persists the question while it waits,
+  clears it after the answer, and denies after 120 s. `HopaApplication` clears a
+  row found at startup: a question on disk means the process died while waiting,
+  so the turn is gone and the question must not resurrect.
+- **Tests**: `UiApprovalGatewayTest` (persist → resolve → clear; timeout → deny
+  and clear) runs in the app unit-test source set; CI now runs
+  `:app:testDebugUnitTest`.
+- **Migration proof**: installing the v3 build over the v2 database launched the
+  app on `emulator-5554` with no Room or crash lines in logcat.
 
-## Not done in A8
+## Still open
 
-- The schema has `sessions`, `turns` and `run_records` but no
-  `pending_approvals`; approvals live in an in-process gateway.
-- New chat always creates a row; it does not reuse one empty draft.
-- No `ChatSync` (push, merge, pull fallback, tombstones across devices).
-- No image upload/download or cache.
-- No merge tests (resurrection, title conflict, id-less turns, rotation).
+- **ChatSync**: no push/merge/pull-fallback, no shared token holder, no images,
+  no merge tests (resurrection, title conflict, id-less turns, rotation). The
+  bridge already serves `/chats` and `/sessions` with a merge, so the client is
+  the missing half.
+- The pending question is not re-shown after a process death; the design choice
+  is to deny, and the sheet cannot outlive the turn that asked.
