@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,21 +21,20 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hopa.app.feature.chat.component.ChatEmptyState
@@ -42,6 +42,8 @@ import com.hopa.app.feature.chat.component.Composer
 import com.hopa.app.feature.chat.component.MessageBubble
 import com.hopa.app.ui.component.ApprovalSheet
 import com.hopa.app.ui.component.HopaBottomBar
+import com.hopa.app.ui.component.HopaMascot
+import com.hopa.app.ui.component.HopaTopBar
 import com.hopa.app.ui.theme.HopaColor
 import com.hopa.data.sessions.ChatMessage
 
@@ -49,6 +51,8 @@ import com.hopa.data.sessions.ChatMessage
 @Composable
 fun ChatScreen(
     state: ChatUiState,
+    activeTab: String,
+    onSelectTab: (String) -> Unit,
     onInput: (String) -> Unit,
     onSend: () -> Unit,
     onOption: (String) -> Unit,
@@ -56,8 +60,6 @@ fun ChatScreen(
     onApprove: (Boolean) -> Unit,
     onNewChat: () -> Unit,
     onOpenConversations: () -> Unit,
-    onOpenActivity: () -> Unit,
-    onOpenCapabilities: () -> Unit,
 ) {
     val messages = state.current?.messages.orEmpty()
     val listState = rememberLazyListState()
@@ -69,56 +71,66 @@ fun ChatScreen(
     Scaffold(
         containerColor = HopaColor.Bg,
         topBar = {
-            TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = HopaColor.Bg,
-                ),
-                navigationIcon = {
+            HopaTopBar {
+                Row(
+                    modifier = Modifier
+                        .height(44.dp)
+                        .clickable(onClick = onOpenConversations)
+                        .padding(start = 4.dp, end = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Icon(
+                        Icons.Outlined.Schedule,
+                        contentDescription = "Chats",
+                        tint = HopaColor.TextPrimary,
+                        modifier = Modifier.size(19.dp),
+                    )
+                    Text("Chats", fontSize = 12.sp, color = HopaColor.TextSecondary)
+                }
+                if (messages.isNotEmpty()) {
+                    Text(
+                        text = state.current?.title ?: "Chat",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = HopaColor.TextPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f),
+                    )
+                } else {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+                if (state.error != null) {
                     Row(
                         modifier = Modifier
-                            .height(44.dp)
-                            .clickable(onClick = onOpenConversations)
-                            .padding(start = 4.dp, end = 8.dp),
+                            .padding(end = 6.dp)
+                            .background(HopaColor.Danger.copy(alpha = 0.08f), RoundedCornerShape(10.dp))
+                            .clickable { onSelectTab("activity") }
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
                     ) {
-                        Icon(
-                            Icons.Default.Schedule,
-                            contentDescription = "Chats",
-                            tint = HopaColor.TextPrimary,
-                            modifier = Modifier.size(19.dp),
-                        )
-                        Text("Chats", fontSize = 12.sp, color = HopaColor.TextSecondary)
-                    }
-                },
-                title = {
-                    if (messages.isNotEmpty()) {
+                        HopaMascot(sizeDp = 20.dp, state = "error", interactive = false)
                         Text(
-                            text = state.current?.title ?: "Chat",
-                            fontSize = 16.sp,
-                            color = HopaColor.TextPrimary,
-                            maxLines = 1,
+                            "Problem",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = HopaColor.Danger,
                         )
                     }
-                },
-                actions = {
-                    if (state.error != null) {
-                        Row(
-                            modifier = Modifier
-                                .padding(end = 8.dp)
-                                .background(HopaColor.Danger.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
-                                .padding(horizontal = 8.dp, vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text("Problem", fontSize = 10.sp, color = HopaColor.Danger)
-                        }
-                    }
-                    if (messages.isNotEmpty()) {
+                }
+                if (messages.isNotEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .size(width = 40.dp, height = 44.dp)
+                            .clickable(onClick = onNewChat),
+                        contentAlignment = Alignment.Center,
+                    ) {
                         Box(
                             modifier = Modifier
                                 .size(34.dp)
-                                .background(HopaColor.PrimarySoft, CircleShape)
-                                .clickable(onClick = onNewChat),
+                                .background(HopaColor.PrimarySoft, CircleShape),
                             contentAlignment = Alignment.Center,
                         ) {
                             Icon(
@@ -129,8 +141,8 @@ fun ChatScreen(
                             )
                         }
                     }
-                },
-            )
+                }
+            }
         },
         bottomBar = {
             Column(
@@ -165,13 +177,8 @@ fun ChatScreen(
                     )
                 }
                 HopaBottomBar(
-                    active = "chat",
-                    onSelect = { key ->
-                        when (key) {
-                            "activity" -> onOpenActivity()
-                            "capabilities" -> onOpenCapabilities()
-                        }
-                    },
+                    active = activeTab,
+                    onSelect = onSelectTab,
                 )
             }
         },

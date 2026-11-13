@@ -1,11 +1,13 @@
 package com.hopa.app.feature.capabilities
 
+import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import com.hopa.app.di.AppContainer
 import com.hopa.capabilities.accessibility.AccessibilityState
 import com.hopa.capabilities.llm.ProviderState
@@ -15,15 +17,18 @@ import kotlinx.coroutines.flow.first
 @Composable
 fun CapabilitiesRoute(
     container: AppContainer,
-    onBack: () -> Unit,
+    activeTab: String,
+    onSelectTab: (String) -> Unit,
     onOpenLaunchpad: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenRuns: () -> Unit,
 ) {
     var provider by remember { mutableStateOf(ProviderState.DEMO) }
     var endpoint by remember { mutableStateOf("") }
     var records by remember { mutableStateOf(0) }
     var apps by remember { mutableStateOf(0) }
     var accessibilityEnabled by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         val settings = container.settings.settings.first()
@@ -41,9 +46,18 @@ fun CapabilitiesRoute(
         records = records,
         apps = apps,
         accessibilityEnabled = accessibilityEnabled,
-        onBack = onBack,
+        activeTab = activeTab,
+        onSelectTab = onSelectTab,
         onOpenLaunchpad = onOpenLaunchpad,
         onOpenSettings = onOpenSettings,
         onOpenAccessibility = { AccessibilityState.openSettings(container.context) },
+        onOpenRuns = onOpenRuns,
+        onUnavailable = { feature ->
+            Toast.makeText(
+                context,
+                "$feature is not on Android yet.",
+                Toast.LENGTH_SHORT,
+            ).show()
+        },
     )
 }

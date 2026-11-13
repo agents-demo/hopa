@@ -30,6 +30,7 @@ class AppContainer(context: Context) {
     private val database = HopaDatabase.build(context)
     val conversations: ConversationStore = RoomConversationStore(database)
     val selectedConversation = MutableStateFlow<String?>(null)
+    val busy = MutableStateFlow(false)
     val packages = AndroidPackageCatalog(context)
     val recorder = RoomRunRecorder(database.runRecordDao())
     val clock = AndroidClock()

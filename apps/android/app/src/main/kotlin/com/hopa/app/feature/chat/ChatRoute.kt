@@ -13,8 +13,8 @@ import com.hopa.app.feature.conversations.ChatsSheet
 @Composable
 fun ChatRoute(
     container: AppContainer,
-    onOpenActivity: () -> Unit,
-    onOpenCapabilities: () -> Unit,
+    activeTab: String,
+    onSelectTab: (String) -> Unit,
 ) {
     val viewModel: ChatViewModel = viewModel(factory = ChatViewModelFactory(container))
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -22,6 +22,8 @@ fun ChatRoute(
 
     ChatScreen(
         state = state,
+        activeTab = activeTab,
+        onSelectTab = onSelectTab,
         onInput = viewModel::onInput,
         onSend = viewModel::send,
         onOption = viewModel::sendOption,
@@ -29,8 +31,6 @@ fun ChatRoute(
         onApprove = viewModel::resolveApproval,
         onNewChat = viewModel::newChat,
         onOpenConversations = { chatsOpen = true },
-        onOpenActivity = onOpenActivity,
-        onOpenCapabilities = onOpenCapabilities,
     )
 
     if (chatsOpen) {

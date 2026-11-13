@@ -1,23 +1,18 @@
 package com.hopa.app.ui.component
 
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.EaseInOut
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,7 +25,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -42,6 +36,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
@@ -52,34 +47,39 @@ import com.hopa.app.ui.theme.HopaColor
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+/**
+ * The living mascot, ported from HopaMark.ets.
+ *
+ * Idle is a hold followed by a 900 ms lift of 2.5%, toggled every 2200 ms; the
+ * eyes close for 150 ms every 4200 ms. Thinking and acting pulse the opacity
+ * every 520 ms, listening leans 2 degrees, acting leans 4 and happy cheers.
+ */
 @Composable
 fun HopaMascot(
     modifier: Modifier = Modifier,
     sizeDp: Dp = 92.dp,
+    state: String = "idle",
     animate: Boolean = true,
     interactive: Boolean = true,
 ) {
     var bubble by remember { mutableStateOf(false) }
     var cheer by remember { mutableStateOf(false) }
     var blinking by remember { mutableStateOf(false) }
+    var bob by remember { mutableStateOf(false) }
+    var pulse by remember { mutableStateOf(false) }
     var waveAngle by remember { mutableFloatStateOf(45f) }
     val scope = rememberCoroutineScope()
     val haptics = LocalHapticFeedback.current
-    val transition = rememberInfiniteTransition(label = "mascot")
-    val bob by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 2200, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse,
-        ),
-        label = "bob",
-    )
-    val scale by animateFloatAsState(
-        targetValue = if (cheer) 1.06f else 1f,
-        animationSpec = tween(durationMillis = 120),
-        label = "cheer",
-    )
+
+    LaunchedEffect(animate) {
+        if (!animate) {
+            return@LaunchedEffect
+        }
+        while (true) {
+            delay(2200)
+            bob = !bob
+        }
+    }
 
     LaunchedEffect(animate) {
         if (!animate) {
@@ -93,10 +93,48 @@ fun HopaMascot(
         }
     }
 
+    LaunchedEffect(animate, state) {
+        pulse = false
+        if (!animate || (state != "thinking" && state != "acting")) {
+            return@LaunchedEffect
+        }
+        while (true) {
+            delay(520)
+            pulse = !pulse
+        }
+    }
+
+    val lift by animateDpAsState(
+        targetValue = if (animate && (state == "idle" || state == "waiting")) {
+            if (bob) sizeDp * 0.025f else sizeDp * -0.025f
+        } else {
+            0.dp
+        },
+        animationSpec = tween(durationMillis = 900, easing = EaseInOut),
+        label = "bob",
+    )
+    val scale by animateFloatAsState(
+        targetValue = if (cheer || state == "happy") 1.06f else 1f,
+        animationSpec = tween(durationMillis = 120),
+        label = "cheer",
+    )
+    val alpha = when {
+        state == "error" -> 0.65f
+        pulse -> 0.88f
+        else -> 1f
+    }
+    val tilt = when (state) {
+        "acting" -> -4f
+        "listening" -> -2f
+        else -> 0f
+    }
+
     Box(
         modifier = modifier
             .size(sizeDp)
+            .offset(y = lift)
             .scale(scale)
+            .graphicsLayer(rotationZ = tilt, alpha = alpha)
             .clickable(enabled = interactive) {
                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                 scope.launch {
@@ -112,8 +150,9 @@ fun HopaMascot(
                     cheer = false
                 }
                 if (sizeDp >= 56.dp) {
-                    bubble = true
                     scope.launch {
+                        delay(140)
+                        bubble = true
                         delay(2200)
                         bubble = false
                     }
@@ -123,69 +162,66 @@ fun HopaMascot(
         Canvas(modifier = Modifier.fillMaxSize()) {
             val w = size.width
             val h = size.height
-            val lift = if (animate) (bob - 0.5f) * h * 0.05f else 0f
             val coral = Brush.linearGradient(
                 colors = listOf(Color(0xFFF08A5B), Color(0xFFE8703A)),
                 start = Offset(w * 0.30f, h * 0.20f),
                 end = Offset(w * 0.72f, h * 0.82f),
             )
 
-            translate(top = lift) {
-                drawRoundRect(
-                    color = Color(0xFFE8703A),
-                    topLeft = Offset(w * 0.3516f, h * 0.8242f),
-                    size = Size(w * 0.0859f, h * 0.0859f),
-                    cornerRadius = CornerRadius(w * 0.0273f),
-                )
-                drawRoundRect(
-                    color = Color(0xFFE8703A),
-                    topLeft = Offset(w * 0.5195f, h * 0.8242f),
-                    size = Size(w * 0.0859f, h * 0.0859f),
-                    cornerRadius = CornerRadius(w * 0.0273f),
-                )
-                drawRoundRect(
-                    brush = coral,
-                    topLeft = Offset(w * 0.2734f, h * 0.1719f),
-                    size = Size(w * 0.4492f, h * 0.6563f),
-                    cornerRadius = CornerRadius(w * 0.1406f),
-                )
-                drawRoundRect(
-                    color = Color(0xFFFFF9F0),
-                    topLeft = Offset(w * 0.3379f, h * 0.2539f),
-                    size = Size(w * 0.3203f, h * 0.4531f),
-                    cornerRadius = CornerRadius(w * 0.0820f),
-                )
-                val eyeHeight = if (blinking) h * 0.035f else h * 0.1133f
-                val eyeTop = if (blinking) h * 0.445f else h * 0.3984f
+            drawRoundRect(
+                color = Color(0xFFE8703A),
+                topLeft = Offset(w * 0.3516f, h * 0.8242f),
+                size = Size(w * 0.0859f, h * 0.0859f),
+                cornerRadius = CornerRadius(w * 0.0273f),
+            )
+            drawRoundRect(
+                color = Color(0xFFE8703A),
+                topLeft = Offset(w * 0.5195f, h * 0.8242f),
+                size = Size(w * 0.0859f, h * 0.0859f),
+                cornerRadius = CornerRadius(w * 0.0273f),
+            )
+            drawRoundRect(
+                brush = coral,
+                topLeft = Offset(w * 0.2734f, h * 0.1719f),
+                size = Size(w * 0.4492f, h * 0.6563f),
+                cornerRadius = CornerRadius(w * 0.1406f),
+            )
+            drawRoundRect(
+                color = Color(0xFFFFF9F0),
+                topLeft = Offset(w * 0.3379f, h * 0.2539f),
+                size = Size(w * 0.3203f, h * 0.4531f),
+                cornerRadius = CornerRadius(w * 0.0820f),
+            )
+            if (!blinking) {
                 drawRoundRect(
                     color = Color(0xFF1C1B18),
-                    topLeft = Offset(w * 0.4141f, eyeTop),
-                    size = Size(w * 0.0508f, eyeHeight),
+                    topLeft = Offset(w * 0.4141f, h * 0.3984f),
+                    size = Size(w * 0.0508f, h * 0.1133f),
                     cornerRadius = CornerRadius(w * 0.0254f),
                 )
                 drawRoundRect(
                     color = Color(0xFF1C1B18),
-                    topLeft = Offset(w * 0.5469f, eyeTop),
-                    size = Size(w * 0.0508f, eyeHeight),
+                    topLeft = Offset(w * 0.5469f, h * 0.3984f),
+                    size = Size(w * 0.0508f, h * 0.1133f),
                     cornerRadius = CornerRadius(w * 0.0254f),
                 )
-                val smile = Path().apply {
-                    moveTo(w * 0.4609f, h * 0.5703f)
-                    quadraticBezierTo(w * 0.5098f, h * 0.6094f, w * 0.5586f, h * 0.5703f)
-                }
-                drawPath(
-                    path = smile,
-                    color = Color(0xFF1C1B18),
-                    style = Stroke(width = w * 0.0254f, cap = StrokeCap.Round),
+            }
+            val smile = Path().apply {
+                moveTo(w * 0.4609f, h * 0.5703f)
+                quadraticBezierTo(w * 0.5098f, h * 0.6094f, w * 0.5586f, h * 0.5703f)
+            }
+            drawPath(
+                path = smile,
+                color = Color(0xFF1C1B18),
+                style = Stroke(width = w * 0.0254f, cap = StrokeCap.Round),
+            )
+            rotate(degrees = waveAngle, pivot = Offset(w * 0.744f, h * 0.381f)) {
+                drawRoundRect(
+                    color = HopaColor.Accent,
+                    topLeft = Offset(w * 0.713f, h * 0.281f),
+                    size = Size(w * 0.062f, h * 0.20f),
+                    cornerRadius = CornerRadius(w * 0.031f),
                 )
-                rotate(degrees = waveAngle, pivot = Offset(w * 0.744f, h * 0.381f)) {
-                    drawRoundRect(
-                        color = HopaColor.Accent,
-                        topLeft = Offset(w * 0.713f, h * 0.281f),
-                        size = Size(w * 0.062f, h * 0.20f),
-                        cornerRadius = CornerRadius(w * 0.031f),
-                    )
-                }
             }
         }
 

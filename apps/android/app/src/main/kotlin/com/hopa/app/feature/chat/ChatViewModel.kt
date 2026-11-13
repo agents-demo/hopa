@@ -111,6 +111,7 @@ class ChatViewModel(
     private fun sendText(text: String) {
         val conversation = _state.value.current ?: return
         _state.update { it.copy(input = "", busy = true, error = null, options = emptyList()) }
+        container.busy.value = true
         viewModelScope.launch {
             val now = System.currentTimeMillis()
             container.conversations.append(
@@ -138,6 +139,7 @@ class ChatViewModel(
                 ),
             )
             val all = container.conversations.all()
+            container.busy.value = false
             _state.update {
                 it.copy(
                     current = all.firstOrNull { item -> item.id == conversation.id },
@@ -147,7 +149,7 @@ class ChatViewModel(
                     options = result.options,
                 )
             }
-        }
+        }.invokeOnCompletion { container.busy.value = false }
     }
 
     private suspend fun load() {
