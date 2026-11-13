@@ -10,7 +10,6 @@ import com.hopa.app.di.AppContainer
 fun ChatRoute(
     container: AppContainer,
     onOpenConversations: () -> Unit,
-    onOpenSettings: () -> Unit,
     onOpenActivity: () -> Unit,
     onOpenCapabilities: () -> Unit,
 ) {
@@ -25,7 +24,6 @@ fun ChatRoute(
         onApprove = viewModel::resolveApproval,
         onNewChat = viewModel::newChat,
         onOpenConversations = onOpenConversations,
-        onOpenSettings = onOpenSettings,
         onOpenActivity = onOpenActivity,
         onOpenCapabilities = onOpenCapabilities,
     )

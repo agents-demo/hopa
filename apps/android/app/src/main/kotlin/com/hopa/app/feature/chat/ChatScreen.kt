@@ -17,10 +17,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -56,7 +56,6 @@ fun ChatScreen(
     onApprove: (Boolean) -> Unit,
     onNewChat: () -> Unit,
     onOpenConversations: () -> Unit,
-    onOpenSettings: () -> Unit,
     onOpenActivity: () -> Unit,
     onOpenCapabilities: () -> Unit,
 ) {
@@ -93,34 +92,42 @@ fun ChatScreen(
                     }
                 },
                 title = {
-                    Text(
-                        text = state.current?.title ?: "Chat",
-                        fontSize = 16.sp,
-                        color = HopaColor.TextPrimary,
-                        maxLines = 1,
-                    )
-                },
-                actions = {
-                    Box(
-                        modifier = Modifier
-                            .size(34.dp)
-                            .background(HopaColor.PrimarySoft, CircleShape)
-                            .clickable(onClick = onNewChat),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            Icons.Default.Add,
-                            contentDescription = "New chat",
-                            tint = HopaColor.Primary,
-                            modifier = Modifier.size(20.dp),
+                    if (messages.isNotEmpty()) {
+                        Text(
+                            text = state.current?.title ?: "Chat",
+                            fontSize = 16.sp,
+                            color = HopaColor.TextPrimary,
+                            maxLines = 1,
                         )
                     }
-                    IconButton(onClick = onOpenSettings) {
-                        Icon(
-                            Icons.Default.Settings,
-                            contentDescription = "Settings",
-                            tint = HopaColor.TextPrimary,
-                        )
+                },
+                actions = {
+                    if (state.error != null) {
+                        Row(
+                            modifier = Modifier
+                                .padding(end = 8.dp)
+                                .background(HopaColor.Danger.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text("Problem", fontSize = 10.sp, color = HopaColor.Danger)
+                        }
+                    }
+                    if (messages.isNotEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .size(34.dp)
+                                .background(HopaColor.PrimarySoft, CircleShape)
+                                .clickable(onClick = onNewChat),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                Icons.Default.Add,
+                                contentDescription = "New chat",
+                                tint = HopaColor.Primary,
+                                modifier = Modifier.size(20.dp),
+                            )
+                        }
                     }
                 },
             )

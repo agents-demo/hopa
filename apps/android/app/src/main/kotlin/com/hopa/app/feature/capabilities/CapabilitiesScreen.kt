@@ -32,6 +32,7 @@ fun CapabilitiesScreen(
     onBack: () -> Unit,
     onOpenLaunchpad: () -> Unit,
     onOpenAccessibility: () -> Unit,
+    onOpenSettings: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -40,6 +41,11 @@ fun CapabilitiesScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    androidx.compose.material3.TextButton(onClick = onOpenSettings) {
+                        Text("Settings", color = MaterialTheme.colorScheme.primary)
                     }
                 },
             )

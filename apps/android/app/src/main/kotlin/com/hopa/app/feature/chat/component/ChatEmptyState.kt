@@ -2,6 +2,7 @@ package com.hopa.app.feature.chat.component
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,87 +34,109 @@ fun ChatEmptyState(onQuick: (String) -> Unit) {
         "Open Settings and show me Wi-Fi",
         "Draft a one-line message to my team",
     )
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        HopaMascot(sizeDp = 92.dp)
-        Text(
-            text = greeting(),
-            fontSize = 11.sp,
-            color = HopaColor.TextHint,
-            modifier = Modifier.padding(top = 8.dp),
-        )
-        Text(
-            text = "HOPA",
-            style = MaterialTheme.typography.headlineLarge,
-            modifier = Modifier.padding(top = 2.dp),
-        )
-        Text(
-            text = "Your assistant. Ask for anything.",
-            fontSize = 14.sp,
-            color = HopaColor.TextSecondary,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = 6.dp),
-        )
-        Text(
-            text = "Payments always ask first.",
-            fontSize = 11.sp,
-            color = HopaColor.TextHint,
-            modifier = Modifier.padding(top = 2.dp),
-        )
-
-        if (ideasOpen) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+        ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 18.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
             ) {
+                HopaMascot(sizeDp = 92.dp)
                 Text(
-                    "TRY SOMETHING",
-                    fontSize = 9.sp,
+                    text = greeting(),
+                    fontSize = 11.sp,
                     color = HopaColor.TextHint,
-                    letterSpacing = 0.7.sp,
+                    modifier = Modifier.padding(top = 8.dp),
                 )
-                suggestions.forEach { suggestion ->
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                ideasOpen = false
-                                onQuick(suggestion)
-                            },
-                        color = HopaColor.Surface,
-                        shape = RoundedCornerShape(12.dp),
-                        shadowElevation = 2.dp,
-                    ) {
-                        Text(
-                            suggestion,
-                            fontSize = 13.sp,
-                            color = HopaColor.TextPrimary,
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-                        )
+                Text(
+                    text = "HOPA",
+                    style = MaterialTheme.typography.headlineLarge,
+                    modifier = Modifier.padding(top = 2.dp),
+                )
+                Text(
+                    text = "Your assistant. Ask for anything.",
+                    fontSize = 14.sp,
+                    color = HopaColor.TextSecondary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 6.dp),
+                )
+                if (!ideasOpen) {
+                    Text(
+                        text = "Payments always ask first.",
+                        fontSize = 11.sp,
+                        color = HopaColor.TextHint,
+                        modifier = Modifier.padding(top = 2.dp),
+                    )
+                }
+            }
+
+            if (ideasOpen) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomStart)
+                        .padding(horizontal = 24.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(
+                        "TRY SOMETHING",
+                        fontSize = 9.sp,
+                        color = HopaColor.TextHint,
+                        letterSpacing = 0.7.sp,
+                    )
+                    suggestions.forEach { suggestion ->
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    ideasOpen = false
+                                    onQuick(suggestion)
+                                },
+                            color = HopaColor.Surface,
+                            shape = RoundedCornerShape(12.dp),
+                            shadowElevation = 2.dp,
+                        ) {
+                            Text(
+                                suggestion,
+                                fontSize = 13.sp,
+                                color = HopaColor.TextPrimary,
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                            )
+                        }
                     }
                 }
             }
         }
 
         Row(
-            modifier = Modifier.padding(top = 18.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.Center,
         ) {
             Pill(
                 text = if (ideasOpen) "Hide examples \u2193" else "Try an example \u2191",
                 onClick = { ideasOpen = !ideasOpen },
             )
-            Pill(
-                text = "Morning brief?",
+            Surface(
+                modifier = Modifier.padding(start = 8.dp),
                 onClick = { onQuick("What should I get done today?") },
-            )
+                color = HopaColor.SurfaceAlt,
+                shape = RoundedCornerShape(20.dp),
+            ) {
+                Text(
+                    "Morning brief?",
+                    fontSize = 12.5.sp,
+                    color = HopaColor.TextSecondary,
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
+                )
+            }
         }
     }
 }
@@ -128,11 +151,7 @@ private fun Pill(text: String, onClick: () -> Unit) {
         Text(
             text,
             fontSize = 12.5.sp,
-            color = if (text.startsWith("Try") || text.startsWith("Hide")) {
-                HopaColor.Primary
-            } else {
-                HopaColor.TextSecondary
-            },
+            color = HopaColor.Primary,
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
         )
     }

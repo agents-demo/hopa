@@ -1,28 +1,32 @@
 package com.hopa.app.ui.component
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChatBubble
-import androidx.compose.material.icons.filled.GridView
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material3.Icon
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hopa.app.ui.theme.HopaColor
@@ -42,13 +46,13 @@ fun HopaBottomBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(64.dp)
-                .padding(horizontal = 12.dp, vertical = 6.dp),
+                .padding(start = 6.dp, end = 6.dp, top = 4.dp, bottom = 6.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            HopaTab("Chat", "chat", Icons.Default.ChatBubble, active, onSelect)
-            HopaTab("Activity", "activity", Icons.Default.History, active, onSelect)
-            HopaTab("Capabilities", "capabilities", Icons.Default.GridView, active, onSelect)
+            HopaTab("Chat", "chat", active, onSelect, Modifier.weight(1f))
+            HopaTab("Activity", "activity", active, onSelect, Modifier.weight(1f))
+            HopaTab("Capabilities", "capabilities", active, onSelect, Modifier.weight(1f))
         }
     }
 }
@@ -57,15 +61,13 @@ fun HopaBottomBar(
 private fun HopaTab(
     label: String,
     key: String,
-    icon: ImageVector,
     active: String,
     onSelect: (String) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val selected = active == key
     Column(
-        modifier = Modifier
-            .width(88.dp)
-            .clickable { onSelect(key) },
+        modifier = modifier.clickable { onSelect(key) },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -74,22 +76,82 @@ private fun HopaTab(
                 .width(48.dp)
                 .height(28.dp)
                 .background(
-                    color = if (selected) HopaColor.PrimarySoft else HopaColor.Surface,
+                    color = if (selected) HopaColor.PrimarySoft else Color.Transparent,
                     shape = RoundedCornerShape(14.dp),
                 ),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = label,
-                tint = if (selected) HopaColor.Primary else HopaColor.TextSecondary,
-                modifier = Modifier.height(18.dp),
-            )
+            HopaTabIcon(kind = key, active = selected)
         }
         Text(
             text = label,
             fontSize = 11.sp,
+            fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal,
             color = if (selected) HopaColor.Primary else HopaColor.TextSecondary,
         )
+    }
+}
+
+@Composable
+private fun HopaTabIcon(kind: String, active: Boolean) {
+    val color = if (active) HopaColor.Primary else HopaColor.TextSecondary
+    Canvas(modifier = Modifier.size(22.dp)) {
+        when (kind) {
+            "chat" -> {
+                drawRoundRect(
+                    color = color,
+                    topLeft = Offset(1.dp.toPx(), 2.dp.toPx()),
+                    size = Size(20.dp.toPx(), 15.dp.toPx()),
+                    cornerRadius = CornerRadius(5.dp.toPx()),
+                )
+                rotate(degrees = 45f, pivot = Offset(6.dp.toPx(), 16.dp.toPx())) {
+                    drawRoundRect(
+                        color = color,
+                        topLeft = Offset(3.dp.toPx(), 13.dp.toPx()),
+                        size = Size(6.dp.toPx(), 6.dp.toPx()),
+                        cornerRadius = CornerRadius(1.dp.toPx()),
+                    )
+                }
+            }
+
+            "activity" -> {
+                drawCircle(
+                    color = color,
+                    radius = 9.5.dp.toPx(),
+                    center = Offset(11.dp.toPx(), 11.dp.toPx()),
+                    style = Stroke(width = 1.8.dp.toPx()),
+                )
+                drawLine(
+                    color = color,
+                    start = Offset(11.dp.toPx(), 6.5.dp.toPx()),
+                    end = Offset(11.dp.toPx(), 11.dp.toPx()),
+                    strokeWidth = 1.8.dp.toPx(),
+                )
+                drawLine(
+                    color = color,
+                    start = Offset(11.dp.toPx(), 11.dp.toPx()),
+                    end = Offset(15.dp.toPx(), 12.dp.toPx()),
+                    strokeWidth = 1.8.dp.toPx(),
+                )
+            }
+
+            else -> {
+                val side = 7.dp.toPx()
+                val radius = CornerRadius(2.dp.toPx())
+                listOf(
+                    Offset(2.dp.toPx(), 2.dp.toPx()),
+                    Offset(12.dp.toPx(), 2.dp.toPx()),
+                    Offset(2.dp.toPx(), 12.dp.toPx()),
+                    Offset(12.dp.toPx(), 12.dp.toPx()),
+                ).forEach { offset ->
+                    drawRoundRect(
+                        color = color,
+                        topLeft = offset,
+                        size = Size(side, side),
+                        cornerRadius = radius,
+                    )
+                }
+            }
+        }
     }
 }

@@ -21,7 +21,6 @@ fun HopaNavHost(container: AppContainer) {
             ChatRoute(
                 container = container,
                 onOpenConversations = { navController.navigate(HopaDestination.CONVERSATIONS) },
-                onOpenSettings = { navController.navigate(HopaDestination.SETTINGS) },
                 onOpenActivity = { navController.navigate(HopaDestination.RUNS) },
                 onOpenCapabilities = { navController.navigate(HopaDestination.CAPABILITIES) },
             )
@@ -58,6 +57,7 @@ fun HopaNavHost(container: AppContainer) {
                 container = container,
                 onBack = { navController.popBackStack() },
                 onOpenLaunchpad = { navController.navigate(HopaDestination.LAUNCHPAD) },
+                onOpenSettings = { navController.navigate(HopaDestination.SETTINGS) },
             )
         }
         composable(HopaDestination.LAUNCHPAD) {

@@ -17,6 +17,7 @@ fun CapabilitiesRoute(
     container: AppContainer,
     onBack: () -> Unit,
     onOpenLaunchpad: () -> Unit,
+    onOpenSettings: () -> Unit,
 ) {
     var provider by remember { mutableStateOf(ProviderState.DEMO) }
     var endpoint by remember { mutableStateOf("") }
@@ -42,6 +43,7 @@ fun CapabilitiesRoute(
         accessibilityEnabled = accessibilityEnabled,
         onBack = onBack,
         onOpenLaunchpad = onOpenLaunchpad,
+        onOpenSettings = onOpenSettings,
         onOpenAccessibility = { AccessibilityState.openSettings(container.context) },
     )
 }
