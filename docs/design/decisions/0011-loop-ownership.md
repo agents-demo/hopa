@@ -1,6 +1,6 @@
 # ADR-0011 — Where the loop runs, and what a backend owns
 
-- Status: accepted
+- Status: accepted (superseded in part by ADR-0016)
 - Date: 2026-11-12
 
 ## Context

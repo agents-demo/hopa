@@ -21,6 +21,7 @@ Service documentation lives with the services: [`services/docs/`](../services/do
 | [architecture/layers.md](design/architecture/layers.md) | What may import what? |
 | [architecture/data-flow.md](design/architecture/data-flow.md) | How does one goal become an action? |
 | [architecture/target-structure.md](design/architecture/target-structure.md) | The historical audit that produced the current folders |
+| [architecture/apps-android.md](design/architecture/apps-android.md) | How the Android app is shaped (planned) |
 | [decisions/](design/decisions/README.md) | Why was a decision made? One ADR per decision |
 | [product/roadmap.md](design/product/roadmap.md) | What comes next? |
 | [product/coverage.md](design/product/coverage.md) | What works today, and what is blocked? |
@@ -34,6 +35,7 @@ Service documentation lives with the services: [`services/docs/`](../services/do
 | [harmony/build-and-sign.md](guides/harmony/build-and-sign.md) | How is the HAP signed and installed? |
 | [harmony/install-phone.md](guides/harmony/install-phone.md) | How does the app reach a phone? |
 | [harmony/acl-request.md](guides/harmony/acl-request.md) | How is the accessibility ACL requested? |
+| [android/README.md](guides/android/README.md) | How does Android run the loop, and how does it act? (planned) |
 
 `guides/android/` and `guides/windows/` appear when those apps do.
 
@@ -48,6 +50,7 @@ Service documentation lives with the services: [`services/docs/`](../services/do
 | [threat-model.md](reference/threat-model.md) | What are the security limits? |
 | [privacy.md](reference/privacy.md) | What data is stored? |
 | [abuse.md](reference/abuse.md) | What is explicitly refused? |
+| [platform-matrix.md](reference/platform-matrix.md) | What can each platform do, and how? |
 
 ## Project
 
