@@ -37,7 +37,7 @@
 signing/
 signingConfigs.json
 build-profile.signing.json5
-secrets/
+/.secrets/
 .env
 .env.*
 !.env.example
