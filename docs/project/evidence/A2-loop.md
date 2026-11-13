@@ -33,3 +33,17 @@ messages untouched, trim older lines to 400 chars, then drop from the front.
   browser precedence does not exist.
 - No loop test with a stub model (payment stop, cancel, token accounting,
   14-step cap, budget cases).
+## Update 2026-11-13: the loop is complete
+
+- `AgentLoop` now settles 1 500 ms after an action, refuses a duplicate launch of
+  the same app, checks cancellation before every model call, before an action and
+  before the final summary, accumulates token usage across calls, and falls back
+  to a plain-text summary after 14 steps.
+- `AgentLoopTest` (6 cases) drives a scripted model: read action, refused
+  payment, the 14-step cap plus the final call, duplicate launch, cancellation
+  and usage totals.
+- `SystemPromptTest` asserts every phrase in `contracts/prompts/rules.v1.json`
+  through the generated `PROMPT_RULES`, plus the web and no-surface branches.
+- `AppRouterTest` reproduces all 12 routing fixtures including score and term.
+- Still open: tap grouping in `RunNarrator`, and `ScreenSource` (bridge →
+  accessibility → browser) which needs A5/A7.

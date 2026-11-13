@@ -33,3 +33,18 @@ python tools/checks/check-android-structure.py -> 0 problems
   untested.
 - The `android` platform map (package/activity per catalogue entry).
 - A schema-only conformance stage before the semantic gate.
+## Update 2026-11-13: schema gate and the producer
+
+- `SchemaValidationTest` validates every fixture observation against
+  `observation.schema.json` and every decision against `decision.schema.json`,
+  inlining the action `$ref` from the sibling file so validation never touches
+  the network. `ui.teleport` fails at the action enum; the two semantic
+  rejections (`done` with an action, `needUser` without options) are named in
+  the test because the schema cannot express them.
+- `ObservationProducer` assigns pre-order refs, drops password fields, redacts
+  email/phone/card/OTP, caps nodes at 400 while keeping the focus path, caps text
+  at 6 000, sets `truncated` and hashes. `ObservationProducerTest` covers each
+  rule and round-trips every hash fixture.
+- `RunRecordSerializer` writes `approved` and `error` explicitly as null, so a
+  sealed record validates against `run-record.schema.json`.
+- Still open: the catalogue `android` platform map.

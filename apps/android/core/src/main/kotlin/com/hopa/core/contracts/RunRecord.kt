@@ -3,7 +3,7 @@ package com.hopa.core.contracts
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-@Serializable
+@Serializable(with = RunRecordSerializer::class)
 data class RunRecord(
     @SerialName("schemaVersion") val schemaVersion: String = "1",
     val runId: String,

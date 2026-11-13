@@ -14,6 +14,7 @@ class RoomRunRecorder(
         val previous = dao.last(draft.runId)?.hash ?: RunChain.SEED
         val record = RunChain.seal(draft, previous)
         dao.insert(RunRecordMapper.entity(record))
+        dao.prune(100)
         return record
     }
 

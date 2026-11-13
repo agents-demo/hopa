@@ -10,6 +10,7 @@ import com.hopa.core.gate.ActionExecutor
 import com.hopa.core.model.ModelMessage
 import com.hopa.core.model.ModelPort
 import com.hopa.core.model.ModelRequest
+import com.hopa.core.model.ModelUsage
 import com.hopa.core.narration.RunNarrator
 import com.hopa.core.parser.DecisionParser
 import com.hopa.core.ports.Clock
@@ -40,6 +41,7 @@ class AgentLoop(
         runId: String,
         traceId: String,
         context: TurnContext,
+        isCancelled: () -> Boolean = { false },
     ): TurnResult {
         var observation = runCatching { device.observe() }.getOrNull()
         val surfaceAvailable = observation != null
@@ -61,8 +63,13 @@ class AgentLoop(
 
         val records = mutableListOf<RunRecord>()
         val narration = mutableListOf<String>()
+        val launched = mutableSetOf<String>()
+        var usage = ModelUsage()
 
         repeat(config.maxSteps) { step ->
+            if (isCancelled()) {
+                return TurnResult("Stopped.", records, narration, usage = usage)
+            }
             val reply = runCatching { model.complete(ModelRequest(messages)) }
                 .getOrElse { error ->
                     return TurnResult(
@@ -70,72 +77,95 @@ class AgentLoop(
                         records = records,
                         narration = narration,
                         error = HopaError(ErrorCodes.MODEL, error.message ?: "model failed"),
+                        usage = usage,
                     )
                 }
+            usage = usage.plus(reply.usage)
             messages += ModelMessage("assistant", reply.text)
-            when (val outcome = parser.parse(reply.text)) {
-                else -> {
-                    val failure = outcome.error
-                    if (failure != null) {
-                        return TurnResult(
-                            answer = "The model sent an invalid step. ${failure.message}",
-                            records = records,
-                            narration = narration,
-                            error = failure,
-                        )
-                    }
-                    val text = outcome.text
-                    if (text != null) {
-                        return TurnResult(text, records, narration)
-                    }
-                    val decision = outcome.decision
-                    if (decision == null) {
-                        return TurnResult("I did not understand the answer.", records, narration)
-                    }
-                    if (decision.done) {
-                        return TurnResult(decision.say.ifBlank { "Done." }, records, narration)
-                    }
-                    if (decision.needUser) {
-                        return TurnResult(
-                            answer = decision.say,
-                            records = records,
-                            narration = narration,
-                            options = decision.options.orEmpty(),
-                        )
-                    }
-                    val action = decision.action
-                    if (action == null) {
-                        return TurnResult(decision.say.ifBlank { "Done." }, records, narration)
-                    }
-                    val before = observation ?: emptyObservation()
-                    val result = executor.execute(
-                        runId = runId,
-                        step = step,
-                        traceId = traceId,
-                        action = action,
-                        before = before,
+
+            val outcome = parser.parse(reply.text)
+            outcome.error?.let { failure ->
+                return TurnResult(
+                    answer = "The model sent an invalid step. ${failure.message}",
+                    records = records,
+                    narration = narration,
+                    error = failure,
+                    usage = usage,
+                )
+            }
+            outcome.text?.let { text ->
+                return TurnResult(text, records, narration, usage = usage)
+            }
+            val decision = outcome.decision
+                ?: return TurnResult("I did not understand the answer.", records, narration, usage = usage)
+            if (decision.done) {
+                return TurnResult(
+                    answer = decision.say.ifBlank { "Done." },
+                    records = records,
+                    narration = narration,
+                    usage = usage,
+                )
+            }
+            if (decision.needUser) {
+                return TurnResult(
+                    answer = decision.say,
+                    records = records,
+                    narration = narration,
+                    options = decision.options.orEmpty(),
+                    usage = usage,
+                )
+            }
+            val action = decision.action
+                ?: return TurnResult(decision.say.ifBlank { "Done." }, records, narration, usage = usage)
+
+            if (action.kind == "ui.launch") {
+                val app = action.app.orEmpty()
+                if (app.isNotEmpty() && !launched.add(app)) {
+                    messages += ModelMessage(
+                        "user",
+                        "The app $app is already in the foreground. Do not launch it again; " +
+                            "read SCREEN and continue.",
                     )
-                    records += result.record
-                    narration += RunNarrator.line(action, result.record.executed)
-                    observation = result.observation
-                    messages += ModelMessage("user", screenRenderer.render(result.observation))
-                    if (result.text.isNotEmpty()) {
-                        messages += ModelMessage("user", result.text)
-                    }
+                    return@repeat
                 }
+            }
+
+            if (isCancelled()) {
+                return TurnResult("Stopped.", records, narration, usage = usage)
+            }
+            val before = observation ?: emptyObservation()
+            val result = executor.execute(
+                runId = runId,
+                step = step,
+                traceId = traceId,
+                action = action,
+                before = before,
+            )
+            records += result.record
+            narration += RunNarrator.line(action, result.record.executed)
+            observation = result.observation
+            clock.sleep(config.settleMillis)
+            messages += ModelMessage("user", screenRenderer.render(result.observation))
+            if (result.text.isNotEmpty()) {
+                messages += ModelMessage("user", result.text)
             }
         }
 
+        if (isCancelled()) {
+            return TurnResult("Stopped.", records, narration, usage = usage)
+        }
         messages += ModelMessage(
             "user",
             "You have reached the step limit. Summarize what happened and answer in plain text.",
         )
         val final = runCatching { model.complete(ModelRequest(messages)) }
+        final.getOrNull()?.let { usage = usage.plus(it.usage) }
         return TurnResult(
             answer = final.map { it.text }.getOrElse { "I stopped after ${config.maxSteps} steps." },
             records = records,
             narration = narration,
             error = if (final.isSuccess) null else HopaError(ErrorCodes.TIMEOUT, "step limit"),
+            usage = usage,
         )
     }
 

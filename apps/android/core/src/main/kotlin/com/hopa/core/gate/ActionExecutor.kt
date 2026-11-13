@@ -130,7 +130,6 @@ class ActionExecutor(
                 val packageName = action.app?.takeIf { it.isNotBlank() }
                     ?: throw IllegalArgumentException("ui.launch needs app")
                 device.launch(packageName)
-                clock.sleep(1_500)
                 return ""
             }
 

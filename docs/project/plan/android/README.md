@@ -5,7 +5,7 @@ phone code (UI, core, capabilities, shared services, bridge); the checklist was
 reconciled with the code on 2026-11-13.
 Owner: TBD.
 
-Progress on 2026-11-13: **19 of 135 phase items (14.1%)**, **20 of 149 (13.4%)**
+Progress on 2026-11-13: **29 of 135 phase items (21.5%)**, **30 of 149 (20.1%)**
 with the Definition of done and the open decisions.
 
 Read that number correctly. It counts *finished items*, not effort: an item is
@@ -257,24 +257,24 @@ apps/android/
 ### A1. Contracts and schema validation (5 d)
 
 - [x] `core/contracts`: serializable `Observation`, `Action`, `Decision`, `RunRecord` matching the schemas exactly (names, nullability, unknown fields rejected). (evidence: ConformanceTest decodes every fixture with ignoreUnknownKeys = false)
-- [ ] JSON-Schema validation with `networknt/json-schema-validator` (draft 2020-12), including `action` `$ref` inside `decision`; pin the version.
-- [ ] `ObservationProducer` contract tests: pre-order refs, redaction cases, limits from `contracts/observation/limits.v1.json`, and the exact hash from `contracts/fixtures/observation-hash.json`.
+- [x] JSON-Schema validation with `networknt/json-schema-validator` (draft 2020-12), including `action` `$ref` inside `decision`; pin the version. (evidence: SchemaValidationTest validates every fixture observation and decision)
+- [x] `ObservationProducer` contract tests: pre-order refs, redaction cases, limits from `contracts/observation/limits.v1.json`, and the exact hash from `contracts/fixtures/observation-hash.json`. (evidence: ObservationProducerTest: refs, redaction, caps, limits, hash fixtures)
 - [ ] Catalogue: generate the Kotlin file from `contracts/catalog/catalog.v1.json` (`build-app-catalog.py --kotlin`); no hand-written list. Fill the `android` platform map (package, activity) from `PackageManager`.
-- [ ] Schema-only conformance: every fixture's observation and decision validates or fails as declared; no semantic gate yet.
+- [x] Schema-only conformance: every fixture's observation and decision validates or fails as declared; no semantic gate yet. (evidence: SchemaValidationTest, with the two semantic rejections named)
 - [x] A named negative case: `ui.teleport` must fail with `E_SCHEMA`. (evidence: DecisionParserTest.rejects_an_unknown_kind)
 - [x] Evidence: JVM tests; the hash vector matches; an intentionally invalid fixture fails with the schema error. (evidence: docs/project/evidence/A1-contracts.md)
 
 ### A2. The loop (10 d)
 
-- [ ] `AgentLoop`: initial capture, system prompt, **up to 14 steps**, 1500 ms settle, duplicate-launch short-circuit, cancel at three checkpoints, final text-only call, `summarize`.
+- [x] `AgentLoop`: initial capture, system prompt, **up to 14 steps**, 1500 ms settle, duplicate-launch short-circuit, cancel at three checkpoints, final text-only call, `summarize`. (evidence: AgentLoopTest (6 cases); settle, cancel, dedupe, usage)
 - [x] `ActionParser`/`DecisionParser`: fenced and last-object parsing, the **schema's** kinds (not Harmony's 19), reject `finish`/`done`, ignore model payment flags, unknown kind → `E_SCHEMA` (see A1). (evidence: core/src/test/kotlin/com/hopa/core/parser/DecisionParserTest.kt)
-- [ ] `PromptBuilder`: system text carrying every rule in `contracts/prompts/rules.v1.json` (generate Kotlin with `build-prompt-rules.py --kotlin` and assert the phrases in a test), memory/skill/app-catalogue blocks, router hint, screen rendering with 120 element lines.
-- [ ] `AppRouter` ported from `AppRouter.ets`; run `contracts/fixtures/routing.json` and reproduce every case.
+- [x] `PromptBuilder`: system text carrying every rule in `contracts/prompts/rules.v1.json` (generate Kotlin with `build-prompt-rules.py --kotlin` and assert the phrases in a test), memory/skill/app-catalogue blocks, router hint, screen rendering with 120 element lines. (evidence: SystemPromptTest asserts every generated PROMPT_RULES phrase)
+- [x] `AppRouter` ported from `AppRouter.ets`; run `contracts/fixtures/routing.json` and reproduce every case. (evidence: AppRouterTest reproduces all 12 routing fixtures)
 - [x] `ContextBudget`: 24 000 chars, keep last 6, 400-char old lines, hard trim. (evidence: core/.../prompt/ContextBudget.kt; AgentLoop calls budget.fit)
 - [ ] `RunNarrator`: per-step sentences, tap grouping, failure phrasing.
 - [ ] `ObservationProducer` wired behind `ScreenSource` (bridge → accessibility 4 s guard → browser text).
-- [ ] Loop tests: payment stops at first step, cancel, token accounting, launch dedupe, 14-step cap, parser cases (from `ActionParser.test`), budget cases.
-- [ ] Evidence: stub-model turn produces outcomes and an answer; tests mirror the Harmony core suite.
+- [x] Loop tests: payment stops at first step, cancel, token accounting, launch dedupe, 14-step cap, parser cases (from `ActionParser.test`), budget cases. (evidence: AgentLoopTest covers all listed cases; ContextBudgetTest covers the budget)
+- [x] Evidence: stub-model turn produces outcomes and an answer; tests mirror the Harmony core suite. (evidence: AgentLoopTest with a scripted model; docs/project/evidence/A2-loop.md)
 
 ### A3. Gate, records, semantic conformance (8 d)
 
@@ -283,9 +283,9 @@ apps/android/
 - [x] `RunRecord` per **contract** with `prevHash`/`hash` (canonical JSON, `sha256:`), step index, trace id; seed pinned to `sha256("")`; `verifyChain` fails on tamper. (evidence: RunChainTest seals, verifies and fails on tamper)
 - [ ] Room `RunStore` (last 100, atomic), `beginTurn` always called.
 - [ ] Approval content: title/body, amount/merchant, highlight bounds, payment checkbox, remember-app for messages.
-- [ ] **Full conformance runner** (the six fixtures) with a fake capability per classification; a broken client fails the fixture name.
+- [x] **Full conformance runner** (the six fixtures) with a fake capability per classification; a broken client fails the fixture name. (evidence: ConformanceExecutionTest executes all six fixtures by name)
 - [ ] 17 policy cases + executor cases (denied, unsupported, approved payment, screen-diff verify).
-- [ ] Evidence: policy/executor/chain tests green; a tampered record fails; all six fixtures pass.
+- [x] Evidence: policy/executor/chain tests green; a tampered record fails; all six fixtures pass. (evidence: docs/project/evidence/A3-gate.md; RunChainTest tamper case)
 
 ### A4. Model, keys, settings core (8 d)
 

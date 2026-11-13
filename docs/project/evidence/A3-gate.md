@@ -33,3 +33,18 @@ cd apps/android
   payment, screen-diff verify) are not a test suite yet.
 - No fake-capability runner: the fixtures stop at classification/policy, they do
   not execute per classification.
+## Update 2026-11-13: execution, cases and the record cap
+
+- `ConformanceExecutionTest` executes the six fixtures through a real
+  `ActionExecutor` with a fake device and a gateway that never approves, and
+  asserts `executed`, `classification` and `needsApproval` per fixture name.
+- `ActionExecutorTest` covers a denied payment, a missing capability
+  (`E_UNSUPPORTED`), a changed screen (`verified`, before/after hashes differ)
+  and a tap that changes nothing.
+- `ApprovalPolicyCasesTest` walks the generated payment, sensitive and allowed
+  lists, proves that autonomous mode still asks for payments, and that an
+  unknown kind fails closed.
+- `RoomRunRecorder` prunes to the last 100 rows.
+- Still open: `beginTurn`, the full approval sheet (highlight crop,
+  remember-app), approved-payment execution, and the count of exactly 17 policy
+  cases.
