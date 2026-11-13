@@ -6,8 +6,8 @@ import com.hopa.app.navigation.HopaNavHost
 import com.hopa.app.ui.theme.HopaTheme
 
 @Composable
-fun HopaApp(container: AppContainer) {
+fun HopaApp(container: AppContainer, initialGoal: String = "") {
     HopaTheme {
-        HopaNavHost(container = container)
+        HopaNavHost(container = container, initialGoal = initialGoal)
     }
 }

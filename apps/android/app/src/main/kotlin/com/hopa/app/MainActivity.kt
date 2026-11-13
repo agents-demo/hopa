@@ -16,8 +16,28 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         val container = (application as HopaApplication).container
         applyLaunchConfig(intent, container)
+        val goal = goalFrom(intent)
         setContent {
-            HopaApp(container = container)
+            HopaApp(container = container, initialGoal = goal)
+        }
+    }
+
+    /**
+     * `hopa://ask?text=...` and `ACTION_PROCESS_TEXT` drop the words into the
+     * composer; nothing is sent without a tap.
+     */
+    private fun goalFrom(intent: Intent?): String {
+        if (intent == null) {
+            return ""
+        }
+        if (intent.action == Intent.ACTION_PROCESS_TEXT) {
+            return intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT)?.toString().orEmpty()
+        }
+        val data = intent.data ?: return ""
+        return if (data.scheme == "hopa" && data.host == "ask") {
+            data.getQueryParameter("text").orEmpty()
+        } else {
+            ""
         }
     }
 

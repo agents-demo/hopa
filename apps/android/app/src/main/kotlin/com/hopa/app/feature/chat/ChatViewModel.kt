@@ -47,6 +47,11 @@ class ChatViewModel(
         _state.update { it.copy(input = value) }
     }
 
+    /** A deep link or a shared selection lands in the composer, never sent. */
+    fun prefill(text: String) {
+        _state.update { it.copy(input = text.trim()) }
+    }
+
     fun newChat() {
         viewModelScope.launch {
             val created = container.conversations.create()

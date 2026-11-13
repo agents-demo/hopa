@@ -13,7 +13,7 @@ import com.hopa.app.feature.settings.SettingsRoute
 import com.hopa.app.feature.shell.HomeShell
 
 @Composable
-fun HopaNavHost(container: AppContainer) {
+fun HopaNavHost(container: AppContainer, initialGoal: String = "") {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = HopaDestination.CHAT) {
         composable(HopaDestination.CHAT) {
@@ -22,6 +22,7 @@ fun HopaNavHost(container: AppContainer) {
                 onOpenSettings = { navController.navigate(HopaDestination.SETTINGS) },
                 onOpenLaunchpad = { navController.navigate(HopaDestination.LAUNCHPAD) },
                 onOpenRuns = { navController.navigate(HopaDestination.RUNS) },
+                initialGoal = initialGoal,
             )
         }
         composable(HopaDestination.SETTINGS) {

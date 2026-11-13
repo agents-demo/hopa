@@ -15,10 +15,17 @@ fun ChatRoute(
     container: AppContainer,
     activeTab: String,
     onSelectTab: (String) -> Unit,
+    initialGoal: String = "",
 ) {
     val viewModel: ChatViewModel = viewModel(factory = ChatViewModelFactory(container))
     val state by viewModel.state.collectAsStateWithLifecycle()
     var chatsOpen by remember { mutableStateOf(false) }
+
+    androidx.compose.runtime.LaunchedEffect(initialGoal) {
+        if (initialGoal.isNotBlank()) {
+            viewModel.prefill(initialGoal)
+        }
+    }
 
     ChatScreen(
         state = state,

@@ -20,6 +20,7 @@ fun HomeShell(
     onOpenSettings: () -> Unit,
     onOpenLaunchpad: () -> Unit,
     onOpenRuns: () -> Unit,
+    initialGoal: String = "",
 ) {
     var tab by rememberSaveable { mutableStateOf("chat") }
     val selectTab: (String) -> Unit = { key ->
@@ -49,6 +50,7 @@ fun HomeShell(
             container = container,
             activeTab = tab,
             onSelectTab = selectTab,
+            initialGoal = initialGoal,
         )
     }
 }
