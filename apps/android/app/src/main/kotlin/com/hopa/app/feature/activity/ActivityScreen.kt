@@ -44,6 +44,7 @@ fun ActivityScreen(
     activeTab: String,
     onSelectTab: (String) -> Unit,
     onOpenRuns: () -> Unit,
+    onOpenUsage: () -> Unit,
     onShare: () -> Unit,
     onUnavailable: (String) -> Unit,
 ) {
@@ -101,7 +102,7 @@ fun ActivityScreen(
 
             SectionLabel("RECENT")
             NavCard("Runs and batches", "Every action, approval and duration", onOpenRuns)
-            NavCard("Usage", "Tokens and time spent") { onUnavailable("Usage") }
+            NavCard("Usage", "Tokens and time spent", onOpenUsage)
 
             SectionLabel("SCHEDULED")
             NavCard("Plans", "Goals that run while HOPA is open") { onUnavailable("Plans") }

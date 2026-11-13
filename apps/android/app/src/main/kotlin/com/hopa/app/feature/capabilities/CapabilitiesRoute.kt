@@ -22,6 +22,7 @@ fun CapabilitiesRoute(
     onOpenLaunchpad: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenRuns: () -> Unit,
+    onOpenUsage: () -> Unit,
 ) {
     var provider by remember { mutableStateOf(ProviderState.DEMO) }
     var endpoint by remember { mutableStateOf("") }
@@ -52,6 +53,7 @@ fun CapabilitiesRoute(
         onOpenSettings = onOpenSettings,
         onOpenAccessibility = { AccessibilityState.openSettings(container.context) },
         onOpenRuns = onOpenRuns,
+        onOpenUsage = onOpenUsage,
         onUnavailable = { feature ->
             Toast.makeText(
                 context,

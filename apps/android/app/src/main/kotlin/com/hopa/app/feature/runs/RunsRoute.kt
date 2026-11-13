@@ -18,5 +18,9 @@ fun RunsRoute(
     LaunchedEffect(Unit) {
         records = container.recorder.all()
     }
-    RunsScreen(records = records, onBack = onBack)
+    RunsScreen(
+        records = records,
+        onBack = onBack,
+        onVerify = { runId -> container.recorder.verify(runId) },
+    )
 }

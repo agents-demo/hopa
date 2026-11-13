@@ -16,6 +16,7 @@ fun ActivityRoute(
     activeTab: String,
     onSelectTab: (String) -> Unit,
     onOpenRuns: () -> Unit,
+    onOpenUsage: () -> Unit,
 ) {
     val viewModel: ActivityViewModel = viewModel(factory = ActivityViewModelFactory(container))
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -30,6 +31,7 @@ fun ActivityRoute(
         activeTab = activeTab,
         onSelectTab = onSelectTab,
         onOpenRuns = onOpenRuns,
+        onOpenUsage = onOpenUsage,
         onShare = {
             val send = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"

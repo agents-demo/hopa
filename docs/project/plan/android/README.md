@@ -5,7 +5,7 @@ phone code (UI, core, capabilities, shared services, bridge); the checklist was
 reconciled with the code on 2026-11-13.
 Owner: TBD.
 
-Progress on 2026-11-13: **50 of 135 phase items (37.0%)**, **51 of 149 (34.2%)**
+Progress on 2026-11-13: **51 of 135 phase items (37.8%)**, **52 of 149 (34.9%)**
 with the Definition of done and the open decisions.
 
 Read that number correctly. It counts *finished items*, not effort: an item is
@@ -371,7 +371,7 @@ apps/android/
 - [ ] Chats sheet: search, date groups, new chat, **rename**, delete via long-press and swipe, delete-all.
 - [ ] Activity: status, last run, week-in-review image (Compose → Bitmap → FileProvider), recent actions.
 - [ ] Runs: filters (all/payments/failed), detail with receipt, replay with filmstrip, batch, clear.
-- [ ] Usage: counters from `run_records`.
+- [x] Usage: counters from `run_records`. (evidence: UsageScreen + emulator run; docs/project/evidence/A11-screens.md)
 - [ ] Plans: repeated-goal suggestions (≥2, 4–90 chars, max 3), intervals, list/delete; **decision**: in-process copy or WorkManager (see §13).
 - [x] Capabilities hub: readiness + tiles. (evidence: docs/project/evidence/A11-screens.md)
 - [ ] Launchpad: render `contracts/catalog/catalog.v1.json`, apps/sites segments, search, verified/unverified; fill and use the `android` package/activity map; `PackageManager` launch with explicit intents.

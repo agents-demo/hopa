@@ -10,6 +10,7 @@ import com.hopa.app.feature.profiles.ProfilesRoute
 import com.hopa.app.feature.runs.RunsRoute
 import com.hopa.app.feature.settings.AccessibilityRoute
 import com.hopa.app.feature.settings.SettingsRoute
+import com.hopa.app.feature.usage.UsageRoute
 import com.hopa.app.feature.shell.HomeShell
 
 @Composable
@@ -22,7 +23,14 @@ fun HopaNavHost(container: AppContainer, initialGoal: String = "") {
                 onOpenSettings = { navController.navigate(HopaDestination.SETTINGS) },
                 onOpenLaunchpad = { navController.navigate(HopaDestination.LAUNCHPAD) },
                 onOpenRuns = { navController.navigate(HopaDestination.RUNS) },
+                onOpenUsage = { navController.navigate(HopaDestination.USAGE) },
                 initialGoal = initialGoal,
+            )
+        }
+        composable(HopaDestination.USAGE) {
+            UsageRoute(
+                container = container,
+                onBack = { navController.popBackStack() },
             )
         }
         composable(HopaDestination.SETTINGS) {

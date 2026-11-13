@@ -5,6 +5,7 @@ object HopaDestination {
     const val SETTINGS = "settings"
     const val PROFILES = "profiles"
     const val RUNS = "runs"
+    const val USAGE = "usage"
     const val CAPABILITIES = "capabilities"
     const val ACCESSIBILITY = "accessibility"
     const val LAUNCHPAD = "launchpad"

@@ -52,6 +52,7 @@ fun CapabilitiesScreen(
     onOpenSettings: () -> Unit,
     onOpenAccessibility: () -> Unit,
     onOpenRuns: () -> Unit,
+    onOpenUsage: () -> Unit,
     onUnavailable: (String) -> Unit,
 ) {
     val ready = accessibilityEnabled
@@ -174,7 +175,7 @@ fun CapabilitiesScreen(
                 Tile(
                     title = "Usage",
                     subtitle = "$records recorded",
-                    onClick = { onUnavailable("Usage") },
+                    onClick = onOpenUsage,
                     modifier = Modifier.weight(1f),
                 )
                 Tile(
