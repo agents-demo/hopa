@@ -12,6 +12,7 @@ fun SettingsRoute(
     onBack: () -> Unit,
     onOpenCapabilities: () -> Unit,
     onOpenLaunchpad: () -> Unit,
+    onOpenProfiles: () -> Unit,
 ) {
     val viewModel: SettingsViewModel = viewModel(factory = SettingsViewModelFactory(container))
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -21,5 +22,6 @@ fun SettingsRoute(
         onSave = viewModel::save,
         onOpenCapabilities = onOpenCapabilities,
         onOpenLaunchpad = onOpenLaunchpad,
+        onOpenProfiles = onOpenProfiles,
     )
 }

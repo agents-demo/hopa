@@ -62,12 +62,34 @@ A cloud or LAN provider is configured in Settings.
 - Tests mirror packages; `core` includes the six conformance fixtures and the
   observation hash vector.
 
+## Visual layer
+
+The first screens now follow the Harmony tokens from
+`apps/harmony/phone/src/main/resources/base/element/color.json`:
+
+- background `#F7F4EE`, surface `#FFFFFF`, alt `#F3EFE7`, primary `#0A59F7`,
+  accent `#E8703A`, text `#1C1B18` / `#6B665C` / `#9A9488`;
+- the mascot is drawn in Compose (`HopaMascot`) from the same geometry as
+  `hopa_body.svg`: coral gradient body, warm screen, two eyes, smile, legs and a
+  waving arm, with a slow bob;
+- the empty state is the Harmony hero: mascot, greeting, HOPA wordmark,
+  tagline, "Payments always ask first.", two pills and an example list;
+- the composer is one white 26 dp rounded field with a 36 dp send/mic circle;
+- the top bar has the Chats clock, title, new-chat circle and settings;
+- the bottom bar is Chat / Activity / Capabilities with the soft active pill.
+
+HarmonyOS Sans is not in the repository (no font file), so the app uses the
+Android system sans with the Harmony sizes and weights. Drop a licensed
+HarmonyOS Sans into `app/src/main/res/font` and point `HopaType` at it to match
+the glyphs exactly.
+
 ## Not done yet
 
 - Bridge `adb` transport (A5) and `BridgeClient` (A6).
 - Accessibility service (A7).
 - Room persistence and chat sync (A8).
-- Approval sheet and the full feature screens (A9-A11); payments are currently
-  refused by the session gateway because there is no approval UI.
+- The full feature screens (A9-A11): per-profile shells, Activity detail, Plans,
+  Usage, Memory, Skills, Browser, full Settings, share.
 - Voice, foreground service (A12), release signing (A13), parity QA (A14).
-- Per-profile shells; the profile setting is stored but the shell is not varied.
+- The approval sheet is implemented; actions that need the device still fail
+  because the device ports are not connected.

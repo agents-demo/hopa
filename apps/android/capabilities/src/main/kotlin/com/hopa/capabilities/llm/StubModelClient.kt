@@ -16,6 +16,8 @@ class StubModelClient : ModelPort {
             last.contains("2 plus 2", ignoreCase = true) -> "2 plus 2 is 4."
             last.contains("hello", ignoreCase = true) -> "Hello. This is the local demo model. " +
                 "Add a provider key in Settings to use a real model."
+            last.contains("share", ignoreCase = true) ->
+                """{"schemaVersion":"1","kind":"system.share","text":"Hello from HOPA","timeoutMs":3000}"""
 
             last.isBlank() -> "Ask me something."
             else -> "Demo model: I received \"${last.take(120)}\". " +

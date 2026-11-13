@@ -9,7 +9,7 @@ import com.hopa.capabilities.system.AndroidPackageCatalog
 import com.hopa.capabilities.system.AndroidSystemPort
 import com.hopa.core.gate.ActionExecutor
 import com.hopa.core.gate.ApprovalPolicy
-import com.hopa.core.gate.SessionApprovalGateway
+import com.hopa.app.gate.UiApprovalGateway
 import com.hopa.core.loop.AgentLoop
 import com.hopa.core.records.InMemoryRunRecorder
 import com.hopa.core.records.RunRecordFactory
@@ -31,6 +31,7 @@ class AppContainer(context: Context) {
     val recorder = InMemoryRunRecorder()
     val clock = AndroidClock()
     val policy = ApprovalPolicy()
+    val approval = UiApprovalGateway()
     val factory = RunRecordFactory(clock)
     val device = UnavailableDevicePort()
     val executor = ActionExecutor(
@@ -39,7 +40,7 @@ class AppContainer(context: Context) {
         system = AndroidSystemPort(context),
         sandbox = null,
         policy = policy,
-        approval = SessionApprovalGateway(),
+        approval = approval,
         recorder = recorder,
         factory = factory,
         clock = clock,

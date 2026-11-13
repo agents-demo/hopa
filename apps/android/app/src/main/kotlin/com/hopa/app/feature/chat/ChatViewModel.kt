@@ -3,6 +3,7 @@ package com.hopa.app.feature.chat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hopa.app.di.AppContainer
+import com.hopa.core.gate.ApprovalRequest
 import com.hopa.core.loop.TurnContext
 import com.hopa.core.model.ModelMessage
 import com.hopa.data.sessions.ChatMessage
@@ -22,6 +23,11 @@ class ChatViewModel(
 
     init {
         viewModelScope.launch { load() }
+        viewModelScope.launch {
+            container.approval.pending.collect { request ->
+                _state.update { it.copy(pendingApproval = request) }
+            }
+        }
         viewModelScope.launch {
             container.selectedConversation.collect { id ->
                 if (id == null || id == _state.value.current?.id) {
@@ -93,6 +99,10 @@ class ChatViewModel(
 
     fun sendQuick(text: String) {
         sendText(text)
+    }
+
+    fun resolveApproval(allow: Boolean) {
+        container.approval.resolve(allow)
     }
 
     private fun sendText(text: String) {

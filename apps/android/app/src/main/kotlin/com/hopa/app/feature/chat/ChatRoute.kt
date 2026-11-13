@@ -11,8 +11,8 @@ fun ChatRoute(
     container: AppContainer,
     onOpenConversations: () -> Unit,
     onOpenSettings: () -> Unit,
-    onOpenProfiles: () -> Unit,
-    onOpenRuns: () -> Unit,
+    onOpenActivity: () -> Unit,
+    onOpenCapabilities: () -> Unit,
 ) {
     val viewModel: ChatViewModel = viewModel(factory = ChatViewModelFactory(container))
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -22,10 +22,11 @@ fun ChatRoute(
         onSend = viewModel::send,
         onOption = viewModel::sendOption,
         onQuick = viewModel::sendQuick,
+        onApprove = viewModel::resolveApproval,
         onNewChat = viewModel::newChat,
         onOpenConversations = onOpenConversations,
         onOpenSettings = onOpenSettings,
-        onOpenProfiles = onOpenProfiles,
-        onOpenRuns = onOpenRuns,
+        onOpenActivity = onOpenActivity,
+        onOpenCapabilities = onOpenCapabilities,
     )
 }

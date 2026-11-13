@@ -22,8 +22,8 @@ fun HopaNavHost(container: AppContainer) {
                 container = container,
                 onOpenConversations = { navController.navigate(HopaDestination.CONVERSATIONS) },
                 onOpenSettings = { navController.navigate(HopaDestination.SETTINGS) },
-                onOpenProfiles = { navController.navigate(HopaDestination.PROFILES) },
-                onOpenRuns = { navController.navigate(HopaDestination.RUNS) },
+                onOpenActivity = { navController.navigate(HopaDestination.RUNS) },
+                onOpenCapabilities = { navController.navigate(HopaDestination.CAPABILITIES) },
             )
         }
         composable(HopaDestination.CONVERSATIONS) {
@@ -38,6 +38,7 @@ fun HopaNavHost(container: AppContainer) {
                 onBack = { navController.popBackStack() },
                 onOpenCapabilities = { navController.navigate(HopaDestination.CAPABILITIES) },
                 onOpenLaunchpad = { navController.navigate(HopaDestination.LAUNCHPAD) },
+                onOpenProfiles = { navController.navigate(HopaDestination.PROFILES) },
             )
         }
         composable(HopaDestination.PROFILES) {

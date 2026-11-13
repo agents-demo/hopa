@@ -39,6 +39,7 @@ fun SettingsScreen(
     onSave: (String, String, String, String, Boolean, Boolean) -> Unit,
     onOpenCapabilities: () -> Unit,
     onOpenLaunchpad: () -> Unit,
+    onOpenProfiles: () -> Unit,
 ) {
     var provider by rememberSaveable { mutableStateOf(state.settings.provider) }
     var endpoint by rememberSaveable { mutableStateOf(state.settings.endpoint) }
@@ -123,13 +124,16 @@ fun SettingsScreen(
                 onClick = { onSave(provider, endpoint, model, key, notify, web) },
                 enabled = !state.busy,
             ) {
-                Text(if (state.busy) "Savingâ€¦" else "Save")
+                Text(if (state.busy) "Saving\u2026" else "Save")
             }
             if (state.saved) {
                 Text("Saved", color = MaterialTheme.colorScheme.primary)
             }
             state.error?.let { error ->
                 Text(error, color = MaterialTheme.colorScheme.error)
+            }
+            Button(onClick = onOpenProfiles) {
+                Text("Profiles")
             }
             Button(onClick = onOpenCapabilities) {
                 Text("Capabilities")

@@ -30,7 +30,7 @@ fun RunsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Runs") },
+                title = { Text("Activity") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -67,7 +67,7 @@ fun RunsScreen(
                     ) {
                         Text(record.action.kind, style = MaterialTheme.typography.bodyLarge)
                         Text(
-                            "${record.classification} · executed=${record.executed} · " +
+                            "${record.classification} Â· executed=${record.executed} Â· " +
                                 "verified=${record.verified}",
                             style = MaterialTheme.typography.bodySmall,
                         )
