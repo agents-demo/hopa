@@ -1,6 +1,10 @@
 > The earlier M1-M6 rebuild plan is retired (ADR-0014) and lives in git at the
 > tag `rebuild-plan-2026-11-13`; this file is the active plan. Count it with
-> `python tools/scripts/plan-status.py` (default path) or `--plan docs/plan`.
+> `python tools/scripts/plan-status.py` (default path) or `--plan docs/project/plan`.
+
+The **Android development plan** is a separate, later plan:
+[`android/README.md`](android/README.md) (ADR-0016, ADR-0017). It is not part of
+this refactor's gate; this plan only prepares its decisions, contracts and folder.
 
 # Refactor plan: apps, services, evals
 
@@ -12,15 +16,14 @@ Three futures this prepares for:
 
 1. **Android HOPA** and **Windows HOPA** as additional `apps/`.
 2. The **bridge as a real backend** (device plane + relay), later a separate repo.
-3. **evals/** as the place quality is measured, instead of `harness/`.
+3. **services/evals/** as the place quality is measured, instead of `harness/`.
 
-Kept out of `docs/project/plan/*.md` on purpose: `tools/scripts/plan-status.py` globs
-that folder non-recursively, so this work does not enter the M-milestone gate.
-Count it with:
+Counted on its own, not against the old M-milestone gate: `plan-status.py` reads
+this file and ignores subfolders (so `android/` has its own count). Run:
 
 ```bash
-python tools/scripts/plan-status.py --plan docs/plan
-python tools/scripts/plan-status.py --plan docs/plan --lint
+python tools/scripts/plan-status.py --plan docs/project/plan
+python tools/scripts/plan-status.py --plan docs/project/plan --lint
 ```
 
 ## 0. Rules
@@ -531,7 +534,7 @@ Risk: low (moves and path fixes only). Rollback: revert the consolidation commit
 | Tree | `python tools/checks/check-tree.py` | R8+ |
 | Contracts | `python tools/checks/check-openapi.py` | R5+ |
 | Links | `python tools/checks/check-links.py` (extended in R8) | every phase |
-| Plan | `python tools/scripts/plan-status.py --plan docs/plan --lint` | every phase |
+| Plan | `python tools/scripts/plan-status.py --plan docs/project/plan --lint` | every phase |
 | Catalogue | `python tools/scripts/build-app-catalog.py --check` | every phase |
 | Build | `tools/scripts/build.ps1` | R2, R3 |
 | Device | laptop app `Connected.` + one observe/tap | R3, R6 |

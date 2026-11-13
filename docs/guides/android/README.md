@@ -90,6 +90,7 @@ for the catalogue.
 
 ## Related
 
+- [Android development plan](../../project/plan/android/README.md)
 - [Android architecture](../../design/architecture/apps-android.md)
 - [Platform capability matrix](../../reference/platform-matrix.md)
 - [Adding a platform](../../../services/docs/guides/adding-a-platform.md)
