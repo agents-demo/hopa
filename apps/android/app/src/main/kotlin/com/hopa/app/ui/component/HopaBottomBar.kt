@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.Icon
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,18 +32,24 @@ fun HopaBottomBar(
     active: String,
     onSelect: (String) -> Unit,
 ) {
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .height(64.dp)
-            .background(HopaColor.Surface)
-            .padding(horizontal = 6.dp, vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically,
+            .background(HopaColor.Surface),
     ) {
-        HopaTab("Chat", "chat", Icons.Default.ChatBubble, active, onSelect)
-        HopaTab("Activity", "activity", Icons.Default.History, active, onSelect)
-        HopaTab("Capabilities", "capabilities", Icons.Default.GridView, active, onSelect)
+        HorizontalDivider(thickness = 1.dp, color = HopaColor.Divider)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(64.dp)
+                .padding(horizontal = 12.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            HopaTab("Chat", "chat", Icons.Default.ChatBubble, active, onSelect)
+            HopaTab("Activity", "activity", Icons.Default.History, active, onSelect)
+            HopaTab("Capabilities", "capabilities", Icons.Default.GridView, active, onSelect)
+        }
     }
 }
 
@@ -57,7 +64,7 @@ private fun HopaTab(
     val selected = active == key
     Column(
         modifier = Modifier
-            .width(96.dp)
+            .width(88.dp)
             .clickable { onSelect(key) },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,

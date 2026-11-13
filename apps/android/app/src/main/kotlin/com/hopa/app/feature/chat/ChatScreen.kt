@@ -147,12 +147,16 @@ fun ChatScreen(
                         }
                     }
                 }
-                Composer(
-                    value = state.input,
-                    busy = state.busy,
-                    onValueChange = onInput,
-                    onSend = onSend,
-                )
+                Box(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                ) {
+                    Composer(
+                        value = state.input,
+                        busy = state.busy,
+                        onValueChange = onInput,
+                        onSend = onSend,
+                    )
+                }
                 HopaBottomBar(
                     active = "chat",
                     onSelect = { key ->
