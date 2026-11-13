@@ -28,8 +28,10 @@ fun CapabilitiesScreen(
     endpoint: String,
     records: Int,
     apps: Int,
+    accessibilityEnabled: Boolean,
     onBack: () -> Unit,
     onOpenLaunchpad: () -> Unit,
+    onOpenAccessibility: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -60,8 +62,11 @@ fun CapabilitiesScreen(
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text("Device", style = MaterialTheme.typography.titleLarge)
-                    Text("Bridge and accessibility are not connected yet.")
+                    Text(if (accessibilityEnabled) "Accessibility is on" else "Accessibility is off")
                     Text("The shell, data and gate work offline.", style = MaterialTheme.typography.bodySmall)
+                    Button(onClick = onOpenAccessibility) {
+                        Text(if (accessibilityEnabled) "Accessibility settings" else "Enable accessibility")
+                    }
                 }
             }
             Card(modifier = Modifier.fillMaxWidth()) {

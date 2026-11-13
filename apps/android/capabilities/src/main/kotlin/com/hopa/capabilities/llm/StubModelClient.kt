@@ -12,7 +12,11 @@ class StubModelClient : ModelPort {
             .lastOrNull { it.role == "user" && !it.content.startsWith("SCREEN:") }
             ?.content
             .orEmpty()
+        val screen = request.messages.lastOrNull { it.content.startsWith("SCREEN:") }?.content
+        val seen = screen?.lines()?.drop(1)?.filter { it.isNotBlank() }?.take(2)?.joinToString(" ")
         val answer = when {
+            last.contains("look", ignoreCase = true) && !seen.isNullOrBlank() ->
+                "I can see: $seen"
             last.contains("2 plus 2", ignoreCase = true) -> "2 plus 2 is 4."
             last.contains("hello", ignoreCase = true) -> "Hello. This is the local demo model. " +
                 "Add a provider key in Settings to use a real model."

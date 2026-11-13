@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.hopa.app.di.AppContainer
+import com.hopa.capabilities.accessibility.AccessibilityState
 import com.hopa.capabilities.llm.ProviderState
 import com.hopa.capabilities.llm.ProviderStateResolver
 import kotlinx.coroutines.flow.first
@@ -21,6 +22,7 @@ fun CapabilitiesRoute(
     var endpoint by remember { mutableStateOf("") }
     var records by remember { mutableStateOf(0) }
     var apps by remember { mutableStateOf(0) }
+    var accessibilityEnabled by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         val settings = container.settings.settings.first()
@@ -29,6 +31,7 @@ fun CapabilitiesRoute(
         endpoint = settings.endpoint
         records = container.recorder.all().size
         apps = container.packages.installed().size
+        accessibilityEnabled = AccessibilityState.isEnabled(container.context)
     }
 
     CapabilitiesScreen(
@@ -36,7 +39,9 @@ fun CapabilitiesRoute(
         endpoint = endpoint,
         records = records,
         apps = apps,
+        accessibilityEnabled = accessibilityEnabled,
         onBack = onBack,
         onOpenLaunchpad = onOpenLaunchpad,
+        onOpenAccessibility = { AccessibilityState.openSettings(container.context) },
     )
 }

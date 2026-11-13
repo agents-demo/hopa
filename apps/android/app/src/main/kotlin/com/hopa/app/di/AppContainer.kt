@@ -2,7 +2,7 @@ package com.hopa.app.di
 
 import android.content.Context
 import com.hopa.app.model.SettingsModelPort
-import com.hopa.capabilities.device.UnavailableDevicePort
+import com.hopa.capabilities.accessibility.AccessibilityDevice
 import com.hopa.capabilities.llm.ModelFactory
 import com.hopa.capabilities.system.AndroidClock
 import com.hopa.capabilities.system.AndroidPackageCatalog
@@ -21,6 +21,7 @@ import com.hopa.data.settings.SettingsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 
 class AppContainer(context: Context) {
+    val context: Context = context.applicationContext
     val settings: SettingsRepository = DataStoreSettingsRepository(
         context = context,
         secrets = KeystoreSecretStore(context),
@@ -33,7 +34,7 @@ class AppContainer(context: Context) {
     val policy = ApprovalPolicy()
     val approval = UiApprovalGateway()
     val factory = RunRecordFactory(clock)
-    val device = UnavailableDevicePort()
+    val device = AccessibilityDevice(context)
     val executor = ActionExecutor(
         device = device,
         browser = null,
