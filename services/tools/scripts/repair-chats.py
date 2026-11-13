@@ -6,8 +6,8 @@ collapsing adjacent and periodic repeats; this script is the stronger one-off
 pass for data that is already distorted: within a session, a turn is kept only
 once per (role, text), preserving the order it first appeared in.
 
-    py -3 tools/scripts/repair-chats.py            # repair ~/.hopa/chats.json
-    py -3 tools/scripts/repair-chats.py <path>     # repair a copy
+    py -3 services/tools/scripts/repair-chats.py            # repair ~/.hopa/chats.json
+    py -3 services/tools/scripts/repair-chats.py <path>     # repair a copy
 """
 
 from __future__ import annotations

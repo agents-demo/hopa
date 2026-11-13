@@ -12,7 +12,7 @@ HarmonyOS app cannot host a JVM, but the PC evaluation rig can.
 ## Decision
 
 1. **M1–M2:** run the loop on the PC. The reference implementation is Python
-   (`evals/baseline/`); the Kotlin brain is extracted into a standalone JVM service
+   (`services/evals/baseline/`); the Kotlin brain is extracted into a standalone JVM service
    with no `android.*` imports and an HTTP `POST /decide` contract.
 2. **M3+:** port the same contract to ArkTS in `apps/harmony/core`. The JVM service
    becomes optional behind a feature flag.

@@ -24,7 +24,7 @@ where to look and what must not drift.
   after stripping transport detail.
 - **Change rule.** A path, method or payload change edits
   `contracts/openapi/bridge.v1.yaml` in the same pull request.
-  `tools/checks/check-openapi.py` fails when the spec and the handlers disagree,
+  `services/tools/checks/check-openapi.py` fails when the spec and the handlers disagree,
   in both directions.
 
 ## Why there is no `/v1` prefix yet

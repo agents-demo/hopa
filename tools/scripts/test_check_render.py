@@ -2,7 +2,7 @@ import importlib.util
 import pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-CHECKER = ROOT / "tools" / "checks" / "check-render.py"
+CHECKER = ROOT / "services" / "tools" / "checks" / "check-render.py"
 
 
 def _load():

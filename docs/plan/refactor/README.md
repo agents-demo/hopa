@@ -46,19 +46,18 @@ hopa/
 │  ├─ harmony/              # DevEco workspace (exists)
 │  ├─ android/              # README first (R9)
 │  └─ windows/              # README first (R9)
-├─ services/                # what runs with nobody watching
+├─ services/                # deployables, shared code, evaluation, service tools
 │  ├─ bridge/               # device plane (R3)
 │  ├─ relay/                # cloud relay server half (R4)
 │  ├─ wire/                 # shared WebSocket/tunnel code, not deployed (ADR-0012)
 │  ├─ brain/                # Kotlin knowledge router (exists, unchanged)
-│  └─ backend/              # reserved: README + ADR-0011, no package yet
-├─ evals/                   # how we know it got better (R1)
-│  ├─ bench/
-│  └─ baseline/
+│  ├─ backend/              # reserved: README + ADR-0011, no package yet
+│  ├─ evals/                # bench/ + baseline/ (ADR-0013)
+│  └─ tools/                # scripts/ + checks/ that drive the services
 ├─ contracts/
 │  ├─ openapi/              # bridge.v1.yaml (R5)
 │  └─ schemas/              # 4 JSON schemas (exists)
-├─ tools/                   # scripts/, checks/, signing/
+├─ tools/                   # app build/check/signing only
 ├─ docs/
 └─ harness/                 # must not exist after R1
 ```
@@ -475,6 +474,30 @@ Risk: none.
       change.
 
 Risk: low. Rollback: revert the rename commit and reinstall the aliases.
+
+## R13. Consolidate everything service-related under `services/`
+
+Owner decision: the future split must be one path, so service code does not stay
+behind in the app repository.
+
+- [x] `evals/` -> `services/evals/` (bench, baseline); CIs, scripts, pyprojects,
+      docs and tests follow.
+- [x] Service tools -> `services/tools/`: bridges, run-agent, run-bench,
+      run-on-device, port-watch, repair-chats, and the openapi/render checkers.
+      `tools/` keeps app build/install/catalog/plan/signing and its checks.
+- [x] Scripts that moved one level deeper compute the repo root correctly; the
+      app scripts they call are referenced through `$root`.
+- [x] `run-tests.ps1` argument list repaired (a `Join-Path` array slipped in
+      during the move).
+- [x] Relative paths in tests fixed for the new depth (`contracts/schemas`,
+      checker `ROOT`).
+- [x] ADR-0013 records the rule; ADR-0007 is marked superseded in part;
+      `check-tree.py` rejects a returning top-level `evals/`.
+- [x] `pytest services/evals services/bridge services/relay services/wire` ->
+      362 passed; ruff clean; tree, links, both contracts, render and plan lint
+      green.
+
+Risk: low (moves and path fixes only). Rollback: revert the consolidation commit.
 
 ## Acceptance gates
 

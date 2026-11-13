@@ -16,7 +16,7 @@ professional or verification work back to the user.
 | Legal advice | lawsuits, "legal advice" | refuse, refer to a lawyer |
 | CAPTCHA | slider, image, one-time human check | **hand over**, never solve |
 
-The classifier is `evals/baseline/src/hopa_baseline/refusal.py`. It runs **before** the model
+The classifier is `services/evals/baseline/src/hopa_baseline/refusal.py`. It runs **before** the model
 and before any device observation. A refusal is final for that task.
 
 ## Plain messages
@@ -59,8 +59,8 @@ must be tested with the chosen provider before release; it is not tested yet.
 
 ## Tests
 
-- `evals/baseline/tests/test_refusal.py` — 20 jailbreak prompts, CAPTCHA handover,
+- `services/evals/baseline/tests/test_refusal.py` — 20 jailbreak prompts, CAPTCHA handover,
   professional-advice categories.
-- `evals/baseline/tests/test_safety.py` — screen text cannot become an instruction.
-- `evals/baseline/tests/test_net.py` — exfiltration to an unapproved host is blocked.
-- `evals/baseline/tests/test_policy.py` — payment and irreversible actions ask.
+- `services/evals/baseline/tests/test_safety.py` — screen text cannot become an instruction.
+- `services/evals/baseline/tests/test_net.py` — exfiltration to an unapproved host is blocked.
+- `services/evals/baseline/tests/test_policy.py` — payment and irreversible actions ask.

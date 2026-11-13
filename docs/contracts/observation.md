@@ -92,6 +92,6 @@ a future renderer can convert them; the current evaluation rig does not scale.
 
 ## Verification
 
-- `evals/baseline/tests/test_observation.py`
-- `evals/baseline/tests/test_schemas.py`
+- `services/evals/baseline/tests/test_observation.py`
+- `services/evals/baseline/tests/test_schemas.py`
 - `hopa-baseline observe --json`

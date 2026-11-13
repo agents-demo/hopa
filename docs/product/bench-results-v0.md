@@ -85,12 +85,12 @@ bundles and selectors must be confirmed on a real HarmonyOS build.
 A failed step can never count as a pass: if any scripted step fails, the task is
 failed even when the success text happened to be on screen before the step ran.
 That rule is enforced in `Runner.run_task` and covered by
-`evals/bench/tests/test_runner.py::test_failed_step_cannot_pass_on_visible_text`.
+`services/evals/bench/tests/test_runner.py::test_failed_step_cannot_pass_on_visible_text`.
 
 All twenty validate:
 
 ```bash
-python -m hopa_bench validate --tasks evals/bench/tasks
+python -m hopa_bench validate --tasks services/evals/bench/tasks
 # ok ... 20 task(s) valid
 ```
 
@@ -108,7 +108,7 @@ python -m hopa_bench validate --tasks evals/bench/tasks
 
 ```bash
 # with a connected emulator or phone
-bench run --tasks evals/bench/tasks --json --out .hopa/bench-v0.json
+bench run --tasks services/evals/bench/tasks --json --out .hopa/bench-v0.json
 ```
 
 With no device, only `list`, `validate` and the unit tests are meaningful.
@@ -118,7 +118,7 @@ With no device, only `list`, `validate` and the unit tests are meaningful.
 Device: **Pura 90 emulator**, HarmonyOS 6.1.1(24), 1320×2856, API 24.
 
 ```bash
-bench run --tasks evals/bench/tasks \
+bench run --tasks services/evals/bench/tasks \
   --task settings-wlan --task clock-open-alarm --task calendar-new-event \
   --task browser-search-harmonyos --task notes-create-note \
   --target 127.0.0.1:5555 --timeout 180 \

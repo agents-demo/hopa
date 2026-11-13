@@ -18,7 +18,7 @@ from hopa_baseline.records import RunRecord  # noqa: E402
 
 from .conftest import SETTINGS  # noqa: E402
 
-SCHEMAS = Path(__file__).resolve().parents[3] / "contracts" / "schemas"
+SCHEMAS = Path(__file__).resolve().parents[4] / "contracts" / "schemas"
 NAMES = [
     "observation.schema.json",
     "action.schema.json",

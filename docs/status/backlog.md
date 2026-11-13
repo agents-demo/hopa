@@ -56,7 +56,7 @@ powershell -ExecutionPolicy Bypass -File tools\scripts\deploy.ps1
 powershell -ExecutionPolicy Bypass -File tools\scripts\bridges.ps1
 
 # repair the shared store if a thread ever balloons again
-py -3 tools/scripts/repair-chats.py
+py -3 services/tools/scripts/repair-chats.py
 ```
 
 Laptop launch hooks: `--ps hopa.bridge_url`, `hopa.bridge_key`, `hopa.ask`,

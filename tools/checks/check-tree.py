@@ -75,7 +75,12 @@ def check(base: Path = ROOT) -> list[str]:
         problems.append("harness/ still exists; it is evals/ now (ADR-0007)")
 
     if (base / "packages").exists():
-        problems.append("packages/ is gone; shared service code lives in services/wire (ADR-0012)")
+        problems.append(
+            "packages/ is gone; shared service code lives in services/wire (ADR-0012)"
+        )
+
+    if (base / "evals").exists():
+        problems.append("evals/ is gone; it lives in services/evals (ADR-0013)")
 
     for path in walk(base):
         if path.name.lower() in JUNK:

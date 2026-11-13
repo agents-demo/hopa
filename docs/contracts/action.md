@@ -5,8 +5,8 @@ it; `Action.from_dict` validates it; `DeviceExecutor` is the only code that runs
 it.
 
 - Schema: [`contracts/schemas/action.schema.json`](../../contracts/schemas/action.schema.json)
-- Validator: `evals/baseline/src/hopa_baseline/actions.py`
-- Executor: `evals/baseline/src/hopa_baseline/executor.py`
+- Validator: `services/evals/baseline/src/hopa_baseline/actions.py`
+- Executor: `services/evals/baseline/src/hopa_baseline/executor.py`
 
 ## Kinds
 

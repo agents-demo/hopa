@@ -21,15 +21,15 @@ cadence differs.
 
 | Folder | Goes to | Note |
 |---|---|---|
-| `services/` | services repo | `git filter-repo --path services` carries bridge, relay, wire and brain together |
+| `services/` | services repo | one path now carries bridge, relay, wire, brain, evals and the service tools |
 | `contracts/` | artifact + both repos | published (or tagged) and consumed by version; never copied |
 | `apps/` | stays | client code only |
-| `tools/scripts` | **split** | app: `build`, `deploy`, `install-to-device`, `build-app-catalog`, `plan-status`. services: `bridges`, `run-agent`, `run-bench`, `run-on-device`, `port-watch`, `repair-chats` |
-| `tools/checks` | **split** | `check-tree`/`check-structure` stay with the tree they police; `check-openapi`/`check-render` move with the services (they read service code) |
+| `tools/scripts` | split (done) | app: `build`, `deploy`, `install-to-device`, `build-app-catalog`, `plan-status`. services: `services/tools/scripts/*` |
+| `tools/checks` | split (done) | `check-tree`/`check-structure`/`check-links` stay; `services/tools/checks/` holds openapi and render |
 | `tools/shots` | stays | README media |
 | `tools/signing` | stays | app signing, gitignored |
 | `docs/` | **split** | `architecture/`, `adr/`, `contracts/`, `guides/` mostly stay; `operations/` for services moves |
-| `evals/` | services repo | it imports `hopa_bridge` today; moving it keeps the app repo free of service code |
+| `services/evals/` | services repo (already inside) | imports `hopa_bridge`; the app repo never sees it |
 
 ## Decisions taken
 

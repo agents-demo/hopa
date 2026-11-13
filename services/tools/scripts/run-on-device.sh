@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Build, sign, install and launch HOPA on the connected emulator/device (macOS/Linux).
 #
-#   ./tools/scripts/run-on-device.sh                       # full cycle
-#   ./tools/scripts/run-on-device.sh --skip-build          # reuse the last build
-#   ./tools/scripts/run-on-device.sh --target 127.0.0.1:5555
-#   ./tools/scripts/run-on-device.sh --skip-sign           # reuse the signed HAP
+#   ./services/tools/scripts/run-on-device.sh                       # full cycle
+#   ./services/tools/scripts/run-on-device.sh --skip-build          # reuse the last build
+#   ./services/tools/scripts/run-on-device.sh --target 127.0.0.1:5555
+#   ./services/tools/scripts/run-on-device.sh --skip-sign           # reuse the signed HAP
 #
 # The debug profile embeds the target's UDID, so the script reads it from the
 # selected device before signing. Nothing leaves the machine.

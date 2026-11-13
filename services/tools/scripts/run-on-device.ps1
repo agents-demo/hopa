@@ -18,7 +18,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+$root = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
 $app = Join-Path $root 'apps\harmony'
 $out = Join-Path $app 'entry\build\default\outputs\default'
 $signed = Join-Path $out 'entry-default-signed.hap'
@@ -86,7 +86,7 @@ Write-Host "Target: $Target"
 # --- build ----------------------------------------------------------------
 if (-not $SkipBuild) {
     Write-Host '=== build ==='
-    & (Join-Path $PSScriptRoot 'build.ps1')
+    & (Join-Path $root 'tools\scripts\build.ps1')
     if ($LASTEXITCODE -ne 0) { throw 'build failed' }
 }
 if (-not (Test-Path $unsigned)) {
@@ -101,7 +101,7 @@ if (-not $SkipSign) {
     if (-not $match.Success) {
         throw "Could not read the device UDID from '$Target'. Output: $($udidOutput.Trim())"
     }
-    & (Join-Path $PSScriptRoot 'sign-app.ps1') -Udids @($match.Value) -BundleName $BundleName
+    & (Join-Path $root 'tools\scripts\sign-app.ps1') -Udids @($match.Value) -BundleName $BundleName
     if ($LASTEXITCODE -ne 0) { throw 'signing failed' }
 }
 if (-not (Test-Path $signed)) {

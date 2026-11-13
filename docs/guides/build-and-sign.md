@@ -29,7 +29,7 @@ One shot on a connected emulator/device (build, sign, install, launch):
 ```
 
 ```bash
-./tools/scripts/run-on-device.sh
+./services/tools/scripts/run-on-device.sh
 ```
 
 Useful flags: `-SkipBuild` / `--skip-build`, `-SkipSign` / `--skip-sign`,

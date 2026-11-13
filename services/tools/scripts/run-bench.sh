@@ -3,7 +3,7 @@
 set -euo pipefail
 
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
-RESULTS="$ROOT/evals/bench/results/latest.json"
+RESULTS="$ROOT/services/evals/bench/results/latest.json"
 
 if [ -x "$ROOT/.venv/bin/python" ]; then
   PY="$ROOT/.venv/bin/python"
@@ -17,7 +17,7 @@ else
 fi
 
 "$PY" -c "import hopa_bridge, hopa_bench" 2>/dev/null || {
-  "$PY" -m pip install -e "$ROOT/services/wire" "$ROOT/services/bridge" -e "$ROOT/evals/bench"
+  "$PY" -m pip install -e "$ROOT/services/wire" "$ROOT/services/bridge" -e "$ROOT/services/evals/bench"
 }
 
-"$PY" -m hopa_bench run --tasks "$ROOT/evals/bench/tasks" --out "$RESULTS" "$@"
+"$PY" -m hopa_bench run --tasks "$ROOT/services/evals/bench/tasks" --out "$RESULTS" "$@"

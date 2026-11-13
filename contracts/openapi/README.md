@@ -10,7 +10,7 @@ One file per service, versioned in git, reviewed like code.
 
 1. **Same pull request.** A path, method, request or response change edits the
    spec in the same PR that changes the handler. There is no follow-up ticket.
-2. **Both directions are checked.** `tools/checks/check-openapi.py` reads the
+2. **Both directions are checked.** `services/tools/checks/check-openapi.py` reads the
    `self.path == ...` chain in `bridge.py` / `bridge_pool.py` and fails when a
    handler is missing from the spec *or* a spec path has no handler.
 3. **Prefix routes are declared, not hidden.** A route handled by
@@ -26,5 +26,5 @@ One file per service, versioned in git, reviewed like code.
 
 1. Add the handler.
 2. Add the path (and its schemas) to the spec.
-3. Run `python tools/checks/check-openapi.py` — it fails both ways on purpose.
+3. Run `python services/tools/checks/check-openapi.py` — it fails both ways on purpose.
 4. If the endpoint needs the pooled routing, document the header it uses.

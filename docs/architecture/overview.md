@@ -77,9 +77,9 @@ The WebSocket codec and tunnel framing are shared by both halves through
 `capabilities/accessibility` (once the ACL is granted), `capabilities/browser`, and
 `capabilities/system`.
 
-### 2.1 PC reference loop (`evals/baseline/`)
+### 2.1 PC reference loop (`services/evals/baseline/`)
 
-M1 runs the whole loop on the PC. `evals/baseline/` is the executable twin of `core/`:
+M1 runs the whole loop on the PC. `services/evals/baseline/` is the executable twin of `core/`:
 same observation, action, policy, executor and record contracts, in Python.
 
 | Module | Owns |
@@ -94,7 +94,7 @@ same observation, action, policy, executor and record contracts, in Python.
 
 `hopa-baseline observe` is the reference observation producer. `hopa-bridge dump`
 stays the raw `uitest` command. The ArkTS port follows the same contracts and
-uses the same golden files (`contracts/schemas/`, `evals/baseline/tests/test_schemas.py`).
+uses the same golden files (`contracts/schemas/`, `services/evals/baseline/tests/test_schemas.py`).
 
 ## 3. Perception: tree + OCR + vision
 

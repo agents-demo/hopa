@@ -15,7 +15,7 @@
 `relay.py` holds the server (`Relay`, the serve loop) and `tunnel.py` holds *both*
 the relay-side `TunnelRegistry` and the PC-side `HdcTunnel`/`serve_hdc_tunnel`.
 `cli.py` also exposes `cloud-link` and `hdc-tunnel`, which are **PC** commands used
-by `tools/scripts/run-agent.ps1`.
+by `services/tools/scripts/run-agent.ps1`.
 
 The naive split — move `relay.py`, `tunnel.py`, `ws.py` into `services/relay` —
 would force `hopa-relay` onto every PC and break `hdc-tunnel`.

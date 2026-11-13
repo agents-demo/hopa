@@ -30,7 +30,7 @@ included where they differ.
 | hdc | 3.2.0f | |
 | HarmonyOS Emulator | 26.0.0.402 | |
 | Bundled Node.js | 24.14.1 (LTS line) | do not replace the bundled copy |
-| Python | 3.12.x (>= 3.11) | for `services/bridge/`, `evals/bench/` and `evals/baseline/` |
+| Python | 3.12.x (>= 3.11) | for `services/bridge/`, `services/evals/bench/` and `services/evals/baseline/` |
 
 Official version overview:
 <https://developer.huawei.com/consumer/en/doc/doccenter-release-notes/overview-2600>

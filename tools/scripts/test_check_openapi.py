@@ -4,7 +4,7 @@ import subprocess
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-CHECKER = ROOT / "tools" / "checks" / "check-openapi.py"
+CHECKER = ROOT / "services" / "tools" / "checks" / "check-openapi.py"
 
 
 def _load():

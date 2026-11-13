@@ -116,7 +116,7 @@ it, not at the end.
 | `apps/harmony/phone` | 6-tab ArkUI app (Chat, Web, Apps, Tasks, Settings, Memory) wired to `AgentLoop`; approval sheet; providers; memory; skills; run history | `pages/Index.ets` |
 | Agent loop | captures the screen, asks for one action, gates, records | `AgentLoop.ets` |
 | `hopa-bridge` | CLI + MCP implemented: devices, dump, tap, double-tap, long-press, type, swipe, screenshot, launch, stop, key, install, uninstall, apps | `services/bridge/src` |
-| `bench` | 20 task files; 5/7 tasks pass on the emulator (strict: a failed step cannot pass) | `evals/bench/tasks`, `docs/product/bench-results-v0.md` |
+| `bench` | 20 task files; 5/7 tasks pass on the emulator (strict: a failed step cannot pass) | `services/evals/bench/tasks`, `docs/product/bench-results-v0.md` |
 | Brain | Kotlin router + HTTP service + knowledge + prompts + skills + sites (98 assertions + schema contract) | `services/brain/src`, `docs/reference/brain.md` |
 | HAP | builds with DevEco 6.1.1 / API 24; signed with the SDK local debug kit; installed with the ACL permission on the Pura 90 emulator | `tools/scripts/sign-app.ps1` |
 | Knowledge | 35 apps (12 system + 23 catalogued), 21 sites, 6 skills | `services/brain/knowledge`, `docs/history/knowledge-triage.md` |
@@ -159,7 +159,7 @@ Module responsibilities:
 | `capabilities/*` | one platform surface each | import each other |
 | `entry/` | UI, permissions, wiring | contain agent logic |
 | `services/bridge/` | device I/O for development | be required at runtime |
-| `evals/bench/` | tasks, runner, scoring | be imported by the app |
+| `services/evals/bench/` | tasks, runner, scoring | be imported by the app |
 
 ---
 

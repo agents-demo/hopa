@@ -1,11 +1,11 @@
 version: 2
 updates:
   - package-ecosystem: pip
-    directory: "/evals/baseline"
+    directory: "/services/evals/baseline"
     schedule:
       interval: weekly
   - package-ecosystem: pip
-    directory: "/evals/bench"
+    directory: "/services/evals/bench"
     schedule:
       interval: weekly
   - package-ecosystem: pip

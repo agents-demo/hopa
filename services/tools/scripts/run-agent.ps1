@@ -18,7 +18,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+$root = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
 $envPath = Join-Path $root $EnvFile
 if (-not (Test-Path $envPath)) { throw "Config file not found: $envPath" }
 

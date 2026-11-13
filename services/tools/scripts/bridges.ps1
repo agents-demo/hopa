@@ -15,7 +15,7 @@ param(
 )
 
 $ErrorActionPreference = 'Continue'
-$root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+$root = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
 $hdc = 'C:\Program Files\Huawei\DevEco Studio\sdk\default\openharmony\toolchains\hdc.exe'
 if (-not (Test-Path $hdc)) {
     $cmd = Get-Command hdc -ErrorAction SilentlyContinue

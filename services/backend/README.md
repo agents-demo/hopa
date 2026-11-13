@@ -32,7 +32,7 @@ services/backend/
 ├─ pyproject.toml            # hopa-backend
 ├─ src/hopa_backend/
 │  ├─ api/                   # FastAPI (or stdlib) over contracts/openapi/backend.v1.yaml
-│  ├─ runtime/               # the loop, ported from evals/baseline
+│  ├─ runtime/               # the loop, ported from services/evals/baseline
 │  ├─ sessions/              # store + migrations
 │  ├─ models/                # provider clients, keys from the environment
 │  ├─ tools/                 # gate + executor
@@ -48,7 +48,7 @@ same rule the bridge and relay follow (`contracts/openapi/README.md`).
 
 - [ ] Write `contracts/openapi/backend.v1.yaml`: `/v1/health`, `/v1/sessions`,
       `/v1/runs`, `/v1/approvals`, with the client versioning rule.
-- [ ] Port the loop from `evals/baseline` (it is the reference implementation) and
+- [ ] Port the loop from `services/evals/baseline` (it is the reference implementation) and
       point it at the bridge for actions.
 - [ ] Move model keys out of the device key store; the app stops calling providers.
 - [ ] Add a migration story for `sessions` before the first deployment.

@@ -25,7 +25,7 @@ ruff format --check hopa-bridge bench agent
 pytest hopa-bridge bench agent
 python tools/scripts/plan-status.py --lint
 python tools/scripts/build-app-catalog.py --check
-python -m hopa_bench validate --tasks evals/bench/tasks
+python -m hopa_bench validate --tasks services/evals/bench/tasks
 ```
 
 For an ArkTS change, also run the core Local Tests on a machine with DevEco.
@@ -92,7 +92,7 @@ Ask which top level answers the question, then pick the layer (ADR-0007):
 |---|---|
 | a screen, a widget, a platform adapter | `apps/` (`harmony/`, later `android/`, `windows/`) |
 | a long-running service, a device driver, a relay | `services/` (`bridge/`, `relay/`, `brain/`, later `backend/`) |
-| a task, a score, a reference driver | `evals/` (`bench/`, `baseline/`) |
+| a task, a score, a reference driver | `services/evals/` (`bench/`, `baseline/`) |
 | a wire format both sides share | `contracts/` (`openapi/`, `schemas/`) |
 | code the services both import | `services/wire/` |
 | a build, sign or check step | `tools/` (`scripts/`, `checks/`, `signing/`) |

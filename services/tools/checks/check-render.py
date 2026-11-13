@@ -18,7 +18,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 BLUEPRINT = ROOT / "render.yaml"
 PATH_TOKEN = re.compile(r"(\./[^\s\"']+)")
 MODULE_TOKEN = re.compile(r"python\s+-m\s+([A-Za-z_][\w.]*)")

@@ -149,7 +149,7 @@ updates keep working; platform identity lives at the module level.
 
 ## Benchmarks
 
-- Tasks live in `evals/bench/tasks/*.yaml` and follow the schema in `evals/bench/README.md`.
+- Tasks live in `services/evals/bench/tasks/*.yaml` and follow the schema in `services/evals/bench/README.md`.
 - A task must declare `goal`, `app` (and ideally `bundle`), and a `success` check.
 - Never make a benchmark task bypass the payment gate. Payment tasks assert that
   the gate *blocks* until confirmation.

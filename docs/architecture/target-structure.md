@@ -235,7 +235,7 @@ services/bridge/src/hopa_bridge/
 ├─ api/mcp_server.py                # MCP stdio server
 └─ cli/ (main.py, device_commands.py, bridge_commands.py, app_commands.py)
 
-evals/baseline/src/hopa_baseline/
+services/evals/baseline/src/hopa_baseline/
 ├─ domain/ (actions.py, observation.py, records.py, models.py)
 ├─ runtime/ (loop.py, executor.py, runtime.py, capture.py, limits.py)
 ├─ safety/ (policy.py, refusal.py)
@@ -252,7 +252,7 @@ services/brain/src/main/kotlin/hopa/brain/
 ├─ demo/DemoEntries.kt
 └─ knowledge/ (data: apps/, sites/, skills/ stay as data, not code)
 
-evals/bench/src/hopa_bench/
+services/evals/bench/src/hopa_bench/
 ├─ tasks.py, runner.py, scoring.py, cli.py
 ├─ tasks/                          # the 20 task files
 └─ results/                        # gitignored

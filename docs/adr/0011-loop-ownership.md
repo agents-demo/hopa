@@ -42,7 +42,7 @@ Three forces pull the loop to a server:
 - `evals/` moves with the services repository: it imports `hopa_bridge` today, so
   keeping it in the app repo would be a cross-repository dependency. It may later
   become an HTTP client; that is not a precondition for the split.
-  `evals/baseline` is retired when the backend runs the loop.
+  `services/evals/baseline` is retired when the backend runs the loop.
 - The repo split is mechanical because the folders already are the deployables;
   see `docs/operations/repo-split.md`.
 

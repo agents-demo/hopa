@@ -34,11 +34,11 @@ jobs:
       - name: Install packages
         run: |
           python -m pip install -U pip
-          python -m pip install -e "./services/wire" -e "./services/bridge" -e "./services/relay" -e "./evals/bench[dev]" -e "./evals/baseline[dev]" "ruff>=0.6" "pytest>=8"
+          python -m pip install -e "./services/wire" -e "./services/bridge" -e "./services/relay" -e "./services/evals/bench[dev]" -e "./services/evals/baseline[dev]" "ruff>=0.6" "pytest>=8"
       - name: Ruff
-        run: ruff check services/wire services/bridge services/relay evals/bench evals/baseline
+        run: ruff check services/wire services/bridge services/relay services/evals/bench services/evals/baseline
       - name: Ruff format
-        run: ruff format --check services/wire services/bridge services/relay evals/bench evals/baseline
+        run: ruff format --check services/wire services/bridge services/relay services/evals/bench services/evals/baseline
       - name: pytest (wire)
         run: pytest services/wire
       - name: pytest (bridge)
@@ -46,9 +46,9 @@ jobs:
       - name: pytest (relay)
         run: pytest services/relay
       - name: pytest (bench)
-        run: pytest evals/bench
+        run: pytest services/evals/bench
       - name: pytest (baseline)
-        run: pytest evals/baseline --cov=hopa_baseline --cov-report=term --cov-fail-under=80
+        run: pytest services/evals/baseline --cov=hopa_baseline --cov-report=term --cov-fail-under=80
       - name: pytest (plan tooling)
         run: pytest tools/scripts
       - name: Plan lint
@@ -56,17 +56,17 @@ jobs:
       - name: Structure rules
         run: python tools/checks/check-structure.py --strict
       - name: Bridge contract
-        run: python tools/checks/check-openapi.py
+        run: python services/tools/checks/check-openapi.py
       - name: Tree rules
         run: python tools/checks/check-tree.py
       - name: Render blueprint
-        run: python tools/checks/check-render.py
+        run: python services/tools/checks/check-render.py
       - name: Documentation links
         run: python tools/checks/check-links.py
       - name: Generated app catalogue is current
         run: python tools/scripts/build-app-catalog.py --check
       - name: Validate benchmark tasks
-        run: python -m hopa_bench validate --tasks evals/bench/tasks
+        run: python -m hopa_bench validate --tasks services/evals/bench/tasks
 
   build-hap:
     name: Build HAP (Linux)
