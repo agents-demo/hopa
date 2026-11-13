@@ -27,7 +27,7 @@ class NodeTreeReader(
         val tree = if (root == null) {
             ObservationNode(type = "root")
         } else {
-            convert(root, isRoot = true)
+            convert(root)
         }
         val metrics = service.resources.displayMetrics
         val observation = Observation(
@@ -47,12 +47,12 @@ class NodeTreeReader(
         return observation.copy(hash = ObservationHasher.hash(observation))
     }
 
-    private fun convert(info: AccessibilityNodeInfo, isRoot: Boolean = false): ObservationNode {
+    private fun convert(info: AccessibilityNodeInfo): ObservationNode {
         if (counter >= maxNodes) {
             truncated = true
             return ObservationNode(type = "truncated")
         }
-        val ref = if (isRoot) "" else "e${++counter}"
+        val ref = "e${++counter}"
         if (ref.isNotEmpty()) {
             refs[ref] = info
         }

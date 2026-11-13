@@ -106,8 +106,9 @@ class ActionExecutor(
     private suspend fun executeAction(action: Action): String {
         when (action.kind) {
             "ui.observe" -> return ""
-            "ui.tap", "ui.doubleTap", "ui.longPress" ->
-                device.tap(action.ref, action.x, action.y)
+            "ui.tap" -> device.tap(action.ref, action.x, action.y)
+            "ui.doubleTap" -> device.doubleTap(action.ref, action.x, action.y)
+            "ui.longPress" -> device.longPress(action.ref, action.x, action.y)
 
             "ui.type" -> device.type(action.text.orEmpty(), action.ref)
             "ui.swipe" -> device.swipe(

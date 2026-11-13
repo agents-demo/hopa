@@ -10,4 +10,5 @@ data class AppSettings(
     val selectedConversation: String = "",
     val bridgeUrl: String = "",
     val useBridge: Boolean = true,
+    val accessibilityAllowed: Boolean = true,
 )

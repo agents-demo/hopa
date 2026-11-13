@@ -118,23 +118,37 @@ def session_install(base: list[str], apk: Path) -> None:
         f"a=install\nb=write\npm $a-$b -S {size} {session} base.apk -\n",
     )
     exec_in(base, f"sh {write}", apk)
+    # adb can return before the device has closed the write stream; committing
+    # too early fails with "Files still open".
+    time.sleep(2)
 
     commit = device_script(
         base,
         "hopa-pm-commit",
         f"a=install\nb=commit\npm $a-$b {session}\n",
     )
-    committed = shell(base, commit)
-    if committed.returncode != 0:
-        raise SystemExit(committed.stdout.decode(errors="replace"))
+    for attempt in range(3):
+        committed = shell(base, commit)
+        if committed.returncode == 0:
+            return
+        if attempt == 2:
+            raise SystemExit(committed.stdout.decode(errors="replace"))
+        time.sleep(2)
 
 
 def install(base: list[str], apk: Path) -> None:
-    direct = run(base + ["install", "-r", str(apk)], capture_output=True)
-    if direct.returncode == 0:
-        return
-    print("direct install refused; staging through the package session API")
-    session_install(base, apk)
+    for attempt in range(2):
+        direct = run(base + ["install", "-r", str(apk)], capture_output=True)
+        if direct.returncode == 0:
+            return
+        print("direct install refused; staging through the package session API")
+        try:
+            session_install(base, apk)
+            return
+        except (SystemExit, RuntimeError) as error:
+            print(f"staging attempt {attempt + 1} failed: {error}")
+            time.sleep(2)
+    raise SystemExit("could not install the APK")
 
 
 def screenshot(base: list[str], out: Path) -> None:

@@ -40,12 +40,19 @@ class AdbDevice(
     }
 
     override suspend fun tap(ref: String?, x: Int?, y: Int?) {
-        val point = when {
-            ref != null -> points[ref] ?: throw IllegalArgumentException("unknown ref $ref")
-            x != null && y != null -> x to y
-            else -> throw IllegalArgumentException("tap needs a ref or coordinates")
-        }
+        val point = resolve(ref, x, y)
         client.tap(point.first, point.second)
+    }
+
+    override suspend fun doubleTap(ref: String?, x: Int?, y: Int?) {
+        val point = resolve(ref, x, y)
+        client.tap(point.first, point.second)
+        client.tap(point.first, point.second)
+    }
+
+    override suspend fun longPress(ref: String?, x: Int?, y: Int?) {
+        val point = resolve(ref, x, y)
+        client.swipe(point.first, point.second, point.first, point.second, velocity = 200)
     }
 
     override suspend fun type(text: String, ref: String?) {
@@ -75,4 +82,10 @@ class AdbDevice(
         runCatching { client.screenshot() }.getOrNull()
 
     override suspend fun apps(): List<InstalledApp> = client.apps()
+
+    private fun resolve(ref: String?, x: Int?, y: Int?): Pair<Int, Int> = when {
+        ref != null -> points[ref] ?: throw IllegalArgumentException("unknown ref $ref")
+        x != null && y != null -> x to y
+        else -> throw IllegalArgumentException("a gesture needs a ref or coordinates")
+    }
 }

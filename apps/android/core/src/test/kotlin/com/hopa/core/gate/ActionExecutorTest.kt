@@ -56,6 +56,17 @@ class ActionExecutorTest {
         assertFalse(result.record.verified)
     }
 
+    @Test
+    fun double_tap_and_long_press_use_their_own_gestures() = runBlocking {
+        val harness = Harness(allow = false)
+        harness.execute(Action(kind = "ui.doubleTap", ref = "e1"))
+        harness.execute(Action(kind = "ui.longPress", ref = "e1"))
+
+        assertEquals(1, harness.device.doubleTaps)
+        assertEquals(1, harness.device.longPresses)
+        assertEquals(0, harness.device.taps)
+    }
+
     private class Harness(
         allow: Boolean,
         changingTap: Boolean = false,
@@ -63,7 +74,7 @@ class ActionExecutorTest {
         val approval = FakeApproval(allow)
         private val clock = FakeClock()
         private val recorder = InMemoryRunRecorder()
-        private val device = FakeDevice(
+        val device = FakeDevice(
             onTap = { tapped ->
                 if (changingTap) {
                     tapped.observation = tapped.observation.copy(text = "changed")

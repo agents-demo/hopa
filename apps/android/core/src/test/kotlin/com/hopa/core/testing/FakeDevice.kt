@@ -13,12 +13,22 @@ class FakeDevice(
 ) : DevicePort {
     var launches = 0
     var taps = 0
+    var doubleTaps = 0
+    var longPresses = 0
 
     override suspend fun observe(): Observation = observation
 
     override suspend fun tap(ref: String?, x: Int?, y: Int?) {
         taps += 1
         onTap?.invoke(this)
+    }
+
+    override suspend fun doubleTap(ref: String?, x: Int?, y: Int?) {
+        doubleTaps += 1
+    }
+
+    override suspend fun longPress(ref: String?, x: Int?, y: Int?) {
+        longPresses += 1
     }
 
     override suspend fun type(text: String, ref: String?) = Unit

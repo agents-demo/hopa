@@ -42,6 +42,7 @@ fun SettingsScreen(
     onOpenCapabilities: () -> Unit,
     onOpenLaunchpad: () -> Unit,
     onOpenProfiles: () -> Unit,
+    onOpenAccessibility: () -> Unit,
 ) {
     var provider by rememberSaveable { mutableStateOf(state.settings.provider) }
     var endpoint by rememberSaveable { mutableStateOf(state.settings.endpoint) }
@@ -205,6 +206,9 @@ fun SettingsScreen(
             }
             Button(onClick = onOpenCapabilities) {
                 Text("Capabilities")
+            }
+            Button(onClick = onOpenAccessibility) {
+                Text("Phone access")
             }
             Button(onClick = onOpenLaunchpad) {
                 Text("Launchpad")

@@ -8,6 +8,7 @@ import com.hopa.app.di.AppContainer
 import com.hopa.app.feature.launchpad.LaunchpadRoute
 import com.hopa.app.feature.profiles.ProfilesRoute
 import com.hopa.app.feature.runs.RunsRoute
+import com.hopa.app.feature.settings.AccessibilityRoute
 import com.hopa.app.feature.settings.SettingsRoute
 import com.hopa.app.feature.shell.HomeShell
 
@@ -30,6 +31,13 @@ fun HopaNavHost(container: AppContainer) {
                 onOpenCapabilities = { navController.popBackStack() },
                 onOpenLaunchpad = { navController.navigate(HopaDestination.LAUNCHPAD) },
                 onOpenProfiles = { navController.navigate(HopaDestination.PROFILES) },
+                onOpenAccessibility = { navController.navigate(HopaDestination.ACCESSIBILITY) },
+            )
+        }
+        composable(HopaDestination.ACCESSIBILITY) {
+            AccessibilityRoute(
+                container = container,
+                onBack = { navController.popBackStack() },
             )
         }
         composable(HopaDestination.PROFILES) {

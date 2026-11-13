@@ -125,7 +125,14 @@ class ChatViewModel(
             )
             val history = conversation.messages.map { ModelMessage(it.role, it.text) }
             val bridged = runCatching { container.bridgedDevice() }.getOrNull()
-            val loop = if (bridged == null) container.loop else container.loopFor(bridged)
+            val current = container.settings.settings.first()
+            val device = bridged
+                ?: if (current.accessibilityAllowed) {
+                    container.device
+                } else {
+                    com.hopa.capabilities.device.UnavailableDevicePort()
+                }
+            val loop = container.loopFor(device)
             val result = loop.run(
                 runId = "run-$now",
                 traceId = UUID.randomUUID().toString(),

@@ -24,11 +24,15 @@ class AccessibilityDevice(
     private val context: Context,
 ) : DevicePort {
     private var refs: Map<String, AccessibilityNodeInfo> = emptyMap()
+    private val producer = com.hopa.core.observation.ObservationProducer()
+    private var lastShot = 0L
 
     override suspend fun observe(): Observation {
         val service = HopaAccessibilityService.instance ?: return offline()
         val reader = NodeTreeReader(service)
-        return reader.read().also { refs = reader.refs }
+        val raw = reader.read()
+        refs = reader.refs
+        return producer.produce(raw)
     }
 
     override suspend fun tap(ref: String?, x: Int?, y: Int?) {
@@ -50,6 +54,18 @@ class AccessibilityDevice(
             throw IllegalArgumentException("tap needs a ref or coordinates")
         }
         dispatcher.tap(x, y)
+        delay(250)
+    }
+
+    override suspend fun doubleTap(ref: String?, x: Int?, y: Int?) {
+        val point = pointFor(ref, x, y)
+        GestureDispatcher(service()).doubleTap(point.first, point.second)
+        delay(250)
+    }
+
+    override suspend fun longPress(ref: String?, x: Int?, y: Int?) {
+        val point = pointFor(ref, x, y)
+        GestureDispatcher(service()).longPress(point.first, point.second)
         delay(250)
     }
 
@@ -107,25 +123,39 @@ class AccessibilityDevice(
         HopaAccessibilityService.instance?.activeRoot()?.packageName?.toString().orEmpty()
 
     override suspend fun screenshot(): ByteArray? {
-        val service = HopaAccessibilityService.instance ?: return null
-        return suspendCancellableCoroutine { continuation ->
-            service.takeScreenshot(
-                Display.DEFAULT_DISPLAY,
-                context.mainExecutor,
-                object : AccessibilityService.TakeScreenshotCallback {
-                    override fun onSuccess(result: AccessibilityService.ScreenshotResult) {
-                        val bitmap = Bitmap.wrapHardwareBuffer(result.hardwareBuffer, result.colorSpace)
-                        val stream = ByteArrayOutputStream()
-                        bitmap?.compress(Bitmap.CompressFormat.JPEG, 88, stream)
-                        result.hardwareBuffer.close()
-                        continuation.resume(stream.toByteArray())
-                    }
+        val now = System.currentTimeMillis()
+        if (now - lastShot < 1_000) {
+            return null
+        }
+        val service = runCatching { service() }.getOrNull() ?: return null
+        lastShot = now
+        return try {
+            suspendCancellableCoroutine { continuation ->
+                service.takeScreenshot(
+                    Display.DEFAULT_DISPLAY,
+                    context.mainExecutor,
+                    object : AccessibilityService.TakeScreenshotCallback {
+                        override fun onSuccess(result: AccessibilityService.ScreenshotResult) {
+                            val bitmap = Bitmap.wrapHardwareBuffer(
+                                result.hardwareBuffer,
+                                result.colorSpace,
+                            )
+                            val stream = ByteArrayOutputStream()
+                            bitmap?.compress(Bitmap.CompressFormat.JPEG, 88, stream)
+                            result.hardwareBuffer.close()
+                            continuation.resume(stream.toByteArray())
+                        }
 
-                    override fun onFailure(errorCode: Int) {
-                        continuation.resume(null)
-                    }
-                },
-            )
+                        override fun onFailure(errorCode: Int) {
+                            // FLAG_SECURE lands here; say nothing rather than
+                            // capture something the app asked to hide.
+                            continuation.resume(null)
+                        }
+                    },
+                )
+            }
+        } catch (error: Exception) {
+            null
         }
     }
 
@@ -144,9 +174,26 @@ class AccessibilityDevice(
             .toList()
     }
 
-    private fun service(): HopaAccessibilityService =
-        HopaAccessibilityService.instance
-            ?: throw IllegalStateException("accessibility is not enabled")
+    private fun service(): HopaAccessibilityService {
+        if (!AccessibilityState.isEnabled(context)) {
+            throw IllegalStateException("accessibility is disabled in Android settings")
+        }
+        return HopaAccessibilityService.instance
+            ?: throw IllegalStateException("accessibility is enabled but not connected yet")
+    }
+
+    private fun pointFor(ref: String?, x: Int?, y: Int?): Pair<Int, Int> {
+        if (ref != null) {
+            val node = refs[ref] ?: throw IllegalArgumentException("stale ref $ref")
+            val bounds = android.graphics.Rect()
+            node.getBoundsInScreen(bounds)
+            return bounds.centerX() to bounds.centerY()
+        }
+        if (x == null || y == null) {
+            throw IllegalArgumentException("a gesture needs a ref or coordinates")
+        }
+        return x to y
+    }
 
     private fun offline(): Observation {
         val observation = Observation(

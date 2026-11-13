@@ -6,5 +6,6 @@ object HopaDestination {
     const val PROFILES = "profiles"
     const val RUNS = "runs"
     const val CAPABILITIES = "capabilities"
+    const val ACCESSIBILITY = "accessibility"
     const val LAUNCHPAD = "launchpad"
 }

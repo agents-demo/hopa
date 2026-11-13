@@ -5,7 +5,7 @@ phone code (UI, core, capabilities, shared services, bridge); the checklist was
 reconciled with the code on 2026-11-13.
 Owner: TBD.
 
-Progress on 2026-11-13: **43 of 135 phase items (31.9%)**, **44 of 149 (29.5%)**
+Progress on 2026-11-13: **47 of 135 phase items (34.8%)**, **48 of 149 (32.2%)**
 with the Definition of done and the open decisions.
 
 Read that number correctly. It counts *finished items*, not effort: an item is
@@ -324,12 +324,12 @@ apps/android/
 
 ### A7. `AccessibilityDevice` (16 d)
 
-- [ ] Service declaration, `accessibilityServiceInfo` (`canTakeScreenshot`, flags), disclosure screen, kill switch, self-package event filtering.
+- [x] Service declaration, `accessibilityServiceInfo` (`canTakeScreenshot`, flags), disclosure screen, kill switch, self-package event filtering. (evidence: disclosure screen, kill switch, self-package filter; docs/project/evidence/A7-accessibility.md)
 - [ ] Tree capture → `ObservationProducer` (same observation as A6 for one fixture screen).
-- [ ] Gestures: tap/double/long/swipe/back/home/scroll via `dispatchGesture`.
+- [x] Gestures: tap/double/long/swipe/back/home/scroll via `dispatchGesture`. (evidence: DevicePort doubleTap/longPress; GestureDispatcher strokes; ActionExecutorTest)
 - [x] Typing: `ACTION_SET_TEXT`, focus first, clipboard/IME fallback; non-ASCII. (evidence: AccessibilityDevice.type: focus, SET_TEXT, clipboard paste)
-- [ ] Screenshot: `takeScreenshot` with `FLAG_SECURE` handling and ~1/s limit; tree-only fallback.
-- [ ] Service death/revocation: re-check `enabledServices` before each action; fail closed.
+- [x] Screenshot: `takeScreenshot` with `FLAG_SECURE` handling and ~1/s limit; tree-only fallback. (evidence: 1/s limit, null on secure/failure, wrapped SecurityException)
+- [x] Service death/revocation: re-check `enabledServices` before each action; fail closed. (evidence: AccessibilityDevice.service checks AccessibilityState before every action)
 - [ ] Background capture: only while the service is enabled and the app is in a run; disclosure text matches behaviour.
 - [ ] Tests: fake tree, ref stability, action mapping, permission denied, revocation mid-run.
 - [ ] Evidence: a full turn on a real phone with the bridge **uninstalled/disabled**; both adapters produce identical observations for the fixture screen.
