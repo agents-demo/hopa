@@ -1,4 +1,4 @@
-# HOPA documentation
+﻿# HOPA documentation
 
 **Active client: Android. Next: Windows. Harmony is frozen (ADR-0020).**
 The Android plan is [`project/plan/android/`](project/plan/android/README.md).
@@ -7,11 +7,11 @@ Five folders by what you are looking for:
 
 ```
 docs/
-├─ design/     what it is and why (architecture, decisions, product)
-├─ guides/     how to do it (per platform; harmony today, android/windows later)
-├─ reference/  what a thing is called (contracts, bundles, glossary, policy)
-├─ project/    how we run it (plan, status, operations, releases, archive)
-└─ media/      pictures and clips
+â”œâ”€ design/     what it is and why (architecture, decisions, product)
+â”œâ”€ guides/     how to do it (per platform; harmony today, android/windows later)
+â”œâ”€ reference/  what a thing is called (contracts, bundles, glossary, policy)
+â”œâ”€ project/    how we run it (plan, status, operations, releases, archive)
+â””â”€ media/      pictures and clips
 ```
 
 Service documentation lives with the services: [`services/docs/`](../services/docs/README.md).
@@ -29,6 +29,7 @@ Service documentation lives with the services: [`services/docs/`](../services/do
 | [product/roadmap.md](design/product/roadmap.md) | What comes next? |
 | [product/coverage.md](design/product/coverage.md) | What works today, and what is blocked? |
 | [product/ux.md](design/product/ux.md) | What is the intended experience? |
+| [product/expansion-portfolio.md](design/product/expansion-portfolio.md) | What should the two extra developers and the researcher build? |
 
 ## Guides
 
