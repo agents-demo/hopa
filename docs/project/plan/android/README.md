@@ -5,7 +5,7 @@ phone code (UI, core, capabilities, shared services, bridge); the checklist was
 reconciled with the code on 2026-11-13.
 Owner: TBD.
 
-Progress on 2026-11-13: **40 of 135 phase items (29.6%)**, **41 of 149 (27.5%)**
+Progress on 2026-11-13: **43 of 135 phase items (31.9%)**, **44 of 149 (29.5%)**
 with the Definition of done and the open decisions.
 
 Read that number correctly. It counts *finished items*, not effort: an item is
@@ -317,10 +317,10 @@ apps/android/
 - [ ] `BridgeClient.kt`: per-method timeouts, one 401 refresh, URL/token scrub, role/target precedence.
 - [x] `AdbDevice`: observe/tap/type/swipe/launch/stop/foreground/**screenshot**/**apps** (the last two call the bridge endpoints added in A5; `DevicePort` is extended there). (evidence: AdbDevice.kt + BridgeClientTest; docs/project/evidence/A6-client.md)
 - [ ] Pairing: code → token+refresh in Keystore; a **single token holder** shared with `ChatSync`.
-- [ ] Target selection: this device vs bridge device; persisted.
-- [ ] Connection UI: address, pair code, connect, `health` then `whoami`, honest failure reasons.
+- [x] Target selection: this device vs bridge device; persisted. (evidence: useBridge switch persisted in settings; bridgedDevice honours it)
+- [x] Connection UI: address, pair code, connect, `health` then `whoami`, honest failure reasons. (evidence: Settings Bridge section: address, pair code, Pair, Test (health then whoami); docs/project/evidence/A6-client.md)
 - [ ] Tests: fake HTTP for every endpoint, forced 401 → rotation updates both clients, scrub cases (full-width), unreachable mid-run.
-- [ ] Evidence: full turn on emulator via bridge; before/after text diff proves the tap; screenshot artifact.
+- [x] Evidence: full turn on emulator via bridge; before/after text diff proves the tap; screenshot artifact. (evidence: docs/project/evidence/A6-client.md live run: pair, whoami+observe, launch turn, tap diff)
 
 ### A7. `AccessibilityDevice` (16 d)
 

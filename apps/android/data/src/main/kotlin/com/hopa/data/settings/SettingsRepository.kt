@@ -14,4 +14,8 @@ interface SettingsRepository {
     suspend fun bridgeToken(): String
 
     suspend fun setBridgeToken(value: String)
+
+    suspend fun bridgeRefresh(): String
+
+    suspend fun setBridgeRefresh(value: String)
 }

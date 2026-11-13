@@ -35,6 +35,34 @@ class BridgeClient(
 
     suspend fun health(): JsonObject = call("GET", "/health", auth = false, timeout = 8)
 
+    suspend fun pair(code: String): BridgeSession {
+        val payload = call(
+            method = "POST",
+            path = "/pair",
+            body = """{"code":${quote(code)}}""",
+            auth = false,
+            timeout = 15,
+        )
+        return session(payload)
+    }
+
+    suspend fun refreshSession(refresh: String): BridgeSession {
+        val payload = call(
+            method = "POST",
+            path = "/refresh",
+            body = """{"refresh":${quote(refresh)}}""",
+            auth = false,
+            timeout = 15,
+        )
+        return session(payload)
+    }
+
+    private fun session(payload: JsonObject): BridgeSession = BridgeSession(
+        token = payload["token"]?.jsonPrimitive?.contentOrNull.orEmpty(),
+        refresh = payload["refresh"]?.jsonPrimitive?.contentOrNull.orEmpty(),
+        expiresIn = payload["expires_in"]?.jsonPrimitive?.contentOrNull?.toLongOrNull() ?: 0,
+    )
+
     suspend fun whoami(): JsonObject = call("GET", "/whoami", timeout = 8)
 
     suspend fun observe(): JsonObject = call("POST", "/observe", body = "{}", timeout = 45)

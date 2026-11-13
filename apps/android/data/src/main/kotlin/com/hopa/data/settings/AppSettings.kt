@@ -9,4 +9,5 @@ data class AppSettings(
     val webEnabled: Boolean = true,
     val selectedConversation: String = "",
     val bridgeUrl: String = "",
+    val useBridge: Boolean = true,
 )

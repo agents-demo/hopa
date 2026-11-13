@@ -15,6 +15,14 @@ class StubModelClient : ModelPort {
         val screen = request.messages.lastOrNull { it.content.startsWith("SCREEN:") }?.content
         val seen = screen?.lines()?.drop(1)?.filter { it.isNotBlank() }?.take(2)?.joinToString(" ")
         val answer = when {
+            last.contains("bridge demo", ignoreCase = true) -> {
+                if (seen?.contains("Settings") == true) {
+                    "Bridge demo: Settings is open. I can see: $seen"
+                } else {
+                    """{"schemaVersion":"1","kind":"ui.launch","app":"com.android.settings","timeoutMs":8000}"""
+                }
+            }
+
             last.contains("look", ignoreCase = true) && !seen.isNullOrBlank() ->
                 "I can see: $seen"
             last.contains("2 plus 2", ignoreCase = true) -> "2 plus 2 is 4."

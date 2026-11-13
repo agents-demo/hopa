@@ -81,6 +81,21 @@ class BridgeClientTest {
     }
 
     @Test
+    fun pairing_returns_the_token_pair() = runBlocking {
+        server.enqueue(
+            MockResponse().setBody(
+                """{"token":"t1","refresh":"r1","expires_in":43200}""",
+            ),
+        )
+        val session = BridgeClient(base, "").pair("123456")
+
+        assertEquals("t1", session.token)
+        assertEquals("r1", session.refresh)
+        assertEquals(43_200L, session.expiresIn)
+        assertEquals("""{"code":"123456"}""", server.takeRequest().body.readUtf8())
+    }
+
+    @Test
     fun apps_are_parsed_and_labels_fall_back_to_the_bundle() = runBlocking {
         server.enqueue(
             MockResponse().setBody(

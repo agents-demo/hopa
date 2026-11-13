@@ -36,8 +36,9 @@ import com.hopa.capabilities.llm.ProviderState
 fun SettingsScreen(
     state: SettingsUiState,
     onBack: () -> Unit,
-    onSave: (String, String, String, String, Boolean, Boolean, String, String) -> Unit,
+    onSave: (String, String, String, String, Boolean, Boolean, String, String, Boolean) -> Unit,
     onTestBridge: (String, String) -> Unit,
+    onPairBridge: (String, String) -> Unit,
     onOpenCapabilities: () -> Unit,
     onOpenLaunchpad: () -> Unit,
     onOpenProfiles: () -> Unit,
@@ -50,6 +51,8 @@ fun SettingsScreen(
     var web by rememberSaveable { mutableStateOf(state.settings.webEnabled) }
     var bridgeUrl by rememberSaveable { mutableStateOf(state.settings.bridgeUrl) }
     var bridgeKey by rememberSaveable { mutableStateOf("") }
+    var pairCode by rememberSaveable { mutableStateOf("") }
+    var useBridge by rememberSaveable { mutableStateOf(state.settings.useBridge) }
 
     LaunchedEffect(state.settings, state.key) {
         provider = state.settings.provider
@@ -58,6 +61,7 @@ fun SettingsScreen(
         notify = state.settings.notifyAnswers
         web = state.settings.webEnabled
         bridgeUrl = state.settings.bridgeUrl
+        useBridge = state.settings.useBridge
         if (key.isEmpty()) {
             key = state.key
         }
@@ -125,10 +129,23 @@ fun SettingsScreen(
                 Switch(checked = web, onCheckedChange = { web = it })
             }
             Text("Bridge (PC)", style = MaterialTheme.typography.titleLarge)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text("Use the bridge for device actions")
+                Switch(checked = useBridge, onCheckedChange = { useBridge = it })
+            }
             OutlinedTextField(
                 value = bridgeUrl,
                 onValueChange = { bridgeUrl = it },
                 label = { Text("Bridge address, e.g. http://192.168.1.5:8766") },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            OutlinedTextField(
+                value = pairCode,
+                onValueChange = { pairCode = it },
+                label = { Text("Pair code from the bridge console") },
                 modifier = Modifier.fillMaxWidth(),
             )
             OutlinedTextField(
@@ -143,16 +160,22 @@ fun SettingsScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Button(
+                    onClick = { onPairBridge(bridgeUrl, pairCode) },
+                    enabled = !state.busy,
+                ) {
+                    Text("Pair")
+                }
+                Button(
                     onClick = { onTestBridge(bridgeUrl, bridgeKey) },
                     enabled = !state.busy,
                 ) {
                     Text("Test bridge")
                 }
-                Text(
-                    state.bridgeStatus ?: "adb acts on the PC; the phone just asks.",
-                    style = MaterialTheme.typography.bodySmall,
-                )
             }
+            Text(
+                state.bridgeStatus ?: "adb acts on the PC; the phone just asks.",
+                style = MaterialTheme.typography.bodySmall,
+            )
             Button(
                 onClick = {
                     onSave(
@@ -164,6 +187,7 @@ fun SettingsScreen(
                         web,
                         bridgeUrl,
                         bridgeKey,
+                        useBridge,
                     )
                 },
                 enabled = !state.busy,

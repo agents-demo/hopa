@@ -63,17 +63,35 @@ class AppContainer(context: Context) {
     /** A bridge-backed device when Settings has an address and a token. */
     suspend fun bridgedDevice(): com.hopa.core.ports.DevicePort? {
         val current = settings.settings.first()
-        if (current.bridgeUrl.isBlank()) {
+        if (!current.useBridge || current.bridgeUrl.isBlank()) {
             return null
         }
         val token = settings.bridgeToken()
         if (token.isBlank()) {
             return null
         }
-        return com.hopa.capabilities.bridge.AdbDevice(
-            client = com.hopa.capabilities.bridge.BridgeClient(current.bridgeUrl, token),
-            clock = clock,
+        val client = com.hopa.capabilities.bridge.BridgeClient(
+            baseUrl = current.bridgeUrl,
+            token = token,
+            refresh = {
+                val saved = settings.bridgeRefresh()
+                if (saved.isBlank()) {
+                    null
+                } else {
+                    runCatching {
+                        com.hopa.capabilities.bridge.BridgeClient(
+                            current.bridgeUrl,
+                            "",
+                        ).refreshSession(saved)
+                    }.getOrNull()?.let { session ->
+                        settings.setBridgeToken(session.token)
+                        settings.setBridgeRefresh(session.refresh)
+                        session.token
+                    }
+                }
+            },
         )
+        return com.hopa.capabilities.bridge.AdbDevice(client, clock)
     }
 
     /** One loop per device path, sharing the model, recorder and gate. */

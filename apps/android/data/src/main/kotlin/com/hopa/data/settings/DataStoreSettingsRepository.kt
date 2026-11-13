@@ -26,6 +26,7 @@ class DataStoreSettingsRepository(
             webEnabled = prefs[WEB] ?: true,
             selectedConversation = prefs[SELECTED] ?: "",
             bridgeUrl = prefs[BRIDGE_URL] ?: "",
+            useBridge = prefs[USE_BRIDGE] ?: true,
         )
     }
 
@@ -40,6 +41,7 @@ class DataStoreSettingsRepository(
             prefs[WEB] = next.webEnabled
             prefs[SELECTED] = next.selectedConversation
             prefs[BRIDGE_URL] = next.bridgeUrl
+            prefs[USE_BRIDGE] = next.useBridge
         }
     }
 
@@ -51,6 +53,10 @@ class DataStoreSettingsRepository(
 
     override suspend fun setBridgeToken(value: String) = secrets.set(BRIDGE_TOKEN, value)
 
+    override suspend fun bridgeRefresh(): String = secrets.get(BRIDGE_REFRESH)
+
+    override suspend fun setBridgeRefresh(value: String) = secrets.set(BRIDGE_REFRESH, value)
+
     private companion object {
         val PROVIDER = stringPreferencesKey("provider")
         val ENDPOINT = stringPreferencesKey("endpoint")
@@ -60,7 +66,9 @@ class DataStoreSettingsRepository(
         val WEB = booleanPreferencesKey("web_enabled")
         val SELECTED = stringPreferencesKey("selected_conversation")
         val BRIDGE_URL = stringPreferencesKey("bridge_url")
+        val USE_BRIDGE = booleanPreferencesKey("use_bridge")
         const val MODEL_KEY = "model_key"
         const val BRIDGE_TOKEN = "bridge_token"
+        const val BRIDGE_REFRESH = "bridge_refresh"
     }
 }

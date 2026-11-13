@@ -40,3 +40,30 @@ error scrubbing, and the apps parser. A live `/observe`, `/apps` and
 - Explicit target/role selection; one bridge address is assumed.
 - The 401-refreshed token is used for the rest of the process but not persisted.
 - Tests for every endpoint, and a full agent turn through the bridge (A14).
+
+## Live run 2026-11-13 (emulator-5554, API 35)
+
+Bridge: `hopa_bridge --platform android --target emulator-5554 bridge --port
+8901 --token basetoken --pair-code 123456 --no-state`, PC side.
+
+1. **Launch config**: `am start ... --es hopa.bridgeUrl http://10.0.2.2:8901
+   --es hopa.bridgePair 123456`. The app wrote the address and paired; the
+   bridge log shows `POST /pair`. This also proved a real gap: without a
+   `networkSecurityConfig` Android blocked the cleartext request, so the app now
+   ships one (documented in the file: the config language cannot express a CIDR
+   range).
+2. **Test bridge** (Settings): the app called `GET /whoami` and `POST /observe`
+   through the bridge and showed `Bridge ok: paired, 28 nodes`.
+3. **A full turn**: the message `bridge demo` with the demo model produced
+   `POST /observe`, `POST /foreground`, `POST /launch` (Settings), `POST
+   /observe`, `POST /foreground` in that order — the action and the re-read both
+   went over the bridge.
+4. **Tap diff through the bridge**: `AndroidDevice` tapped the `Chats` label in
+   the app; the screen text gained `New chat` and `CURRENT`, and the screenshot
+   was a 46 583-byte PNG. That is the before/after proof.
+
+## Automation hooks
+
+`MainActivity` accepts `hopa.bridgeUrl`, `hopa.bridgeToken` and
+`hopa.bridgePair` extras; absent extras change nothing. They are the launch
+config A13 expects.

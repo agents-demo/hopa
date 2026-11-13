@@ -35,6 +35,7 @@ class SettingsViewModel(
         webEnabled: Boolean,
         bridgeUrl: String,
         bridgeKey: String,
+        useBridge: Boolean,
     ) {
         viewModelScope.launch {
             _state.update { it.copy(busy = true, saved = false, error = null) }
@@ -47,6 +48,7 @@ class SettingsViewModel(
                         notifyAnswers = notifyAnswers,
                         webEnabled = webEnabled,
                         bridgeUrl = bridgeUrl.trim(),
+                        useBridge = useBridge,
                     )
                 }
                 if (key.isNotBlank()) {
@@ -64,6 +66,24 @@ class SettingsViewModel(
         }
     }
 
+    fun pairBridge(url: String, code: String) {
+        viewModelScope.launch {
+            if (url.isBlank() || code.isBlank()) {
+                _state.update { it.copy(bridgeStatus = "Bridge: address and pair code first") }
+                return@launch
+            }
+            _state.update { it.copy(busy = true, bridgeStatus = null) }
+            val message = runCatching {
+                val session = BridgeClient(url, "").pair(code.trim())
+                container.settings.setBridgeToken(session.token)
+                container.settings.setBridgeRefresh(session.refresh)
+                reload()
+                "Bridge paired; the token is in the Keystore"
+            }.getOrElse { error -> "Bridge: ${error.message}" }
+            _state.update { it.copy(busy = false, bridgeStatus = message) }
+        }
+    }
+
     fun testBridge(url: String, token: String) {
         viewModelScope.launch {
             if (url.isBlank()) {
@@ -76,10 +96,12 @@ class SettingsViewModel(
             }
             val message = runCatching {
                 val client = BridgeClient(url, effective)
+                client.health()
                 val who = client.whoami()
                 val devices = who["devices"]?.jsonArray
                     ?.joinToString { it.jsonPrimitive.content }
-                "Bridge ok: ${devices ?: "paired"}"
+                val nodes = client.observe()["nodes"]?.jsonArray?.size ?: 0
+                "Bridge ok: ${devices ?: "paired"}, $nodes nodes"
             }.getOrElse { error -> "Bridge: ${error.message}" }
             _state.update { it.copy(busy = false, bridgeStatus = message) }
         }

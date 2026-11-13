@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The bridge and a LAN model answer on plain HTTP inside the private network.
+  The network-security-config language cannot express a CIDR range (only exact
+  domains or IPs), so a "private ranges only" rule is impossible to write
+  literally. Cleartext is therefore permitted and the guards are the bridge
+  token in the Keystore and the approval gate; HTTPS endpoints still get the
+  system trust anchors and are never downgraded.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
