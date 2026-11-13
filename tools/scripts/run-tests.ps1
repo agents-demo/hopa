@@ -57,6 +57,16 @@ Write-Host '=== app catalogue ==='
 & $pythonExe @pythonPrefix (Join-Path $root 'tools\scripts\build-app-catalog.py') --check
 if ($LASTEXITCODE -ne 0) { throw 'app catalogue is stale' }
 
+Write-Host '=== shared contract data ==='
+& $pythonExe @pythonPrefix (Join-Path $root 'tools\scripts\build-policy-data.py') --check
+if ($LASTEXITCODE -ne 0) { throw 'policy data is stale' }
+& $pythonExe @pythonPrefix (Join-Path $root 'tools\scripts\build-prompt-rules.py') --check
+if ($LASTEXITCODE -ne 0) { throw 'prompt rules are stale' }
+& $pythonExe @pythonPrefix (Join-Path $root 'tools\checks\check-routing.py')
+if ($LASTEXITCODE -ne 0) { throw 'routing fixtures failed' }
+& $pythonExe @pythonPrefix (Join-Path $root 'tools\checks\check-observation-hash.py')
+if ($LASTEXITCODE -ne 0) { throw 'observation hash vector failed' }
+
 Write-Host '=== brain tests ==='
 if (Test-Path (Join-Path $root '.tools\kotlinc\bin\kotlinc.bat')) {
     & (Join-Path $PSScriptRoot 'brain.ps1')

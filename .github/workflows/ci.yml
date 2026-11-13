@@ -59,6 +59,10 @@ jobs:
         run: python services/tools/checks/check-openapi.py
       - name: Conformance fixtures
         run: python tools/checks/check-conformance.py
+      - name: Routing fixtures
+        run: python tools/checks/check-routing.py
+      - name: Observation hash vector
+        run: python tools/checks/check-observation-hash.py
       - name: Tree rules
         run: python tools/checks/check-tree.py
       - name: Render blueprint
@@ -67,6 +71,10 @@ jobs:
         run: python tools/checks/check-links.py
       - name: Generated app catalogue is current
         run: python tools/scripts/build-app-catalog.py --check
+      - name: Generated policy data is current
+        run: python tools/scripts/build-policy-data.py --check
+      - name: Generated prompt rules are current
+        run: python tools/scripts/build-prompt-rules.py --check
       - name: Validate benchmark tasks
         run: python -m hopa_bench validate --tasks services/evals/bench/tasks
 

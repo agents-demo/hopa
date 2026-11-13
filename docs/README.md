@@ -51,6 +51,7 @@ Service documentation lives with the services: [`services/docs/`](../services/do
 | [privacy.md](reference/privacy.md) | What data is stored? |
 | [abuse.md](reference/abuse.md) | What is explicitly refused? |
 | [platform-matrix.md](reference/platform-matrix.md) | What can each platform do, and how? |
+| [shared-data.md](reference/shared-data.md) | Which data do all clients read, and where is it generated from? |
 
 ## Project
 

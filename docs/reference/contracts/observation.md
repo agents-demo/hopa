@@ -72,6 +72,12 @@ deliberately conservative.
 focus, text, tree}))` with sorted keys and no whitespace. The screenshot is
 **not** part of the hash.
 
+Machine-readable values and a cross-client vector:
+
+- [`contracts/observation/limits.v1.json`](../../../contracts/observation/limits.v1.json)
+- [`contracts/fixtures/observation-hash.json`](../../../contracts/fixtures/observation-hash.json)
+- `tools/checks/check-observation-hash.py` recomputes it in CI.
+
 ## Truncation
 
 The tree is capped at 400 nodes. The focus path is always kept even when it

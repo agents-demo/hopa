@@ -4,7 +4,7 @@ display: Baidu
 bundle: com.baidu.baiduapp
 ability: EntryAbility
 bundle_verified: Mate 80, 2026-11-08
-aliases: [Baidu, ??, baidu]
+aliases: [Baidu, 百度, baidu]
 pace: careful
 validated: verified
 platform: harmonyos

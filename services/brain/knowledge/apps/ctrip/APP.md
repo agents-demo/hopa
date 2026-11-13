@@ -4,7 +4,7 @@ display: Trip.com
 bundle: com.ctrip.harmonynext
 ability: CTEntryAbility
 bundle_verified: Mate 80, 2026-11-08
-aliases: [Trip.com, ??, ctrip]
+aliases: [Trip.com, 携程, ctrip]
 pace: careful
 validated: verified
 platform: harmonyos

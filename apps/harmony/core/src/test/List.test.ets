@@ -14,6 +14,7 @@ import appRouterTest from './AppRouter.test';
 import runNarratorTest from './RunNarrator.test';
 import approvalDescriptionTest from './ApprovalDescription.test';
 import actionParserTest from './ActionParser.test';
+import promptContractTest from './PromptContract.test';
 
 export default function testsuite(): void {
   approvalPolicyTest();
@@ -32,4 +33,5 @@ export default function testsuite(): void {
   runNarratorTest();
   approvalDescriptionTest();
   actionParserTest();
+  promptContractTest();
 }

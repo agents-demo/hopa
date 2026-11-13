@@ -4,7 +4,7 @@ display: Quark
 bundle: com.quark.ohosbrowser
 ability: EntryAbility
 bundle_verified: Mate 80, 2026-11-08
-aliases: [Quark, ??, quark]
+aliases: [Quark, 夸克, quark]
 pace: careful
 validated: verified
 platform: harmonyos

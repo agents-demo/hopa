@@ -1,0 +1,228 @@
+{
+  "schemaVersion": "1",
+  "description": "Lexical routing cases every client loop must reproduce (ADR-0018). The reference implementation is tools/checks/check-routing.py; the ArkTS twin is apps/harmony/core/src/main/ets/router/AppRouter.ets.",
+  "generic": [
+    "app",
+    "apps",
+    "web",
+    "www",
+    "site",
+    "website",
+    "browser",
+    "phone",
+    "open",
+    "use",
+    "应用",
+    "网站",
+    "网页",
+    "浏览器",
+    "打开",
+    "使用"
+  ],
+  "cases": [
+    {
+      "name": "an-alias-matches",
+      "goal": "set an alarm for 7",
+      "targets": [
+        {
+          "name": "clock",
+          "display": "Clock",
+          "kind": "app",
+          "bundle": "com.huawei.hmos.clock",
+          "domains": [],
+          "aliases": ["alarm", "timer"]
+        },
+        {
+          "name": "settings",
+          "display": "Settings",
+          "kind": "app",
+          "bundle": "com.huawei.hmos.settings",
+          "domains": [],
+          "aliases": []
+        }
+      ],
+      "expect": { "matched": true, "name": "clock", "kind": "app", "score": 5, "term": "alarm" }
+    },
+    {
+      "name": "the-longest-term-wins",
+      "goal": "open mail and gmail",
+      "targets": [
+        {
+          "name": "mail",
+          "display": "Mail",
+          "kind": "app",
+          "bundle": "com.example.mail",
+          "domains": [],
+          "aliases": []
+        },
+        {
+          "name": "gmail",
+          "display": "Gmail",
+          "kind": "app",
+          "bundle": "com.example.gmail",
+          "domains": [],
+          "aliases": ["gmail"]
+        }
+      ],
+      "expect": { "matched": true, "name": "gmail", "kind": "app", "score": 5, "term": "gmail" }
+    },
+    {
+      "name": "generic-words-do-not-route",
+      "goal": "open the app",
+      "targets": [
+        {
+          "name": "clock",
+          "display": "Clock",
+          "kind": "app",
+          "bundle": "com.huawei.hmos.clock",
+          "domains": [],
+          "aliases": []
+        }
+      ],
+      "expect": { "matched": false }
+    },
+    {
+      "name": "a-domain-matches",
+      "goal": "watch on bilibili.com",
+      "targets": [
+        {
+          "name": "bilibili.com",
+          "display": "Bilibili",
+          "kind": "site",
+          "bundle": "",
+          "domains": ["bilibili.com", "www.bilibili.com"],
+          "aliases": ["bili"]
+        }
+      ],
+      "expect": { "matched": true, "name": "bilibili.com", "kind": "site", "score": 12, "term": "bilibili.com" }
+    },
+    {
+      "name": "a-bundle-matches",
+      "goal": "launch com.huawei.hmos.clock",
+      "targets": [
+        {
+          "name": "clock",
+          "display": "Clock",
+          "kind": "app",
+          "bundle": "com.huawei.hmos.clock",
+          "domains": [],
+          "aliases": ["alarm"]
+        }
+      ],
+      "expect": { "matched": true, "name": "clock", "kind": "app", "score": 21, "term": "com.huawei.hmos.clock" }
+    },
+    {
+      "name": "a-tie-prefers-a-launchable-target",
+      "goal": "set an alarm",
+      "targets": [
+        {
+          "name": "clock-unverified",
+          "display": "Clock",
+          "kind": "app",
+          "bundle": "",
+          "domains": [],
+          "aliases": ["alarm"]
+        },
+        {
+          "name": "clock",
+          "display": "Clock",
+          "kind": "app",
+          "bundle": "com.huawei.hmos.clock",
+          "domains": [],
+          "aliases": ["alarm"]
+        }
+      ],
+      "expect": { "matched": true, "name": "clock", "kind": "app", "score": 5, "term": "alarm" }
+    },
+    {
+      "name": "ascii-terms-need-a-word-boundary",
+      "goal": "open the clockwork",
+      "targets": [
+        {
+          "name": "clock",
+          "display": "Clock",
+          "kind": "app",
+          "bundle": "com.huawei.hmos.clock",
+          "domains": [],
+          "aliases": []
+        }
+      ],
+      "expect": { "matched": false }
+    },
+    {
+      "name": "a-short-numeric-alias-is-ignored",
+      "goal": "5",
+      "targets": [
+        {
+          "name": "five",
+          "display": "Five",
+          "kind": "app",
+          "bundle": "com.example.five",
+          "domains": [],
+          "aliases": ["5"]
+        }
+      ],
+      "expect": { "matched": false }
+    },
+    {
+      "name": "a-long-numeric-alias-matches",
+      "goal": "555",
+      "targets": [
+        {
+          "name": "five",
+          "display": "Five",
+          "kind": "app",
+          "bundle": "com.example.five",
+          "domains": [],
+          "aliases": ["555"]
+        }
+      ],
+      "expect": { "matched": true, "name": "five", "kind": "app", "score": 3, "term": "555" }
+    },
+    {
+      "name": "a-chinese-alias-matches",
+      "goal": "打开支付宝",
+      "targets": [
+        {
+          "name": "alipay",
+          "display": "Alipay",
+          "kind": "app",
+          "bundle": "com.alipay.mobile.client",
+          "domains": [],
+          "aliases": ["支付宝"]
+        }
+      ],
+      "expect": { "matched": true, "name": "alipay", "kind": "app", "score": 3, "term": "支付宝" }
+    },
+    {
+      "name": "the-goal-is-case-insensitive",
+      "goal": "OPEN CLOCK",
+      "targets": [
+        {
+          "name": "clock",
+          "display": "Clock",
+          "kind": "app",
+          "bundle": "com.huawei.hmos.clock",
+          "domains": [],
+          "aliases": []
+        }
+      ],
+      "expect": { "matched": true, "name": "clock", "kind": "app", "score": 5, "term": "clock" }
+    },
+    {
+      "name": "an-empty-goal-matches-nothing",
+      "goal": "   ",
+      "targets": [
+        {
+          "name": "clock",
+          "display": "Clock",
+          "kind": "app",
+          "bundle": "com.huawei.hmos.clock",
+          "domains": [],
+          "aliases": ["alarm"]
+        }
+      ],
+      "expect": { "matched": false }
+    }
+  ]
+}

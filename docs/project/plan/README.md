@@ -540,6 +540,30 @@ Risk: low (moves and path fixes only). Rollback: revert the consolidation commit
 | Device | laptop app `Connected.` + one observe/tap | R3, R6 |
 | Relay | `/health` on preview and on the PC half's `hdc-tunnel` | R4 |
 
+## R15. Share the data every client reads
+
+Scope added after the refactor, requested before Android development starts. The
+loop stays per client (ADR-0016); the data and the cases move to `contracts/`
+(ADR-0018).
+
+- [x] `contracts/catalog/catalog.v1.json` is generated from `services/brain/knowledge`
+      with a `platforms` map; the ArkTS copy is rendered from it and a Kotlin
+      renderer exists. (evidence: `build-app-catalog.py --check`, 35 apps + 21 sites)
+- [x] Approval vocabularies live in `contracts/policy/approval.v1.json`; the
+      ArkTS gate reads generated data and keeps its logic. (evidence: 110 ArkTS
+      tests pass, `build-policy-data.py --check`)
+- [x] Prompt promises are `contracts/prompts/rules.v1.json`; a generated constant
+      and `PromptContract.test.ets` assert every phrase. (evidence:
+      `build-prompt-rules.py --check`, 12 rules)
+- [x] Routing cases and an observation hash vector are fixtures with checkers.
+      (evidence: `check-routing.py` and `check-observation-hash.py`, 0 problems)
+- [x] CI and `tools/scripts/run-tests.ps1` run the new generators and checkers.
+      (evidence: `.github/workflows/ci.yml`, `run-tests.ps1`)
+- [x] ADR-0018 and `docs/reference/shared-data.md` explain the split.
+      (evidence: 0 broken links)
+- [x] Harmony regression on hardware: both HAPs built, installed, one live model
+      turn each. (evidence: `docs/project/evidence/A0-shared-data-prep.md`)
+
 ## Rollback model
 
 Each rename is **one** atomic commit (move + imports + pyproject + CI), so the

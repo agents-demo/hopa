@@ -1,0 +1,85 @@
+{
+  "schemaVersion": "1",
+  "algorithm": "sha256 over canonical JSON (sorted keys, no whitespace, UTF-8) of the projection {displayId, windowId, rotation, width, height, focus, text, tree}; prefixed sha256:",
+  "cases": [
+    {
+      "name": "settings-screen",
+      "observation": {
+        "schemaVersion": "1",
+        "id": "obs-fixture-1",
+        "timestamp": 0,
+        "displayId": 0,
+        "windowId": "active",
+        "rotation": 0,
+        "density": 1.0,
+        "screenSize": {
+          "width": 1080,
+          "height": 2400
+        },
+        "focus": "e2",
+        "text": "Settings\nWi-Fi",
+        "tree": {
+          "ref": "e1",
+          "type": "root",
+          "text": "",
+          "description": "",
+          "id": "",
+          "bounds": null,
+          "clickable": false,
+          "enabled": true,
+          "checked": false,
+          "scrollable": false,
+          "visible": true,
+          "focused": false,
+          "children": [
+            {
+              "ref": "e2",
+              "type": "button",
+              "text": "Settings",
+              "description": "",
+              "id": "",
+              "bounds": [
+                40,
+                200,
+                400,
+                280
+              ],
+              "clickable": true,
+              "enabled": true,
+              "checked": false,
+              "scrollable": false,
+              "visible": true,
+              "focused": false,
+              "children": []
+            },
+            {
+              "ref": "e3",
+              "type": "text",
+              "text": "Wi-Fi",
+              "description": "",
+              "id": "",
+              "bounds": [
+                40,
+                320,
+                400,
+                380
+              ],
+              "clickable": false,
+              "enabled": true,
+              "checked": false,
+              "scrollable": false,
+              "visible": true,
+              "focused": false,
+              "children": []
+            }
+          ]
+        },
+        "screenshotRef": "",
+        "app": "",
+        "hash": "sha256:3fd2d17a2e044cd56c2de2e5a8ac09aaa2e31ee1aef8d54509e22c19ae6d5f63",
+        "truncated": false
+      },
+      "hash": "sha256:3fd2d17a2e044cd56c2de2e5a8ac09aaa2e31ee1aef8d54509e22c19ae6d5f63"
+    }
+  ]
+}

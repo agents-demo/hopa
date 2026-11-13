@@ -44,6 +44,7 @@ stated target, and the artifact exists.
 | Decision | Where |
 |---|---|
 | Each client owns its loop; shared schemas + fixtures | ADR-0016 |
+| Shared data (catalogue, policy, prompt rules, routing, hash) lives once | ADR-0018 |
 | Bridge/adb first, accessibility fallback | ADR-0017 |
 | Kotlin + Compose, `apps/android`, minSdk 30 / target 35 | this plan |
 | BYOK; key only in Keystore | ADR-0016 |
@@ -110,6 +111,13 @@ through to About.
   outbound is clipboard and `systemShare`. The plan must not treat it as one
   outbound sheet.
 - **17 approval policy cases**, not 18.
+- **The catalogue and the policy vocabulary are now shared data** (ADR-0018):
+  `contracts/catalog/catalog.v1.json`, `contracts/policy/approval.v1.json`,
+  `contracts/prompts/rules.v1.json`, `contracts/fixtures/routing.json`,
+  `contracts/fixtures/observation-hash.json`. The Android client renders them;
+  it does not re-author them. The Harmony parser still emits four kinds the
+  schema does not list (`ui.sendMessage`, `ui.call`, `a11y.observe`,
+  `sandbox.runNetworked`); Android uses the schema names.
 - **7 settings sections**, 11 sub-pages.
 - Verified: 24 000-char budget / last 6 / 400-char old lines; 120-line element
   cap; 20 000-char browser text; 600-char speak; 4 MiB images; 12 h tokens and
@@ -208,16 +216,18 @@ stops secrets reaching the prompt.
 
 - [ ] `core/contracts`: serializable `Observation`, `Action`, `Decision`, `RunRecord` matching the schemas exactly (names, nullability, unknown fields rejected).
 - [ ] JSON-Schema validation with `networknt/json-schema-validator` (draft 2020-12), including `action` `$ref` inside `decision`; pin the version.
-- [ ] `ObservationProducer` contract tests: pre-order refs, redaction cases, 400-node cap with focus path, 6 000-char cap, canonical hash vector.
+- [ ] `ObservationProducer` contract tests: pre-order refs, redaction cases, limits from `contracts/observation/limits.v1.json`, and the exact hash from `contracts/fixtures/observation-hash.json`.
+- [ ] Catalogue: generate the Kotlin file from `contracts/catalog/catalog.v1.json` (`build-app-catalog.py --kotlin`); no hand-written list. Fill the `android` platform map (package, activity) from `PackageManager`.
 - [ ] Schema-only conformance: every fixture's observation and decision validates or fails as declared; no semantic gate yet.
 - [ ] A named negative case: `ui.teleport` must fail with `E_SCHEMA`.
-- [ ] Evidence: JVM tests; an intentionally invalid fixture fails with the schema error.
+- [ ] Evidence: JVM tests; the hash vector matches; an intentionally invalid fixture fails with the schema error.
 
 ### A2. The loop (10 d)
 
 - [ ] `AgentLoop`: initial capture, system prompt, **up to 14 steps**, 1500 ms settle, duplicate-launch short-circuit, cancel at three checkpoints, final text-only call, `summarize`.
 - [ ] `ActionParser`: fenced/last-object parsing, the **schema's** kinds (not Harmony's 19), reject `finish`/`done`, ignore model payment flags, unknown kind → text.
-- [ ] `PromptBuilder`: system text, memory/skill/app-catalogue blocks, router hint, screen rendering with 120 element lines.
+- [ ] `PromptBuilder`: system text carrying every rule in `contracts/prompts/rules.v1.json` (assert the phrases in a test), memory/skill/app-catalogue blocks, router hint, screen rendering with 120 element lines.
+- [ ] `AppRouter` ported from `AppRouter.ets`; run `contracts/fixtures/routing.json` and reproduce every case.
 - [ ] `ContextBudget`: 24 000 chars, keep last 6, 400-char old lines, hard trim.
 - [ ] `RunNarrator`: per-step sentences, tap grouping, failure phrasing.
 - [ ] `ObservationProducer` wired behind `ScreenSource` (bridge → accessibility 4 s guard → browser text).
@@ -226,7 +236,7 @@ stops secrets reaching the prompt.
 
 ### A3. Gate, records, semantic conformance (8 d)
 
-- [ ] `ApprovalPolicy`: all sets from `ApprovalPolicy.ets`, amount/merchant regexes, trusted-app rule against `system.sendMessage`, fail-closed; autonomous never bypasses payment.
+- [ ] `ApprovalPolicy`: read `contracts/policy/approval.v1.json` (generated Kotlin constant), all lists and amount/merchant regexes, trusted-app rule against `system.sendMessage`, fail-closed; autonomous never bypasses payment.
 - [ ] `ActionExecutor`: guards → policy → approval → capability → verify → record; denial records; unsupported records.
 - [ ] `RunRecord` per **contract** with `prevHash`/`hash` (canonical JSON, `sha256:`), step index, trace id; seed pinned to `sha256("")`; `verifyChain` fails on tamper.
 - [ ] Room `RunStore` (last 100, atomic), `beginTurn` always called.
@@ -320,7 +330,7 @@ stops secrets reaching the prompt.
 - [ ] Usage: counters from `run_records`.
 - [ ] Plans: repeated-goal suggestions (≥2, 4–90 chars, max 3), intervals, list/delete; **decision**: in-process copy or WorkManager (see §13).
 - [ ] Capabilities hub: readiness + tiles.
-- [ ] Launchpad: **new Android package catalogue**, apps/sites segments, search, verified/unverified, `PackageManager` launch with explicit intents.
+- [ ] Launchpad: render `contracts/catalog/catalog.v1.json`, apps/sites segments, search, verified/unverified; fill and use the `android` package/activity map; `PackageManager` launch with explicit intents.
 - [ ] Browser: WebView https-only, JS read/click/type, 20 000-char cap, in-app address bar.
 - [ ] Memory and Skills: add/delete/clear/export; skill use.
 - [ ] Device control page: bridge vs on-device states, both setup flows, retry, "cannot act" honesty.
@@ -343,7 +353,7 @@ stops secrets reaching the prompt.
 ### A13. Evaluation, hardening, release (9 d)
 
 - [ ] `services/evals`: task `platform` field, Android bundle map, one Android task through the adb bridge.
-- [ ] `tools/scripts/build-app-catalog.py`: platform field + Android target; regenerate the Android catalogue.
+- [ ] `build-app-catalog.py --kotlin apps/android/.../AppCatalog.kt`: commit the generated Kotlin catalogue; CI `--check` keeps it current.
 - [ ] Launch-config hooks for automation (provider/endpoint/model/key/bridge URL/token) as `adb`-set extras, documented.
 - [ ] Emulator E2E per path; device E2E ("open Douyin and tell me what you see") on a real Android phone.
 - [ ] Conformance green on JVM and on-device.
@@ -371,7 +381,7 @@ stops secrets reaching the prompt.
 | `adb` transport, Android adapter, pool factory, role detection | `services/bridge` | A5 |
 | CLI `--platform`, `/health` platform, OpenAPI `platform` | `services/bridge`, contracts | A5 |
 | Evals `platform` + Android bundle map | `services/evals` | A13 |
-| Catalogue generator platform field | `tools/scripts` | A13 |
+| Kotlin catalogue generation from the neutral contract | `tools/scripts` | A11 |
 | Docs: `platform-matrix.md` hash-chain claim, `apps/android/README.md` "thin client" contradiction, umbrella plan R9 | docs | A0 |
 
 ## 8. Acceptance: assertions, not "opens"

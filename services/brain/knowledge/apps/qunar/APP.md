@@ -4,7 +4,7 @@ display: Qunar
 bundle: com.qunar.hos
 ability: EntryAbility
 bundle_verified: Mate 80, 2026-11-08
-aliases: [Qunar, ???, qunar]
+aliases: [Qunar, 去哪儿, qunar]
 pace: careful
 validated: verified
 platform: harmonyos

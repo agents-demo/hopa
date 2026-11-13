@@ -28,6 +28,14 @@ supersede it. Format:
 | [0008](0008-python-distribution-renames.md) | Python distribution renames and CLI aliases | accepted |
 | [0009](../../../services/docs/adr/0009-relay-is-a-server-half.md) | The relay is a server half; the PC keeps its tunnel client | accepted |
 | [0010](../../../services/docs/adr/0010-shared-code-lives-in-packages.md) | Shared code lives in `packages/`, not in a service | superseded by 0012 |
+| [0011](0011-loop-ownership.md) | Where the loop runs, and what a backend owns | accepted, superseded in part by 0016 |
+| [0012](../../../services/docs/adr/0012-shared-service-code-lives-under-services.md) | Shared service code lives under `services/` | accepted |
+| [0013](../../../services/docs/adr/0013-service-related-code-lives-under-services.md) | Everything service-related lives under `services/` | accepted |
+| [0014](0014-retire-the-rebuild-plan.md) | Retire the M1-M6 rebuild plan from the working tree | accepted |
+| [0015](0015-docs-by-audience.md) | Documentation is five folders, by audience | accepted |
+| [0016](0016-clients-own-the-loop.md) | Each client owns its agent loop | accepted |
+| [0017](0017-android-dual-execution.md) | Android acts through the bridge and on-device | accepted |
+| [0018](0018-shared-data-per-client-code.md) | Share the data and the fixtures, not the loop | accepted |
 
 Create the next ADR by copying the template below.
 
