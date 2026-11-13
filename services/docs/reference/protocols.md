@@ -32,7 +32,7 @@ where to look and what must not drift.
 The bridge is deployed to PC desktops and to one relay, and both move with the
 repository, so a breaking change can update every caller in one commit. The
 prefix becomes worthwhile when an Android or Windows client ships on its own
-schedule; the decision is recorded in `docs/plan/refactor/README.md`.
+schedule; the decision is recorded in `docs/plan/README.md`.
 
 ## Related
 

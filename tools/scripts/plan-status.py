@@ -55,11 +55,13 @@ def parse(path: Path) -> dict:
     sections.append(current)
     in_fence = False
     line_no = 0
+    attach = None
 
     for line in _plan_text(path).splitlines():
         line_no += 1
         if FENCE.match(line):
             in_fence = not in_fence
+            attach = None
             continue
         if in_fence:
             continue
@@ -68,6 +70,11 @@ def parse(path: Path) -> dict:
         if heading:
             current = {"title": heading.group(1), "items": []}
             sections.append(current)
+            attach = None
+            continue
+
+        if not line.strip():
+            attach = None
             continue
 
         box = CHECKBOX.match(line)
@@ -81,6 +88,7 @@ def parse(path: Path) -> dict:
                     "pair": None,
                 }
             )
+            attach = current["items"][-1]
             continue
 
         if ANY_BOX.match(line) and not box:
@@ -94,6 +102,12 @@ def parse(path: Path) -> dict:
                     "malformed": True,
                 }
             )
+            attach = None
+            continue
+
+        # A wrapped checkbox: evidence and prose often sit on the next lines.
+        if attach is not None:
+            attach["text"] = f"{attach['text']} {line.strip()}"
 
     _resolve_pairs(sections)
     return _report(path, sections)

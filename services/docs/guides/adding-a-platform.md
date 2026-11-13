@@ -6,7 +6,7 @@ implementation; Android and Windows are adapters, not forks.
 ## The port
 
 `services/bridge/src/hopa_bridge/device_port.py` (introduced in R6 of
-`docs/plan/refactor/README.md`) declares:
+`docs/plan/README.md`) declares:
 
 | Method | Answers |
 |---|---|

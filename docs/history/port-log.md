@@ -43,4 +43,4 @@ documented behaviour.
 
 Note (2026-11-12): paths in this log are frozen. `harness/` is now `evals/`
 (`evals/bench`, `evals/baseline`) and `services/pc-agent` becomes
-`services/bridge`; see ADR-0007 and docs/plan/refactor/README.md.
+`services/bridge`; see ADR-0007 and docs/plan/README.md.

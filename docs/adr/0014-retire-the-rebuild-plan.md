@@ -25,14 +25,14 @@ them.
 - A git tag, `rebuild-plan-2026-11-13`, holds it: any file is one
   `git show <tag>:docs/plan/<file>` away.
 - `docs/plan/README.md` points at the active plan and at the tag.
-- The active plan is `docs/plan/refactor/README.md`; decisions live in ADRs.
+- The active plan is `docs/plan/README.md`; decisions live in ADRs.
 - The freeze rule now names the tag, not files that no longer exist.
 
 ## Consequences
 
 - `plan-status.py` with its default path reports the index (no boxes) instead of a
   fake percentage; the refactor plan is counted explicitly with
-  `--plan docs/plan/refactor`.
+  `--plan docs/plan`.
 - Git history remains the archive; no second copy in the tree.
 - A future plan starts as a new file with real evidence, not by reviving 789
   boxes.

@@ -1,8 +1,8 @@
 # HOPA status and backlog
 
-Updated 2026-11-11. Two shells: phone (`2SX0224410054549`) and MateBook 2-in-1
-(`3QC0225821000268`, HarmonyOS 7.0.0.111, API 26). Shared code lives in
-`@hopa/app`; the bridge is `services/bridge`.
+Updated 2026-11-13. Two shells: phone (`2SX0224410054549`) and MateBook 2-in-1
+(`3QC0225821000268`, HarmonyOS 7.0.0.111, API 26). Shared app code lives in
+`@hopa/app`; the services are `services/{bridge,relay,wire,brain,evals}`.
 
 ## Where the daily experience stands
 
@@ -40,9 +40,9 @@ Updated 2026-11-11. Two shells: phone (`2SX0224410054549`) and MateBook 2-in-1
 | Chinese strings (no RTL) | 2.5 | both shells; extract resources, then translate |
 | Fold/tablet remainder | 1.5 | two-pane fold states, tablet widths |
 | Desktop leftovers | 2.0 | focus ring styling, taskbar alternative |
-| Verification pass | 1.5 | seven behaviours built but unseen: browser Close, Enter sends, search height, notification Stop, Kid layout, rename-by-hover, the rail's evidence block |
+| Verification pass | 1.5 | behaviours built but unseen: browser Close, search height, notification Stop, Kid layout, rename-by-hover, the rail's evidence block. (Enter/Shift+Enter, mic and the arrow are verified on 2026-11-12) |
 | Surface freeze | 0.5 | see above |
-| Split the oversized pages | 1.0 | `ChatPage` 1159, `SettingsPage` 801, `LaptopIndex` 3106, `BridgeClient` 519 lines: the structure gate reports them as grandfathered debt |
+| Split the oversized pages | 1.0 | `ChatPage` 1137, `SettingsPage` 852, `LaptopIndex` 3545, `BridgeClient` 557 lines: the structure gate reports them as grandfathered debt |
 | Buffer | 1.0 | |
 | **Total** | **13.0** | |
 
@@ -53,7 +53,7 @@ Updated 2026-11-11. Two shells: phone (`2SX0224410054549`) and MateBook 2-in-1
 powershell -ExecutionPolicy Bypass -File tools\scripts\deploy.ps1
 
 # one bridge for every device (one port, role routing)
-powershell -ExecutionPolicy Bypass -File tools\scripts\bridges.ps1
+powershell -ExecutionPolicy Bypass -File services\tools\scripts\bridges.ps1
 
 # repair the shared store if a thread ever balloons again
 py -3 services/tools/scripts/repair-chats.py
@@ -63,19 +63,11 @@ Laptop launch hooks: `--ps hopa.bridge_url`, `hopa.bridge_key`, `hopa.ask`,
 `hopa.new 1`, `hopa.page_ask`, `hopa.laptop.new`. Phone: `hopa.bridge_url`,
 `hopa.bridge_token`, `hopa.ask`.
 
-## Refactor baseline (2026-11-12)
+## Structure
 
-Before `docs/plan/refactor/` starts, HEAD is green on the gates the refactor will
-lean on, at commit `4e5787e` plus the R0 changes:
-
-- `python tools/scripts/build-app-catalog.py --check` -> "35 apps and 21 sites are current"
-- `pytest tools/scripts` -> 18 passed
-- `pytest services/evals services/bridge services/relay services/wire tools/scripts`
-  -> passed (the suite ran as `harness` before R1); `pytest.ini` uses
-  `--import-mode=importlib`, which removes the duplicate `test_cli.py` collision)
-- `ruff check services evals tools` -> All checks passed
-- Editable installs were uninstalled and reinstalled from path, so a console
-  script cannot silently run pre-move code.
+The structural refactor is done; its evidence is in `docs/plan/README.md`.
+Gates it established: `check-tree`, `check-links`, `check-openapi`,
+`check-render`, scoped ruff, and `pytest.ini` with `--import-mode=importlib`.
 
 ## Known behaviour (from the 2026-11-12 E2E)
 
