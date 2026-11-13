@@ -1,3 +1,8 @@
+> **Historical rebuild plan (M1-M6).** The active structural plan is
+> [refactor/README.md](refactor/README.md). This document is kept because it
+> records the milestones, the evidence and the port matrix; it is no longer
+> the contract for current work.
+
 ﻿# HOPA rebuild plan and roadmap
 
 **This document is the contract.** Development is finished when every checkbox in
