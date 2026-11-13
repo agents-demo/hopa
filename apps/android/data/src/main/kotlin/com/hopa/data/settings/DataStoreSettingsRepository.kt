@@ -24,6 +24,7 @@ class DataStoreSettingsRepository(
             profile = prefs[PROFILE] ?: "everyday",
             notifyAnswers = prefs[NOTIFY] ?: true,
             webEnabled = prefs[WEB] ?: true,
+            selectedConversation = prefs[SELECTED] ?: "",
         )
     }
 
@@ -36,6 +37,7 @@ class DataStoreSettingsRepository(
             prefs[PROFILE] = next.profile
             prefs[NOTIFY] = next.notifyAnswers
             prefs[WEB] = next.webEnabled
+            prefs[SELECTED] = next.selectedConversation
         }
     }
 
@@ -50,6 +52,7 @@ class DataStoreSettingsRepository(
         val PROFILE = stringPreferencesKey("profile")
         val NOTIFY = booleanPreferencesKey("notify_answers")
         val WEB = booleanPreferencesKey("web_enabled")
+        val SELECTED = stringPreferencesKey("selected_conversation")
         const val MODEL_KEY = "model_key"
     }
 }

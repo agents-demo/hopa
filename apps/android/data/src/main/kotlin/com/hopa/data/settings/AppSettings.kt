@@ -7,4 +7,5 @@ data class AppSettings(
     val profile: String = "everyday",
     val notifyAnswers: Boolean = true,
     val webEnabled: Boolean = true,
+    val selectedConversation: String = "",
 )

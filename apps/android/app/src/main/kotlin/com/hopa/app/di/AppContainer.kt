@@ -11,11 +11,12 @@ import com.hopa.core.gate.ActionExecutor
 import com.hopa.core.gate.ApprovalPolicy
 import com.hopa.app.gate.UiApprovalGateway
 import com.hopa.core.loop.AgentLoop
-import com.hopa.core.records.InMemoryRunRecorder
+import com.hopa.data.database.HopaDatabase
+import com.hopa.data.records.RoomRunRecorder
 import com.hopa.core.records.RunRecordFactory
 import com.hopa.data.secrets.KeystoreSecretStore
 import com.hopa.data.sessions.ConversationStore
-import com.hopa.data.sessions.InMemoryConversationStore
+import com.hopa.data.sessions.RoomConversationStore
 import com.hopa.data.settings.DataStoreSettingsRepository
 import com.hopa.data.settings.SettingsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,10 +27,11 @@ class AppContainer(context: Context) {
         context = context,
         secrets = KeystoreSecretStore(context),
     )
-    val conversations: ConversationStore = InMemoryConversationStore()
+    private val database = HopaDatabase.build(context)
+    val conversations: ConversationStore = RoomConversationStore(database)
     val selectedConversation = MutableStateFlow<String?>(null)
     val packages = AndroidPackageCatalog(context)
-    val recorder = InMemoryRunRecorder()
+    val recorder = RoomRunRecorder(database.runRecordDao())
     val clock = AndroidClock()
     val policy = ApprovalPolicy()
     val approval = UiApprovalGateway()

@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -50,6 +51,7 @@ class ChatViewModel(
         viewModelScope.launch {
             val created = container.conversations.create()
             container.selectedConversation.value = created.id
+            container.settings.update { it.copy(selectedConversation = created.id) }
             _state.update {
                 it.copy(
                     current = created,
@@ -67,6 +69,7 @@ class ChatViewModel(
             val all = container.conversations.all()
             val selected = all.firstOrNull { it.id == id } ?: return@launch
             container.selectedConversation.value = id
+            container.settings.update { it.copy(selectedConversation = id) }
             _state.update { it.copy(current = selected, conversations = all, options = emptyList()) }
         }
     }
@@ -149,13 +152,15 @@ class ChatViewModel(
 
     private suspend fun load() {
         val all = container.conversations.all()
-        val selectedId = container.selectedConversation.value
+        val savedId = container.settings.settings.first().selectedConversation
+        val selectedId = savedId.ifBlank { container.selectedConversation.value }
         val current = all.firstOrNull { it.id == selectedId }
             ?: all.firstOrNull()
             ?: container.conversations.create().also {
                 container.selectedConversation.value = it.id
             }
         container.selectedConversation.value = current.id
+        container.settings.update { it.copy(selectedConversation = current.id) }
         _state.update {
             it.copy(
                 conversations = container.conversations.all(),
