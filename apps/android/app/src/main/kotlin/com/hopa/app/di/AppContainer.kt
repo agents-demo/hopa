@@ -37,12 +37,15 @@ class AppContainer(context: Context) {
     val pendingApprovals = com.hopa.data.approvals.RoomPendingApprovalStore(
         database.pendingApprovalDao(),
     )
+    val memory = com.hopa.data.memory.RoomMemoryStore(database.memoryDao())
+    val skills = com.hopa.data.skills.RoomSkillStore(database.skillDao())
     val clock = AndroidClock()
     val policy = ApprovalPolicy()
     val approval = UiApprovalGateway(pendingApprovals)
     val factory = RunRecordFactory(clock)
     val device = AccessibilityDevice(context)
     val voice = com.hopa.capabilities.voice.VoiceRecorder(context)
+    val speaker = com.hopa.capabilities.voice.Speaker(context)
     val executor = ActionExecutor(
         device = device,
         browser = null,
@@ -96,6 +99,21 @@ class AppContainer(context: Context) {
             },
         )
         return com.hopa.capabilities.bridge.AdbDevice(client, clock)
+    }
+
+    /** Read a reply aloud: the PC voice when a bridge is configured, else TTS. */
+    suspend fun speak(text: String): Boolean {
+        val current = settings.settings.first()
+        val token = settings.bridgeToken()
+        if (current.bridgeUrl.isNotBlank() && token.isNotBlank()) {
+            val wav = runCatching {
+                com.hopa.capabilities.bridge.BridgeClient(current.bridgeUrl, token).speak(text)
+            }.getOrNull()
+            if (wav != null) {
+                return speaker.play(wav)
+            }
+        }
+        return speaker.speak(text)
     }
 
     /** Speech to text through the PC bridge; null when no bridge is configured. */

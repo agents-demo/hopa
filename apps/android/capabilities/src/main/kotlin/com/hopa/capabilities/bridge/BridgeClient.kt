@@ -136,6 +136,14 @@ class BridgeClient(
         return response["text"]?.jsonPrimitive?.contentOrNull.orEmpty()
     }
 
+    /** The bridge renders a WAV with the PC voice; null when it cannot. */
+    suspend fun speak(text: String): ByteArray? {
+        val payload = buildJsonObject { put("text", text.take(600)) }
+        val response = call("POST", "/speak", body = payload.toString(), timeout = 60)
+        val audio = response["audio"]?.jsonPrimitive?.contentOrNull ?: return null
+        return runCatching { java.util.Base64.getDecoder().decode(audio) }.getOrNull()
+    }
+
     suspend fun postChats(
         sessions: kotlinx.serialization.json.JsonArray,
     ): kotlinx.serialization.json.JsonObject = call(

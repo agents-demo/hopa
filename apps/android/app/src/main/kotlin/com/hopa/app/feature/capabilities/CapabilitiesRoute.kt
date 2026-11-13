@@ -23,11 +23,14 @@ fun CapabilitiesRoute(
     onOpenSettings: () -> Unit,
     onOpenRuns: () -> Unit,
     onOpenUsage: () -> Unit,
+    onOpenMemory: () -> Unit,
 ) {
     var provider by remember { mutableStateOf(ProviderState.DEMO) }
     var endpoint by remember { mutableStateOf("") }
     var records by remember { mutableStateOf(0) }
     var apps by remember { mutableStateOf(0) }
+    var facts by remember { mutableStateOf(0) }
+    var skills by remember { mutableStateOf(0) }
     var accessibilityEnabled by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
@@ -38,6 +41,8 @@ fun CapabilitiesRoute(
         endpoint = settings.endpoint
         records = container.recorder.all().size
         apps = container.packages.installed().size
+        facts = container.memory.all().size
+        skills = container.skills.all().size
         accessibilityEnabled = AccessibilityState.isEnabled(container.context)
     }
 
@@ -46,6 +51,8 @@ fun CapabilitiesRoute(
         endpoint = endpoint,
         records = records,
         apps = apps,
+        facts = facts,
+        skills = skills,
         accessibilityEnabled = accessibilityEnabled,
         activeTab = activeTab,
         onSelectTab = onSelectTab,
@@ -54,6 +61,7 @@ fun CapabilitiesRoute(
         onOpenAccessibility = { AccessibilityState.openSettings(container.context) },
         onOpenRuns = onOpenRuns,
         onOpenUsage = onOpenUsage,
+        onOpenMemory = onOpenMemory,
         onUnavailable = { feature ->
             Toast.makeText(
                 context,

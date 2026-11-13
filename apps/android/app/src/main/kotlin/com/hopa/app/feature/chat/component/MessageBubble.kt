@@ -31,7 +31,7 @@ import com.hopa.data.sessions.ChatMessage
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun MessageBubble(message: ChatMessage) {
+fun MessageBubble(message: ChatMessage, onSpeak: (String) -> Unit = {}) {
     val fromUser = message.role == "user"
     val context = LocalContext.current
     val clipboard = LocalClipboardManager.current
@@ -91,6 +91,15 @@ fun MessageBubble(message: ChatMessage) {
                     menu = false
                 },
             )
+            if (!fromUser) {
+                DropdownMenuItem(
+                    text = { Text("Read aloud") },
+                    onClick = {
+                        onSpeak(message.text)
+                        menu = false
+                    },
+                )
+            }
         }
     }
 }

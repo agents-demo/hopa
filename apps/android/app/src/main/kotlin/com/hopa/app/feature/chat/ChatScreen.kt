@@ -69,6 +69,7 @@ fun ChatScreen(
     onStartVoice: () -> Unit,
     onStopVoice: () -> Unit,
     onDismissVoiceError: () -> Unit,
+    onSpeak: (String) -> Unit,
 ) {
     val messages = state.current?.messages.orEmpty()
     val listState = rememberLazyListState()
@@ -266,7 +267,7 @@ fun ChatScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     items(messages, key = ChatMessage::id) { message ->
-                        MessageBubble(message = message)
+                        MessageBubble(message = message, onSpeak = onSpeak)
                     }
                 }
             }

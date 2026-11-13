@@ -45,6 +45,8 @@ fun CapabilitiesScreen(
     endpoint: String,
     records: Int,
     apps: Int,
+    facts: Int = 0,
+    skills: Int = 0,
     accessibilityEnabled: Boolean,
     activeTab: String,
     onSelectTab: (String) -> Unit,
@@ -53,6 +55,7 @@ fun CapabilitiesScreen(
     onOpenAccessibility: () -> Unit,
     onOpenRuns: () -> Unit,
     onOpenUsage: () -> Unit,
+    onOpenMemory: () -> Unit,
     onUnavailable: (String) -> Unit,
 ) {
     val ready = accessibilityEnabled
@@ -158,8 +161,8 @@ fun CapabilitiesScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Tile(
                     title = "Memory",
-                    subtitle = "0 facts",
-                    onClick = { onUnavailable("Memory") },
+                    subtitle = if (facts == 1) "1 fact" else "$facts facts",
+                    onClick = onOpenMemory,
                     modifier = Modifier.weight(1f),
                 )
                 Tile(
@@ -188,8 +191,8 @@ fun CapabilitiesScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Tile(
                     title = "Skills",
-                    subtitle = "Triggers HOPA has learned",
-                    onClick = { onUnavailable("Skills") },
+                    subtitle = if (skills == 1) "1 trigger" else "$skills triggers",
+                    onClick = onOpenMemory,
                     modifier = Modifier.weight(1f),
                 )
             }

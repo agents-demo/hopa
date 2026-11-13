@@ -99,6 +99,14 @@ class ChatViewModel(
         _state.update { it.copy(voiceError = null) }
     }
 
+    /** Read a reply through the PC voice or Android TTS. */
+    fun speak(text: String) {
+        if (text.isBlank()) {
+            return
+        }
+        viewModelScope.launch { container.speak(text) }
+    }
+
     fun newChat() {
         viewModelScope.launch {
             val created = container.conversations.create()
@@ -176,6 +184,8 @@ class ChatViewModel(
                 ),
             )
             val history = conversation.messages.map { ModelMessage(it.role, it.text) }
+            val memory = runCatching { container.memory.promptText() }.getOrDefault("")
+            val skills = runCatching { container.skills.promptText() }.getOrDefault("")
             val bridged = runCatching { container.bridgedDevice() }.getOrNull()
             val current = container.settings.settings.first()
             val device = bridged
@@ -188,7 +198,7 @@ class ChatViewModel(
             val result = loop.run(
                 runId = "run-$now",
                 traceId = UUID.randomUUID().toString(),
-                context = TurnContext(goal = text, history = history),
+                context = TurnContext(goal = text, history = history, memory = memory, skills = skills),
             )
             container.conversations.append(
                 conversation.id,

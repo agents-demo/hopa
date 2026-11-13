@@ -5,7 +5,7 @@ phone code (UI, core, capabilities, shared services, bridge); the checklist was
 reconciled with the code on 2026-11-13.
 Owner: TBD.
 
-Progress on 2026-11-13: **54 of 135 phase items (40.0%)**, **55 of 149 (36.9%)**
+Progress on 2026-11-13: **56 of 135 phase items (41.5%)**, **57 of 149 (38.3%)**
 with the Definition of done and the open decisions.
 
 Read that number correctly. It counts *finished items*, not effort: an item is
@@ -376,7 +376,7 @@ apps/android/
 - [x] Capabilities hub: readiness + tiles. (evidence: docs/project/evidence/A11-screens.md)
 - [ ] Launchpad: render `contracts/catalog/catalog.v1.json`, apps/sites segments, search, verified/unverified; fill and use the `android` package/activity map; `PackageManager` launch with explicit intents.
 - [ ] Browser: WebView https-only, JS read/click/type, 20 000-char cap, in-app address bar.
-- [ ] Memory and Skills: add/delete/clear/export; skill use.
+- [x] Memory and Skills: add/delete/clear/export; skill use. (evidence: MemoryScreen + Room v4 + prompt injection; docs/project/evidence/A11-screens.md)
 - [ ] Device control page: bridge vs on-device states, both setup flows, retry, "cannot act" honesty.
 - [ ] Settings: profile, agent switches (including `notifyAnswers`), appearance, phone access, model, character (tone/chattiness/voice/preview), parent PIN, bridge wizard (adb + pair), logs, live screen, self-check, developer, test notification, about, export, license, welcome.
 - [ ] Fix the three Settings fall-through rows; do not build Models/Source.
@@ -387,7 +387,7 @@ apps/android/
 ### A12. Voice, background, notifications (7 d)
 
 - [x] `AudioRecord` 16 kHz mono → WAV → `/transcribe`; dictation inserts text only. (evidence: VoiceRecorder + WavFile + /transcribe; live on emulator; docs/project/evidence/A12-voice.md)
-- [ ] `/speak` playback; TTS fallback without a bridge; 600-char cap.
+- [x] `/speak` playback; TTS fallback without a bridge; 600-char cap. (evidence: Speaker: bridge /speak WAV or Android TTS, 600-char cap; docs/project/evidence/A12-voice.md)
 - [ ] Foreground service `shortService` for a bounded run; ongoing notification id 1001 with a tap that opens the run; stop cancels the loop.
 - [ ] Notification permission denied path; test-notification action.
 - [ ] 120 s run bound with a clear message.

@@ -45,3 +45,11 @@ Still open for the Runs item: replay with a filmstrip, batch actions, clear.
 
 Browser, Memory, Skills, device control, the full Settings tree, the inbound
 share target as a file/image target, MCP and License pages, Plans.
+
+## Memory and Skills (2026-11-14)
+
+- Room v4 adds `memory_facts` and `skills` with `MIGRATION_3_4`; `RoomMemoryStore` and `RoomSkillStore` own add/delete/clear/export text.
+- `MemoryScreen` has a MEMORY section (add a fact, delete one, clear all) and a SKILLS section (phrase -> action), plus Export via the share sheet.
+- `ChatViewModel` passes `memory.promptText()` and `skills.promptText()` into `TurnContext`, so the system prompt carries both; Capabilities shows the fact and trigger counts.
+- Verified on emulator-5554: the v4 migration kept the app running; saved `my name is Michael` and the skill `focus -> open Settings`; both lists rendered.
+

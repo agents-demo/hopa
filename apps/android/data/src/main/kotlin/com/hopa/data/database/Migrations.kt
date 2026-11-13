@@ -27,4 +27,19 @@ object Migrations {
             )
         }
     }
+
+    val MIGRATION_3_4: Migration = object : Migration(3, 4) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL(
+                "CREATE TABLE IF NOT EXISTS `memory_facts` (" +
+                    "`text` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, " +
+                    "PRIMARY KEY(`text`))",
+            )
+            database.execSQL(
+                "CREATE TABLE IF NOT EXISTS `skills` (" +
+                    "`trigger` TEXT NOT NULL, `action` TEXT NOT NULL, " +
+                    "`createdAt` INTEGER NOT NULL, PRIMARY KEY(`trigger`))",
+            )
+        }
+    }
 }

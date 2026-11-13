@@ -37,3 +37,10 @@ runs both.
 - `/speak` playback and the on-device TTS fallback (600-char cap).
 - Foreground service, ongoing notification, notification-permission denied path,
   120 s bound.
+
+## Read aloud (2026-11-14)
+
+- `Speaker` uses the PC voice when a bridge is configured (`POST /speak` returns a WAV, played with MediaPlayer from the cache) and Android TextToSpeech otherwise; both are capped at 600 characters.
+- Long-press on an assistant message offers **Read aloud** next to Copy and Share.
+- Not verified with audible output on the emulator; the fallback path is code-complete and the bridge endpoint is exercised by the client tests.
+

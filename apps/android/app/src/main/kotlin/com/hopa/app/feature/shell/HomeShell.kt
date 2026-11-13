@@ -21,6 +21,7 @@ fun HomeShell(
     onOpenLaunchpad: () -> Unit,
     onOpenRuns: () -> Unit,
     onOpenUsage: () -> Unit,
+    onOpenMemory: () -> Unit,
     initialGoal: String = "",
 ) {
     var tab by rememberSaveable { mutableStateOf("chat") }
@@ -47,6 +48,7 @@ fun HomeShell(
             onOpenSettings = onOpenSettings,
             onOpenRuns = onOpenRuns,
             onOpenUsage = onOpenUsage,
+            onOpenMemory = onOpenMemory,
         )
 
         else -> ChatRoute(
