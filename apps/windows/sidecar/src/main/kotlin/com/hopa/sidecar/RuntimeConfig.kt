@@ -15,6 +15,8 @@ class RuntimeConfig {
         private set
     var bridgeToken: String = ""
         private set
+    var bridgeRefresh: String = ""
+        private set
     var modelProvider: String = "openai"
         private set
     var modelBaseUrl: String = ""
@@ -32,10 +34,15 @@ class RuntimeConfig {
     val hasModel: Boolean
         get() = modelKey.isNotBlank()
 
-    fun update(message: JsonObject) {
-        bridgeUrl = message.text("bridgeUrl")
+    fun setSession(token: String, refresh: String) {
+        bridgeToken = token
+        bridgeRefresh = refresh
+    }
+
+    fun update(message: JsonObject) {        bridgeUrl = message.text("bridgeUrl")
         useBridge = message.text("useBridge").toBoolean()
         bridgeToken = message.text("bridgeToken")
+        bridgeRefresh = message.text("bridgeRefresh")
         modelProvider = message.text("modelProvider").ifBlank { "openai" }
         modelBaseUrl = message.text("modelBaseUrl")
         modelKey = message.text("modelKey")

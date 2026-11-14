@@ -1,5 +1,8 @@
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Net.Http;
+using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
@@ -178,6 +181,63 @@ public partial class MainWindow : Window
         await SendAsync("open settings on the phone");
         WriteLog();
         Application.Current.Shutdown();
+    }
+
+    public async Task PairAsync(string url, string code, string path)
+    {
+        var (ok, token, refresh) = await PostAsync(url, "/pair", new { code });
+        if (ok && token.Length > 0)
+        {
+            CredentialStore.Write("hopa.bridge.token", token);
+            CredentialStore.Write("hopa.bridge.refresh", refresh);
+            var settings = new SettingsStore();
+            var current = settings.Load();
+            current.BridgeUrl = url;
+            current.UseBridge = true;
+            settings.Save(current);
+        }
+
+        File.WriteAllLines(path, new[]
+        {
+            $"pair: {(ok && token.Length > 0 ? "ok" : "FAIL")}",
+            $"refresh stored: {refresh.Length > 0}",
+        });
+        Application.Current.Shutdown();
+    }
+
+    public async Task StaleCheckAsync(string url, string path)
+    {
+        var staleToken = CredentialStore.Read("hopa.bridge.token");
+        var refresh = CredentialStore.Read("hopa.bridge.refresh");
+        var (ok, newToken, newRefresh) = await PostAsync(url, "/refresh", new { refresh });
+        // Keep the old token (now rejected) and hand the sidecar the rotated refresh.
+        CredentialStore.Write("hopa.bridge.refresh", newRefresh);
+        outputPath = path;
+        autoApproval = "allow";
+        await ConnectAsync();
+        await SendAsync("open settings on the phone");
+        Log($"stale check: rotation={(ok && newToken.Length > 0 ? "ok" : "FAIL")} " +
+            $"token_changed={newToken != staleToken}");
+        WriteLog();
+        Application.Current.Shutdown();
+    }
+
+    private static async Task<(bool Ok, string Token, string Refresh)> PostAsync(
+        string url,
+        string path,
+        object body)
+    {
+        using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
+        var payload = JsonSerializer.Serialize(body);
+        var response = await http.PostAsync(
+            url.TrimEnd('/') + path,
+            new StringContent(payload, Encoding.UTF8, "application/json"));
+        var text = await response.Content.ReadAsStringAsync();
+        var node = response.IsSuccessStatusCode ? JsonNode.Parse(text) as JsonObject : null;
+        return (
+            response.IsSuccessStatusCode,
+            node?["token"]?.GetValue<string>() ?? "",
+            node?["refresh"]?.GetValue<string>() ?? "");
     }
 
     public Task SettingsCheckAsync(string path)

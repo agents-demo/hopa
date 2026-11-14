@@ -39,7 +39,25 @@ class Engine(
             io.log("turn $id in ${conversation.id}: $goal")
 
             val device: DevicePort = if (config.hasBridge) {
-                AdbDevice(BridgeClient(config.bridgeUrl, config.bridgeToken), clock)
+                val bridge = BridgeClient(
+                    baseUrl = config.bridgeUrl,
+                    token = config.bridgeToken,
+                    refresh = {
+                        val refresh = config.bridgeRefresh
+                        if (refresh.isBlank()) {
+                            null
+                        } else {
+                            runCatching { BridgeClient(config.bridgeUrl, "").refreshSession(refresh) }
+                                .getOrNull()
+                                ?.let { session ->
+                                    config.setSession(session.token, session.refresh)
+                                    io.log("bridge token refreshed")
+                                    session.token
+                                }
+                        }
+                    },
+                )
+                AdbDevice(bridge, clock)
             } else {
                 hostDevice
             }

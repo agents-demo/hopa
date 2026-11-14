@@ -161,6 +161,7 @@ public sealed class SidecarClient : IAsyncDisposable
             ["bridgeUrl"] = settings.BridgeUrl,
             ["useBridge"] = settings.UseBridge,
             ["bridgeToken"] = bridgeToken,
+            ["bridgeRefresh"] = CredentialStore.Read("hopa.bridge.refresh"),
             ["modelProvider"] = settings.ModelProvider,
             ["modelBaseUrl"] = settings.ModelBaseUrl,
             ["modelName"] = settings.ModelName,

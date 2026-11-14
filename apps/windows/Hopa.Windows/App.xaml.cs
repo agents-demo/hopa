@@ -63,6 +63,18 @@ public partial class App : Application
         if (args.Length >= 4 && args[0] == "--bridge-check")
         {
             _ = window.BridgeCheckAsync(args[1], args[2], args[3]);
+            return;
+        }
+
+        if (args.Length >= 4 && args[0] == "--pair")
+        {
+            _ = window.PairAsync(args[1], args[2], args[3]);
+            return;
+        }
+
+        if (args.Length >= 3 && args[0] == "--stale-check")
+        {
+            _ = window.StaleCheckAsync(args[1], args[2]);
         }
     }
 }

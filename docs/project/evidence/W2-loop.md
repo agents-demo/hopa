@@ -56,13 +56,6 @@ The host still cannot execute `payment.pay` (W3/W5 own real payments); what this
 proves is the gate: the request reached the window, the answer came back, and a
 deny stopped the action before the device.
 
-## Bridge down
-
-```
-HOPA: Sidecar answered: "I could not do that: bridge unreachable: Failed to connect to /127.0.0.1:8898".
-step #0 ui.launch [read] approved= executed=False verified=False error=E_DEVICE
-```
-
 ## Pending approvals survive a restart, then are denied
 
 While an approval was waiting, the sidecar wrote `approvals.json`. The process
@@ -88,8 +81,33 @@ The sidecar appends each turn's records to `records.json` (912 B after the
 click) and runs `RunChain.verify` before replying; `turn.end` carries
 `chainOk`. The Run button shows the same lines with the chain state.
 
+## Bridge down and the 401 refresh
+
+Unreachable bridge:
+
+```
+HOPA: Sidecar answered: "I could not do that: bridge unreachable: Failed to connect to /127.0.0.1:8898".
+step #0 ui.launch [read] approved= executed=False verified=False error=E_DEVICE
+```
+
+Stale token. A second bridge on `127.0.0.1:8897` was paired (`pair: ok`,
+`refresh stored: True`), then its refresh endpoint was called once so the stored
+access token became stale while the refresh token stayed valid. The turn then
+used the stale token:
+
+```
+sidecar: configured: bridge=on url=http://127.0.0.1:8897 model=none tone=warm
+sidecar: bridge token refreshed
+HOPA: Sidecar answered: "open settings on the phone".
+step #0 ui.launch [read] approved= executed=True verified=False error= hash=sha256:e78
+chain: ok
+stale check: rotation=ok token_changed=True
+```
+
+One 401, one refresh, the rotated token retried the action. `verified=False`
+because Settings was already in the foreground.
+
 ## Not done
 
-- **One 401 refresh** on the bridge was not exercised; the bridge-down case was.
 - The answer text comes from the scripted model; a real provider needs a key in
-  Settings (W2 box for the model, not yet ticked).
+  Settings (the model box stays open until a key is present).
