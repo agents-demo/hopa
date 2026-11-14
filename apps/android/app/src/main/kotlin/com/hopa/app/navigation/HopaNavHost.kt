@@ -11,7 +11,9 @@ import com.hopa.app.feature.device.DeviceRoute
 import com.hopa.app.feature.browser.BrowserRoute
 import com.hopa.app.feature.profiles.ProfilesRoute
 import com.hopa.app.feature.runs.RunsRoute
+import com.hopa.app.feature.settings.AboutScreen
 import com.hopa.app.feature.settings.AccessibilityRoute
+import com.hopa.app.feature.settings.SelfCheckRoute
 import com.hopa.app.feature.settings.SettingsRoute
 import com.hopa.app.feature.usage.UsageRoute
 import com.hopa.app.feature.shell.HomeShell
@@ -64,7 +66,18 @@ fun HopaNavHost(container: AppContainer, initialGoal: String = "") {
                 onOpenLaunchpad = { navController.navigate(HopaDestination.LAUNCHPAD) },
                 onOpenProfiles = { navController.navigate(HopaDestination.PROFILES) },
                 onOpenAccessibility = { navController.navigate(HopaDestination.ACCESSIBILITY) },
+                onOpenSelfCheck = { navController.navigate(HopaDestination.SELF_CHECK) },
+                onOpenAbout = { navController.navigate(HopaDestination.ABOUT) },
             )
+        }
+        composable(HopaDestination.SELF_CHECK) {
+            SelfCheckRoute(
+                container = container,
+                onBack = { navController.popBackStack() },
+            )
+        }
+        composable(HopaDestination.ABOUT) {
+            AboutScreen(onBack = { navController.popBackStack() })
         }
         composable(HopaDestination.ACCESSIBILITY) {
             AccessibilityRoute(

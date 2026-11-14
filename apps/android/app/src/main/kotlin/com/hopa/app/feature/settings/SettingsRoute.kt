@@ -14,6 +14,8 @@ fun SettingsRoute(
     onOpenLaunchpad: () -> Unit,
     onOpenProfiles: () -> Unit,
     onOpenAccessibility: () -> Unit,
+    onOpenSelfCheck: () -> Unit,
+    onOpenAbout: () -> Unit,
 ) {
     val viewModel: SettingsViewModel = viewModel(factory = SettingsViewModelFactory(container))
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -23,6 +25,10 @@ fun SettingsRoute(
         onSave = viewModel::save,
         onTestBridge = viewModel::testBridge,
         onTestNotification = viewModel::testNotification,
+        onTone = viewModel::setTone,
+        onChattiness = viewModel::setChattiness,
+        onOpenSelfCheck = onOpenSelfCheck,
+        onOpenAbout = onOpenAbout,
         onPairBridge = viewModel::pairBridge,
         onOpenCapabilities = onOpenCapabilities,
         onOpenLaunchpad = onOpenLaunchpad,

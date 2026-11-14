@@ -11,4 +11,6 @@ data class AppSettings(
     val bridgeUrl: String = "",
     val useBridge: Boolean = true,
     val accessibilityAllowed: Boolean = true,
+    val tone: String = "friendly",
+    val chattiness: String = "balanced",
 )

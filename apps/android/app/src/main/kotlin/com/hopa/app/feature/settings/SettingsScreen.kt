@@ -1,5 +1,10 @@
 package com.hopa.app.feature.settings
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.unit.sp
+import com.hopa.app.ui.theme.HopaColor
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -39,6 +44,10 @@ fun SettingsScreen(
     onSave: (String, String, String, String, Boolean, Boolean, String, String, Boolean) -> Unit,
     onTestBridge: (String, String) -> Unit,
     onTestNotification: () -> Unit,
+    onTone: (String) -> Unit,
+    onChattiness: (String) -> Unit,
+    onOpenSelfCheck: () -> Unit,
+    onOpenAbout: () -> Unit,
     onPairBridge: (String, String) -> Unit,
     onOpenCapabilities: () -> Unit,
     onOpenLaunchpad: () -> Unit,
@@ -214,8 +223,49 @@ fun SettingsScreen(
             state.error?.let { error ->
                 Text(error, color = MaterialTheme.colorScheme.error)
             }
+            Text("Character", style = MaterialTheme.typography.titleLarge)
+            Text("Tone", style = MaterialTheme.typography.bodySmall)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                for (value in listOf("friendly", "direct")) {
+                    val chosen = state.settings.tone == value
+                    Text(
+                        value,
+                        fontSize = 12.sp,
+                        color = if (chosen) HopaColor.OnPrimary else HopaColor.TextSecondary,
+                        modifier = Modifier
+                            .background(
+                                if (chosen) HopaColor.Primary else HopaColor.SurfaceAlt,
+                                RoundedCornerShape(16.dp),
+                            )
+                            .clickable { onTone(value) }
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                    )
+                }
+            }
+            Text("Length", style = MaterialTheme.typography.bodySmall)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                for (value in listOf("short", "balanced", "detailed")) {
+                    val chosen = state.settings.chattiness == value
+                    Text(
+                        value,
+                        fontSize = 12.sp,
+                        color = if (chosen) HopaColor.OnPrimary else HopaColor.TextSecondary,
+                        modifier = Modifier
+                            .background(
+                                if (chosen) HopaColor.Primary else HopaColor.SurfaceAlt,
+                                RoundedCornerShape(16.dp),
+                            )
+                            .clickable { onChattiness(value) }
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                    )
+                }
+            }
             Button(onClick = onOpenProfiles) {
                 Text("Profiles")
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = onOpenSelfCheck) { Text("Self-check") }
+                Button(onClick = onOpenAbout) { Text("About") }
             }
             Button(onClick = onOpenCapabilities) {
                 Text("Capabilities")

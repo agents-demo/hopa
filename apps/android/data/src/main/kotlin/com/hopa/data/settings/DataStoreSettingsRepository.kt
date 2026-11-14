@@ -28,6 +28,8 @@ class DataStoreSettingsRepository(
             bridgeUrl = prefs[BRIDGE_URL] ?: "",
             useBridge = prefs[USE_BRIDGE] ?: true,
             accessibilityAllowed = prefs[ACCESSIBILITY_ALLOWED] ?: true,
+            tone = prefs[TONE] ?: "friendly",
+            chattiness = prefs[CHATTINESS] ?: "balanced",
         )
     }
 
@@ -44,6 +46,8 @@ class DataStoreSettingsRepository(
             prefs[BRIDGE_URL] = next.bridgeUrl
             prefs[USE_BRIDGE] = next.useBridge
             prefs[ACCESSIBILITY_ALLOWED] = next.accessibilityAllowed
+            prefs[TONE] = next.tone
+            prefs[CHATTINESS] = next.chattiness
         }
     }
 
@@ -70,6 +74,8 @@ class DataStoreSettingsRepository(
         val BRIDGE_URL = stringPreferencesKey("bridge_url")
         val USE_BRIDGE = booleanPreferencesKey("use_bridge")
         val ACCESSIBILITY_ALLOWED = booleanPreferencesKey("accessibility_allowed")
+        val TONE = stringPreferencesKey("tone")
+        val CHATTINESS = stringPreferencesKey("chattiness")
         const val MODEL_KEY = "model_key"
         const val BRIDGE_TOKEN = "bridge_token"
         const val BRIDGE_REFRESH = "bridge_refresh"

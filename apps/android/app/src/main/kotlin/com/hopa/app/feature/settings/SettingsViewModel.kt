@@ -66,6 +66,20 @@ class SettingsViewModel(
         }
     }
 
+    fun setTone(value: String) {
+        viewModelScope.launch {
+            container.settings.update { it.copy(tone = value) }
+            reload()
+        }
+    }
+
+    fun setChattiness(value: String) {
+        viewModelScope.launch {
+            container.settings.update { it.copy(chattiness = value) }
+            reload()
+        }
+    }
+
     fun testNotification() {
         if (!com.hopa.app.service.Notifier.permissionGranted(container.context)) {
             _state.update {

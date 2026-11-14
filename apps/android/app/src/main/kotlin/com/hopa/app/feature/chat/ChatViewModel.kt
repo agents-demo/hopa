@@ -222,10 +222,13 @@ class ChatViewModel(
                 )
             }
             val history = conversation.messages.map { ModelMessage(it.role, it.text) }
-            val memory = runCatching { container.memory.promptText() }.getOrDefault("")
+            val current = container.settings.settings.first()
+            val facts = runCatching { container.memory.promptText() }.getOrDefault("")
+            val character = "Character: ${current.tone} tone, ${current.chattiness} length."
+            val memory = listOf(facts, character).filter { it.isNotBlank() }
+                .joinToString("\n\n")
             val skills = runCatching { container.skills.promptText() }.getOrDefault("")
             val bridged = runCatching { container.bridgedDevice() }.getOrNull()
-            val current = container.settings.settings.first()
             val device = bridged
                 ?: if (current.accessibilityAllowed) {
                     container.device
