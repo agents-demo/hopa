@@ -23,14 +23,15 @@ android {
 }
 
 dependencies {
-    implementation(project(":core"))
+    // The client-side capabilities (bridge, model clients) are a plain JVM
+    // module in packages/; this module adds the Android-only ones.
+    api(project(":capabilities"))
+    api(project(":core"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.serialization.json)
-    implementation(libs.okhttp)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.core)
-    testImplementation(libs.mockwebserver)
 }

@@ -397,7 +397,7 @@ apps/android/
 ### A13. Evaluation, hardening, release (9 d)
 
 - [ ] `services/evals`: task `platform` field, Android bundle map, one Android task through the adb bridge.
-- [x] `build-app-catalog.py --kotlin apps/android/.../AppCatalog.kt`: commit the generated Kotlin catalogue; CI `--check` keeps it current. (evidence: AppCatalog.kt generated; CI --check)
+- [x] `build-app-catalog.py --kotlin packages/core/.../AppCatalog.kt`: commit the generated Kotlin catalogue; CI `--check` keeps it current. (evidence: AppCatalog.kt generated; CI --check)
 - [ ] Launch-config hooks for automation (provider/endpoint/model/key/bridge URL/token) as `adb`-set extras, documented.
 - [ ] Emulator E2E per path; device E2E ("open Douyin and tell me what you see") on a real Android phone.
 - [ ] Conformance green on JVM and on-device.

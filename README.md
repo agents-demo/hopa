@@ -279,15 +279,20 @@ and a secret/license scan.
 
 **What is where**
 
-- `apps/harmony/app/` — the shared kit: runtime, chat formatting, bridge
+- `apps/android/` — the active client: Compose shell, Android capabilities and
+  storage.
+- `apps/windows/` — the next client (planned).
+- `apps/harmony/app/` — the shared ArkTS kit: runtime, chat formatting, bridge
   client, conversation contracts.
-- `apps/harmony/core/` — the core: loop, gate, executor, run records.
+- `apps/harmony/core/` — the ArkTS core: loop, gate, executor, run records.
 - `apps/harmony/phone/` — the phone app (module `entry`).
-- `apps/harmony/laptop/` — the laptop app (module `laptop`).
+- `apps/harmony/laptop/` — the laptop app (module `laptop`); frozen.
+- `packages/core/`, `packages/data/`, `packages/capabilities/` — the Kotlin
+  client engine shared by the Android and Windows clients.
 - `services/bridge/` — the PC companion and bridge: device control, store,
   images, relay.
 - `services/brain/` — the Kotlin reference brain for routing and knowledge.
-- `evals/` — the reference loop and HOPA-Bench.
+- `services/evals/` — the reference loop and HOPA-Bench.
 - `docs/` — setup, architecture, contracts and the status.
 
 **Links**

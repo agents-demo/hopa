@@ -117,8 +117,8 @@ type (as with `file://`).
    copy, and still lands on Chat
    (`docs/media/android-share-refused.png`).
 
-`gradlew.bat :core:check :capabilities:testDebugUnitTest :app:testDebugUnitTest
-:app:assembleDebug` is green.
+`gradlew.bat :core:check :capabilities:test :capabilities-android:testDebugUnitTest
+:data:test :app:testDebugUnitTest :app:assembleDebug` is green.
 
 
 ## Fixed on the way
