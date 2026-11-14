@@ -48,6 +48,7 @@ import com.hopa.app.feature.chat.component.Composer
 import com.hopa.app.feature.chat.component.MessageBubble
 import com.hopa.app.ui.component.ApprovalSheet
 import com.hopa.app.ui.component.HopaBottomBar
+import com.hopa.app.ui.component.HopaBottomBarEasy
 import com.hopa.app.ui.component.HopaMascot
 import com.hopa.app.ui.component.HopaTopBar
 import com.hopa.app.ui.theme.HopaColor
@@ -70,6 +71,8 @@ fun ChatScreen(
     onStopVoice: () -> Unit,
     onDismissVoiceError: () -> Unit,
     onSpeak: (String) -> Unit,
+    easy: Boolean = false,
+    onOpenSettings: () -> Unit = {},
 ) {
     val messages = state.current?.messages.orEmpty()
     val listState = rememberLazyListState()
@@ -231,10 +234,19 @@ fun ChatScreen(
                             .padding(start = 20.dp, end = 20.dp, bottom = 4.dp),
                     )
                 }
-                HopaBottomBar(
-                    active = activeTab,
-                    onSelect = onSelectTab,
-                )
+                if (easy) {
+                    HopaBottomBarEasy(
+                        active = activeTab,
+                        onSelect = { key ->
+                            if (key == "settings") onOpenSettings() else onSelectTab(key)
+                        },
+                    )
+                } else {
+                    HopaBottomBar(
+                        active = activeTab,
+                        onSelect = onSelectTab,
+                    )
+                }
             }
         },
     ) { padding ->

@@ -16,6 +16,8 @@ fun ChatRoute(
     activeTab: String,
     onSelectTab: (String) -> Unit,
     initialGoal: String = "",
+    easy: Boolean = false,
+    onOpenSettings: () -> Unit = {},
 ) {
     val viewModel: ChatViewModel = viewModel(factory = ChatViewModelFactory(container))
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -42,6 +44,8 @@ fun ChatRoute(
         onStopVoice = viewModel::stopVoice,
         onDismissVoiceError = viewModel::dismissVoiceError,
         onSpeak = viewModel::speak,
+        easy = easy,
+        onOpenSettings = onOpenSettings,
     )
 
     if (chatsOpen) {
