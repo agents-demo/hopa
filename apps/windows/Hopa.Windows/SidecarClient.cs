@@ -36,7 +36,11 @@ public sealed class SidecarClient : IAsyncDisposable
                 $"sidecar library not found at {lib}; run gradlew -p apps/windows/sidecar installDist");
         }
 
-        var start = new ProcessStartInfo("java")
+        var javaHome = Environment.GetEnvironmentVariable("JAVA_HOME");
+        var java = string.IsNullOrWhiteSpace(javaHome)
+            ? "java"
+            : Path.Combine(javaHome, "bin", "java.exe");
+        var start = new ProcessStartInfo(java)
         {
             Arguments = $"-cp \"{lib}\\*\" com.hopa.sidecar.MainKt",
             RedirectStandardInput = true,
