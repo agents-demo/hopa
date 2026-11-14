@@ -25,6 +25,9 @@ interface SessionDao {
     @Query("SELECT * FROM sessions WHERE id = :id LIMIT 1")
     suspend fun byId(id: String): SessionEntity?
 
+    @Query("UPDATE sessions SET updatedAt = :updatedAt WHERE id = :id")
+    suspend fun touch(id: String, updatedAt: Long)
+
     @Query("SELECT * FROM sessions ORDER BY updatedAt DESC")
     suspend fun allRows(): List<SessionEntity>
 

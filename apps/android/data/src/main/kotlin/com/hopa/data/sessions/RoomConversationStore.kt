@@ -15,6 +15,11 @@ class RoomConversationStore(
 
     override suspend fun allWithDeleted(): List<Conversation> = conversations(sessions.allRows())
 
+    override suspend fun dropLastExchange(id: String) {
+        turns.dropLast(id, 2)
+        sessions.touch(id, System.currentTimeMillis())
+    }
+
     override suspend fun adopt(session: Conversation) {
         val existing = sessions.byId(session.id)
         if (existing == null) {

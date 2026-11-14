@@ -45,6 +45,7 @@ fun ChatRoute(
         onDismissVoiceError = viewModel::dismissVoiceError,
         onSpeak = viewModel::speak,
         onRetry = viewModel::retryLast,
+        onUndo = viewModel::undoLast,
         easy = easy,
         onOpenSettings = onOpenSettings,
     )

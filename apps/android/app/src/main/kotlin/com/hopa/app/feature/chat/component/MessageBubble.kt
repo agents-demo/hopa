@@ -35,6 +35,7 @@ fun MessageBubble(
     message: ChatMessage,
     onSpeak: (String) -> Unit = {},
     onRetry: () -> Unit = {},
+    onUndo: () -> Unit = {},
 ) {
     val fromUser = message.role == "user"
     val context = LocalContext.current
@@ -96,6 +97,13 @@ fun MessageBubble(
                 },
             )
             if (!fromUser) {
+                DropdownMenuItem(
+                    text = { Text("Undo last exchange") },
+                    onClick = {
+                        onUndo()
+                        menu = false
+                    },
+                )
                 DropdownMenuItem(
                     text = { Text("Retry") },
                     onClick = {

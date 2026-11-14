@@ -13,4 +13,11 @@ interface TurnDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(turn: TurnEntity)
+
+    @Query(
+        "DELETE FROM turns WHERE id IN (" +
+            "SELECT id FROM turns WHERE sessionId = :sessionId " +
+            "ORDER BY timestamp DESC, id DESC LIMIT :count)",
+    )
+    suspend fun dropLast(sessionId: String, count: Int)
 }

@@ -9,6 +9,9 @@ interface ConversationStore {
     /** Copy a session from a merged snapshot, appending only unknown turns. */
     suspend fun adopt(session: Conversation)
 
+    /** Undo: drop the last user message and the answer that followed it. */
+    suspend fun dropLastExchange(id: String)
+
     suspend fun search(query: String): List<Conversation>
 
     suspend fun create(): Conversation

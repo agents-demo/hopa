@@ -72,6 +72,7 @@ fun ChatScreen(
     onDismissVoiceError: () -> Unit,
     onSpeak: (String) -> Unit,
     onRetry: () -> Unit,
+    onUndo: () -> Unit,
     easy: Boolean = false,
     onOpenSettings: () -> Unit = {},
 ) {
@@ -280,7 +281,12 @@ fun ChatScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     items(messages, key = ChatMessage::id) { message ->
-                        MessageBubble(message = message, onSpeak = onSpeak, onRetry = onRetry)
+                        MessageBubble(
+                            message = message,
+                            onSpeak = onSpeak,
+                            onRetry = onRetry,
+                            onUndo = onUndo,
+                        )
                     }
                 }
             }

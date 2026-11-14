@@ -43,6 +43,9 @@ class MainActivity : ComponentActivity() {
         if (intent.action == Intent.ACTION_PROCESS_TEXT) {
             return intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT)?.toString().orEmpty()
         }
+        if (intent.action == Intent.ACTION_SEND && intent.type == "text/plain") {
+            return intent.getStringExtra(Intent.EXTRA_TEXT).orEmpty()
+        }
         val data = intent.data ?: return ""
         return if (data.scheme == "hopa" && data.host == "ask") {
             data.getQueryParameter("text").orEmpty()

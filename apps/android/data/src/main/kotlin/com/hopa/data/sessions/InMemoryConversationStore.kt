@@ -13,6 +13,14 @@ class InMemoryConversationStore : ConversationStore {
     override suspend fun allWithDeleted(): List<Conversation> =
         rows.values.sortedByDescending { it.updatedAt }
 
+    override suspend fun dropLastExchange(id: String) {
+        val session = rows[id] ?: return
+        rows[id] = session.copy(
+            messages = session.messages.dropLast(2),
+            updatedAt = System.currentTimeMillis(),
+        )
+    }
+
     override suspend fun adopt(session: Conversation) {
         val existing = rows[session.id]
         rows[session.id] = if (existing == null) {

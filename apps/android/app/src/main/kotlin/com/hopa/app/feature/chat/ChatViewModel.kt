@@ -167,6 +167,27 @@ class ChatViewModel(
         sendText(text)
     }
 
+    /** Remove the last exchange from the thread. */
+    fun undoLast() {
+        if (_state.value.busy) {
+            return
+        }
+        val conversation = _state.value.current ?: return
+        if (conversation.messages.size < 2) {
+            return
+        }
+        viewModelScope.launch {
+            container.conversations.dropLastExchange(conversation.id)
+            val all = container.conversations.all()
+            _state.update {
+                it.copy(
+                    current = all.firstOrNull { item -> item.id == conversation.id },
+                    conversations = all,
+                )
+            }
+        }
+    }
+
     /** Re-run the last user goal without appending the message twice. */
     fun retryLast() {
         if (_state.value.busy) {
