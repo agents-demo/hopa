@@ -1,5 +1,8 @@
-package com.hopa.data.sessions
+﻿package com.hopa.data.sessions
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class ChatMessage(
     val id: String,
     val role: String,

@@ -25,3 +25,6 @@ project(":core").projectDir = file("../../../packages/core")
 
 include(":capabilities")
 project(":capabilities").projectDir = file("../../../packages/capabilities")
+
+include(":data")
+project(":data").projectDir = file("../../../packages/data")

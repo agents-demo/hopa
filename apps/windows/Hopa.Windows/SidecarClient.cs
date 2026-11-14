@@ -16,7 +16,7 @@ public sealed class SidecarClient : IAsyncDisposable
     private readonly Process process;
     private readonly StreamWriter input;
     private readonly StreamReader output;
-    private readonly Dictionary<string, TaskCompletionSource<string>> turns = new();
+    private readonly Dictionary<string, TaskCompletionSource<JsonObject>> pending = new();
     private readonly Task readLoop;
 
     public event Action<string>? LogReceived;
@@ -66,24 +66,88 @@ public sealed class SidecarClient : IAsyncDisposable
         });
     }
 
-    public async Task<string> StartTurnAsync(string goal)
+    public async Task<JsonObject> RequestAsync(string type, JsonObject fields, TimeSpan timeout)
     {
-        var id = $"g-{Guid.NewGuid():N}";
-        var completion = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
-        turns[id] = completion;
-        Send(new JsonObject
+        var id = $"r-{Guid.NewGuid():N}";
+        var completion = new TaskCompletionSource<JsonObject>(TaskCreationOptions.RunContinuationsAsynchronously);
+        lock (pending)
         {
-            ["type"] = "turn.start",
+            pending[id] = completion;
+        }
+
+        var message = new JsonObject
+        {
+            ["type"] = type,
             ["id"] = id,
-            ["goal"] = goal,
-        });
-        var finished = await Task.WhenAny(completion.Task, Task.Delay(TimeSpan.FromSeconds(60)));
+        };
+        foreach (var pair in fields)
+        {
+            message[pair.Key] = pair.Value?.DeepClone();
+        }
+
+        Send(message);
+        var finished = await Task.WhenAny(completion.Task, Task.Delay(timeout));
         if (finished != completion.Task)
         {
-            throw new TimeoutException("the sidecar did not answer in 60 s");
+            lock (pending)
+            {
+                pending.Remove(id);
+            }
+
+            throw new TimeoutException($"the sidecar did not answer {type} in {timeout.TotalSeconds:0} s");
         }
 
         return await completion.Task;
+    }
+
+    public async Task<(string Answer, string ConversationId, string Title)> StartTurnAsync(
+        string goal,
+        string? conversationId)
+    {
+        var fields = new JsonObject { ["goal"] = goal };
+        if (conversationId != null)
+        {
+            fields["conversationId"] = conversationId;
+        }
+
+        var response = await RequestAsync("turn.start", fields, TimeSpan.FromSeconds(120));
+        return (
+            response["answer"]?.GetValue<string>() ?? "",
+            response["conversationId"]?.GetValue<string>() ?? "",
+            response["title"]?.GetValue<string>() ?? "New chat");
+    }
+
+    public async Task<List<JsonObject>> ListConversationsAsync()
+    {
+        var response = await RequestAsync("conversations.list", new JsonObject(), TimeSpan.FromSeconds(10));
+        var items = new List<JsonObject>();
+        if (response["items"] is JsonArray array)
+        {
+            foreach (var item in array)
+            {
+                if (item is JsonObject obj)
+                {
+                    items.Add(obj);
+                }
+            }
+        }
+
+        return items;
+    }
+
+    public async Task<JsonObject?> CreateConversationAsync()
+    {
+        var response = await RequestAsync("conversation.create", new JsonObject(), TimeSpan.FromSeconds(10));
+        return response["conversation"] as JsonObject;
+    }
+
+    public async Task<JsonObject?> OpenConversationAsync(string id)
+    {
+        var response = await RequestAsync(
+            "conversation.open",
+            new JsonObject { ["conversationId"] = id },
+            TimeSpan.FromSeconds(10));
+        return response["conversation"] as JsonObject;
     }
 
     public void SendDeviceResult(string id, bool ok, string? error = null)
@@ -141,11 +205,17 @@ public sealed class SidecarClient : IAsyncDisposable
                 case "device.request":
                     DeviceRequested?.Invoke(message);
                     break;
-                case "turn.end":
+                default:
                     var id = message["id"]?.GetValue<string>();
-                    if (id != null && turns.Remove(id, out var completion))
+                    if (id != null)
                     {
-                        completion.TrySetResult(message["answer"]?.GetValue<string>() ?? "");
+                        TaskCompletionSource<JsonObject>? completion;
+                        lock (pending)
+                        {
+                            pending.Remove(id, out completion);
+                        }
+
+                        completion?.TrySetResult(message);
                     }
 
                     break;

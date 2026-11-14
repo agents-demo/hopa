@@ -1,5 +1,8 @@
-package com.hopa.data.sessions
+﻿package com.hopa.data.sessions
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Conversation(
     val id: String,
     val title: String,

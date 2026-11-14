@@ -13,9 +13,12 @@ import com.hopa.core.model.ModelRequest
  */
 class SpikeModel : ModelPort {
     override suspend fun complete(request: ModelRequest): ModelReply {
-        val goal = request.messages.firstOrNull { it.role == "user" }?.content.orEmpty()
-        val alreadyDecided = request.messages.any { it.role == "assistant" }
-        if (!alreadyDecided && goal.contains("click", ignoreCase = true)) {
+        val goal = request.messages
+            .lastOrNull { it.role == "user" && !it.content.startsWith("SCREEN:") }
+            ?.content
+            .orEmpty()
+        val lastAssistant = request.messages.lastOrNull { it.role == "assistant" }?.content.orEmpty()
+        if (goal.contains("click", ignoreCase = true) && !lastAssistant.contains("\"ui.tap\"")) {
             return ModelReply("""{"schemaVersion":"1","kind":"ui.tap","x":700,"y":600,"timeoutMs":5000}""")
         }
         return ModelReply("Sidecar answered: \"${goal.take(80)}\".")

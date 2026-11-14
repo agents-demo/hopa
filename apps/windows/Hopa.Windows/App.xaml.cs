@@ -8,28 +8,33 @@ public partial class App : Application
     {
         base.OnStartup(e);
         var window = new MainWindow();
-        if (e.Args.Length >= 2 && e.Args[0] == "--turn")
+        window.Show();
+        var args = e.Args;
+        if (args.Length >= 2 && args[0] == "--turn")
         {
             string? output = null;
             string? shot = null;
-            for (var i = 2; i + 1 < e.Args.Length; i += 2)
+            for (var i = 2; i + 1 < args.Length; i += 2)
             {
-                switch (e.Args[i])
+                switch (args[i])
                 {
                     case "--out":
-                        output = e.Args[i + 1];
+                        output = args[i + 1];
                         break;
                     case "--shot":
-                        shot = e.Args[i + 1];
+                        shot = args[i + 1];
                         break;
                 }
             }
 
-            window.Show();
-            _ = window.RunTurnAsync(e.Args[1], output, shot);
+            _ = window.RunTurnAsync(args[1], output, shot);
             return;
         }
 
-        window.Show();
+        if (args.Length >= 1 && args[0] == "--list")
+        {
+            string? output = args.Length >= 3 && args[1] == "--out" ? args[2] : null;
+            _ = window.ListAsync(output);
+        }
     }
 }

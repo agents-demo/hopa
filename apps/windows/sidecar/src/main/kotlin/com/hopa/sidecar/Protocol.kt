@@ -1,16 +1,20 @@
 package com.hopa.sidecar
 
+import com.hopa.data.sessions.Conversation
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonObjectBuilder
+import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
 /** The NDJSON messages between the .NET host and this sidecar. */
 object Protocol {
     const val VERSION = 1
+    private val json = Json { encodeDefaults = true }
 
     fun ready(): JsonObject = buildJsonObject {
         put("type", "ready")
@@ -22,10 +26,29 @@ object Protocol {
         put("text", text)
     }
 
-    fun turnEnd(id: String, answer: String): JsonObject = buildJsonObject {
-        put("type", "turn.end")
+    fun turnEnd(id: String, conversationId: String, title: String, answer: String): JsonObject =
+        buildJsonObject {
+            put("type", "turn.end")
+            put("id", id)
+            put("conversationId", conversationId)
+            put("title", title)
+            put("answer", answer)
+        }
+
+    fun conversationList(id: String, items: List<Conversation>): JsonObject = buildJsonObject {
+        put("type", "conversations.list")
         put("id", id)
-        put("answer", answer)
+        put("items", buildJsonArray {
+            items.forEach { add(json.encodeToJsonElement(Conversation.serializer(), it)) }
+        })
+    }
+
+    fun conversationOpened(id: String, conversation: Conversation?): JsonObject = buildJsonObject {
+        put("type", "conversation.history")
+        put("id", id)
+        if (conversation != null) {
+            put("conversation", json.encodeToJsonElement(Conversation.serializer(), conversation))
+        }
     }
 
     fun deviceRequest(id: String, op: String, fields: JsonObjectBuilder.() -> Unit): JsonObject =
@@ -37,7 +60,7 @@ object Protocol {
         }
 
     fun String.asObject(): JsonObject? = runCatching {
-        Json.parseToJsonElement(this).let { it as? JsonObject }
+        json.parseToJsonElement(this).let { it as? JsonObject }
     }.getOrNull()
 
     fun JsonObject.type(): String? = this["type"]?.jsonPrimitive?.contentOrNull
