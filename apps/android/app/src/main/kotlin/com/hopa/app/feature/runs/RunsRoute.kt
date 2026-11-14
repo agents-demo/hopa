@@ -22,5 +22,9 @@ fun RunsRoute(
         records = records,
         onBack = onBack,
         onVerify = { runId -> container.recorder.verify(runId) },
+        onClear = {
+            container.recorder.clear()
+            records = emptyList()
+        },
     )
 }

@@ -46,10 +46,12 @@ fun RunsScreen(
     records: List<RunRecord>,
     onBack: () -> Unit,
     onVerify: suspend (String) -> Boolean,
+    onClear: suspend () -> Unit,
 ) {
     var filter by remember { mutableStateOf("All") }
     var selected by remember { mutableStateOf<RunRecord?>(null) }
     var chainOk by remember { mutableStateOf<Boolean?>(null) }
+    var confirmClear by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     val visible = when (filter) {
@@ -74,7 +76,13 @@ fun RunsScreen(
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Medium,
                     color = HopaColor.TextPrimary,
+                    modifier = Modifier.weight(1f),
                 )
+                if (records.isNotEmpty()) {
+                    TextButton(onClick = { confirmClear = true }) {
+                        Text("Clear", color = HopaColor.Danger)
+                    }
+                }
             }
         },
     ) { padding ->
@@ -160,6 +168,25 @@ fun RunsScreen(
                 }
             }
         }
+    }
+
+    if (confirmClear) {
+        AlertDialog(
+            onDismissRequest = { confirmClear = false },
+            title = { Text("Clear all run records?") },
+            text = { Text("The audit trail on this device is removed. It cannot be undone.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        confirmClear = false
+                        scope.launch { onClear() }
+                    },
+                ) { Text("Clear", color = HopaColor.Danger) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmClear = false }) { Text("Cancel") }
+            },
+        )
     }
 
     selected?.let { record ->

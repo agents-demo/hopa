@@ -19,6 +19,10 @@ class InMemoryRunRecorder : RunRecorder {
     override suspend fun all(): List<RunRecord> =
         runs.values.flatten().sortedByDescending { it.timestamp.orEmpty() }
 
+    override suspend fun clear() {
+        runs.clear()
+    }
+
     override suspend fun verify(runId: String): Boolean {
         val records = runs[runId] ?: return true
         return RunChain.verify(records)

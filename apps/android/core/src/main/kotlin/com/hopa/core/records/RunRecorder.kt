@@ -10,4 +10,6 @@ interface RunRecorder {
     suspend fun all(): List<RunRecord>
 
     suspend fun verify(runId: String): Boolean
+
+    suspend fun clear()
 }

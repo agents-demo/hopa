@@ -26,4 +26,8 @@ class RoomRunRecorder(
 
     override suspend fun verify(runId: String): Boolean =
         RunChain.verify(records(runId))
+
+    override suspend fun clear() {
+        dao.clearAll()
+    }
 }

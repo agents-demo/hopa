@@ -30,6 +30,13 @@ toast before.
 
 Still open for the Runs item: replay with a filmstrip, batch actions, clear.
 
+## Runs: clear (2026-11-14)
+
+- `RunRecorder.clear()` (Room + in-memory) empties the audit trail; the Runs
+  header offers **Clear** with a confirm dialog, and the list empties at once.
+- `RunRecorderClearTest` covers the in-memory contract; build green.
+
+
 ## Partly there, not ticked
 
 - Chats sheet: search, date groups, New chat, Current, swipe delete, delete-all,
