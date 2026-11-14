@@ -54,6 +54,8 @@ fun ChatRoute(
         onSpeak = viewModel::speak,
         onRetry = viewModel::retryLast,
         onUndo = viewModel::undoLast,
+        onDiscardAttachment = viewModel::discardAttachment,
+        onDismissAttachmentNotice = viewModel::dismissAttachmentNotice,
         easy = easy,
         onOpenSettings = onOpenSettings,
     )

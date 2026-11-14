@@ -11,6 +11,9 @@ interface TurnDao {
     @Query("SELECT * FROM turns WHERE sessionId = :sessionId ORDER BY timestamp, id")
     suspend fun forSession(sessionId: String): List<TurnEntity>
 
+    @Query("SELECT * FROM turns WHERE id = :id")
+    suspend fun byId(id: String): TurnEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(turn: TurnEntity)
 

@@ -89,6 +89,7 @@ tools/shots/
 
 # Android build output and local secrets
 **/.gradle/
+**/.kotlin/
 **/*.jks
 **/*.keystore
 **/keystore.properties

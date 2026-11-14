@@ -46,8 +46,9 @@ fun Composer(
     recording: Boolean = false,
     transcribing: Boolean = false,
     onMic: () -> Unit = {},
+    hasAttachment: Boolean = false,
 ) {
-    val canSend = value.isNotBlank() && !busy && !transcribing
+    val canSend = (value.isNotBlank() || hasAttachment) && !busy && !transcribing
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -88,7 +89,13 @@ fun Composer(
                 Box {
                     if (value.isEmpty()) {
                         Text(
-                            if (recording) "Listening\u2026" else "Ask HOPA...",
+                            if (recording) {
+                                "Listening\u2026"
+                            } else if (hasAttachment) {
+                                "Add a note\u2026"
+                            } else {
+                                "Ask HOPA..."
+                            },
                             fontSize = 15.sp,
                             color = HopaColor.TextHint,
                         )

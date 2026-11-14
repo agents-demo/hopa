@@ -5,4 +5,5 @@ data class ChatMessage(
     val role: String,
     val text: String,
     val timestamp: Long,
+    val attachment: Attachment? = null,
 )

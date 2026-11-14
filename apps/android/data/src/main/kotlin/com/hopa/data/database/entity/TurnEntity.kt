@@ -23,4 +23,8 @@ data class TurnEntity(
     val role: String,
     val text: String,
     val timestamp: Long,
+    val attachmentName: String = "",
+    val attachmentMime: String = "",
+    val attachmentBytes: Long = 0,
+    val attachmentPath: String = "",
 )
