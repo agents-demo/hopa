@@ -32,3 +32,31 @@ Date: 2026-11-13. One item: the generated Kotlin catalogue.
 - `docs/reference/privacy.md` gained an Android data inventory (screen text/tree in memory, screenshots at most 1/s, microphone only while dictating, records limited to 100, Keystore token, no analytics) and a Play policy note (accessibility declaration and kill switch, queries only MAIN/LAUNCHER, planned shortService FGS, the documented cleartext trade-off).
 - Still open: release signing with a keystore in CI, a signed APK on a clean phone, evals platform/Android task, emulator/device E2E, on-device conformance, Play submission.
 
+## Update 2026-11-14: the launcher icon
+
+The old `ic_launcher.png` was a 192 x 192 cream square with the mascot baked in:
+alpha 255 in every corner, equal to the Harmony `app_icon.png`. It only looked
+transparent where the app drew the mascot itself.
+
+Now the icon is layered:
+
+- `res/mipmap-anydpi-v26/ic_launcher.xml` - an adaptive icon: the cream colour
+  `#F7F4EE` as the background layer, `ic_launcher_foreground` (transparent
+  mascot, 57.5 dp of the 108 dp canvas, max radius 32.4 dp so circular and
+  squircle masks never cut the face or the waving arm) and a monochrome vector
+  for themed icons.
+- `res/mipmap-*/ic_launcher.png` - regenerated with an alpha channel and no
+  background; corners are `(0, 0, 0, 0)`.
+- `res/mipmap-*/ic_launcher_foreground.png` - the same mark inset for the
+  adaptive layer.
+- `docs/media/mascot-2026.png` - a 512 px transparent raster of the mark for
+  docs and a store listing.
+- `tools/scripts/make-icon.py` regenerates all of them from the shared geometry
+  (`hopa_body.svg` plus the arm from `HopaMascot.kt`).
+
+Verified on `emulator-5554`, API 35: the App info header renders the squircle
+mask with the cream background and the whole mascot, arm included
+(`docs/media/android-icon-2026-11-14.png`). The packaged APK was unpacked and
+every `ic_launcher*.png` reports transparent corners with a cream screen at the
+centre.
+

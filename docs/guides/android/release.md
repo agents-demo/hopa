@@ -9,6 +9,23 @@ cd apps/android
 
 APK: `app/build/outputs/apk/debug/app-debug.apk`.
 
+## Launcher icon
+
+The icon is a layered adaptive icon: an opaque cream background layer
+(`@color/ic_launcher_background`) and a transparent mascot foreground that stays
+inside the 66 dp safe zone, plus a monochrome layer for themed icons. Regenerate
+the bitmaps after changing the mark:
+
+```
+python tools/scripts/make-icon.py
+```
+
+It reads the geometry shared with `hopa_body.svg` and writes the density
+`ic_launcher.png` / `ic_launcher_foreground.png` files and
+`docs/media/mascot-2026.png` (transparent, 512 px). Every PNG it writes has an
+alpha channel; only the adaptive background layer is opaque, because Android
+masks that layer with the launcher shape.
+
 ## Release signature
 
 The release build reads `apps/android/keystore.properties`. The file and the
