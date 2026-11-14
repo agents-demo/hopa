@@ -38,6 +38,7 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onSave: (String, String, String, String, Boolean, Boolean, String, String, Boolean) -> Unit,
     onTestBridge: (String, String) -> Unit,
+    onTestNotification: () -> Unit,
     onPairBridge: (String, String) -> Unit,
     onOpenCapabilities: () -> Unit,
     onOpenLaunchpad: () -> Unit,
@@ -121,6 +122,18 @@ fun SettingsScreen(
             ) {
                 Text("Notify when an answer is ready")
                 Switch(checked = notify, onCheckedChange = { notify = it })
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Button(onClick = onTestNotification) {
+                    Text("Send a test notification")
+                }
+                Text(
+                    state.notice ?: "",
+                    style = MaterialTheme.typography.bodySmall,
+                )
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),

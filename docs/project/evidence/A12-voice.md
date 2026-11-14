@@ -44,8 +44,17 @@ Verified: sending a task started `RunService`
 (`isForeground=true foregroundId=1001 types=0x00000800`), the shade showed
 "HOPA is working" plus STOP, and tapping STOP removed the service.
 
+## Notification permission and test
+
+- POST_NOTIFICATIONS is requested at first launch; `Notifier.permissionGranted`
+  gates the Settings test action, and a denial shows "Notifications are off in
+  Android settings" instead of pretending.
+- "Send a test notification" posts a one-off notification on the `hopa_test`
+  channel with the app as its target.
+- Verified on emulator-5554: tapping the button put **"HOPA test notification"**
+  in the shade.
+
 ## Not done
 
-- The denied-notification path and a test-notification action.
 - A screen-off run on a real phone and a spoken-mic run.
 - TTS voice/rate settings.

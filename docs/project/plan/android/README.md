@@ -5,7 +5,7 @@ phone code (UI, core, capabilities, shared services, bridge); the checklist was
 reconciled with the code on 2026-11-13.
 Owner: TBD.
 
-Progress on 2026-11-13: **59 of 135 phase items (43.7%)**, **60 of 149 (40.3%)**
+Progress on 2026-11-13: **60 of 135 phase items (44.4%)**, **61 of 149 (40.9%)**
 with the Definition of done and the open decisions.
 
 Read that number correctly. It counts *finished items*, not effort: an item is
@@ -389,7 +389,7 @@ apps/android/
 - [x] `AudioRecord` 16 kHz mono → WAV → `/transcribe`; dictation inserts text only. (evidence: VoiceRecorder + WavFile + /transcribe; live on emulator; docs/project/evidence/A12-voice.md)
 - [x] `/speak` playback; TTS fallback without a bridge; 600-char cap. (evidence: Speaker: bridge /speak WAV or Android TTS, 600-char cap; docs/project/evidence/A12-voice.md)
 - [x] Foreground service `shortService` for a bounded run; ongoing notification id 1001 with a tap that opens the run; stop cancels the loop. (evidence: RunService + notification 1001 + Stop sets cancelRequested; docs/project/evidence/A12-voice.md)
-- [ ] Notification permission denied path; test-notification action.
+- [x] Notification permission denied path; test-notification action. (evidence: Notifier + Settings test button; docs/project/evidence/A12-voice.md)
 - [x] 120 s run bound with a clear message. (evidence: withTimeoutOrNull(120_000) appends 'I stopped after two minutes.')
 - [ ] Tests: WAV header, empty recording, permission denied, screen-off run, notification tap.
 - [ ] Evidence: screen-off run completes or stops cleanly; bridge path needs no FGS (state that in the artifact).

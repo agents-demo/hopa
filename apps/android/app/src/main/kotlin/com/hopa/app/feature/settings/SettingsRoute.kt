@@ -22,6 +22,7 @@ fun SettingsRoute(
         onBack = onBack,
         onSave = viewModel::save,
         onTestBridge = viewModel::testBridge,
+        onTestNotification = viewModel::testNotification,
         onPairBridge = viewModel::pairBridge,
         onOpenCapabilities = onOpenCapabilities,
         onOpenLaunchpad = onOpenLaunchpad,

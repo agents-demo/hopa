@@ -167,11 +167,21 @@ class ChatViewModel(
         sendText(text)
     }
 
+    /** Re-run the last user goal without appending the message twice. */
+    fun retryLast() {
+        if (_state.value.busy) {
+            return
+        }
+        val conversation = _state.value.current ?: return
+        val lastUser = conversation.messages.lastOrNull { it.role == "user" } ?: return
+        sendText(lastUser.text, appendUser = false)
+    }
+
     fun resolveApproval(allow: Boolean) {
         container.approval.resolve(allow)
     }
 
-    private fun sendText(text: String) {
+    private fun sendText(text: String, appendUser: Boolean = true) {
         val conversation = _state.value.current ?: return
         _state.update { it.copy(input = "", busy = true, error = null, options = emptyList()) }
         container.busy.value = true
@@ -179,15 +189,17 @@ class ChatViewModel(
         startRunService()
         viewModelScope.launch {
             val now = System.currentTimeMillis()
-            container.conversations.append(
-                conversation.id,
-                ChatMessage(
-                    id = "m-$now-${UUID.randomUUID().toString().take(6)}",
-                    role = "user",
-                    text = text,
-                    timestamp = now,
-                ),
-            )
+            if (appendUser) {
+                container.conversations.append(
+                    conversation.id,
+                    ChatMessage(
+                        id = "m-$now-${UUID.randomUUID().toString().take(6)}",
+                        role = "user",
+                        text = text,
+                        timestamp = now,
+                    ),
+                )
+            }
             val history = conversation.messages.map { ModelMessage(it.role, it.text) }
             val memory = runCatching { container.memory.promptText() }.getOrDefault("")
             val skills = runCatching { container.skills.promptText() }.getOrDefault("")

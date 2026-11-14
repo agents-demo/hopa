@@ -12,4 +12,5 @@ data class SettingsUiState(
     val saved: Boolean = false,
     val error: String? = null,
     val bridgeStatus: String? = null,
+    val notice: String? = null,
 )

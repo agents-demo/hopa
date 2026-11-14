@@ -66,6 +66,25 @@ class SettingsViewModel(
         }
     }
 
+    fun testNotification() {
+        if (!com.hopa.app.service.Notifier.permissionGranted(container.context)) {
+            _state.update {
+                it.copy(notice = "Notifications are off in Android settings")
+            }
+            return
+        }
+        val sent = com.hopa.app.service.Notifier.postTest(container.context)
+        _state.update {
+            it.copy(
+                notice = if (sent) {
+                    "Test notification sent"
+                } else {
+                    "Could not show a notification"
+                },
+            )
+        }
+    }
+
     fun pairBridge(url: String, code: String) {
         viewModelScope.launch {
             if (url.isBlank() || code.isBlank()) {
