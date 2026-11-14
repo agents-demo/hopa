@@ -7,6 +7,7 @@ import androidx.navigation.compose.rememberNavController
 import com.hopa.app.di.AppContainer
 import com.hopa.app.feature.launchpad.LaunchpadRoute
 import com.hopa.app.feature.memory.MemoryRoute
+import com.hopa.app.feature.device.DeviceRoute
 import com.hopa.app.feature.profiles.ProfilesRoute
 import com.hopa.app.feature.runs.RunsRoute
 import com.hopa.app.feature.settings.AccessibilityRoute
@@ -26,6 +27,7 @@ fun HopaNavHost(container: AppContainer, initialGoal: String = "") {
                 onOpenRuns = { navController.navigate(HopaDestination.RUNS) },
                 onOpenUsage = { navController.navigate(HopaDestination.USAGE) },
                 onOpenMemory = { navController.navigate(HopaDestination.MEMORY) },
+                onOpenDevice = { navController.navigate(HopaDestination.DEVICE) },
                 initialGoal = initialGoal,
             )
         }
@@ -39,6 +41,14 @@ fun HopaNavHost(container: AppContainer, initialGoal: String = "") {
             MemoryRoute(
                 container = container,
                 onBack = { navController.popBackStack() },
+            )
+        }
+        composable(HopaDestination.DEVICE) {
+            DeviceRoute(
+                container = container,
+                onBack = { navController.popBackStack() },
+                onOpenBridgeSettings = { navController.navigate(HopaDestination.SETTINGS) },
+                onOpenAccessibility = { navController.navigate(HopaDestination.ACCESSIBILITY) },
             )
         }
         composable(HopaDestination.SETTINGS) {

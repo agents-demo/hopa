@@ -46,6 +46,19 @@ Still open for the Runs item: replay with a filmstrip, batch actions, clear.
 Browser, Memory, Skills, device control, the full Settings tree, the inbound
 share target as a file/image target, MCP and License pages, Plans.
 
+## Device control (2026-11-14)
+
+- The Capabilities status card opens `Device control`: one card for the PC bridge
+  (not configured / configured, not checked / connected / unreachable, with the
+  address and error), one for the on-device service (off / enabled, not
+  connected / enabled and connected), a Retry that calls `/health`, buttons to
+  the Bridge settings and Phone access, and an honest "HOPA cannot act yet" line
+  when neither path is ready.
+- The statuses poll every two seconds, so enabling the service in Android
+  settings updates the page without leaving it.
+- Verified on emulator-5554: the page rendered both states, the bridge address
+  and the honesty line.
+
 ## Memory and Skills (2026-11-14)
 
 - Room v4 adds `memory_facts` and `skills` with `MIGRATION_3_4`; `RoomMemoryStore` and `RoomSkillStore` own add/delete/clear/export text.

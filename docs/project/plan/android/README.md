@@ -5,7 +5,7 @@ phone code (UI, core, capabilities, shared services, bridge); the checklist was
 reconciled with the code on 2026-11-13.
 Owner: TBD.
 
-Progress on 2026-11-13: **56 of 135 phase items (41.5%)**, **57 of 149 (38.3%)**
+Progress on 2026-11-13: **57 of 135 phase items (42.2%)**, **58 of 149 (38.9%)**
 with the Definition of done and the open decisions.
 
 Read that number correctly. It counts *finished items*, not effort: an item is
@@ -377,7 +377,7 @@ apps/android/
 - [ ] Launchpad: render `contracts/catalog/catalog.v1.json`, apps/sites segments, search, verified/unverified; fill and use the `android` package/activity map; `PackageManager` launch with explicit intents.
 - [ ] Browser: WebView https-only, JS read/click/type, 20 000-char cap, in-app address bar.
 - [x] Memory and Skills: add/delete/clear/export; skill use. (evidence: MemoryScreen + Room v4 + prompt injection; docs/project/evidence/A11-screens.md)
-- [ ] Device control page: bridge vs on-device states, both setup flows, retry, "cannot act" honesty.
+- [x] Device control page: bridge vs on-device states, both setup flows, retry, "cannot act" honesty. (evidence: DeviceScreen: states, retry, both setup links, honesty; docs/project/evidence/A11-screens.md)
 - [ ] Settings: profile, agent switches (including `notifyAnswers`), appearance, phone access, model, character (tone/chattiness/voice/preview), parent PIN, bridge wizard (adb + pair), logs, live screen, self-check, developer, test notification, about, export, license, welcome.
 - [ ] Fix the three Settings fall-through rows; do not build Models/Source.
 - [ ] Inbound share target (text/image/file, max 1) + `ACTION_PROCESS_TEXT` → pending goal in the composer.

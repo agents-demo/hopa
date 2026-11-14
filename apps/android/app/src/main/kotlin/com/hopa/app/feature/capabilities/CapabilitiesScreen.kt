@@ -52,7 +52,7 @@ fun CapabilitiesScreen(
     onSelectTab: (String) -> Unit,
     onOpenLaunchpad: () -> Unit,
     onOpenSettings: () -> Unit,
-    onOpenAccessibility: () -> Unit,
+    onOpenDevice: () -> Unit,
     onOpenRuns: () -> Unit,
     onOpenUsage: () -> Unit,
     onOpenMemory: () -> Unit,
@@ -106,7 +106,7 @@ fun CapabilitiesScreen(
                     .fillMaxWidth()
                     .background(HopaColor.Surface, RoundedCornerShape(14.dp))
                     .border(1.dp, HopaColor.Divider, RoundedCornerShape(14.dp))
-                    .clickable(onClick = onOpenAccessibility)
+                    .clickable(onClick = onOpenDevice)
                     .padding(14.dp),
                 verticalAlignment = Alignment.Top,
             ) {
