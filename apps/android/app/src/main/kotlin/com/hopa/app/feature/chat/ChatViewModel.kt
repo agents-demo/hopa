@@ -1,5 +1,7 @@
 package com.hopa.app.feature.chat
 
+import android.content.Intent
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hopa.app.di.AppContainer
@@ -15,6 +17,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 class ChatViewModel(
     private val container: AppContainer,
@@ -172,6 +175,8 @@ class ChatViewModel(
         val conversation = _state.value.current ?: return
         _state.update { it.copy(input = "", busy = true, error = null, options = emptyList()) }
         container.busy.value = true
+        container.cancelRequested.value = false
+        startRunService()
         viewModelScope.launch {
             val now = System.currentTimeMillis()
             container.conversations.append(
@@ -195,17 +200,29 @@ class ChatViewModel(
                     com.hopa.capabilities.device.UnavailableDevicePort()
                 }
             val loop = container.loopFor(device)
-            val result = loop.run(
-                runId = "run-$now",
-                traceId = UUID.randomUUID().toString(),
-                context = TurnContext(goal = text, history = history, memory = memory, skills = skills),
-            )
+            val result = try {
+                withTimeoutOrNull(120_000) {
+                    loop.run(
+                        runId = "run-$now",
+                        traceId = UUID.randomUUID().toString(),
+                        context = TurnContext(
+                            goal = text,
+                            history = history,
+                            memory = memory,
+                            skills = skills,
+                        ),
+                        isCancelled = { container.cancelRequested.value },
+                    )
+                }
+            } finally {
+                stopRunService()
+            }
             container.conversations.append(
                 conversation.id,
                 ChatMessage(
                     id = "m-${System.currentTimeMillis()}-${UUID.randomUUID().toString().take(6)}",
                     role = "assistant",
-                    text = result.answer,
+                    text = result?.answer ?: "I stopped after two minutes.",
                     timestamp = System.currentTimeMillis(),
                 ),
             )
@@ -216,11 +233,26 @@ class ChatViewModel(
                     current = all.firstOrNull { item -> item.id == conversation.id },
                     conversations = all,
                     busy = false,
-                    error = result.error?.message,
-                    options = result.options,
+                    error = result?.error?.message,
+                    options = result?.options.orEmpty(),
                 )
             }
         }.invokeOnCompletion { container.busy.value = false }
+    }
+
+    private fun startRunService() {
+        val intent = Intent(container.context, com.hopa.app.service.RunService::class.java)
+        runCatching {
+            ContextCompat.startForegroundService(container.context, intent)
+        }
+    }
+
+    private fun stopRunService() {
+        runCatching {
+            container.context.stopService(
+                Intent(container.context, com.hopa.app.service.RunService::class.java),
+            )
+        }
     }
 
     private suspend fun load() {

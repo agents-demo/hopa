@@ -32,6 +32,7 @@ class AppContainer(context: Context) {
     val conversations: ConversationStore = RoomConversationStore(database)
     val selectedConversation = MutableStateFlow<String?>(null)
     val busy = MutableStateFlow(false)
+    val cancelRequested = MutableStateFlow(false)
     val packages = AndroidPackageCatalog(context)
     val recorder = RoomRunRecorder(database.runRecordDao())
     val pendingApprovals = com.hopa.data.approvals.RoomPendingApprovalStore(
