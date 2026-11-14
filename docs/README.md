@@ -67,6 +67,8 @@ Service documentation lives with the services: [`services/docs/`](../services/do
 | [operations/release.md](project/operations/release.md) | How is a release cut? |
 | [operations/versioning.md](project/operations/versioning.md) | How are versions numbered? |
 | [operations/owners.md](project/operations/owners.md) | Who owns what? |
+| [operations/teams.md](project/operations/teams.md) | How does the work split into parallel teams? |
+| [operations/teams-notes.md](project/operations/teams-notes.md) | Why the teams look like this, in plain language? |
 | [operations/sbom.json](project/operations/sbom.json) | What ships in the HAP? |
 | [releases/0.1.0.md](project/releases/0.1.0.md) | The 0.1.0 release note |
 | [archive/README.md](project/archive/README.md) | Dated evidence: measurements, platform limits, provenance |

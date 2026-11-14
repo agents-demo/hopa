@@ -3,6 +3,10 @@
 Status: acting, one maintainer. Replace "acting" with a real name and add a
 second reviewer before M5.
 
+Team topology and staffing live in [`teams.md`](teams.md); the reasoning, the
+plain-word glossary and the discussion log are in
+[`teams-notes.md`](teams-notes.md).
+
 ## Phase owners
 
 | Phase | Owner | Reviewer |
