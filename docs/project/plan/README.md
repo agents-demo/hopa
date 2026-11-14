@@ -6,6 +6,10 @@ The **Android development plan** is a separate, later plan:
 [`android/README.md`](android/README.md) (ADR-0016, ADR-0017). It is not part of
 this refactor's gate; this plan only prepares its decisions, contracts and folder.
 
+The **Windows development plan** follows it:
+[`windows/README.md`](windows/README.md) (ADR-0021). It starts at W0 once the
+Android gates close.
+
 # Refactor plan: apps, services, evals
 
 Status: **revised after critique; execution starts at R0.**

@@ -90,7 +90,8 @@ Ask which top level answers the question, then pick the layer (ADR-0007):
 
 | The new thing is... | Top level |
 |---|---|
-| a screen, a widget, a platform adapter | `apps/` (`harmony/`, later `android/`, `windows/`) |
+| a screen, a widget, a platform adapter | `apps/` (`harmony/`, `android/`, `windows/`) |
+| code two clients import (no UI, no Android) | `packages/` (`core/`, `data/`, `capabilities/`) |
 | a long-running service, a device driver, a relay | `services/` (`bridge/`, `relay/`, `brain/`, later `backend/`) |
 | a task, a score, a reference driver | `services/evals/` (`bench/`, `baseline/`) |
 | a wire format both sides share | `contracts/` (`openapi/`, `schemas/`) |

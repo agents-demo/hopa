@@ -1,42 +1,59 @@
 # HOPA for Windows
 
-**Status: reserved.** No code yet. This file exists so the folder answers "what
-goes here" before anyone writes the first line (ADR-0007).
+Status: **W0 spike**, the engine seam works; the shell is next
+([plan](../../docs/project/plan/windows/README.md), [ADR-0021](../../docs/design/decisions/0021-windows-client-stack.md)).
 
-## What a Windows HOPA is
+```
+Hopa.Windows/   WPF app: window, sidecar client, one UIA action (FlaUI)
+sidecar/        Kotlin host for packages/core + packages/capabilities (NDJSON over stdio)
+```
 
-A **thin client** with a desktop body, the same shape as the Harmony 2-in-1 shell:
+This folder used to describe a *thin* client that would not run the loop. That
+was superseded: clients own the loop (ADR-0016), so the loop runs here in the
+Kotlin sidecar and the C# app is the host around it (ADR-0021).
 
-- it renders the conversation and the run pane;
-- it captures the screen and executes actions **on this machine**;
-- it talks to `services/backend` over `contracts/` only.
+## Build
 
-It does **not** run the agent loop, hold a model key, or inline a prompt.
+```powershell
+cd apps\android
+.\gradlew.bat -p ..\windows\sidecar installDist --no-daemon
 
-## The two halves
+cd ..\windows\Hopa.Windows
+dotnet build -c Debug
+```
 
-| Half | Windows implementation | Contract |
-|---|---|---|
-| Shell | WinUI 3 (or WPF if the toolchain forces it) | `contracts/openapi/backend.v1.yaml` (future) |
-| Device adapter | UI Automation (`UIAutomationClient`) + `PrintWindow`/DXGI capture | `DevicePort` in `services/bridge` |
+The app finds the sidecar at `sidecar/build/install/hopa-windows-sidecar/lib`;
+set `HOPA_SIDECAR_LIB` to override.
 
-`DevicePort` is the seam described in
-[adding a platform](../../services/docs/guides/adding-a-platform.md): `observe`, `tap`,
-`type`, `swipe`, `screenshot`, `launch`, `foreground`, `apps`, plus `serial` and
-`platform`.
+## Run
+
+```powershell
+.\bin\Debug\net8.0-windows\Hopa.Windows.exe
+```
+
+Type a goal and press Send. The spike goals:
+
+- `say hello` - one turn through the loop and back;
+- `click the notepad text area` - the engine asks the host for a UI Automation
+  click and the host performs it.
+
+Headless verification:
+
+```powershell
+.\bin\Debug\net8.0-windows\Hopa.Windows.exe --turn "say hello" --out result.txt --shot shot.png
+```
 
 ## Rules
 
-1. No HarmonyOS imports and no copy of `apps/harmony/core` — the loop is not here.
-2. The adapter reports **what it can see**, never what it assumes: UIA trees are
-   sparse, so `observe` must say when it only has window titles.
+1. The loop, the gate and the records live in `packages/`, inside the sidecar.
+   The C# app never decides whether an action is allowed.
+2. The adapter reports **what it can see**. UI Automation trees are sparse, so
+   `observe` must say when it only has window titles.
 3. Payment and destructive actions go through the same ask-first gate; the
-   adapter never decides.
-4. Nothing in this folder may be imported by `services/` or `evals/`.
+   adapter only reports.
+4. Sealing is one-way: nothing here may be imported by `services/` or `evals/`.
+5. Keys stay in Windows Credential Manager; the sidecar receives them in memory
+   only (W2).
 
-## First steps when work starts
-
-- [ ] Prove UIA `observe` on a real window tree (notepad first, then a browser).
-- [ ] Implement `DevicePort` and run the handler tests on the fake.
-- [ ] Add a contract client generated from `contracts/openapi/`.
-- [ ] Prove one task end to end against `services/backend` (or the bridge).
+The protocol is in [`docs/project/plan/windows/protocol.md`](../../docs/project/plan/windows/protocol.md);
+the W0 evidence is in [`docs/project/evidence/W0-spike.md`](../../docs/project/evidence/W0-spike.md).

@@ -72,8 +72,8 @@ android {
 
 dependencies {
     implementation(project(":core"))
-    implementation(project(":capabilities"))
-    implementation(project(":data"))
+    implementation(project(":capabilities-android"))
+    implementation(project(":data-android"))
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)

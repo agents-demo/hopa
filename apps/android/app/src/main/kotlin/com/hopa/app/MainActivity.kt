@@ -3,6 +3,7 @@ package com.hopa.app
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -26,6 +27,11 @@ class MainActivity : ComponentActivity() {
             requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 41)
         }
         applyLaunchConfig(intent, container)
+        // A cold-start share must copy its file too; a rotation must not copy it
+        // again, because the container already holds the pending attachment.
+        if (savedInstanceState == null) {
+            intakeFrom(intent, container)
+        }
         val goal = goalFrom(intent)
         setContent {
             HopaApp(container = container, initialGoal = goal)
@@ -33,8 +39,8 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * `hopa://ask?text=...` and `ACTION_PROCESS_TEXT` drop the words into the
-     * composer; nothing is sent without a tap.
+     * `hopa://ask?text=...`, `ACTION_PROCESS_TEXT` and `ACTION_SEND` drop the
+     * words into the composer; nothing is sent without a tap.
      */
     private fun goalFrom(intent: Intent?): String {
         if (intent == null) {
@@ -43,8 +49,8 @@ class MainActivity : ComponentActivity() {
         if (intent.action == Intent.ACTION_PROCESS_TEXT) {
             return intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT)?.toString().orEmpty()
         }
-        if (intent.action == Intent.ACTION_SEND && intent.type == "text/plain") {
-            return intent.getStringExtra(Intent.EXTRA_TEXT).orEmpty()
+        if (intent.action == Intent.ACTION_SEND) {
+            return intent.getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString().orEmpty()
         }
         val data = intent.data ?: return ""
         return if (data.scheme == "hopa" && data.host == "ask") {
@@ -52,6 +58,43 @@ class MainActivity : ComponentActivity() {
         } else {
             ""
         }
+    }
+
+    /** A shared file waits in the composer; its bytes are copied first. */
+    private fun intakeFrom(intent: Intent, container: AppContainer) {
+        if (intent.action != Intent.ACTION_SEND) {
+            return
+        }
+        val uri = streamFrom(intent) ?: return
+        if (intent.type?.startsWith("text/") == true) {
+            return
+        }
+        lifecycleScope.launch {
+            val previous = container.pendingAttachment.value
+            val result = container.intake.accept(uri, hint = intent.type)
+            if (previous != null && previous.path != result.attachment?.path) {
+                container.intake.delete(previous)
+            }
+            container.pendingNotice.value = result.notice
+            container.pendingAttachment.value = result.attachment
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun streamFrom(intent: Intent): Uri? = intent.getParcelableExtra(Intent.EXTRA_STREAM)
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        val container = (application as HopaApplication).container
+        applyLaunchConfig(intent, container)
+        if (streamFrom(intent) == null) {
+            val goal = goalFrom(intent)
+            if (goal.isNotBlank()) {
+                container.pendingGoal.value = goal
+            }
+        }
+        intakeFrom(intent, container)
     }
 
     /**

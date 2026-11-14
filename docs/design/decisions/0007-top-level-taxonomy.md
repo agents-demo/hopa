@@ -66,3 +66,26 @@ Three problems motivated this record:
   with its own packages and reports, not a build script.
 - **Keep a counts inventory in this ADR.** Rejected: counts rot; they live in the
   plan document instead.
+
+## Addendum 2026-11-14: `packages/` for the client engine
+
+The Kotlin clients (Android now, Windows next) share one client engine, and
+`apps/android/core` was the wrong home: the Windows client would have had to
+import the Android app. The engine moved out of `apps/`:
+
+| Folder | What it holds | Who may import it |
+|---|---|---|
+| `packages/core` | contracts, loop, gate, records, ports | clients |
+| `packages/data` | storage interfaces and models | clients |
+| `packages/capabilities` | bridge and model clients | clients |
+
+Rules:
+
+- `packages/` is neither an app nor a service: no UI, no `main`, no Android SDK.
+- `apps/android` and `apps/windows` never import each other; both import
+  `packages/`.
+- `apps/harmony` (ArkTS, frozen) does not use `packages/`; its own kit stays in
+  `apps/harmony/app`.
+- The folder is `packages`, not `shared`: `shared/` remains rejected as vague,
+  and `libs/` would collide with the Gradle version catalog in this repository.
+- Package names stay `com.hopa.*`; the move changes Gradle paths only.

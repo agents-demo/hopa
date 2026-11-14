@@ -63,10 +63,13 @@ Service documentation lives with the services: [`services/docs/`](../services/do
 |---|---|
 | [plan/README.md](project/plan/README.md) | The active refactor plan, with evidence |
 | [plan/android/README.md](project/plan/android/README.md) | How will the Android app be built, with what effort? |
+| [plan/windows/README.md](project/plan/windows/README.md) | How will the Windows client be built? |
 | [status.md](project/status.md) | Where the daily experience stands, and known debts |
 | [operations/release.md](project/operations/release.md) | How is a release cut? |
 | [operations/versioning.md](project/operations/versioning.md) | How are versions numbered? |
 | [operations/owners.md](project/operations/owners.md) | Who owns what? |
+| [operations/teams.md](project/operations/teams.md) | How does the work split into parallel teams? |
+| [operations/teams-notes.md](project/operations/teams-notes.md) | Why the teams look like this, in plain language? |
 | [operations/sbom.json](project/operations/sbom.json) | What ships in the HAP? |
 | [releases/0.1.0.md](project/releases/0.1.0.md) | The 0.1.0 release note |
 | [archive/README.md](project/archive/README.md) | Dated evidence: measurements, platform limits, provenance |

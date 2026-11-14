@@ -1,0 +1,58 @@
+<Window x:Class="Hopa.Windows.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Settings"
+        Height="560" Width="580"
+        Background="#F7F4EE"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize">
+    <Grid Margin="22">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Settings" FontSize="22" FontWeight="SemiBold" Foreground="#1C1B18" />
+
+        <StackPanel Grid.Row="1" Margin="0,16,0,0">
+            <TextBlock Text="Bridge" FontSize="12" Foreground="#6B665C" />
+            <TextBox x:Name="BridgeUrlBox" Height="32" Margin="0,4,0,0" />
+            <TextBlock Text="Bridge address, e.g. http://127.0.0.1:8901" FontSize="10"
+                       Foreground="#9A9488" Margin="0,3,0,8" />
+            <TextBlock Text="Bridge token" FontSize="12" Foreground="#6B665C" />
+            <PasswordBox x:Name="BridgeTokenBox" Height="32" Margin="0,4,0,8" />
+            <CheckBox x:Name="UseBridgeBox" Content="Use the bridge as the device target"
+                      Foreground="#1C1B18" Margin="0,0,0,12" />
+
+            <TextBlock Text="Model" FontSize="12" Foreground="#6B665C" />
+            <ComboBox x:Name="ProviderBox" Height="32" Margin="0,4,0,8">
+                <ComboBoxItem Content="openai" />
+                <ComboBoxItem Content="lan" />
+            </ComboBox>
+            <TextBlock Text="Base URL" FontSize="12" Foreground="#6B665C" />
+            <TextBox x:Name="BaseUrlBox" Height="32" Margin="0,4,0,8" />
+            <TextBlock Text="Model name" FontSize="12" Foreground="#6B665C" />
+            <TextBox x:Name="ModelNameBox" Height="32" Margin="0,4,0,8" />
+            <TextBlock Text="Model key (stored in Windows Credential Manager)" FontSize="12"
+                       Foreground="#6B665C" />
+            <PasswordBox x:Name="ModelKeyBox" Height="32" Margin="0,4,0,12" />
+
+            <TextBlock Text="Tone" FontSize="12" Foreground="#6B665C" />
+            <ComboBox x:Name="ToneBox" Height="32" Margin="0,4,0,0">
+                <ComboBoxItem Content="warm" />
+                <ComboBoxItem Content="neutral" />
+                <ComboBoxItem Content="brief" />
+            </ComboBox>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right"
+                    Margin="0,16,0,0">
+            <Button x:Name="CancelButton" Content="Cancel" Width="96" Height="34"
+                    Margin="0,0,8,0" IsCancel="True" />
+            <Button x:Name="SaveButton" Content="Save" Width="96" Height="34"
+                    Background="#0A59F7" Foreground="#FFFFFF" BorderThickness="0"
+                    Click="Save_Click" />
+        </StackPanel>
+    </Grid>
+</Window>

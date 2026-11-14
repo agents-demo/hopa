@@ -105,7 +105,7 @@ Build and verify:
 
 ```powershell
 cd apps/android
-.\gradlew.bat :core:check :capabilities:testDebugUnitTest :app:testDebugUnitTest :app:assembleDebug
+.\gradlew.bat :core:check :capabilities:test :capabilities-android:testDebugUnitTest :data:test :app:testDebugUnitTest :app:assembleDebug
 python tools/scripts/android-smoke.py --serial <serial>
 python tools/checks/check-android-structure.py
 ```

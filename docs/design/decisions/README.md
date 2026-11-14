@@ -38,6 +38,7 @@ supersede it. Format:
 | [0018](0018-shared-data-per-client-code.md) | Share the data and the fixtures, not the loop | accepted |
 | [0019](0019-offline-and-model-network.md) | The model needs a network; the shell does not | accepted |
 | [0020](0020-android-is-the-active-client.md) | Android is the active client; Windows is next; Harmony is frozen | accepted |
+| [0021](0021-windows-client-stack.md) | Windows client: .NET shell over the Kotlin engine | accepted |
 
 Create the next ADR by copying the template below.
 

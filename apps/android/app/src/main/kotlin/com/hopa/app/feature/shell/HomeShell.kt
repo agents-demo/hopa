@@ -35,11 +35,15 @@ fun HomeShell(
     val settings by container.settings.settings.collectAsStateWithLifecycle(
         initialValue = AppSettings(),
     )
+    val shared by container.pendingAttachment.collectAsStateWithLifecycle()
+    val sharedNotice by container.pendingNotice.collectAsStateWithLifecycle()
+    val incoming = shared != null || sharedNotice != null
     if (settings.profile == "easy") {
         EasyShell(
             container = container,
             onOpenSettings = onOpenSettings,
             initialGoal = initialGoal,
+            shared = incoming,
         )
         return
     }
@@ -54,11 +58,17 @@ fun HomeShell(
             onOpenDevice = onOpenDevice,
             onOpenBrowser = onOpenBrowser,
             initialGoal = initialGoal,
+            shared = incoming,
         )
         return
     }
 
     var tab by rememberSaveable { mutableStateOf("chat") }
+    androidx.compose.runtime.LaunchedEffect(shared, sharedNotice) {
+        if (shared != null || sharedNotice != null) {
+            tab = "chat"
+        }
+    }
     val selectTab: (String) -> Unit = { key ->
         if (key == "chat" || key == "activity" || key == "capabilities") {
             tab = key
@@ -101,8 +111,14 @@ private fun EasyShell(
     container: AppContainer,
     onOpenSettings: () -> Unit,
     initialGoal: String,
+    shared: Boolean,
 ) {
     var tab by rememberSaveable { mutableStateOf("talk") }
+    androidx.compose.runtime.LaunchedEffect(shared) {
+        if (shared) {
+            tab = "talk"
+        }
+    }
     val select: (String) -> Unit = { key ->
         when (key) {
             "settings" -> onOpenSettings()
@@ -143,9 +159,16 @@ private fun PowerShell(
     onOpenDevice: () -> Unit,
     onOpenBrowser: () -> Unit,
     initialGoal: String,
+    shared: Boolean,
 ) {
     var tab by rememberSaveable { mutableStateOf("chat") }
     var chatStarted by rememberSaveable { mutableStateOf(false) }
+    androidx.compose.runtime.LaunchedEffect(shared) {
+        if (shared) {
+            chatStarted = true
+            tab = "chat"
+        }
+    }
 
     val select: (String) -> Unit = { key ->
         when (key) {

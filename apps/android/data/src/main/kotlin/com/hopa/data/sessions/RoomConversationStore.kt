@@ -44,7 +44,23 @@ class RoomConversationStore(
                 ),
             )
         }
-        session.messages.forEach { turns.insert(ConversationMapper.turn(session.id, it)) }
+        session.messages.forEach { message ->
+            val row = ConversationMapper.turn(session.id, message)
+            val local = turns.byId(row.id)
+            // A snapshot from the bridge carries text only; keep local bytes.
+            turns.insert(
+                if (local == null || message.attachment != null) {
+                    row
+                } else {
+                    row.copy(
+                        attachmentName = local.attachmentName,
+                        attachmentMime = local.attachmentMime,
+                        attachmentBytes = local.attachmentBytes,
+                        attachmentPath = local.attachmentPath,
+                    )
+                },
+            )
+        }
     }
 
     override suspend fun search(query: String): List<Conversation> =

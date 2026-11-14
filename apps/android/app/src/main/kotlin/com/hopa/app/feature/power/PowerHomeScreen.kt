@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -53,7 +54,11 @@ fun PowerHomeScreen(
                 )
             }
         },
-        bottomBar = { HopaBottomBar(active = active, onSelect = onSelectTab) },
+        bottomBar = {
+            Column(modifier = Modifier.navigationBarsPadding()) {
+                HopaBottomBar(active = active, onSelect = onSelectTab)
+            }
+        },
     ) { padding ->
         Column(
             modifier = Modifier

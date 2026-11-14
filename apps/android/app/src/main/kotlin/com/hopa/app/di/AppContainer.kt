@@ -35,6 +35,10 @@ class AppContainer(context: Context) {
     val cancelRequested = MutableStateFlow(false)
     /** A goal handed to the chat by a profile home (Power's command bar). */
     val pendingGoal = MutableStateFlow<String?>(null)
+    /** A file shared into the app, waiting in the composer. */
+    val pendingAttachment = MutableStateFlow<com.hopa.data.sessions.Attachment?>(null)
+    val pendingNotice = MutableStateFlow<String?>(null)
+    val intake = com.hopa.app.share.AttachmentIntake(context)
     val packages = AndroidPackageCatalog(context)
     val recorder = RoomRunRecorder(database.runRecordDao())
     val pendingApprovals = com.hopa.data.approvals.RoomPendingApprovalStore(

@@ -35,6 +35,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -46,6 +47,7 @@ import androidx.core.content.ContextCompat
 import com.hopa.app.feature.chat.component.ChatEmptyState
 import com.hopa.app.feature.chat.component.Composer
 import com.hopa.app.feature.chat.component.MessageBubble
+import com.hopa.app.feature.chat.component.PendingAttachmentRow
 import com.hopa.app.ui.component.ApprovalSheet
 import com.hopa.app.ui.component.HopaBottomBar
 import com.hopa.app.ui.component.HopaBottomBarEasy
@@ -73,6 +75,8 @@ fun ChatScreen(
     onSpeak: (String) -> Unit,
     onRetry: () -> Unit,
     onUndo: () -> Unit,
+    onDiscardAttachment: () -> Unit,
+    onDismissAttachmentNotice: () -> Unit,
     easy: Boolean = false,
     onOpenSettings: () -> Unit = {},
 ) {
@@ -96,8 +100,12 @@ fun ChatScreen(
             micPermission.launch(Manifest.permission.RECORD_AUDIO)
         }
     }
-    LaunchedEffect(messages.size) {
+    LaunchedEffect(messages.size, state.busy) {
         if (messages.isNotEmpty()) {
+            // Two passes: the first scroll runs on estimated item heights, and a
+            // tall attachment bubble settles only after the next measure.
+            listState.animateScrollToItem(messages.lastIndex)
+            withFrameNanos { }
             listState.animateScrollToItem(messages.lastIndex)
         }
     }
@@ -199,6 +207,13 @@ fun ChatScreen(
                         }
                     }
                 }
+                state.attachment?.let { attachment ->
+                    PendingAttachmentRow(
+                        attachment = attachment,
+                        onDiscard = onDiscardAttachment,
+                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp),
+                    )
+                }
                 Box(
                     modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 10.dp),
                 ) {
@@ -216,6 +231,17 @@ fun ChatScreen(
                                 requestMic()
                             }
                         },
+                        hasAttachment = state.attachment != null,
+                    )
+                }
+                state.attachmentNotice?.let { notice ->
+                    Text(
+                        notice,
+                        fontSize = 11.sp,
+                        color = HopaColor.Danger,
+                        modifier = Modifier
+                            .clickable(onClick = onDismissAttachmentNotice)
+                            .padding(start = 20.dp, end = 20.dp, bottom = 4.dp),
                     )
                 }
                 if (state.transcribing) {

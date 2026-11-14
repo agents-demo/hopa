@@ -5,7 +5,7 @@ phone code (UI, core, capabilities, shared services, bridge); the checklist was
 reconciled with the code on 2026-11-13.
 Owner: TBD.
 
-Progress on 2026-11-13: **60 of 135 phase items (44.4%)**, **61 of 149 (40.9%)**
+Progress on 2026-11-14: **61 of 135 phase items (45.2%)**, **62 of 149 (41.6%)**
 with the Definition of done and the open decisions.
 
 Read that number correctly. It counts *finished items*, not effort: an item is
@@ -380,7 +380,7 @@ apps/android/
 - [x] Device control page: bridge vs on-device states, both setup flows, retry, "cannot act" honesty. (evidence: DeviceScreen: states, retry, both setup links, honesty; docs/project/evidence/A11-screens.md)
 - [ ] Settings: profile, agent switches (including `notifyAnswers`), appearance, phone access, model, character (tone/chattiness/voice/preview), parent PIN, bridge wizard (adb + pair), logs, live screen, self-check, developer, test notification, about, export, license, welcome.
 - [ ] Fix the three Settings fall-through rows; do not build Models/Source.
-- [ ] Inbound share target (text/image/file, max 1) + `ACTION_PROCESS_TEXT` → pending goal in the composer.
+- [x] Inbound share target (text/image/file, max 1) + `ACTION_PROCESS_TEXT` → pending goal in the composer. (evidence: AttachmentIntake 4 MiB cap; Room v5 + mapper; live share, send and restart on emulator-5554; docs/project/evidence/A11-share-target.md)
 - [ ] MCP page (static, Android-accurate), License page.
 - [ ] Evidence: per-screen assertion (see §8), not just "opens".
 
@@ -397,7 +397,7 @@ apps/android/
 ### A13. Evaluation, hardening, release (9 d)
 
 - [ ] `services/evals`: task `platform` field, Android bundle map, one Android task through the adb bridge.
-- [x] `build-app-catalog.py --kotlin apps/android/.../AppCatalog.kt`: commit the generated Kotlin catalogue; CI `--check` keeps it current. (evidence: AppCatalog.kt generated; CI --check)
+- [x] `build-app-catalog.py --kotlin packages/core/.../AppCatalog.kt`: commit the generated Kotlin catalogue; CI `--check` keeps it current. (evidence: AppCatalog.kt generated; CI --check)
 - [ ] Launch-config hooks for automation (provider/endpoint/model/key/bridge URL/token) as `adb`-set extras, documented.
 - [ ] Emulator E2E per path; device E2E ("open Douyin and tell me what you see") on a real Android phone.
 - [ ] Conformance green on JVM and on-device.
@@ -451,6 +451,7 @@ Goal: decide with measurements, not enthusiasm, whether a model can live in the 
 | Accessibility | observation equals the bridge-path observation for the fixture screen (refs + hash); `FLAG_SECURE` yields an honest failure | artifact |
 | Sync | delete on A, edit on B, sync → deleted stays deleted; failure keeps local | two-device transcript |
 | Chat | send via hardware Enter and IME Send; Shift+Enter newline; mic fills only | screenshots |
+| Share | inbound `ACTION_SEND` image lands in the composer with a thumbnail, nothing sent until tap; a file over 4 MiB is refused with a notice | screenshot + `files/attachments` listing |
 | Approval | rotate the device while the sheet is open → still pending, then allow; kill the process → denied | video/log |
 | Runs | after a run, the record appears; replay advances; receipt copies | screenshot |
 | Plans | a scheduled run fires while the app is alive (or WorkManager path if chosen) | log |

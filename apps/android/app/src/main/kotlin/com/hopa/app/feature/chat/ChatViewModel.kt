@@ -8,6 +8,8 @@ import com.hopa.app.di.AppContainer
 import com.hopa.core.gate.ApprovalRequest
 import com.hopa.core.loop.TurnContext
 import com.hopa.core.model.ModelMessage
+import com.hopa.data.sessions.Attachment
+import com.hopa.data.sessions.AttachmentRules
 import com.hopa.data.sessions.ChatMessage
 import java.util.UUID
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,6 +32,18 @@ class ChatViewModel(
         viewModelScope.launch {
             container.approval.pending.collect { request ->
                 _state.update { it.copy(pendingApproval = request) }
+            }
+        }
+        viewModelScope.launch {
+            container.pendingAttachment.collect { attachment ->
+                if (attachment?.path != _state.value.attachment?.path) {
+                    _state.update { it.copy(attachment = attachment) }
+                }
+            }
+        }
+        viewModelScope.launch {
+            container.pendingNotice.collect { notice ->
+                _state.update { it.copy(attachmentNotice = notice) }
             }
         }
         viewModelScope.launch {
@@ -153,10 +167,27 @@ class ChatViewModel(
 
     fun send() {
         val text = _state.value.input.trim()
-        if (text.isEmpty() || _state.value.busy) {
+        val attachment = _state.value.attachment
+        if ((text.isEmpty() && attachment == null) || _state.value.busy) {
             return
         }
-        sendText(text)
+        sendText(text, attachment = attachment)
+    }
+
+    /** Drop the shared file before it is sent, and remove its bytes. */
+    fun discardAttachment() {
+        val attachment = _state.value.attachment
+        container.pendingAttachment.value = null
+        container.pendingNotice.value = null
+        _state.update { it.copy(attachment = null, attachmentNotice = null) }
+        if (attachment != null) {
+            viewModelScope.launch { container.intake.delete(attachment) }
+        }
+    }
+
+    fun dismissAttachmentNotice() {
+        container.pendingNotice.value = null
+        _state.update { it.copy(attachmentNotice = null) }
     }
 
     fun sendOption(option: String) {
@@ -202,9 +233,25 @@ class ChatViewModel(
         container.approval.resolve(allow)
     }
 
-    private fun sendText(text: String, appendUser: Boolean = true) {
+    private fun sendText(
+        text: String,
+        attachment: Attachment? = null,
+        appendUser: Boolean = true,
+    ) {
         val conversation = _state.value.current ?: return
-        _state.update { it.copy(input = "", busy = true, error = null, options = emptyList()) }
+        val body = text.ifBlank { attachment?.let(AttachmentRules::describe).orEmpty() }
+        _state.update {
+            it.copy(
+                input = "",
+                busy = true,
+                error = null,
+                options = emptyList(),
+                attachment = null,
+                attachmentNotice = null,
+            )
+        }
+        container.pendingAttachment.value = null
+        container.pendingNotice.value = null
         container.busy.value = true
         container.cancelRequested.value = false
         startRunService()
@@ -216,8 +263,9 @@ class ChatViewModel(
                     ChatMessage(
                         id = "m-$now-${UUID.randomUUID().toString().take(6)}",
                         role = "user",
-                        text = text,
+                        text = body,
                         timestamp = now,
+                        attachment = attachment,
                     ),
                 )
             }

@@ -5,9 +5,13 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -59,12 +63,26 @@ fun MessageBubble(
                     color = HopaColor.Primary,
                     shape = RoundedCornerShape(18.dp),
                 ) {
-                    Text(
-                        text = message.text,
+                    Column(
                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                        color = HopaColor.OnPrimary,
-                        fontSize = 15.sp,
-                    )
+                    ) {
+                        message.attachment?.let { attachment ->
+                            AttachmentPreview(
+                                attachment = attachment,
+                                modifier = Modifier.widthIn(max = 220.dp),
+                            )
+                            if (message.text.isNotBlank()) {
+                                Spacer(modifier = Modifier.height(6.dp))
+                            }
+                        }
+                        if (message.text.isNotBlank()) {
+                            Text(
+                                text = message.text,
+                                color = HopaColor.OnPrimary,
+                                fontSize = 15.sp,
+                            )
+                        }
+                    }
                 }
             } else {
                 HopaMascot(sizeDp = 26.dp, animate = false)

@@ -22,11 +22,19 @@ the Android plan; it is not parity with the Harmony app yet.
 
 ```
 apps/android/
-├─ app/            Compose shell, navigation, features, DI
-├─ core/           contracts, loop, parser, prompt, gate, records, ports
-├─ capabilities/   model clients, system intents, package catalogue, device
-├─ data/           settings, secrets, conversations
-└─ testing/        fakes for tests
+├─ app/                Compose shell, navigation, features, DI
+├─ capabilities-android/ accessibility, browser, system, voice (Android capabilities)
+├─ data-android/       Room, DataStore and Keystore implementations
+└─ testing/            fakes for tests
+```
+
+The pure Kotlin modules live in `packages/`:
+
+```
+packages/
+├─ core/            contracts, loop, parser, prompt, gate, records, ports
+├─ data/            settings, secrets, conversations, memory, skills (interfaces)
+└─ capabilities/    model clients and the bridge client
 ```
 
 ## Build and run

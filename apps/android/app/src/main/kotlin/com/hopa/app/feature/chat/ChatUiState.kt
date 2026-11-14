@@ -1,6 +1,7 @@
 package com.hopa.app.feature.chat
 
 import com.hopa.core.gate.ApprovalRequest
+import com.hopa.data.sessions.Attachment
 import com.hopa.data.sessions.Conversation
 
 data class ChatUiState(
@@ -14,4 +15,6 @@ data class ChatUiState(
     val recording: Boolean = false,
     val transcribing: Boolean = false,
     val voiceError: String? = null,
+    val attachment: Attachment? = null,
+    val attachmentNotice: String? = null,
 )
