@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke the Windows client: one turn, the conversation list, a screenshot.
+"""Smoke the Windows client: one turn, the list, settings, drafts, a screenshot.
 
 Local-only: it needs a Windows desktop with the sidecar built. The CI jobs do
 not run it.
@@ -20,10 +20,21 @@ EXE = ROOT / "apps" / "windows" / "Hopa.Windows" / "bin" / "Debug" / "net8.0-win
 SHOT = ROOT / "docs" / "media" / "windows-w1.png"
 
 
+def _run(*args: str, timeout: int = 180) -> None:
+    subprocess.run([str(EXE), *args], check=True, timeout=timeout)
+
+
 def run(*args: str, timeout: int = 180) -> str:
     out = Path(tempfile.gettempdir()) / f"hopa-windows-{uuid.uuid4().hex}.txt"
-    command = [str(EXE), *args, "--out", str(out)]
-    subprocess.run(command, check=True, timeout=timeout)
+    _run(*args, "--out", str(out), timeout=timeout)
+    text = out.read_text(encoding="utf-8")
+    out.unlink(missing_ok=True)
+    return text
+
+
+def run_check(flag: str, timeout: int = 120) -> str:
+    out = Path(tempfile.gettempdir()) / f"hopa-windows-{uuid.uuid4().hex}.txt"
+    _run(flag, str(out), timeout=timeout)
     text = out.read_text(encoding="utf-8")
     out.unlink(missing_ok=True)
     return text
@@ -45,8 +56,20 @@ def main() -> int:
         print("the conversation list is empty:\n" + listed)
         return 1
 
+    settings = run_check("--settings-check")
+    if "settings round-trip: ok" not in settings or "credential round-trip: ok" not in settings:
+        print("settings failed:\n" + settings)
+        return 1
+
+    drafts = run_check("--draft-check")
+    if "draft round-trip: ok" not in drafts:
+        print("drafts failed:\n" + drafts)
+        return 1
+
     print("turn: ok")
     print("list: ok")
+    print("settings: ok")
+    print("drafts: ok")
     print(f"screenshot: {SHOT}")
     return 0
 

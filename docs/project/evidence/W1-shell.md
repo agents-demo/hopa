@@ -47,6 +47,8 @@ restart proof: the second process loaded the first process's thread.
 ```
 turn: ok
 list: ok
+settings: ok
+drafts: ok
 screenshot: docs/media/windows-w1.png
 ```
 
@@ -62,11 +64,39 @@ composer).
   repeated the old goal. It reads the last user message that is not a SCREEN
   render.
 
+## Settings and drafts
+
+- **Settings** (`docs/media/windows-settings.png`): bridge address and token, the
+  bridge toggle, model provider and base URL, model key, tone. Non-secrets go to
+  `%LOCALAPPDATA%\HOPA\settings.json`; the bridge token and model key go to
+  Windows Credential Manager (`hopa.bridge.token`, `hopa.model.key`).
+- The dialog's values reach the sidecar as one `configure` message:
+
+  ```
+  sidecar: [sidecar] configured: bridge=off url=- model=openai tone=warm
+  ```
+
+  The summary carries no secret; the sidecar keeps them in memory only.
+- Round-trip checks (`Hopa.Windows.exe --settings-check`):
+
+  ```
+  settings round-trip: ok
+  credential round-trip: ok
+  credential delete: ok
+  settings file: C:\Users\m00645993\AppData\Local\HOPA\settings.json
+  ```
+
+- **Draft reuse** (`Hopa.Windows.exe --draft-check`): type in conversation A,
+  switch to B, switch back:
+
+  ```
+  composer after switch: '' (expected '')
+  draft restored: 'draft one' (expected 'draft one')
+  draft round-trip: ok
+  ```
+
 ## Not done
 
-- Settings (model provider and key in Credential Manager, bridge address and
-  token, tone): the box is open.
-- Draft reuse needs a hand check: switch conversation, type, switch back.
 - The model is still the scripted `SpikeModel`; a real provider, approvals and
   stored run records are W2.
 - No share, voice, notifications or tray yet (W4).

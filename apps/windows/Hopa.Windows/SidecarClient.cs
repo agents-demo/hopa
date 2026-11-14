@@ -150,6 +150,21 @@ public sealed class SidecarClient : IAsyncDisposable
         return response["conversation"] as JsonObject;
     }
 
+    public async Task<JsonObject> ConfigureAsync(AppSettings settings, string bridgeToken, string modelKey)
+    {
+        var fields = new JsonObject
+        {
+            ["bridgeUrl"] = settings.BridgeUrl,
+            ["useBridge"] = settings.UseBridge,
+            ["bridgeToken"] = bridgeToken,
+            ["modelProvider"] = settings.ModelProvider,
+            ["modelBaseUrl"] = settings.ModelBaseUrl,
+            ["modelKey"] = modelKey,
+            ["tone"] = settings.Tone,
+        };
+        return await RequestAsync("configure", fields, TimeSpan.FromSeconds(10));
+    }
+
     public void SendDeviceResult(string id, bool ok, string? error = null)
     {
         var message = new JsonObject

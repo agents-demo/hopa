@@ -51,6 +51,13 @@ object Protocol {
         }
     }
 
+    fun configured(id: String, bridge: Boolean, model: String): JsonObject = buildJsonObject {
+        put("type", "configured")
+        put("id", id)
+        put("bridge", bridge)
+        put("model", model)
+    }
+
     fun deviceRequest(id: String, op: String, fields: JsonObjectBuilder.() -> Unit): JsonObject =
         buildJsonObject {
             put("type", "device.request")

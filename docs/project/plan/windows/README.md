@@ -1,6 +1,6 @@
 # Windows client plan
 
-Status: **v1, W1 in progress (4 of 6 W1 items).** Written 2026-11-14 from the
+Status: **v1, W1 complete (6 of 6); W2 next.** Written 2026-11-14 from the
 Android plan, the expansion portfolio and ADR-0021.
 
 Android is the active client; Windows is next; Harmony is frozen (ADR-0020).
@@ -90,8 +90,8 @@ and the `uiAccess` helper exist to prove it.
 
 - [x] Window chrome, sidebar, conversation list, chat column, composer; the laptop layout from `apps/harmony/laptop`. (evidence: docs/media/windows-w1.png; docs/project/evidence/W1-shell.md)
 - [x] Conversation persistence through the sidecar (JSON store): restart keeps history. (evidence: W1-shell "Verification": same conversation id across two runs, 4 messages in the list)
-- [ ] Draft reuse per conversation, like Android.
-- [ ] Settings: model provider and key (Windows Credential Manager), bridge address and token, profile tone.
+- [x] Draft reuse per conversation, like Android. (evidence: W1-shell "Settings and drafts": draft round-trip: ok; tools/scripts/windows-smoke.py drafts: ok)
+- [x] Settings: model provider and key (Windows Credential Manager), bridge address and token, profile tone. (evidence: docs/media/windows-settings.png; W1-shell "Settings and drafts": settings/credential round-trip ok; configure log)
 - [x] Theme: the same cream/orange palette and mascot rhythm. (evidence: docs/media/windows-w1.png; palette copied from HopaColor)
 - [x] Smoke script `tools/scripts/windows-smoke.py` (start, send, screenshot, assert) and screenshots in `docs/project/evidence/W1-shell.md`. (evidence: W1-shell "Verification"; script output turn: ok / list: ok)
 

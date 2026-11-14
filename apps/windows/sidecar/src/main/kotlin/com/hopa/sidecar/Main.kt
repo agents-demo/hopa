@@ -13,6 +13,7 @@ fun main() {
         ?: Path.of(System.getProperty("user.home"), ".hopa", "windows")
     val store = ChatStore(dataDir.resolve("conversations.json"))
     val engine = Engine(io, device, store)
+    val config = RuntimeConfig()
     io.send(Protocol.ready())
     io.log("ready (protocol v${Protocol.VERSION}), conversations at $dataDir")
     while (true) {
@@ -29,6 +30,12 @@ fun main() {
 
             "conversation.open" ->
                 io.send(Protocol.conversationOpened(message.text("id"), store.get(message.text("conversationId"))))
+
+            "configure" -> {
+                config.update(message)
+                io.log("configured: ${config.summary()}")
+                io.send(Protocol.configured(message.text("id"), config.useBridge, config.modelProvider))
+            }
 
             "turn.start" -> engine.startTurn(
                 id = message.text("id"),

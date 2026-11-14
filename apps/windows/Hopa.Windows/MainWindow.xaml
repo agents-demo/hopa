@@ -42,6 +42,9 @@
                     <Button Content="+ New chat" Margin="0,12,0,0" Height="34"
                             Background="#FFFFFF" BorderBrush="#E9E4DA" Click="NewChat_Click" />
                 </StackPanel>
+                <Button DockPanel.Dock="Bottom" x:Name="SettingsButton" Content="Settings"
+                        Margin="12,8,12,12" Height="32" Background="Transparent"
+                        BorderThickness="0" Foreground="#6B665C" Click="Settings_Click" />
                 <ListBox x:Name="ConversationList" BorderThickness="0" Background="Transparent"
                          ItemTemplate="{StaticResource ConversationTemplate}"
                          SelectionChanged="ConversationList_SelectionChanged" />

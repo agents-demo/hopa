@@ -35,6 +35,24 @@ public partial class App : Application
         {
             string? output = args.Length >= 3 && args[1] == "--out" ? args[2] : null;
             _ = window.ListAsync(output);
+            return;
+        }
+
+        if (args.Length >= 2 && args[0] == "--shot-settings")
+        {
+            _ = window.ShotSettingsAsync(args[1]);
+            return;
+        }
+
+        if (args.Length >= 2 && args[0] == "--settings-check")
+        {
+            _ = window.SettingsCheckAsync(args[1]);
+            return;
+        }
+
+        if (args.Length >= 2 && args[0] == "--draft-check")
+        {
+            _ = window.DraftCheckAsync(args[1]);
         }
     }
 }

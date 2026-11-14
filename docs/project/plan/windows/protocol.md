@@ -14,7 +14,8 @@ and update this file in the same commit.
 | type | fields | meaning |
 |---|---|---|
 | `hello` | - | optional; the sidecar answers `ready` anyway at start |
-| `turn.start` | `id`, `goal` | run one turn for this goal |
+| `turn.start` | `id`, `goal`, `conversationId?` | run one turn for this goal, in that conversation (a blank id creates one) |
+| `configure` | `bridgeUrl`, `useBridge`, `bridgeToken`, `modelProvider`, `modelBaseUrl`, `modelKey`, `tone` | the host pushes settings; secrets are held in memory only |
 | `device.result` | `id`, `ok`, `error?` | the host performed the requested device action |
 | `shutdown` | - | the host is closing; the sidecar exits |
 
@@ -23,6 +24,7 @@ and update this file in the same commit.
 | type | fields | meaning |
 |---|---|---|
 | `ready` | `version` | the loop is loaded and the sidecar can take a turn |
+| `configured` | `id`, `bridge`, `model` | settings were accepted; the summary carries no secrets |
 | `log` | `text` | a human-readable line for the host's log |
 | `device.request` | `id`, `op`, plus op fields | perform one device action on the host |
 | `turn.end` | `id`, `answer` | the turn finished; `answer` is what the user sees |

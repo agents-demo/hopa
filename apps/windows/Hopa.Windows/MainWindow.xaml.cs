@@ -100,17 +100,99 @@ public partial class MainWindow : Window
         Application.Current.Shutdown();
     }
 
-    public void SaveShot(string path)
+    public void SaveShot(string path) => WindowShot.Save(this, path);
+
+    public async Task ShotSettingsAsync(string path)
     {
-        UpdateLayout();
-        var width = (int)Math.Max(ActualWidth, 1);
-        var height = (int)Math.Max(ActualHeight, 1);
-        var bitmap = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
-        bitmap.Render(this);
-        var encoder = new PngBitmapEncoder();
-        encoder.Frames.Add(BitmapFrame.Create(bitmap));
-        using var stream = File.Create(path);
-        encoder.Save(stream);
+        await ConnectAsync();
+        var dialog = new SettingsWindow { Owner = this };
+        dialog.Show();
+        await Task.Delay(600);
+        WindowShot.Save(dialog, path);
+        dialog.Close();
+        Application.Current.Shutdown();
+    }
+
+    public async Task DraftCheckAsync(string path)
+    {
+        await ConnectAsync();
+        var lines = new List<string>();
+        if (client == null || currentId == null)
+        {
+            lines.Add("draft round-trip: FAIL (not connected)");
+            File.WriteAllLines(path, lines);
+            Application.Current.Shutdown();
+            return;
+        }
+
+        var firstId = currentId;
+        var other = conversations.FirstOrDefault(item => item.Id != firstId);
+        if (other == null)
+        {
+            var created = await client.CreateConversationAsync();
+            var id = created?["id"]?.GetValue<string>();
+            if (id != null)
+            {
+                conversations.Add(ToVm(created!));
+                other = conversations.First(item => item.Id == id);
+            }
+        }
+
+        if (other == null)
+        {
+            lines.Add("draft round-trip: FAIL (no second conversation)");
+            File.WriteAllLines(path, lines);
+            Application.Current.Shutdown();
+            return;
+        }
+
+        Composer.Text = "draft one";
+        await SelectAsync(other.Id);
+        var cleared = Composer.Text;
+        await SelectAsync(firstId);
+        var restored = Composer.Text;
+        lines.Add($"second conversation: {other.Id}");
+        lines.Add($"composer after switch: '{cleared}' (expected '')");
+        lines.Add($"draft restored: '{restored}' (expected 'draft one')");
+        lines.Add($"draft round-trip: {(cleared.Length == 0 && restored == "draft one" ? "ok" : "FAIL")}");
+        File.WriteAllLines(path, lines);
+        Application.Current.Shutdown();
+    }
+
+    public Task SettingsCheckAsync(string path)
+    {
+        var store = new SettingsStore();
+        var original = store.Load();
+        var probe = new AppSettings
+        {
+            BridgeUrl = "http://127.0.0.1:8901",
+            UseBridge = true,
+            ModelProvider = "lan",
+            ModelBaseUrl = "http://127.0.0.1:11434/v1",
+            Tone = "neutral",
+        };
+        store.Save(probe);
+        var loaded = store.Load();
+        var settingsOk = loaded.BridgeUrl == probe.BridgeUrl
+            && loaded.UseBridge
+            && loaded.ModelProvider == "lan"
+            && loaded.Tone == "neutral";
+
+        CredentialStore.Write("hopa.test.secret", "s3cret");
+        var secretOk = CredentialStore.Read("hopa.test.secret") == "s3cret";
+        CredentialStore.Delete("hopa.test.secret");
+        var gone = CredentialStore.Read("hopa.test.secret").Length == 0;
+
+        store.Save(original);
+        File.WriteAllLines(path, new[]
+        {
+            $"settings round-trip: {(settingsOk ? "ok" : "FAIL")}",
+            $"credential round-trip: {(secretOk ? "ok" : "FAIL")}",
+            $"credential delete: {(gone ? "ok" : "FAIL")}",
+            $"settings file: {store.FilePath}",
+        });
+        Application.Current.Shutdown();
+        return Task.CompletedTask;
     }
 
     private async Task ConnectAsync()
@@ -129,6 +211,7 @@ public partial class MainWindow : Window
             client = started;
             StatusText.Text = "Ready";
             await RefreshAsync();
+            await ApplySettingsAsync();
         }
         catch (Exception error)
         {
@@ -272,8 +355,39 @@ public partial class MainWindow : Window
         conversations.Insert(0, new ConversationVm { Id = id, Title = title, UpdatedLabel = "now" });
     }
 
-    private async void NewChat_Click(object sender, RoutedEventArgs e)
+    private async void Settings_Click(object sender, RoutedEventArgs e)
     {
+        var dialog = new SettingsWindow { Owner = this };
+        if (dialog.ShowDialog() == true)
+        {
+            await ApplySettingsAsync();
+            StatusText.Text = "Settings saved";
+        }
+    }
+
+    private async Task ApplySettingsAsync()
+    {
+        if (client == null)
+        {
+            return;
+        }
+
+        try
+        {
+            var settings = new SettingsStore().Load();
+            await client.ConfigureAsync(
+                settings,
+                CredentialStore.Read("hopa.bridge.token"),
+                CredentialStore.Read("hopa.model.key"));
+        }
+        catch (Exception error)
+        {
+            StatusText.Text = error.Message;
+            Log($"error: {error.Message}");
+        }
+    }
+
+    private async void NewChat_Click(object sender, RoutedEventArgs e)    {
         if (client == null)
         {
             return;
