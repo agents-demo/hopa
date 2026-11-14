@@ -25,6 +25,7 @@ fun CapabilitiesRoute(
     onOpenUsage: () -> Unit,
     onOpenMemory: () -> Unit,
     onOpenDevice: () -> Unit,
+    onOpenBrowser: () -> Unit,
 ) {
     var provider by remember { mutableStateOf(ProviderState.DEMO) }
     var endpoint by remember { mutableStateOf("") }
@@ -60,6 +61,7 @@ fun CapabilitiesRoute(
         onOpenLaunchpad = onOpenLaunchpad,
         onOpenSettings = onOpenSettings,
         onOpenDevice = onOpenDevice,
+        onOpenBrowser = onOpenBrowser,
         onOpenRuns = onOpenRuns,
         onOpenUsage = onOpenUsage,
         onOpenMemory = onOpenMemory,

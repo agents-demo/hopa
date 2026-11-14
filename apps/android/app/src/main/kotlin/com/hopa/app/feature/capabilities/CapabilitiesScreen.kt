@@ -53,6 +53,7 @@ fun CapabilitiesScreen(
     onOpenLaunchpad: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenDevice: () -> Unit,
+    onOpenBrowser: () -> Unit,
     onOpenRuns: () -> Unit,
     onOpenUsage: () -> Unit,
     onOpenMemory: () -> Unit,
@@ -154,7 +155,7 @@ fun CapabilitiesScreen(
                 Tile(
                     title = "Browser",
                     subtitle = "Read, click and type",
-                    onClick = { onUnavailable("Browser") },
+                    onClick = onOpenBrowser,
                     modifier = Modifier.weight(1f),
                 )
             }

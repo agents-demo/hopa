@@ -28,6 +28,7 @@ fun HomeShell(
     onOpenUsage: () -> Unit,
     onOpenMemory: () -> Unit,
     onOpenDevice: () -> Unit,
+    onOpenBrowser: () -> Unit,
     initialGoal: String = "",
 ) {
     val settings by container.settings.settings.collectAsStateWithLifecycle(
@@ -68,6 +69,7 @@ fun HomeShell(
             onOpenUsage = onOpenUsage,
             onOpenMemory = onOpenMemory,
             onOpenDevice = onOpenDevice,
+            onOpenBrowser = onOpenBrowser,
         )
 
         else -> ChatRoute(

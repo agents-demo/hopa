@@ -8,6 +8,7 @@ import com.hopa.app.di.AppContainer
 import com.hopa.app.feature.launchpad.LaunchpadRoute
 import com.hopa.app.feature.memory.MemoryRoute
 import com.hopa.app.feature.device.DeviceRoute
+import com.hopa.app.feature.browser.BrowserRoute
 import com.hopa.app.feature.profiles.ProfilesRoute
 import com.hopa.app.feature.runs.RunsRoute
 import com.hopa.app.feature.settings.AccessibilityRoute
@@ -28,6 +29,7 @@ fun HopaNavHost(container: AppContainer, initialGoal: String = "") {
                 onOpenUsage = { navController.navigate(HopaDestination.USAGE) },
                 onOpenMemory = { navController.navigate(HopaDestination.MEMORY) },
                 onOpenDevice = { navController.navigate(HopaDestination.DEVICE) },
+                onOpenBrowser = { navController.navigate(HopaDestination.BROWSER) },
                 initialGoal = initialGoal,
             )
         }
@@ -42,6 +44,9 @@ fun HopaNavHost(container: AppContainer, initialGoal: String = "") {
                 container = container,
                 onBack = { navController.popBackStack() },
             )
+        }
+        composable(HopaDestination.BROWSER) {
+            BrowserRoute(onBack = { navController.popBackStack() })
         }
         composable(HopaDestination.DEVICE) {
             DeviceRoute(
