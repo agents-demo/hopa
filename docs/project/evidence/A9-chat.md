@@ -32,10 +32,25 @@ Screens: `docs/media/android-chat-2026-11-13.png`,
 
 ## Update 2026-11-14: deep link, shortcuts and message actions
 
-- `hopa://ask?text=...` opens the composer prefilled; verified with `am start -a android.intent.action.VIEW -d 'hopa://ask?text=hello%20from%20link'`: the field contained `hello from link` and nothing was sent.`n- `ACTION_PROCESS_TEXT` (text/plain) feeds the same prefill path, so selected text can be sent to HOPA from another app.
+- `hopa://ask?text=...` opens the composer prefilled; verified with `am start -a android.intent.action.VIEW -d 'hopa://ask?text=hello%20from%20link'`: the field contained `hello from link` and nothing was sent.
+- `ACTION_PROCESS_TEXT` (text/plain) feeds the same prefill path, so selected text can be sent to HOPA from another app.
 - A static shortcut `Ask HOPA` targets the same deep link.
 - Long-press on a message opens Copy / Share; the menu was observed on the emulator at `Copy`/`Share`.
 - Enter sends, Shift+Enter keeps the line break (checked live earlier).
 
-Still open in A9: typed routes, predictive back, service-owned approval, step chips/verification/What HOPA saw, undo/retry, TalkBack and 200% font pass.
+Still open in A9: typed routes, predictive back, service-owned approval, step chips/verification/What HOPA saw, TalkBack and 200% font pass.
+
+## Update 2026-11-14: undo and inbound text shares
+
+- **Undo last exchange** is in the assistant message menu: it removes the last
+  two turns (`TurnDao.dropLast`, `ConversationStore.dropLastExchange`) and
+  reloads the thread. `DropLastExchangeTest` covers the in-memory behaviour.
+- **Retry** re-runs the last user goal without appending the user message again.
+- `ACTION_SEND` `text/plain` is an inbound share target next to
+  `ACTION_PROCESS_TEXT`; the text lands in the composer, not sent. Verified with
+  `am start -a android.intent.action.SEND -t text/plain --es
+  android.intent.extra.TEXT 'hello from share'`: the field showed
+  `hello from share`.
+- The message menu now holds Copy / Share / Undo last exchange / Retry / Read
+  aloud, verified on the emulator.
 
