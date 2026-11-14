@@ -50,7 +50,7 @@ def relative_package(path: Path) -> str | None:
 def check() -> list[str]:
     problems: list[str] = []
     for path in kotlin_files():
-        text = path.read_text(encoding="utf-8")
+        text = path.read_text(encoding="utf-8").lstrip("\ufeff")
         if path.stem in BANNED:
             problems.append(f"{path.relative_to(ROOT)}: banned file name")
         expected = relative_package(path)

@@ -1,4 +1,4 @@
-﻿package com.hopa.data.sessions
+package com.hopa.data.sessions
 
 import kotlinx.serialization.Serializable
 
