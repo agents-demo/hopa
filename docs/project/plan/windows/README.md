@@ -1,7 +1,7 @@
 # Windows client plan
 
-Status: **v1, not started.** Written 2026-11-14 from the Android plan, the
-expansion portfolio and ADR-0021.
+Status: **v1, W0 in progress (6 of 7 W0 items).** Written 2026-11-14 from the
+Android plan, the expansion portfolio and ADR-0021.
 
 Android is the active client; Windows is next; Harmony is frozen (ADR-0020).
 This plan is counted on its own:
@@ -72,17 +72,19 @@ window -> sidecar -> core loop -> DevicePort
 
 ## 5. Phases
 
-### W0. Decision and spike (2 weeks)
+### W0. Decision and spike (2 weeks, W0 in progress)
 
-- [ ] ADR-0021 accepted, linked from the decisions index and this plan.
-- [ ] `apps/windows/sidecar` Gradle build includes `packages/core` and `packages/capabilities`.
-- [ ] NDJSON protocol v0 written down: message names, fields, version, error shape.
-- [ ] A WPF window starts the sidecar, sends `turn.start` and shows the answer.
-- [ ] One UIA click in Notepad goes through `device.request` -> FlaUI -> `device.result`.
+- [x] ADR-0021 accepted, linked from the decisions index and this plan. (evidence: docs/design/decisions/0021-windows-client-stack.md; decisions index)
+- [x] `apps/windows/sidecar` Gradle build includes `packages/core` and `packages/capabilities`. (evidence: apps/windows/sidecar/settings.gradle.kts; `installDist` green; docs/project/evidence/W0-spike.md)
+- [x] NDJSON protocol v0 written down: message names, fields, version, error shape. (evidence: docs/project/plan/windows/protocol.md)
+- [x] A WPF window starts the sidecar, sends `turn.start` and shows the answer. (evidence: docs/media/windows-w0.png; W0-spike "One turn from the window")
+- [x] One UIA click in Notepad goes through `device.request` -> FlaUI -> `device.result`. (evidence: W0-spike "One UIA click": "clicked Notepad ... at 640,464")
 - [ ] Honest failure: a secure window (UAC prompt or a `FLAG_SECURE`-like surface) returns "cannot see or touch"; the app says so.
-- [ ] Spike notes in `docs/project/evidence/W0-spike.md` with screenshots and the protocol file.
+- [x] Spike notes in `docs/project/evidence/W0-spike.md` with screenshots and the protocol file. (evidence: docs/project/evidence/W0-spike.md)
 
-Gate: the four spike criteria in ADR-0021 hold on a Windows VM.
+Gate: the four spike criteria in ADR-0021 hold on a Windows VM. Status: three
+hold; the secure-surface refusal moves to W3, where the `WindowsDevice` guard
+and the `uiAccess` helper exist to prove it.
 
 ### W1. Shell (3 weeks)
 
