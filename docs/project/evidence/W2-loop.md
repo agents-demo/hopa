@@ -63,12 +63,33 @@ HOPA: Sidecar answered: "I could not do that: bridge unreachable: Failed to conn
 step #0 ui.launch [read] approved= executed=False verified=False error=E_DEVICE
 ```
 
+## Pending approvals survive a restart, then are denied
+
+While an approval was waiting, the sidecar wrote `approvals.json`. The process
+was stopped and a new sidecar started:
+
+```
+sidecar: denied 1 pending approval(s) on restart
+```
+
+The file is `{}` afterwards. The rule matches Android: survive a rotation, deny
+on process death, time out after 120 s. (The kill happened after the sheet
+request was accepted by the sidecar; the dialog itself is the same one the
+allow/deny runs above exercise.)
+
+## Records and the chain
+
+```
+step #0 ui.tap [read] approved= executed=True verified=True error= hash=sha256:5b6
+chain: ok
+```
+
+The sidecar appends each turn's records to `records.json` (912 B after the
+click) and runs `RunChain.verify` before replying; `turn.end` carries
+`chainOk`. The Run button shows the same lines with the chain state.
+
 ## Not done
 
-- **A pending approval does not survive a restart yet**: it is held in memory
-  and times out after 120 s. The plan box stays open.
-- **Records are per-turn, not persisted**, and the dialog shows the hash but does
-  not re-walk the chain. The box stays open.
 - **One 401 refresh** on the bridge was not exercised; the bridge-down case was.
 - The answer text comes from the scripted model; a real provider needs a key in
   Settings (W2 box for the model, not yet ticked).

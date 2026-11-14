@@ -20,6 +20,7 @@ public partial class MainWindow : Window
     private Task? connecting;
     private string? currentId;
     private JsonArray? lastSteps;
+    private bool lastChainOk;
     private string? autoApproval;
     private string? outputPath;
     private bool switching;
@@ -325,15 +326,21 @@ public partial class MainWindow : Window
         ScrollToEnd();
         try
         {
-            var (answer, conversationId, title, steps) = await client.StartTurnAsync(goal, currentId);
+            var (answer, conversationId, title, steps, chainOk) = await client.StartTurnAsync(goal, currentId);
             currentId = conversationId;
             messages.Add(new MessageVm { Role = "assistant", Text = answer });
             Log($"HOPA: {answer}");
             lastSteps = steps;
+            lastChainOk = chainOk;
             DetailsButton.IsEnabled = steps is { Count: > 0 };
             foreach (var line in StepLines(steps))
             {
                 Log($"step {line}");
+            }
+
+            if (steps is { Count: > 0 })
+            {
+                Log($"chain: {(chainOk ? "ok" : "failed")}");
             }
 
             TitleText.Text = title;
@@ -492,6 +499,10 @@ public partial class MainWindow : Window
         if (lines.Count == 0)
         {
             lines.Add("No steps: the answer came without an action.");
+        }
+        else
+        {
+            lines.Add($"chain: {(lastChainOk ? "ok" : "failed")}");
         }
 
         new StepsWindow(lines) { Owner = this }.ShowDialog();

@@ -11,6 +11,7 @@ import com.hopa.core.model.ModelMessage
 import com.hopa.core.model.ModelPort
 import com.hopa.core.ports.DevicePort
 import com.hopa.core.records.InMemoryRunRecorder
+import com.hopa.core.records.RunChain
 import com.hopa.core.records.RunRecordFactory
 import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
@@ -24,6 +25,7 @@ class Engine(
     private val hostDevice: HostDevice,
     private val approval: HostApproval,
     private val store: ChatStore,
+    private val recordStore: RecordStore,
     private val config: RuntimeConfig,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -82,6 +84,9 @@ class Engine(
 
             val answer = outcome.getOrNull()?.answer
                 ?: "The sidecar failed: ${outcome.exceptionOrNull()?.message ?: "unknown error"}"
+            val records = outcome.getOrNull()?.records.orEmpty()
+            recordStore.append(conversation.id, "run-$id", records)
+            val chainOk = records.isEmpty() || RunChain.verify(records)
             store.append(conversation.id, "assistant", answer)
             val updated = store.get(conversation.id)
             io.send(
@@ -90,7 +95,8 @@ class Engine(
                     conversationId = conversation.id,
                     title = updated?.title ?: "New chat",
                     answer = answer,
-                    steps = outcome.getOrNull()?.records.orEmpty(),
+                    steps = records,
+                    chainOk = chainOk,
                 ),
             )
         }

@@ -12,11 +12,17 @@ fun main() {
         ?.let { Path.of(it) }
         ?: Path.of(System.getProperty("user.home"), ".hopa", "windows")
     val store = ChatStore(dataDir.resolve("conversations.json"))
+    val approvals = PendingApprovals(dataDir.resolve("approvals.json"))
+    val records = RecordStore(dataDir.resolve("records.json"))
     val config = RuntimeConfig()
-    val approval = HostApproval(io)
-    val engine = Engine(io, device, approval, store, config)
+    val approval = HostApproval(io, approvals)
+    val engine = Engine(io, device, approval, store, records, config)
     io.send(Protocol.ready())
-    io.log("ready (protocol v${Protocol.VERSION}), conversations at $dataDir")
+    val denied = approvals.restoreAndDeny()
+    if (denied > 0) {
+        io.log("denied $denied pending approval(s) on restart")
+    }
+    io.log("ready (protocol v${Protocol.VERSION}), conversations at $dataDir, runs=${records.count()}")
     while (true) {
         val line = readLine() ?: break
         if (line.isBlank()) continue

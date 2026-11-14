@@ -8,7 +8,10 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.withTimeoutOrNull
 
 /** W2: approvals travel to the window and wait up to two minutes. */
-class HostApproval(private val io: Stdio) : ApprovalGateway {
+class HostApproval(
+    private val io: Stdio,
+    private val store: PendingApprovals,
+) : ApprovalGateway {
     private val pending = ConcurrentHashMap<String, CompletableDeferred<Boolean>>()
     private val counter = AtomicInteger(0)
 
@@ -20,7 +23,10 @@ class HostApproval(private val io: Stdio) : ApprovalGateway {
         val id = "ap-${counter.incrementAndGet()}"
         val deferred = CompletableDeferred<Boolean>()
         pending[id] = deferred
+        store.save(id, request)
         io.send(Protocol.approvalRequest(id, request))
-        return withTimeoutOrNull(120_000) { deferred.await() } ?: false
+        val allow = withTimeoutOrNull(120_000) { deferred.await() } ?: false
+        store.clear(id)
+        return allow
     }
 }

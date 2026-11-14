@@ -34,6 +34,7 @@ object Protocol {
         title: String,
         answer: String,
         steps: List<RunRecord>,
+        chainOk: Boolean,
     ): JsonObject =
         buildJsonObject {
             put("type", "turn.end")
@@ -41,6 +42,7 @@ object Protocol {
             put("conversationId", conversationId)
             put("title", title)
             put("answer", answer)
+            put("chainOk", chainOk)
             put("steps", buildJsonArray {
                 steps.forEach { add(json.encodeToJsonElement(RunRecord.serializer(), it)) }
             })

@@ -102,7 +102,7 @@ public sealed class SidecarClient : IAsyncDisposable
         return await completion.Task;
     }
 
-    public async Task<(string Answer, string ConversationId, string Title, JsonArray? Steps)> StartTurnAsync(
+    public async Task<(string Answer, string ConversationId, string Title, JsonArray? Steps, bool ChainOk)> StartTurnAsync(
         string goal,
         string? conversationId)
     {
@@ -117,7 +117,8 @@ public sealed class SidecarClient : IAsyncDisposable
             response["answer"]?.GetValue<string>() ?? "",
             response["conversationId"]?.GetValue<string>() ?? "",
             response["title"]?.GetValue<string>() ?? "New chat",
-            response["steps"] as JsonArray);
+            response["steps"] as JsonArray,
+            response["chainOk"]?.GetValue<bool>() == true);
     }
 
     public async Task<List<JsonObject>> ListConversationsAsync()
