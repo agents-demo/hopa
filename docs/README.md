@@ -63,6 +63,7 @@ Service documentation lives with the services: [`services/docs/`](../services/do
 |---|---|
 | [plan/README.md](project/plan/README.md) | The active refactor plan, with evidence |
 | [plan/android/README.md](project/plan/android/README.md) | How will the Android app be built, with what effort? |
+| [plan/windows/README.md](project/plan/windows/README.md) | How will the Windows client be built? |
 | [status.md](project/status.md) | Where the daily experience stands, and known debts |
 | [operations/release.md](project/operations/release.md) | How is a release cut? |
 | [operations/versioning.md](project/operations/versioning.md) | How are versions numbered? |
