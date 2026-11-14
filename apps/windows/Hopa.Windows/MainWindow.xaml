@@ -4,6 +4,8 @@
         Title="HOPA"
         Height="760" Width="1140"
         Background="#F7F4EE"
+        WindowStyle="None"
+        ResizeMode="CanResize"
         WindowStartupLocation="CenterScreen">
     <Window.Resources>
         <DataTemplate x:Key="MessageTemplate">
@@ -57,10 +59,27 @@
 
             <Border Grid.Row="0" Background="#F7F4EE" BorderBrush="#E9E4DA" BorderThickness="0,0,0,1">
                 <Grid Margin="18,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
                     <TextBlock x:Name="TitleText" Text="New chat" VerticalAlignment="Center"
                                FontSize="15" FontWeight="SemiBold" Foreground="#1C1B18" />
-                    <TextBlock x:Name="StatusText" Text="" HorizontalAlignment="Right"
-                               VerticalAlignment="Center" FontSize="11" Foreground="#9A9488" />
+                    <TextBlock x:Name="StatusText" Grid.Column="1" Text="" VerticalAlignment="Center"
+                               Margin="12,0" FontSize="11" Foreground="#9A9488" />
+                    <StackPanel x:Name="WindowButtons" Grid.Column="2" Orientation="Horizontal"
+                                VerticalAlignment="Center">
+                        <Button x:Name="MinimizeButton" Content="&#x2013;" Width="34" Height="28"
+                                Background="Transparent" BorderThickness="0" Foreground="#6B665C"
+                                Click="Minimize_Click" />
+                        <Button x:Name="MaximizeButton" Content="&#x25A1;" Width="34" Height="28"
+                                Background="Transparent" BorderThickness="0" Foreground="#6B665C"
+                                Click="Maximize_Click" />
+                        <Button x:Name="CloseButton" Content="&#x2715;" Width="34" Height="28"
+                                Background="Transparent" BorderThickness="0" Foreground="#6B665C"
+                                Click="Close_Click" />
+                    </StackPanel>
                 </Grid>
             </Border>
 

@@ -15,6 +15,9 @@ and conversations survive a restart.
 - **Composer**: Enter sends, Shift+Enter keeps the line break.
 - **Palette** copied from `HopaColor`: `#F7F4EE` background, `#F3EFE7` sidebar,
   `#0A59F7` primary, `#E8703A` accent, `#1C1B18` text.
+- **No system title bar**: `WindowChrome` hides the decoration, the top 52 px
+  drags, and the minimize/maximize/close buttons live in the header (the same
+  shape as the Harmony laptop's `decorHidden` mode).
 - **Persistence** in the sidecar: `%USERPROFILE%\.hopa\windows\conversations.json`
   (JSON store over `packages/data` models, now `@Serializable`).
 - **Drafts** per conversation, kept in memory (implemented, not yet verified by

@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Shell;
 
 namespace Hopa.Windows;
 
@@ -25,9 +26,50 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        // The Harmony laptop app hides the system decoration and keeps its own
+        // window controls. WindowChrome does the same here: the top 52 px drags,
+        // the three buttons stay clickable, the resize border remains.
+        WindowChrome.SetWindowChrome(this, new WindowChrome
+        {
+            CaptionHeight = 52,
+            ResizeBorderThickness = new Thickness(6),
+            GlassFrameThickness = new Thickness(0),
+            CornerRadius = new CornerRadius(0),
+            UseAeroCaptionButtons = false,
+        });
+        foreach (var button in new[] { MinimizeButton, MaximizeButton, CloseButton })
+        {
+            WindowChrome.SetIsHitTestVisibleInChrome(button, true);
+        }
+
+        StateChanged += (_, _) => MaximizeButton.Content = WindowState == WindowState.Maximized
+            ? "\u2750"
+            : "\u25A1";
         ConversationList.ItemsSource = conversations;
         MessagesList.ItemsSource = messages;
         Loaded += async (_, _) => await ConnectAsync();
+    }
+
+    private void Minimize_Click(object sender, RoutedEventArgs e)
+    {
+        SystemCommands.MinimizeWindow(this);
+    }
+
+    private void Maximize_Click(object sender, RoutedEventArgs e)
+    {
+        if (WindowState == WindowState.Maximized)
+        {
+            SystemCommands.RestoreWindow(this);
+        }
+        else
+        {
+            SystemCommands.MaximizeWindow(this);
+        }
+    }
+
+    private void Close_Click(object sender, RoutedEventArgs e)
+    {
+        SystemCommands.CloseWindow(this);
     }
 
     public async Task RunTurnAsync(string goal, string? outPath, string? shotPath)
