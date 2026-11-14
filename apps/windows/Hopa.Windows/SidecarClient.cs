@@ -23,6 +23,8 @@ public sealed class SidecarClient : IAsyncDisposable
 
     public event Action<JsonObject>? DeviceRequested;
 
+    public event Action<JsonObject>? ApprovalRequested;
+
     public SidecarClient()
     {
         var lib = Environment.GetEnvironmentVariable("HOPA_SIDECAR_LIB")
@@ -100,7 +102,7 @@ public sealed class SidecarClient : IAsyncDisposable
         return await completion.Task;
     }
 
-    public async Task<(string Answer, string ConversationId, string Title)> StartTurnAsync(
+    public async Task<(string Answer, string ConversationId, string Title, JsonArray? Steps)> StartTurnAsync(
         string goal,
         string? conversationId)
     {
@@ -114,7 +116,8 @@ public sealed class SidecarClient : IAsyncDisposable
         return (
             response["answer"]?.GetValue<string>() ?? "",
             response["conversationId"]?.GetValue<string>() ?? "",
-            response["title"]?.GetValue<string>() ?? "New chat");
+            response["title"]?.GetValue<string>() ?? "New chat",
+            response["steps"] as JsonArray);
     }
 
     public async Task<List<JsonObject>> ListConversationsAsync()
@@ -159,10 +162,21 @@ public sealed class SidecarClient : IAsyncDisposable
             ["bridgeToken"] = bridgeToken,
             ["modelProvider"] = settings.ModelProvider,
             ["modelBaseUrl"] = settings.ModelBaseUrl,
+            ["modelName"] = settings.ModelName,
             ["modelKey"] = modelKey,
             ["tone"] = settings.Tone,
         };
         return await RequestAsync("configure", fields, TimeSpan.FromSeconds(10));
+    }
+
+    public void SendApprovalResult(string id, bool allow)
+    {
+        Send(new JsonObject
+        {
+            ["type"] = "approval.result",
+            ["id"] = id,
+            ["allow"] = allow,
+        });
     }
 
     public void SendDeviceResult(string id, bool ok, string? error = null)
@@ -219,6 +233,9 @@ public sealed class SidecarClient : IAsyncDisposable
                     break;
                 case "device.request":
                     DeviceRequested?.Invoke(message);
+                    break;
+                case "approval.request":
+                    ApprovalRequested?.Invoke(message);
                     break;
                 default:
                     var id = message["id"]?.GetValue<string>();

@@ -66,12 +66,16 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <TextBlock x:Name="TitleText" Text="New chat" VerticalAlignment="Center"
                                FontSize="15" FontWeight="SemiBold" Foreground="#1C1B18" />
                     <TextBlock x:Name="StatusText" Grid.Column="1" Text="" VerticalAlignment="Center"
                                Margin="12,0" FontSize="11" Foreground="#9A9488" />
-                    <StackPanel x:Name="WindowButtons" Grid.Column="2" Orientation="Horizontal"
+                    <Button x:Name="DetailsButton" Grid.Column="2" Content="Run" Width="44" Height="26"
+                            Margin="0,0,8,0" Background="Transparent" BorderThickness="0"
+                            Foreground="#6B665C" IsEnabled="False" Click="Details_Click" />
+                    <StackPanel x:Name="WindowButtons" Grid.Column="3" Orientation="Horizontal"
                                 VerticalAlignment="Center">
                         <Button x:Name="MinimizeButton" Content="&#x2013;" Width="34" Height="28"
                                 Background="Transparent" BorderThickness="0" Foreground="#6B665C"

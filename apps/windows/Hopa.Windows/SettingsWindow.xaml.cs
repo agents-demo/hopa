@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 
 namespace Hopa.Windows;
@@ -16,6 +16,7 @@ public partial class SettingsWindow : Window
         UseBridgeBox.IsChecked = settings.UseBridge;
         Select(ProviderBox, settings.ModelProvider);
         BaseUrlBox.Text = settings.ModelBaseUrl;
+        ModelNameBox.Text = settings.ModelName;
         ModelKeyBox.Password = CredentialStore.Read("hopa.model.key");
         Select(ToneBox, settings.Tone);
     }
@@ -28,6 +29,7 @@ public partial class SettingsWindow : Window
             UseBridge = UseBridgeBox.IsChecked == true,
             ModelProvider = Value(ProviderBox, "openai"),
             ModelBaseUrl = BaseUrlBox.Text.Trim(),
+            ModelName = ModelNameBox.Text.Trim(),
             Tone = Value(ToneBox, "warm"),
         };
         store.Save(settings);
@@ -69,3 +71,4 @@ public partial class SettingsWindow : Window
         }
     }
 }
+

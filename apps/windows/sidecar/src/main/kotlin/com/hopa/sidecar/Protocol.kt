@@ -1,5 +1,7 @@
 package com.hopa.sidecar
 
+import com.hopa.core.gate.ApprovalRequest
+import com.hopa.core.contracts.RunRecord
 import com.hopa.data.sessions.Conversation
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -26,14 +28,35 @@ object Protocol {
         put("text", text)
     }
 
-    fun turnEnd(id: String, conversationId: String, title: String, answer: String): JsonObject =
+    fun turnEnd(
+        id: String,
+        conversationId: String,
+        title: String,
+        answer: String,
+        steps: List<RunRecord>,
+    ): JsonObject =
         buildJsonObject {
             put("type", "turn.end")
             put("id", id)
             put("conversationId", conversationId)
             put("title", title)
             put("answer", answer)
+            put("steps", buildJsonArray {
+                steps.forEach { add(json.encodeToJsonElement(RunRecord.serializer(), it)) }
+            })
         }
+
+    fun approvalRequest(id: String, request: ApprovalRequest): JsonObject = buildJsonObject {
+        put("type", "approval.request")
+        put("id", id)
+        put("title", request.title)
+        put("body", request.body)
+        put("amount", request.amount)
+        put("merchant", request.merchant)
+        put("consequence", request.consequence)
+        put("isPayment", request.isPayment)
+        put("action", request.action.kind)
+    }
 
     fun conversationList(id: String, items: List<Conversation>): JsonObject = buildJsonObject {
         put("type", "conversations.list")

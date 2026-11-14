@@ -32,6 +32,8 @@
             </ComboBox>
             <TextBlock Text="Base URL" FontSize="12" Foreground="#6B665C" />
             <TextBox x:Name="BaseUrlBox" Height="32" Margin="0,4,0,8" />
+            <TextBlock Text="Model name" FontSize="12" Foreground="#6B665C" />
+            <TextBox x:Name="ModelNameBox" Height="32" Margin="0,4,0,8" />
             <TextBlock Text="Model key (stored in Windows Credential Manager)" FontSize="12"
                        Foreground="#6B665C" />
             <PasswordBox x:Name="ModelKeyBox" Height="32" Margin="0,4,0,12" />

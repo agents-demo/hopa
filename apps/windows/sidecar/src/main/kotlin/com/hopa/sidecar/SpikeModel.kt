@@ -21,6 +21,12 @@ class SpikeModel : ModelPort {
         if (goal.contains("click", ignoreCase = true) && !lastAssistant.contains("\"ui.tap\"")) {
             return ModelReply("""{"schemaVersion":"1","kind":"ui.tap","x":700,"y":600,"timeoutMs":5000}""")
         }
+        if (goal.contains("pay", ignoreCase = true) && !lastAssistant.contains("\"payment.pay\"")) {
+            return ModelReply("""{"schemaVersion":"1","kind":"payment.pay","app":"bank","text":"100"}""")
+        }
+        if (goal.contains("open settings", ignoreCase = true) && !lastAssistant.contains("\"ui.launch\"")) {
+            return ModelReply("""{"schemaVersion":"1","kind":"ui.launch","app":"com.android.settings","timeoutMs":8000}""")
+        }
         return ModelReply("Sidecar answered: \"${goal.take(80)}\".")
     }
 }

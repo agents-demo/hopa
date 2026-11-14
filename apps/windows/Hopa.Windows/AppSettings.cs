@@ -11,5 +11,7 @@ public sealed class AppSettings
 
     public string ModelBaseUrl { get; set; } = "https://api.openai.com/v1";
 
+    public string ModelName { get; set; } = "gpt-4o-mini";
+
     public string Tone { get; set; } = "warm";
 }

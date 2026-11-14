@@ -1,10 +1,15 @@
 package com.hopa.sidecar
 
+import com.hopa.capabilities.bridge.AdbDevice
+import com.hopa.capabilities.bridge.BridgeClient
+import com.hopa.capabilities.llm.ModelFactory
 import com.hopa.core.gate.ActionExecutor
 import com.hopa.core.gate.ApprovalPolicy
 import com.hopa.core.loop.AgentLoop
 import com.hopa.core.loop.TurnContext
 import com.hopa.core.model.ModelMessage
+import com.hopa.core.model.ModelPort
+import com.hopa.core.ports.DevicePort
 import com.hopa.core.records.InMemoryRunRecorder
 import com.hopa.core.records.RunRecordFactory
 import java.util.UUID
@@ -13,11 +18,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
-/** One turn at a time for W1; the loop and the gate are the real ones. */
+/** One turn at a time; the loop and the gate are the real ones. */
 class Engine(
     private val io: Stdio,
-    private val device: HostDevice,
+    private val hostDevice: HostDevice,
+    private val approval: HostApproval,
     private val store: ChatStore,
+    private val config: RuntimeConfig,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val clock = SystemClock()
@@ -29,6 +36,22 @@ class Engine(
             store.append(conversation.id, "user", goal)
             io.log("turn $id in ${conversation.id}: $goal")
 
+            val device: DevicePort = if (config.hasBridge) {
+                AdbDevice(BridgeClient(config.bridgeUrl, config.bridgeToken), clock)
+            } else {
+                hostDevice
+            }
+            val model: ModelPort = if (config.hasModel) {
+                ModelFactory().create(
+                    provider = config.modelProvider,
+                    endpoint = config.modelBaseUrl,
+                    apiKey = config.modelKey,
+                    modelName = config.modelName,
+                )
+            } else {
+                SpikeModel()
+            }
+
             val recorder = InMemoryRunRecorder()
             val executor = ActionExecutor(
                 device = device,
@@ -36,32 +59,40 @@ class Engine(
                 system = null,
                 sandbox = null,
                 policy = ApprovalPolicy(),
-                approval = SpikeApproval(),
+                approval = approval,
                 recorder = recorder,
                 factory = RunRecordFactory(clock),
                 clock = clock,
             )
             val loop = AgentLoop(
-                model = SpikeModel(),
+                model = model,
                 device = device,
                 executor = executor,
                 recorder = recorder,
                 clock = clock,
                 webAvailable = false,
             )
-            val answer = runCatching {
+            val outcome = runCatching {
                 loop.run(
                     runId = "run-$id",
                     traceId = UUID.randomUUID().toString(),
                     context = TurnContext(goal = goal, history = history),
-                ).answer
-            }.getOrElse { error ->
-                "The sidecar failed: ${error.message}"
+                )
             }
 
+            val answer = outcome.getOrNull()?.answer
+                ?: "The sidecar failed: ${outcome.exceptionOrNull()?.message ?: "unknown error"}"
             store.append(conversation.id, "assistant", answer)
             val updated = store.get(conversation.id)
-            io.send(Protocol.turnEnd(id, conversation.id, updated?.title ?: "New chat", answer))
+            io.send(
+                Protocol.turnEnd(
+                    id = id,
+                    conversationId = conversation.id,
+                    title = updated?.title ?: "New chat",
+                    answer = answer,
+                    steps = outcome.getOrNull()?.records.orEmpty(),
+                ),
+            )
         }
     }
 }

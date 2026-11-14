@@ -1,6 +1,6 @@
 # Windows client plan
 
-Status: **v1, W1 complete (6 of 6); W2 next.** Written 2026-11-14 from the
+Status: **v1, W2 in progress (3 of 6).** Written 2026-11-14 from the
 Android plan, the expansion portfolio and ADR-0021.
 
 Android is the active client; Windows is next; Harmony is frozen (ADR-0020).
@@ -100,12 +100,12 @@ the restart check in W1-shell (two processes, one conversation).
 
 ### W2. Loop and the phone target (3 weeks)
 
-- [ ] Sidecar runs the full `AgentLoop` with the bridge `AdbDevice` (target: phone).
+- [x] Sidecar runs the full `AgentLoop` with the bridge `AdbDevice` (target: phone). (evidence: W2-loop "Bridge turn": com.android.settings launched on emulator-5554)
 - [ ] Approval sheet for sensitive and payment actions; a pending approval survives a restart and times out after 120 s.
 - [ ] Run records through the sidecar; a runs view shows steps, classification, verified and the hash chain.
-- [ ] One real turn: "open Settings on the phone" through the bridge, with before/after observations.
+- [x] One real turn: "open Settings on the phone" through the bridge, with before/after observations. (evidence: W2-loop "Bridge turn": dumpsys shows Settings; verified=True, then False when already foreground)
 - [ ] Honest failure when the bridge is down or the token is stale; one 401 refresh.
-- [ ] Evidence: transcript, screenshots, record dump in `docs/project/evidence/W2-loop.md`.
+- [x] Evidence: transcript, screenshots, record dump in `docs/project/evidence/W2-loop.md`. (evidence: docs/project/evidence/W2-loop.md)
 
 Gate: a turn started in the Windows window acts on the phone through the bridge and is verified.
 

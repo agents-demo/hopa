@@ -14,6 +14,7 @@ public partial class App : Application
         {
             string? output = null;
             string? shot = null;
+            string? approval = null;
             for (var i = 2; i + 1 < args.Length; i += 2)
             {
                 switch (args[i])
@@ -24,10 +25,13 @@ public partial class App : Application
                     case "--shot":
                         shot = args[i + 1];
                         break;
+                    case "--approval":
+                        approval = args[i + 1];
+                        break;
                 }
             }
 
-            _ = window.RunTurnAsync(args[1], output, shot);
+            _ = window.RunTurnAsync(args[1], output, shot, approval);
             return;
         }
 
@@ -53,6 +57,12 @@ public partial class App : Application
         if (args.Length >= 2 && args[0] == "--draft-check")
         {
             _ = window.DraftCheckAsync(args[1]);
+            return;
+        }
+
+        if (args.Length >= 4 && args[0] == "--bridge-check")
+        {
+            _ = window.BridgeCheckAsync(args[1], args[2], args[3]);
         }
     }
 }

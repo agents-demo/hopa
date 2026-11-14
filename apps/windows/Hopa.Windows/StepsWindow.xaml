@@ -1,0 +1,17 @@
+<Window x:Class="Hopa.Windows.StepsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Run details"
+        Height="420" Width="620"
+        Background="#F7F4EE"
+        WindowStartupLocation="CenterOwner">
+    <Grid Margin="18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <TextBlock Text="Run details" FontSize="18" FontWeight="SemiBold" Foreground="#1C1B18" />
+        <ListBox x:Name="StepsList" Grid.Row="1" Margin="0,12,0,0" BorderThickness="0"
+                 Background="#FFFFFF" FontFamily="Consolas" FontSize="12" />
+    </Grid>
+</Window>

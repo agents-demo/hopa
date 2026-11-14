@@ -12,8 +12,9 @@ fun main() {
         ?.let { Path.of(it) }
         ?: Path.of(System.getProperty("user.home"), ".hopa", "windows")
     val store = ChatStore(dataDir.resolve("conversations.json"))
-    val engine = Engine(io, device, store)
     val config = RuntimeConfig()
+    val approval = HostApproval(io)
+    val engine = Engine(io, device, approval, store, config)
     io.send(Protocol.ready())
     io.log("ready (protocol v${Protocol.VERSION}), conversations at $dataDir")
     while (true) {
@@ -44,6 +45,7 @@ fun main() {
             )
 
             "device.result" -> device.resolve(message.text("id"), message.text("ok").toBoolean())
+            "approval.result" -> approval.resolve(message.text("id"), message.text("allow").toBoolean())
             "shutdown" -> return
             else -> io.log("unknown message: ${message.type()}")
         }

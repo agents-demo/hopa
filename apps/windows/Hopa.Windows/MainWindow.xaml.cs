@@ -19,6 +19,8 @@ public partial class MainWindow : Window
     private SidecarClient? client;
     private Task? connecting;
     private string? currentId;
+    private JsonArray? lastSteps;
+    private string? autoApproval;
     private string? outputPath;
     private bool switching;
     private bool running;
@@ -72,9 +74,10 @@ public partial class MainWindow : Window
         SystemCommands.CloseWindow(this);
     }
 
-    public async Task RunTurnAsync(string goal, string? outPath, string? shotPath)
+    public async Task RunTurnAsync(string goal, string? outPath, string? shotPath, string? approval = null)
     {
         outputPath = outPath;
+        autoApproval = approval;
         await ConnectAsync();
         await SendAsync(goal);
         WriteLog();
@@ -159,6 +162,23 @@ public partial class MainWindow : Window
         Application.Current.Shutdown();
     }
 
+    public async Task BridgeCheckAsync(string url, string token, string path)
+    {
+        var settings = new SettingsStore();
+        var current = settings.Load();
+        current.BridgeUrl = url;
+        current.UseBridge = true;
+        settings.Save(current);
+        CredentialStore.Write("hopa.bridge.token", token);
+
+        outputPath = path;
+        autoApproval = "allow";
+        await ConnectAsync();
+        await SendAsync("open settings on the phone");
+        WriteLog();
+        Application.Current.Shutdown();
+    }
+
     public Task SettingsCheckAsync(string path)
     {
         var store = new SettingsStore();
@@ -208,6 +228,7 @@ public partial class MainWindow : Window
             var started = new SidecarClient();
             started.LogReceived += line => Log($"sidecar: {line}");
             started.DeviceRequested += OnDeviceRequested;
+            started.ApprovalRequested += OnApprovalRequested;
             client = started;
             StatusText.Text = "Ready";
             await RefreshAsync();
@@ -304,10 +325,17 @@ public partial class MainWindow : Window
         ScrollToEnd();
         try
         {
-            var (answer, conversationId, title) = await client.StartTurnAsync(goal, currentId);
+            var (answer, conversationId, title, steps) = await client.StartTurnAsync(goal, currentId);
             currentId = conversationId;
             messages.Add(new MessageVm { Role = "assistant", Text = answer });
             Log($"HOPA: {answer}");
+            lastSteps = steps;
+            DetailsButton.IsEnabled = steps is { Count: > 0 };
+            foreach (var line in StepLines(steps))
+            {
+                Log($"step {line}");
+            }
+
             TitleText.Text = title;
             UpsertConversation(conversationId, title);
             ScrollToEnd();
@@ -426,6 +454,74 @@ public partial class MainWindow : Window
         {
             e.Handled = true;
             await SendFromComposerAsync();
+        }
+    }
+
+    private void OnApprovalRequested(JsonObject message)
+    {
+        if (autoApproval != null)
+        {
+            var allowed = autoApproval == "allow";
+            Log($"approval: auto-{(allowed ? "allow" : "deny")} {message["title"]?.GetValue<string>()}");
+            client?.SendApprovalResult(message["id"]?.GetValue<string>() ?? "", allowed);
+            return;
+        }
+
+        Dispatcher.Invoke(() =>
+        {
+            var allow = false;
+            var dialog = new ApprovalWindow(message) { Owner = this };
+            if (dialog.ShowDialog() == true)
+            {
+                allow = true;
+            }
+
+            Log($"approval: {(allow ? "allow" : "deny")} {message["title"]?.GetValue<string>()}");
+            client?.SendApprovalResult(message["id"]?.GetValue<string>() ?? "", allow);
+        });
+    }
+
+    private void Details_Click(object sender, RoutedEventArgs e)
+    {
+        if (lastSteps == null)
+        {
+            return;
+        }
+
+        var lines = StepLines(lastSteps).ToList();
+        if (lines.Count == 0)
+        {
+            lines.Add("No steps: the answer came without an action.");
+        }
+
+        new StepsWindow(lines) { Owner = this }.ShowDialog();
+    }
+
+    private static IEnumerable<string> StepLines(JsonArray? steps)
+    {
+        if (steps == null)
+        {
+            yield break;
+        }
+
+        foreach (var node in steps)
+        {
+            if (node is not JsonObject step)
+            {
+                continue;
+            }
+
+            var number = step["step"]?.GetValue<int>() ?? 0;
+            var kind = step["action"]?["kind"]?.GetValue<string>() ?? "?";
+            var classification = step["classification"]?.GetValue<string>() ?? "?";
+            var approved = step["approved"]?.GetValue<bool?>();
+            var executed = step["executed"]?.GetValue<bool>() == true;
+            var verified = step["verified"]?.GetValue<bool>() == true;
+            var error = step["error"]?.GetValue<string>() ?? "";
+            var hash = step["hash"]?.GetValue<string>() ?? "";
+            yield return $"#{number} {kind} [{classification}] approved={approved} " +
+                         $"executed={executed} verified={verified} error={error} " +
+                         $"hash={hash[..Math.Min(10, hash.Length)]}";
         }
     }
 
