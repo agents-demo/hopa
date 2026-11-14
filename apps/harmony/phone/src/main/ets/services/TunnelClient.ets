@@ -42,7 +42,7 @@ export class TunnelSnapshot {
  * The phone half of the hdc-over-relay tunnel.
  *
  * The phone dials *out* to the relay, so it works on mobile data and behind
- * NAT. The relay pairs this side with `pc-agent hdc-tunnel`; each OPEN frame
+ * NAT. The relay pairs this side with `hopa-bridge hdc-tunnel`; each OPEN frame
  * becomes a TCP connection to the local hdcd on 127.0.0.1:5555.
  *
  * This class never touches the bridge HTTP path. If it fails, chat and the

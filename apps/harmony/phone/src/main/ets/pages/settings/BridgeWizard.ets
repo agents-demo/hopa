@@ -20,7 +20,7 @@ export struct BridgeWizard {
   private bridge: BridgeClient = new BridgeClient();
 
   private static readonly COMMAND: string =
-    'python -m hopa_pc_agent bridge --host 127.0.0.1 --port 8766';
+    'python -m hopa_bridge bridge --host 127.0.0.1 --port 8766';
 
   aboutToAppear(): void {
     SettingsStore.load(getContext(this) as Context).then((stored: StoredSettings) => {

@@ -4,7 +4,7 @@ display: JD
 bundle: com.jd.hm.mall
 ability: EntryAbility
 bundle_verified: Mate 80, 2026-11-08
-aliases: [JD, ??, jd]
+aliases: [JD, 京东, jd]
 pace: careful
 validated: verified
 platform: harmonyos

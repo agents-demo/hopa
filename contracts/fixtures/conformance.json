@@ -1,0 +1,172 @@
+{
+  "schemaVersion": "1",
+  "cases": [
+    {
+      "name": "one-tap-is-read-and-runs",
+      "why": "The ordinary case: a clickable node, one tap, nothing sensitive.",
+      "observation": {
+        "schemaVersion": "1",
+        "id": "obs-settings",
+        "timestamp": 0,
+        "screenSize": { "width": 1080, "height": 2400 },
+        "tree": {
+          "ref": "e1",
+          "type": "root",
+          "children": [
+            {
+              "ref": "e2",
+              "type": "button",
+              "text": "Settings",
+              "bounds": [40, 200, 400, 280],
+              "clickable": true,
+              "children": []
+            }
+          ]
+        },
+        "hash": "sha256:0000000000000000000000000000000000000000000000000000000000000001"
+      },
+      "modelReply": {
+        "say": "",
+        "done": false,
+        "needUser": false,
+        "action": { "schemaVersion": "1", "kind": "ui.tap", "ref": "e2", "timeoutMs": 3000 }
+      },
+      "expect": {
+        "valid": true,
+        "actionKind": "ui.tap",
+        "classification": "read",
+        "needsApproval": false,
+        "executed": true
+      }
+    },
+    {
+      "name": "tap-on-a-payment-screen-asks-first",
+      "why": "The model never decides risk: the screen does. This tap must be payment and wait for approval.",
+      "observation": {
+        "schemaVersion": "1",
+        "id": "obs-pay",
+        "timestamp": 0,
+        "screenSize": { "width": 1080, "height": 2400 },
+        "tree": {
+          "ref": "e1",
+          "type": "root",
+          "children": [
+            {
+              "ref": "e2",
+              "type": "button",
+              "text": "Pay now",
+              "bounds": [40, 1800, 1040, 1900],
+              "clickable": true,
+              "children": []
+            }
+          ]
+        },
+        "hash": "sha256:0000000000000000000000000000000000000000000000000000000000000002"
+      },
+      "modelReply": {
+        "say": "Paying.",
+        "done": false,
+        "needUser": false,
+        "action": { "schemaVersion": "1", "kind": "ui.tap", "ref": "e2", "timeoutMs": 3000 }
+      },
+      "expect": {
+        "valid": true,
+        "actionKind": "ui.tap",
+        "classification": "payment",
+        "needsApproval": true,
+        "executed": false
+      }
+    },
+    {
+      "name": "a-model-payment-flag-changes-nothing",
+      "why": "A provider may add payment fields; the loop must ignore them and classify from the screen.",
+      "observation": {
+        "schemaVersion": "1",
+        "id": "obs-pay-flag",
+        "timestamp": 0,
+        "screenSize": { "width": 1080, "height": 2400 },
+        "tree": {
+          "ref": "e1",
+          "type": "root",
+          "children": [
+            {
+              "ref": "e2",
+              "type": "button",
+              "text": "Confirm payment",
+              "bounds": [40, 1800, 1040, 1900],
+              "clickable": true,
+              "children": []
+            }
+          ]
+        },
+        "hash": "sha256:0000000000000000000000000000000000000000000000000000000000000003"
+      },
+      "modelReply": {
+        "say": "",
+        "done": false,
+        "needUser": false,
+        "action": { "schemaVersion": "1", "kind": "ui.tap", "ref": "e2", "timeoutMs": 3000 }
+      },
+      "modelClaim": "isPayment:false",
+      "expect": {
+        "valid": true,
+        "actionKind": "ui.tap",
+        "classification": "payment",
+        "needsApproval": true,
+        "executed": false
+      }
+    },
+    {
+      "name": "unknown-action-kind-is-rejected",
+      "why": "Fail closed: an action outside the schema never reaches the executor.",
+      "observation": {
+        "schemaVersion": "1",
+        "id": "obs-unknown",
+        "timestamp": 0,
+        "screenSize": { "width": 1080, "height": 2400 },
+        "tree": { "ref": "e1", "type": "root", "children": [] },
+        "hash": "sha256:0000000000000000000000000000000000000000000000000000000000000004"
+      },
+      "modelReply": {
+        "say": "",
+        "done": false,
+        "needUser": false,
+        "action": { "schemaVersion": "1", "kind": "ui.teleport", "timeoutMs": 3000 }
+      },
+      "expect": { "valid": false, "errorCode": "E_SCHEMA" }
+    },
+    {
+      "name": "done-with-an-action-is-rejected",
+      "why": "A turn cannot both finish and act; the semantic rule is not expressible in JSON Schema alone.",
+      "observation": {
+        "schemaVersion": "1",
+        "id": "obs-done",
+        "timestamp": 0,
+        "screenSize": { "width": 1080, "height": 2400 },
+        "tree": { "ref": "e1", "type": "root", "children": [] },
+        "hash": "sha256:0000000000000000000000000000000000000000000000000000000000000005"
+      },
+      "modelReply": {
+        "say": "Done.",
+        "done": true,
+        "needUser": false,
+        "action": { "schemaVersion": "1", "kind": "ui.home", "timeoutMs": 3000 }
+      },
+      "expect": { "valid": false, "errorCode": "E_SCHEMA" }
+    },
+    {
+      "name": "a-question-needs-options",
+      "why": "The approval sheet cannot render a question without choices.",
+      "observation": {
+        "schemaVersion": "1",
+        "id": "obs-question",
+        "timestamp": 0,
+        "screenSize": { "width": 1080, "height": 2400 },
+        "tree": { "ref": "e1", "type": "root", "children": [] },
+        "hash": "sha256:0000000000000000000000000000000000000000000000000000000000000006"
+      },
+      "modelReply": { "say": "Which account?", "done": false, "needUser": true },
+      "expect": { "valid": false, "errorCode": "E_SCHEMA" }
+    }
+  ]
+}

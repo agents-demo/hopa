@@ -4,7 +4,7 @@ display: WPS Office
 bundle: cn.wps.mobileoffice.hap
 ability: DocumentAbility
 bundle_verified: Mate 80, 2026-11-08
-aliases: [WPS, WPS Office, ????, wps]
+aliases: [WPS, WPS Office, 金山办公, wps]
 pace: careful
 validated: verified
 platform: harmonyos

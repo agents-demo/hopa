@@ -31,7 +31,7 @@ RouterTest: 17 assertions passed
 ServerTest: 20 assertions passed
 ```
 
-The HTTP contract is documented in [`docs/brain.md`](../docs/brain.md).
+The HTTP contract is documented in [`docs/brain.md`](../../services/docs/reference/brain.md).
 
 ## Scope
 

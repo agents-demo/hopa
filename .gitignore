@@ -37,7 +37,7 @@
 signing/
 signingConfigs.json
 build-profile.signing.json5
-secrets/
+/.secrets/
 .env
 .env.*
 !.env.example
@@ -65,8 +65,8 @@ node_modules/
 package-lock.json
 
 # Benchmark artifacts
-bench/results/
-bench/artifacts/
+evals/bench/results/
+evals/bench/artifacts/
 artifacts/
 
 # OS / editor noise
@@ -86,3 +86,9 @@ desktop.ini
 # Local harness artifacts
 .hopa/
 tools/shots/
+
+# Android build output and local secrets
+**/.gradle/
+**/*.jks
+**/*.keystore
+**/keystore.properties

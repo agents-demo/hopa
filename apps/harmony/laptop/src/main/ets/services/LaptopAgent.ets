@@ -32,7 +32,7 @@ import { RunArchive } from '@hopa/app';
  *
  * This machine has no accessibility service and no local way to drive another
  * app, so the PC bridge is its only pair of hands: it observes the screen,
- * taps, types and launches through `pc-agent bridge`. With the bridge off the
+ * taps, types and launches through `hopa-bridge bridge`. With the bridge off the
  * runtime answers questions and refuses actions instead of pretending.
  */
 
@@ -173,7 +173,7 @@ export class LaptopAgent {
     );
   }
 
-  /** Points the bridge capability at a running `pc-agent bridge`. */
+  /** Points the bridge capability at a running `hopa-bridge bridge`. */
   configureBridge(url: string, token: string): void {
     this.bridge.configure(url, token);
     this.chatSync.configure(url, token, '2in1');

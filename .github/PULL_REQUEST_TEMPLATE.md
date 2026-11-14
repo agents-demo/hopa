@@ -26,6 +26,6 @@
 ## Verification
 
 - [ ] `ruff check` and `ruff format --check` pass.
-- [ ] `pytest pc-agent bench agent` passes.
+- [ ] `pytest hopa-bridge bench agent` passes.
 - [ ] `python scripts/plan-status.py --lint` passes.
 - [ ] If ArkTS: core Local Tests pass (attach the run).

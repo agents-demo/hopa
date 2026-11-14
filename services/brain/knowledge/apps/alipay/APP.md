@@ -4,7 +4,7 @@ display: Alipay
 bundle: com.alipay.mobile.client
 ability: EntryAbility
 bundle_verified: Mate 80, 2026-11-08
-aliases: [Alipay, ???, alipay]
+aliases: [Alipay, 支付宝, alipay]
 pace: careful
 validated: verified
 platform: harmonyos

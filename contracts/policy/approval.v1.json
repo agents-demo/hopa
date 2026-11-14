@@ -1,0 +1,96 @@
+{
+  "schemaVersion": "1",
+  "description": "Approval vocabularies shared by every client loop (ADR-0018). Payment is classified from the action and the screen, never from a model flag.",
+  "paymentKinds": [
+    "payment.pay",
+    "payment.confirm",
+    "payment.checkout",
+    "payment.enterCard",
+    "payment.authorize"
+  ],
+  "paymentWords": [
+    "checkout",
+    "order",
+    "pay",
+    "purchase",
+    "支付",
+    "付款",
+    "结算",
+    "订单",
+    "商户"
+  ],
+  "paymentActions": [
+    "pay now",
+    "confirm payment",
+    "place order",
+    "buy now",
+    "subscribe",
+    "checkout",
+    "立即支付",
+    "确认支付",
+    "立即购买",
+    "提交订单",
+    "去支付",
+    "付款",
+    "结算"
+  ],
+  "interactiveKinds": [
+    "ui.tap",
+    "ui.doubleTap",
+    "ui.longPress",
+    "ui.type",
+    "ui.swipe",
+    "ui.scroll",
+    "web.click",
+    "web.type"
+  ],
+  "sensitiveKinds": [
+    "ui.sendMessage",
+    "ui.call",
+    "system.sendMessage",
+    "system.call",
+    "system.delete",
+    "system.uninstall",
+    "system.reset",
+    "sandbox.runNetworked"
+  ],
+  "allowedKinds": [
+    "web.navigate",
+    "web.read",
+    "web.click",
+    "web.type",
+    "ui.tap",
+    "ui.doubleTap",
+    "ui.longPress",
+    "ui.type",
+    "ui.swipe",
+    "ui.scroll",
+    "ui.back",
+    "ui.home",
+    "ui.launch",
+    "ui.wait",
+    "ui.observe",
+    "a11y.observe",
+    "system.setAlarm",
+    "system.addEvent",
+    "system.openLink",
+    "sandbox.run"
+  ],
+  "trustedAppKinds": [
+    "ui.sendMessage",
+    "system.sendMessage"
+  ],
+  "payment": {
+    "currencyPattern": "(?:[¥$€£]|CNY|USD|EUR|GBP)\\s?\\d[\\d,]*(?:\\.\\d{1,2})?",
+    "currencyFlags": "i",
+    "currencyTokenPattern": "[¥$€£]|CNY|USD|EUR|GBP",
+    "currencyTokenFlags": "i",
+    "totalPattern": "(?:total|amount|order total|合计|金额|应付|实付|总计)[^\\d]{0,8}\\d",
+    "totalFlags": "i",
+    "merchantPrefixes": [
+      "merchant:",
+      "商户"
+    ],
+    "consequence": "Money may leave your account. HOPA cannot undo a payment."
+  }
+}

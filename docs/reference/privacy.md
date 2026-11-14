@@ -31,7 +31,7 @@ preferred over leaks.
 ## Export and delete
 
 - Records are plain JSONL and can be copied.
-- `hopa-agent records --path … --json` exports them.
+- `hopa-baseline records --path … --json` exports them.
 - Delete the file and the screenshots directory to remove local history.
 - In-app export/delete is not built yet.
 
@@ -52,6 +52,37 @@ data-retention policy must be reviewed before a public release.
 |---|---|---|
 | Model provider | Prompts and screen text | Chosen by the deployment; see ADR-0006 |
 | App store / crash reporting | Crash metadata | Opt-in; not enabled by default |
+
+## Android (0.1.0)
+
+| Data | Where | Why | Retention |
+|---|---|---|---|
+| Screen text and tree | In memory, then the model request | Decide the next action | Not stored |
+| Screenshots | Never by default; a run may take at most one per second | Evidence and OCR fallback | Not stored; a secure window yields nothing |
+| Microphone | Only while the mic button is active | Dictation through the PC bridge | The WAV is sent once and not kept |
+| Run records | Room `run_records` | Audit and replay | Last 100 rows |
+| Chat history | Room `sessions`/`turns` | The user's threads | Until deleted; tombstones persist |
+| Bridge token | Android Keystore | Authenticate to the PC | Until unpaired |
+| Analytics / crash reporting | None | — | — |
+
+Redaction happens before anything leaves the device: the observation producer
+drops password fields and replaces emails, phones, cards and OTPs. The
+disclosure screen (`Settings > Phone access`) states this and has a kill switch
+that refuses every device action even when Android still has the service on.
+
+### Play policy note
+
+- **Accessibility**: declared with a disclosure screen, a kill switch, a
+  self-package filter and fail-closed checks; it is the fallback path, the PC
+  bridge is primary.
+- **Package visibility**: `<queries>` lists only `MAIN`/`LAUNCHER` intents; no
+  `QUERY_ALL_PACKAGES`.
+- **Foreground service**: not declared yet. The planned type is `shortService`
+  for a bounded run with an ongoing notification; until then a run lives with
+  the activity.
+- **Cleartext**: permitted by `network_security_config.xml` because the config
+  language cannot express a private CIDR range; HTTPS endpoints keep the system
+  trust anchors.
 
 ## Children
 

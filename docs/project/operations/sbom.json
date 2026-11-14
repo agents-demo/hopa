@@ -1,0 +1,20 @@
+{
+  "bomFormat": "HOPA-SBOM",
+  "specVersion": "1",
+  "version": 1,
+  "created": "2026-11-06",
+  "components": [
+    { "name": "hopa-baseline", "version": "0.1.0", "license": "Apache-2.0", "scope": "dev" },
+    { "name": "hopa-bridge", "version": "0.1.0", "license": "Apache-2.0", "scope": "dev" },
+    { "name": "hopa-bench", "version": "0.1.0", "license": "Apache-2.0", "scope": "dev" },
+    { "name": "hopa-brain", "version": "0.1.0", "license": "Apache-2.0", "scope": "dev" },
+    { "name": "Kotlin", "version": "2.1.0", "license": "Apache-2.0", "scope": "build" },
+    { "name": "Gson", "version": "2.11.0", "license": "Apache-2.0", "scope": "runtime" },
+    { "name": "jsonschema", "version": "4.x", "license": "MIT", "scope": "dev" },
+    { "name": "pytest", "version": "8.x", "license": "MIT", "scope": "dev" },
+    { "name": "ruff", "version": "0.6+", "license": "MIT", "scope": "dev" },
+    { "name": "PyYAML", "version": "6.x", "license": "MIT", "scope": "dev" },
+    { "name": "Pyodide", "version": "pending", "license": "MPL-2.0", "scope": "planned" },
+    { "name": "QuickJS", "version": "pending", "license": "MIT", "scope": "planned" }
+  ]
+}

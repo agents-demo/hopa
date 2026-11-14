@@ -4,12 +4,12 @@ useDefault = true
 [allowlist]
 description = "Test fixtures and documentation examples"
 paths = [
-  '''agent/tests/.*''',
+  '''services/evals/baseline/tests/.*''',
   '''scripts/test_plan_status\.py''',
   '''docs/.*''',
   '''README\.md''',
   '''CHANGELOG\.md''',
-  '''bench/tasks/.*'''
+  '''services/evals/bench/tasks/.*'''
 ]
 regexes = [
   '''harmony-clt-[0-9A-Za-z.\-]+''',

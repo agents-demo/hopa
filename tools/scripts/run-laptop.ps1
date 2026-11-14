@@ -55,7 +55,7 @@ $appUrl = $cfg['HOPA_LAPTOP_BRIDGE_URL']
 if (-not $appUrl) { $appUrl = "http://127.0.0.1:$port" }
 $bundle = 'com.hopa.agent'
 $ability = 'LaptopAbility'
-$pcAgent = Join-Path $root '.venv\Scripts\pc-agent.exe'
+$pcAgent = Join-Path $root '.venv\Scripts\hopa-bridge.exe'
 $healthUrl = "http://127.0.0.1:$port"
 
 $cloud = $Cloud -or ($cfg['HOPA_LAPTOP_CLOUD'] -match '^(1|true|yes|on)$')
@@ -102,7 +102,7 @@ function Get-BridgeProcesses {
     $portPattern = "--port $port(?:\s|$)"
     return @(Get-CimInstance Win32_Process | Where-Object {
         $_.CommandLine -and
-        ($_.Name -eq 'pc-agent.exe' -or $_.Name -eq 'python.exe') -and
+        ($_.Name -eq 'hopa-bridge.exe' -or $_.Name -eq 'python.exe') -and
         $_.CommandLine -match '\bbridge\b' -and
         $_.CommandLine -match $portPattern
     })
@@ -125,7 +125,7 @@ function Stop-LaptopBridge {
 function Start-LaptopBridge {
     if (Test-Port $port) { return }
     if (-not (Test-Path $pcAgent)) {
-        throw "pc-agent not found at $pcAgent. Install services\pc-agent into .venv first."
+        throw "hopa-bridge not found at $pcAgent. Install services\bridge into .venv first."
     }
     $arguments = @(
         '--target', $device,

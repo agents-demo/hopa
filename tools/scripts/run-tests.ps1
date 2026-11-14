@@ -1,4 +1,4 @@
-#!/usr/bin/env pwsh
+﻿#!/usr/bin/env pwsh
 # Run Python, brain and ArkTS tests, plus lint and plan checks (Windows).
 $ErrorActionPreference = 'Stop'
 
@@ -21,30 +21,32 @@ if (Test-Path $venv) {
 Write-Host '=== installing Python packages (editable) ==='
 & $pythonExe @pythonPrefix -m pip install -U pip | Out-Host
 & $pythonExe @pythonPrefix -m pip install `
-    -e (Join-Path $root 'services\pc-agent') `
-    -e (Join-Path $root 'harness\bench[dev]') `
-    -e (Join-Path $root 'harness\agent[dev]') | Out-Host
+    -e (Join-Path $root 'services\wire') `
+    -e (Join-Path $root 'services\bridge') `
+    -e (Join-Path $root 'services\evals\bench[dev]') `
+    -e (Join-Path $root 'services\evals\baseline[dev]') | Out-Host
 if ($LASTEXITCODE -ne 0) { throw 'pip install failed' }
 
 Write-Host '=== Python tests ==='
 & $pythonExe @pythonPrefix -m pytest `
-    (Join-Path $root 'services\pc-agent') `
-    (Join-Path $root 'harness\bench') `
-    (Join-Path $root 'harness\agent') `
+    (Join-Path $root 'services\wire') `
+    (Join-Path $root 'services\bridge') `
+    (Join-Path $root 'services\evals\bench') `
+    (Join-Path $root 'services\evals\baseline') `
     (Join-Path $root 'tools\scripts') -q
 if ($LASTEXITCODE -ne 0) { throw 'Python tests failed' }
 
 Write-Host '=== agent coverage ==='
-& $pythonExe @pythonPrefix -m pytest (Join-Path $root 'harness\agent') `
-    --cov=hopa_agent --cov-report=term --cov-fail-under=80 -q
+& $pythonExe @pythonPrefix -m pytest (Join-Path $root 'services\evals\baseline') `
+    --cov=hopa_baseline --cov-report=term --cov-fail-under=80 -q
 if ($LASTEXITCODE -ne 0) { throw 'agent coverage gate failed' }
 
 Write-Host '=== ruff ==='
 & $pythonExe @pythonPrefix -m ruff check `
-    (Join-Path $root 'services\pc-agent') (Join-Path $root 'harness\bench') (Join-Path $root 'harness\agent')
+    (Join-Path $root 'services\wire', 'services\bridge') (Join-Path $root 'services\evals\bench') (Join-Path $root 'services\evals\baseline')
 if ($LASTEXITCODE -ne 0) { throw 'ruff check failed' }
 & $pythonExe @pythonPrefix -m ruff format --check `
-    (Join-Path $root 'services\pc-agent') (Join-Path $root 'harness\bench') (Join-Path $root 'harness\agent')
+    (Join-Path $root 'services\wire', 'services\bridge') (Join-Path $root 'services\evals\bench') (Join-Path $root 'services\evals\baseline')
 if ($LASTEXITCODE -ne 0) { throw 'ruff format check failed' }
 
 Write-Host '=== plan lint ==='
@@ -54,6 +56,18 @@ if ($LASTEXITCODE -ne 0) { throw 'plan lint failed' }
 Write-Host '=== app catalogue ==='
 & $pythonExe @pythonPrefix (Join-Path $root 'tools\scripts\build-app-catalog.py') --check
 if ($LASTEXITCODE -ne 0) { throw 'app catalogue is stale' }
+
+Write-Host '=== shared contract data ==='
+& $pythonExe @pythonPrefix (Join-Path $root 'tools\scripts\build-policy-data.py') --check
+if ($LASTEXITCODE -ne 0) { throw 'policy data is stale' }
+& $pythonExe @pythonPrefix (Join-Path $root 'tools\scripts\build-prompt-rules.py') --check
+if ($LASTEXITCODE -ne 0) { throw 'prompt rules are stale' }
+& $pythonExe @pythonPrefix (Join-Path $root 'tools\checks\check-routing.py')
+if ($LASTEXITCODE -ne 0) { throw 'routing fixtures failed' }
+& $pythonExe @pythonPrefix (Join-Path $root 'tools\checks\check-observation-hash.py')
+if ($LASTEXITCODE -ne 0) { throw 'observation hash vector failed' }
+& $pythonExe @pythonPrefix (Join-Path $root 'tools\checks\check-android-structure.py')
+if ($LASTEXITCODE -ne 0) { throw 'Android structure failed' }
 
 Write-Host '=== brain tests ==='
 if (Test-Path (Join-Path $root '.tools\kotlinc\bin\kotlinc.bat')) {

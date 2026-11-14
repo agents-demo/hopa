@@ -1,0 +1,151 @@
+openapi: 3.0.3
+info:
+  title: HOPA relay
+  version: "1.0"
+  description: |
+    The cloud half of the bridge: phones talk to the relay, one linked PC dials
+    out to it (`cloud-link`), and every other request is forwarded verbatim to the
+    bridge on that PC.
+
+    ```text
+    phone --HTTPS--> relay (cloud) <--long-poll-- hopa-bridge cloud-link
+                                                      |  hdc + device
+    ```
+
+    Paths under `x-forwarded` are not modelled here because they are the bridge's
+    own surface (`contracts/openapi/bridge.v1.yaml`), forwarded unchanged after the
+    phone token check.
+servers:
+  - url: https://hopa-relay.onrender.com
+    description: Render deployment (see render.yaml)
+security:
+  - bearerAuth: []
+paths:
+  /:
+    get:
+      summary: HTML status page
+      security: []
+      responses:
+        "200":
+          description: Status page
+          content:
+            text/html: { schema: { type: string } }
+  /health:
+    get:
+      summary: Is a PC linked, and how stale is it
+      security: []
+      responses:
+        "200":
+          description: Relay health
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  role: { type: string }
+                  linked: { type: boolean }
+                  link_age_seconds: { type: number, nullable: true }
+                  queued: { type: integer }
+                  waiting: { type: integer }
+                  tunnel: { type: object, additionalProperties: true }
+  /favicon.ico:
+    get:
+      summary: Empty favicon
+      security: []
+      responses:
+        "204": { description: No content }
+  /pair:
+    post:
+      summary: Trade the pairing code for a token pair
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code: { type: string }
+      responses:
+        "200":
+          description: Issued
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Session" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /refresh:
+    post:
+      summary: Renew an expired pair
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh]
+              properties:
+                refresh: { type: string }
+      responses:
+        "200":
+          description: Issued
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Session" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /link/poll:
+    get:
+      summary: PC only - long-poll for the next phone request
+      responses:
+        "200":
+          description: A request to replay, or a keep-alive
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /link/result:
+    post:
+      summary: PC only - hand back the bridge's answer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        "204": { description: Accepted }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /tunnel:
+    get:
+      summary: Binary WebSocket tunnel (host or phone side)
+      description: |
+        Upgrade to WebSocket. Frames are OPEN/DATA/CLOSE/STATUS, shared with the
+        PC half through `hopa_wire` (ADR-0010). The query carries
+        `role=host|phone&session=...` and the bearer token.
+      responses:
+        "101": { description: Switching protocols }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+x-forwarded:
+  - "*"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  responses:
+    Unauthorized:
+      description: Missing or wrong token
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error: { type: string }
+  schemas:
+    Session:
+      type: object
+      properties:
+        token: { type: string }
+        refresh: { type: string }
+        expires_in: { type: integer }

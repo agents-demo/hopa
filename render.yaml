@@ -1,4 +1,4 @@
-# One public relay for the PC bridge. See docs/guides/pc-bridge.md.
+# One public relay for the PC bridge. See docs/guides/harmony/pc-bridge.md.
 #
 # The PC still owns hdc and the conversation store; this service only forwards
 # authenticated phone requests to the linked PC. HOPA_BRIDGE_TOKEN and
@@ -9,8 +9,8 @@ services:
     runtime: python
     plan: free
     region: singapore
-    buildCommand: pip install --no-deps ./services/pc-agent
-    startCommand: python -m hopa_pc_agent relay --host 0.0.0.0 --port $PORT
+    buildCommand: pip install --no-deps ./services/wire ./services/relay
+    startCommand: python -m hopa_relay relay --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION

@@ -9,7 +9,15 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE_SUFFIXES = {".py", ".kt", ".ets", ".ts", ".js"}
-SKIP_DIRS = {".git", ".tools", "node_modules", "oh_modules", "build", "dist", "coverage"}
+SKIP_DIRS = {
+    ".git",
+    ".tools",
+    "node_modules",
+    "oh_modules",
+    "build",
+    "dist",
+    "coverage",
+}
 BAD_MARKERS = (
     "GNU General Public License",
     "GNU Affero General Public License",
@@ -25,7 +33,9 @@ def main() -> int:
     license_path = ROOT / "LICENSE"
     if not license_path.is_file():
         errors.append("LICENSE is missing")
-    elif "Apache License" not in license_path.read_text(encoding="utf-8", errors="replace"):
+    elif "Apache License" not in license_path.read_text(
+        encoding="utf-8", errors="replace"
+    ):
         errors.append("LICENSE does not contain the Apache License text")
 
     if not (ROOT / "NOTICE").is_file():

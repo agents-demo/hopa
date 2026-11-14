@@ -1,15 +1,15 @@
 version: 2
 updates:
   - package-ecosystem: pip
-    directory: "/harness/agent"
+    directory: "/services/evals/baseline"
     schedule:
       interval: weekly
   - package-ecosystem: pip
-    directory: "/harness/bench"
+    directory: "/services/evals/bench"
     schedule:
       interval: weekly
   - package-ecosystem: pip
-    directory: "/services/pc-agent"
+    directory: "/services/bridge"
     schedule:
       interval: weekly
   - package-ecosystem: github-actions

@@ -1,6 +1,6 @@
 # Safety model
 
-The rules below are enforced in code, not only in prompts. The PC harness and
+The rules below are enforced in code, not only in prompts. The PC evaluation rig and
 the ArkTS core must keep the same behaviour.
 
 ## One gate
@@ -78,7 +78,7 @@ refused before execution.
 
 - Append-only JSONL.
 - Each step chains to the previous hash. Editing a line is detectable with
-  `hopa-agent verify-chain`.
+  `hopa-baseline verify-chain`.
 - Denied and blocked actions are recorded too.
 
 ## Known gaps

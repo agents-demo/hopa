@@ -25,7 +25,7 @@ BUDGETS = {
 }
 # Files that were already over budget when the single `entry` module was split
 # into `app` / `phone` / `laptop`. They stay reported as open debt, not as new
-# drift: the list may only shrink. Tracked in docs/status/backlog.md.
+# drift: the list may only shrink. Tracked in docs/project/status.md.
 GRANDFATHERED = {
     "apps/harmony/phone/src/main/ets/pages/chat/ChatPage.ets",
     "apps/harmony/phone/src/main/ets/pages/settings/SettingsPage.ets",
@@ -70,16 +70,35 @@ def check_capabilities(errors: list[str]) -> None:
                     )
 
 
+DEVICE_ROOT = ROOT / "services/bridge/src/hopa_bridge"
+# hdc is the HarmonyOS transport. The adapter is the only place allowed to know
+# it; the HTTP layer talks to DevicePort (docs/guides/harmony/adding-a-platform.md).
+HDC_OWNERS = {"hdc.py", "device.py", "device_harmony.py"}
+
+
+def check_device_seam(errors: list[str]) -> None:
+    for path in DEVICE_ROOT.glob("*.py"):
+        if path.name in HDC_OWNERS:
+            continue
+        text = path.read_text(encoding="utf-8")
+        if re.search(r"from\s+\.hdc\s+import|import\s+hdc\b", text):
+            errors.append(f"{path.relative_to(ROOT)}: imports hdc outside the adapter")
+
+
 def check_barrels(errors: list[str]) -> None:
     allowed = {
         APP / "core/Index.ets",
         APP / "app/Index.ets",  # the shared kit's package root
         APP / "phone/src/main/ets/pages/Index.ets",  # ArkUI entry page, not a barrel
-    } | {path / "Index.ets" for path in (APP / "capabilities").iterdir() if path.is_dir()}
+    } | {
+        path / "Index.ets" for path in (APP / "capabilities").iterdir() if path.is_dir()
+    }
     for path in APP.rglob("Index.ets"):
         if path in allowed:
             continue
-        if any(part in {"build", "oh_modules", ".preview", ".test"} for part in path.parts):
+        if any(
+            part in {"build", "oh_modules", ".preview", ".test"} for part in path.parts
+        ):
             continue
         errors.append(f"{path.relative_to(ROOT)}: Index.ets outside a package root")
 
@@ -102,10 +121,14 @@ def size_report() -> tuple[list[str], list[str]]:
             lines = len(path.read_text(encoding="utf-8").splitlines())
             relative = path.relative_to(ROOT)
             if relative.as_posix() in GRANDFATHERED:
-                warnings.append(f"{relative}: {lines} lines, already over the {budget} budget")
+                warnings.append(
+                    f"{relative}: {lines} lines, already over the {budget} budget"
+                )
                 continue
             if lines > budget * 2:
-                violations.append(f"{relative}: {lines} lines (limit {budget}, hard {budget * 2})")
+                violations.append(
+                    f"{relative}: {lines} lines (limit {budget}, hard {budget * 2})"
+                )
             elif lines > budget:
                 warnings.append(f"{relative}: {lines} lines (limit {budget})")
     return warnings, violations
@@ -116,6 +139,7 @@ def main(argv: list[str]) -> int:
     errors: list[str] = []
     check_core(errors)
     check_capabilities(errors)
+    check_device_seam(errors)
     check_barrels(errors)
     warnings, violations = size_report()
 

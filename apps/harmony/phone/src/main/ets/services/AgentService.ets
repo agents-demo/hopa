@@ -238,7 +238,7 @@ export class AgentService {
     return snapshots;
   }
 
-  /** Points the bridge capability at a running `pc-agent bridge`. */
+  /** Points the bridge capability at a running `hopa-bridge bridge`. */
   configureBridge(url: string, token: string): void {
     this.bridge.configure(url, token);
     this.chatSync.configure(url, token, 'phone');

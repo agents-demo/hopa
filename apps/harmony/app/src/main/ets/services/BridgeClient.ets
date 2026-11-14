@@ -84,7 +84,7 @@ class VoicesBody {
 }
 
 /**
- * Client for `pc-agent bridge`.
+ * Client for `hopa-bridge bridge`.
  *
  * The phone asks the PC for the current layout and sends taps/types/launches
  * back. The token stays in memory only.

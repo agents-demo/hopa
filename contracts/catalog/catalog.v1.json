@@ -1,0 +1,1248 @@
+{
+  "schemaVersion": "1",
+  "description": "Platform-neutral app and site descriptions. Launch details live under platforms; every client renders this file (ADR-0018).",
+  "apps": [
+    {
+      "id": "alipay",
+      "display": "Alipay",
+      "aliases": [
+        "Alipay",
+        "支付宝",
+        "alipay"
+      ],
+      "purpose": "Payments, transfers, bills and mini programs.",
+      "actions": [
+        "Sending money or paying a bill is a payment: always ask, show the amount and recipient.",
+        "Never read a password or verification code; hand login to the user."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "com.alipay.mobile.client",
+          "ability": "EntryAbility",
+          "confirmed": true,
+          "verified": true
+        }
+      }
+    },
+    {
+      "id": "appgallery",
+      "display": "AppGallery",
+      "aliases": [
+        "应用市场",
+        "app store"
+      ],
+      "purpose": "Open AppGallery. Search for an app by name.",
+      "actions": [
+        "Install with the Install button; review permissions first.",
+        "Updates are under Me > Updates."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "com.huawei.hmsapp.appgallery",
+          "ability": "MainAbility",
+          "confirmed": true,
+          "verified": true
+        }
+      }
+    },
+    {
+      "id": "baidu",
+      "display": "Baidu",
+      "aliases": [
+        "Baidu",
+        "百度",
+        "baidu"
+      ],
+      "purpose": "Search, news feed and mini programs.",
+      "actions": [
+        "Reading is safe; publishing or commenting is public: ask first."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "com.baidu.baiduapp",
+          "ability": "EntryAbility",
+          "confirmed": true,
+          "verified": true
+        }
+      }
+    },
+    {
+      "id": "bilibili",
+      "display": "Bilibili",
+      "aliases": [
+        "Bilibili",
+        "B站",
+        "哔哩哔哩",
+        "bili"
+      ],
+      "purpose": "Video, search, comments, favourites, downloads.",
+      "actions": [
+        "Watching is safe; posting, commenting and following are public actions: ask.",
+        "If the app is absent, use https://www.bilibili.com in the built-in browser."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "yylx.danmaku.bili",
+          "ability": "EntryAbility",
+          "confirmed": true,
+          "verified": true
+        }
+      }
+    },
+    {
+      "id": "browser",
+      "display": "Browser",
+      "aliases": [
+        "浏览器"
+      ],
+      "purpose": "Open Browser. The address bar accepts a URL or a search.",
+      "actions": [
+        "Search results open in the same tab unless opened long-press.",
+        "Tabs are managed from the tab counter."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "com.huawei.hmos.browser",
+          "ability": "MainAbility",
+          "confirmed": true,
+          "verified": true
+        }
+      }
+    },
+    {
+      "id": "calendar",
+      "display": "Calendar",
+      "aliases": [
+        "日历",
+        "日程"
+      ],
+      "purpose": "Open Calendar. Use + to create an event.",
+      "actions": [
+        "Set the title, start and end time, then save.",
+        "Switch between day, week and month views."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "com.huawei.hmos.calendar",
+          "ability": "MainAbility",
+          "confirmed": true,
+          "verified": true
+        }
+      }
+    },
+    {
+      "id": "camera",
+      "display": "Camera",
+      "aliases": [
+        "相机",
+        "拍照"
+      ],
+      "purpose": "Open Camera. The shutter takes a photo.",
+      "actions": [
+        "Switch between photo and video.",
+        "Open the gallery from the thumbnail."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "com.huawei.hmos.camera",
+          "ability": "com.huawei.hmos.camera.MainAbility",
+          "confirmed": true,
+          "verified": true
+        }
+      }
+    },
+    {
+      "id": "clock",
+      "display": "Clock",
+      "aliases": [
+        "闹钟",
+        "时钟",
+        "alarm"
+      ],
+      "purpose": "Open Clock. The Alarm tab lists alarms.",
+      "actions": [
+        "Add an alarm with the + button; set the time and repeat days.",
+        "Delete an alarm with a long press."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "com.huawei.hmos.clock",
+          "ability": "com.huawei.hmos.clock.phone",
+          "confirmed": true,
+          "verified": true
+        }
+      }
+    },
+    {
+      "id": "contacts",
+      "display": "Contacts",
+      "aliases": [
+        "联系人",
+        "通讯录"
+      ],
+      "purpose": "Open Contacts. Use the search field for a name.",
+      "actions": [
+        "Open a contact to call, message or edit.",
+        "Create a contact with the + button."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "com.ohos.contacts",
+          "ability": "com.ohos.contacts.EntryAbility",
+          "confirmed": true,
+          "verified": true
+        }
+      }
+    },
+    {
+      "id": "douyin",
+      "display": "Douyin",
+      "aliases": [
+        "Douyin",
+        "抖音",
+        "TikTok China"
+      ],
+      "purpose": "Feed, search, profile, messages, shopping.",
+      "actions": [
+        "Liking, commenting, following, posting and buying are public or paid actions: ask first.",
+        "Purchases inside Douyin are payments: always ask, show the total.",
+        "Web fallback: https://www.douyin.com."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "com.ss.hm.ugc.aweme",
+          "ability": "MainAbility",
+          "confirmed": true,
+          "verified": true
+        }
+      }
+    },
+    {
+      "id": "files",
+      "display": "Files",
+      "aliases": [
+        "文件",
+        "文件管理"
+      ],
+      "purpose": "Open Files. Browse categories or internal storage.",
+      "actions": [
+        "Use search for a file name.",
+        "Long-press a file for copy, move, rename or delete."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "com.huawei.hmos.filemanager",
+          "ability": "EntryAbility",
+          "confirmed": true,
+          "verified": true
+        }
+      }
+    },
+    {
+      "id": "gallery",
+      "display": "Gallery",
+      "aliases": [
+        "图库",
+        "相册"
+      ],
+      "purpose": "Open Gallery. Albums are on the Albums tab.",
+      "actions": [
+        "Search by place, object or date.",
+        "Long-press a photo to share or delete."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "com.huawei.hmos.photos",
+          "ability": "com.huawei.hmos.photos.MainAbility",
+          "confirmed": true,
+          "verified": true
+        }
+      }
+    },
+    {
+      "id": "jd",
+      "display": "JD",
+      "aliases": [
+        "JD",
+        "京东",
+        "jd"
+      ],
+      "purpose": "Shopping, search, cart and orders.",
+      "actions": [
+        "Checkout is a payment: always ask, show the item and total.",
+        "Publishing a review is public: ask first."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "com.jd.hm.mall",
+          "ability": "EntryAbility",
+          "confirmed": true,
+          "verified": true
+        }
+      }
+    },
+    {
+      "id": "kuaishou",
+      "display": "Kuaishou",
+      "aliases": [
+        "Kuaishou",
+        "快手",
+        "Kwai"
+      ],
+      "purpose": "Short video, live, messages, shop.",
+      "actions": [
+        "Liking, commenting, following, posting and buying: ask first.",
+        "Live gifts and shop purchases are payments: always ask."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "com.kuaishou.hmapp",
+          "ability": "EntryAbility",
+          "confirmed": true,
+          "verified": true
+        }
+      }
+    },
+    {
+      "id": "music",
+      "display": "Music",
+      "aliases": [
+        "音乐",
+        "播放器"
+      ],
+      "purpose": "Open Music. Search or browse the library.",
+      "actions": [
+        "Tap a track to play; the mini player controls pause and next.",
+        "Playlists are under My Music."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "com.huawei.hmsapp.music",
+          "ability": "MainAbility",
+          "confirmed": true,
+          "verified": true
+        }
+      }
+    },
+    {
+      "id": "notepad",
+      "display": "Notes",
+      "aliases": [
+        "备忘录",
+        "笔记",
+        "notes"
+      ],
+      "purpose": "Open Notes. Use + to create a note.",
+      "actions": [
+        "Type the body, then go back to save.",
+        "Search notes with the magnifier."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "com.huawei.hmos.notepad",
+          "ability": "MainAbility",
+          "confirmed": true,
+          "verified": true
+        }
+      }
+    },
+    {
+      "id": "petal-maps",
+      "display": "Petal Maps",
+      "aliases": [
+        "地图",
+        "petal maps"
+      ],
+      "purpose": "Open Petal Maps. Search for a place or address.",
+      "actions": [
+        "Start a route with the directions button.",
+        "Choose walking, driving or transit."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "com.huawei.hmos.maps.app",
+          "ability": "EntryAbility",
+          "confirmed": true,
+          "verified": true
+        }
+      }
+    },
+    {
+      "id": "quark",
+      "display": "Quark",
+      "aliases": [
+        "Quark",
+        "夸克",
+        "quark"
+      ],
+      "purpose": "Browser, search, documents and downloads.",
+      "actions": [
+        "Reading is safe; submitting a form or message needs approval."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "com.quark.ohosbrowser",
+          "ability": "EntryAbility",
+          "confirmed": true,
+          "verified": true
+        }
+      }
+    },
+    {
+      "id": "qunar",
+      "display": "Qunar",
+      "aliases": [
+        "Qunar",
+        "去哪儿",
+        "qunar"
+      ],
+      "purpose": "Flights, hotels, trains and travel search.",
+      "actions": [
+        "Booking is a payment: always ask, show dates, destination and total."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "com.qunar.hos",
+          "ability": "EntryAbility",
+          "confirmed": true,
+          "verified": true
+        }
+      }
+    },
+    {
+      "id": "settings",
+      "display": "Settings",
+      "aliases": [
+        "设置",
+        "settings"
+      ],
+      "purpose": "Open Settings to change Wi-Fi, Bluetooth, Display or Battery.",
+      "actions": [
+        "Wi-Fi: Settings > WLAN. Toggle the switch.",
+        "Bluetooth: Settings > Bluetooth. Toggle the switch.",
+        "Display: Settings > Display & brightness."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "com.huawei.hmos.settings",
+          "ability": "com.huawei.hmos.settings.MainAbility",
+          "confirmed": true,
+          "verified": true
+        }
+      }
+    },
+    {
+      "id": "taobao",
+      "display": "Taobao",
+      "aliases": [
+        "Taobao",
+        "淘宝",
+        "taobao"
+      ],
+      "purpose": "Shopping, search, cart, orders and reviews.",
+      "actions": [
+        "Checkout is a payment: always ask, show the item and total.",
+        "Publishing a review is public: ask first."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "com.taobao.taobao4hmos",
+          "ability": "Taobao_mainAbility",
+          "confirmed": true,
+          "verified": true
+        }
+      }
+    },
+    {
+      "id": "ctrip",
+      "display": "Trip.com",
+      "aliases": [
+        "Trip.com",
+        "携程",
+        "ctrip"
+      ],
+      "purpose": "Flights, hotels, trains and travel search.",
+      "actions": [
+        "Booking is a payment: always ask, show dates, destination and total."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "com.ctrip.harmonynext",
+          "ability": "CTEntryAbility",
+          "confirmed": true,
+          "verified": true
+        }
+      }
+    },
+    {
+      "id": "wechat",
+      "display": "WeChat",
+      "aliases": [
+        "WeChat",
+        "微信",
+        "weixin",
+        "wechat"
+      ],
+      "purpose": "Chats, contacts, search, Moments, Pay, mini programs.",
+      "actions": [
+        "Sending a message is public and effectively irreversible: show recipient and text, then ask.",
+        "WeChat Pay is a payment: always ask, show amount and merchant if visible.",
+        "Never read a verification code or password; hand login to the user."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "com.tencent.wechat",
+          "ability": "EntryAbility",
+          "confirmed": true,
+          "verified": true
+        }
+      }
+    },
+    {
+      "id": "weibo",
+      "display": "Weibo",
+      "aliases": [
+        "Weibo",
+        "微博",
+        "sina weibo"
+      ],
+      "purpose": "Feed, search, profile, comments, direct messages.",
+      "actions": [
+        "To post: tap Skip if an ad shows, then tap Home. The orange + exists only on the Home feed, top-right near 1210,200.",
+        "The + has no label. Tap it, choose 写微博 (not Album), then type and tap Send. Send greys out until there is text.",
+        "Posting, reposting, commenting and following are public: ask first.",
+        "Web fallback: https://weibo.com."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "com.sina.weibo.stage",
+          "ability": "EntryAbility",
+          "confirmed": true,
+          "verified": true
+        }
+      }
+    },
+    {
+      "id": "wps",
+      "display": "WPS Office",
+      "aliases": [
+        "WPS",
+        "WPS Office",
+        "金山办公",
+        "wps"
+      ],
+      "purpose": "Documents, spreadsheets and presentations.",
+      "actions": [
+        "Editing or sharing a document changes someone else's file: ask first."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "cn.wps.mobileoffice.hap",
+          "ability": "DocumentAbility",
+          "confirmed": true,
+          "verified": true
+        }
+      }
+    },
+    {
+      "id": "xianyu",
+      "display": "Xianyu",
+      "aliases": [
+        "Xianyu",
+        "闲鱼",
+        "idlefish"
+      ],
+      "purpose": "Marketplace listings, search, chat with sellers, orders.",
+      "actions": [
+        "Buying, bidding, making an offer and confirming receipt involve money: always ask, show item, price and seller.",
+        "Publishing a listing is public: ask first."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "com.taobao.idlefish4ohos",
+          "ability": "EntryAbility",
+          "confirmed": true,
+          "verified": true
+        }
+      }
+    },
+    {
+      "id": "baijiahao",
+      "display": "Baidu Baijiahao",
+      "aliases": [
+        "Baijiahao",
+        "Baidu Baijiahao",
+        "百家号"
+      ],
+      "purpose": "Publishing an article or changing a published post is irreversible: ask first.",
+      "actions": [
+        "If no HarmonyOS app is installed, use https://baijiahao.baidu.com in the built-in browser."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "",
+          "ability": "",
+          "confirmed": false,
+          "verified": false
+        }
+      }
+    },
+    {
+      "id": "boss-zhipin",
+      "display": "BOSS Zhipin",
+      "aliases": [
+        "BOSS",
+        "BOSS直聘",
+        "boss zhipin",
+        "zhipin"
+      ],
+      "purpose": "Jobs, search, recruiter chat, resume.",
+      "actions": [
+        "Sending a message to a recruiter is public and hard to undo: ask first.",
+        "Uploading or replacing a resume changes what employers see: ask first.",
+        "Web fallback: https://www.zhipin.com."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "",
+          "ability": "",
+          "confirmed": false,
+          "verified": false
+        }
+      }
+    },
+    {
+      "id": "dedao",
+      "display": "Dedao",
+      "aliases": [
+        "Dedao",
+        "得到",
+        "luojilab"
+      ],
+      "purpose": "Courses, audio, notes, purchases.",
+      "actions": [
+        "Buying a course is a payment: always ask.",
+        "Reading and playback are safe."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "",
+          "ability": "",
+          "confirmed": false,
+          "verified": false
+        }
+      }
+    },
+    {
+      "id": "feishu",
+      "display": "Feishu",
+      "aliases": [
+        "Feishu",
+        "Lark",
+        "飞书"
+      ],
+      "purpose": "Chats, docs, calendar, meetings.",
+      "actions": [
+        "Sending a message or creating a meeting invites other people: ask first.",
+        "Documents can be edited collaboratively; check before overwriting content."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "",
+          "ability": "",
+          "confirmed": false,
+          "verified": false
+        }
+      }
+    },
+    {
+      "id": "jike",
+      "display": "Jike",
+      "aliases": [
+        "Jike",
+        "即刻",
+        "ruguo"
+      ],
+      "purpose": "Feed, topics, comments, messages.",
+      "actions": [
+        "Posting, commenting and following are public actions: ask first."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "",
+          "ability": "",
+          "confirmed": false,
+          "verified": false
+        }
+      }
+    },
+    {
+      "id": "qqmail",
+      "display": "QQ Mail",
+      "aliases": [
+        "QQ Mail",
+        "QQ邮箱",
+        "qqmail",
+        "foxmail"
+      ],
+      "purpose": "Inbox, search, read, compose, attachments.",
+      "actions": [
+        "Sending mail is irreversible: show recipients, subject and body, then ask.",
+        "Never read a password or one-time code aloud; hand login over to the user."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "",
+          "ability": "",
+          "confirmed": false,
+          "verified": false
+        }
+      }
+    },
+    {
+      "id": "toutiao",
+      "display": "Toutiao",
+      "aliases": [
+        "Toutiao",
+        "今日头条",
+        "jinri toutiao"
+      ],
+      "purpose": "News feed, search, comments, video.",
+      "actions": [
+        "Reading is safe; commenting, posting and following: ask first."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "",
+          "ability": "",
+          "confirmed": false,
+          "verified": false
+        }
+      }
+    },
+    {
+      "id": "xiaohongshu",
+      "display": "Xiaohongshu",
+      "aliases": [
+        "Xiaohongshu",
+        "小红书",
+        "RED",
+        "xhs"
+      ],
+      "purpose": "Feed, search, notes, comments, messages, shop.",
+      "actions": [
+        "Liking, collecting, commenting, following and posting: ask first.",
+        "Shop checkout is a payment: always ask, show the total.",
+        "Web fallback: https://www.xiaohongshu.com."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "",
+          "ability": "",
+          "confirmed": false,
+          "verified": false
+        }
+      }
+    },
+    {
+      "id": "zhihu",
+      "display": "Zhihu",
+      "aliases": [
+        "Zhihu",
+        "知乎"
+      ],
+      "purpose": "Feed, search, questions, answers, comments, messages.",
+      "actions": [
+        "Publishing an answer, comment or message is public: ask first.",
+        "Web fallback: https://www.zhihu.com."
+      ],
+      "platforms": {
+        "harmonyos": {
+          "bundle": "",
+          "ability": "",
+          "confirmed": false,
+          "verified": false
+        }
+      }
+    }
+  ],
+  "sites": [
+    {
+      "id": "amazon.com",
+      "display": "Amazon",
+      "domains": [
+        "amazon.com",
+        "amazon.sg",
+        "amazon.co.uk",
+        "amazon.de",
+        "amazon.co.jp"
+      ],
+      "aliases": [
+        "Amazon",
+        "亚马逊"
+      ],
+      "validated": "pending",
+      "purpose": "",
+      "actions": [
+        "Open https://amazon.com in Browser.",
+        "Read the page and use element refs; never invent coordinates.",
+        "Do not submit an order, form or message without approval."
+      ],
+      "platforms": {
+        "harmonyos": {}
+      }
+    },
+    {
+      "id": "zhipin.com",
+      "display": "BOSS直聘",
+      "domains": [
+        "zhipin.com"
+      ],
+      "aliases": [
+        "BOSS直聘",
+        "Boss直聘",
+        "boss直聘",
+        "BOSS直聘网页版",
+        "直聘",
+        "zhipin"
+      ],
+      "validated": "pending",
+      "purpose": "",
+      "actions": [
+        "Open https://zhipin.com in Browser.",
+        "Read the page and use element refs; never invent coordinates.",
+        "Do not submit an order, form or message without approval."
+      ],
+      "platforms": {
+        "harmonyos": {}
+      }
+    },
+    {
+      "id": "mail.google.com",
+      "display": "Gmail",
+      "domains": [
+        "mail.google.com"
+      ],
+      "aliases": [
+        "Gmail",
+        "Google Mail",
+        "谷歌邮箱"
+      ],
+      "validated": "pending",
+      "purpose": "",
+      "actions": [
+        "Open https://mail.google.com in Browser.",
+        "Read the page and use element refs; never invent coordinates.",
+        "Do not submit an order, form or message without approval."
+      ],
+      "platforms": {
+        "harmonyos": {}
+      }
+    },
+    {
+      "id": "calendar.google.com",
+      "display": "Google Calendar",
+      "domains": [
+        "calendar.google.com"
+      ],
+      "aliases": [
+        "Google Calendar",
+        "谷歌日历"
+      ],
+      "validated": "pending",
+      "purpose": "",
+      "actions": [
+        "Open https://calendar.google.com in Browser.",
+        "Read the page and use element refs; never invent coordinates.",
+        "Do not submit an order, form or message without approval."
+      ],
+      "platforms": {
+        "harmonyos": {}
+      }
+    },
+    {
+      "id": "maps.google.com",
+      "display": "Google Maps",
+      "domains": [
+        "maps.google.com"
+      ],
+      "aliases": [
+        "Google Maps",
+        "谷歌地图"
+      ],
+      "validated": "pending",
+      "purpose": "",
+      "actions": [
+        "Open https://maps.google.com in Browser.",
+        "Read the page and use element refs; never invent coordinates.",
+        "Do not submit an order, form or message without approval."
+      ],
+      "platforms": {
+        "harmonyos": {}
+      }
+    },
+    {
+      "id": "instagram.com",
+      "display": "Instagram",
+      "domains": [
+        "instagram.com"
+      ],
+      "aliases": [
+        "Instagram",
+        "IG",
+        "照片墙"
+      ],
+      "validated": "pending",
+      "purpose": "",
+      "actions": [
+        "Open https://instagram.com in Browser.",
+        "Read the page and use element refs; never invent coordinates.",
+        "Do not submit an order, form or message without approval."
+      ],
+      "platforms": {
+        "harmonyos": {}
+      }
+    },
+    {
+      "id": "linkedin.com",
+      "display": "LinkedIn",
+      "domains": [
+        "linkedin.com",
+        "www.linkedin.com"
+      ],
+      "aliases": [
+        "LinkedIn",
+        "linked in"
+      ],
+      "validated": "pending",
+      "purpose": "",
+      "actions": [
+        "Open https://www.linkedin.com in the built-in browser.",
+        "Read the page and use the visible text on links and buttons; never invent coordinates.",
+        "Signing in is handed to the user. HOPA never types a password or a one-time code.",
+        "Do not post, message, connect or apply without approval."
+      ],
+      "platforms": {
+        "harmonyos": {}
+      }
+    },
+    {
+      "id": "telegram.org",
+      "display": "Telegram",
+      "domains": [
+        "telegram.org",
+        "web.telegram.org"
+      ],
+      "aliases": [
+        "Telegram",
+        "电报",
+        "TG"
+      ],
+      "validated": "pending",
+      "purpose": "",
+      "actions": [
+        "Open https://telegram.org in Browser.",
+        "Read the page and use element refs; never invent coordinates.",
+        "Do not submit an order, form or message without approval."
+      ],
+      "platforms": {
+        "harmonyos": {}
+      }
+    },
+    {
+      "id": "uber.com",
+      "display": "Uber",
+      "domains": [
+        "uber.com",
+        "www.uber.com",
+        "m.uber.com"
+      ],
+      "aliases": [
+        "Uber",
+        "uber ride"
+      ],
+      "validated": "pending",
+      "purpose": "1. Set pickup. 2. Set destination. 3. Compare ride types and prices. 4. Request the ride — approval required.",
+      "actions": [
+        "Open https://m.uber.com in the built-in browser.",
+        "Read the page and use the visible text on links and buttons; never invent coordinates.",
+        "Signing in is handed to the user.",
+        "**Any ride request is a payment-classified action: always ask before confirming.** Show the pickup, destination, ride t…"
+      ],
+      "platforms": {
+        "harmonyos": {}
+      }
+    },
+    {
+      "id": "ubereats.com",
+      "display": "Uber Eats",
+      "domains": [
+        "ubereats.com",
+        "www.ubereats.com"
+      ],
+      "aliases": [
+        "Uber Eats",
+        "ubereats",
+        "food delivery"
+      ],
+      "validated": "pending",
+      "purpose": "1. Choose a delivery address. 2. Search a restaurant or a dish. 3. Add items to the cart. 4. Review the total, then ask before placing the order.",
+      "actions": [
+        "Open https://www.ubereats.com in the built-in browser.",
+        "Read the page and use the visible text on links and buttons; never invent coordinates.",
+        "Signing in and the delivery address are handed to the user.",
+        "**Checkout is a payment-classified action: always ask before placing the order.** Show the restaurant, items, fees and…"
+      ],
+      "platforms": {
+        "harmonyos": {}
+      }
+    },
+    {
+      "id": "whatsapp.com",
+      "display": "WhatsApp",
+      "domains": [
+        "whatsapp.com",
+        "web.whatsapp.com"
+      ],
+      "aliases": [
+        "WhatsApp",
+        "Whats App",
+        "whatsapp",
+        "WA"
+      ],
+      "validated": "pending",
+      "purpose": "",
+      "actions": [
+        "Open https://whatsapp.com in Browser.",
+        "Read the page and use element refs; never invent coordinates.",
+        "Do not submit an order, form or message without approval."
+      ],
+      "platforms": {
+        "harmonyos": {}
+      }
+    },
+    {
+      "id": "youtube.com",
+      "display": "YouTube",
+      "domains": [
+        "youtube.com",
+        "youtu.be"
+      ],
+      "aliases": [
+        "YouTube",
+        "油管"
+      ],
+      "validated": "pending",
+      "purpose": "",
+      "actions": [
+        "Open https://youtube.com in Browser.",
+        "Read the page and use element refs; never invent coordinates.",
+        "Do not submit an order, form or message without approval."
+      ],
+      "platforms": {
+        "harmonyos": {}
+      }
+    },
+    {
+      "id": "bilibili.com",
+      "display": "哔哩哔哩",
+      "domains": [
+        "bilibili.com"
+      ],
+      "aliases": [
+        "B站",
+        "哔哩哔哩",
+        "bilibili",
+        "b站"
+      ],
+      "validated": "pending",
+      "purpose": "",
+      "actions": [
+        "Open https://bilibili.com in Browser.",
+        "Read the page and use element refs; never invent coordinates.",
+        "Do not submit an order, form or message without approval."
+      ],
+      "platforms": {
+        "harmonyos": {}
+      }
+    },
+    {
+      "id": "xiaoyuzhoufm.com",
+      "display": "小宇宙",
+      "domains": [
+        "xiaoyuzhoufm.com"
+      ],
+      "aliases": [
+        "小宇宙",
+        "Xiaoyuzhou"
+      ],
+      "validated": "pending",
+      "purpose": "",
+      "actions": [
+        "Open https://xiaoyuzhoufm.com in Browser.",
+        "Read the page and use element refs; never invent coordinates.",
+        "Do not submit an order, form or message without approval."
+      ],
+      "platforms": {
+        "harmonyos": {}
+      }
+    },
+    {
+      "id": "xiaohongshu.com",
+      "display": "小红书",
+      "domains": [
+        "xiaohongshu.com",
+        "xhslink.com"
+      ],
+      "aliases": [
+        "小红书",
+        "Xiaohongshu",
+        "XHS",
+        "xiaohongshu",
+        "xhs"
+      ],
+      "validated": "pending",
+      "purpose": "",
+      "actions": [
+        "Open https://xiaohongshu.com in Browser.",
+        "Read the page and use element refs; never invent coordinates.",
+        "Do not submit an order, form or message without approval."
+      ],
+      "platforms": {
+        "harmonyos": {}
+      }
+    },
+    {
+      "id": "weibo.com",
+      "display": "微博",
+      "domains": [
+        "weibo.com"
+      ],
+      "aliases": [
+        "微博",
+        "Weibo",
+        "weibo"
+      ],
+      "validated": "pending",
+      "purpose": "",
+      "actions": [
+        "Open https://weibo.com in Browser.",
+        "Read the page and use element refs; never invent coordinates.",
+        "Do not submit an order, form or message without approval."
+      ],
+      "platforms": {
+        "harmonyos": {}
+      }
+    },
+    {
+      "id": "douyin.com",
+      "display": "抖音",
+      "domains": [
+        "douyin.com",
+        "jinritemai.com"
+      ],
+      "aliases": [
+        "抖音",
+        "抖音商城",
+        "抖音电商",
+        "douyin",
+        "douyinshop"
+      ],
+      "validated": "pending",
+      "purpose": "",
+      "actions": [
+        "Open https://douyin.com in Browser.",
+        "Read the page and use element refs; never invent coordinates.",
+        "Do not submit an order, form or message without approval."
+      ],
+      "platforms": {
+        "harmonyos": {}
+      }
+    },
+    {
+      "id": "weixin.sogou.com",
+      "display": "搜狗微信",
+      "domains": [
+        "weixin.sogou.com"
+      ],
+      "aliases": [
+        "搜狗微信",
+        "Sogou Weixin"
+      ],
+      "validated": "pending",
+      "purpose": "",
+      "actions": [
+        "Open https://weixin.sogou.com in Browser.",
+        "Read the page and use element refs; never invent coordinates.",
+        "Do not submit an order, form or message without approval."
+      ],
+      "platforms": {
+        "harmonyos": {}
+      }
+    },
+    {
+      "id": "tieba.baidu.com",
+      "display": "百度贴吧",
+      "domains": [
+        "tieba.baidu.com"
+      ],
+      "aliases": [
+        "贴吧",
+        "百度贴吧"
+      ],
+      "validated": "pending",
+      "purpose": "",
+      "actions": [
+        "Open https://tieba.baidu.com in Browser.",
+        "Read the page and use element refs; never invent coordinates.",
+        "Do not submit an order, form or message without approval."
+      ],
+      "platforms": {
+        "harmonyos": {}
+      }
+    },
+    {
+      "id": "zhihu.com",
+      "display": "知乎",
+      "domains": [
+        "zhihu.com"
+      ],
+      "aliases": [
+        "知乎",
+        "Zhihu",
+        "zhihu"
+      ],
+      "validated": "pending",
+      "purpose": "",
+      "actions": [
+        "Open https://zhihu.com in Browser.",
+        "Read the page and use element refs; never invent coordinates.",
+        "Do not submit an order, form or message without approval."
+      ],
+      "platforms": {
+        "harmonyos": {}
+      }
+    },
+    {
+      "id": "douban.com",
+      "display": "豆瓣",
+      "domains": [
+        "douban.com"
+      ],
+      "aliases": [
+        "豆瓣",
+        "Douban"
+      ],
+      "validated": "pending",
+      "purpose": "",
+      "actions": [
+        "Open https://douban.com in Browser.",
+        "Read the page and use element refs; never invent coordinates.",
+        "Do not submit an order, form or message without approval."
+      ],
+      "platforms": {
+        "harmonyos": {}
+      }
+    }
+  ]
+}

@@ -40,7 +40,7 @@ stricter safety check.
 | Node (bundled) | 24.14.1 |
 | Python | 3.11+ (3.12 recommended) |
 
-Environment variables are documented in `docs/guides/setup.md`. Do not hard-code absolute
+Environment variables are documented in `docs/guides/harmony/setup.md`. Do not hard-code absolute
 paths in tracked files; scripts should discover tools or read env vars.
 
 ## Build
@@ -66,10 +66,10 @@ hvigorw assembleHap --no-daemon
 cd apps/harmony
 hvigorw test -p module=core@default --no-daemon -p coverage=false
 
-# pc-agent + bench
-cd pc-agent && python -m pytest
+# hopa-bridge + bench
+cd services/bridge && python -m pytest
 cd bench   && python -m pytest
-ruff check pc-agent bench
+ruff check hopa-bridge bench
 ```
 
 - Put pure logic tests in `<module>/src/test/*.test.ets` and **register every suite
@@ -122,7 +122,7 @@ updates keep working; platform identity lives at the module level.
 - `capabilities/sandbox` hosts the hidden WebView + Pyodide/QuickJS. Offline by
   default; no network unless explicitly enabled by the user.
 - `capabilities/accessibility` is an `AccessibilityExtensionAbility` skeleton. It depends on
-  **restricted permissions / an ACL request**; see `docs/architecture/overview.md`. Do not
+  **restricted permissions / an ACL request**; see `docs/design/architecture/overview.md`. Do not
   claim it works until the ACL is approved and verified on a device.
 - `capabilities/system` uses system intents (alarm, calendar, deep links). Prefer
   public `startAbility` / want APIs over private ones.
@@ -144,12 +144,12 @@ updates keep working; platform identity lives at the module level.
    descriptors registered with `ToolRegistry`.
 3. Classify each action's risk in `ApprovalPolicy` (payment conservatively).
 4. Add host unit tests where logic allows; device tests go in `ohosTest/`.
-5. Update `docs/architecture/overview.md` (boundaries + permissions) and `NOTICE` if you
+5. Update `docs/design/architecture/overview.md` (boundaries + permissions) and `NOTICE` if you
    add third-party code.
 
 ## Benchmarks
 
-- Tasks live in `harness/bench/tasks/*.yaml` and follow the schema in `harness/bench/README.md`.
+- Tasks live in `services/evals/bench/tasks/*.yaml` and follow the schema in `services/evals/bench/README.md`.
 - A task must declare `goal`, `app` (and ideally `bundle`), and a `success` check.
 - Never make a benchmark task bypass the payment gate. Payment tasks assert that
   the gate *blocks* until confirmation.

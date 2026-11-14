@@ -4,7 +4,7 @@ display: Taobao
 bundle: com.taobao.taobao4hmos
 ability: Taobao_mainAbility
 bundle_verified: Mate 80, 2026-11-08
-aliases: [Taobao, ??, taobao]
+aliases: [Taobao, 淘宝, taobao]
 pace: careful
 validated: verified
 platform: harmonyos

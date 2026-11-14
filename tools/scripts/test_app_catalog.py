@@ -1,8 +1,9 @@
-"""Tests for the generated app/site catalogue."""
+"""Tests for the generated app/site catalogue and its platform renderings."""
 
 from __future__ import annotations
 
 import importlib.util
+import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -45,45 +46,67 @@ def test_list_parsing_handles_empty() -> None:
 
 def test_catalogue_counts_and_status() -> None:
     module = _module()
-    apps = module.collect()
-    sites = module.collect_sites()
-    assert len(apps) == 35
-    assert len(sites) == 21
-    assert sum(1 for app in apps if app["verified"]) == 26
-    assert sum(1 for app in apps if not app["confirmed"]) == 9
+    data = module.document(module.collect_apps(), module.collect_sites())
+    assert len(data["apps"]) == 35
+    assert len(data["sites"]) == 21
+    harmony = [app["platforms"]["harmonyos"] for app in data["apps"]]
+    assert sum(1 for item in harmony if item["verified"]) == 26
+    assert sum(1 for item in harmony if not item["confirmed"]) == 9
     # Verified apps must carry a launchable ability.
-    assert all(app["ability"] for app in apps if app["verified"])
+    assert all(item["ability"] for item in harmony if item["verified"])
 
 
 def test_unconfirmed_apps_have_no_bundle() -> None:
     module = _module()
-    apps = module.collect()
-    for app in apps:
-        if not app["confirmed"]:
-            assert app["bundle"] == ""
-            assert app["verified"] is False
+    for app in module.collect_apps():
+        harmony = app["platforms"]["harmonyos"]
+        if not harmony["confirmed"]:
+            assert harmony["bundle"] == ""
+            assert harmony["verified"] is False
 
 
 def test_render_emits_both_catalogues() -> None:
     module = _module()
-    apps = module.collect()
-    sites = module.collect_sites()
-    output = module.render(apps, sites)
+    data = module.document(module.collect_apps(), module.collect_sites())
+    output = module.render_ets(data)
     assert "export const APP_CATALOG" in output
     assert "export const SITE_CATALOG" in output
     assert "verified: true" in output
     assert "verified: false" in output
-    # A bundle or a site domain is an identifier, never a URL. Prose in the
-    # purpose/actions may mention an https fallback on purpose.
-    assert all("://" not in app["bundle"] for app in apps)
-    assert all("://" not in domain for site in sites for domain in site["domains"])
+    assert all("://" not in app["platforms"]["harmonyos"]["bundle"] for app in data["apps"])
+    assert all("://" not in domain for site in data["sites"] for domain in site["domains"])
+
+
+def test_neutral_json_is_platform_free() -> None:
+    module = _module()
+    data = module.document(module.collect_apps(), module.collect_sites())
+    parsed = json.loads(module.render_json(data))
+    assert parsed["schemaVersion"] == "1"
+    app = next(item for item in parsed["apps"] if item["id"] == "alipay")
+    assert "bundle" not in app
+    assert app["platforms"]["harmonyos"]["bundle"] == "com.alipay.mobile.client"
+    site = next(item for item in parsed["sites"] if item["id"] == "amazon.com")
+    assert site["domains"]
+    assert "purpose" in site
+
+
+def test_kotlin_rendering_matches_the_same_entries() -> None:
+    module = _module()
+    data = module.document(module.collect_apps(), module.collect_sites())
+    output = module.render_kotlin(data)
+    assert "package com.hopa.catalog" in output
+    assert 'id = "alipay"' in output
+    for app in data["apps"]:
+        assert f'id = "{app["id"]}"' in output
+    # Kotlin needs $ escaped inside a string literal.
+    assert module.kotlin_string("cost $5") == '"cost \\$5"'
 
 
 def test_entries_carry_purpose_and_actions() -> None:
     module = _module()
-    apps = module.collect()
+    apps = module.collect_apps()
     assert all(app["purpose"] for app in apps)
-    clock = next(app for app in apps if app["name"] == "clock")
+    clock = next(app for app in apps if app["id"] == "clock")
     assert "alarm" in clock["purpose"].lower()
     assert clock["actions"]
     sites = module.collect_sites()
@@ -91,10 +114,8 @@ def test_entries_carry_purpose_and_actions() -> None:
     assert any(site["aliases"] for site in sites)
 
 
-def test_committed_file_is_current() -> None:
+def test_committed_files_are_current() -> None:
     module = _module()
-    expected = module.render(module.collect(), module.collect_sites())
-    target = (
-        ROOT / "apps" / "harmony" / "app" / "src" / "main" / "ets" / "services" / "AppCatalog.ets"
-    )
-    assert target.read_text(encoding="utf-8") == expected
+    data = module.document(module.collect_apps(), module.collect_sites())
+    assert module.CATALOG.read_text(encoding="utf-8") == module.render_json(data)
+    assert module.TARGET.read_text(encoding="utf-8") == module.render_ets(data)

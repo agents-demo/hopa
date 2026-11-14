@@ -1,5 +1,19 @@
 import { Action, RiskLevel } from '../Types';
 import { Screen } from '../domain/Screen';
+import {
+  ALLOWED_KINDS,
+  CURRENCY_RE,
+  CURRENCY_TOKEN_RE,
+  INTERACTIVE_KINDS,
+  MERCHANT_PREFIXES,
+  PAYMENT_ACTIONS,
+  PAYMENT_CONSEQUENCE,
+  PAYMENT_KINDS,
+  PAYMENT_WORDS,
+  SENSITIVE_KINDS,
+  TOTAL_RE,
+  TRUSTED_APP_KINDS
+} from './PolicyData';
 
 /**
  * Amount, currency and merchant read from the screen. Best effort: a missing
@@ -9,8 +23,7 @@ export class PaymentContext {
   amount: string = '';
   currency: string = '';
   merchant: string = '';
-  readonly consequence: string =
-    'Money may leave your account. HOPA cannot undo a payment.';
+  readonly consequence: string = PAYMENT_CONSEQUENCE;
 
   hasDetails(): boolean {
     return this.amount.length > 0 || this.merchant.length > 0;
@@ -51,86 +64,19 @@ export class ApprovalPolicy {
   isTrustedApp(bundle: string): boolean {
     return this.trustedApps.has(bundle.trim().toLowerCase());
   }
-  private paymentKinds: Set<string> = new Set<string>([
-    'payment.pay',
-    'payment.confirm',
-    'payment.checkout',
-    'payment.enterCard',
-    'payment.authorize'
-  ]);
+  private paymentKinds: Set<string> = new Set<string>(PAYMENT_KINDS);
 
-  private paymentWords: string[] = [
-    'checkout',
-    'order',
-    'pay',
-    'purchase',
-    '支付',
-    '付款',
-    '结算',
-    '订单',
-    '商户'
-  ];
+  private paymentWords: string[] = PAYMENT_WORDS;
 
-  private paymentActions: string[] = [
-    'pay now',
-    'confirm payment',
-    'place order',
-    'buy now',
-    'subscribe',
-    'checkout',
-    '立即支付',
-    '确认支付',
-    '立即购买',
-    '提交订单',
-    '去支付',
-    '付款',
-    '结算'
-  ];
+  private paymentActions: string[] = PAYMENT_ACTIONS;
 
-  private interactiveKinds: Set<string> = new Set<string>([
-    'ui.tap',
-    'ui.doubleTap',
-    'ui.longPress',
-    'ui.type',
-    'ui.swipe',
-    'ui.scroll',
-    'web.click',
-    'web.type'
-  ]);
+  private interactiveKinds: Set<string> = new Set<string>(INTERACTIVE_KINDS);
 
-  private sensitiveKinds: Set<string> = new Set<string>([
-    'ui.sendMessage',
-    'ui.call',
-    'system.delete',
-    'system.uninstall',
-    'system.reset',
-    'sandbox.runNetworked'
-  ]);
+  private sensitiveKinds: Set<string> = new Set<string>(SENSITIVE_KINDS);
 
   // Explicitly allow-listed, non-destructive actions. Anything not listed here
   // (and not payment) falls through to Sensitive.
-  private allowedKinds: Set<string> = new Set<string>([
-    'web.navigate',
-    'web.read',
-    'web.click',
-    'web.type',
-    'ui.tap',
-    'ui.doubleTap',
-    'ui.longPress',
-    'ui.type',
-    'ui.swipe',
-    'ui.scroll',
-    'ui.back',
-    'ui.home',
-    'ui.launch',
-    'ui.wait',
-    'ui.observe',
-    'a11y.observe',
-    'system.setAlarm',
-    'system.addEvent',
-    'system.openLink',
-    'sandbox.run'
-  ]);
+  private allowedKinds: Set<string> = new Set<string>(ALLOWED_KINDS);
 
   /**
    * A payment screen must show a real checkout signal: an amount together
@@ -164,12 +110,19 @@ export class ApprovalPolicy {
   }
 
   private hasAmount(text: string): boolean {
-    const currency: RegExp = /(?:[¥$€£]|CNY|USD|EUR|GBP)\s?\d[\d,]*(?:\.\d{1,2})?/i;
-    if (currency.test(text)) {
+    if (CURRENCY_RE.test(text)) {
       return true;
     }
-    const total: RegExp = /(?:total|amount|order total|合计|金额|应付|实付|总计)[^\d]{0,8}\d/i;
-    return total.test(text);
+    return TOTAL_RE.test(text);
+  }
+
+  private isTrustedKind(kind: string): boolean {
+    for (const trustedKind of TRUSTED_APP_KINDS) {
+      if (trustedKind === kind) {
+        return true;
+      }
+    }
+    return false;
   }
 
   classify(action: Action, screen?: Screen): RiskLevel {
@@ -181,7 +134,7 @@ export class ApprovalPolicy {
     }
     // A remembered app skips the message prompt only. Delete, call, payment and
     // unknown kinds keep asking.
-    if (action.kind === 'ui.sendMessage' && action.app.length > 0 &&
+    if (this.isTrustedKind(action.kind) && action.app.length > 0 &&
       this.trustedApps.has(action.app.toLowerCase())) {
       return RiskLevel.Read;
     }
@@ -225,10 +178,10 @@ export class ApprovalPolicy {
         continue;
       }
       if (context.amount.length === 0) {
-        const match = text.match(/(?:[¥$€£]|CNY|USD|EUR|GBP)\s?\d[\d,]*(?:\.\d{1,2})?/i);
+        const match = text.match(CURRENCY_RE);
         if (match !== null) {
           context.amount = match[0].trim();
-          const currency = context.amount.match(/[¥$€£]|CNY|USD|EUR|GBP/i);
+          const currency = context.amount.match(CURRENCY_TOKEN_RE);
           if (currency !== null) {
             context.currency = currency[0];
           }
@@ -236,7 +189,14 @@ export class ApprovalPolicy {
       }
       if (context.merchant.length === 0) {
         const lower: string = text.toLowerCase();
-        if (lower.startsWith('merchant:') || text.startsWith('商户')) {
+        let hasPrefix: boolean = false;
+        for (const prefix of MERCHANT_PREFIXES) {
+          if (lower.startsWith(prefix)) {
+            hasPrefix = true;
+            break;
+          }
+        }
+        if (hasPrefix) {
           const index: number = text.indexOf(':');
           context.merchant = index >= 0 ? text.substring(index + 1).trim() : text;
         }

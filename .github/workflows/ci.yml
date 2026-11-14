@@ -1,4 +1,4 @@
-name: CI
+﻿name: CI
 
 # Honest constraints of this workflow:
 #
@@ -10,7 +10,7 @@ name: CI
 #    instead of pretending to build.
 # 2. `hvigorw test` (Local Test) is NOT supported on Linux. The core unit tests
 #    therefore run on a macOS runner; the HAP build runs on Linux as requested.
-# 3. pc-agent and bench are pure Python and run on Linux with no toolchain.
+# 3. hopa-bridge and bench are pure Python and run on Linux with no toolchain.
 
 on:
   push:
@@ -24,7 +24,7 @@ concurrency:
 
 jobs:
   python:
-    name: pc-agent + bench (Linux)
+    name: bridge + evals (Linux)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -34,29 +34,51 @@ jobs:
       - name: Install packages
         run: |
           python -m pip install -U pip
-          python -m pip install -e "./services/pc-agent" -e "./harness/bench[dev]" -e "./harness/agent[dev]" "ruff>=0.6" "pytest>=8"
+          python -m pip install -e "./services/wire" -e "./services/bridge" -e "./services/relay" -e "./services/evals/bench[dev]" -e "./services/evals/baseline[dev]" "ruff>=0.6" "pytest>=8"
       - name: Ruff
-        run: ruff check services/pc-agent harness/bench harness/agent
+        run: ruff check services/wire services/bridge services/relay services/evals/bench services/evals/baseline
       - name: Ruff format
-        run: ruff format --check services/pc-agent harness/bench harness/agent
-      - name: pytest (pc-agent)
-        run: pytest services/pc-agent
+        run: ruff format --check services/wire services/bridge services/relay services/evals/bench services/evals/baseline
+      - name: pytest (wire)
+        run: pytest services/wire
+      - name: pytest (bridge)
+        run: pytest services/bridge
+      - name: pytest (relay)
+        run: pytest services/relay
       - name: pytest (bench)
-        run: pytest harness/bench
-      - name: pytest (agent)
-        run: pytest harness/agent --cov=hopa_agent --cov-report=term --cov-fail-under=80
+        run: pytest services/evals/bench
+      - name: pytest (baseline)
+        run: pytest services/evals/baseline --cov=hopa_baseline --cov-report=term --cov-fail-under=80
       - name: pytest (plan tooling)
         run: pytest tools/scripts
       - name: Plan lint
         run: python tools/scripts/plan-status.py --lint
       - name: Structure rules
         run: python tools/checks/check-structure.py --strict
+      - name: Bridge contract
+        run: python services/tools/checks/check-openapi.py
+      - name: Conformance fixtures
+        run: python tools/checks/check-conformance.py
+      - name: Routing fixtures
+        run: python tools/checks/check-routing.py
+      - name: Android structure
+        run: python tools/checks/check-android-structure.py
+      - name: Observation hash vector
+        run: python tools/checks/check-observation-hash.py
+      - name: Tree rules
+        run: python tools/checks/check-tree.py
+      - name: Render blueprint
+        run: python services/tools/checks/check-render.py
       - name: Documentation links
         run: python tools/checks/check-links.py
       - name: Generated app catalogue is current
         run: python tools/scripts/build-app-catalog.py --check
+      - name: Generated policy data is current
+        run: python tools/scripts/build-policy-data.py --check
+      - name: Generated prompt rules are current
+        run: python tools/scripts/build-prompt-rules.py --check
       - name: Validate benchmark tasks
-        run: python -m hopa_bench validate --tasks harness/bench/tasks
+        run: python -m hopa_bench validate --tasks services/evals/bench/tasks
 
   build-hap:
     name: Build HAP (Linux)
@@ -213,3 +235,31 @@ jobs:
           ohpm install
           # Do not set DEVECO_SDK_HOME here: a mismatch makes the CLI SDK unavailable.
           hvigorw test -p module=core@default --no-daemon -p coverage=false
+
+  android:
+    name: Android (JDK 17)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Ensure Android SDK 35
+        run: |
+          if [ ! -d "$ANDROID_HOME/platforms/android-35" ]; then
+            yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
+            "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-35" "build-tools;35.0.0"
+          fi
+      - name: Core checks and debug APK
+        working-directory: apps/android
+        run: ./gradlew :core:check :capabilities:testDebugUnitTest :app:testDebugUnitTest :app:assembleDebug --no-daemon
+      - name: Android structure
+        run: python3 tools/checks/check-android-structure.py
+      - name: Upload APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: hopa-android-debug
+          path: apps/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error

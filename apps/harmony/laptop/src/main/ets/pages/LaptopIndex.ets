@@ -1,5 +1,4 @@
 import { common } from '@kit.AbilityKit';
-import { preferences } from '@kit.ArkData';
 import { RunRecord, RunStatus, ScheduledTask, Skill } from '@hopa/core';
 import { MemoryItem } from '@hopa/app';
 import { window } from '@kit.ArkUI';
@@ -728,29 +727,6 @@ struct LaptopIndex {
     // notice is the honest end of that turn.
   }
 
-  /**
-   * The system suspends this shell ~0.4 s after an action opens another app and
-   * recovers it two seconds later. Finishing the question on that return is the
-   * only reliable behaviour a third-party 2-in-1 app can offer; the guard stops
-   * a second suspend from looping forever.
-   */
-  private resumeInterrupted(prompt: string): void {
-    if (prompt.trim().length === 0) {
-      return;
-    }
-    const context = getContext(this) as common.UIAbilityContext;
-    preferences.getPreferences(context, 'hopa_laptop').then(async (store) => {
-      const last = await store.get('resume_at', 0);
-      const since: number = typeof last === 'number' ? last : 0;
-      if (Date.now() - since < 180000) {
-        return;
-      }
-      await store.put('resume_at', Date.now());
-      await store.flush();
-      this.whenReady(prompt, Date.now());
-    }).catch(() => {});
-  }
-
   /** The rail and the retry both read this; adopted turns must update it. */
   private refreshLastQuestion(): void {
     this.lastQuestion = '';
@@ -1006,7 +982,8 @@ struct LaptopIndex {
       return;
     }
     this.bridgeStatus = 'Pairing\u2026';
-    const session: BridgeSession = await BridgeClient.pair(url, code);
+    // The bridge is a pool: the role is what routes this pair to the 2-in-1.
+    const session: BridgeSession = await BridgeClient.pair(url, code, '2in1');
     if (session.token.length === 0) {
       this.bridgeStatus = 'That code did not work. Check the bridge output.';
       return;
@@ -3501,15 +3478,15 @@ struct LaptopIndex {
             })
           } else if (this.draft.trim().length > 0) {
             Stack({ alignContent: Alignment.Center }) {
-              // Path draws a stroke unless told otherwise, and the default
-              // stroke is black: without strokeWidth(0) the arrow had a hairline
-              // outline that made it look like a glyph, not a control.
-              Path()
-                .commands('M 9 0 L 18 8.5 L 12.4 8.5 L 12.4 20 L 5.6 20 L 5.6 8.5 L 0 8.5 Z')
-                .fill($r('app.color.on_primary'))
-                .strokeWidth(0)
-                .width(18)
-                .height(20)
+              // An SVG asset, not Path: Path draws at its command extent and
+              // ignores width/height, so the arrow stayed 18 pt wide through two
+              // "make it bigger" edits. Image scales to the size it is given.
+              // Thin, rounded stroke - the weight the mic beside it already has.
+              // A filled, square-jointed arrow read like a 2016 upload glyph.
+              Image($r('app.media.ic_arrow_up'))
+                .width(22)
+                .height(22)
+                .objectFit(ImageFit.Contain)
             }
             .width(44)
             .height(44)

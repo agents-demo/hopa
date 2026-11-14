@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Count checkboxes in docs/plan and gate completion.
+"""Count checkboxes in docs/project/plan and gate completion.
 
 Usage:
     python scripts/plan-status.py
@@ -42,7 +42,9 @@ EVIDENCE = "(evidence:"
 def _plan_text(path: Path) -> str:
     """Read one plan file or a plan directory (one file per phase)."""
     if path.is_dir():
-        files = sorted(path.glob("*.md"), key=lambda item: (item.name != "README.md", item.name))
+        files = sorted(
+            path.glob("*.md"), key=lambda item: (item.name != "README.md", item.name)
+        )
         return "\n".join(item.read_text(encoding="utf-8") for item in files)
     return path.read_text(encoding="utf-8")
 
@@ -53,11 +55,13 @@ def parse(path: Path) -> dict:
     sections.append(current)
     in_fence = False
     line_no = 0
+    attach = None
 
     for line in _plan_text(path).splitlines():
         line_no += 1
         if FENCE.match(line):
             in_fence = not in_fence
+            attach = None
             continue
         if in_fence:
             continue
@@ -66,6 +70,11 @@ def parse(path: Path) -> dict:
         if heading:
             current = {"title": heading.group(1), "items": []}
             sections.append(current)
+            attach = None
+            continue
+
+        if not line.strip():
+            attach = None
             continue
 
         box = CHECKBOX.match(line)
@@ -79,6 +88,7 @@ def parse(path: Path) -> dict:
                     "pair": None,
                 }
             )
+            attach = current["items"][-1]
             continue
 
         if ANY_BOX.match(line) and not box:
@@ -92,6 +102,12 @@ def parse(path: Path) -> dict:
                     "malformed": True,
                 }
             )
+            attach = None
+            continue
+
+        # A wrapped checkbox: evidence and prose often sit on the next lines.
+        if attach is not None:
+            attach["text"] = f"{attach['text']} {line.strip()}"
 
     _resolve_pairs(sections)
     return _report(path, sections)
@@ -168,7 +184,9 @@ def lint(report: dict) -> list[str]:
             errors.append(f"line {line}: malformed checkbox: {item['text']}")
             continue
         if item["done"] and EVIDENCE not in item["text"]:
-            errors.append(f"line {line}: checked box has no (evidence: ...): {item['text']}")
+            errors.append(
+                f"line {line}: checked box has no (evidence: ...): {item['text']}"
+            )
         if item["done"] and re.search(r"\(evidence:\s*\)", item["text"]):
             errors.append(f"line {line}: empty evidence: {item['text']}")
         if item["pair"] is None and CONDITIONAL.match(item["text"]):
@@ -177,9 +195,7 @@ def lint(report: dict) -> list[str]:
             )
         key = _normalise(item["text"])
         if key in seen:
-            errors.append(
-                f"line {line}: duplicate of line {seen[key]}: {item['text']}"
-            )
+            errors.append(f"line {line}: duplicate of line {seen[key]}: {item['text']}")
         else:
             seen[key] = line
 
@@ -241,11 +257,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--plan",
         type=Path,
-        default=Path(__file__).resolve().parents[2] / "docs" / "plan",
+        default=Path(__file__).resolve().parents[2] / "docs" / "project" / "plan",
         help="path to the plan markdown file or its directory",
     )
-    parser.add_argument("--json", action="store_true", help="print machine-readable JSON")
-    parser.add_argument("--lint", action="store_true", help="check evidence and plan rules")
+    parser.add_argument(
+        "--json", action="store_true", help="print machine-readable JSON"
+    )
+    parser.add_argument(
+        "--lint", action="store_true", help="check evidence and plan rules"
+    )
     parser.add_argument(
         "--require-complete",
         action="store_true",
@@ -273,12 +293,18 @@ def main(argv: list[str] | None = None) -> int:
     errors = lint(report)
 
     if args.json:
-        print(json.dumps({**report, "lint_errors": errors}, indent=2, ensure_ascii=False))
+        print(
+            json.dumps({**report, "lint_errors": errors}, indent=2, ensure_ascii=False)
+        )
     else:
         print_table(report)
         if args.list_unchecked:
             for section in report["sections"]:
-                pending = [i for i in section["items"] if not i["done"] and not i.get("decided")]
+                pending = [
+                    i
+                    for i in section["items"]
+                    if not i["done"] and not i.get("decided")
+                ]
                 if not pending:
                     continue
                 print(f"\n{display(section['title'])} ({len(pending)} open)")

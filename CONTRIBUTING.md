@@ -2,7 +2,7 @@
 
 ## The evidence rule
 
-A checkbox in [`docs/plan/README.md`](docs/plan/README.md) is done only when
+A checkbox in [`docs/project/plan/README.md`](docs/project/plan/README.md) is done only when
 the stated verification passes on the stated target. Append the evidence on the
 same line:
 
@@ -19,13 +19,13 @@ one checked side as **decided**; both checked is an error.
 ## Before you open a PR
 
 ```bash
-python -m pip install -e ./pc-agent -e ./bench[dev] -e ./agent[dev]
-ruff check pc-agent bench agent
-ruff format --check pc-agent bench agent
-pytest pc-agent bench agent
+python -m pip install -e ./services/bridge -e ./bench[dev] -e ./agent[dev]
+ruff check hopa-bridge bench agent
+ruff format --check hopa-bridge bench agent
+pytest hopa-bridge bench agent
 python tools/scripts/plan-status.py --lint
 python tools/scripts/build-app-catalog.py --check
-python -m hopa_bench validate --tasks harness/bench/tasks
+python -m hopa_bench validate --tasks services/evals/bench/tasks
 ```
 
 For an ArkTS change, also run the core Local Tests on a machine with DevEco.
@@ -83,6 +83,25 @@ Use the PR template in `.github/PULL_REQUEST_TEMPLATE.md`.
 - Emergency numbers are blocked.
 - New action kinds must be added to the schema, the validator, the policy and
   the tests in the same PR.
+
+## Where does a new file go?
+
+Ask which top level answers the question, then pick the layer (ADR-0007):
+
+| The new thing is... | Top level |
+|---|---|
+| a screen, a widget, a platform adapter | `apps/` (`harmony/`, later `android/`, `windows/`) |
+| a long-running service, a device driver, a relay | `services/` (`bridge/`, `relay/`, `brain/`, later `backend/`) |
+| a task, a score, a reference driver | `services/evals/` (`bench/`, `baseline/`) |
+| a wire format both sides share | `contracts/` (`openapi/`, `schemas/`) |
+| code the services both import | `services/wire/` |
+| a build, sign or check step | `tools/` (`scripts/`, `checks/`, `signing/`) |
+| why something is the way it is | `docs/` (`adr/`, `architecture/`, `guides/`) |
+
+Inside the Harmony app, `docs/design/architecture/layers.md` has the second table
+(core / capabilities / entry). Two rules are absolute: `core` imports no
+`@kit.*`, and nothing imports `evals/` - it is a measuring instrument, not a
+library.
 
 ## Style
 
