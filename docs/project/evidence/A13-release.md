@@ -10,9 +10,11 @@ Date: 2026-11-13. One item: the generated Kotlin catalogue.
 
 ## Debug APK (not a release)
 
-- `hopa-0.1.0-debug.apk`, 61 155 282 bytes,
-  sha256 `6F32A242A7ED92ACF287B0FFE67D402CCC5D31DCA3FA6C8E6BC5433960157FE3`,
-  commit `4b90fef`, installed and run on the `hopa35` emulator.
+- `hopa-0.1.0-debug.apk`, 62 634 848 bytes,
+  sha256 `A2D3F6DE5F6518ABB698D93D09CA1C0A0993294EBD9D718F51A1D8A86150AF2B`,
+  commit `04b4b7e`, installed and run on the `hopa35` emulator (including a
+  share into the composer). Earlier builds were 61 155 282 bytes (`4b90fef`) and
+  62 421 140 bytes (`0ba3c80`).
 - Signed with the debug key only. No release keystore, no `keystore.properties`,
   no Android release note in `docs/project/releases`.
 
