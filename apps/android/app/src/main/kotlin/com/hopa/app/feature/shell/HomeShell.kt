@@ -11,6 +11,7 @@ import com.hopa.app.feature.activity.ActivityRoute
 import com.hopa.app.feature.capabilities.CapabilitiesRoute
 import com.hopa.app.feature.chat.ChatRoute
 import com.hopa.app.feature.conversations.EasyHistoryRoute
+import com.hopa.app.feature.power.PowerHomeRoute
 import com.hopa.data.settings.AppSettings
 
 /**
@@ -38,6 +39,20 @@ fun HomeShell(
         EasyShell(
             container = container,
             onOpenSettings = onOpenSettings,
+            initialGoal = initialGoal,
+        )
+        return
+    }
+    if (settings.profile == "power") {
+        PowerShell(
+            container = container,
+            onOpenSettings = onOpenSettings,
+            onOpenLaunchpad = onOpenLaunchpad,
+            onOpenRuns = onOpenRuns,
+            onOpenUsage = onOpenUsage,
+            onOpenMemory = onOpenMemory,
+            onOpenDevice = onOpenDevice,
+            onOpenBrowser = onOpenBrowser,
             initialGoal = initialGoal,
         )
         return
@@ -113,6 +128,74 @@ private fun EasyShell(
             initialGoal = initialGoal,
             easy = true,
             onOpenSettings = onOpenSettings,
+        )
+    }
+}
+
+@Composable
+private fun PowerShell(
+    container: AppContainer,
+    onOpenSettings: () -> Unit,
+    onOpenLaunchpad: () -> Unit,
+    onOpenRuns: () -> Unit,
+    onOpenUsage: () -> Unit,
+    onOpenMemory: () -> Unit,
+    onOpenDevice: () -> Unit,
+    onOpenBrowser: () -> Unit,
+    initialGoal: String,
+) {
+    var tab by rememberSaveable { mutableStateOf("chat") }
+    var chatStarted by rememberSaveable { mutableStateOf(false) }
+
+    val select: (String) -> Unit = { key ->
+        when (key) {
+            "chat" -> {
+                chatStarted = true
+                tab = "chat"
+            }
+
+            "activity", "capabilities" -> tab = key
+        }
+    }
+
+    when {
+        tab == "activity" -> ActivityRoute(
+            container = container,
+            activeTab = tab,
+            onSelectTab = select,
+            onOpenRuns = onOpenRuns,
+            onOpenUsage = onOpenUsage,
+        )
+
+        tab == "capabilities" -> CapabilitiesRoute(
+            container = container,
+            activeTab = tab,
+            onSelectTab = select,
+            onOpenLaunchpad = onOpenLaunchpad,
+            onOpenSettings = onOpenSettings,
+            onOpenRuns = onOpenRuns,
+            onOpenUsage = onOpenUsage,
+            onOpenMemory = onOpenMemory,
+            onOpenDevice = onOpenDevice,
+            onOpenBrowser = onOpenBrowser,
+        )
+
+        chatStarted -> ChatRoute(
+            container = container,
+            activeTab = tab,
+            onSelectTab = select,
+            initialGoal = initialGoal,
+        )
+
+        else -> PowerHomeRoute(
+            container = container,
+            active = "chat",
+            onSelectTab = select,
+            onRun = { goal ->
+                container.pendingGoal.value = goal
+                chatStarted = true
+                tab = "chat"
+            },
         )
     }
 }

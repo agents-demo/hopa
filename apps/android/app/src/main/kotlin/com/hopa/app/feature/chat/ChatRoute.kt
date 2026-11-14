@@ -23,6 +23,14 @@ fun ChatRoute(
     val state by viewModel.state.collectAsStateWithLifecycle()
     var chatsOpen by remember { mutableStateOf(false) }
 
+    val pendingGoal by container.pendingGoal.collectAsStateWithLifecycle()
+    androidx.compose.runtime.LaunchedEffect(pendingGoal) {
+        val goal = pendingGoal ?: return@LaunchedEffect
+        container.pendingGoal.value = null
+        viewModel.prefill(goal)
+        viewModel.send()
+    }
+
     androidx.compose.runtime.LaunchedEffect(initialGoal) {
         if (initialGoal.isNotBlank()) {
             viewModel.prefill(initialGoal)

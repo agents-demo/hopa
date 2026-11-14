@@ -33,6 +33,8 @@ class AppContainer(context: Context) {
     val selectedConversation = MutableStateFlow<String?>(null)
     val busy = MutableStateFlow(false)
     val cancelRequested = MutableStateFlow(false)
+    /** A goal handed to the chat by a profile home (Power's command bar). */
+    val pendingGoal = MutableStateFlow<String?>(null)
     val packages = AndroidPackageCatalog(context)
     val recorder = RoomRunRecorder(database.runRecordDao())
     val pendingApprovals = com.hopa.data.approvals.RoomPendingApprovalStore(
