@@ -98,3 +98,6 @@ tools/shots/
 
 # Windows packaging output
 out/
+
+# Superpowers execution workspace (ledger and briefs, never committed)
+.superpowers/
