@@ -40,7 +40,11 @@ fun Application.gatewayRoutes(
     install(WebSockets) {
         pingPeriod = 25.seconds
         timeout = 90.seconds
-        maxFrameSize = EnvelopeValidator.MAX_FRAME_BYTES.toLong()
+        // Four times the contract cap: a frame the client should not have sent
+        // still reaches the validator, which answers E_SCHEMA. Ktor only closes
+        // the socket itself beyond this, so the limit is a fail-safe, not the
+        // contract.
+        maxFrameSize = EnvelopeValidator.MAX_FRAME_BYTES * 4L
     }
 
     routing {
@@ -106,7 +110,7 @@ fun Application.gatewayRoutes(
                                     ),
                                 )
                             }
-                            router.deliverQueued(identity.deviceId)
+                            router.deliverPending(identity.deviceId)
                         }
 
                         "ping" -> outgoing.send(
@@ -133,7 +137,7 @@ fun Application.gatewayRoutes(
                     }
                 }
             } finally {
-                registry.leave(identity.deviceId)
+                registry.leave(session)
                 val remaining = registry.deviceIds(identity.householdId)
                 registry.peers(identity.householdId, identity.deviceId).forEach { peer ->
 

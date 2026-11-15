@@ -55,8 +55,9 @@ change needs a version bump and a fixture, not a conversation.
 ### 4.1 Transport
 
 - REST over HTTPS under `/v1` for pairing, tokens, health and trace lookup.
-- One WebSocket per device at `wss://<host>/v1/gateway`, authenticated with the
-  access token in the first frame (not the query string, which reaches logs).
+- One WebSocket per device at `wss://<host>/v1/gateway`, authenticated with
+  `Authorization: Bearer <access token>` (never a query parameter, which reaches
+  logs and proxies).
 - JSON text frames, UTF-8, 64 KiB cap, no compression in v0.
 - Heartbeat: server `ping` every 25 s, client `pong`, dead after 90 s.
 - Unknown major version → close with `E_VERSION`, never best-effort parsing.

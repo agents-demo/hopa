@@ -1,4 +1,4 @@
-package com.hopa.backend.tasks
+﻿package com.hopa.backend.tasks
 
 import com.hopa.backend.auth.DeviceIdentity
 import com.hopa.backend.gateway.DeviceRegistry
@@ -54,13 +54,10 @@ class TaskRouter(
         }
     }
 
-    /** Deliveries owed to a device that just came online. */
-    fun deliverQueued(deviceId: String): List<TaskRecord> {
-        val due = store.queuedFor(deviceId, now())
-        due.forEach { task ->
-            deliver(task)
-            store.markDelivered(task.id)
-        }
+    /** Deliveries owed to a device that just came online, or never acked one. */
+    fun deliverPending(deviceId: String): List<TaskRecord> {
+        val due = store.pendingFor(deviceId, now())
+        due.forEach { task -> deliver(task) }
         return due
     }
 
@@ -84,14 +81,12 @@ class TaskRouter(
             trace = EnvelopeValidator.traceOf(envelope),
             ts = envelope.ts,
             body = envelope.body,
-            state = if (online) "delivered" else "queued",
+            state = "queued",
             deadlineAt = now() + deadlineMs,
         )
         store.remember(identity.householdId, envelope.id, task)
-        if (online) {
-            deliver(task)
-        }
-        return RouteResult.Accepted(task, duplicate = false)
+        val routed = if (online) deliver(task) else task
+        return RouteResult.Accepted(routed, duplicate = false)
     }
 
     private fun relay(identity: DeviceIdentity, envelope: Envelope): RouteResult {
@@ -117,6 +112,7 @@ class TaskRouter(
         )
 
         val next = when (envelope.type) {
+            "task.ack" -> task.copy(state = "acked")
             "task.result" -> task.copy(state = "done")
             "task.error" -> task.copy(state = "failed")
             "task.cancel" -> task.copy(state = "cancelled")
@@ -128,8 +124,9 @@ class TaskRouter(
         return RouteResult.Accepted(next, duplicate = false)
     }
 
-    private fun deliver(task: TaskRecord) {
-        registry.sessionFor(task.to)?.outgoing?.trySend(
+    private fun deliver(task: TaskRecord): TaskRecord {
+        val session = registry.sessionFor(task.to) ?: return task
+        val sent = session.outgoing.trySend(
             GatewayCodec.encode(
                 Envelope(
                     v = 1,
@@ -143,6 +140,9 @@ class TaskRouter(
                     body = task.body,
                 ),
             ),
-        )
+        ).isSuccess
+        if (!sent) return task
+        store.markSent(task.id)
+        return task.copy(state = "sent")
     }
 }

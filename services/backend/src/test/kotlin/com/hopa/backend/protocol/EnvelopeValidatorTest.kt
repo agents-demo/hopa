@@ -1,7 +1,12 @@
 package com.hopa.backend.protocol
 
 import java.util.UUID
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -81,5 +86,41 @@ class EnvelopeValidatorTest {
         val error = EnvelopeValidator.validate(GatewayCodec.encode(envelope), envelope)
 
         assertEquals("E_SCHEMA", error?.code)
+    }
+
+    @Test
+    fun `a non-uuid id is refused`() {
+        val envelope = envelope().copy(id = "x")
+
+        val error = EnvelopeValidator.validate(GatewayCodec.encode(envelope), envelope)
+
+        assertEquals("E_SCHEMA", error?.code)
+    }
+
+    @Test
+    fun `every schema-invalid fixture names the validator code`() {
+        val raw = requireNotNull(javaClass.getResource("/fixtures/gateway-v0.json")).readText()
+        val cases = Json.parseToJsonElement(raw).jsonObject["cases"]!!.jsonArray
+        var checked = 0
+        for (element in cases) {
+            val case = element.jsonObject
+            val schemaValid = case["schema"]?.jsonPrimitive?.boolean
+                ?: case["ok"]!!.jsonPrimitive.boolean
+            val expected = case["error"]?.jsonPrimitive?.content
+            if (schemaValid ||
+                expected == null ||
+                expected !in setOf("E_SCHEMA", "E_VERSION", "E_UNSUPPORTED")
+            ) {
+                continue
+            }
+            checked++
+            val message = case["message"]!!.jsonObject.toString()
+            val actual = when (val decoded = GatewayCodec.decode(message)) {
+                is DecodeResult.Failed -> decoded.error.code
+                is DecodeResult.Ok -> EnvelopeValidator.validate(message, decoded.envelope)?.code
+            }
+            assertEquals(case["name"]!!.jsonPrimitive.content, expected, actual)
+        }
+        assertTrue("expected at least four validator-level fixtures", checked >= 4)
     }
 }

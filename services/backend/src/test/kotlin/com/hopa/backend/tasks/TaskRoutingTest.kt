@@ -69,7 +69,7 @@ class TaskRoutingTest {
         phone.send(message)
 
         val ack = phone.expect("task.ack")
-        assertEquals("delivered", ack.bodyString("state"))
+        assertEquals("sent", ack.bodyString("state"))
         assertEquals("false", ack.bodyString("duplicate"))
 
         val delivered = pc.expect("task.create")
@@ -149,6 +149,52 @@ class TaskRoutingTest {
         pc.expect("device.hello.ack")
         val delivered = pc.expect("task.create")
         assertEquals(taskId, delivered.task)
+    }
+
+    @Test
+    fun `a task is redelivered until the target acks it`() = testApplication {
+        application { module(config()) }
+        val http = createClient { install(WebSockets) }
+        val phone = FakeDevice("dev-phone", "tok-dev-phone")
+        val pc = FakeDevice("dev-pc", "tok-dev-pc")
+        phone.connect(http)
+        phone.send(hello("dev-phone"))
+        phone.expect("device.hello.ack")
+        pc.connect(http)
+        pc.send(hello("dev-pc"))
+        pc.expect("device.hello.ack")
+        phone.expect("presence")
+
+        phone.send(create("dev-pc"))
+        val taskId = phone.expect("task.ack").bodyString("task")
+        assertEquals(taskId, pc.expect("task.create").task)
+
+        // The PC drops before it can ack: the task must not be lost.
+        pc.close()
+        val again = FakeDevice("dev-pc", "tok-dev-pc")
+        again.connect(http)
+        again.send(hello("dev-pc"))
+        again.expect("device.hello.ack")
+        assertEquals(taskId, again.expect("task.create").task)
+
+        again.send(
+            Envelope(
+                v = 1,
+                id = UUID.randomUUID().toString(),
+                type = "task.ack",
+                ts = 2,
+                to = "dev-phone",
+                task = taskId,
+                body = buildJsonObject { put("state", "delivered") },
+            ),
+        )
+        again.close()
+
+        val third = FakeDevice("dev-pc", "tok-dev-pc")
+        third.connect(http)
+        third.send(hello("dev-pc"))
+        third.expect("device.hello.ack")
+        third.expectNothing("task.create")
     }
 
     @Test

@@ -22,8 +22,8 @@ class DeviceRegistry {
         sessions[session.identity.deviceId] = session
     }
 
-    fun leave(deviceId: String) {
-        sessions.remove(deviceId)
+    fun leave(session: Session) {
+        sessions.remove(session.identity.deviceId, session)
     }
 
     fun online(deviceId: String): Boolean = sessions.containsKey(deviceId)

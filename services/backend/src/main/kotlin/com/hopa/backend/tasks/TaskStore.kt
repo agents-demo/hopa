@@ -1,4 +1,4 @@
-package com.hopa.backend.tasks
+﻿package com.hopa.backend.tasks
 
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.serialization.json.JsonObject
@@ -30,9 +30,9 @@ interface TaskStore {
 
     fun update(task: TaskRecord)
 
-    fun queuedFor(deviceId: String, now: Long): List<TaskRecord>
+    fun pendingFor(deviceId: String, now: Long): List<TaskRecord>
 
-    fun markDelivered(taskId: String)
+    fun markSent(taskId: String)
 }
 
 class InMemoryTaskStore : TaskStore {
@@ -54,13 +54,15 @@ class InMemoryTaskStore : TaskStore {
         byMessage[key(task.householdId, task.messageId)] = task
     }
 
-    override fun queuedFor(deviceId: String, now: Long): List<TaskRecord> =
+    override fun pendingFor(deviceId: String, now: Long): List<TaskRecord> =
         byId.values
-            .filter { it.to == deviceId && it.state == "queued" && it.deadlineAt > now }
+            .filter {
+                it.to == deviceId && it.state in setOf("queued", "sent") && it.deadlineAt > now
+            }
             .sortedBy { it.ts }
 
-    override fun markDelivered(taskId: String) {
-        byId[taskId]?.let { update(it.copy(state = "delivered")) }
+    override fun markSent(taskId: String) {
+        byId[taskId]?.let { update(it.copy(state = "sent")) }
     }
 
     private fun key(householdId: String, messageId: String) = "$householdId/$messageId"

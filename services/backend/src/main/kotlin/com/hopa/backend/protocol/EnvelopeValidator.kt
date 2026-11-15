@@ -28,6 +28,8 @@ object EnvelopeValidator {
     )
 
     private val TRACEPARENT = Regex("^00-[0-9a-f]{32}-[0-9a-f]{16}-01$")
+    private val MESSAGE_ID =
+        Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
     private val random = SecureRandom()
 
     fun validate(raw: String, envelope: Envelope): GatewayError? = when {
@@ -40,8 +42,16 @@ object EnvelopeValidator {
         envelope.type !in TYPES ->
             GatewayError("E_UNSUPPORTED", "unsupported message type")
 
-        envelope.id.isBlank() ->
-            GatewayError("E_SCHEMA", "missing message id")
+        envelope.ts < 0 ->
+            GatewayError("E_SCHEMA", "negative timestamp")
+
+        !MESSAGE_ID.matches(envelope.id) ->
+            GatewayError("E_SCHEMA", "message id is not a UUID")
+
+        envelope.from?.isBlank() == true ||
+            envelope.to?.isBlank() == true ||
+            envelope.task?.isBlank() == true ->
+            GatewayError("E_SCHEMA", "blank device or task id")
 
         envelope.type.startsWith("task.") && envelope.to == null ->
             GatewayError("E_SCHEMA", "a task message needs a target device")
