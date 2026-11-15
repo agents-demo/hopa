@@ -6,6 +6,10 @@ import com.hopa.backend.protocol.DecodeResult
 import com.hopa.backend.protocol.Envelope
 import com.hopa.backend.protocol.EnvelopeValidator
 import com.hopa.backend.protocol.GatewayCodec
+import com.hopa.backend.tasks.InMemoryTaskStore
+import com.hopa.backend.tasks.RouteResult
+import com.hopa.backend.tasks.TaskRecord
+import com.hopa.backend.tasks.TaskRouter
 import io.ktor.http.HttpHeaders
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
@@ -31,6 +35,7 @@ import kotlinx.serialization.json.put
 fun Application.gatewayRoutes(
     config: ServerConfig,
     registry: DeviceRegistry = DeviceRegistry(),
+    router: TaskRouter = TaskRouter(InMemoryTaskStore(), registry, config.devices),
 ) {
     install(WebSockets) {
         pingPeriod = 25.seconds
@@ -101,20 +106,30 @@ fun Application.gatewayRoutes(
                                     ),
                                 )
                             }
+                            router.deliverQueued(identity.deviceId)
                         }
 
                         "ping" -> outgoing.send(
                             GatewayCodec.encode(serverFrame("pong", identity.deviceId)),
                         )
 
-                        else -> outgoing.send(
-                            GatewayCodec.encode(
-                                errorFrame(
-                                    "E_UNSUPPORTED",
-                                    "not implemented in protocol v0: ${envelope.type}",
+                        else -> when (val result = router.route(identity, envelope)) {
+                            is RouteResult.Accepted -> outgoing.send(
+                                GatewayCodec.encode(
+                                    acceptedFrame(identity.deviceId, result.task, result.duplicate),
                                 ),
-                            ),
-                        )
+                            )
+
+                            is RouteResult.Refused -> outgoing.send(
+                                GatewayCodec.encode(
+                                    errorFrame(
+                                        result.error.code,
+                                        result.error.message,
+                                        trace = result.trace,
+                                    ),
+                                ),
+                            )
+                        }
                     }
                 }
             } finally {
@@ -151,14 +166,27 @@ private fun serverFrame(
     body = body,
 )
 
-private fun errorFrame(code: String, message: String): Envelope =
+private fun errorFrame(code: String, message: String, trace: String? = null): Envelope =
     serverFrame(
         type = "error",
         to = null,
+        trace = trace,
         body = buildJsonObject {
             put("code", code)
             put("message", message)
             put("retryable", code == "E_QUEUE" || code == "E_RATE")
+        },
+    )
+
+private fun acceptedFrame(deviceId: String, task: TaskRecord, duplicate: Boolean): Envelope =
+    serverFrame(
+        type = "task.ack",
+        to = deviceId,
+        trace = task.trace,
+        body = buildJsonObject {
+            put("task", task.id)
+            put("state", task.state)
+            put("duplicate", duplicate)
         },
     )
 

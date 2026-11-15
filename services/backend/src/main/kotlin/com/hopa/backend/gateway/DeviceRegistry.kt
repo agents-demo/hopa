@@ -28,6 +28,8 @@ class DeviceRegistry {
 
     fun online(deviceId: String): Boolean = sessions.containsKey(deviceId)
 
+    fun sessionFor(deviceId: String): Session? = sessions[deviceId]
+
     fun householdSessions(householdId: String): List<Session> =
         sessions.values
             .filter { it.identity.householdId == householdId }
