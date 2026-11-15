@@ -120,6 +120,37 @@
       }
     },
     {
+      "name": "task.ack from the PC",
+      "ok": true,
+      "schema": true,
+      "message": {
+        "v": 1,
+        "id": "018f3a5e-6b1c-7c3a-9d2e-4f5a6b7c8dab",
+        "type": "task.ack",
+        "trace": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902ba-01",
+        "ts": 1763212990000,
+        "from": "dev-01h-pc",
+        "to": "dev-01h-phone",
+        "task": "tsk-01h-1",
+        "body": { "state": "delivered" }
+      }
+    },
+    {
+      "name": "task.progress carries a step count, never a screen",
+      "ok": true,
+      "schema": true,
+      "message": {
+        "v": 1,
+        "id": "018f3a5e-6b1c-7c3a-9d2e-4f5a6b7c8dac",
+        "type": "task.progress",
+        "ts": 1763213000000,
+        "from": "dev-01h-pc",
+        "to": "dev-01h-phone",
+        "task": "tsk-01h-1",
+        "body": { "step": 3, "note": "found the lease" }
+      }
+    },
+    {
       "name": "a target in another household is refused",
       "ok": false,
       "schema": true,

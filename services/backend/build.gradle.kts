@@ -12,6 +12,13 @@ application {
     mainClass.set("com.hopa.backend.MainKt")
 }
 
+sourceSets {
+    test {
+        // The contracts are the test data: the same fixtures CI replays in Python.
+        resources.srcDir(file("../../contracts"))
+    }
+}
+
 dependencies {
     implementation(project(":core"))
     implementation(project(":data"))
