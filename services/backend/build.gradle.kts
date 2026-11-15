@@ -32,11 +32,18 @@ dependencies {
     implementation(libs.ktor.server.websockets)
     implementation(libs.ktor.serialization.kotlinx.json)
 
+    implementation(libs.flyway.core)
+    implementation(libs.flyway.database.postgresql)
+    implementation(libs.hikaricp)
+    implementation(libs.postgresql)
+    implementation(libs.slf4j.simple)
+
     testImplementation(libs.junit)
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.ktor.client.cio)
     testImplementation(libs.ktor.client.websockets)
     testImplementation(libs.ktor.client.content.negotiation)
+    testImplementation(libs.testcontainers.postgresql)
 }
 
 tasks.test {
