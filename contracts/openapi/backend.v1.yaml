@@ -82,6 +82,10 @@ paths:
               properties:
                 householdName: { type: string, minLength: 1 }
                 memberName: { type: string, minLength: 1 }
+                householdId:
+                  type: string
+                  nullable: true
+                  description: Join an existing household (the second device). Omit to create one.
       responses:
         "201":
           description: Created

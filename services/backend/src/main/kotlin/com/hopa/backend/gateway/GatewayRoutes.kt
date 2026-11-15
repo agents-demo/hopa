@@ -37,7 +37,12 @@ import kotlinx.serialization.json.put
 fun Application.gatewayRoutes(
     config: ServerConfig,
     registry: DeviceRegistry = DeviceRegistry(),
-    router: TaskRouter = TaskRouter(InMemoryTaskStore(), registry, config.devices),
+    router: TaskRouter = TaskRouter(
+        store = config.tasks,
+        registry = registry,
+        devices = config.devices,
+        log = config.log,
+    ),
 ) {
     install(WebSockets) {
         pingPeriod = 25.seconds
@@ -118,29 +123,39 @@ fun Application.gatewayRoutes(
                                     ),
                                 )
                             }
-                            router.deliverPending(identity.deviceId)
+                            router.deliverPending(identity.deviceId, identity.householdId)
                         }
 
                         "ping" -> outgoing.send(
                             GatewayCodec.encode(serverFrame("pong", identity.deviceId)),
                         )
 
-                        else -> when (val result = router.route(identity, envelope)) {
-                            is RouteResult.Accepted -> outgoing.send(
-                                GatewayCodec.encode(
-                                    acceptedFrame(identity.deviceId, result.task, result.duplicate),
-                                ),
-                            )
-
-                            is RouteResult.Refused -> outgoing.send(
-                                GatewayCodec.encode(
-                                    errorFrame(
-                                        result.error.code,
-                                        result.error.message,
-                                        trace = result.trace,
+                        else -> {
+                            if (envelope.type.startsWith("task.") &&
+                                !config.messageLimit.allow(identity.deviceId)
+                            ) {
+                                outgoing.send(
+                                    GatewayCodec.encode(errorFrame("E_RATE", "too many messages")),
+                                )
+                                continue
+                            }
+                            when (val result = router.route(identity, envelope)) {
+                                is RouteResult.Accepted -> outgoing.send(
+                                    GatewayCodec.encode(
+                                        acceptedFrame(identity.deviceId, result.task, result.duplicate),
                                     ),
-                                ),
-                            )
+                                )
+
+                                is RouteResult.Refused -> outgoing.send(
+                                    GatewayCodec.encode(
+                                        errorFrame(
+                                            result.error.code,
+                                            result.error.message,
+                                            trace = result.trace,
+                                        ),
+                                    ),
+                                )
+                            }
                         }
                     }
                 }

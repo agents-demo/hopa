@@ -16,6 +16,7 @@ sealed interface PairingOutcome<out T> {
 data class MintRequest(
     val householdName: String,
     val memberName: String,
+    val householdId: String? = null,
 )
 
 @Serializable
@@ -45,7 +46,12 @@ data class Claimed(
 )
 
 interface PairingApi {
-    fun mint(householdName: String, memberName: String, remoteAddress: String): PairingOutcome<Minted>
+    fun mint(
+        householdName: String,
+        memberName: String,
+        remoteAddress: String,
+        householdId: String? = null,
+    ): PairingOutcome<Minted>
 
     fun claim(request: ClaimRequest, remoteAddress: String): PairingOutcome<Claimed>
 }

@@ -5,12 +5,12 @@ import kotlinx.serialization.json.JsonObject
 
 /**
  * One task as the backend sees it: an identified message, its route, and the
- * durable state a reconnect resumes from. In slice A the store is memory;
- * slice B replaces it with Postgres behind this interface.
+ * durable state a reconnect resumes from.
  */
 data class TaskRecord(
     val id: String,
     val householdId: String,
+    val memberId: String,
     val from: String,
     val to: String,
     val messageId: String,
@@ -26,13 +26,15 @@ interface TaskStore {
 
     fun recall(householdId: String, messageId: String): TaskRecord?
 
-    fun find(taskId: String): TaskRecord?
+    fun find(taskId: String, householdId: String): TaskRecord?
 
     fun update(task: TaskRecord)
 
-    fun pendingFor(deviceId: String, now: Long): List<TaskRecord>
+    fun pendingFor(deviceId: String, householdId: String, now: Long): List<TaskRecord>
 
-    fun markSent(taskId: String)
+    fun markDelivered(taskId: String, householdId: String)
+
+    fun event(taskId: String, householdId: String, kind: String, body: JsonObject, at: Long)
 }
 
 class InMemoryTaskStore : TaskStore {
@@ -47,22 +49,30 @@ class InMemoryTaskStore : TaskStore {
     override fun recall(householdId: String, messageId: String): TaskRecord? =
         byMessage[key(householdId, messageId)]
 
-    override fun find(taskId: String): TaskRecord? = byId[taskId]
+    override fun find(taskId: String, householdId: String): TaskRecord? =
+        byId[taskId]?.takeIf { it.householdId == householdId }
 
     override fun update(task: TaskRecord) {
         byId[task.id] = task
         byMessage[key(task.householdId, task.messageId)] = task
     }
 
-    override fun pendingFor(deviceId: String, now: Long): List<TaskRecord> =
+    override fun pendingFor(deviceId: String, householdId: String, now: Long): List<TaskRecord> =
         byId.values
             .filter {
-                it.to == deviceId && it.state in setOf("queued", "sent") && it.deadlineAt > now
+                it.to == deviceId &&
+                    it.householdId == householdId &&
+                    it.state in setOf("queued", "delivered") &&
+                    it.deadlineAt > now
             }
             .sortedBy { it.ts }
 
-    override fun markSent(taskId: String) {
-        byId[taskId]?.let { update(it.copy(state = "sent")) }
+    override fun markDelivered(taskId: String, householdId: String) {
+        byId[taskId]?.let { update(it.copy(state = "delivered")) }
+    }
+
+    override fun event(taskId: String, householdId: String, kind: String, body: JsonObject, at: Long) {
+        // The in-memory store exists for the protocol tests; the event log is durable.
     }
 
     private fun key(householdId: String, messageId: String) = "$householdId/$messageId"

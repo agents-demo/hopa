@@ -11,8 +11,11 @@ import com.hopa.backend.pairing.tokenRoutes
 import com.hopa.backend.store.Database
 import com.hopa.backend.store.DbProbe
 import com.hopa.backend.store.PgDevices
+import com.hopa.backend.store.PgTaskStore
 import com.hopa.backend.store.PostgresProbe
 import com.hopa.backend.tasks.DeviceDirectory
+import com.hopa.backend.tasks.InMemoryTaskStore
+import com.hopa.backend.tasks.TaskStore
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
@@ -58,6 +61,7 @@ fun main() {
         },
         bootstrapToken = System.getenv("HOPA_BOOTSTRAP_TOKEN"),
         tokenIssuer = tokens,
+        tasks = database?.let { PgTaskStore(it) } ?: InMemoryTaskStore(),
     )
 
     embeddedServer(Netty, port = port, host = "0.0.0.0") {

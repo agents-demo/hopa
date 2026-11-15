@@ -69,7 +69,7 @@ class TaskRoutingTest {
         phone.send(message)
 
         val ack = phone.expect("task.ack")
-        assertEquals("sent", ack.bodyString("state"))
+        assertEquals("delivered", ack.bodyString("state"))
         assertEquals("false", ack.bodyString("duplicate"))
 
         val delivered = pc.expect("task.create")

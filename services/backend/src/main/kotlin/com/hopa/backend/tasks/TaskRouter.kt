@@ -2,11 +2,13 @@
 
 import com.hopa.backend.auth.DeviceIdentity
 import com.hopa.backend.gateway.DeviceRegistry
+import com.hopa.backend.log.EventLog
 import com.hopa.backend.protocol.Envelope
 import com.hopa.backend.protocol.EnvelopeValidator
 import com.hopa.backend.protocol.GatewayCodec
 import com.hopa.backend.protocol.GatewayError
 import java.util.UUID
+import kotlinx.serialization.json.JsonObject
 
 /** Every paired device, online or not. Production resolves from Postgres. */
 interface DeviceDirectory {
@@ -43,7 +45,8 @@ class TaskRouter(
     private val store: TaskStore,
     private val registry: DeviceRegistry,
     private val devices: DeviceDirectory,
-    private val newTaskId: () -> String = { "tsk_" + UUID.randomUUID().toString().replace("-", "") },
+    private val log: EventLog = EventLog.None,
+    private val newTaskId: () -> String = { UUID.randomUUID().toString() },
     private val now: () -> Long = System::currentTimeMillis,
 ) {
     private val deadlineMs = 10 * 60 * 1000L
@@ -66,8 +69,8 @@ class TaskRouter(
     }
 
     /** Deliveries owed to a device that just came online, or never acked one. */
-    fun deliverPending(deviceId: String): List<TaskRecord> {
-        val due = store.pendingFor(deviceId, now())
+    fun deliverPending(deviceId: String, householdId: String): List<TaskRecord> {
+        val due = store.pendingFor(deviceId, householdId, now())
         due.forEach { task -> deliver(task) }
         return due
     }
@@ -77,37 +80,46 @@ class TaskRouter(
             ?: return RouteResult.Refused(GatewayError("E_SCHEMA", "a task needs a target"), envelope.trace)
 
         val target = devices.lookup(to, identity.householdId)
-            ?: return RouteResult.Refused(GatewayError("E_TENANT", "no such device in this household"), envelope.trace)
-        if (target.householdId != identity.householdId) {
-            return RouteResult.Refused(GatewayError("E_TENANT", "no such device in this household"), envelope.trace)
+        if (target == null) {
+            log.event(
+                "tenant_refused",
+                mapOf(
+                    "household_id" to identity.householdId,
+                    "device_id" to identity.deviceId,
+                    "to" to to,
+                ),
+            )
+            return RouteResult.Refused(
+                GatewayError("E_TENANT", "no such device in this household"),
+                envelope.trace,
+            )
         }
 
-        val online = registry.online(to)
         val task = TaskRecord(
             id = newTaskId(),
             householdId = identity.householdId,
+            memberId = identity.memberId,
             from = identity.deviceId,
             to = to,
             messageId = envelope.id,
             trace = EnvelopeValidator.traceOf(envelope),
             ts = envelope.ts,
             body = envelope.body,
-            state = "queued",
+            state = if (registry.online(to)) "delivered" else "queued",
             deadlineAt = now() + deadlineMs,
         )
         store.remember(identity.householdId, envelope.id, task)
-        val routed = if (online) deliver(task) else task
+        store.event(task.id, identity.householdId, "create", envelope.body, now())
+        val routed = if (registry.online(to)) deliver(task) else task
         return RouteResult.Accepted(routed, duplicate = false)
     }
 
     private fun relay(identity: DeviceIdentity, envelope: Envelope): RouteResult {
         val taskId = envelope.task
             ?: return RouteResult.Refused(GatewayError("E_SCHEMA", "missing task id"), envelope.trace)
-        val task = store.find(taskId)
+        val task = store.find(taskId, identity.householdId)
             ?: return RouteResult.Refused(GatewayError("E_SCHEMA", "unknown task"), envelope.trace)
-        if (task.householdId != identity.householdId ||
-            (identity.deviceId != task.from && identity.deviceId != task.to)
-        ) {
+        if (identity.deviceId != task.from && identity.deviceId != task.to) {
             return RouteResult.Refused(GatewayError("E_TENANT", "not your task"), envelope.trace)
         }
 
@@ -124,6 +136,7 @@ class TaskRouter(
 
         val next = when (envelope.type) {
             "task.ack" -> task.copy(state = "acked")
+            "task.progress" -> task.copy(state = "progress")
             "task.result" -> task.copy(state = "done")
             "task.error" -> task.copy(state = "failed")
             "task.cancel" -> task.copy(state = "cancelled")
@@ -132,6 +145,7 @@ class TaskRouter(
         if (next != task) {
             store.update(next)
         }
+        store.event(task.id, identity.householdId, envelope.type, envelope.body, now())
         return RouteResult.Accepted(next, duplicate = false)
     }
 
@@ -153,7 +167,8 @@ class TaskRouter(
             ),
         ).isSuccess
         if (!sent) return task
-        store.markSent(task.id)
-        return task.copy(state = "sent")
+        store.markDelivered(task.id, task.householdId)
+        store.event(task.id, task.householdId, "deliver", JsonObject(emptyMap()), now())
+        return task.copy(state = "delivered")
     }
 }

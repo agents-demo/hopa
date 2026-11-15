@@ -27,21 +27,37 @@ class PairingService(
         householdName: String,
         memberName: String,
         remoteAddress: String,
+        householdId: String?,
     ): PairingOutcome<Minted> {
         if (!mintLimiter.allow(remoteAddress)) {
             return PairingOutcome.Refused("E_RATE", "too many pairing sessions", retryable = true)
         }
 
-        val household = UUID.randomUUID().toString()
+        val household = householdId ?: UUID.randomUUID().toString()
+        if (householdId != null) {
+            val exists = db.tenant(householdId) { connection ->
+                connection.createStatement().use { statement ->
+                    statement.executeQuery("select count(*) from households").use { rows ->
+                        rows.next()
+                        rows.getInt(1) == 1
+                    }
+                }
+            }
+            if (!exists) {
+                return PairingOutcome.Refused("E_SCHEMA", "unknown household")
+            }
+        }
         val member = UUID.randomUUID().toString()
         val session = Tokens.mint()
         val expiresAt = clock() + SESSION_MS
 
         db.tenant(household) { connection ->
-            connection.prepareStatement("insert into households(id, name) values (?::uuid, ?)").use {
-                it.setString(1, household)
-                it.setString(2, householdName)
-                it.executeUpdate()
+            if (householdId == null) {
+                connection.prepareStatement("insert into households(id, name) values (?::uuid, ?)").use {
+                    it.setString(1, household)
+                    it.setString(2, householdName)
+                    it.executeUpdate()
+                }
             }
             connection.prepareStatement(
                 "insert into members(id, household_id, role, display_name) " +

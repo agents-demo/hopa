@@ -34,7 +34,12 @@ fun Application.pairingRoutes(config: ServerConfig) {
                 call.respondError(HttpStatusCode.BadRequest, "E_SCHEMA", "invalid JSON body")
                 return@post
             }
-            when (val outcome = api.mint(request.householdName, request.memberName, remoteAddress(call))) {
+            when (val outcome = api.mint(
+                request.householdName,
+                request.memberName,
+                remoteAddress(call),
+                request.householdId,
+            )) {
                 is PairingOutcome.Ok -> call.respond(HttpStatusCode.Created, outcome.value)
                 is PairingOutcome.Refused -> call.refuse(outcome)
             }

@@ -178,6 +178,33 @@ class PairingHttpTest {
     }
 
     @Test
+    fun `a session minted for an existing household joins it`() = testApplication {
+        application { module(config()) }
+        val first = Json.parseToJsonElement(
+            client.claim(sessionOf(qrOf(client.mint().bodyAsText()))).bodyAsText(),
+        ).jsonObject
+        val household = first["householdId"]!!.jsonPrimitive.content
+
+        val join = client.post("/v1/pair/sessions") {
+            header(HttpHeaders.Authorization, "Bearer boot-secret")
+            header("X-Forwarded-For", "198.51.100.2")
+            contentType(ContentType.Application.Json)
+            setBody(
+                """{"householdName":"Levi","memberName":"PC","householdId":"$household"}""",
+            )
+        }
+        val second = Json.parseToJsonElement(
+            client.claim(sessionOf(qrOf(join.bodyAsText()))).bodyAsText(),
+        ).jsonObject
+
+        assertEquals(household, second["householdId"]!!.jsonPrimitive.content)
+        assertNotEquals(
+            first["deviceId"]!!.jsonPrimitive.content,
+            second["deviceId"]!!.jsonPrimitive.content,
+        )
+    }
+
+    @Test
     fun `the sixth session from one address in a minute is E_RATE`() = testApplication {
         application { module(config()) }
 
