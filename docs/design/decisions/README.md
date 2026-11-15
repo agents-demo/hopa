@@ -39,6 +39,7 @@ supersede it. Format:
 | [0019](0019-offline-and-model-network.md) | The model needs a network; the shell does not | accepted |
 | [0020](0020-android-is-the-active-client.md) | Android is the active client; Windows is next; Harmony is frozen | accepted |
 | [0021](0021-windows-client-stack.md) | Windows client: .NET shell over the Kotlin engine | accepted |
+| [0022](0022-backend-kotlin-and-shape.md) | Backend language and shape: Kotlin on the JVM, one build with `packages/` | proposed |
 
 Create the next ADR by copying the template below.
 

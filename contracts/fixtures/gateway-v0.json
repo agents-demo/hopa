@@ -1,0 +1,218 @@
+{
+  "version": 1,
+  "description": "Protocol v0 vectors. 'ok' is what the server does; 'schema' is whether JSON Schema accepts the message. They differ on purpose: an invalid trace is replaced, and a schema-valid message can still be refused for tenancy or authentication. Both the Kotlin codec and the Python checker replay this file.",
+  "cases": [
+    {
+      "name": "task.create from the phone to the PC",
+      "ok": true,
+      "schema": true,
+      "message": {
+        "v": 1,
+        "id": "018f3a5e-6b1c-7c3a-9d2e-4f5a6b7c8d9e",
+        "type": "task.create",
+        "trace": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
+        "ts": 1763212800123,
+        "to": "dev-01h-pc",
+        "body": { "goal": "find the lease pdf and draft an email to the landlord" }
+      }
+    },
+    {
+      "name": "task.result from the PC to the phone",
+      "ok": true,
+      "schema": true,
+      "message": {
+        "v": 1,
+        "id": "018f3a5e-6b1c-7c3a-9d2e-4f5a6b7c8d9f",
+        "type": "task.result",
+        "trace": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b8-01",
+        "ts": 1763212860456,
+        "from": "dev-01h-pc",
+        "to": "dev-01h-phone",
+        "task": "tsk-01h-1",
+        "body": { "summary": "drafted, not sent", "artifacts": [] }
+      }
+    },
+    {
+      "name": "device.hello with a push token",
+      "ok": true,
+      "schema": true,
+      "message": {
+        "v": 1,
+        "id": "018f3a5e-6b1c-7c3a-9d2e-4f5a6b7c8da0",
+        "type": "device.hello",
+        "ts": 1763212801000,
+        "from": "dev-01h-phone",
+        "body": {
+          "platform": "android",
+          "name": "Pixel 9",
+          "appVersion": "0.1.0",
+          "pushToken": "fcm-token-abc",
+          "capabilities": { "accessibility": true, "battery": 84 }
+        }
+      }
+    },
+    {
+      "name": "ping keeps an idle socket honest",
+      "ok": true,
+      "schema": true,
+      "message": {
+        "v": 1,
+        "id": "018f3a5e-6b1c-7c3a-9d2e-4f5a6b7c8da1",
+        "type": "ping",
+        "ts": 1763212810000
+      }
+    },
+    {
+      "name": "task.cancel is schema-valid",
+      "ok": true,
+      "schema": true,
+      "message": {
+        "v": 1,
+        "id": "018f3a5e-6b1c-7c3a-9d2e-4f5a6b7c8da2",
+        "type": "task.cancel",
+        "trace": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b9-01",
+        "ts": 1763212820000,
+        "to": "dev-01h-pc",
+        "task": "tsk-01h-1",
+        "body": {}
+      }
+    },
+    {
+      "name": "a replayed message id is still schema-valid",
+      "ok": true,
+      "schema": true,
+      "message": {
+        "v": 1,
+        "id": "018f3a5e-6b1c-7c3a-9d2e-4f5a6b7c8d9e",
+        "type": "task.create",
+        "trace": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
+        "ts": 1763212899999,
+        "to": "dev-01h-pc",
+        "body": { "goal": "find the lease pdf and draft an email to the landlord" }
+      }
+    },
+    {
+      "name": "an unknown field is ignored, not refused",
+      "ok": true,
+      "schema": true,
+      "message": {
+        "v": 1,
+        "id": "018f3a5e-6b1c-7c3a-9d2e-4f5a6b7c8da3",
+        "type": "task.create",
+        "ts": 1763212900000,
+        "to": "dev-01h-pc",
+        "household": "hh-someone-else",
+        "body": { "goal": "open the settings app" }
+      }
+    },
+    {
+      "name": "a trace that is not a traceparent is replaced by the server",
+      "ok": true,
+      "schema": false,
+      "message": {
+        "v": 1,
+        "id": "018f3a5e-6b1c-7c3a-9d2e-4f5a6b7c8da4",
+        "type": "task.create",
+        "trace": "not-a-traceparent",
+        "ts": 1763212910000,
+        "to": "dev-01h-pc",
+        "body": { "goal": "open the settings app" }
+      }
+    },
+    {
+      "name": "a target in another household is refused",
+      "ok": false,
+      "schema": true,
+      "error": "E_TENANT",
+      "message": {
+        "v": 1,
+        "id": "018f3a5e-6b1c-7c3a-9d2e-4f5a6b7c8da5",
+        "type": "task.create",
+        "ts": 1763212920000,
+        "to": "dev-other-household",
+        "body": { "goal": "read the other family's calendar" }
+      }
+    },
+    {
+      "name": "an expired access token is refused",
+      "ok": false,
+      "schema": true,
+      "error": "E_AUTH",
+      "message": {
+        "v": 1,
+        "id": "018f3a5e-6b1c-7c3a-9d2e-4f5a6b7c8da6",
+        "type": "device.hello",
+        "ts": 1763212930000,
+        "from": "dev-01h-phone",
+        "body": { "platform": "android", "name": "Pixel 9", "appVersion": "0.1.0" }
+      }
+    },
+    {
+      "name": "needs_approval is reserved until week 5",
+      "ok": false,
+      "schema": false,
+      "error": "E_UNSUPPORTED",
+      "message": {
+        "v": 1,
+        "id": "018f3a5e-6b1c-7c3a-9d2e-4f5a6b7c8da7",
+        "type": "task.needs_approval",
+        "ts": 1763212940000,
+        "to": "dev-01h-parent",
+        "task": "tsk-01h-2",
+        "body": { "amount": 1240 }
+      }
+    },
+    {
+      "name": "a message without an id is refused",
+      "ok": false,
+      "schema": false,
+      "error": "E_SCHEMA",
+      "message": {
+        "v": 1,
+        "type": "task.create",
+        "ts": 1763212950000,
+        "to": "dev-01h-pc",
+        "body": {}
+      }
+    },
+    {
+      "name": "an unknown type is refused",
+      "ok": false,
+      "schema": false,
+      "error": "E_UNSUPPORTED",
+      "message": {
+        "v": 1,
+        "id": "018f3a5e-6b1c-7c3a-9d2e-4f5a6b7c8da8",
+        "type": "device.reboot",
+        "ts": 1763212960000
+      }
+    },
+    {
+      "name": "a later major version is refused",
+      "ok": false,
+      "schema": false,
+      "error": "E_VERSION",
+      "message": {
+        "v": 2,
+        "id": "018f3a5e-6b1c-7c3a-9d2e-4f5a6b7c8da9",
+        "type": "task.create",
+        "ts": 1763212970000,
+        "to": "dev-01h-pc",
+        "body": {}
+      }
+    },
+    {
+      "name": "a task without a target is refused",
+      "ok": false,
+      "schema": false,
+      "error": "E_SCHEMA",
+      "message": {
+        "v": 1,
+        "id": "018f3a5e-6b1c-7c3a-9d2e-4f5a6b7c8daa",
+        "type": "task.create",
+        "ts": 1763212980000,
+        "body": { "goal": "open the settings app" }
+      }
+    }
+  ]
+}

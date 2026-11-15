@@ -1,0 +1,247 @@
+openapi: 3.0.3
+info:
+  title: HOPA backend
+  version: "1.0"
+  description: |
+    The coordination service: pairing, tokens, trace lookup and the WebSocket
+    gateway that routes task messages between one household's devices.
+
+    The backend never decides a step and never executes a device command. It
+    carries task messages, stores their state, wakes a sleeping device and
+    records where every message went.
+
+    Identity is never on the wire. `household_id` is derived from the access
+    token; a body that names another household is ignored, and a `to` device
+    outside the caller's household is refused with `E_TENANT`.
+
+    The gateway frames are defined by
+    `contracts/schemas/gateway.v1.schema.json` and replayed from
+    `contracts/fixtures/gateway-v0.json`; this file covers the HTTP surface.
+servers:
+  - url: https://api.hopa.dev
+    description: EU deployment (Fly.io, fra)
+  - url: http://127.0.0.1:8080
+    description: Local
+security:
+  - bearerAuth: []
+paths:
+  /v1/health:
+    get:
+      summary: Liveness and readiness
+      description: Unauthenticated. Reports database state and queue depth so a deploy can gate on it.
+      security: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, version, db]
+                properties:
+                  ok: { type: boolean }
+                  version: { type: string }
+                  db: { type: string, enum: [ok, down, unconfigured] }
+                  queueDepth: { type: integer, minimum: 0 }
+        "503":
+          description: A dependency is down
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+  /v1/version:
+    get:
+      summary: Build and protocol version
+      security: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [version, protocol]
+                properties:
+                  version: { type: string }
+                  protocol: { type: integer, enum: [1] }
+  /v1/pair/sessions:
+    post:
+      summary: Mint a pairing session and its QR payload
+      description: |
+        Requires the operator bootstrap token (never a device token). The session
+        is single use, expires in five minutes and is rate limited to five per
+        minute per address.
+      security:
+        - bootstrapAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [householdName, memberName]
+              properties:
+                householdName: { type: string, minLength: 1 }
+                memberName: { type: string, minLength: 1 }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [session, qr, expiresAt]
+                properties:
+                  session: { type: string }
+                  qr:
+                    type: string
+                    description: "hopa://pair?v=1&h=<household>&p=<session>&u=<wss url>"
+                  expiresAt: { type: string, format: date-time }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /v1/pair/claim:
+    post:
+      summary: Trade a pairing session for device tokens
+      description: |
+        Called by the new device. The public key is stored now and used for
+        household-key wrapping in week 2; nothing is wrapped in week 1.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [session, platform, name, publicKey, alg]
+              properties:
+                session: { type: string }
+                platform: { type: string, enum: [android, windows] }
+                name: { type: string, minLength: 1 }
+                publicKey: { type: string, description: Base64url, 32 bytes (X25519) }
+                alg: { type: string, enum: [x25519] }
+                pushToken: { type: string, nullable: true }
+      responses:
+        "201":
+          description: Paired
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [deviceId, householdId, accessToken, refreshToken, expiresAt]
+                properties:
+                  deviceId: { type: string }
+                  householdId: { type: string }
+                  accessToken: { type: string }
+                  refreshToken: { type: string }
+                  expiresAt: { type: string, format: date-time }
+        "400":
+          description: Expired or already claimed session
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /v1/token/refresh:
+    post:
+      summary: Rotate an access token
+      description: A refresh token is single use. Presenting a rotated token revokes the device's token family.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken: { type: string }
+      responses:
+        "200":
+          description: Rotated
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [accessToken, refreshToken, expiresAt]
+                properties:
+                  accessToken: { type: string }
+                  refreshToken: { type: string }
+                  expiresAt: { type: string, format: date-time }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /v1/traces/{traceId}:
+    get:
+      summary: The path one message took, by trace id
+      description: Scoped to the caller's household. Used by the operations console from week 2.
+      parameters:
+        - name: traceId
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[0-9a-f]{32}$"
+      responses:
+        "200":
+          description: The spans, oldest first
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [traceId, spans]
+                properties:
+                  traceId: { type: string }
+                  spans:
+                    type: array
+                    items:
+                      type: object
+                      required: [operation, startedAt, durationMs, status]
+                      properties:
+                        operation: { type: string }
+                        deviceId: { type: string, nullable: true }
+                        taskId: { type: string, nullable: true }
+                        startedAt: { type: string, format: date-time }
+                        durationMs: { type: integer, minimum: 0 }
+                        status: { type: string, enum: [ok, error] }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404":
+          description: Unknown trace, or one belonging to another household
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Device access token, 15 min, opaque.
+    bootstrapAuth:
+      type: http
+      scheme: bearer
+      description: Operator bootstrap token from the environment; creates pairing sessions only.
+  schemas:
+    Error:
+      type: object
+      required: [code, message, retryable, traceId]
+      properties:
+        code:
+          type: string
+          enum:
+            - E_AUTH
+            - E_TENANT
+            - E_VERSION
+            - E_RATE
+            - E_QUEUE
+            - E_SCHEMA
+            - E_UNSUPPORTED
+        message: { type: string }
+        retryable: { type: boolean }
+        messageKey: { type: string }
+        traceId: { type: string }
+  responses:
+    Unauthorized:
+      description: Missing, expired or revoked token
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    RateLimited:
+      description: Too many requests in the window
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }

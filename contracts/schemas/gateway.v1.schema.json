@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hopa.dev/contracts/schemas/gateway.v1.schema.json",
+  "title": "HOPA gateway envelope v1",
+  "description": "One frame on the /v1/gateway WebSocket, and the same shape in a task queue row. household_id is deliberately absent: the server derives identity from the access token, so a client cannot name another household. Unknown fields are ignored, not refused: a newer minor version may add one, and the server keeps accepting the current major version.",
+  "type": "object",
+  "required": ["v", "id", "type", "ts"],
+  "properties": {
+    "v": {
+      "const": 1,
+      "description": "Protocol major version. The only accepted value."
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+      "description": "Client-generated message id; the idempotency key, unique per household for 24 h."
+    },
+    "type": {
+      "enum": [
+        "device.hello",
+        "device.hello.ack",
+        "presence",
+        "task.create",
+        "task.ack",
+        "task.progress",
+        "task.result",
+        "task.error",
+        "task.cancel",
+        "error",
+        "ping",
+        "pong"
+      ]
+    },
+    "trace": {
+      "type": "string",
+      "pattern": "^00-[0-9a-f]{32}-[0-9a-f]{16}-01$",
+      "description": "W3C traceparent. Invalid values are replaced by the server, never refused."
+    },
+    "ts": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Sender clock in milliseconds. Ordering is server-assigned, not trusted."
+    },
+    "from": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Server-set device id. A client value is ignored."
+    },
+    "to": {
+      "type": "string",
+      "minLength": 1
+    },
+    "task": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Server-assigned task id, copied on every message after the first task.create."
+    },
+    "body": {
+      "type": "object",
+      "description": "Type-specific payload. Ciphertext from week 2; the server never renders it."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": ["type"],
+        "properties": {
+          "type": { "pattern": "^task\\." }
+        }
+      },
+      "then": {
+        "required": ["to"]
+      }
+    }
+  ]
+}

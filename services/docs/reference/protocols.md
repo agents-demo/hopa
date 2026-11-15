@@ -7,6 +7,7 @@ where to look and what must not drift.
 |---|---|---|---|
 | **Bridge HTTP** | `@hopa/app` (`BridgeClient`, `ChatSync`) → `services/bridge` | HTTP + JSON on `127.0.0.1:8766` (reverse port) or the relay | [`contracts/openapi/bridge.v1.yaml`](../../../contracts/openapi/bridge.v1.yaml) |
 | **Relay** | phone → relay → PC | WebSocket, bearer token | `services/relay` (server half), `services/bridge/cloud_link.py` (PC half), `services/wire`; guide: [pc-bridge](../guides/pc-bridge.md) |
+| **Gateway** | Android / Windows → `services/backend` (planned) | WSS + JSON frames, opaque bearer token | [`contracts/openapi/backend.v1.yaml`](../../../contracts/openapi/backend.v1.yaml), [`gateway.v1.schema.json`](../../../contracts/schemas/gateway.v1.schema.json), fixtures `gateway-v0.json` |
 | **Brain HTTP** | bridge / baseline → `services/brain` | HTTP + JSON | [brain](brain.md) |
 | **MCP** | any MCP client → `hopa-bridge mcp` | stdio, JSON-RPC | `services/bridge/mcp_server.py` |
 | **Action / observation / decision / run-record** | app, baseline, bench | JSON in memory and in logs | [`contracts/schemas/`](../../../../../docs/reference/contracts/schemas) and [contracts](../../../docs/reference/contracts/action.md) |

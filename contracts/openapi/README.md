@@ -5,6 +5,7 @@ One file per service, versioned in git, reviewed like code.
 | File | Service | Status |
 |---|---|---|
 | `bridge.v1.yaml` | `services/bridge` (and the pool) | current surface, no `/v1` prefix yet |
+| `backend.v1.yaml` | `services/backend` (planned) | protocol v0 frozen; gateway frames live in `contracts/schemas/gateway.v1.schema.json` |
 
 ## Rules
 
