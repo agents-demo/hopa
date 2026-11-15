@@ -7,6 +7,8 @@ import com.hopa.backend.protocol.Envelope
 import com.hopa.backend.protocol.EnvelopeValidator
 import com.hopa.backend.protocol.GatewayCodec
 import com.hopa.backend.protocol.GatewayError
+import com.hopa.backend.push.PushOutcome
+import com.hopa.backend.push.PushPort
 import java.util.UUID
 import kotlinx.serialization.json.JsonObject
 
@@ -46,6 +48,7 @@ class TaskRouter(
     private val registry: DeviceRegistry,
     private val devices: DeviceDirectory,
     private val log: EventLog = EventLog.None,
+    private val push: PushPort = PushPort.None,
     private val newTaskId: () -> String = { UUID.randomUUID().toString() },
     private val now: () -> Long = System::currentTimeMillis,
 ) {
@@ -110,7 +113,17 @@ class TaskRouter(
         )
         store.remember(identity.householdId, envelope.id, task)
         store.event(task.id, identity.householdId, "create", envelope.body, now())
-        val routed = if (registry.online(to)) deliver(task) else task
+        val routed = if (registry.online(to)) {
+            deliver(task)
+        } else {
+            val pushToken = devices.pushToken(to, identity.householdId)
+            if (pushToken != null &&
+                push.wake(to, task.id, task.trace, pushToken) == PushOutcome.InvalidToken
+            ) {
+                devices.clearPushToken(to, identity.householdId)
+            }
+            task
+        }
         return RouteResult.Accepted(routed, duplicate = false)
     }
 

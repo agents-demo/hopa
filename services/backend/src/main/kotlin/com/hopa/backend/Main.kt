@@ -8,6 +8,10 @@ import com.hopa.backend.pairing.PgAuth
 import com.hopa.backend.pairing.TokenIssuer
 import com.hopa.backend.pairing.pairingRoutes
 import com.hopa.backend.pairing.tokenRoutes
+import com.hopa.backend.push.FcmSender
+import com.hopa.backend.push.GuardedPush
+import com.hopa.backend.push.PushPort
+import com.hopa.backend.push.ServiceAccountFcmAuth
 import com.hopa.backend.store.Database
 import com.hopa.backend.store.DbProbe
 import com.hopa.backend.store.PgDevices
@@ -49,6 +53,19 @@ fun main() {
         TokenIssuer(db, onRevoke = { deviceId -> auth?.revoke(deviceId) })
     }
 
+    val fcmProject = System.getenv("HOPA_FCM_PROJECT")
+    val fcmCredentials = System.getenv("HOPA_FCM_CREDENTIALS")
+    val push: PushPort = if (fcmProject != null && fcmCredentials != null) {
+        GuardedPush(
+            FcmSender(
+                projectId = fcmProject,
+                auth = ServiceAccountFcmAuth(fcmCredentials),
+            ),
+        )
+    } else {
+        PushPort.None
+    }
+
     val config = ServerConfig(
         version = version,
         auth = auth ?: AuthPort.DenyAll,
@@ -62,6 +79,7 @@ fun main() {
         bootstrapToken = System.getenv("HOPA_BOOTSTRAP_TOKEN"),
         tokenIssuer = tokens,
         tasks = database?.let { PgTaskStore(it) } ?: InMemoryTaskStore(),
+        push = push,
     )
 
     embeddedServer(Netty, port = port, host = "0.0.0.0") {

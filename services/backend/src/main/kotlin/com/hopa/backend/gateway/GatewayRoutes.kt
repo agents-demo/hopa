@@ -42,6 +42,7 @@ fun Application.gatewayRoutes(
         registry = registry,
         devices = config.devices,
         log = config.log,
+        push = config.push,
     ),
 ) {
     install(WebSockets) {

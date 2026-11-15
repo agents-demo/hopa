@@ -5,6 +5,7 @@ import com.hopa.backend.http.RateLimiter
 import com.hopa.backend.log.EventLog
 import com.hopa.backend.pairing.PairingApi
 import com.hopa.backend.pairing.TokenIssuer
+import com.hopa.backend.push.PushPort
 import com.hopa.backend.store.DbProbe
 import com.hopa.backend.tasks.DeviceDirectory
 import com.hopa.backend.tasks.InMemoryTaskStore
@@ -26,4 +27,5 @@ data class ServerConfig(
     val tasks: TaskStore = InMemoryTaskStore(),
     val messageLimit: RateLimiter = RateLimiter(20, 1_000),
     val log: EventLog = EventLog.None,
+    val push: PushPort = PushPort.None,
 )
