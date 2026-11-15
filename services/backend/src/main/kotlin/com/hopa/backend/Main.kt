@@ -1,11 +1,18 @@
 ﻿package com.hopa.backend
 
+import com.hopa.backend.auth.AuthPort
 import com.hopa.backend.gateway.gatewayRoutes
 import com.hopa.backend.http.healthRoutes
 import com.hopa.backend.pairing.PairingService
+import com.hopa.backend.pairing.PgAuth
+import com.hopa.backend.pairing.TokenIssuer
 import com.hopa.backend.pairing.pairingRoutes
+import com.hopa.backend.pairing.tokenRoutes
 import com.hopa.backend.store.Database
+import com.hopa.backend.store.DbProbe
+import com.hopa.backend.store.PgDevices
 import com.hopa.backend.store.PostgresProbe
+import com.hopa.backend.tasks.DeviceDirectory
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
@@ -20,6 +27,7 @@ fun Application.module(config: ServerConfig) {
     }
     healthRoutes(config)
     pairingRoutes(config)
+    tokenRoutes(config)
     gatewayRoutes(config)
 }
 
@@ -32,11 +40,24 @@ fun main() {
     val database = Database.fromEnvironment()
     database?.migrate()
 
+    val auth: PgAuth? = database?.let(::PgAuth)
+    val devices: DeviceDirectory = database?.let(::PgDevices) ?: DeviceDirectory.Empty
+    val tokens = database?.let { db ->
+        TokenIssuer(db, onRevoke = { deviceId -> auth?.revoke(deviceId) })
+    }
+
     val config = ServerConfig(
         version = version,
-        db = database?.let(::PostgresProbe) ?: com.hopa.backend.store.DbProbe.Unconfigured,
-        pairing = database?.let(::PairingService),
+        auth = auth ?: AuthPort.DenyAll,
+        devices = devices,
+        db = database?.let(::PostgresProbe) ?: DbProbe.Unconfigured,
+        pairing = if (database != null && tokens != null) {
+            PairingService(database, tokens = tokens)
+        } else {
+            null
+        },
         bootstrapToken = System.getenv("HOPA_BOOTSTRAP_TOKEN"),
+        tokenIssuer = tokens,
     )
 
     embeddedServer(Netty, port = port, host = "0.0.0.0") {

@@ -7,5 +7,6 @@ import com.hopa.backend.tasks.DeviceDirectory
 class MapDirectory(
     private val byId: Map<String, DeviceIdentity>,
 ) : DeviceDirectory {
-    override fun lookup(deviceId: String): DeviceIdentity? = byId[deviceId]
+    override fun lookup(deviceId: String, householdId: String): DeviceIdentity? =
+        byId[deviceId]?.takeIf { it.householdId == householdId }
 }

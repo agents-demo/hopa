@@ -2,6 +2,7 @@
 
 import com.hopa.backend.auth.AuthPort
 import com.hopa.backend.pairing.PairingApi
+import com.hopa.backend.pairing.TokenIssuer
 import com.hopa.backend.store.DbProbe
 import com.hopa.backend.tasks.DeviceDirectory
 
@@ -17,4 +18,5 @@ data class ServerConfig(
     val db: DbProbe = DbProbe.Unconfigured,
     val pairing: PairingApi? = null,
     val bootstrapToken: String? = null,
+    val tokenIssuer: TokenIssuer? = null,
 )

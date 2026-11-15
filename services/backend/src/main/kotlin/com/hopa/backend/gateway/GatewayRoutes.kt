@@ -28,6 +28,8 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -93,6 +95,12 @@ fun Application.gatewayRoutes(
                     when (envelope.type) {
                         "device.hello" -> {
                             registry.join(session)
+                            config.devices.touch(
+                                identity.deviceId,
+                                identity.householdId,
+                                envelope.body["pushToken"]?.jsonPrimitive?.contentOrNull,
+                                System.currentTimeMillis(),
+                            )
                             val ids = registry.deviceIds(identity.householdId)
                             val peers = registry.peers(identity.householdId, identity.deviceId)
                             // The newcomer learns the roster from the ack; one

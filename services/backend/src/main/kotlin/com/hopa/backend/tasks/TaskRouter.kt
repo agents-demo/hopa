@@ -9,11 +9,22 @@ import com.hopa.backend.protocol.GatewayError
 import java.util.UUID
 
 /** Every paired device, online or not. Production resolves from Postgres. */
-fun interface DeviceDirectory {
-    fun lookup(deviceId: String): DeviceIdentity?
+interface DeviceDirectory {
+    fun lookup(deviceId: String, householdId: String): DeviceIdentity?
+
+    /** The FCM registration, or null when the device has none. */
+    fun pushToken(deviceId: String, householdId: String): String? = null
+
+    /** Records presence and, when present, the latest push token. */
+    fun touch(deviceId: String, householdId: String, pushToken: String?, at: Long) {}
+
+    /** An unregistered FCM token is cleared until the next hello replaces it. */
+    fun clearPushToken(deviceId: String, householdId: String) {}
 
     companion object {
-        val Empty = DeviceDirectory { null }
+        val Empty = object : DeviceDirectory {
+            override fun lookup(deviceId: String, householdId: String): DeviceIdentity? = null
+        }
     }
 }
 
@@ -65,7 +76,7 @@ class TaskRouter(
         val to = envelope.to
             ?: return RouteResult.Refused(GatewayError("E_SCHEMA", "a task needs a target"), envelope.trace)
 
-        val target = devices.lookup(to)
+        val target = devices.lookup(to, identity.householdId)
             ?: return RouteResult.Refused(GatewayError("E_TENANT", "no such device in this household"), envelope.trace)
         if (target.householdId != identity.householdId) {
             return RouteResult.Refused(GatewayError("E_TENANT", "no such device in this household"), envelope.trace)
