@@ -83,10 +83,10 @@ create table tasks (
     body bytea not null,
     deadline_at timestamptz not null,
     created_at timestamptz not null default now(),
-    updated_at timestamptz not null default now(),
-    unique (household_id, message_id)
+    updated_at timestamptz not null default now()
 );
 create index tasks_target_idx on tasks (to_device, state);
+create index tasks_message_idx on tasks (household_id, message_id);
 
 create table task_events (
     id bigserial primary key,

@@ -57,16 +57,20 @@ class TaskRouter(
 ) {
     private val deadlineMs = 10 * 60 * 1000L
 
-    fun route(identity: DeviceIdentity, envelope: Envelope): RouteResult {
-        val traceparent = EnvelopeValidator.traceOf(envelope)
+    fun route(
+        identity: DeviceIdentity,
+        envelope: Envelope,
+        traceparent: String? = null,
+    ): RouteResult {
+        val trace = traceparent ?: EnvelopeValidator.traceOf(envelope)
         return traces.span(
             identity.householdId,
-            traceId(traceparent),
+            traceId(trace),
             "route",
             identity.deviceId,
             envelope.task,
         ) {
-            routeEnvelope(identity, envelope, traceparent)
+            routeEnvelope(identity, envelope, trace)
         }
     }
 
@@ -135,7 +139,14 @@ class TaskRouter(
             state = if (registry.online(to)) "delivered" else "queued",
             deadlineAt = now() + deadlineMs,
         )
-        store.remember(identity.householdId, envelope.id, task)
+        if (!store.remember(identity.householdId, envelope.id, task)) {
+            val existing = store.recall(identity.householdId, envelope.id)
+                ?: return RouteResult.Refused(
+                    GatewayError("E_QUEUE", "duplicate message could not be read back"),
+                    envelope.trace,
+                )
+            return RouteResult.Accepted(existing, duplicate = true)
+        }
         store.event(task.id, identity.householdId, "create", envelope.body, now())
 
         val routed = if (registry.online(to)) {

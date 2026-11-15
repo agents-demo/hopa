@@ -22,7 +22,8 @@ data class TaskRecord(
 )
 
 interface TaskStore {
-    fun remember(householdId: String, messageId: String, task: TaskRecord)
+    /** True when this message id won the idempotency window, false when it was already live. */
+    fun remember(householdId: String, messageId: String, task: TaskRecord): Boolean
 
     fun recall(householdId: String, messageId: String): TaskRecord?
 
@@ -41,9 +42,11 @@ class InMemoryTaskStore : TaskStore {
     private val byMessage = ConcurrentHashMap<String, TaskRecord>()
     private val byId = ConcurrentHashMap<String, TaskRecord>()
 
-    override fun remember(householdId: String, messageId: String, task: TaskRecord) {
-        byMessage[key(householdId, messageId)] = task
+    override fun remember(householdId: String, messageId: String, task: TaskRecord): Boolean {
+        val key = key(householdId, messageId)
+        if (byMessage.putIfAbsent(key, task) != null) return false
         byId[task.id] = task
+        return true
     }
 
     override fun recall(householdId: String, messageId: String): TaskRecord? =

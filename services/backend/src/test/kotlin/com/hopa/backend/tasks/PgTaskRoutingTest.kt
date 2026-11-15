@@ -40,6 +40,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -291,7 +292,7 @@ class PgTaskRoutingTest {
     }
 
     @Test
-    fun `idempotency expires after twenty four hours`() {
+    fun `idempotency expires after twenty four hours and a resend creates a new task`() {
         val household = newHousehold()
         val device = newDevice()
         val member = UUID.randomUUID().toString()
@@ -311,9 +312,9 @@ class PgTaskRoutingTest {
             deadlineAt = clock.get() + 600_000,
         )
         val tasks = PgTaskStore(db, clock::get)
-        tasks.remember(household, messageId, task)
-
+        assertTrue(tasks.remember(household, messageId, task))
         assertEquals(task.id, tasks.recall(household, messageId)?.id)
+
         db.tenant(household) { connection ->
             connection.prepareStatement("update idempotency_keys set expires_at = ?").use {
                 it.setTimestamp(1, Timestamp.from(Instant.ofEpochMilli(clock.get() - 1)))
@@ -321,5 +322,46 @@ class PgTaskRoutingTest {
             }
         }
         assertNull(tasks.recall(household, messageId))
+
+        val second = task.copy(id = UUID.randomUUID().toString())
+        assertTrue("an expired key must accept a new task", tasks.remember(household, messageId, second))
+        assertEquals(second.id, tasks.recall(household, messageId)?.id)
+        assertEquals(2, taskCountForMessage(household, messageId))
     }
+
+    @Test
+    fun `a live message id cannot be remembered twice`() {
+        val household = newHousehold()
+        val device = newDevice()
+        val member = UUID.randomUUID().toString()
+        seedHousehold(db, household, device, member)
+        val messageId = UUID.randomUUID().toString()
+        val task = TaskRecord(
+            id = UUID.randomUUID().toString(),
+            householdId = household,
+            memberId = member,
+            from = device,
+            to = device,
+            messageId = messageId,
+            trace = "b".repeat(32),
+            ts = clock.get(),
+            body = JsonObject(emptyMap()),
+            state = "queued",
+            deadlineAt = clock.get() + 600_000,
+        )
+        val tasks = PgTaskStore(db, clock::get)
+
+        assertTrue(tasks.remember(household, messageId, task))
+        assertFalse(tasks.remember(household, messageId, task.copy(id = UUID.randomUUID().toString())))
+        assertEquals(task.id, tasks.recall(household, messageId)?.id)
+        assertEquals(1, taskCountForMessage(household, messageId))
+    }
+
+    private fun taskCountForMessage(household: String, messageId: String): Int =
+        db.tenant(household) { connection ->
+            connection.prepareStatement("select count(*) from tasks where message_id = ?::uuid").use {
+                it.setString(1, messageId)
+                it.executeQuery().use { rows -> rows.next(); rows.getInt(1) }
+            }
+        }
 }

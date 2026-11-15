@@ -152,7 +152,7 @@ fun Application.gatewayRoutes(
                                 )
                                 continue
                             }
-                            when (val result = router.route(identity, envelope)) {
+                            when (val result = router.route(identity, envelope, traceparent)) {
                                 is RouteResult.Accepted -> outgoing.send(
                                     GatewayCodec.encode(
                                         acceptedFrame(identity.deviceId, result.task, result.duplicate),

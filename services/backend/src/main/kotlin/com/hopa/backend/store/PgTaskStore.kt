@@ -21,9 +21,31 @@ class PgTaskStore(
     private val db: Database,
     private val clock: () -> Long = System::currentTimeMillis,
 ) : TaskStore {
-    override fun remember(householdId: String, messageId: String, task: TaskRecord) {
+    override fun remember(householdId: String, messageId: String, task: TaskRecord): Boolean {
         val now = clock()
-        db.tenant(householdId) { connection ->
+        return db.tenant(householdId) { connection ->
+            val response = buildJsonObject {
+                put("taskId", task.id)
+                put("state", task.state)
+            }.toString()
+            val claimed = connection.prepareStatement(
+                """
+                insert into idempotency_keys(household_id, message_id, response, expires_at)
+                values (?::uuid, ?::uuid, ?::jsonb, ?)
+                on conflict (household_id, message_id) do update
+                  set response = excluded.response, expires_at = excluded.expires_at
+                  where idempotency_keys.expires_at <= ?
+                """.trimIndent(),
+            ).use {
+                it.setString(1, householdId)
+                it.setString(2, messageId)
+                it.setString(3, response)
+                it.setTimestamp(4, timestamp(now + IDEMPOTENCY_MS))
+                it.setTimestamp(5, timestamp(now))
+                it.executeUpdate()
+            }
+            if (claimed != 1) return@tenant false
+
             connection.prepareStatement(
                 """
                 insert into tasks(id, household_id, member_id, from_device, to_device,
@@ -47,21 +69,7 @@ class PgTaskStore(
                 it.setTimestamp(12, timestamp(now))
                 it.executeUpdate()
             }
-
-            val response = buildJsonObject {
-                put("taskId", task.id)
-                put("state", task.state)
-            }.toString()
-            connection.prepareStatement(
-                "insert into idempotency_keys(household_id, message_id, response, expires_at) " +
-                    "values (?::uuid, ?::uuid, ?::jsonb, ?)",
-            ).use {
-                it.setString(1, householdId)
-                it.setString(2, messageId)
-                it.setString(3, response)
-                it.setTimestamp(4, timestamp(now + IDEMPOTENCY_MS))
-                it.executeUpdate()
-            }
+            true
         }
     }
 

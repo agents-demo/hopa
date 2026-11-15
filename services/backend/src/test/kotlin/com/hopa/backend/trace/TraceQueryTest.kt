@@ -232,6 +232,40 @@ class TraceQueryTest {
     }
 
     @Test
+    fun `a trace-less message keeps accept and route under the echoed trace`() = testApplication {
+        application { module(config()) }
+        val phone = client.claim("Phone")
+        val pc = client.claim("PC", phone.householdId)
+        val phoneWs = connect(phone)
+        connect(pc)
+        phoneWs.expect("presence")
+
+        phoneWs.send(
+            Envelope(
+                v = 1,
+                id = UUID.randomUUID().toString(),
+                type = "task.create",
+                ts = clock.get(),
+                to = pc.deviceId,
+                body = buildJsonObject { put("goal", "open settings") },
+            ),
+        )
+        val traceparent = phoneWs.expect("task.ack").trace!!
+        val traceId = TraceIds.traceId(traceparent)!!
+
+        val response = client.get("/v1/traces/$traceId") {
+            header("Authorization", "Bearer ${phone.access}")
+        }
+        val spans = Json.parseToJsonElement(response.bodyAsText()).jsonObject["spans"]!!.jsonArray
+            .map { it.jsonObject["operation"]!!.jsonPrimitive.content }
+            .toSet()
+
+        assertTrue("expected accept and route under $traceId, got $spans", spans.containsAll(
+            setOf("accept", "route", "deliver"),
+        ))
+    }
+
+    @Test
     fun `an invalid traceparent is replaced with a fresh one`() = testApplication {
         application { module(config()) }
         val phone = client.claim("Phone")

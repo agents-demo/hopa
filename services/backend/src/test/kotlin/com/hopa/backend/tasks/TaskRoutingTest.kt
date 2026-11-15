@@ -188,6 +188,8 @@ class TaskRoutingTest {
                 body = buildJsonObject { put("state", "delivered") },
             ),
         )
+        // Wait for the relay: the ack must be processed before the socket closes.
+        assertEquals(taskId, phone.expect("task.ack").task)
         again.close()
 
         val third = FakeDevice("dev-pc", "tok-dev-pc")
