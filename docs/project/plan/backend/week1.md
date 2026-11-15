@@ -45,7 +45,8 @@ Exit check: **20 of 20 scripted round-trips**, one real FCM wake, and the
 | Tokens | Opaque, SHA-256 at rest: access 15 min, refresh 30 days rotating | Revocation in week 2 needs an instant cut-off, not a JWT expiry |
 | Trace ids | W3C `traceparent`, server assigns at ingress if absent | Fits the console's "task trace by trace id" and the existing `traceId` in `errors.md` |
 | Wake-up | FCM HTTP v1, data-only, `priority: high`, 5-min TTL, no payload contents | The phone must wake without the server reading the message |
-| Hosting | Fly.io `fra` + Neon Postgres `eu-central-1` (proposed, confirmed Tuesday) | EU data residency, WebSocket-friendly, managed backups |
+| Hosting | Render (Frankfurt) + Render Postgres 16 (Frankfurt), one Docker web service | Already the repo's host for `hopa-relay`; EU data residency, WebSocket support, Blueprint deploy, managed backups |
+| Deploy tier | Render free web service for v0; move to `starter` before beta | No cost during the build. A free service sleeps after ~15 min idle and drops every socket, so the exit run warms it first and the upgrade is a release gate |
 
 ## 4. Protocol v0
 
@@ -140,12 +141,12 @@ a client cannot ask for another household's data even by accident.
 ## 5. Shape
 
 ```
-Android ──wss──┐                    ┌── Postgres (Neon, EU)
+Android ──wss──┐                    ┌── Postgres (Render, Frankfurt)
                ├── Ktor gateway ────┤     households, members, devices,
 Windows ───────┘        │            │     pairing_sessions, refresh_tokens,
                         │            │     tasks, task_events, idempotency_keys,
                         ├── FCM v1   │     trace_spans
-                        └── Fly.io (fra), one container, Fly health checks
+                        └── Render (Frankfurt), one container, /v1/health checks
 ```
 
 ```
@@ -195,7 +196,7 @@ then queries. A test connects as the app role and proves a cross-household
 
 | Day | Lane A (Amir) | Lane B (Batya) |
 |---|---|---|
-| Sun 15 | Protocol §4 written, ADR-0022, spec + schema + fixtures | Host choice confirmed; Neon project, Postgres 16, branch per env; `V1__init.sql` first draft |
+| Sun 15 | Protocol §4 written, ADR-0022, spec + schema + fixtures | Render Blueprint and Postgres 16 in Frankfurt; `V1__init.sql` first draft |
 | Mon 16 | **16:00 freeze**; Ktor skeleton, `/v1/health`, envelope codec + fixture tests | Fly app, Dockerfile, CI job, migrations on deploy; RLS test harness |
 | Tue 17 | Pairing endpoints, opaque tokens, refresh rotation; gateway handshake and presence | Repositories + transaction helper; trace span writer; health with DB and queue depth |
 | Wed 18 | Routing, idempotency, queue and replay, cross-household refusal | FCM service account and secrets; mock-FCM test double; log pipeline and redaction check |
@@ -229,6 +230,7 @@ week 3 demo.
 | RLS bypassed by a pool connection without `SET LOCAL` | Tenant leak — the one bug that ends the beta | Every repository call goes through one transaction helper; CI runs as the app role; the 1,000-attempt suite | B |
 | Opaque tokens cost a DB read per message | Latency at 5k sockets | 5-second in-process cache keyed by token hash; revoke invalidates the key | A |
 | JVM footprint on a small instance | Cost, OOM at load | jlink runtime, `-XX:MaxRAMPercentage`, measure the idle RSS in the evidence file | B |
+| Free web service sleeps after ~15 min idle | Sockets drop and a wake lands on a stopped process | Warm the service before the exit run; upgrade to `starter` before beta | A |
 | Two engineers, one contract | Review starvation | Lane B reviews the spec change before it is frozen, lane A reviews the schema | both |
 
 ## 10. Rollback
@@ -240,8 +242,10 @@ so an outage costs nothing in production; the relay is untouched.
 
 ## 11. Open decisions
 
-- [ ] Hosting confirmed Tuesday: Fly.io `fra` + Neon, or Render with an EU region,
-      or a Hetzner VPS with managed Postgres. Cost and backup effort decide it.
+- [x] Hosting confirmed: Render in Frankfurt with Render Postgres 16 (evidence:
+      [`tasks/week1b.md`](tasks/week1b.md) task B8). The web service stays on the
+      free tier for v0 and moves to `starter` before beta, because a sleeping
+      service drops every socket.
 - [ ] Access tokens: opaque now (chosen) or a signed JWT from day one, if the
       week 2 console needs offline verification.
 - [ ] Android slice owner: QR scan, FCM token registration and the gateway client
@@ -304,8 +308,9 @@ Every box is a change, a test or an artifact, not a meeting.
 
 ### W1.4 Gateway
 
-- [ ] `WSS /v1/gateway` authenticates the first frame, answers `device.hello`
-      with `hello.ack`, and enforces the 25 s heartbeat and 90 s timeout.
+- [ ] `WSS /v1/gateway` authenticates the bearer token on connect, answers
+      `device.hello` with `hello.ack`, and enforces the 25 s heartbeat and 90 s
+      timeout.
 - [ ] Presence is tracked in memory and in `devices.last_seen_at`, and `presence`
       events reach only same-household peers.
 - [ ] `task.create`, `task.ack`, `task.progress`, `task.result`, `task.error` and
@@ -339,7 +344,8 @@ Every box is a change, a test or an artifact, not a meeting.
 - [ ] Logs are JSON on stdout with `trace_id`, `household_id`, `device_id` and
       `task_id`, and never a token or a body.
 - [ ] A distroless image builds from the jlink runtime and boots under 512 MB.
-- [ ] Fly.io app in `fra`, Neon Postgres in the EU, secrets only in `fly secrets`,
-      and a documented single-command deploy.
+- [ ] Render Blueprint (`render.yaml`) with a Docker web service and Postgres 16
+      in Frankfurt; secrets set in the dashboard, never committed; deploy is a
+      push to the connected branch.
 - [ ] `docs/project/evidence/B1-gateway.md` records the exit-check table with
       commands, trace ids and timestamps.

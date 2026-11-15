@@ -13,6 +13,10 @@ as it lands.
 | 1 · 15–19 Nov | [`week1.md`](week1.md) | planned |
 | 2–8 | not written yet | — |
 
+Executable slices: [`tasks/week1.md`](tasks/week1.md) is slice A (contracts,
+skeleton, codec, mock clients); [`tasks/week1b.md`](tasks/week1b.md) is slice B
+(Postgres, RLS, pairing, wake, traces, Render deploy).
+
 Count a week with:
 
 ```bash

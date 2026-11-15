@@ -18,8 +18,8 @@ info:
     `contracts/schemas/gateway.v1.schema.json` and replayed from
     `contracts/fixtures/gateway-v0.json`; this file covers the HTTP surface.
 servers:
-  - url: https://api.hopa.dev
-    description: EU deployment (Fly.io, fra)
+  - url: https://hopa-backend.onrender.com
+    description: EU deployment (Render, Frankfurt)
   - url: http://127.0.0.1:8080
     description: Local
 security:
