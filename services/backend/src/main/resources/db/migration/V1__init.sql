@@ -175,6 +175,8 @@ alter table access_tokens enable row level security;
 alter table access_tokens force row level security;
 create policy access_tokens_presented on access_tokens for select
     using (token_hash = decode(nullif(current_setting('hopa.token_hash', true), ''), 'hex'));
+create policy access_tokens_tenant_select on access_tokens for select
+    using (household_id = nullif(current_setting('hopa.household_id', true), '')::uuid);
 create policy access_tokens_tenant_insert on access_tokens for insert
     with check (household_id = nullif(current_setting('hopa.household_id', true), '')::uuid);
 create policy access_tokens_tenant_delete on access_tokens for delete
@@ -196,6 +198,8 @@ alter table pairing_sessions enable row level security;
 alter table pairing_sessions force row level security;
 create policy pairing_sessions_presented on pairing_sessions for select
     using (code_hash = decode(nullif(current_setting('hopa.token_hash', true), ''), 'hex'));
+create policy pairing_sessions_tenant_select on pairing_sessions for select
+    using (household_id = nullif(current_setting('hopa.household_id', true), '')::uuid);
 create policy pairing_sessions_tenant_insert on pairing_sessions for insert
     with check (household_id = nullif(current_setting('hopa.household_id', true), '')::uuid);
 create policy pairing_sessions_tenant_update on pairing_sessions for update

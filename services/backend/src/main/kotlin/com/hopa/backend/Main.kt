@@ -1,7 +1,9 @@
-package com.hopa.backend
+﻿package com.hopa.backend
 
 import com.hopa.backend.gateway.gatewayRoutes
 import com.hopa.backend.http.healthRoutes
+import com.hopa.backend.pairing.PairingService
+import com.hopa.backend.pairing.pairingRoutes
 import com.hopa.backend.store.Database
 import com.hopa.backend.store.PostgresProbe
 import io.ktor.serialization.kotlinx.json.json
@@ -17,6 +19,7 @@ fun Application.module(config: ServerConfig) {
         json(Json { explicitNulls = false; encodeDefaults = true })
     }
     healthRoutes(config)
+    pairingRoutes(config)
     gatewayRoutes(config)
 }
 
@@ -32,6 +35,8 @@ fun main() {
     val config = ServerConfig(
         version = version,
         db = database?.let(::PostgresProbe) ?: com.hopa.backend.store.DbProbe.Unconfigured,
+        pairing = database?.let(::PairingService),
+        bootstrapToken = System.getenv("HOPA_BOOTSTRAP_TOKEN"),
     )
 
     embeddedServer(Netty, port = port, host = "0.0.0.0") {
