@@ -272,6 +272,8 @@ jobs:
   backend:
     name: Backend (JDK 17)
     runs-on: ubuntu-latest
+    env:
+      HOPA_ISOLATION_ATTEMPTS: "1000"
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-java@v6

@@ -7,12 +7,15 @@ import org.testcontainers.containers.PostgreSQLContainer
 /**
  * One Postgres 16 container for the whole test JVM.
  *
- * Flyway and role creation run as the container superuser; the app code under
- * test connects as `hopa_app`, which is `NOSUPERUSER NOBYPASSRLS` so the row
- * level policies actually apply. Testing as `postgres` would bypass them and
- * make every isolation assertion a lie.
+ * Migrations run as `hopa_owner`, a NOSUPERUSER NOBYPASSRLS role, so the tables
+ * are owned by a role the policies actually apply to — that is what makes
+ * `FORCE ROW LEVEL SECURITY` a real assertion rather than decoration. The app
+ * under test connects as `hopa_app`, a second non-superuser role. The container
+ * superuser is used only to create the two roles.
  */
 object PostgresHarness {
+    private const val NO_HOUSEHOLD = "00000000-0000-0000-0000-000000000000"
+
     private val container by lazy {
         PostgreSQLContainer<Nothing>("postgres:16-alpine").apply {
             withDatabaseName("hopa")
@@ -24,34 +27,57 @@ object PostgresHarness {
 
     private var prepared = false
 
-    fun adminDatabase(): Database {
-        val db = Database.connect(container.jdbcUrl, container.username, container.password)
-        prepare(db)
-        return db
+    private val admin: Database by lazy {
+        Database.connect(container.jdbcUrl, "postgres", "postgres").also { prepare(it) }
     }
 
-    fun appDatabase(): Database {
+    private val owner: Database by lazy {
         adminDatabase()
-        return Database.connect(container.jdbcUrl, "hopa_app", "hopa_app")
+        Database.connect(container.jdbcUrl, "hopa_owner", "hopa_owner")
     }
+
+    private val app: Database by lazy {
+        adminDatabase()
+        Database.connect(container.jdbcUrl, "hopa_app", "hopa_app")
+    }
+
+    fun adminDatabase(): Database = admin
+
+    /** The role that owns the tables: the deploy role on Render. */
+    fun ownerDatabase(): Database = owner
+
+    /** The role the application connects as. */
+    fun appDatabase(): Database = app
 
     private fun prepare(admin: Database) {
         if (prepared) return
         synchronized(this) {
             if (prepared) return
-            admin.migrate()
-            admin.tenant("00000000-0000-0000-0000-000000000000") { connection ->
+            admin.tenant(NO_HOUSEHOLD) { connection ->
                 connection.createStatement().use { statement ->
                     statement.execute(
                         """
                         DO $$ BEGIN
+                          IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'hopa_owner') THEN
+                            CREATE ROLE hopa_owner LOGIN PASSWORD 'hopa_owner' NOSUPERUSER NOBYPASSRLS;
+                          END IF;
                           IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'hopa_app') THEN
                             CREATE ROLE hopa_app LOGIN PASSWORD 'hopa_app' NOSUPERUSER NOBYPASSRLS;
                           END IF;
                         END $$;
                         """.trimIndent(),
                     )
+                    statement.execute("GRANT USAGE, CREATE ON SCHEMA public TO hopa_owner")
                     statement.execute("GRANT USAGE ON SCHEMA public TO hopa_app")
+                }
+            }
+
+            Database.connect(container.jdbcUrl, "hopa_owner", "hopa_owner").use { owner ->
+                owner.migrate()
+            }
+
+            admin.tenant(NO_HOUSEHOLD) { connection ->
+                connection.createStatement().use { statement ->
                     statement.execute(
                         "GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO hopa_app",
                     )
