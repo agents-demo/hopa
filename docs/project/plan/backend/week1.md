@@ -97,7 +97,7 @@ a client cannot ask for another household's data even by accident.
 | Type | Direction | Meaning |
 |---|---|---|
 | `device.hello` | device → server | `{platform, name, appVersion, capabilities, pushToken}`; starts presence |
-| `device.hello.ack` | server → device | `{session, serverTime, heartbeatSec, queued: n}`; triggers queued delivery |
+| `device.hello.ack` | server → device | `{session, serverTime, heartbeatSec, queued, peers}` — `peers` is the roster, so a join is announced once and a replay cannot double it |
 | `presence` | server → peers | `{device, online, peers}` inside one household |
 | `task.create` | device → device | the request; server assigns `task`, replies `ack` to the sender |
 | `task.ack` | server and device | accepted by the server; then delivered to the target |

@@ -1,5 +1,6 @@
 package com.hopa.backend
 
+import com.hopa.backend.gateway.gatewayRoutes
 import com.hopa.backend.http.healthRoutes
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
@@ -13,6 +14,7 @@ fun Application.module(config: ServerConfig) {
         json()
     }
     healthRoutes(config)
+    gatewayRoutes(config)
 }
 
 fun main() {
