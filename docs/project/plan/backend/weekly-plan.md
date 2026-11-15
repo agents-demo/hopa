@@ -38,7 +38,7 @@ The plan already gets several things right: the task message set (`task.create` 
 
 ## What the backend must do (v1)
 
-Eleven areas make v1, including the operations console. Each is listed with the week it lands in the plan below. The backend never decides a step and never holds the final say on a payment: it routes, stores, wakes and records. It carries task messages, never device commands: no `adb`, `hdc` or screen taps pass through it, unlike today’s relay tunnel. Each client controls apps on its own device.
+Twelve areas make v1, including the operations console. Each is listed with the week it lands in the plan below. The backend never decides a step and never holds the final say on a payment: it routes, stores, wakes and records. It carries task messages, never device commands: no `adb`, `hdc` or screen taps pass through it, unlike today’s relay tunnel. Each client controls apps on its own device.
 
 | Area | Functions | Week |
 | --- | --- | --- |
@@ -47,8 +47,9 @@ Eleven areas make v1, including the operations console. Each is listed with the 
 | Presence and routing | WebSocket gateway; `device.hello` with capabilities (OS, apps, battery); online state; routing only between devices of the same household; rate limits | 1, 4 |
 | Wake-up | FCM high-priority push to Android; a Windows tray app keeps its socket; messages queued until the ack | 1, 3 |
 | Tasks | Durable state machine (`task.create` → `ack` → `progress` → `needs_approval` → `result`, plus `error` and `cancel`); retries, idempotency, deadlines, heartbeats; resume after reconnect; both directions between a user’s devices | 1 (v0), 3 |
-| Conversation sync | v0: threads and turns across one user’s devices, append-only and deduplicated by id, last-writer-wins titles, tombstone deletes, a cursor per device. v1: attachments in object storage, shared household threads | 2, 6 |
-| Encryption | TLS everywhere; end-to-end payloads; a household key wrapped per device; a new device admitted by an existing one | 1, 2, 6 |
+| File transfer | A `file.send` task: the sender encrypts the file and uploads it to object storage; the task carries its id, name, size and hash; the receiver downloads, checks the hash and saves it (on Android, then the share sheet). Expiring links, a 25 MB limit to start | 3 |
+| Conversation sync | v0: threads and turns across one user’s devices, append-only and deduplicated by id, last-writer-wins titles, tombstone deletes, a cursor per device. v1: chat attachments on the same file storage, shared household threads | 2, 6 |
+| Encryption | TLS everywhere; end-to-end payloads and files; a household key wrapped per device; a new device admitted by an existing one | 1, 2, 6 |
 | Family approvals | Send `needs_approval` to the member who must confirm; verify the signed decision; expiry; an audit trail. The device still runs its own gate | 5 |
 | Journals and operations | Opt-in upload of redacted, hash-chained run records; metrics, alerts, backups; data export and account deletion for GDPR | 6, 7 |
 | Recipe delivery | Signed recipe packages pinned to a target-app build; staged rollout, then rollback; devices report installed versions | 7 |
@@ -98,10 +99,10 @@ The demo proves the single-user path. Gate 1 is the 1,000-attempt cross-househol
 | --- | --- | --- | --- |
 | 1 · 15–19 Nov | Base relay (the attached plan) | Protocol v0 frozen Mon 16:00; WebSocket gateway; Postgres schema v0 with `household_id` and `member_id` on every table; QR pairing; trace ids; idempotent messages; FCM wake; deployed in the EU | The week plan’s Thursday definition of done: 20 of 20 runs |
 | 2 · 22–26 Nov | One user: accounts and sync v0 | Sign-in, with a household of one created automatically; device list, revoke, token refresh; sync v0 of threads and turns across one user’s devices (cursors, tombstones, ciphertext only); console: team sign-in and a health page | A turn typed on the phone shows on the PC, and back, within 2 s (target, to measure); a revoked device is cut off within 5 s |
-| 3 · 29 Nov–3 Dec | Durable tasks and the demo | Task state machine with retries, deadlines, cancel and resume; phone → PC (find a file, draft the email) and PC → phone (a system action, such as a calendar event or the share sheet); the approval card on the user’s own device; console: task trace view | **Demo Thu 3 Dec.** 20 of 20 runs in each direction; app or PC killed mid-task in 20 runs: each task resumes or ends with a named error |
+| 3 · 29 Nov–3 Dec | Durable tasks and the demo | Task state machine with retries, deadlines, cancel and resume; phone → PC (find a file, draft the email) and PC → phone (**send a file**: encrypted upload, the phone saves it and opens the share sheet; or a system action such as a calendar event); the approval card on the user’s own device; console: task trace view | **Demo Thu 3 Dec.** 20 of 20 runs in each direction, including a 10 MB file sent PC → phone with a matching hash; app or PC killed mid-task in 20 runs: each task resumes or ends with a named error |
 | 4 · 6–10 Dec | Households | Invite and remove members; roles; routing only inside a household; console: household and device lookup | Gate 1: 1,000 cross-household attempts in CI all refused. No second real user goes on before this passes |
 | 5 · 13–17 Dec | Family approvals | Approval routing by role (“a child’s purchase goes to a parent”); signed decisions verified; expiry and reminders; audit trail per task | Gate 2: a child’s task reaches the parent’s phone, is approved and completes; the audit shows every hop with its trace id |
-| 6 · 20–24 Dec | Sync v1 and journals | Attachments in object storage; a new device admitted by an existing one; shared household threads; opt-in run-record upload, redacted and chain-checked | Three devices edit offline and reconnect with no lost or duplicate turn; a new device reads history only after approval |
+| 6 · 20–24 Dec | Sync v1 and journals | Chat attachments, reusing week 3’s file storage; a new device admitted by an existing one; shared household threads; opt-in run-record upload, redacted and chain-checked | Three devices edit offline and reconnect with no lost or duplicate turn; a new device reads history only after approval |
 | 7 · 27–31 Dec | Operations and recipe delivery | Metrics, alerts, nightly backups, data export and account deletion; signed recipe packages with staged rollout; console: alerts, rollout and rollback controls | Restore in under 1 hour; a deleted account leaves no row or file; a 10% rollout rolls back with versions reported within 10 minutes |
 | 8 · 3–7 Jan | Hardening and beta gate | Threat-model review; load test (target to measure: 1,000 households, 5,000 sockets); service levels and runbook; staging and production split; console security review | Load test meets the agreed targets; no open high-severity finding; beta households onboarded |
 
@@ -131,10 +132,10 @@ Split the work by lane, not by week: **A** owns the live path between devices (g
 | --- | --- | --- |
 | 1 · 15–19 Nov | Protocol v0; WebSocket gateway; QR pairing; trace ids; FCM wake | Postgres schema v0 with household ids; EU hosting; CI deploy and migrations; logs and trace storage |
 | 2 · 22–26 Nov | Device list, revoke, token refresh; key model written and agreed | Sign-in with a household of one; sync v0; console sign-in and health page |
-| 3 · 29 Nov–3 Dec | Durable tasks; both task directions; own-device approval card messages | Console task trace view; sync fixes found in rehearsal; demo data reset script |
+| 3 · 29 Nov–3 Dec | Durable tasks; both task directions, including a `file.send` task; own-device approval card messages | File storage: encrypted upload, expiring download links, a 25 MB limit; console task trace view; sync fixes found in rehearsal; demo data reset script |
 | 4 · 6–10 Dec | Routing only inside a household; the 1,000-attempt isolation suite | Invites, members, roles; console household and device lookup |
 | 5 · 13–17 Dec | Approval routing by role; signed decisions; expiry | Audit trail storage; reminder pushes; console audit view |
-| 6 · 20–24 Dec | Admitting a new device (key wrapping) | Attachments in object storage; shared household threads; journal upload |
+| 6 · 20–24 Dec | Admitting a new device (key wrapping) | Chat attachments on the week-3 file storage; shared household threads; journal upload |
 | 7 · 27–31 Dec | Recipe package signing and staged rollout | Metrics, alerts, backups; export and deletion; console alerts and rollout controls |
 | 8 · 3–7 Jan | Threat-model review; load test | Runbook; staging and production split; console security review |
 
