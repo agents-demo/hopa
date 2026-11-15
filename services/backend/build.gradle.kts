@@ -52,3 +52,10 @@ tasks.test {
         events("passed", "failed", "skipped")
     }
 }
+
+tasks.register<JavaExec>("exitRun") {
+    group = "verification"
+    description = "Run N gateway round-trips against a deployed instance."
+    classpath = sourceSets["test"].runtimeClasspath
+    mainClass.set("com.hopa.backend.tools.ExitRunKt")
+}

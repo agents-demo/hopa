@@ -1,8 +1,20 @@
 # One public relay for the PC bridge. See docs/guides/harmony/pc-bridge.md.
-#
 # The PC still owns hdc and the conversation store; this service only forwards
 # authenticated phone requests to the linked PC. HOPA_BRIDGE_TOKEN and
 # HOPA_LINK_TOKEN are secrets and must be set in the Render dashboard.
+#
+# hopa-backend is the week-1 gateway. It runs in Frankfurt next to its Postgres,
+# migrates on boot, and holds only dashboard secrets. The free web service sleeps
+# after ~15 minutes idle: warm it before the exit run, and move it to `starter`
+# before beta (week1.md section 3).
+databases:
+  - name: hopa-backend-db
+    databaseName: hopa
+    user: hopa_app
+    plan: free
+    region: frankfurt
+    postgresMajorVersion: "16"
+
 services:
   - type: web
     name: hopa-relay
@@ -21,3 +33,27 @@ services:
         sync: false
       - key: HOPA_PAIR_CODE
         value: "246810"
+
+  - type: web
+    name: hopa-backend
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./services/backend/Dockerfile
+    dockerContext: .
+    healthCheckPath: /v1/health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: hopa-backend-db
+          property: connectionString
+      - key: HOPA_BOOTSTRAP_TOKEN
+        sync: false
+      - key: HOPA_FCM_PROJECT
+        sync: false
+      - key: HOPA_FCM_CREDENTIALS
+        sync: false
+      - key: HOPA_PUBLIC_HOST
+        value: hopa-backend.onrender.com
+      - key: HOPA_VERSION
+        value: "0.1.0"

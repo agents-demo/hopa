@@ -1,0 +1,10 @@
+.git
+.venv
+.superpowers
+docs
+**/build
+**/.gradle
+**/.kotlin
+**/node_modules
+**/.pytest_cache
+**/.ruff_cache

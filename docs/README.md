@@ -67,6 +67,7 @@ Service documentation lives with the services: [`services/docs/`](../services/do
 | [plan/android/README.md](project/plan/android/README.md) | How will the Android app be built, with what effort? |
 | [plan/windows/README.md](project/plan/windows/README.md) | How will the Windows client be built? |
 | [plan/backend/README.md](project/plan/backend/README.md) | How is the backend built, week by week? (week 1 planned) |
+| [evidence/B1-gateway.md](project/evidence/B1-gateway.md) | What proves the week-1 gateway works, and what is deferred? |
 | [status.md](project/status.md) | Where the daily experience stands, and known debts |
 | [operations/release.md](project/operations/release.md) | How is a release cut? |
 | [operations/versioning.md](project/operations/versioning.md) | How are versions numbered? |
