@@ -10,6 +10,7 @@ import com.hopa.backend.tasks.InMemoryTaskStore
 import com.hopa.backend.tasks.RouteResult
 import com.hopa.backend.tasks.TaskRecord
 import com.hopa.backend.tasks.TaskRouter
+import com.hopa.backend.trace.TraceIds
 import io.ktor.http.HttpHeaders
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
@@ -43,6 +44,7 @@ fun Application.gatewayRoutes(
         devices = config.devices,
         log = config.log,
         push = config.push,
+        traces = config.traces,
     ),
 ) {
     install(WebSockets) {
@@ -97,6 +99,16 @@ fun Application.gatewayRoutes(
                         outgoing.send(GatewayCodec.encode(errorFrame(problem.code, problem.message)))
                         continue
                     }
+
+                    val traceparent = EnvelopeValidator.traceOf(envelope)
+                    config.traces.span(
+                        identity.householdId,
+                        TraceIds.traceId(traceparent)
+                            ?: TraceIds.traceId(TraceIds.newTraceparent())!!,
+                        "accept",
+                        identity.deviceId,
+                        envelope.task,
+                    ) {}
 
                     when (envelope.type) {
                         "device.hello" -> {

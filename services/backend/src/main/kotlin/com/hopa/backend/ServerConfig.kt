@@ -10,6 +10,8 @@ import com.hopa.backend.store.DbProbe
 import com.hopa.backend.tasks.DeviceDirectory
 import com.hopa.backend.tasks.InMemoryTaskStore
 import com.hopa.backend.tasks.TaskStore
+import com.hopa.backend.trace.TraceQuery
+import com.hopa.backend.trace.TraceRecorder
 
 /**
  * Everything the application needs that comes from outside a test: the build
@@ -28,4 +30,6 @@ data class ServerConfig(
     val messageLimit: RateLimiter = RateLimiter(20, 1_000),
     val log: EventLog = EventLog.None,
     val push: PushPort = PushPort.None,
+    val traces: TraceRecorder = TraceRecorder.None,
+    val traceQuery: TraceQuery? = null,
 )

@@ -3,6 +3,7 @@
 import com.hopa.backend.auth.AuthPort
 import com.hopa.backend.gateway.gatewayRoutes
 import com.hopa.backend.http.healthRoutes
+import com.hopa.backend.log.JsonEventLog
 import com.hopa.backend.pairing.PairingService
 import com.hopa.backend.pairing.PgAuth
 import com.hopa.backend.pairing.TokenIssuer
@@ -20,6 +21,9 @@ import com.hopa.backend.store.PostgresProbe
 import com.hopa.backend.tasks.DeviceDirectory
 import com.hopa.backend.tasks.InMemoryTaskStore
 import com.hopa.backend.tasks.TaskStore
+import com.hopa.backend.trace.PgTraceStore
+import com.hopa.backend.trace.TraceRecorder
+import com.hopa.backend.trace.traceRoutes
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
@@ -35,6 +39,7 @@ fun Application.module(config: ServerConfig) {
     healthRoutes(config)
     pairingRoutes(config)
     tokenRoutes(config)
+    traceRoutes(config)
     gatewayRoutes(config)
 }
 
@@ -66,6 +71,8 @@ fun main() {
         PushPort.None
     }
 
+    val traceStore = database?.let { PgTraceStore(it) }
+
     val config = ServerConfig(
         version = version,
         auth = auth ?: AuthPort.DenyAll,
@@ -80,6 +87,9 @@ fun main() {
         tokenIssuer = tokens,
         tasks = database?.let { PgTaskStore(it) } ?: InMemoryTaskStore(),
         push = push,
+        traces = traceStore ?: TraceRecorder.None,
+        traceQuery = traceStore,
+        log = JsonEventLog(),
     )
 
     embeddedServer(Netty, port = port, host = "0.0.0.0") {

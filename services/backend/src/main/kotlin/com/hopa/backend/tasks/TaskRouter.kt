@@ -9,6 +9,8 @@ import com.hopa.backend.protocol.GatewayCodec
 import com.hopa.backend.protocol.GatewayError
 import com.hopa.backend.push.PushOutcome
 import com.hopa.backend.push.PushPort
+import com.hopa.backend.trace.TraceIds
+import com.hopa.backend.trace.TraceRecorder
 import java.util.UUID
 import kotlinx.serialization.json.JsonObject
 
@@ -49,25 +51,22 @@ class TaskRouter(
     private val devices: DeviceDirectory,
     private val log: EventLog = EventLog.None,
     private val push: PushPort = PushPort.None,
+    private val traces: TraceRecorder = TraceRecorder.None,
     private val newTaskId: () -> String = { UUID.randomUUID().toString() },
     private val now: () -> Long = System::currentTimeMillis,
 ) {
     private val deadlineMs = 10 * 60 * 1000L
 
     fun route(identity: DeviceIdentity, envelope: Envelope): RouteResult {
-        store.recall(identity.householdId, envelope.id)?.let { replayed ->
-            return RouteResult.Accepted(replayed, duplicate = true)
-        }
-
-        return when (envelope.type) {
-            "task.create" -> create(identity, envelope)
-            "task.ack", "task.progress", "task.result", "task.error", "task.cancel" ->
-                relay(identity, envelope)
-
-            else -> RouteResult.Refused(
-                GatewayError("E_UNSUPPORTED", "not routable in v0: ${envelope.type}"),
-                envelope.trace,
-            )
+        val traceparent = EnvelopeValidator.traceOf(envelope)
+        return traces.span(
+            identity.householdId,
+            traceId(traceparent),
+            "route",
+            identity.deviceId,
+            envelope.task,
+        ) {
+            routeEnvelope(identity, envelope, traceparent)
         }
     }
 
@@ -78,7 +77,32 @@ class TaskRouter(
         return due
     }
 
-    private fun create(identity: DeviceIdentity, envelope: Envelope): RouteResult {
+    private fun routeEnvelope(
+        identity: DeviceIdentity,
+        envelope: Envelope,
+        traceparent: String,
+    ): RouteResult {
+        store.recall(identity.householdId, envelope.id)?.let { replayed ->
+            return RouteResult.Accepted(replayed, duplicate = true)
+        }
+
+        return when (envelope.type) {
+            "task.create" -> create(identity, envelope, traceparent)
+            "task.ack", "task.progress", "task.result", "task.error", "task.cancel" ->
+                relay(identity, envelope)
+
+            else -> RouteResult.Refused(
+                GatewayError("E_UNSUPPORTED", "not routable in v0: ${envelope.type}"),
+                envelope.trace,
+            )
+        }
+    }
+
+    private fun create(
+        identity: DeviceIdentity,
+        envelope: Envelope,
+        traceparent: String,
+    ): RouteResult {
         val to = envelope.to
             ?: return RouteResult.Refused(GatewayError("E_SCHEMA", "a task needs a target"), envelope.trace)
 
@@ -105,7 +129,7 @@ class TaskRouter(
             from = identity.deviceId,
             to = to,
             messageId = envelope.id,
-            trace = EnvelopeValidator.traceOf(envelope),
+            trace = traceparent,
             ts = envelope.ts,
             body = envelope.body,
             state = if (registry.online(to)) "delivered" else "queued",
@@ -113,14 +137,24 @@ class TaskRouter(
         )
         store.remember(identity.householdId, envelope.id, task)
         store.event(task.id, identity.householdId, "create", envelope.body, now())
+
         val routed = if (registry.online(to)) {
             deliver(task)
         } else {
             val pushToken = devices.pushToken(to, identity.householdId)
-            if (pushToken != null &&
-                push.wake(to, task.id, task.trace, pushToken) == PushOutcome.InvalidToken
-            ) {
-                devices.clearPushToken(to, identity.householdId)
+            if (pushToken != null) {
+                val outcome = traces.span(
+                    identity.householdId,
+                    traceId(traceparent),
+                    "wake",
+                    identity.deviceId,
+                    task.id,
+                ) {
+                    push.wake(to, task.id, traceId(traceparent), pushToken)
+                }
+                if (outcome == PushOutcome.InvalidToken) {
+                    devices.clearPushToken(to, identity.householdId)
+                }
             }
             task
         }
@@ -134,6 +168,16 @@ class TaskRouter(
             ?: return RouteResult.Refused(GatewayError("E_SCHEMA", "unknown task"), envelope.trace)
         if (identity.deviceId != task.from && identity.deviceId != task.to) {
             return RouteResult.Refused(GatewayError("E_TENANT", "not your task"), envelope.trace)
+        }
+
+        if (envelope.type == "task.ack") {
+            traces.span(
+                identity.householdId,
+                traceId(task.trace),
+                "ack",
+                identity.deviceId,
+                task.id,
+            ) {}
         }
 
         val other = if (identity.deviceId == task.from) task.to else task.from
@@ -162,26 +206,36 @@ class TaskRouter(
         return RouteResult.Accepted(next, duplicate = false)
     }
 
-    private fun deliver(task: TaskRecord): TaskRecord {
-        val session = registry.sessionFor(task.to) ?: return task
-        val sent = session.outgoing.trySend(
-            GatewayCodec.encode(
-                Envelope(
-                    v = 1,
-                    id = task.messageId,
-                    type = "task.create",
-                    ts = task.ts,
-                    trace = task.trace,
-                    from = task.from,
-                    to = task.to,
-                    task = task.id,
-                    body = task.body,
+    private fun deliver(task: TaskRecord): TaskRecord =
+        traces.span(
+            task.householdId,
+            traceId(task.trace),
+            "deliver",
+            task.from,
+            task.id,
+        ) {
+            val session = registry.sessionFor(task.to) ?: return@span task
+            val sent = session.outgoing.trySend(
+                GatewayCodec.encode(
+                    Envelope(
+                        v = 1,
+                        id = task.messageId,
+                        type = "task.create",
+                        ts = task.ts,
+                        trace = task.trace,
+                        from = task.from,
+                        to = task.to,
+                        task = task.id,
+                        body = task.body,
+                    ),
                 ),
-            ),
-        ).isSuccess
-        if (!sent) return task
-        store.markDelivered(task.id, task.householdId)
-        store.event(task.id, task.householdId, "deliver", JsonObject(emptyMap()), now())
-        return task.copy(state = "delivered")
-    }
+            ).isSuccess
+            if (!sent) return@span task
+            store.markDelivered(task.id, task.householdId)
+            store.event(task.id, task.householdId, "deliver", JsonObject(emptyMap()), now())
+            task.copy(state = "delivered")
+        }
+
+    private fun traceId(traceparent: String): String =
+        TraceIds.traceId(traceparent) ?: TraceIds.traceId(TraceIds.newTraceparent())!!
 }
