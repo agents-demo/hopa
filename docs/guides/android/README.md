@@ -13,10 +13,12 @@ Neither the loop nor the UI knows which one runs; both sit behind `DevicePort`.
 
 ## Prerequisites
 
+Full walkthrough for a new machine: [setup.md](setup.md).
+
 | Tool | Version | Why |
 |---|---|---|
-| JDK | 17 | Gradle/AGP |
-| Android SDK | API 34 platform + build-tools | compile and run |
+| JDK | 17 (Temurin) — required by `jvmToolchain(17)`; 21 works as the daemon | Gradle/AGP; the app targets Java 17 bytecode |
+| Android SDK | API 35 platform + build-tools to compile; API 37.0 to run the emulator | compile and run |
 | `adb` | platform-tools | device, screenshots, `uiautomator` |
 | Gradle | via the wrapper in `apps/android` | no global install needed |
 
