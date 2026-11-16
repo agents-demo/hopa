@@ -1,203 +1,198 @@
-# Windows client plan
+# Windows client plan (P0–P6)
 
-Status: **v1, W3 8/9, W4 6/8, W5 5/8, W6 5/7, W7 7/16.** Written 2026-11-14 from the
-Android plan, the expansion portfolio and ADR-0021.
-
-Android is the active client; Windows is next; Harmony is frozen (ADR-0020).
-This plan is counted on its own:
+Status: **P1 complete; P2 code complete, one manual gate open.** The shared engine
+runs headless through the real gate, and the PC adapter implements the whole
+`DevicePort` contract. Re-baselined 2026-11-15 against the Android client
+(ADR-0020); merged onto the Android parity branch 2026-11-16. Counted with:
 
 ```bash
 python tools/scripts/plan-status.py --plan docs/project/plan/windows
 ```
 
-A box is ticked only when the behaviour exists **and** an artifact proves it
-(screenshot, transcript, CI run, installer hash). Every tick carries
-`(evidence: ...)`, and phase evidence lives in `docs/project/evidence/W<N>-*.md`.
+A box is ticked only when the behaviour exists **and** an artifact proves it. Every
+tick carries `(evidence: ...)`.
 
-## 1. Goals
+## 1. Position
 
-1. A Windows client that looks and behaves like the HarmonyOS laptop app: a
-   sidebar of conversations, a chat column, settings, approvals.
-2. **One brain:** the loop, the gate and the contracts come from `packages/`;
-   no second implementation.
-3. Two targets from one window: the **phone** through the bridge, and the
-   **PC itself** through UI Automation.
-4. Honest failure: elevated windows, secure screens and apps without an
-   accessibility tree say so instead of pretending.
-5. Sideload-first: a signed MSI on a clean Windows VM, with a checksum.
+HOPA's product client is Android. The Windows app is the **desktop leg**, not a
+second product and not a port of a retired shell. It exists for the three jobs
+only a PC can do:
 
-## 2. Non-goals
+1. drive desktop applications that expose no intent or API, through UI Automation;
+2. host a long form, a document, or a signature that a phone cannot comfortably
+   complete;
+3. ask the phone for approval when the action runs on the PC.
 
-- A full .NET port of the loop (ADR-0021).
-- MSIX, the Microsoft Store and auto-update in v0; the installer is an MSI.
-- Windows on ARM as the first target.
-- Multi-user or enterprise (SSO, MDM, DLP).
-- macOS or Linux hosts; Avalonia is not chosen.
+Everything else belongs on Android: the notifier, the event card, history,
+profiles, memory, usage, the launchpad, and approval whenever the phone is in
+hand.
+
+The one rule that keeps this a ten-week plan: if the phone can do it better, it
+is not a Windows feature.
+
+## 2. Goals
+
+1. **The same brain.** The loop, the gate, the contracts and the records come
+   from `packages/`; no second implementation (ADR-0016, ADR-0021).
+2. **Two targets from one window.** The Android phone through the bridge, and
+   the PC itself through UI Automation, chosen per action.
+3. **Honest failure.** Locked screen, elevated window, missing UIA tree, stale
+   ref and dead bridge each say what happened, distinctly.
+4. **The gate is the gate.** The C# host never decides whether an action is
+   allowed. Payment always asks, is never remembered, and a deny executes nothing.
+5. **Sideload-first.** A signed MSI on a clean Windows VM with a checksum.
+
+## 3. Non-goals
+
+- A .NET port of the loop.
+- A second UI product: no profiles, memory, usage, launchpad, self-check or
+  browser panes in v0.
+- A notifier on Windows; the phone owns the event surface.
+- Batch-approved payments. Payment is one action, one question, every time.
+- MSIX, the Microsoft Store and auto-update in v0.
+- macOS or Linux hosts.
 - Screenshots or screen text in logs, ever.
 
-## 3. Decisions already taken
+## 4. Decisions
 
 | Decision | Where |
 |---|---|
-| Windows is the next client | ADR-0020 |
+| Android is the product client; Windows is the desktop leg | ADR-0020, this plan |
 | .NET 8 + WPF shell, Kotlin engine as a sidecar, NDJSON over stdio | ADR-0021 |
 | The client engine is `packages/core`, `packages/data`, `packages/capabilities` | ADR-0007 addendum |
 | Clients own the loop; the bridge stays transport | ADR-0016 |
-| Device control on the PC is a `DevicePort` adapter (FlaUI/UIA), like Android's accessibility adapter | ADR-0017 pattern |
+| PC device control is a `DevicePort` adapter (FlaUI/UIA), like Android's accessibility adapter | ADR-0017 pattern |
+| IPC v1 is frozen: `step`, `approval.*`, `session`, `task.*` | [protocol.md](protocol.md) |
+| The parity reference is the Android app, screen by screen | [parity.md](parity.md) |
 
-## 4. Shape
+### Android distribution (P0 decision)
+
+The Android app ships **sideload or enterprise first**, and automation is
+**intent-first**. Google Play restricts `AccessibilityService` use to genuine
+accessibility work, so a Play build must keep the accessibility path optional and
+degrade to the intent/API tiers; the enterprise build keeps the full path. The
+Windows client has no such constraint and ships as a signed MSI.
+
+This is recorded here because it shapes what the PC may assume: the phone may
+legitimately lack the accessibility capability, and the PC must still work.
+
+## 5. Shape
 
 ```
 apps/windows/
-  Hopa.Windows/           WPF app (C#): windows, views, view models
-  Hopa.Windows.Device/    WindowsDevice: UIA observe/act, screenshots (C#)
-  Hopa.Windows.Ipc/       NDJSON framing and message types (C#)
-  sidecar/                Kotlin engine host (Gradle build, uses packages/)
+  Hopa.Windows/           WPF app (C#): windows, views, view models, WindowsDevice
+  sidecar/                Kotlin engine host for packages/ (NDJSON over stdio)
   installer/              WiX MSI
 
-IPC (stdio, NDJSON):
-  host -> sidecar   hello, set-model-key, turn.start, approval.resolve,
-                    cancel, device.result
-  sidecar -> host   ready, step, device.request, approval.request,
+IPC (stdio, NDJSON, v1):
+  host -> sidecar   turn.start, turn.cancel, configure, device.result,
+                    approval.result, conversations.*, conversation.*,
+                    file.*, task.*, shutdown
+  sidecar -> host   ready, step, device.request, approval.request, session,
                     turn.end, log
-```
 
 Targets:
-
-```
-window -> sidecar -> core loop -> DevicePort
-                                   ├─ bridge AdbDevice  -> the phone (adb)
-                                   └─ host device proxy -> WindowsDevice (UIA)
+  window -> sidecar -> packages/core loop -> DevicePort
+                                            ├─ phone (bridge / adb)
+                                            └─ PC (UI Automation, via the host)
 ```
 
-## 5. Phases
+## 6. Phases
 
-### W0. Decision and spike (2 weeks, W0 in progress)
+### P0. Re-baseline (0.5 week) — done
 
-- [x] ADR-0021 accepted, linked from the decisions index and this plan. (evidence: docs/design/decisions/0021-windows-client-stack.md; decisions index)
-- [x] `apps/windows/sidecar` Gradle build includes `packages/core` and `packages/capabilities`. (evidence: apps/windows/sidecar/settings.gradle.kts; `installDist` green; docs/project/evidence/W0-spike.md)
-- [x] NDJSON protocol v0 written down: message names, fields, version, error shape. (evidence: docs/project/plan/windows/protocol.md)
-- [x] A WPF window starts the sidecar, sends `turn.start` and shows the answer. (evidence: docs/media/windows-w0.png; W0-spike "One turn from the window")
-- [x] One UIA click in Notepad goes through `device.request` -> FlaUI -> `device.result`. (evidence: W0-spike "One UIA click": "clicked Notepad ... at 640,464")
-- [x] Honest failure: a secure window (UAC prompt or a `FLAG_SECURE`-like surface) returns "cannot see or touch"; the app says so. (evidence: W3-device "Secure surface": LockApp refused with E_DEVICE, message repeated by the app)
-- [x] Spike notes in `docs/project/evidence/W0-spike.md` with screenshots and the protocol file. (evidence: docs/project/evidence/W0-spike.md)
+Point the UI spec at the Android app, not at a retired shell. Delete the
+phases that chased that shell's look. Freeze IPC v1. Decide the Android
+distribution model.
 
-Gate: the four spike criteria in ADR-0021 hold on a Windows VM. All four do; the
-secure-surface refusal is recorded in W3 (the lock screen is the test surface).
+- [x] The plan is re-baselined against `apps/android`; no frozen-client screen is referenced. (evidence: this file; docs/project/plan/windows/parity.md)
+- [x] The parity checklist names Android screens only, with source paths. (evidence: docs/project/plan/windows/parity.md)
+- [x] IPC v1 is frozen: `step`, `approval.*`, `session` and `task.*` have documented shapes and rules. (evidence: docs/project/plan/windows/protocol.md)
+- [x] The Android distribution model is decided and recorded. (evidence: this file, "Android distribution")
+- [x] The frozen-client parity and surface phases are retired from this plan. (evidence: this file, "Phases")
 
-### W1. Shell (3 weeks)
+### P1. Engine parity (1 week) — done
 
-- [x] Window chrome, sidebar, conversation list, chat column, composer; the laptop layout from `apps/harmony/laptop`. (evidence: docs/media/windows-w1.png; docs/project/evidence/W1-shell.md)
-- [x] Conversation persistence through the sidecar (JSON store): restart keeps history. (evidence: W1-shell "Verification": same conversation id across two runs, 4 messages in the list)
-- [x] Draft reuse per conversation, like Android. (evidence: W1-shell "Settings and drafts": draft round-trip: ok; tools/scripts/windows-smoke.py drafts: ok)
-- [x] Settings: model provider and key (Windows Credential Manager), bridge address and token, profile tone. (evidence: docs/media/windows-settings.png; W1-shell "Settings and drafts": settings/credential round-trip ok; configure log)
-- [x] Theme: the same cream/orange palette and mascot rhythm. (evidence: docs/media/windows-w1.png; palette copied from HopaColor)
-- [x] Smoke script `tools/scripts/windows-smoke.py` (start, send, screenshot, assert) and screenshots in `docs/project/evidence/W1-shell.md`. (evidence: W1-shell "Verification"; script output turn: ok / list: ok)
+Boot the shared `packages/core` loop inside the sidecar. Use a stub model. Add
+the conversation store and records. Expose a headless `--turn` mode.
 
-Gate: a person can chat, close the app, reopen it and find the thread. Met by
-the restart check in W1-shell (two processes, one conversation).
+- [x] The sidecar runs the real `AgentLoop` in a headless `--turn` mode. (evidence: docs/project/evidence/P1-engine.md)
+- [x] The stub model is deterministic, offline and only proposes; it cannot approve anything. (evidence: `apps/windows/sidecar/src/main/kotlin/com/hopa/sidecar/StubModel.kt`; `StubModelTest`)
+- [x] Headless approvals deny by default, and the gate is the real `ActionExecutor`. (evidence: `DenyAllApproval.kt`; `HeadlessTurnTest`)
+- [x] A denied payment leaves `executed=false`, `approved=false`, and never reaches the device. (evidence: `HeadlessTurnTest.payment_is_refused_before_the_device_is_touched`; docs/project/evidence/P1-engine.md)
+- [x] Conversations and records survive a reload, and the record chain verifies. (evidence: `HeadlessTurnTest`; docs/project/evidence/P1-engine.md)
 
-### W2. Loop and the phone target (3 weeks)
+Gate: `--turn "say hello"` answers, and `--turn "pay 100"` records a refusal with
+no device call.
 
-- [x] Sidecar runs the full `AgentLoop` with the bridge `AdbDevice` (target: phone). (evidence: W2-loop "Bridge turn": com.android.settings launched on emulator-5554)
-- [x] Approval sheet for sensitive and payment actions; a pending approval survives a restart and times out after 120 s. (evidence: W2-loop "Pending approvals": denied 1 pending approval(s) on restart; allow/deny transcripts; HostApproval 120 s timeout)
-- [x] Run records through the sidecar; a runs view shows steps, classification, verified and the hash chain. (evidence: W2-loop "Records and the chain": chain: ok; records.json 912 B; Run dialog)
-- [x] One real turn: "open Settings on the phone" through the bridge, with before/after observations. (evidence: W2-loop "Bridge turn": dumpsys shows Settings; verified=True, then False when already foreground)
-- [x] Honest failure when the bridge is down or the token is stale; one 401 refresh. (evidence: W2-loop "Bridge down and the 401 refresh": E_DEVICE on 8898; "bridge token refreshed" then success on 8897)
-- [x] Evidence: transcript, screenshots, record dump in `docs/project/evidence/W2-loop.md`. (evidence: docs/project/evidence/W2-loop.md)
+### P2. PC target (2.5 weeks) — code complete
 
-Gate: a turn started in the Windows window acts on the phone through the bridge and is verified.
+Wire `WindowsDevice` behind `DevicePort`. Observe the UIA tree. Act by pattern
+first, coordinates second. Type only with a ref. Launch must prove foreground.
+Refuse lock screens and elevated windows. The step-by-step run is
+[`docs/guides/windows/p2-testing.md`](../../../guides/windows/p2-testing.md).
 
-### W3. The PC as a target (6 weeks)
+- [x] `WindowsDevice` implements the full `DevicePort` contract, including `stop`, `screenshot` and `apps`. (evidence: `WindowsDevice.cs`; docs/project/evidence/P2-device.md "apps: 84", "screenshot: 95984 bytes", "stop a missing app: refused")
+- [x] Every action tries the UIA pattern before the input stack and reports which one ran in `device.result.text`. (evidence: P2-device.md "calc tap: invoked e5"; `MainWindow.OnDeviceRequested`)
+- [x] `type` without a ref is refused; a stale ref is refused with "observe again". (evidence: P2-device.md "type without ref: refused", "stale ref: refused")
+- [x] Launch proves the foreground handle within a bounded wait (12 s, one retry for a cold packaged app) or fails with a readable error. (evidence: P2-device.md "launch notepad: launched ... (foreground=notepad)"; W3-device.md "launched notepad (foreground=notepad)")
+- [x] Lock screen, elevated window and no-tree app each produce a distinct message. (evidence: `RefuseSecureSurface`, `RefuseElevatedBoundary`, `ObservationRules.IsTreeOnlyRoot`; `ObservationRulesTests`)
+- [x] Evidence transcript with one benign action and three refusals. (evidence: P2-device.md: Notepad tap/type/read-back, plus blind-type, stale-ref and missing-app refusals)
+- [ ] Lock-screen and elevated-window refusals captured on a desktop session. (manual: guide step 6, `--p2-wait` in `lock` or `elevated` mode)
 
-- [x] `WindowsDevice` implements the same contract as the Android adapter: `observe`, `tap`, `doubleTap`, `longPress`, `type`, `swipe`, `back`, `home`, `launch`, `stop`, `foreground`, `screenshot`, `apps`. (evidence: W3-device "Live matrix": five apps observed, launched and screenshotted; type readback)
-- [x] UIA observation: refs stable across one screen, bounds, password fields dropped, node and text caps, hash. (evidence: W3-device "Close-out": hash stable across two observations; `ObservationRules` tests; density 1.5)
-- [x] Actions: pattern first (`Invoke`, `Toggle`, `SelectionItem`, `ValuePattern`), coordinates and `SendInput` as fallback; timeouts on every UIA call. (evidence: W3-device close-out: `calc tap: invoked e5`, Notepad `clicked` fallback, `type: set e3`; `Call` timeout 1500/700 ms)
-- [x] Screenshots through `Windows.Graphics.Capture`; a protected window returns no frame. (evidence: W3-device "Live matrix": five PNGs in docs/media/windows-matrix-*.png; secure surfaces refused)
-- [x] Launch by AUMID or executable; foreground by window handle; per-monitor DPI handled. (evidence: W3-device close-out: calc launched and brought forward; `density=1.5` at 150% scaling; `app.manifest` PerMonitorV2)
-- [x] Elevated windows: an honest refusal with the reason and a link to the setup. (evidence: `RefuseElevatedBoundary`; `docs/guides/windows/uiaccess.md`; W3-device failure taxonomy)
-- [ ] Elevated windows: a signed `uiAccess` helper performs the action. (blocked: code-signing certificate)
-- [x] App matrix executed and recorded: Notepad, Calculator, Explorer, Chrome, an Electron app, a WPF app. (evidence: W3-device "Live matrix": Notepad 45, Calculator 54, Explorer 331, Chrome 106, VS Code 120 nodes)
-- [x] Evidence: matrix table, screenshots, failure taxonomy in `docs/project/evidence/W3-device.md`. (evidence: W3-device "Close-out": transcript, observation rules, taxonomy table)
+Gate: Notepad reads back typed text; a locked screen refuses; a UAC window
+refuses with a different sentence.
 
-Gate: the window acts on the PC (Notepad and Calculator) and refuses UAC, elevated windows and apps without a tree, each with a distinct message.
+### P3. Path selector (1.5 weeks)
 
-### W4. Desktop fit and parity (4 weeks)
+Add four tiers per action: API, intent, UIA, input. Pick the cheapest tier that
+works and log which tier fired.
 
-- [x] Clipboard and file drop into the composer; share out through the Windows share sheet or the clipboard. (evidence: W4-desktop "Files and the clipboard": attach-check transcript; Copy button; 4 MiB cap)
-- [x] Toast notification when an answer arrives while the window is unfocused; tray icon with run state and Stop. (evidence: W4-parity transcript: balloon shown, Stop disabled before a turn, tooltip "HOPA (working)")
-- [x] Voice: bridge transcription into the composer and read-aloud through the bridge or Windows TTS. (evidence: W4-desktop "Voice": /speak and /transcribe round-trips; `TranscribeAsync` wired to the mic)
-- [x] History: search, rename, delete, export; pinned and archived conversations. (evidence: W4-desktop "Verified headlessly": pin/archive/hidden/shown, rename, search, export, delete; 7 store tests in CI)
-- [x] Keyboard: shortcuts for new chat, send, stop, search. (evidence: W4-parity transcript: Ctrl+N, Ctrl+F/K, Enter, Shift+Enter, Esc)
-- [x] Keyboard: full keyboard navigation pass (tab order, visible focus). (evidence: W6-parity keyboard transcript; KeyboardNavigation cycle)
-- [ ] Accessibility: UIA names on every control, 200% scaling, high contrast.
-- [x] Multi-monitor and window-state restore. (evidence: W4-parity transcript: restored bounds on-screen; off-screen position refused)
-- [x] Evidence: parity table against the Harmony laptop app in `docs/project/evidence/W4-parity.md`. (evidence: W4-parity: 16 rows, 4 known gaps listed)
+- [ ] A tier table maps action kinds to API / intent / UIA / input.
+- [ ] `system.openLink` and app URI activation run before any click.
+- [ ] Each step records the tier it used.
+- [ ] A tier that is unavailable falls through to the next one, visibly.
 
-Gate: the parity table has no unexplained gaps.
+Gate: "open Settings → Wi-Fi" uses an intent, not a sequence of clicks.
 
-### W5. Delivery (3 weeks)
+### P4. Phone link (2 weeks)
 
-- [x] Sidecar shipped as a `jlink` runtime plus a fat jar inside the MSI. (evidence: W5-package "Artifacts": MSI payload has runtime\bin\java.exe and sidecar\lib; administrative install verified)
-- [x] `dotnet publish` self-contained build; WiX MSI with version metadata and a licence page. (evidence: W5-package; `dotnet publish -r win-x64 --self-contained`; WiX 5.0.2 with WixUI_InstallDir and the LICENSE page)
-- [ ] Code signing (the same certificate that signs the `uiAccess` helper) and a verified signature on the installer.
-- [x] Windows CI job: build, unit tests and packaging. (evidence: run 43644033262, Windows job 4m32s; `dotnet test` step)
-- [ ] Windows CI smoke script on a desktop runner (a headless runner cannot drive a window).
-- [ ] Clean-VM E2E: install, pair the bridge, run one phone turn and one PC turn.
-- [x] Release note, privacy note (what is read, what is stored, where), checksum. (evidence: docs/project/releases/0.1.0-windows.md; docs/reference/privacy.md "Windows client"; hashes in W5-package)
-- [x] Evidence: `docs/project/evidence/W5-release.md` with the installer hash and the E2E transcript. (evidence: docs/project/evidence/W5-package.md; hashes and the packaged-run transcript)
+Make the Android app a peer: pair, hand off a task, push approval to the phone,
+return the verified result. Reuse the existing relay and add device identity. Do
+not invent a new transport.
 
-Gate: the signed MSI installs on a clean Windows VM and both targets work.
+- [ ] `task.start`, `task.get` and `task.handoff` are implemented against the documented shapes.
+- [ ] A PC action can request approval on the phone and receive allow or deny.
+- [ ] The record says who approved and on which device.
+- [ ] A dropped link fails the task with a readable error; the conversation survives.
 
-### W6. Visual parity with the Harmony laptop app (2 weeks)
+Gate: a PC action is approved on the phone and the run record names the phone.
 
-Behaviour parity is W4; this is the look. The Harmony laptop app is the reference
-(`apps/harmony/laptop/src/main/ets`), and every row ends with a screenshot.
+### P5. Signature and HITL (1 week)
 
-- [x] Tokens match: bg `#F7F4EE`, surface `#FFFFFF`, sidebar `#F3EFE7`, muted `#F1ECE3`, ink `#1C1B18`, hint `#9A9488`, primary `#0A59F7`, brand `#E8703A`, divider `#E9E4DA`; bubble 14, pill 24, rail 14; type 9 / 9.5 / 10.5 / 11.5 / 12.5 / 13.5 / 15. (evidence: W6-harmony-spec.md; W6-parity tokens table; windows-w4.png)
-- [x] Component inventory side by side: rail, conversation row, bubbles, composer, attachment bar, approval sheet, settings, empty state, error state, long text. (evidence: W6-parity screenshots: windows-w4.png, windows-w6-chat.png, windows-w6-settings.png, windows-w6-approval.png, windows-w6-steps.png)
-- [x] Interaction states: hover, focus, selected, disabled, busy. (evidence: `App.xaml` templates; W6-parity states table; `windows-w4.png`, `windows-w6-settings.png`)
-- [x] Keyboard-only pass: every action reachable, visible focus ring. (evidence: W6-parity keyboard transcript: 14 stops in order; focus ring #E8703A)
-- [ ] 200% scaling pass: nothing clipped, nothing overlaps.
-- [x] Parity table with one row per component and no unexplained gaps. (evidence: docs/project/evidence/W6-parity.md; screenshots in docs/media/windows-w4.png onward)
-- [ ] Evidence: `docs/project/evidence/W6-parity.md` signed off after the rows above.
+Add a takeover surface: pause, hand the form to the user, resume. Capture the
+verified postcondition.
 
-Gate: the parity table has no unexplained gaps and a person cannot tell the two
-clients apart from the screenshots.
+- [ ] The loop can pause on a step and hand the foreground to the user.
+- [ ] Resuming re-observes and verifies the postcondition before continuing.
+- [ ] A cancelled takeover leaves the task failed, not silently done.
+- [ ] Evidence: a form pre-filled, signed, submitted and confirmed.
 
-### W7. Surface finish (backlog, no new architecture)
+Gate: a signed form produces a verified postcondition and a record.
 
-The items below are visible gaps against the Harmony laptop app, found by walking
-the two screens side by side. None needs a new component; each ends with a
-screenshot or a transcript.
+### P6. Package (1.5 weeks)
 
-Sidebar
-- [x] Session hover `⋯` menu with Rename and Delete. (evidence: ConversationTemplate trigger; More_Click selects the row, then opens the menu)
-- [ ] `Ctrl+K` command palette: search sessions, New chat, Settings, Stop. (evidence: palette screenshot; keyboard-only open/close)
-- [ ] `Activity` pane: the run list already stored, one row per turn with steps, duration and outcome. (evidence: pane screenshot)
-- [ ] `Capabilities` pane: what this PC can observe and drive, read from `WindowsDevice`. (evidence: pane screenshot)
-- [ ] `Plans` pane: scheduled tasks, read-only until scheduling exists on Windows. (evidence: pane screenshot or an explicit "not on Windows yet" row)
+Ship a jlink runtime plus the sidecar inside a WiX MSI. Add a checksum. Add a
+Windows CI runner.
 
-Rail
-- [x] `Earlier: <question>` line above the step list. (evidence: RailEarlier set on the second turn)
-- [x] Measured line: answered in X.X s. (evidence: RailMeasured set from the turn stopwatch; tokens not exposed by the sidecar yet)
-- [ ] Evidence frame block (`WHAT HOPA SAW`) when a step captured a screenshot. (evidence: rail screenshot)
-- [ ] Approval inside the rail instead of a separate window. (evidence: rail screenshot with Allow / Not now)
+- [ ] The MSI installs the sidecar and a private runtime; no machine-wide Java is required.
+- [ ] A clean VM runs one PC turn and one phone-approved turn.
+- [ ] The installer is signed and its hash is recorded.
+- [ ] Windows CI builds, tests and packages on every pull request.
 
-Fields and chrome
-- [x] `PasswordBox` styled like `TextBox`. (evidence: windows-w6-settings.png: muted token and key fields)
-- [x] Settings dialog with the same borderless chrome. (evidence: windows-w6-settings.png: custom header and close)
-- [x] Tray and taskbar icon use the laptop mark. (evidence: LaptopIcon() drawn at 32 px; tray and Window.Icon)
-- [x] Composer grows with the text up to a cap, then scrolls. (evidence: Composer MaxHeight 132 + vertical scroll)
+Gate: a signed MSI on a clean VM, with both targets working.
 
-Behaviour
-- [ ] The `Phone` target chip proven with a live bridge turn: chip switches target, the step lands on the phone. (evidence: transcript with bridge and dumpsys)
-
-Blocked, listed so they are not forgotten
-- [ ] High contrast theme: every surface follows the system colours. (blocked: decision - full theme or chrome and text only)
-- [ ] 200% scaling pass. (blocked: needs the display set to 200 %)
-
-## 6. Acceptance: assertions, not "opens"
+## 7. Acceptance: assertions, not "opens"
 
 | Area | Assertion | Artifact |
 |---|---|---|
@@ -205,47 +200,44 @@ Blocked, listed so they are not forgotten
 | Chat | a message produces an answer; restart keeps it | screenshot + store dump |
 | Phone target | `ui.launch` on the phone changes the foreground app | before/after observation |
 | PC target | a click in Notepad changes the document text | before/after tree + screenshot |
-| Gate | a payment action waits for approval; deny leaves `executed: false` | record dump |
-| Honest failure | UAC, elevated window and no-tree app each give a different message | screenshots |
+| Gate | a payment waits for approval; deny leaves `executed: false` | record dump |
+| Honest failure | lock, elevation and no-tree each give a different message | transcripts |
 | Records | tampering a field makes `verifyChain` fail | test log |
 | Installer | signed MSI installs on a clean VM; checksum recorded | MSI + hash |
 | Locked down | screen text is absent from logs and crash dumps | grep + review |
 
-## 7. Dependencies and risks
-
-| Dependency | Owner | Blocks |
-|---|---|---|
-| `packages/core` and `packages/capabilities` | done (2026-11-14) | everything |
-| NDJSON protocol v0 | W0 | W1 and later |
-| Code-signing certificate for the `uiAccess` helper and the MSI | procurement | W3, W5 |
-| Windows CI runner | architecture | W5 |
-| A clean Windows VM for E2E | architecture | W5 |
-| The bridge (paired) | platform | W2 |
+## 8. Risks
 
 | Risk | Mitigation |
 |---|---|
-| UIA calls hang | timeouts, caching, a watchdog on every call |
+| UIA calls hang | per-call deadlines (1500 ms patterns, 700 ms properties) |
 | `uiAccess` needs a signature and Program Files | plan the certificate early; refuse honestly without it |
 | Two runtimes confuse support | one installer, one version number, one log file |
-| IPC drift between C# and Kotlin | versioned protocol file plus a round-trip test on both sides |
-| The sidecar leaks secrets | keys in Credential Manager only; the sidecar receives them in memory |
-| Scope creep towards the Store | MSIX is explicitly out of v0 |
-
-## 8. Definition of done
-
-- All W0–W5 gates pass with artifacts.
-- One brain: no gate, loop or contract code exists twice.
-- Both targets work from the same window, with honest failures.
-- Signed MSI on a clean VM, release note, privacy note, checksum.
-- The parity table against the Harmony laptop app is signed off.
+| IPC drift between C# and Kotlin | the frozen v1 file plus a round-trip test on both sides |
+| The sidecar leaks secrets | Credential Manager only; the sidecar receives them in memory |
+| Scope creep into a second product | the one rule in §1 |
 
 ## 9. Open decisions
 
-- WinUI 3 after v0, or stay on WPF? Decided by the first user feedback on look
-  and by whether MSIX/auto-update is required.
+- WinUI 3 after v0, or stay on WPF?
 - SQLite in the sidecar: when does the JSON store stop being enough?
-- Is the `uiAccess` helper a separate signed executable (recommended) or the
-  main app signed with `uiAccess`?
+- Is the `uiAccess` helper a separate signed executable (recommended) or the main
+  app signed with `uiAccess`?
 - Does the Windows client pair its own bridge token, or reuse the phone's?
-- Auto-update mechanism after v0: MSIX App Installer, WinSparkle, or a manual
-  download page.
+
+## 10. Evidence carried over
+
+The shell, the loop and the device adapter predate P0, and the Android branch
+added prompt context that the sidecar now passes through. Their artifacts remain
+valid and are linked here so nothing is lost:
+
+| Artifact | What it proves |
+|---|---|
+| `docs/project/evidence/W0-spike.md` | the sidecar seam and one UI Automation click |
+| `docs/project/evidence/W1-shell.md` | chat, persistence, settings and drafts |
+| `docs/project/evidence/W2-loop.md` | the loop against a phone, approvals and records |
+| `docs/project/evidence/W3-device.md` | the UIA adapter, its matrix and its failure taxonomy |
+| `docs/project/evidence/W4-desktop.md` | tray, toast, shortcuts, attachments and voice |
+| `docs/project/evidence/W5-package.md` | the packaged build and its hashes |
+| `apps/windows/sidecar/Engine.kt` | the prompt names the Windows apps the catalog offers, marks `platform = "windows"`, and claims phone access only when a host is attached |
+| `packages/core` (`TurnContext.vision`) | a frame can ride with a model call; the Windows host does not enable it yet, so the parity row stays `out` |

@@ -1,14 +1,16 @@
 package com.hopa.sidecar
 
-import com.hopa.contracts.wire.Observation
 import com.hopa.contracts.json.HopaJson
-import com.hopa.observation.produce.ObservationProducer
 import com.hopa.contracts.ports.DevicePort
 import com.hopa.contracts.ports.InstalledApp
+import com.hopa.contracts.wire.Observation
+import com.hopa.observation.produce.ObservationProducer
+import java.util.Base64
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.withTimeout
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonObjectBuilder
 import kotlinx.serialization.json.booleanOrNull
@@ -91,16 +93,38 @@ class HostDevice(private val io: Stdio) : DevicePort {
     }
 
     override suspend fun stop(packageName: String) {
-        throw UnsupportedOperationException("the Windows adapter does not stop apps yet")
+        request("stop") { put("app", packageName) }
     }
 
     override suspend fun foreground(): String = request("foreground") {}.let { result ->
         result["app"]?.jsonPrimitive?.contentOrNull.orEmpty()
     }
 
-    override suspend fun screenshot(): ByteArray? = null
+    override suspend fun screenshot(): ByteArray? {
+        val result = request("screenshot") {}
+        val image = result["image"]?.jsonPrimitive?.contentOrNull.orEmpty()
+        if (image.isBlank()) {
+            // The host answers ok with no frame when the window is protected.
+            return null
+        }
+        return runCatching { Base64.getDecoder().decode(image) }.getOrNull()
+    }
 
-    override suspend fun apps(): List<InstalledApp> = emptyList()
+    override suspend fun apps(): List<InstalledApp> {
+        val result = request("apps") {}
+        val items = result["apps"] as? JsonArray ?: return emptyList()
+        return items.mapNotNull { item ->
+            val entry = item as? JsonObject ?: return@mapNotNull null
+            val packageName = entry["package"]?.jsonPrimitive?.contentOrNull.orEmpty()
+            if (packageName.isBlank()) {
+                return@mapNotNull null
+            }
+            InstalledApp(
+                packageName = packageName,
+                label = entry["label"]?.jsonPrimitive?.contentOrNull.orEmpty(),
+            )
+        }
+    }
 
     private suspend fun request(op: String, fields: JsonObjectBuilder.() -> Unit): JsonObject {
         val id = "req-${counter.incrementAndGet()}"

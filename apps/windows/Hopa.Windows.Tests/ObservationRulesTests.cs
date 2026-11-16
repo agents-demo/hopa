@@ -79,4 +79,23 @@ public sealed class ObservationRulesTests
         Assert.DoesNotContain("hunter2", text);
         Assert.Contains("password field (dropped)", text);
     }
+
+    [Fact]
+    public void AWindowWithNoNameAndNoChildrenIsAnEmptyTree()
+    {
+        Assert.True(ObservationRules.IsTreeOnlyRoot(1, ""));
+        Assert.True(ObservationRules.IsTreeOnlyRoot(1, "   "));
+    }
+
+    [Fact]
+    public void ATitleOnlyWindowIsStillObservable()
+    {
+        Assert.False(ObservationRules.IsTreeOnlyRoot(1, "e1 window Notepad"));
+    }
+
+    [Fact]
+    public void ARealTreeIsNotCalledEmpty()
+    {
+        Assert.False(ObservationRules.IsTreeOnlyRoot(12, "e1 window Notepad"));
+    }
 }

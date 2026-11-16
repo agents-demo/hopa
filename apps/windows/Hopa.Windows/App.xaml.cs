@@ -7,9 +7,35 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        var args = e.Args;
+
+        // Headless checks that need no window. They run before the shell exists
+        // so they also work on a locked or otherwise non-interactive desktop.
+        if (args.Length >= 2 && args[0] == "--w3-check")
+        {
+            W3Check.Run(args[1]);
+            Shutdown();
+            return;
+        }
+
+        if (args.Length >= 2 && args[0] == "--p2-check")
+        {
+            P2Check.Run(args[1]);
+            Shutdown();
+            return;
+        }
+
+        if (args.Length >= 2 && args[0] == "--p2-wait")
+        {
+            var seconds = args.Length >= 3 && int.TryParse(args[2], out var parsed) ? parsed : 12;
+            var mode = args.Length >= 4 ? args[3] : "lock";
+            P2Check.RunWait(args[1], seconds, mode);
+            Shutdown();
+            return;
+        }
+
         var window = new MainWindow();
         window.Show();
-        var args = e.Args;
         if (args.Length >= 2 && args[0] == "--turn")
         {
             string? output = null;
@@ -93,13 +119,6 @@ public partial class App : Application
         if (args.Length >= 2 && args[0] == "--w4-check")
         {
             window.Dispatcher.BeginInvoke(new Action(() => window.W4Check(args[1])));
-            return;
-        }
-
-        if (args.Length >= 2 && args[0] == "--w3-check")
-        {
-            W3Check.Run(args[1]);
-            Shutdown();
             return;
         }
 

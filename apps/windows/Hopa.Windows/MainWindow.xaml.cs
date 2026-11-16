@@ -1792,9 +1792,41 @@ public partial class MainWindow : Window
                 return;
             }
 
+            if (op == "screenshot")
+            {
+                var png = device.CaptureWindow();
+                if (png == null)
+                {
+                    Log("device: no frame (protected or not capturable)");
+                    client.SendDeviceResult(id, true);
+                    return;
+                }
+
+                client.SendDeviceResult(id, true, image: Convert.ToBase64String(png));
+                return;
+            }
+
+            if (op == "apps")
+            {
+                var entries = device.Apps();
+                var array = new JsonArray();
+                foreach (var entry in entries)
+                {
+                    array.Add(new JsonObject
+                    {
+                        ["package"] = entry.Package,
+                        ["label"] = entry.Label,
+                    });
+                }
+
+                Log($"device: {entries.Count} apps");
+                client.SendDeviceResult(id, true, apps: array);
+                return;
+            }
+
             var info = device.Act(op, message);
             Log($"device: {info}");
-            client.SendDeviceResult(id, true);
+            client.SendDeviceResult(id, true, text: info);
         }
         catch (Exception error)
         {

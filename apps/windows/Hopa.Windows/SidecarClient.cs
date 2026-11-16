@@ -27,6 +27,9 @@ public sealed class SidecarClient : IAsyncDisposable
 
     public event Action<JsonObject>? SessionUpdated;
 
+    /// <summary>One action finished inside a turn; additive to protocol v1.</summary>
+    public event Action<JsonObject>? StepReceived;
+
     public SidecarClient()
     {
         var lib = Environment.GetEnvironmentVariable("HOPA_SIDECAR_LIB");
@@ -293,7 +296,10 @@ public sealed class SidecarClient : IAsyncDisposable
         bool ok,
         string? error = null,
         JsonObject? observation = null,
-        string? app = null)
+        string? app = null,
+        string? text = null,
+        string? image = null,
+        JsonArray? apps = null)
     {
         var message = new JsonObject
         {
@@ -314,6 +320,21 @@ public sealed class SidecarClient : IAsyncDisposable
         if (app != null)
         {
             message["app"] = app;
+        }
+
+        if (text != null)
+        {
+            message["text"] = text;
+        }
+
+        if (image != null)
+        {
+            message["image"] = image;
+        }
+
+        if (apps != null)
+        {
+            message["apps"] = apps;
         }
 
         Send(message);
@@ -363,6 +384,11 @@ public sealed class SidecarClient : IAsyncDisposable
                     break;
                 case "session":
                     SessionUpdated?.Invoke(message);
+                    break;
+                case "step":
+                    // Additive in v1: the turn's id lives on this message too, so
+                    // it must not fall through to the pending-request switch.
+                    StepReceived?.Invoke(message);
                     break;
                 default:
                     var id = message["id"]?.GetValue<string>();

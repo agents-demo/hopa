@@ -49,6 +49,59 @@ object Protocol {
             })
         }
 
+    /** One action finished; the rail can fill before the turn ends. */
+    fun step(
+        turnId: String,
+        index: Int,
+        record: RunRecord,
+        at: Long,
+        durationMs: Long,
+    ): JsonObject = buildJsonObject {
+        put("type", "step")
+        put("id", turnId)
+        put("index", index)
+        put("action", record.action.kind)
+        put("classification", record.classification)
+        put("approved", record.approved)
+        put("executed", record.executed)
+        put("verified", record.verified)
+        put("error", record.error)
+        put("at", at)
+        put("durationMs", durationMs)
+    }
+
+    /** `--turn` prints one of these on stdout; there is no host to talk to. */
+    fun headlessTurn(id: String, outcome: TurnOutcome): JsonObject = buildJsonObject {
+        put("type", "turn.end")
+        put("id", id)
+        put("conversationId", outcome.conversationId)
+        put("title", outcome.title)
+        put("answer", outcome.answer)
+        put("chainOk", outcome.chainOk)
+        put("error", outcome.error)
+        put("records", outcome.records.size)
+        put("executed", outcome.records.count { it.executed })
+        put("denied", outcome.records.count { it.approved == false && !it.executed })
+        put("steps", buildJsonArray {
+            outcome.records.forEach {
+                add(json.encodeToJsonElement(RunRecord.serializer(), it))
+            }
+        })
+        put("narration", buildJsonArray {
+            outcome.narration.forEach { add(kotlinx.serialization.json.JsonPrimitive(it)) }
+        })
+    }
+
+    /** v1 freezes the task shapes but refuses them until P4. */
+    fun taskRefused(id: String, type: String, error: String): JsonObject = buildJsonObject {
+        put("type", "task.error")
+        put("id", id)
+        put("request", type)
+        put("ok", false)
+        put("code", "E_UNSUPPORTED")
+        put("error", error)
+    }
+
     fun approvalRequest(id: String, request: ApprovalRequest): JsonObject = buildJsonObject {
         put("type", "approval.request")
         put("id", id)
