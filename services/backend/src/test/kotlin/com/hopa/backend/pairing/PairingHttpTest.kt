@@ -219,4 +219,36 @@ class PairingHttpTest {
         assertEquals(HttpStatusCode.TooManyRequests, sixth.status)
         assertEquals("E_RATE", errorCode(sixth))
     }
+
+    @Test
+    fun `an empty household name is E_SCHEMA`() = testApplication {
+        application { module(config()) }
+
+        val response = client.mint(household = "")
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+        assertEquals("E_SCHEMA", errorCode(response))
+    }
+
+    @Test
+    fun `an oversized member name is E_SCHEMA`() = testApplication {
+        application { module(config()) }
+
+        val response = client.mint(member = "a".repeat(201))
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+        assertEquals("E_SCHEMA", errorCode(response))
+    }
+
+    @Test
+    fun `a request body over the cap is refused with 413`() = testApplication {
+        application { module(config()) }
+
+        val response = client.post("/v1/pair/claim") {
+            contentType(ContentType.Application.Json)
+            setBody("""{"session":"${"a".repeat(70_000)}","platform":"android","name":"x","publicKey":"AAAA","alg":"x25519"}""")
+        }
+
+        assertEquals(HttpStatusCode.PayloadTooLarge, response.status)
+    }
 }

@@ -2,6 +2,7 @@ package com.hopa.backend.http
 
 import com.hopa.backend.ServerConfig
 import com.hopa.backend.module
+import com.hopa.backend.store.DbProbe
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
@@ -26,6 +27,18 @@ class HealthTest {
         assertEquals(true, body["ok"]!!.jsonPrimitive.boolean)
         assertEquals("0.1.0", body["version"]!!.jsonPrimitive.content)
         assertEquals("unconfigured", body["db"]!!.jsonPrimitive.content)
+    }
+
+    @Test
+    fun `health is 503 and not ok when the database is down`() = testApplication {
+        application { module(ServerConfig(version = "0.1.0", db = DbProbe { "down" })) }
+
+        val response = client.get("/v1/health")
+
+        assertEquals(HttpStatusCode.ServiceUnavailable, response.status)
+        val body = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+        assertEquals(false, body["ok"]!!.jsonPrimitive.boolean)
+        assertEquals("down", body["db"]!!.jsonPrimitive.content)
     }
 
     @Test

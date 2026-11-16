@@ -101,18 +101,26 @@ class Database(internal val dataSource: HikariDataSource) : AutoCloseable {
             val userInfo = uri.rawUserInfo
             val user = userInfo
                 ?.substringBefore(":")
-                ?.let { URLDecoder.decode(it, StandardCharsets.UTF_8) }
+                ?.let(::decodeUserInfo)
                 .orEmpty()
             val password = userInfo
                 ?.substringAfter(":", "")
-                ?.let { URLDecoder.decode(it, StandardCharsets.UTF_8) }
+                ?.let(::decodeUserInfo)
                 .orEmpty()
             val port = if (uri.port == -1) 5432 else uri.port
+            val query = uri.rawQuery?.let { "?$it" }.orEmpty()
             return ConnectionInfo(
-                jdbcUrl = "jdbc:postgresql://${uri.host}:$port${uri.path}",
+                jdbcUrl = "jdbc:postgresql://${uri.host}:$port${uri.path}$query",
                 user = user,
                 password = password,
             )
         }
+
+        /**
+         * The userinfo is percent-encoded, not form-encoded: `+` is a literal
+         * plus, so it must not be turned into a space by [URLDecoder].
+         */
+        private fun decodeUserInfo(value: String): String =
+            URLDecoder.decode(value.replace("+", "%2B"), StandardCharsets.UTF_8)
     }
 }

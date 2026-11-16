@@ -1,7 +1,7 @@
 package com.hopa.backend.pairing
 
-import com.hopa.backend.auth.DeviceIdentity
 import com.hopa.backend.store.Database
+import java.sql.Connection
 import java.sql.Timestamp
 import java.time.Instant
 import java.util.UUID
@@ -25,21 +25,25 @@ class TokenIssuer(
     private val clock: () -> Long = System::currentTimeMillis,
     private val onRevoke: (deviceId: String) -> Unit = {},
 ) {
-    fun issueAccess(deviceId: String, householdId: String, memberId: String = ""): Issued {
+    fun issueAccess(deviceId: String, householdId: String, memberId: String = ""): Issued =
+        db.tenant(householdId) { connection ->
+            issueAccessOn(connection, deviceId, householdId)
+        }
+
+    /** For a caller that already holds a household transaction, so the insert commits with it. */
+    internal fun issueAccessOn(connection: Connection, deviceId: String, householdId: String): Issued {
         val token = Tokens.mint()
         val expiresAt = clock() + ACCESS_MS
-        db.tenant(householdId) { connection ->
-            connection.prepareStatement(
-                "insert into access_tokens(id, device_id, household_id, token_hash, expires_at) " +
-                    "values (?::uuid, ?::uuid, ?::uuid, ?, ?)",
-            ).use {
-                it.setString(1, UUID.randomUUID().toString())
-                it.setString(2, deviceId)
-                it.setString(3, householdId)
-                it.setBytes(4, Tokens.hash(token))
-                it.setTimestamp(5, Timestamp.from(Instant.ofEpochMilli(expiresAt)))
-                it.executeUpdate()
-            }
+        connection.prepareStatement(
+            "insert into access_tokens(id, device_id, household_id, token_hash, expires_at) " +
+                "values (?::uuid, ?::uuid, ?::uuid, ?, ?)",
+        ).use {
+            it.setString(1, UUID.randomUUID().toString())
+            it.setString(2, deviceId)
+            it.setString(3, householdId)
+            it.setBytes(4, Tokens.hash(token))
+            it.setTimestamp(5, Timestamp.from(Instant.ofEpochMilli(expiresAt)))
+            it.executeUpdate()
         }
         return Issued(token, Instant.ofEpochMilli(expiresAt).toString())
     }
@@ -48,22 +52,31 @@ class TokenIssuer(
         deviceId: String,
         householdId: String,
         rotatedFrom: String? = null,
+    ): Issued =
+        db.tenant(householdId) { connection ->
+            issueRefreshOn(connection, deviceId, householdId, rotatedFrom)
+        }
+
+    /** For a caller that already holds a household transaction, so the insert commits with it. */
+    internal fun issueRefreshOn(
+        connection: Connection,
+        deviceId: String,
+        householdId: String,
+        rotatedFrom: String? = null,
     ): Issued {
         val token = Tokens.mint()
         val expiresAt = clock() + REFRESH_MS
-        db.tenant(householdId) { connection ->
-            connection.prepareStatement(
-                "insert into refresh_tokens(id, device_id, household_id, token_hash, expires_at, rotated_from) " +
-                    "values (?::uuid, ?::uuid, ?::uuid, ?, ?, ?::uuid)",
-            ).use {
-                it.setString(1, UUID.randomUUID().toString())
-                it.setString(2, deviceId)
-                it.setString(3, householdId)
-                it.setBytes(4, Tokens.hash(token))
-                it.setTimestamp(5, Timestamp.from(Instant.ofEpochMilli(expiresAt)))
-                it.setString(6, rotatedFrom)
-                it.executeUpdate()
-            }
+        connection.prepareStatement(
+            "insert into refresh_tokens(id, device_id, household_id, token_hash, expires_at, rotated_from) " +
+                "values (?::uuid, ?::uuid, ?::uuid, ?, ?, ?::uuid)",
+        ).use {
+            it.setString(1, UUID.randomUUID().toString())
+            it.setString(2, deviceId)
+            it.setString(3, householdId)
+            it.setBytes(4, Tokens.hash(token))
+            it.setTimestamp(5, Timestamp.from(Instant.ofEpochMilli(expiresAt)))
+            it.setString(6, rotatedFrom)
+            it.executeUpdate()
         }
         return Issued(token, Instant.ofEpochMilli(expiresAt).toString())
     }
@@ -135,50 +148,6 @@ class TokenIssuer(
         return RotateOutcome.Rotated(access, refresh)
     }
 
-    fun verify(accessToken: String): DeviceIdentity? {
-        val hash = Tokens.hex(Tokens.hash(accessToken))
-        val row = db.token(hash) { connection ->
-            connection.prepareStatement(
-                "select device_id, household_id, expires_at from access_tokens " +
-                    "where token_hash = decode(?, 'hex')",
-            ).use {
-                it.setString(1, hash)
-                it.executeQuery().use { rows ->
-                    if (!rows.next()) {
-                        null
-                    } else {
-                        TokenRow(
-                            deviceId = rows.getString(1),
-                            householdId = rows.getString(2),
-                            expiresAt = rows.getTimestamp(3).toInstant().toEpochMilli(),
-                        )
-                    }
-                }
-            }
-        } ?: return null
-        if (row.expiresAt <= clock()) return null
-
-        return db.tenant(row.householdId) { connection ->
-            connection.prepareStatement(
-                "select id, household_id, member_id from devices " +
-                    "where id = ?::uuid and revoked_at is null",
-            ).use {
-                it.setString(1, row.deviceId)
-                it.executeQuery().use { rows ->
-                    if (!rows.next()) {
-                        null
-                    } else {
-                        DeviceIdentity(
-                            deviceId = rows.getString(1),
-                            householdId = rows.getString(2),
-                            memberId = rows.getString(3),
-                        )
-                    }
-                }
-            }
-        }
-    }
-
     private fun revokeFamily(deviceId: String, householdId: String) {
         db.tenant(householdId) { connection ->
             connection.prepareStatement(
@@ -203,12 +172,6 @@ class TokenIssuer(
         val householdId: String,
         val expiresAt: Long,
         val revoked: Boolean,
-    )
-
-    private data class TokenRow(
-        val deviceId: String,
-        val householdId: String,
-        val expiresAt: Long,
     )
 
     private companion object {

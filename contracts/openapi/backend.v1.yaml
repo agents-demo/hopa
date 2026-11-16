@@ -24,11 +24,19 @@ servers:
     description: Local
 security:
   - bearerAuth: []
+# The WebSocket surface is defined by contracts/schemas/gateway.v1.schema.json
+# and its fixtures, not by OpenAPI. The path is declared so the route/spec check
+# knows it exists.
+x-path-prefixes:
+  - /v1/gateway
 paths:
   /v1/health:
     get:
       summary: Liveness and readiness
-      description: Unauthenticated. Reports database state and queue depth so a deploy can gate on it.
+      description: |
+        Unauthenticated. Reports database state and queue depth so a deploy can
+        gate on it. Answers 200 while the database is reachable (`ok`, or
+        `unconfigured` before a database is wired up) and 503 once it is not.
       security: []
       responses:
         "200":
@@ -42,12 +50,22 @@ paths:
                   ok: { type: boolean }
                   version: { type: string }
                   db: { type: string, enum: [ok, down, unconfigured] }
-                  queueDepth: { type: integer, minimum: 0 }
+                  queueDepth:
+                    type: integer
+                    minimum: 0
+                    description: Present only when the caller presents a device token.
         "503":
-          description: A dependency is down
+          description: The database is unreachable (`db` is `down`, `ok` is false)
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/Error" }
+              schema:
+                type: object
+                required: [ok, version, db]
+                properties:
+                  ok: { type: boolean }
+                  version: { type: string }
+                  db: { type: string, enum: [ok, down, unconfigured] }
+                  queueDepth: { type: integer, minimum: 0 }
   /v1/version:
     get:
       summary: Build and protocol version
@@ -80,8 +98,8 @@ paths:
               type: object
               required: [householdName, memberName]
               properties:
-                householdName: { type: string, minLength: 1 }
-                memberName: { type: string, minLength: 1 }
+                householdName: { type: string, minLength: 1, maxLength: 100 }
+                memberName: { type: string, minLength: 1, maxLength: 100 }
                 householdId:
                   type: string
                   nullable: true
@@ -101,6 +119,7 @@ paths:
                     description: "hopa://pair?v=1&h=<household>&p=<session>&u=<wss url>"
                   expiresAt: { type: string, format: date-time }
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
         "429": { $ref: "#/components/responses/RateLimited" }
   /v1/pair/claim:
     post:
@@ -119,10 +138,10 @@ paths:
               properties:
                 session: { type: string }
                 platform: { type: string, enum: [android, windows] }
-                name: { type: string, minLength: 1 }
+                name: { type: string, minLength: 1, maxLength: 100 }
                 publicKey: { type: string, description: Base64url, 32 bytes (X25519) }
                 alg: { type: string, enum: [x25519] }
-                pushToken: { type: string, nullable: true }
+                pushToken: { type: string, nullable: true, maxLength: 4096 }
       responses:
         "201":
           description: Paired
@@ -142,6 +161,7 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
         "429": { $ref: "#/components/responses/RateLimited" }
   /v1/token/refresh:
     post:
@@ -170,6 +190,7 @@ paths:
                   refreshToken: { type: string }
                   expiresAt: { type: string, format: date-time }
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
   /v1/traces/{traceId}:
     get:
       summary: The path one message took, by trace id
@@ -246,6 +267,11 @@ components:
           schema: { $ref: "#/components/schemas/Error" }
     RateLimited:
       description: Too many requests in the window
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    PayloadTooLarge:
+      description: The request body is larger than the 64 KiB cap
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }

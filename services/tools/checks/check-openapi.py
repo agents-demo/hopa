@@ -25,24 +25,37 @@ TARGETS = (
             ROOT / "services/bridge/src/hopa_bridge/bridge.py",
             ROOT / "services/bridge/src/hopa_bridge/bridge_pool.py",
         ),
+        "python",
     ),
     (
         ROOT / "contracts/openapi/relay.v1.yaml",
         (ROOT / "services/relay/src/hopa_relay/relay_server.py",),
+        "python",
+    ),
+    (
+        ROOT / "contracts/openapi/backend.v1.yaml",
+        (ROOT / "services/backend/src/main/kotlin",),
+        "kotlin",
     ),
 )
 
 LITERAL = re.compile(r'self\.path == "([^"]+)"')
 PREFIX = re.compile(r'self\.path\.startswith\("([^"]+)"\)')
+KOTLIN = re.compile(r'(?:get|post|put|patch|delete|webSocket)\("(/v1/[^"]+)"\)')
 
 
-def code_routes(sources: tuple[Path, ...]) -> tuple[set[str], set[str]]:
+def code_routes(sources: tuple[Path, ...], kind: str) -> tuple[set[str], set[str]]:
     literals: set[str] = set()
     prefixes: set[str] = set()
-    for path in sources:
-        text = path.read_text(encoding="utf-8")
-        literals.update(LITERAL.findall(text))
-        prefixes.update(PREFIX.findall(text))
+    for source in sources:
+        files = sorted(source.glob("**/*.kt")) if source.is_dir() else [source]
+        for path in files:
+            text = path.read_text(encoding="utf-8")
+            if kind == "kotlin":
+                literals.update(KOTLIN.findall(text))
+            else:
+                literals.update(LITERAL.findall(text))
+                prefixes.update(PREFIX.findall(text))
     return literals, prefixes
 
 
@@ -80,12 +93,12 @@ def compare(
 
 def main() -> int:
     failures = 0
-    for spec_path, sources in TARGETS:
+    for spec_path, sources, kind in TARGETS:
         if not spec_path.exists():
             print(f"FAIL  missing spec: {spec_path.relative_to(ROOT)}")
             failures += 1
             continue
-        literal, prefix = code_routes(sources)
+        literal, prefix = code_routes(sources, kind)
         spec, declared_prefix = spec_routes(spec_path)
         missing_from_spec, missing_from_code = compare(
             literal, prefix, spec, declared_prefix

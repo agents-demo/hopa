@@ -32,6 +32,12 @@ class PairingService(
         if (!mintLimiter.allow(remoteAddress)) {
             return PairingOutcome.Refused("E_RATE", "too many pairing sessions", retryable = true)
         }
+        validateName("householdName", householdName)?.let {
+            return PairingOutcome.Refused("E_SCHEMA", it)
+        }
+        validateName("memberName", memberName)?.let {
+            return PairingOutcome.Refused("E_SCHEMA", it)
+        }
 
         val household = householdId ?: UUID.randomUUID().toString()
         if (householdId != null) {
@@ -92,6 +98,12 @@ class PairingService(
         if (request.platform !in PLATFORMS) {
             return PairingOutcome.Refused("E_SCHEMA", "platform must be android or windows")
         }
+        validateName("name", request.name)?.let {
+            return PairingOutcome.Refused("E_SCHEMA", it)
+        }
+        if (request.pushToken != null && request.pushToken.length > MAX_PUSH_TOKEN) {
+            return PairingOutcome.Refused("E_SCHEMA", "pushToken is too long")
+        }
         if (request.alg != "x25519") {
             return PairingOutcome.Refused("E_SCHEMA", "alg must be x25519")
         }
@@ -132,7 +144,7 @@ class PairingService(
         }
 
         val device = UUID.randomUUID().toString()
-        try {
+        val (access, refresh) = try {
             db.tenant(session.householdId) { connection ->
                 val won = connection.prepareStatement(
                     "update pairing_sessions set claimed_at = now() " +
@@ -157,13 +169,17 @@ class PairingService(
                     it.setString(8, request.pushToken)
                     it.executeUpdate()
                 }
+
+                // The session claim, the device and its tokens commit together:
+                // a failure must leave a retryable session, not a device that can
+                // never sign in.
+                tokens.issueAccessOn(connection, device, session.householdId) to
+                    tokens.issueRefreshOn(connection, device, session.householdId)
             }
         } catch (_: SessionTaken) {
             return PairingOutcome.Refused("E_SCHEMA", "pairing session already claimed")
         }
 
-        val access = tokens.issueAccess(device, session.householdId, session.memberId)
-        val refresh = tokens.issueRefresh(device, session.householdId)
         return PairingOutcome.Ok(
             Claimed(
                 deviceId = device,
@@ -173,6 +189,12 @@ class PairingService(
                 expiresAt = access.expiresAt,
             ),
         )
+    }
+
+    private fun validateName(label: String, value: String): String? = when {
+        value.isBlank() -> "$label must not be blank"
+        value.length > MAX_NAME -> "$label is longer than $MAX_NAME characters"
+        else -> null
     }
 
     private fun decodeKey(value: String): ByteArray? =
@@ -198,6 +220,8 @@ class PairingService(
 
     private companion object {
         const val SESSION_MS = 5 * 60 * 1000L
+        const val MAX_NAME = 100
+        const val MAX_PUSH_TOKEN = 4_096
         val PLATFORMS = setOf("android", "windows")
     }
 }

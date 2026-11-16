@@ -1,11 +1,12 @@
 package com.hopa.backend.pairing
 
 import com.hopa.backend.ServerConfig
+import com.hopa.backend.http.BodyTooLarge
+import com.hopa.backend.http.receiveBounded
 import com.hopa.backend.http.respondError
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
-import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
@@ -27,7 +28,14 @@ fun Application.tokenRoutes(config: ServerConfig) {
     routing {
         post("/v1/token/refresh") {
             val request = try {
-                call.receive<RefreshRequest>()
+                call.receiveBounded(RefreshRequest.serializer())
+            } catch (_: BodyTooLarge) {
+                call.respondError(
+                    HttpStatusCode.PayloadTooLarge,
+                    "E_SCHEMA",
+                    "request body is larger than 64 KiB",
+                )
+                return@post
             } catch (_: Exception) {
                 call.respondError(HttpStatusCode.BadRequest, "E_SCHEMA", "invalid JSON body")
                 return@post

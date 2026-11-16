@@ -67,4 +67,17 @@ class DatabaseTest {
         assertEquals("u", info.user)
         assertEquals("p@ss", info.password)
     }
+
+    @Test
+    fun `a connection string keeps its query and a literal plus in the password`() {
+        val info = Database.connectionInfo(
+            mapOf(
+                "DATABASE_URL" to "postgres://u:p+ss%40x@db.example:5432/hopa?sslmode=require",
+            ),
+        )
+
+        assertNotNull(info)
+        assertEquals("jdbc:postgresql://db.example:5432/hopa?sslmode=require", info!!.jdbcUrl)
+        assertEquals("p+ss@x", info.password)
+    }
 }
