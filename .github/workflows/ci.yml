@@ -249,7 +249,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - name: Ensure Android SDK 35
         run: |
           if [ ! -d "$ANDROID_HOME/platforms/android-35" ]; then
@@ -282,7 +282,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - name: Backend tests
         working-directory: apps/android
         run: ./gradlew -p ../../services/backend :test --no-daemon
@@ -299,7 +299,7 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - name: Sidecar tests
         working-directory: apps/android
         run: .\gradlew.bat -p ../windows/sidecar test --no-daemon
