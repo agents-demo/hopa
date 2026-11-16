@@ -1,9 +1,10 @@
 # Windows client plan (P0–P6)
 
-Status: **P1 complete; P2 code complete, one manual gate open.** The shared engine
-runs headless through the real gate, and the PC adapter implements the whole
-`DevicePort` contract. Re-baselined 2026-11-15 against the Android client
-(ADR-0020); merged onto the Android parity branch 2026-11-16. Counted with:
+Status: **P1 and P3 complete; P2 code complete with one manual gate open.** The
+shared engine runs headless through the real gate, the PC adapter implements the
+whole `DevicePort` contract, and settings launches use a URI before any click.
+Re-baselined 2026-11-15 against the Android client (ADR-0020); merged onto the
+Android parity branch 2026-11-16. Counted with:
 
 ```bash
 python tools/scripts/plan-status.py --plan docs/project/plan/windows
@@ -143,15 +144,15 @@ Refuse lock screens and elevated windows. The step-by-step run is
 Gate: Notepad reads back typed text; a locked screen refuses; a UAC window
 refuses with a different sentence.
 
-### P3. Path selector (1.5 weeks)
+### P3. Path selector (1.5 weeks) — intent tier complete
 
 Add four tiers per action: API, intent, UIA, input. Pick the cheapest tier that
 works and log which tier fired.
 
-- [ ] A tier table maps action kinds to API / intent / UIA / input.
-- [ ] `system.openLink` and app URI activation run before any click.
-- [ ] Each step records the tier it used.
-- [ ] A tier that is unavailable falls through to the next one, visibly.
+- [x] A tier table maps action kinds to API / intent / UIA / input. (evidence: `WindowsPathSelector`; `WindowsSelectorTest` 7 tests)
+- [x] `system.openLink` and app URI activation run before any click. (evidence: docs/project/evidence/P3-intents.md: `step 0: system.openLink tier=intent` for "open wifi settings")
+- [x] Each step records the tier it used. (evidence: `RunRecord.tier`, `contracts/schemas/run-record.schema.json`, `Protocol.step`; P3-intents.md)
+- [ ] A tier that is unavailable falls through to the next one, visibly. The first unavailable tier is refused with `E_UNSUPPORTED` and the tier is recorded; automatic fallback to the next tier is still open.
 
 Gate: "open Settings → Wi-Fi" uses an intent, not a sequence of clicks.
 

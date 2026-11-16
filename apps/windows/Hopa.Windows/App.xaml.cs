@@ -34,6 +34,20 @@ public partial class App : Application
             return;
         }
 
+        if (args.Length >= 2 && args[0] == "--p3-check")
+        {
+            P3Check.Run(args[1]);
+            Shutdown();
+            return;
+        }
+
+        if (args.Length >= 2 && args[0] == "--p3-check")
+        {
+            P3Check.Run(args[1]);
+            Shutdown();
+            return;
+        }
+
         var window = new MainWindow();
         window.Show();
         if (args.Length >= 2 && args[0] == "--turn")

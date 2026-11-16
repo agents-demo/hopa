@@ -34,6 +34,7 @@ class ActionExecutor(
     private val factory: RunRecordFactory,
     private val clock: Clock,
     private val scrollGeometry: ScrollGeometry = ScrollGeometry(),
+    private val selector: PathSelector? = null,
 ) {
     suspend fun execute(
         runId: String,
@@ -43,14 +44,20 @@ class ActionExecutor(
         before: Observation,
     ): ExecutionResult {
         val gate = policy()
+        // The selector may replace a UI launch with a URI (intent) and says which
+        // path this step takes. Everything after this line uses the chosen action,
+        // so the approval and the record describe what actually runs.
+        val planned = selector?.choose(action)
+        val chosen = planned?.action ?: action
+        val tier = planned?.tier?.wire.orEmpty()
         // What the ref points at, kept so a recipe can find the same control
         // after the tree has been redrawn.
-        val targetKey = action.ref?.takeIf { it.isNotBlank() }
+        val targetKey = chosen.ref?.takeIf { it.isNotBlank() }
             ?.let { ref -> NodeAnchor.find(before.tree, ref)?.let(NodeAnchor::key) }
-        val classification = gate.classify(action, before)
-        val needsApproval = gate.requiresApproval(action, before)
+        val classification = gate.classify(chosen, before)
+        val needsApproval = gate.requiresApproval(chosen, before)
         val approved = if (needsApproval) {
-            approval.approve(gate.request(action, before))
+            approval.approve(gate.request(chosen, before))
         } else {
             null
         }
@@ -61,8 +68,9 @@ class ActionExecutor(
                 runId = runId,
                 step = step,
                 traceId = traceId,
-                action = action,
+                action = chosen,
                 classification = label(classification),
+                tier = tier,
                 approved = false,
                 observation = before,
                 beforeHash = beforeHash,
@@ -76,19 +84,20 @@ class ActionExecutor(
         }
 
         return runCatching {
-            val text = executeAction(action, before)
+            val text = executeAction(chosen, before)
             val after = runCatching { device.observe() }.getOrDefault(before)
             val afterHash = ObservationHasher.hashOf(after)
             val changed = afterHash != beforeHash
-            val verified = text.isNotEmpty() || action.kind in setOf(
+            val verified = text.isNotEmpty() || chosen.kind in setOf(
                 "ui.observe", "ui.wait", "ui.back", "ui.home", "ui.stop",
             ) || changed
             val record = factory.draft(
                 runId = runId,
                 step = step,
                 traceId = traceId,
-                action = action,
+                action = chosen,
                 classification = label(classification),
+                tier = tier,
                 approved = approved,
                 observation = after,
                 beforeHash = beforeHash,
@@ -108,8 +117,9 @@ class ActionExecutor(
                 runId = runId,
                 step = step,
                 traceId = traceId,
-                action = action,
+                action = chosen,
                 classification = label(classification),
+                tier = tier,
                 approved = approved,
                 observation = before,
                 beforeHash = beforeHash,

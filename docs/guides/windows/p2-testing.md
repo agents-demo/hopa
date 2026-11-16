@@ -327,9 +327,58 @@ refusals (lock, elevation, stale/absent reference).
 - Sidecar build: `apps\windows\sidecar\build\install\hopa-windows-sidecar`.
 - Transcripts: wherever you point them (`$env:TEMP\hopa-p2` in these examples).
 
-## What P2 does not test
+## Step 8 — P3: intent first
 
-- The phone target: that is P4.
-- Intent-first routing: that is P3.
+P3 opens a settings page through its URI instead of clicking through the
+Settings app, and records which path ran.
+
+### 8.1 The host check
+
+```powershell
+cd C:\work\hopa\apps\windows\Hopa.Windows
+New-Item -ItemType Directory -Force -Path "$env:TEMP\hopa-p3" | Out-Null
+dotnet run -c Debug -- --p3-check "$env:TEMP\hopa-p3\check.txt"
+Get-Content "$env:TEMP\hopa-p3\check.txt"
+```
+
+Expected:
+
+```
+scheme refused: refused: the 'file' scheme is not allowed; only http, https and ms-settings
+scheme refused: refused: the 'shell' scheme is not allowed; only http, https and ms-settings
+open: opened ms-settings:network-wifi (foreground=...)
+observe: app=... nodes=...
+```
+
+### 8.2 The end-to-end gate
+
+Rebuild the sidecar once (`installDist`) so the selector is in the running
+engine, then:
+
+```powershell
+dotnet run -c Debug -- --turn "open wifi settings" --out "$env:TEMP\hopa-p3\turn.txt"
+Get-Content "$env:TEMP\hopa-p3\turn.txt"
+```
+
+Expected:
+
+```
+device: opened ms-settings:network-wifi (foreground=...)
+step 0: system.openLink tier=intent executed=True
+step #0 system.openLink [read] ... verified=True ...
+chain: ok
+```
+
+Settings opens on the Wi-Fi page. If that page was already in front, the step can
+show `verified=False` because the screen did not change; that is honest. Close
+Settings and rerun for a changed observation.
+
+`--turn` starts the sidecar, so `JAVA_HOME` must point at a JRE 17+ (as in step 3).
+
+## What this guide does not test
+
+- The phone target and its intent table: that is P4.
+- Automatic fallback between tiers: the first unavailable tier is refused and
+  recorded; P3 does not silently try the next one.
 - The signed `uiAccess` helper: blocked on a code-signing certificate.
 - Vision frames: the Windows host does not enable them yet.

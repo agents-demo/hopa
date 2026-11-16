@@ -62,6 +62,7 @@ object Protocol {
         put("index", index)
         put("action", record.action.kind)
         put("classification", record.classification)
+        put("tier", record.tier)
         put("approved", record.approved)
         put("executed", record.executed)
         put("verified", record.verified)

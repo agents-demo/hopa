@@ -903,6 +903,14 @@ public partial class MainWindow : Window
                     Log("bridge session rotated; the host stored the new pair");
                 }
             };
+            started.StepReceived += message =>
+            {
+                var index = message["index"]?.GetValue<int>() ?? 0;
+                var action = message["action"]?.GetValue<string>() ?? "?";
+                var tier = message["tier"]?.GetValue<string>() ?? "";
+                var executed = message["executed"]?.GetValue<bool>() == true;
+                Log($"step {index}: {action} tier={tier} executed={executed}");
+            };
             client = started;
             StatusText.Text = "Ready";
             UpdateRailBridge();
@@ -1821,6 +1829,14 @@ public partial class MainWindow : Window
 
                 Log($"device: {entries.Count} apps");
                 client.SendDeviceResult(id, true, apps: array);
+                return;
+            }
+
+            if (op == "openLink")
+            {
+                var opened = device.OpenLink(message["url"]?.GetValue<string>() ?? "");
+                Log($"device: {opened}");
+                client.SendDeviceResult(id, true, text: opened);
                 return;
             }
 

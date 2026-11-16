@@ -110,6 +110,11 @@ class HostDevice(private val io: Stdio) : DevicePort {
         return runCatching { Base64.getDecoder().decode(image) }.getOrNull()
     }
 
+    /** Open a URI through the host; it validates the scheme before launching. */
+    suspend fun openLink(url: String) {
+        request("openLink") { put("url", url) }
+    }
+
     override suspend fun apps(): List<InstalledApp> {
         val result = request("apps") {}
         val items = result["apps"] as? JsonArray ?: return emptyList()

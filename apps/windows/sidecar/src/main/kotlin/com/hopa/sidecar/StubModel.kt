@@ -48,6 +48,10 @@ class StubModel : ModelPort {
                 goal.contains("click", ignoreCase = true) && !already("\"ui.tap\"") ->
                     """{"schemaVersion":"1","kind":"ui.tap","x":700,"y":600,"timeoutMs":5000}"""
 
+                (goal.contains("wifi", ignoreCase = true) ||
+                    goal.contains("wi-fi", ignoreCase = true)) && !already("\"ui.launch\"") ->
+                    """{"schemaVersion":"1","kind":"ui.launch","app":"wifi","timeoutMs":8000}"""
+
                 goal.contains("open notepad", ignoreCase = true) && !already("\"ui.launch\"") ->
                     """{"schemaVersion":"1","kind":"ui.launch","app":"notepad","timeoutMs":8000}"""
 

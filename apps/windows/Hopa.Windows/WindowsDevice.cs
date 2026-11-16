@@ -242,6 +242,42 @@ public sealed class WindowsDevice : IDisposable
         }
     }
 
+    /// <summary>
+    /// Open a URI through the shell. Only the schemes an assistant has a reason
+    /// to use are allowed: a web page or a Windows settings page. Anything else
+    /// is refused instead of handing an arbitrary handler to the OS.
+    /// </summary>
+    public string OpenLink(string url)
+    {
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+        {
+            throw new InvalidOperationException($"'{url}' is not an absolute URI");
+        }
+
+        var scheme = uri.Scheme.ToLowerInvariant();
+        if (scheme is not ("http" or "https" or "ms-settings"))
+        {
+            throw new InvalidOperationException(
+                $"the '{scheme}' scheme is not allowed; only http, https and ms-settings");
+        }
+
+        Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
+        Thread.Sleep(900);
+        if (scheme == "ms-settings")
+        {
+            // The Settings app is a packaged app; wait for its window and bring
+            // it forward so the observation can actually verify the page.
+            var handle = WaitForSettingsWindow(TimeSpan.FromSeconds(10));
+            if (handle != IntPtr.Zero)
+            {
+                ForceForeground(handle);
+                Thread.Sleep(500);
+            }
+        }
+
+        return $"opened {url} (foreground={ForegroundApp()})";
+    }
+
     /// <summary>One app the Start menu offers: a launchable target and a label.</summary>
     public sealed record AppEntry(string Package, string Label);
 
@@ -895,6 +931,57 @@ public sealed class WindowsDevice : IDisposable
         {
             // The caller checks the foreground and reports honestly.
         }
+    }
+
+    /// <summary>The Settings app, by its real process. A VS Code window whose
+    /// title mentions settings must never be mistaken for it.</summary>
+    private IntPtr WaitForSettingsWindow(TimeSpan timeout)
+    {
+        var deadline = DateTime.UtcNow + timeout;
+        while (DateTime.UtcNow < deadline)
+        {
+            var handle = FindSettingsWindow();
+            if (handle != IntPtr.Zero)
+            {
+                return handle;
+            }
+
+            Thread.Sleep(300);
+        }
+
+        return IntPtr.Zero;
+    }
+
+    private IntPtr FindSettingsWindow()
+    {
+        try
+        {
+            foreach (var window in automation.GetDesktop()
+                         .FindAllChildren(cf => cf.ByControlType(ControlType.Window)))
+            {
+                var process = ProcessNameFor(window);
+                var title = Property(() => window.Properties.Name.ValueOrDefault ?? "", "");
+                var isSettings = process.Equals("SystemSettings", StringComparison.OrdinalIgnoreCase) ||
+                                 (process.Equals("ApplicationFrameHost", StringComparison.OrdinalIgnoreCase) &&
+                                  title.Equals("Settings", StringComparison.OrdinalIgnoreCase));
+                if (!isSettings)
+                {
+                    continue;
+                }
+
+                var handle = Property(() => window.Properties.NativeWindowHandle.Value, 0);
+                if (handle != 0)
+                {
+                    return (IntPtr)handle;
+                }
+            }
+        }
+        catch
+        {
+            // The desktop enumeration can throw mid-change; the caller retries.
+        }
+
+        return IntPtr.Zero;
     }
 
     /// <summary>An empty needle means "the first real window that appeared after launch".</summary>

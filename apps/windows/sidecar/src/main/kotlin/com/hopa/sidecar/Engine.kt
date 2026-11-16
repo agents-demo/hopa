@@ -132,19 +132,28 @@ class Engine(
 
         val device = device()
         val model = model()
+        // Windows picks a path per action; the phone target keeps its own order
+        // until P4 gives it a selector.
+        val selector = if (config.hasBridge) null else WindowsPathSelector()
+        val system = if (config.hasBridge) {
+            null
+        } else {
+            (hostDevice as? HostDevice)?.let { HostSystem(it) }
+        }
         val memory = InMemoryRunRecorder()
         val recorder = if (onRecord == null) memory else EmittingRecorder(memory, onRecord)
 
         val executor = ActionExecutor(
             device = device,
             browser = null,
-            system = null,
+            system = system,
             sandbox = null,
             policy = { ApprovalPolicy() },
             approval = approval,
             recorder = recorder,
             factory = RunRecordFactory(clock),
             clock = clock,
+            selector = selector,
         )
         val loop = AgentLoop(
             policy = ModelDecisionPolicy(

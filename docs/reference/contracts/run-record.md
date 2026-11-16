@@ -18,6 +18,7 @@ action auditable after the fact.
 | `traceId` | string | correlates the record with logs |
 | `action` | action | the step that ran (or was refused) |
 | `classification` | `read` / `sensitive` / `payment` | decided by the gate, never by the model |
+| `tier` | `api` / `intent` / `uia` / `input` (optional) | the path the selector chose; absent when the client has no selector |
 | `approved` | boolean or `null` | `null` when no approval was needed |
 | `observationHash` | string | hash of the observation the step saw |
 | `beforeHash` / `afterHash` | string | optional screen hashes around the action |

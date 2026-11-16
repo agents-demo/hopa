@@ -1,9 +1,9 @@
 # HOPA for Windows
 
-Status: **P1 complete; P2 code complete, one manual gate open.** The shared
-engine runs headless through the real gate, and the PC adapter implements the
-whole `DevicePort` contract: observe, act, type, launch, stop, screenshot, apps.
-The desktop leg of the Android program
+Status: **P1 and P3 complete; P2 code complete with one manual gate open.** The
+shared engine runs headless through the real gate, the PC adapter implements the
+whole `DevicePort` contract, and a settings launch becomes a URI before any
+click. The desktop leg of the Android program
 ([plan](../../docs/project/plan/windows/README.md),
 [protocol](../../docs/project/plan/windows/protocol.md),
 [parity](../../docs/project/plan/windows/parity.md), [ADR-0021](../../docs/design/decisions/0021-windows-client-stack.md)).
@@ -85,6 +85,17 @@ and drives Calculator through the UIA pattern path. Two refusals need a human:
 dotnet run -c Debug -- --p2-wait "$env:TEMP\hopa-p2\lock.txt" 60            # press Win+L
 dotnet run -c Debug -- --p2-wait "$env:TEMP\hopa-p2\uac.txt" 60 elevated    # approve the UAC prompt
 ```
+
+## Test the path selector (P3)
+
+```powershell
+dotnet run -c Debug -- --p3-check "$env:TEMP\hopa-p3\check.txt"
+dotnet run -c Debug -- --turn "open wifi settings" --out "$env:TEMP\hopa-p3\turn.txt"
+```
+
+The first refuses `file:` and `shell:` and opens `ms-settings:network-wifi`; the
+second must log `step 0: system.openLink tier=intent` and verify against the
+Settings window. `--turn` starts the sidecar, so `JAVA_HOME` must be set.
 
 ## Rules
 

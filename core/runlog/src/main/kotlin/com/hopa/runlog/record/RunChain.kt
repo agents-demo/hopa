@@ -19,6 +19,7 @@ object RunChain {
             traceId = draft.traceId,
             action = draft.action,
             classification = draft.classification,
+            tier = draft.tier,
             approved = draft.approved,
             observationHash = draft.observationHash,
             beforeHash = draft.beforeHash,

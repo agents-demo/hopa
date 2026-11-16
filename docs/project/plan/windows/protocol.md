@@ -43,7 +43,7 @@ and update this file in the same commit. P0 froze this document; P1 implements
 | `ready` | `version` | the loop is loaded and can take a turn |
 | `configured` | `id`, `bridge`, `model` | settings accepted; the summary carries no secrets |
 | `log` | `text` | a human-readable line for the host's log |
-| `step` | `id` (turn), `index`, `action`, `classification`, `approved`, `executed`, `verified`, `error?`, `at`, `durationMs` | one action finished; the rail can fill live |
+| `step` | `id` (turn), `index`, `action`, `classification`, `tier`, `approved`, `executed`, `verified`, `error?`, `at`, `durationMs` | one action finished; the rail can fill live |
 | `device.request` | `id`, `op`, plus op fields | perform one device action on the host |
 | `approval.request` | `id`, `title`, `body`, `amount`, `merchant`, `consequence`, `isPayment`, `action` | ask the person |
 | `session` | `token`, `refresh` | the sidecar rotated the bridge pair; the host persists it |
@@ -66,6 +66,7 @@ and update this file in the same commit. P0 froze this document; P1 implements
 | `key` | `key` (`back` or `home`) | Escape or show-desktop |
 | `launch` | `app` | launch and prove the foreground |
 | `foreground` | - | the foreground process name |
+| `openLink` | `url` | open an http/https/ms-settings URI and report the foreground |
 | `screenshot` | - | `image` (base64 PNG) or no frame for a protected window |
 | `stop` | `app` | ask the window to close; a save prompt is reported, never killed |
 | `apps` | - | the Start-menu list: `[{package, label}]` |

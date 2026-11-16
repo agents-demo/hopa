@@ -9,6 +9,7 @@ data class RunRecordDraft(
     val traceId: String,
     val action: Action,
     val classification: String,
+    val tier: String = "",
     val approved: Boolean? = null,
     val observationHash: String,
     val beforeHash: String? = null,

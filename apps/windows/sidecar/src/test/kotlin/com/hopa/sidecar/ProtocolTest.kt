@@ -17,6 +17,7 @@ class ProtocolTest {
             traceId = "trace",
             action = Action(kind = "payment.pay", app = "bank", text = "100"),
             classification = "payment",
+            tier = "uia",
             approved = false,
             observationHash = "sha256:before",
             beforeHash = "sha256:before",
@@ -35,6 +36,7 @@ class ProtocolTest {
         assertEquals("3", step.text("index"))
         assertEquals("payment.pay", step.text("action"))
         assertEquals("payment", step.text("classification"))
+        assertEquals("uia", step.text("tier"))
         assertEquals("false", step["approved"].toString())
         assertEquals("false", step["executed"].toString())
         assertEquals("E_REFUSED", step.text("error"))

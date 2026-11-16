@@ -26,6 +26,7 @@
     "traceId": { "type": "string" },
     "action": { "$ref": "action.schema.json" },
     "classification": { "type": "string", "enum": ["read", "sensitive", "payment"] },
+    "tier": { "type": "string", "enum": ["api", "intent", "uia", "input"] },
     "approved": { "type": ["boolean", "null"] },
     "observationHash": { "type": "string" },
     "beforeHash": { "type": "string" },
