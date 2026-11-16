@@ -13,6 +13,8 @@ import com.hopa.backend.trace.TraceIds
 import com.hopa.backend.trace.TraceRecorder
 import java.util.UUID
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
 
 /** Every paired device, online or not. Production resolves from Postgres. */
 interface DeviceDirectory {
@@ -56,6 +58,7 @@ class TaskRouter(
     private val now: () -> Long = System::currentTimeMillis,
 ) {
     private val deadlineMs = 10 * 60 * 1000L
+    private val maxDeadlineMs = 24L * 60 * 60 * 1000
 
     fun route(
         identity: DeviceIdentity,
@@ -80,6 +83,10 @@ class TaskRouter(
         due.forEach { task -> deliver(task) }
         return due
     }
+
+    /** How much work a device would find if it came online right now. */
+    fun queuedFor(deviceId: String, householdId: String): Int =
+        store.pendingFor(deviceId, householdId, now()).size
 
     private fun routeEnvelope(
         identity: DeviceIdentity,
@@ -137,7 +144,7 @@ class TaskRouter(
             ts = envelope.ts,
             body = envelope.body,
             state = if (registry.online(to)) "delivered" else "queued",
-            deadlineAt = now() + deadlineMs,
+            deadlineAt = deadlineFrom(envelope.body),
         )
         if (!store.remember(identity.householdId, envelope.id, task)) {
             val existing = store.recall(identity.householdId, envelope.id)
@@ -197,7 +204,10 @@ class TaskRouter(
                 envelope.copy(
                     task = task.id,
                     from = identity.deviceId,
-                    trace = EnvelopeValidator.traceOf(envelope),
+                    to = other,
+                    // The relay joins the task's chain; a frame from a client that
+                    // sent no traceparent must not start a new one.
+                    trace = task.trace,
                 ),
             ),
         )
@@ -249,4 +259,19 @@ class TaskRouter(
 
     private fun traceId(traceparent: String): String =
         TraceIds.traceId(traceparent) ?: TraceIds.traceId(TraceIds.newTraceparent())!!
+
+    /**
+     * A sender may ask for a longer or shorter deadline in the body. Anything
+     * outside (now, now + 24 h] is treated as absent rather than as an
+     * undeliverable task.
+     */
+    private fun deadlineFrom(body: JsonObject): Long {
+        val nowMs = now()
+        val requested = body["deadlineAt"]?.jsonPrimitive?.longOrNull
+        return if (requested != null && requested > nowMs && requested <= nowMs + maxDeadlineMs) {
+            requested
+        } else {
+            nowMs + deadlineMs
+        }
+    }
 }

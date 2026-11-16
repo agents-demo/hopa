@@ -30,7 +30,8 @@ class PostgresProbe(private val db: Database) : DbProbe {
             db.tenant(householdId) { connection ->
                 connection.createStatement().use { statement ->
                     statement.executeQuery(
-                        "select count(*) from tasks where state in ('queued','delivered')",
+                        "select count(*) from tasks " +
+                            "where state in ('queued','delivered') and deadline_at > now()",
                     ).use { rows ->
                         rows.next()
                         rows.getInt(1)

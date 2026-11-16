@@ -107,4 +107,41 @@ class GatewayHandshakeTest {
         assertEquals("false", offline.body["online"]!!.jsonPrimitive.content)
         assertEquals(setOf("dev-a"), offline.peers())
     }
+
+    @Test
+    fun `a replaced socket does not announce the device offline`() = testApplication {
+        application { module(config(auth())) }
+        val http = createClient { install(WebSockets) }
+        val a = FakeDevice("dev-a", "tok-a")
+        val b = FakeDevice("dev-b", "tok-b")
+        a.connect(http)
+        a.send(hello("dev-a"))
+        a.expect("device.hello.ack")
+        b.connect(http)
+        b.send(hello("dev-b"))
+        b.expect("device.hello.ack")
+        a.expect("presence")
+
+        // The device reconnects before the old socket has finished closing.
+        val again = FakeDevice("dev-a", "tok-a")
+        again.connect(http)
+        again.send(hello("dev-a"))
+        again.expect("device.hello.ack")
+        b.expect("presence")
+
+        a.close()
+
+        // The device is still online on the new socket, so peers must not hear
+        // that it went away.
+        b.expectNothing("presence")
+        again.send(ping())
+        again.expect("pong")
+    }
+
+    private fun ping() = Envelope(
+        v = 1,
+        id = UUID.randomUUID().toString(),
+        type = "ping",
+        ts = 0,
+    )
 }

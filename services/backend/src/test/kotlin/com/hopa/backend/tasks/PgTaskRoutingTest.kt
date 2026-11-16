@@ -292,6 +292,25 @@ class PgTaskRoutingTest {
     }
 
     @Test
+    fun `the hello ack reports how many tasks are waiting`() = testApplication {
+        application { module(config()) }
+        val phone = client.claim("Phone")
+        val pc = client.claim("PC", phone.householdId)
+        val identity = auth.deviceFor(phone.access)!!
+        val routed = TaskRouter(store, DeviceRegistry(), devices).route(identity, create(pc.deviceId))
+        assertEquals("queued", (routed as RouteResult.Accepted).task.state)
+
+        val http = createClient { install(WebSockets) }
+        val pcWs = FakeDevice(pc.deviceId, pc.access)
+        pcWs.connect(http)
+        pcWs.send(hello(pc.deviceId))
+
+        val ack = pcWs.expect("device.hello.ack")
+        assertEquals("1", ack.bodyString("queued"))
+        pcWs.expect("task.create")
+    }
+
+    @Test
     fun `idempotency expires after twenty four hours and a resend creates a new task`() {
         val household = newHousehold()
         val device = newDevice()

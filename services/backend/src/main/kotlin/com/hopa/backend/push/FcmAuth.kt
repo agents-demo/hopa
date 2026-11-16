@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets
 import java.security.KeyFactory
 import java.security.Signature
 import java.security.spec.PKCS8EncodedKeySpec
+import java.time.Duration
 import java.util.Base64
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
@@ -40,13 +41,17 @@ data class JwtClaims(
 class ServiceAccountFcmAuth(
     credentialsJson: String,
     private val clock: () -> Long = System::currentTimeMillis,
-    private val http: HttpClient = HttpClient.newHttpClient(),
+    private val timeoutMs: Long = 5_000,
+    private val http: HttpClient = HttpClient.newBuilder()
+        .connectTimeout(Duration.ofMillis(timeoutMs))
+        .build(),
 ) : FcmAuth {
     private val credentials = Json.parseToJsonElement(credentialsJson).jsonObject
     private val clientEmail = credentials["client_email"]!!.jsonPrimitive.content
     private val privateKeyPem = credentials["private_key"]!!.jsonPrimitive.content
     private val tokenUri = credentials["token_uri"]!!.jsonPrimitive.content
 
+    private val lock = Any()
     private var cached: Pair<String, Long>? = null
 
     fun claims(nowSeconds: Long): JwtClaims = JwtClaims(
@@ -75,16 +80,17 @@ class ServiceAccountFcmAuth(
         return signingInput + "." + base64Url(sign(signingInput))
     }
 
-    override fun bearerToken(): String {
+    override fun bearerToken(): String = synchronized(lock) {
         val now = clock()
         cached?.let { (token, expiresAt) ->
-            if (expiresAt - 60_000 > now) return token
+            if (expiresAt - 60_000 > now) return@synchronized token
         }
 
         val form = "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer" +
             "&assertion=" + assertion(now / 1000)
         val request = HttpRequest.newBuilder(URI.create(tokenUri))
             .header("Content-Type", "application/x-www-form-urlencoded")
+            .timeout(Duration.ofMillis(timeoutMs))
             .POST(HttpRequest.BodyPublishers.ofString(form))
             .build()
         val response = http.send(request, HttpResponse.BodyHandlers.ofString())
@@ -95,7 +101,7 @@ class ServiceAccountFcmAuth(
         val token = body["access_token"]!!.jsonPrimitive.content
         val expiresIn = body["expires_in"]?.jsonPrimitive?.longOrNull ?: 3600
         cached = token to (now + expiresIn * 1000)
-        return token
+        token
     }
 
     private fun sign(input: String): ByteArray {

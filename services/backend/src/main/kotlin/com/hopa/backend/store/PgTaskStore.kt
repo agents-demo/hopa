@@ -136,6 +136,12 @@ class PgTaskStore(
 
     override fun event(taskId: String, householdId: String, kind: String, body: JsonObject, at: Long) {
         db.tenant(householdId) { connection ->
+            // Serialise per task: two events racing for the same task would both
+            // read max(seq) and one would lose on the unique (task_id, seq).
+            connection.prepareStatement("select 1 from tasks where id = ?::uuid for update").use {
+                it.setString(1, taskId)
+                it.executeQuery().use { rows -> rows.next() }
+            }
             connection.prepareStatement(
                 """
                 insert into task_events(task_id, household_id, seq, kind, body, at)

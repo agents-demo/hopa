@@ -116,8 +116,10 @@ a client cannot ask for another household's data even by accident.
 
 1. **Idempotent.** `(household_id, id)` is unique; a replay returns the stored
    response and does not re-route. A reconnect may resend freely.
-2. **Ordered per task.** The server appends `seq` per task; a receiver that gets
-   `seq` out of order asks for a replay rather than reordering silently.
+2. **Ordered per task in storage.** The server appends `seq` to `task_events` for
+   every event on a task. The wire does not carry `seq` in v0, so a receiver
+   orders by arrival; gap detection and replay-on-gap travel with the sync work.
+   A test proves that concurrent events on one task still get distinct numbers.
 3. **Tenant-first.** `to` is resolved to a household before any row is written;
    a mismatch is refused with `E_TENANT` and logged as a security event.
 4. **Durable.** A task survives both sockets; offline targets get `queued` and

@@ -6,7 +6,6 @@ import com.hopa.backend.protocol.DecodeResult
 import com.hopa.backend.protocol.Envelope
 import com.hopa.backend.protocol.EnvelopeValidator
 import com.hopa.backend.protocol.GatewayCodec
-import com.hopa.backend.tasks.InMemoryTaskStore
 import com.hopa.backend.tasks.RouteResult
 import com.hopa.backend.tasks.TaskRecord
 import com.hopa.backend.tasks.TaskRouter
@@ -121,12 +120,13 @@ fun Application.gatewayRoutes(
                             )
                             val ids = registry.deviceIds(identity.householdId)
                             val peers = registry.peers(identity.householdId, identity.deviceId)
+                            val queued = router.queuedFor(identity.deviceId, identity.householdId)
                             // The newcomer learns the roster from the ack; one
                             // event per join tells the others, so a replay or an
                             // interleaved handshake cannot announce it twice.
                             outgoing.send(
                                 GatewayCodec.encode(
-                                    helloAck(identity.deviceId, queued = 0, peers = ids),
+                                    helloAck(identity.deviceId, queued = queued, peers = ids),
                                 ),
                             )
                             peers.forEach { peer ->
@@ -174,14 +174,17 @@ fun Application.gatewayRoutes(
                 }
             } finally {
                 registry.leave(session)
-                val remaining = registry.deviceIds(identity.householdId)
-                registry.peers(identity.householdId, identity.deviceId).forEach { peer ->
-
-                    peer.outgoing.trySend(
-                        GatewayCodec.encode(
-                            presence(identity.deviceId, online = false, remaining),
-                        ),
-                    )
+                // A reconnect replaces the session; the old socket closing then
+                // must not tell peers that a live device went away.
+                if (registry.sessionFor(identity.deviceId) == null) {
+                    val remaining = registry.deviceIds(identity.householdId)
+                    registry.peers(identity.householdId, identity.deviceId).forEach { peer ->
+                        peer.outgoing.trySend(
+                            GatewayCodec.encode(
+                                presence(identity.deviceId, online = false, remaining),
+                            ),
+                        )
+                    }
                 }
                 outgoing.close()
                 writer.cancel()

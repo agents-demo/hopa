@@ -27,6 +27,12 @@ class FakeDevice(
 ) {
     private lateinit var session: DefaultClientWebSocketSession
 
+    /**
+     * Frames that arrived while a test was waiting for a different type. They
+     * are kept, not discarded: a later expectation must still see them.
+     */
+    private val pending = mutableListOf<Envelope>()
+
     suspend fun connect(client: HttpClient, path: String = "/v1/gateway") {
         session = client.webSocketSession(path) {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -37,18 +43,28 @@ class FakeDevice(
         session.send(Frame.Text(GatewayCodec.encode(envelope)))
     }
 
-    /** The next frame of [type]; other frames are discarded. */
-    suspend fun expect(type: String, timeoutMs: Long = 2_000): Envelope = withTimeout(timeoutMs) {
-        while (true) {
-            val frame = session.incoming.receive()
-            if (frame !is Frame.Text) continue
-            val decoded = GatewayCodec.decode(frame.readText())
-            if (decoded is DecodeResult.Ok && decoded.envelope.type == type) {
-                return@withTimeout decoded.envelope
+    /** The next frame of [type]; non-matching frames are buffered for later. */
+    suspend fun expect(type: String, timeoutMs: Long = 2_000): Envelope {
+        take(type)?.let { return it }
+        return withTimeout(timeoutMs) {
+            while (true) {
+                val frame = session.incoming.receive()
+                if (frame !is Frame.Text) continue
+                val decoded = GatewayCodec.decode(frame.readText())
+                if (decoded is DecodeResult.Ok) {
+                    if (decoded.envelope.type == type) return@withTimeout decoded.envelope
+                    pending += decoded.envelope
+                }
             }
+            @Suppress("UNREACHABLE_CODE")
+            error("the socket closed before a $type frame arrived")
         }
-        @Suppress("UNREACHABLE_CODE")
-        error("the socket closed before a $type frame arrived")
+    }
+
+    private fun take(type: String): Envelope? {
+        val index = pending.indexOfFirst { it.type == type }
+        if (index < 0) return null
+        return pending.removeAt(index)
     }
 
     /** Asserts that no frame of [type] arrives inside the window. */

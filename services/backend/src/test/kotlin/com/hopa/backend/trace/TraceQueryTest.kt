@@ -266,6 +266,47 @@ class TraceQueryTest {
     }
 
     @Test
+    fun `an ack without a traceparent is relayed under the task trace`() = testApplication {
+        application { module(config()) }
+        val phone = client.claim("Phone")
+        val pc = client.claim("PC", phone.householdId)
+        val phoneWs = connect(phone)
+        val pcWs = connect(pc)
+        phoneWs.expect("presence")
+        val traceparent = "00-${"3".repeat(32)}-${"4".repeat(16)}-01"
+
+        phoneWs.send(
+            Envelope(
+                v = 1,
+                id = UUID.randomUUID().toString(),
+                type = "task.create",
+                ts = clock.get(),
+                trace = traceparent,
+                to = pc.deviceId,
+                body = buildJsonObject { put("goal", "open settings") },
+            ),
+        )
+        val taskId = phoneWs.expect("task.ack").bodyString("task")!!
+        pcWs.expect("task.create")
+
+        pcWs.send(
+            Envelope(
+                v = 1,
+                id = UUID.randomUUID().toString(),
+                type = "task.ack",
+                ts = clock.get(),
+                to = "not-the-phone",
+                task = taskId,
+                body = buildJsonObject { put("state", "delivered") },
+            ),
+        )
+
+        val relayed = phoneWs.expect("task.ack")
+        assertEquals(traceparent, relayed.trace)
+        assertEquals(phone.deviceId, relayed.to)
+    }
+
+    @Test
     fun `an invalid traceparent is replaced with a fresh one`() = testApplication {
         application { module(config()) }
         val phone = client.claim("Phone")
