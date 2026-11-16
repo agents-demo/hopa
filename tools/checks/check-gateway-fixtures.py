@@ -58,7 +58,10 @@ def main() -> int:
         errors = list(validator.iter_errors(case["message"]))
         schema_valid = case.get("schema", case["ok"])
         if schema_valid and errors:
-            print(f"{name}: schema should accept, got {errors[0].message}", file=sys.stderr)
+            print(
+                f"{name}: schema should accept, got {errors[0].message}",
+                file=sys.stderr,
+            )
             problems += 1
         if not schema_valid and not errors:
             print(f"{name}: schema should refuse", file=sys.stderr)
