@@ -197,30 +197,40 @@ class AppContainer(context: Context) {
      * A paired bridge can start the helper itself, so the common case needs no
      * button press; after a reboot the first background run does it.
      */
-    suspend fun backgroundDevice(): com.hopa.engine.ports.DevicePort? =
-        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-            if (!shell.connect()) {
-                val startedHere = runCatching { wireless.connectAndStartHelper(displayToken.value) }
-                    .getOrDefault("")
-                    .contains("ready")
-                if (!startedHere) {
-                    startHelperThroughBridge()
-                }
-                kotlinx.coroutines.delay(1_500)
+    suspend fun backgroundDevice(): com.hopa.engine.ports.DevicePort? {
+        var started: com.hopa.capabilities.display.ShellDisplayDevice? = null
+        return try {
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                 if (!shell.connect()) {
-                    return@withContext null
+                    val startedHere = quiet {
+                        wireless.connectAndStartHelper(displayToken.value).contains("ready")
+                    }
+                    if (!startedHere) {
+                        startHelperThroughBridge()
+                    }
+                    kotlinx.coroutines.delay(1_500)
+                    if (!shell.connect()) {
+                        return@withContext null
+                    }
+                }
+                val metrics = context.resources.displayMetrics
+                val device = com.hopa.capabilities.display.ShellDisplayDevice(shell, context)
+                if (device.start(metrics.widthPixels, metrics.heightPixels, metrics.densityDpi)) {
+                    lastBackgroundError = ""
+                    started = device
+                    device
+                } else {
+                    lastBackgroundError = device.error.ifBlank { "the helper refused a display" }
+                    null
                 }
             }
-            val metrics = context.resources.displayMetrics
-            val device = com.hopa.capabilities.display.ShellDisplayDevice(shell, context)
-            if (device.start(metrics.widthPixels, metrics.heightPixels, metrics.densityDpi)) {
-                lastBackgroundError = ""
-                device
-            } else {
-                lastBackgroundError = device.error.ifBlank { "the helper refused a display" }
-                null
-            }
+        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            // The display is live before withContext's cancellation check; stop
+            // it here because the caller never received the device to release.
+            runCatching { started?.stop() }
+            throw cancelled
         }
+    }
 
     /** Pair with this phone's own adbd, then start the helper with that shell. */
     suspend fun pairWireless(address: String, code: String): String =
@@ -252,11 +262,20 @@ class AppContainer(context: Context) {
         if (token.isBlank()) {
             return false
         }
-        return runCatching {
+        return quiet {
             com.hopa.net.bridge.BridgeClient(current.bridgeUrl, token)
                 .startHelper(token = displayToken.value)
             true
-        }.getOrDefault(false)
+        }
+    }
+
+    /** A failed optional step is false; cancellation still belongs to the caller. */
+    private suspend fun quiet(block: suspend () -> Boolean): Boolean = try {
+        block()
+    } catch (cancelled: kotlinx.coroutines.CancellationException) {
+        throw cancelled
+    } catch (error: Exception) {
+        false
     }
 
     val model = SettingsModelPort(settings, ModelFactory(), ProviderChoiceRules())

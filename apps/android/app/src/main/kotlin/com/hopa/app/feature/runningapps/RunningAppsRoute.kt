@@ -35,10 +35,20 @@ fun RunningAppsRoute(
         }
     }
 
+    // Screen access is granted in Android settings and binds a moment later, so
+    // the pill is re-read on resume and while this page stays open.
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(2_000)
+            viewModel.refreshScreenAccess()
+        }
+    }
+
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 viewModel.refresh()
+                viewModel.refreshScreenAccess()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
