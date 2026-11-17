@@ -1,10 +1,11 @@
-﻿package com.hopa.app.feature.chat
+package com.hopa.app.feature.chat
 
 import android.content.Intent
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hopa.app.di.AppContainer
+import com.hopa.app.di.Surfaces
 import com.hopa.capabilities.accessibility.AccessibilityState
 import com.hopa.capabilities.accessibility.HopaAccessibilityService
 import com.hopa.engine.gate.ApprovalRequest
@@ -384,36 +385,8 @@ class ChatViewModel(
                 .joinToString("\n\n")
             val skills = runCatching { container.skills.promptText() }.getOrDefault("")
             val installed = runCatching { container.packages.installed() }.getOrDefault(emptyList())
-            val bridged = runCatching { container.bridgedDevice() }.getOrNull()
             val preferred = ScreenPath.of(current.screenPath)
-            val background = if (
-                preferred == ScreenPath.AUTO || preferred == ScreenPath.BACKGROUND
-            ) {
-                runCatching { container.backgroundDevice() }.getOrNull()
-            } else {
-                null
-            }
-            val onscreen = current.accessibilityAllowed &&
-                HopaAccessibilityService.instance != null
-            // AUTO is the phone's best mode: the hidden display when it is up,
-            // else this screen. The computer is only used when chosen.
-            val ordered = ScreenPathOrder().order(
-                preferred = preferred,
-                background = background != null,
-                bridge = bridged != null,
-                onscreen = onscreen,
-            )
-            val sources = ordered.mapNotNull { name ->
-                when (name) {
-                    "background" -> ScreenSource("background", background!!, budgetMs = 8_000)
-                    "bridge" -> ScreenSource("bridge", bridged!!, budgetMs = 15_000)
-                    else -> ScreenSource("accessibility", container.device, budgetMs = 8_000)
-                }
-            }
-            val device = ScreenSourceDevice(
-                sources = sources,
-                fallback = com.hopa.capabilities.device.UnavailableDevicePort(),
-            )
+            val device = container.surfaces(current)
             device.observe()
             if (device.sourceName == "fallback") {
                 container.busy.value = false
@@ -459,7 +432,7 @@ class ChatViewModel(
                         com.hopa.app.skills.Replayer(container).replay(recipe, device)
                     }.getOrDefault(0)
                     if (replayed == recipe.steps.size) {
-                        (background as? com.hopa.capabilities.display.ShellDisplayDevice)?.stop()
+                        Surfaces.release()
                         container.busy.value = false
                         val answer = "Done - repeated the $replayed steps that worked last time."
                         val steps = recipe.steps.mapIndexed { index, action ->
@@ -528,7 +501,7 @@ class ChatViewModel(
                 }
             } finally {
                 stopRunService()
-                (background as? com.hopa.capabilities.display.ShellDisplayDevice)?.stop()
+                Surfaces.release()
             }
             val answer = result?.answer ?: "I stopped after two minutes."
             val steps = result?.records.orEmpty().map { record ->
