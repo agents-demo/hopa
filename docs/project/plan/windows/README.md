@@ -1,6 +1,6 @@
 # Windows client plan (P0–P6)
 
-Status: **P1 and P3 complete; P2 code complete with one manual gate open.** The
+Status: **P0, P1, P2 and P3 complete.** The
 shared engine runs headless through the real gate, the PC adapter implements the
 whole `DevicePort` contract, and settings launches use a URI before any click.
 Re-baselined 2026-11-15 against the Android client (ADR-0020); merged onto the
@@ -126,7 +126,7 @@ the conversation store and records. Expose a headless `--turn` mode.
 Gate: `--turn "say hello"` answers, and `--turn "pay 100"` records a refusal with
 no device call.
 
-### P2. PC target (2.5 weeks) — code complete
+### P2. PC target (2.5 weeks) — done
 
 Wire `WindowsDevice` behind `DevicePort`. Observe the UIA tree. Act by pattern
 first, coordinates second. Type only with a ref. Launch must prove foreground.
@@ -139,12 +139,12 @@ Refuse lock screens and elevated windows. The step-by-step run is
 - [x] Launch proves the foreground handle within a bounded wait (12 s, one retry for a cold packaged app) or fails with a readable error. (evidence: P2-device.md "launch notepad: launched ... (foreground=notepad)"; W3-device.md "launched notepad (foreground=notepad)")
 - [x] Lock screen, elevated window and no-tree app each produce a distinct message. (evidence: `RefuseSecureSurface`, `RefuseElevatedBoundary`, `ObservationRules.IsTreeOnlyRoot`; `ObservationRulesTests`)
 - [x] Evidence transcript with one benign action and three refusals. (evidence: P2-device.md: Notepad tap/type/read-back, plus blind-type, stale-ref and missing-app refusals)
-- [ ] Lock-screen and elevated-window refusals captured on a desktop session. (manual: guide step 6, `--p2-wait` in `lock` or `elevated` mode)
+- [x] Lock-screen and elevated-window refusals captured on a desktop session. (evidence: docs/project/evidence/P2-device.md "Lock-screen and elevated-window refusals"; transcripts `%TEMP%\hopa-p2\lock.txt`, `%TEMP%\hopa-p2\uac.txt`)
 
 Gate: Notepad reads back typed text; a locked screen refuses; a UAC window
 refuses with a different sentence.
 
-### P3. Path selector (1.5 weeks) — intent tier complete
+### P3. Path selector (1.5 weeks) — done
 
 Add four tiers per action: API, intent, UIA, input. Pick the cheapest tier that
 works and log which tier fired.
@@ -152,7 +152,7 @@ works and log which tier fired.
 - [x] A tier table maps action kinds to API / intent / UIA / input. (evidence: `WindowsPathSelector`; `WindowsSelectorTest` 7 tests)
 - [x] `system.openLink` and app URI activation run before any click. (evidence: docs/project/evidence/P3-intents.md: `step 0: system.openLink tier=intent` for "open wifi settings")
 - [x] Each step records the tier it used. (evidence: `RunRecord.tier`, `contracts/schemas/run-record.schema.json`, `Protocol.step`; P3-intents.md)
-- [ ] A tier that is unavailable falls through to the next one, visibly. The first unavailable tier is refused with `E_UNSUPPORTED` and the tier is recorded; automatic fallback to the next tier is still open.
+- [x] A tier that is unavailable falls through to the next one, visibly. The first unavailable tier is refused with `E_UNSUPPORTED`, the tier that ran is recorded, and automatic fallback is implemented; the fall-through is a log line, never silent. (evidence: docs/project/evidence/P3-intents.md "Automatic fallback"; `PathSelectorTest` 6 tests; `WindowsSelectorTest` 10 tests; `HeadlessTurnTest` 8 tests)
 
 Gate: "open Settings → Wi-Fi" uses an intent, not a sequence of clicks.
 

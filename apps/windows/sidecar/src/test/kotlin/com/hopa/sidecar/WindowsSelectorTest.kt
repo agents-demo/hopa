@@ -76,4 +76,31 @@ class WindowsSelectorTest {
             selector.choose(Action(kind = "app.function", app = "notepad", ref = "save")).tier,
         )
     }
+
+    @Test
+    fun a_settings_alias_plans_an_intent_then_a_uia_launch() {
+        val planned = selector.plan(Action(kind = "ui.launch", app = "wifi"))
+
+        assertEquals(2, planned.size)
+        assertEquals(PathTier.INTENT, planned[0].tier)
+        assertEquals("system.openLink", planned[0].action.kind)
+        assertEquals("ms-settings:network-wifi", planned[0].action.url)
+        assertEquals(PathTier.UIA, planned[1].tier)
+        assertEquals("ui.launch", planned[1].action.kind)
+        assertEquals("wifi", planned[1].action.app)
+    }
+
+    @Test
+    fun an_unmapped_launch_has_no_intent_to_fall_back_from() {
+        val planned = selector.plan(Action(kind = "ui.launch", app = "notepad"))
+
+        assertEquals(1, planned.size)
+        assertEquals(PathTier.UIA, planned[0].tier)
+    }
+
+    @Test
+    fun choose_is_always_the_first_planned_tier() {
+        val action = Action(kind = "ui.launch", app = "wifi")
+        assertEquals(selector.plan(action).first(), selector.choose(action))
+    }
 }

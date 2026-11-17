@@ -1,5 +1,6 @@
 package com.hopa.agent.action
 
+import com.hopa.contracts.ports.DevicePort
 import com.hopa.contracts.ports.SystemPort
 import com.hopa.contracts.testing.FakeApproval
 import com.hopa.contracts.testing.FakeClock
@@ -11,6 +12,7 @@ import com.hopa.runlog.record.RunRecordFactory
 import com.hopa.runlog.store.InMemoryRunRecorder
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -50,6 +52,56 @@ class PathSelectorTest {
         assertEquals("", result.record.tier)
     }
 
+    @Test
+    fun an_unavailable_tier_falls_through_and_the_surviving_tier_is_recorded() = runBlocking {
+        val harness = FallbackHarness(
+            FallbackSelector(),
+            FakeDevice(),
+            FailingSystem(),
+        )
+        val result = harness.execute(Action(kind = "ui.launch", app = "wifi"))
+
+        assertEquals("ui.launch", result.record.action.kind)
+        assertEquals("uia", result.record.tier)
+        assertTrue(result.record.executed)
+        assertNull(result.record.error)
+        assertEquals(
+            listOf("tier intent unavailable (E_UNSUPPORTED); falling back to uia"),
+            harness.fallbacks,
+        )
+        assertTrue(RunChain.verify(listOf(result.record)))
+    }
+
+    @Test
+    fun when_every_tier_is_unavailable_the_last_tier_is_recorded() = runBlocking {
+        val harness = FallbackHarness(
+            FallbackSelector(),
+            UnsupportedLaunchDevice(),
+            FailingSystem(),
+        )
+        val result = harness.execute(Action(kind = "ui.launch", app = "wifi"))
+
+        assertEquals("uia", result.record.tier)
+        assertEquals(false, result.record.executed)
+        assertEquals("E_UNSUPPORTED", result.record.error)
+        assertEquals(1, harness.fallbacks.size)
+        assertTrue(RunChain.verify(listOf(result.record)))
+    }
+
+    @Test
+    fun a_device_error_is_not_retried_as_a_fallback() = runBlocking {
+        val harness = FallbackHarness(
+            SingleTierSelector(),
+            BrokenLaunchDevice(),
+            RecordingSystem(),
+        )
+        val result = harness.execute(Action(kind = "ui.launch", app = "wifi"))
+
+        assertEquals("E_DEVICE", result.record.error)
+        assertEquals("uia", result.record.tier)
+        assertTrue(harness.fallbacks.isEmpty())
+    }
+
     private class IntentSelector : PathSelector {
         override fun choose(action: Action): PlannedAction =
             if (action.kind == "ui.launch" && action.app == "wifi") {
@@ -60,6 +112,23 @@ class PathSelectorTest {
             } else {
                 PlannedAction(action, PathTier.UIA)
             }
+    }
+
+    private class SingleTierSelector : PathSelector {
+        override fun choose(action: Action): PlannedAction = PlannedAction(action, PathTier.UIA)
+    }
+
+    /** Two paths for one action, so an unavailable intent can reach the UIA launch. */
+    private class FallbackSelector : PathSelector {
+        override fun choose(action: Action): PlannedAction = plan(action).first()
+
+        override fun plan(action: Action): List<PlannedAction> = listOf(
+            PlannedAction(
+                action.copy(kind = "system.openLink", url = "ms-settings:network-wifi", app = null),
+                PathTier.INTENT,
+            ),
+            PlannedAction(action, PathTier.UIA),
+        )
     }
 
     private class Harness(selector: PathSelector?) {
@@ -90,6 +159,36 @@ class PathSelectorTest {
         )
     }
 
+    private class FallbackHarness(
+        selector: PathSelector,
+        device: DevicePort,
+        system: SystemPort,
+    ) {
+        val fallbacks = mutableListOf<String>()
+        private val clock = FakeClock()
+        private val executor = ActionExecutor(
+            device = device,
+            browser = null,
+            system = system,
+            sandbox = null,
+            policy = { ApprovalPolicy() },
+            approval = FakeApproval(allow = true),
+            recorder = InMemoryRunRecorder(),
+            factory = RunRecordFactory(clock),
+            clock = clock,
+            selector = selector,
+            onFallback = { fallbacks += it },
+        )
+
+        suspend fun execute(action: Action): ExecutionResult = executor.execute(
+            runId = "run-fallback",
+            step = 0,
+            traceId = "trace-fallback",
+            action = action,
+            before = FakeDevice.sample(),
+        )
+    }
+
     private class RecordingSystem : SystemPort {
         val opened = mutableListOf<String>()
 
@@ -110,5 +209,34 @@ class PathSelectorTest {
         override suspend fun delete(query: String) = Unit
 
         override suspend fun uninstall(packageName: String) = Unit
+    }
+
+    private class FailingSystem : SystemPort {
+        override suspend fun openLink(url: String) =
+            throw UnsupportedOperationException("no system port")
+
+        override suspend fun setAlarm(hour: Int, minute: Int, label: String) = Unit
+
+        override suspend fun addEvent(title: String, startMillis: Long, endMillis: Long) = Unit
+
+        override suspend fun share(text: String) = Unit
+
+        override suspend fun sendMessage(target: String, text: String) = Unit
+
+        override suspend fun call(number: String) = Unit
+
+        override suspend fun delete(query: String) = Unit
+
+        override suspend fun uninstall(packageName: String) = Unit
+    }
+
+    private class UnsupportedLaunchDevice : DevicePort by FakeDevice() {
+        override suspend fun launch(packageName: String) =
+            throw UnsupportedOperationException("no launcher")
+    }
+
+    private class BrokenLaunchDevice : DevicePort by FakeDevice() {
+        override suspend fun launch(packageName: String) =
+            throw IllegalStateException("launcher exploded")
     }
 }

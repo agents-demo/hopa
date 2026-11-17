@@ -154,6 +154,7 @@ class Engine(
             factory = RunRecordFactory(clock),
             clock = clock,
             selector = selector,
+            onFallback = { message -> io.log(message) },
         )
         val loop = AgentLoop(
             policy = ModelDecisionPolicy(

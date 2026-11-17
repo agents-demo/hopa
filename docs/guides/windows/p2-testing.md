@@ -100,7 +100,8 @@ cd C:\work\hopa\apps\android
 .\gradlew.bat -p ..\windows\sidecar test --no-daemon
 ```
 
-Expected: **25 tests, 0 failures** (six suites, including the P1 gate).
+Expected: **41 tests, 0 failures** (eight suites, including the P1 gate and the
+P3 fallback cases).
 
 Then the C# tests:
 
@@ -378,7 +379,8 @@ Settings and rerun for a changed observation.
 ## What this guide does not test
 
 - The phone target and its intent table: that is P4.
-- Automatic fallback between tiers: the first unavailable tier is refused and
-  recorded; P3 does not silently try the next one.
+- Automatic fallback between tiers: implemented and unit-tested in P3 (an
+  unavailable tier is logged and the next one tried), but not driven by this
+  PC-target guide. See `docs/project/evidence/P3-intents.md`.
 - The signed `uiAccess` helper: blocked on a code-signing certificate.
 - Vision frames: the Windows host does not enable them yet.

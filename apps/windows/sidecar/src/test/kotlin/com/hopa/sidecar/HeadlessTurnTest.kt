@@ -111,6 +111,26 @@ class HeadlessTurnTest {
     }
 
     @Test
+    fun an_unavailable_intent_tier_falls_back_to_the_uia_launch() {
+        val dataDir = Files.createTempDirectory("hopa-p3-fallback")
+        val device = RecordingDevice()
+
+        // No HostDevice is attached, so the sidecar has no system port. The
+        // intent tier for "open wifi settings" is unavailable and must fall
+        // through to the plain UIA launch the selector kept as a second path.
+        val outcome = runBlocking {
+            engine(dataDir, device).runTurn("t-fallback", "open wifi settings", null)
+        }
+
+        assertEquals(listOf("wifi"), device.launches)
+        val record = outcome.records.single()
+        assertEquals("uia", record.tier)
+        assertTrue(record.executed)
+        assertNull(record.error)
+        assertTrue(outcome.chainOk)
+    }
+
+    @Test
     fun a_second_turn_keeps_the_conversation_and_the_records() {
         val dataDir = Files.createTempDirectory("hopa-p1-restart")
         val conversations = dataDir.resolve("conversations.json")

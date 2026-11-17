@@ -14,6 +14,7 @@ Date: 2026-11-16. Host: Windows 11 (10.0.22631), .NET 8.0.428, JDK 17.
 | `system.openLink` on Windows | `HostSystem`, `HostDevice.openLink`, `WindowsDevice.OpenLink` |
 | Scheme allow-list | `http`, `https`, `ms-settings`; everything else is refused |
 | Stub trigger for the gate | "wifi" → `ui.launch app=wifi`, rewritten to the URI |
+| Ordered tier plans and visible fallback | `PathSelector.plan`, `WindowsPathSelector.plan`, `ActionExecutor.onFallback` |
 
 The rewrite happens **before** the gate, so approval, the record and the step
 event all describe the action that actually ran (`system.openLink`), not the
@@ -49,23 +50,48 @@ observe: app=ApplicationFrameHost nodes=96
 foreground: ApplicationFrameHost
 ```
 
+## Automatic fallback (closed 2026-11-17)
+
+A selector can now return an ordered list of candidate paths. `WindowsPathSelector.plan`
+puts the URI (`intent`) first and keeps the original `ui.launch` (`uia`) as a
+second candidate. `ActionExecutor` tries them in order: an
+`UnsupportedOperationException` means the tier is unavailable, not that the
+device failed. It logs the tier it left and moves on, so the fallback is never
+silent. A device error is never retried, and the person is asked for approval
+once, before the first tier runs — a fallback retries a path, never a decision.
+Still one record per step: the tier on the step is the one that actually ran.
+
+Headless, with no host and therefore no system port:
+
+```
+[sidecar] turn cli-1 in c-2016ef2e-…: open wifi settings
+[sidecar] tier intent unavailable (E_UNSUPPORTED); falling back to uia
+{"type":"turn.end",…,"steps":[{"action":{"kind":"ui.launch","app":"wifi"},
+  "classification":"read","tier":"uia","executed":false,"error":"E_UNSUPPORTED",…}],
+ "narration":["Open wifi failed: E_UNSUPPORTED"]}
+```
+
+The first tier was refused with `E_UNSUPPORTED`, the tier that actually ran is
+recorded, and the fall-through is a visible log line. Both tiers are unavailable
+in headless mode, so the step honestly fails; with a device attached the second
+tier launches the app and `HeadlessTurnTest` proves it (`launches = ["wifi"]`,
+`tier = uia`, `executed = true`).
+
 ## Tests
 
-| Suite | Tests |
-|---|---|
-| `PathSelectorTest` (core) | 3 — intent rewrite, tier on an unchanged action, no selector means empty tier |
-| `WindowsSelectorTest` | 7 — aliases, explicit URI, real app, package name, openLink, ref vs coordinates, app function |
-| `WindowsIntentsTest` | 5 — case, pass-through, web URL, package name, unknown |
-| `ProtocolTest` | `step` carries `tier` |
+| Suite | Tests | Notes |
+|---|---|---|
+| `PathSelectorTest` (core) | 6 | intent rewrite, unchanged action, empty tier; +3 fallback cases |
+| `WindowsSelectorTest` | 10 | aliases, URI, real app, package, openLink, ref vs coords, app function; +3 plan cases |
+| `WindowsIntentsTest` | 5 | case, pass-through, web URL, package name, unknown |
+| `HeadlessTurnTest` | 8 | P1 gate; +1 no-system-port fallback |
+| `ProtocolTest` | 5 | `step` carries `tier` |
 
-Sidecar suite: 30 tests, 0 failures. Core suite: 91 tests, 0 failures.
+Measured from the JUnit XML: core 22 suites / 92 tests, sidecar 8 suites / 41
+tests, 0 failures. These replace the earlier 91/30 estimates in this file.
 
-## What is not in P3
+## Still not in P3
 
-- **Automatic fallback.** If a tier is unavailable (for example no host, so
-  `system.openLink` is unsupported), the step fails with `E_UNSUPPORTED` and
-  records the tier. It does not silently try the next tier. That is the one open
-  P3 checkbox, and it is deliberate: a fallback must be visible, not silent.
 - **The phone's selector.** With a bridge configured the selector is off, so a
   phone launch keeps its old path until P4.
 - Other URI schemes. `file:`, `shell:` and app-specific schemes are refused; the

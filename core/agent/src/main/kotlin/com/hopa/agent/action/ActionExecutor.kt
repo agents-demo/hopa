@@ -35,6 +35,8 @@ class ActionExecutor(
     private val clock: Clock,
     private val scrollGeometry: ScrollGeometry = ScrollGeometry(),
     private val selector: PathSelector? = null,
+    /** Called for each tier left behind, so the host can show the fallback. */
+    private val onFallback: (String) -> Unit = {},
 ) {
     suspend fun execute(
         runId: String,
@@ -44,20 +46,24 @@ class ActionExecutor(
         before: Observation,
     ): ExecutionResult {
         val gate = policy()
-        // The selector may replace a UI launch with a URI (intent) and says which
-        // path this step takes. Everything after this line uses the chosen action,
-        // so the approval and the record describe what actually runs.
-        val planned = selector?.choose(action)
-        val chosen = planned?.action ?: action
-        val tier = planned?.tier?.wire.orEmpty()
+        // The selector may replace a UI launch with a URI (intent) and may offer
+        // further tiers. Everything below uses the chosen action, so the approval
+        // and the record describe what actually runs.
+        val attempts = selector?.plan(action)
+            ?.takeIf { it.isNotEmpty() }
+            ?.map { Attempt(it.action, it.tier.wire) }
+            ?: listOf(Attempt(action, ""))
+        val intended = attempts.first()
         // What the ref points at, kept so a recipe can find the same control
         // after the tree has been redrawn.
-        val targetKey = chosen.ref?.takeIf { it.isNotBlank() }
+        val targetKey = intended.action.ref?.takeIf { it.isNotBlank() }
             ?.let { ref -> NodeAnchor.find(before.tree, ref)?.let(NodeAnchor::key) }
-        val classification = gate.classify(chosen, before)
-        val needsApproval = gate.requiresApproval(chosen, before)
+        val classification = gate.classify(intended.action, before)
+        val needsApproval = gate.requiresApproval(intended.action, before)
+        // One question for the whole action, asked before any tier runs. A
+        // fallback retries a path, never the person's decision.
         val approved = if (needsApproval) {
-            approval.approve(gate.request(chosen, before))
+            approval.approve(gate.request(intended.action, before))
         } else {
             null
         }
@@ -68,9 +74,9 @@ class ActionExecutor(
                 runId = runId,
                 step = step,
                 traceId = traceId,
-                action = chosen,
+                action = intended.action,
                 classification = label(classification),
-                tier = tier,
+                tier = intended.tier,
                 approved = false,
                 observation = before,
                 beforeHash = beforeHash,
@@ -83,31 +89,54 @@ class ActionExecutor(
             return ExecutionResult(record, before, "I did not run that.")
         }
 
-        return runCatching {
-            val text = executeAction(chosen, before)
-            val after = runCatching { device.observe() }.getOrDefault(before)
-            val afterHash = ObservationHasher.hashOf(after)
-            val changed = afterHash != beforeHash
-            val verified = text.isNotEmpty() || chosen.kind in setOf(
-                "ui.observe", "ui.wait", "ui.back", "ui.home", "ui.stop",
-            ) || changed
-            val record = factory.draft(
-                runId = runId,
-                step = step,
-                traceId = traceId,
-                action = chosen,
-                classification = label(classification),
-                tier = tier,
-                approved = approved,
-                observation = after,
-                beforeHash = beforeHash,
-                afterHash = afterHash,
-                verified = verified,
-                executed = true,
-                targetKey = targetKey,
-            ).let { recorder.append(it) }
-            ExecutionResult(record, after, text)
-        }.getOrElse { error ->
+        var index = 0
+        while (index < attempts.size) {
+            val attempt = attempts[index]
+            val outcome = runCatching {
+                val text = executeAction(attempt.action, before)
+                val after = runCatching { device.observe() }.getOrDefault(before)
+                val afterHash = ObservationHasher.hashOf(after)
+                val changed = afterHash != beforeHash
+                val verified = text.isNotEmpty() || attempt.action.kind in setOf(
+                    "ui.observe", "ui.wait", "ui.back", "ui.home", "ui.stop",
+                ) || changed
+                val record = factory.draft(
+                    runId = runId,
+                    step = step,
+                    traceId = traceId,
+                    action = attempt.action,
+                    classification = label(classification),
+                    tier = attempt.tier,
+                    approved = approved,
+                    observation = after,
+                    beforeHash = beforeHash,
+                    afterHash = afterHash,
+                    verified = verified,
+                    executed = true,
+                    targetKey = targetKey,
+                ).let { recorder.append(it) }
+                ExecutionResult(record, after, text)
+            }
+            val success = outcome.getOrNull()
+            if (success != null) {
+                return success
+            }
+
+            val error = outcome.exceptionOrNull()!!
+            val next = attempts.getOrNull(index + 1)
+            if (error is UnsupportedOperationException && next != null) {
+                // An unavailable tier is not a device failure. Leave it visibly
+                // and try the next tier; never fall through silently.
+                onFallback(
+                    "tier ${attempt.tier} unavailable (${ErrorCodes.UNSUPPORTED}); " +
+                        "falling back to ${next.tier}",
+                )
+                index++
+                continue
+            }
+
+            // Either the last tier is unavailable, or the device actually broke.
+            // A device error is never retried: only unavailable tiers fall through.
             val code = if (error is UnsupportedOperationException) {
                 ErrorCodes.UNSUPPORTED
             } else {
@@ -117,9 +146,9 @@ class ActionExecutor(
                 runId = runId,
                 step = step,
                 traceId = traceId,
-                action = chosen,
+                action = attempt.action,
                 classification = label(classification),
-                tier = tier,
+                tier = attempt.tier,
                 approved = approved,
                 observation = before,
                 beforeHash = beforeHash,
@@ -129,9 +158,13 @@ class ActionExecutor(
                 targetKey = targetKey,
                 error = code,
             ).let { recorder.append(it) }
-            ExecutionResult(record, before, "I could not do that: ${error.message ?: code}")
+            return ExecutionResult(record, before, "I could not do that: ${error.message ?: code}")
         }
+        throw IllegalStateException("no path was attempted")
     }
+
+    /** One candidate path: the action to run and the wire name of its tier. */
+    private data class Attempt(val action: Action, val tier: String)
 
     private suspend fun executeAction(action: Action, before: Observation): String {
         // The same table the parser uses: an incomplete step is a mistake, not a

@@ -9,4 +9,13 @@ import com.hopa.contracts.wire.Action
  */
 interface PathSelector {
     fun choose(action: Action): PlannedAction
+
+    /**
+     * All viable paths for one action, cheapest first. The executor tries them in
+     * order when a tier is unavailable, so an intent can fall through to a UIA
+     * launch without the caller asking twice. The default keeps a selector that
+     * only implements [choose] single-path; a fallback is always visible because
+     * the executor logs every tier it leaves.
+     */
+    fun plan(action: Action): List<PlannedAction> = listOf(choose(action))
 }

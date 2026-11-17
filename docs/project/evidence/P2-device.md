@@ -94,21 +94,30 @@ sequence above is why the same command now reports `foreground=notepad`.
 - A failed step does not abort the run; the transcript always reaches disk.
 - The only `Kill` is the check's own scratch instance.
 
-## Remaining gate
+## Lock-screen and elevated-window refusals (captured 2026-11-17)
 
-The lock-screen and UAC refusals need a human in front of the machine. They are
-step 6 of the guide:
+Step 6 of the guide, on a real desktop session. The watcher stops on the first
+matching refusal, so there is no timer to race.
+
+`--p2-wait <out>\lock.txt 60` — pressed Win+L while it polled:
 
 ```
-Hopa.Windows.exe --p2-wait <out>\lock.txt 60            # press Win+L whenever ready
-Hopa.Windows.exe --p2-wait <out>\uac.txt 60 elevated    # approve the UAC prompt
+watching for a refusal for up to 60s — lock the screen whenever you are ready
+refused: the screen is 'LockApp' (locked or secure); HOPA cannot see or touch it
 ```
 
-The watcher stops on the first matching refusal, so there is no timer to race.
+`--p2-wait <out>\uac.txt 60 elevated` — `Start-Process notepad -Verb RunAs`,
+approved the prompt and left the elevated window in front:
 
-Expected: `refused: the screen is 'LockApp' ...` or, when Windows exposes only
-the secure desktop, `refused: the screen is locked or secure; ...` — both are the
-lock refusal. The second file is an **elevated window** (`notepad -Verb RunAs`,
-prompt approved): expect `'Notepad' runs elevated and HOPA does not ...`, a
-different sentence. That run is the last P2
-checkbox.
+```
+watching for an elevated window for up to 60s — approve the UAC prompt and leave the app in front
+secure desktop seen (the consent dialog); still waiting for the elevated window
+refused: 'Notepad' runs elevated and HOPA does not; Windows blocks input across that boundary. Install the signed uiAccess helper (docs/guides/windows/uiaccess.md) or run HOPA elevated on purpose.
+```
+
+The two sentences are distinct, so the plan's "honest failure" assertion holds:
+the lock screen is a secure-surface refusal, the elevated app is a boundary
+refusal. The elevated capture first timed out with `no elevated window within
+60s (foreground=OpenCode)` — the watcher checks the *foreground* window, so the
+elevated Notepad had to be clicked forward after the prompt was approved. The
+retry above is the valid one. This closes the last P2 checkbox.
