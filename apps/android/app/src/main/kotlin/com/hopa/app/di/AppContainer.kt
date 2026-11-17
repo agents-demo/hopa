@@ -1,6 +1,9 @@
 package com.hopa.app.di
 
 import android.content.Context
+import android.os.Build
+import com.hopa.app.BuildConfig
+import com.hopa.app.backend.BackendSession
 import com.hopa.app.model.SettingsModelPort
 import com.hopa.capabilities.accessibility.AccessibilityDevice
 import com.hopa.net.llm.ModelFactory
@@ -86,6 +89,29 @@ class AppContainer(context: Context) {
     /** Why the last hidden-display start failed; empty when it worked. */
     var lastBackgroundError: String = ""
         private set
+
+    /**
+     * The app's one gateway link. Pairing and the activity life cycle reach it
+     * through here; Task 9 attaches the remote runner with
+     * `backend.onTask = { runner.handle(it) }`.
+     */
+    val backend: BackendSession by lazy {
+        BackendSession(
+            settings = settings,
+            pairingFactory = { url -> com.hopa.capabilities.backend.BackendPairing(url) },
+            linkFactory = { credentials, name, version, pushToken, refresh ->
+                com.hopa.capabilities.backend.BackendClient(
+                    credentials = { credentials },
+                    pushToken = pushToken,
+                    refresh = refresh,
+                    deviceName = name,
+                    appVersion = version,
+                )
+            },
+            deviceName = Build.MODEL,
+            appVersion = BuildConfig.VERSION_NAME,
+        )
+    }
 
     /** The hidden background display: one helper process, one loopback port. */
     val displayToken = com.hopa.capabilities.display.DisplayToken(context)
