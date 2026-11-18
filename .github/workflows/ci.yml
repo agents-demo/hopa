@@ -34,7 +34,7 @@ jobs:
       - name: Install packages
         run: |
           python -m pip install -U pip
-          python -m pip install -e "./services/wire" -e "./services/bridge" -e "./services/relay" -e "./services/evals/bench[dev]" -e "./services/evals/baseline[dev]" "ruff>=0.6" "pytest>=8" "jsonschema>=4"
+          python -m pip install -e "./services/wire" -e "./services/bridge" -e "./services/relay" -e "./services/evals/bench[dev]" -e "./services/evals/baseline[dev]" "ruff>=0.6" "pytest>=8" "jsonschema>=4" "Pillow>=10" "numpy>=1.26"
       - name: Ruff
         run: ruff check services/wire services/bridge services/relay services/evals/bench services/evals/baseline
       - name: Ruff format
