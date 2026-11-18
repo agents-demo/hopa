@@ -1,10 +1,16 @@
 package com.hopa.app.ui.component
 
+import android.provider.Settings
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseInOut
-import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,47 +20,48 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hopa.app.R
 import com.hopa.app.ui.theme.HopaColor
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
- * The living mascot, ported from HopaMark.ets.
+ * The plush HOPA. The photo is a rounded-square badge; the life comes from the
+ * container: a 4.8 s float, breathing squash, a 150 ms blink, the established
+ * thinking pulse, listening lean and happy cheer, and a wiggle on tap.
  *
- * Idle is a hold followed by a 900 ms lift of 2.5%, toggled every 2200 ms; the
- * eyes close for 150 ms every 4200 ms. Thinking and acting pulse the opacity
- * every 520 ms, listening leans 2 degrees, acting leans 4 and happy cheers.
+ * Transcript avatars pass <code>animate = false</code>, which creates no
+ * infinite transitions and no blink timer, so a long chat costs nothing.
  */
 @Composable
 fun HopaMascot(
@@ -64,40 +71,38 @@ fun HopaMascot(
     animate: Boolean = true,
     interactive: Boolean = true,
 ) {
-    var bubble by remember { mutableStateOf(false) }
-    var cheer by remember { mutableStateOf(false) }
-    var blinking by remember { mutableStateOf(false) }
-    var bob by remember { mutableStateOf(false) }
-    var pulse by remember { mutableStateOf(false) }
-    var waveAngle by remember { mutableFloatStateOf(45f) }
-    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     val haptics = LocalHapticFeedback.current
-
-    LaunchedEffect(animate) {
-        if (!animate) {
-            return@LaunchedEffect
-        }
-        while (true) {
-            delay(2200)
-            bob = !bob
-        }
+    val scope = rememberCoroutineScope()
+    val systemMotion = remember(context) {
+        Settings.Global.getFloat(
+            context.contentResolver,
+            Settings.Global.ANIMATOR_DURATION_SCALE,
+            1f,
+        ) > 0f
     }
+    val motionOn = animate && systemMotion
+    val motion = rememberIdleMotion(motionOn)
+    val blinking = rememberBlink(motionOn && sizeDp >= 32.dp)
+    val blinkAlpha by animateFloatAsState(
+        targetValue = if (blinking) 1f else 0f,
+        animationSpec = tween(durationMillis = 60),
+        label = "blink",
+    )
+    var cheer by remember { mutableStateOf(false) }
+    var pulse by remember { mutableStateOf(false) }
+    var bubble by remember { mutableStateOf(false) }
+    val cheerScale by animateFloatAsState(
+        targetValue = if (cheer || state == "happy") 1.06f else 1f,
+        animationSpec = tween(durationMillis = 120),
+        label = "cheer",
+    )
+    val wiggle = remember { Animatable(0f) }
+    val badge = RoundedCornerShape(sizeDp * 0.20f)
 
-    LaunchedEffect(animate) {
-        if (!animate) {
-            return@LaunchedEffect
-        }
-        while (true) {
-            delay(4200)
-            blinking = true
-            delay(150)
-            blinking = false
-        }
-    }
-
-    LaunchedEffect(animate, state) {
+    LaunchedEffect(motionOn, state) {
         pulse = false
-        if (!animate || (state != "thinking" && state != "acting")) {
+        if (!motionOn || (state != "thinking" && state != "acting")) {
             return@LaunchedEffect
         }
         while (true) {
@@ -106,20 +111,6 @@ fun HopaMascot(
         }
     }
 
-    val lift by animateDpAsState(
-        targetValue = if (animate && (state == "idle" || state == "waiting")) {
-            if (bob) sizeDp * 0.025f else sizeDp * -0.025f
-        } else {
-            0.dp
-        },
-        animationSpec = tween(durationMillis = 900, easing = EaseInOut),
-        label = "bob",
-    )
-    val scale by animateFloatAsState(
-        targetValue = if (cheer || state == "happy") 1.06f else 1f,
-        animationSpec = tween(durationMillis = 120),
-        label = "cheer",
-    )
     val alpha = when {
         state == "error" -> 0.65f
         pulse -> 0.88f
@@ -130,101 +121,64 @@ fun HopaMascot(
         "listening" -> -2f
         else -> 0f
     }
+    val lift = if (state == "idle" || state == "waiting") {
+        sizeDp * 0.02f * motion.float
+    } else {
+        0.dp
+    }
 
     Box(
         modifier = modifier
             .size(sizeDp)
             .offset(y = lift)
-            .scale(scale)
-            .graphicsLayer(rotationZ = tilt, alpha = alpha)
-            .clickable(enabled = interactive) {
-                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                scope.launch {
-                    for (step in 1..7) {
-                        waveAngle = if (step % 2 == 1) 65f else 25f
-                        delay(180)
-                    }
-                    waveAngle = 45f
-                }
-                cheer = true
-                scope.launch {
-                    delay(260)
-                    cheer = false
-                }
-                if (sizeDp >= 56.dp) {
-                    scope.launch {
-                        delay(140)
-                        bubble = true
-                        delay(2200)
-                        bubble = false
-                    }
-                }
-            },
+            .graphicsLayer(
+                scaleX = cheerScale * (1f - 0.01f * motion.breathe),
+                scaleY = cheerScale * (1f + 0.03f * motion.breathe),
+                rotationZ = tilt + wiggle.value,
+                alpha = alpha,
+            )
+            .semantics { contentDescription = label(state) },
     ) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val w = size.width
-            val h = size.height
-            val coral = Brush.linearGradient(
-                colors = listOf(Color(0xFFF08A5B), Color(0xFFE8703A)),
-                start = Offset(w * 0.30f, h * 0.20f),
-                end = Offset(w * 0.72f, h * 0.82f),
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .shadow(elevation = 3.dp, shape = badge, clip = false)
+                .clip(badge)
+                .clickable(enabled = interactive) {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    scope.launch {
+                        wiggle.animateTo(3f, tween(durationMillis = 90))
+                        wiggle.animateTo(-3f, tween(durationMillis = 90))
+                        wiggle.animateTo(0f, tween(durationMillis = 90))
+                    }
+                    cheer = true
+                    scope.launch {
+                        delay(260)
+                        cheer = false
+                    }
+                    if (sizeDp >= 56.dp && state != "thinking" && state != "acting") {
+                        scope.launch {
+                            delay(140)
+                            bubble = true
+                            delay(2200)
+                            bubble = false
+                        }
+                    }
+                },
+        ) {
+            Image(
+                painter = painterResource(R.drawable.hopa_plush),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
             )
-
-            drawRoundRect(
-                color = Color(0xFFE8703A),
-                topLeft = Offset(w * 0.3516f, h * 0.8242f),
-                size = Size(w * 0.0859f, h * 0.0859f),
-                cornerRadius = CornerRadius(w * 0.0273f),
+            Image(
+                painter = painterResource(R.drawable.hopa_plush_blink),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                alpha = blinkAlpha,
+                modifier = Modifier.fillMaxSize(),
             )
-            drawRoundRect(
-                color = Color(0xFFE8703A),
-                topLeft = Offset(w * 0.5195f, h * 0.8242f),
-                size = Size(w * 0.0859f, h * 0.0859f),
-                cornerRadius = CornerRadius(w * 0.0273f),
-            )
-            drawRoundRect(
-                brush = coral,
-                topLeft = Offset(w * 0.2734f, h * 0.1719f),
-                size = Size(w * 0.4492f, h * 0.6563f),
-                cornerRadius = CornerRadius(w * 0.1406f),
-            )
-            drawRoundRect(
-                color = Color(0xFFFFF9F0),
-                topLeft = Offset(w * 0.3379f, h * 0.2539f),
-                size = Size(w * 0.3203f, h * 0.4531f),
-                cornerRadius = CornerRadius(w * 0.0820f),
-            )
-            if (!blinking) {
-                drawRoundRect(
-                    color = Color(0xFF1C1B18),
-                    topLeft = Offset(w * 0.4141f, h * 0.3984f),
-                    size = Size(w * 0.0508f, h * 0.1133f),
-                    cornerRadius = CornerRadius(w * 0.0254f),
-                )
-                drawRoundRect(
-                    color = Color(0xFF1C1B18),
-                    topLeft = Offset(w * 0.5469f, h * 0.3984f),
-                    size = Size(w * 0.0508f, h * 0.1133f),
-                    cornerRadius = CornerRadius(w * 0.0254f),
-                )
-            }
-            val smile = Path().apply {
-                moveTo(w * 0.4609f, h * 0.5703f)
-                quadraticBezierTo(w * 0.5098f, h * 0.6094f, w * 0.5586f, h * 0.5703f)
-            }
-            drawPath(
-                path = smile,
-                color = Color(0xFF1C1B18),
-                style = Stroke(width = w * 0.0254f, cap = StrokeCap.Round),
-            )
-            rotate(degrees = waveAngle, pivot = Offset(w * 0.744f, h * 0.381f)) {
-                drawRoundRect(
-                    color = HopaColor.Accent,
-                    topLeft = Offset(w * 0.713f, h * 0.281f),
-                    size = Size(w * 0.062f, h * 0.20f),
-                    cornerRadius = CornerRadius(w * 0.031f),
-                )
-            }
         }
 
         if (bubble && sizeDp >= 56.dp) {
@@ -269,6 +223,72 @@ fun HopaMascot(
             }
         }
     }
+}
+
+private data class IdleMotion(val float: Float, val breathe: Float)
+
+@Composable
+private fun rememberIdleMotion(animate: Boolean): IdleMotion {
+    if (!animate) {
+        return IdleMotion(0f, 0f)
+    }
+    val transition = rememberInfiniteTransition(label = "hopa-idle")
+    val float by transition.animateFloat(
+        initialValue = -1f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 2400, easing = EaseInOut),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "float",
+    )
+    val breathe by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 2400, easing = EaseInOut),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "breathe",
+    )
+    return IdleMotion(float, breathe)
+}
+
+@Composable
+private fun rememberBlink(enabled: Boolean): Boolean {
+    var blinking by remember { mutableStateOf(false) }
+    LaunchedEffect(enabled) {
+        blinking = false
+        if (!enabled) {
+            return@LaunchedEffect
+        }
+        while (true) {
+            delay(4200)
+            blinking = true
+            delay(150)
+            blinking = false
+        }
+    }
+    return blinking
+}
+
+private fun label(state: String): String {
+    if (state == "thinking" || state == "acting") {
+        return "HOPA is working"
+    }
+    if (state == "waiting") {
+        return "HOPA is waiting for your approval"
+    }
+    if (state == "listening") {
+        return "HOPA is listening"
+    }
+    if (state == "happy") {
+        return "HOPA finished"
+    }
+    if (state == "error") {
+        return "HOPA could not finish"
+    }
+    return "HOPA"
 }
 
 private fun bubblePath(w: Float, h: Float): Path {
