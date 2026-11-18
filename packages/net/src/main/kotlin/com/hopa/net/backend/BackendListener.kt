@@ -6,6 +6,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
@@ -60,6 +62,13 @@ internal class BackendListener(
     override fun onMessage(webSocket: WebSocket, text: String) {
         if (!active.get()) return
         val frame = BackendCodec.decodeOrNull(text) ?: return
+        // The gateway refuses an expired token with this frame and then closes.
+        // OkHttp reports that close as a socket failure, not a 1008 close, so
+        // the frame is the only signal that a refresh is required.
+        if (frame.type == ERROR && frame.body["code"]?.jsonPrimitive?.contentOrNull == AUTH_CODE) {
+            finish(BackendClose(BackendClose.AUTH_CLOSE, BackendClose.AUTH_REASON, AUTH_MESSAGE))
+            return
+        }
         if (frame.type == HELLO_ACK) {
             acked = true
             handshake?.cancel()
@@ -90,6 +99,9 @@ internal class BackendListener(
 
     private companion object {
         const val HELLO_ACK = "device.hello.ack"
+        const val ERROR = "error"
+        const val AUTH_CODE = "E_AUTH"
+        const val AUTH_MESSAGE = "the gateway needs a new token"
         const val CLOSE_HELLO = 4000
         const val HELLO_TIMEOUT = "the gateway did not answer the hello"
     }

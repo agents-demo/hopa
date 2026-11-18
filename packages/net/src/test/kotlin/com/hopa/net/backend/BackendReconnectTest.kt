@@ -39,6 +39,27 @@ class BackendReconnectTest {
     }
 
     @Test
+    fun `an E_AUTH error frame that ends in a socket failure refreshes once`() = runBlocking {
+        var refreshes = 0
+        val tokens = CopyOnWriteArrayList<String>()
+        val server = MockWebServer()
+        repeat(2) { enqueueAuthFrame(server, tokens) }
+        val client = clientFor(
+            server,
+            refresh = {
+                refreshes++
+                if (refreshes == 1) credentials(server, accessToken = "a2") else null
+            },
+        )
+        client.start(this)
+        withTimeout(5_000) { client.state.first { it is BackendState.Failed && it.needsPairing } }
+        assertEquals(2, refreshes)
+        assertEquals(listOf("Bearer a1", "Bearer a2"), tokens.toList())
+        client.stop()
+        server.shutdown()
+    }
+
+    @Test
     fun `a close that is not an auth close reconnects without refreshing`() = runBlocking {
         val refreshes = AtomicInteger()
         val server = MockWebServer()
@@ -94,6 +115,31 @@ class BackendReconnectTest {
 
             override fun onMessage(webSocket: WebSocket, text: String) {
                 webSocket.close(1008, "E_AUTH")
+            }
+        }))
+    }
+
+    /**
+     * What Ktor actually does on an expired token: the error frame, then a
+     * close. OkHttp surfaces the close as a failure, so the frame is the only
+     * reliable signal that the token must be refreshed.
+     */
+    private fun enqueueAuthFrame(server: MockWebServer, tokens: MutableList<String>) {
+        server.enqueue(MockResponse().withWebSocketUpgrade(object : FakeGateway() {
+            override fun onOpen(webSocket: WebSocket, response: Response) {
+                tokens += response.request.header("Authorization").orEmpty()
+            }
+
+            override fun onMessage(webSocket: WebSocket, text: String) {
+                webSocket.send(
+                    """{"v":1,"id":"e1","type":"error","ts":1,
+                    "body":{"code":"E_AUTH","message":"unknown or expired token"}}""".trimIndent(),
+                )
+                // Let the frame reach the client before the abrupt close: on the
+                // real gateway the frame is followed by a close that OkHttp
+                // reports as a failure, not a 1008.
+                Thread.sleep(200)
+                webSocket.cancel()
             }
         }))
     }

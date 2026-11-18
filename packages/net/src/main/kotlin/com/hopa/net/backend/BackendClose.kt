@@ -7,7 +7,7 @@ package com.hopa.net.backend
 internal class BackendClose(val code: Int, val reason: String, val message: String) {
     val auth: Boolean get() = code == AUTH_CLOSE && reason == AUTH_REASON
 
-    private companion object {
+    internal companion object {
         const val AUTH_CLOSE = 1008
         const val AUTH_REASON = "E_AUTH"
     }
