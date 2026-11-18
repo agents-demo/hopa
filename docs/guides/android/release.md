@@ -11,20 +11,26 @@ APK: `app/build/outputs/apk/debug/app-debug.apk`.
 
 ## Launcher icon
 
-The icon is a layered adaptive icon: an opaque cream background layer
-(`@color/ic_launcher_background`) and a transparent mascot foreground that stays
-inside the 66 dp safe zone, plus a monochrome layer for themed icons. Regenerate
-the bitmaps after changing the mark:
+The icon is the plush photo on its own cream field (`#F7F1E6`): a 108 dp
+adaptive foreground with the figure at 47% so the raised hand stays inside the
+66 dp safe circle, legacy 48 dp rasters, and a hand-drawn monochrome silhouette
+in `drawable/ic_launcher_monochrome.xml` for themed icons. Regenerate the
+bitmaps after changing the artwork:
 
 ```
 python tools/scripts/make-icon.py
 ```
 
-It reads the geometry shared with `hopa_body.svg` and writes the density
-`ic_launcher.png` / `ic_launcher_foreground.png` files and
-`docs/media/mascot-2026.png` (transparent, 512 px). Every PNG it writes has an
-alpha channel; only the adaptive background layer is opaque, because Android
-masks that layer with the launcher shape.
+It reads `tools/assets/hopa-plush-2026.jpg` and writes:
+- `mipmap-*/ic_launcher.png` (legacy, full-bleed);
+- `mipmap-*/ic_launcher_foreground.png` (adaptive foreground);
+- `drawable-nodpi/hopa_plush.png` and `hopa_plush_blink.png` (chat avatar);
+- the Windows `Assets/mascot*.png` and `hopa.ico`;
+- `docs/media/hopa-plush-2026.png` (store/docs raster).
+
+The background layer stays a solid colour rather than a bitmap, so launcher
+parallax cannot reveal a seam. Every generated PNG is opaque; only the Windows
+ICO has transparent (rounded) corners. The monochrome layer is not generated.
 
 ## Release signature
 
