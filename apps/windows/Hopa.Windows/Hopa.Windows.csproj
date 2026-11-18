@@ -13,6 +13,7 @@
     <Product>HOPA</Product>
     <Company>HOPA</Company>
     <AssemblyTitle>HOPA for Windows</AssemblyTitle>
+    <ApplicationIcon>Assets\hopa.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <!-- WPF reads DPI awareness from the manifest; the WinForms analyzer asks for
          ApplicationHighDpiMode instead, which WPF does not use. -->
@@ -33,6 +34,8 @@
 
   <ItemGroup>
     <Resource Include="Assets\mascot.png" />
+    <Resource Include="Assets\mascot-blink.png" />
+    <Resource Include="Assets\hopa.ico" />
   </ItemGroup>
 
 </Project>
