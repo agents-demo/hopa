@@ -6,7 +6,6 @@ import com.hopa.engine.contracts.Decision
 import com.hopa.engine.contracts.ErrorCodes
 import com.hopa.engine.contracts.HopaError
 import com.hopa.engine.json.HopaJson
-import com.hopa.engine.parser.DecisionRules
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull

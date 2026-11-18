@@ -1,10 +1,10 @@
 package com.hopa.engine.router
 
+import com.hopa.engine.ports.InstalledApp
 import com.hopa.knowledge.APP_CATALOG
 import com.hopa.knowledge.CatalogApp
 import com.hopa.knowledge.CatalogTarget
 import com.hopa.knowledge.SITE_CATALOG
-import com.hopa.engine.ports.InstalledApp
 
 /**
  * The catalog is one list for every platform; this is where a client asks for

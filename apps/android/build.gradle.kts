@@ -11,10 +11,10 @@ plugins {
 }
 
 // ktlint lives here, not in packages/engine, because the Windows sidecar also
-// includes that module and does not have the plugin. :core is the first module
+// includes that module and does not have the plugin. :engine is the first module
 // held to zero style warnings; the rest follow module by module.
 subprojects {
-    if (name == "core") {
+    if (name == "engine") {
         apply(plugin = "org.jlleitschuh.gradle.ktlint")
         extensions.configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
             filter { exclude("**/catalog/AppCatalog.kt") }

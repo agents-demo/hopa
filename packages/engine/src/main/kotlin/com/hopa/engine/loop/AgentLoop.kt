@@ -11,7 +11,6 @@ import com.hopa.engine.model.ModelMessage
 import com.hopa.engine.model.ModelPort
 import com.hopa.engine.model.ModelRequest
 import com.hopa.engine.model.ModelUsage
-import com.hopa.engine.loop.RunNarrator
 import com.hopa.engine.parser.DecisionParser
 import com.hopa.engine.ports.Clock
 import com.hopa.engine.ports.DevicePort
