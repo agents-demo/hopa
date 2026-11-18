@@ -1,11 +1,11 @@
 package com.hopa.app.backend
 
-import com.hopa.capabilities.backend.BackendCredentials
-import com.hopa.capabilities.backend.BackendPairing
-import com.hopa.capabilities.backend.BackendPairingFailure
-import com.hopa.capabilities.backend.PairingLink
-import com.hopa.capabilities.backend.X25519Keys
-import com.hopa.data.settings.SettingsRepository
+import com.hopa.net.backend.BackendCredentials
+import com.hopa.net.backend.BackendPairing
+import com.hopa.net.backend.BackendPairingFailure
+import com.hopa.net.backend.PairingLink
+import com.hopa.net.backend.X25519Keys
+import com.hopa.stores.SettingsRepository
 import java.util.Base64
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable

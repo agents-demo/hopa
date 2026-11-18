@@ -1,7 +1,7 @@
 package com.hopa.app.backend
 
 import android.content.Context
-import com.hopa.capabilities.backend.ProcessedTaskLog
+import com.hopa.net.backend.ProcessedTaskLog
 
 /**
  * The processed-task log on disk: one preferences entry per task id. A

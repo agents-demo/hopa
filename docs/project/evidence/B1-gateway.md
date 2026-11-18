@@ -1,4 +1,4 @@
-﻿# B1 — week-1 gateway evidence
+# B1 — week-1 gateway evidence
 
 Date: 2026-11-16 (definition-of-done run). Spec:
 [`../plan/backend/week1.md`](../plan/backend/week1.md) section 8. Slice plan:

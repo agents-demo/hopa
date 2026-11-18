@@ -613,11 +613,6 @@ class SettingsViewModel(
         }
     }
 
-    /** Re-read the saved identity and the FCM registration on demand. */
-    fun refresh() {
-        viewModelScope.launch { reload() }
-    }
-
     /**
      * Android binds the accessibility service a moment after the app resumes.
      * The pill reads this snapshot, so it is refreshed on resume and polled

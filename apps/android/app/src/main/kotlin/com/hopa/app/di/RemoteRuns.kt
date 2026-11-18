@@ -1,9 +1,9 @@
 package com.hopa.app.di
 
 import com.hopa.app.backend.RemoteRunRequest
-import com.hopa.core.loop.TurnContext
-import com.hopa.core.loop.TurnResult
-import com.hopa.core.observation.ScreenSourceDevice
+import com.hopa.engine.loop.TurnContext
+import com.hopa.engine.loop.TurnResult
+import com.hopa.engine.observation.ScreenSourceDevice
 
 /**
  * The turn a delivered task runs. The context is the one the chat builds: what

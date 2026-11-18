@@ -1,7 +1,7 @@
 package com.hopa.app.feature.settings
 
-import com.hopa.capabilities.backend.PairingLink
-import com.hopa.capabilities.backend.PairingLinks
+import com.hopa.net.backend.PairingLink
+import com.hopa.net.backend.PairingLinks
 
 /**
  * The one field that takes either a whole `hopa://pair…` link or a bare

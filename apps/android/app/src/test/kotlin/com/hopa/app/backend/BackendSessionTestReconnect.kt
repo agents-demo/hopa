@@ -3,7 +3,7 @@ package com.hopa.app.backend
 import com.hopa.app.backend.SessionFixtures.FakeLink
 import com.hopa.app.backend.SessionFixtures.FakeSettings
 import com.hopa.app.backend.SessionFixtures.session
-import com.hopa.capabilities.backend.BackendState
+import com.hopa.net.backend.BackendState
 import java.util.Collections
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.delay

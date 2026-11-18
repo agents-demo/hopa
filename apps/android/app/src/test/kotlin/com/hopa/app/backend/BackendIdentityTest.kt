@@ -3,8 +3,8 @@ package com.hopa.app.backend
 import com.hopa.app.backend.SessionFixtures.FakeSettings
 import com.hopa.app.backend.SessionFixtures.gateway
 import com.hopa.app.backend.SessionFixtures.pairingServer
-import com.hopa.capabilities.backend.BackendPairing
-import com.hopa.capabilities.backend.BackendPairingFailure
+import com.hopa.net.backend.BackendPairing
+import com.hopa.net.backend.BackendPairingFailure
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

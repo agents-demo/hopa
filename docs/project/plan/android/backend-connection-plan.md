@@ -4,7 +4,7 @@
 
 **Goal:** Pair the HOPA Android app with the deployed backend, connect it to the gateway, run a delivered task on the configured surface, and prove an FCM wake on the Xiaomi 15T Pro.
 
-**Architecture:** A pure-JVM `BackendClient` in `:capabilities` (OkHttp WebSocket, no Android imports) beside `BridgeClient`, wired by an app-level `BackendSession` in `AppContainer`; a `FirebaseMessagingService` that reconnects for a wake; `RemoteTaskRunner` that reuses `AgentLoop` on the same surface `ChatViewModel` uses; two PC scripts that mint the pairing link and send a task.
+**Architecture:** A pure-JVM `BackendClient` in `:net` (OkHttp WebSocket, no Android imports) beside `BridgeClient`, wired by an app-level `BackendSession` in `AppContainer`; a `FirebaseMessagingService` that reconnects for a wake; `RemoteTaskRunner` that reuses `AgentLoop` on the same surface `ChatViewModel` uses; two PC scripts that mint the pairing link and send a task.
 
 **Tech Stack:** Kotlin 2.0.21 / JVM 17, OkHttp 4.12.0, kotlinx.serialization 1.7.3, MockWebServer, Firebase BOM 33.7.0 + messaging, Google services plugin 4.4.2, AGP 8.7.3.
 
@@ -13,13 +13,13 @@
 ## Global Constraints
 
 - Every file has one public declaration and its name matches the file (`check-android-structure.py`, `check-structure.py`); files stay under 250 lines.
-- `:capabilities` is pure JVM: no `android.*` imports. `:core:check` enforces the same rule for `:core`.
+- `:net` is pure JVM: no `android.*` imports. `:engine:check` enforces the same rule for `:engine`.
 - Tokens, the pairing session and the private key never appear in logs, notifications, commit messages or fixture files.
 - Protocol v1 is frozen: envelope fields `v, id, type, ts, trace, from, to, task, body`; no backend change.
 - Deployed gateway: `wss://hopa-backend-test.onrender.com/v1/gateway`; HTTP base derived by `https` + stripping `/v1/gateway`.
 - Android: `minSdk 29`, `targetSdk 35`, applicationId `com.hopa.android`, Kotlin `jvmTarget 17`.
 - Run cap 170 s inside `RunService` (`shortService`, 3-minute platform limit); approval wait 120 s inside it.
-- Test commands: `apps\android\gradlew.bat -p apps/android :capabilities:test`, `apps\android\gradlew.bat -p apps/android :app:testDebugUnitTest`, `apps\android\gradlew.bat -p apps/android :app:assembleDebug`.
+- Test commands: `apps\android\gradlew.bat -p apps/android :net:test`, `apps\android\gradlew.bat -p apps/android :app:testDebugUnitTest`, `apps\android\gradlew.bat -p apps/android :app:assembleDebug`.
 
 ## Review Focus
 
@@ -34,13 +34,13 @@
 ### Task 1: Pairing link, credentials and X25519 keys
 
 **Files:**
-- Create: `packages/capabilities/src/main/kotlin/com/hopa/capabilities/backend/BackendCredentials.kt`
-- Create: `packages/capabilities/src/main/kotlin/com/hopa/capabilities/backend/PairingLink.kt`
-- Create: `packages/capabilities/src/main/kotlin/com/hopa/capabilities/backend/PairingLinks.kt`
-- Create: `packages/capabilities/src/main/kotlin/com/hopa/capabilities/backend/X25519Keys.kt`
-- Create: `packages/capabilities/src/main/kotlin/com/hopa/capabilities/backend/BackendPairing.kt`
-- Test: `packages/capabilities/src/test/kotlin/com/hopa/capabilities/backend/PairingLinksTest.kt`
-- Test: `packages/capabilities/src/test/kotlin/com/hopa/capabilities/backend/BackendPairingTest.kt`
+- Create: `packages/net/src/main/kotlin/com/hopa/net/backend/BackendCredentials.kt`
+- Create: `packages/net/src/main/kotlin/com/hopa/net/backend/PairingLink.kt`
+- Create: `packages/net/src/main/kotlin/com/hopa/net/backend/PairingLinks.kt`
+- Create: `packages/net/src/main/kotlin/com/hopa/net/backend/X25519Keys.kt`
+- Create: `packages/net/src/main/kotlin/com/hopa/net/backend/BackendPairing.kt`
+- Test: `packages/net/src/test/kotlin/com/hopa/net/backend/PairingLinksTest.kt`
+- Test: `packages/net/src/test/kotlin/com/hopa/net/backend/BackendPairingTest.kt`
 
 **Interfaces:**
 - Produces:
@@ -82,7 +82,7 @@
 
 - [ ] **Step 2: Run the tests and watch them fail**
 
-Run: `apps\android\gradlew.bat -p apps/android :capabilities:test --tests "*PairingLinksTest*"`
+Run: `apps\android\gradlew.bat -p apps/android :net:test --tests "*PairingLinksTest*"`
 Expected: FAIL, unresolved reference `PairingLinks`.
 
 - [ ] **Step 3: Implement `PairingLinks` and `BackendUrls`**
@@ -116,7 +116,7 @@ Use `java.net.URI`; read query parameters by splitting on `&` and `=`, decoding 
 
 - [ ] **Step 5: Run the tests and watch them fail**
 
-Run: `apps\android\gradlew.bat -p apps/android :capabilities:test --tests "*BackendPairingTest*"`
+Run: `apps\android\gradlew.bat -p apps/android :net:test --tests "*BackendPairingTest*"`
 Expected: FAIL, unresolved reference `BackendPairing`.
 
 - [ ] **Step 6: Implement `BackendPairing` and `X25519Keys`**
@@ -135,13 +135,13 @@ Expected: FAIL, unresolved reference `BackendPairing`.
 
 - [ ] **Step 8: Run the package tests**
 
-Run: `apps\android\gradlew.bat -p apps/android :capabilities:test`
+Run: `apps\android\gradlew.bat -p apps/android :net:test`
 Expected: PASS.
 
 - [ ] **Step 9: Commit**
 
 ```bash
-git add packages/capabilities/src/main/kotlin/com/hopa/capabilities/backend packages/capabilities/src/test/kotlin/com/hopa/capabilities/backend
+git add packages/net/src/main/kotlin/com/hopa/net/backend packages/net/src/test/kotlin/com/hopa/net/backend
 git commit -m "feat(backend-client): parse pairing links, claim a session, generate x25519 keys"
 ```
 
@@ -150,9 +150,9 @@ git commit -m "feat(backend-client): parse pairing links, claim a session, gener
 ### Task 2: Envelope codec
 
 **Files:**
-- Create: `packages/capabilities/src/main/kotlin/com/hopa/capabilities/backend/BackendEnvelope.kt`
-- Create: `packages/capabilities/src/main/kotlin/com/hopa/capabilities/backend/BackendCodec.kt`
-- Test: `packages/capabilities/src/test/kotlin/com/hopa/capabilities/backend/BackendCodecTest.kt`
+- Create: `packages/net/src/main/kotlin/com/hopa/net/backend/BackendEnvelope.kt`
+- Create: `packages/net/src/main/kotlin/com/hopa/net/backend/BackendCodec.kt`
+- Test: `packages/net/src/test/kotlin/com/hopa/net/backend/BackendCodecTest.kt`
 
 **Interfaces:**
 - Produces:
@@ -189,7 +189,7 @@ git commit -m "feat(backend-client): parse pairing links, claim a session, gener
 
 - [ ] **Step 2: Run the tests and watch them fail**
 
-Run: `apps\android\gradlew.bat -p apps/android :capabilities:test --tests "*BackendCodecTest*"`
+Run: `apps\android\gradlew.bat -p apps/android :net:test --tests "*BackendCodecTest*"`
 Expected: FAIL, unresolved reference `BackendCodec`.
 
 - [ ] **Step 3: Implement the codec**
@@ -198,13 +198,13 @@ Build the JSON with `buildJsonObject` and ignore unknown keys on decode; `decode
 
 - [ ] **Step 4: Run the tests**
 
-Run: `apps\android\gradlew.bat -p apps/android :capabilities:test --tests "*BackendCodecTest*"`
+Run: `apps\android\gradlew.bat -p apps/android :net:test --tests "*BackendCodecTest*"`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add packages/capabilities/src/main/kotlin/com/hopa/capabilities/backend/BackendEnvelope.kt packages/capabilities/src/main/kotlin/com/hopa/capabilities/backend/BackendCodec.kt packages/capabilities/src/test/kotlin/com/hopa/capabilities/backend/BackendCodecTest.kt
+git add packages/net/src/main/kotlin/com/hopa/net/backend/BackendEnvelope.kt packages/net/src/main/kotlin/com/hopa/net/backend/BackendCodec.kt packages/net/src/test/kotlin/com/hopa/net/backend/BackendCodecTest.kt
 git commit -m "feat(backend-client): encode and decode the v1 gateway envelope"
 ```
 
@@ -213,10 +213,10 @@ git commit -m "feat(backend-client): encode and decode the v1 gateway envelope"
 ### Task 3: Client connects, says hello, and reports live
 
 **Files:**
-- Create: `packages/capabilities/src/main/kotlin/com/hopa/capabilities/backend/BackendState.kt`
-- Create: `packages/capabilities/src/main/kotlin/com/hopa/capabilities/backend/BackendLink.kt`
-- Create: `packages/capabilities/src/main/kotlin/com/hopa/capabilities/backend/BackendClient.kt`
-- Test: `packages/capabilities/src/test/kotlin/com/hopa/capabilities/backend/BackendClientTest.kt`
+- Create: `packages/net/src/main/kotlin/com/hopa/net/backend/BackendState.kt`
+- Create: `packages/net/src/main/kotlin/com/hopa/net/backend/BackendLink.kt`
+- Create: `packages/net/src/main/kotlin/com/hopa/net/backend/BackendClient.kt`
+- Test: `packages/net/src/test/kotlin/com/hopa/net/backend/BackendClientTest.kt`
 
 **Interfaces:**
 - Consumes: `BackendCodec`, `BackendEnvelope`, `BackendCredentials`.
@@ -252,7 +252,7 @@ git commit -m "feat(backend-client): encode and decode the v1 gateway envelope"
 
 - [ ] **Step 2: Run it and watch it fail**
 
-Run: `apps\android\gradlew.bat -p apps/android :capabilities:test --tests "*BackendClientTest*"`
+Run: `apps\android\gradlew.bat -p apps/android :net:test --tests "*BackendClientTest*"`
 Expected: FAIL, unresolved reference `BackendClient`.
 
 - [ ] **Step 3: Implement connect + hello**
@@ -261,7 +261,7 @@ Expected: FAIL, unresolved reference `BackendClient`.
 
 - [ ] **Step 4: Run the test**
 
-Run: `apps\android\gradlew.bat -p apps/android :capabilities:test --tests "*BackendClientTest*"`
+Run: `apps\android\gradlew.bat -p apps/android :net:test --tests "*BackendClientTest*"`
 Expected: PASS.
 
 - [ ] **Step 5: Add the malformed-frame test (Review Focus 1)**
@@ -274,11 +274,11 @@ Expected: PASS.
 
 - [ ] **Step 6: Run it, then commit**
 
-Run: `apps\android\gradlew.bat -p apps/android :capabilities:test --tests "*BackendClientTest*"`
+Run: `apps\android\gradlew.bat -p apps/android :net:test --tests "*BackendClientTest*"`
 Expected: PASS.
 
 ```bash
-git add packages/capabilities/src/main/kotlin/com/hopa/capabilities/backend/BackendState.kt packages/capabilities/src/main/kotlin/com/hopa/capabilities/backend/BackendClient.kt packages/capabilities/src/test/kotlin/com/hopa/capabilities/backend/BackendClientTest.kt
+git add packages/net/src/main/kotlin/com/hopa/net/backend/BackendState.kt packages/net/src/main/kotlin/com/hopa/net/backend/BackendClient.kt packages/net/src/test/kotlin/com/hopa/net/backend/BackendClientTest.kt
 git commit -m "feat(backend-client): connect to the gateway and go live on hello.ack"
 ```
 
@@ -287,9 +287,9 @@ git commit -m "feat(backend-client): connect to the gateway and go live on hello
 ### Task 4: Deliveries, acks and replies
 
 **Files:**
-- Modify: `packages/capabilities/src/main/kotlin/com/hopa/capabilities/backend/BackendClient.kt`
-- Create: `packages/capabilities/src/main/kotlin/com/hopa/capabilities/backend/BackendReplies.kt`
-- Test: `packages/capabilities/src/test/kotlin/com/hopa/capabilities/backend/BackendDeliveriesTest.kt`
+- Modify: `packages/net/src/main/kotlin/com/hopa/net/backend/BackendClient.kt`
+- Create: `packages/net/src/main/kotlin/com/hopa/net/backend/BackendReplies.kt`
+- Test: `packages/net/src/test/kotlin/com/hopa/net/backend/BackendDeliveriesTest.kt`
 
 **Interfaces:**
 - Produces:
@@ -331,7 +331,7 @@ git commit -m "feat(backend-client): connect to the gateway and go live on hello
 
 - [ ] **Step 2: Run it and watch it fail**
 
-Run: `apps\android\gradlew.bat -p apps/android :capabilities:test --tests "*BackendDeliveriesTest*"`
+Run: `apps\android\gradlew.bat -p apps/android :net:test --tests "*BackendDeliveriesTest*"`
 Expected: FAIL, unresolved `onTask`/`ack`.
 
 - [ ] **Step 3: Implement delivery dispatch, ack and the reply builders**
@@ -340,7 +340,7 @@ Dispatch `task.create` on a coroutine so a slow handler cannot stall the reader;
 
 - [ ] **Step 4: Run the tests**
 
-Run: `apps\android\gradlew.bat -p apps/android :capabilities:test`
+Run: `apps\android\gradlew.bat -p apps/android :net:test`
 Expected: PASS.
 
 - [ ] **Step 5: Add the "unknown type is ignored" test**
@@ -350,7 +350,7 @@ Server sends `type:"task.needs_approval"`, then a valid hello.ack; assert `Live`
 - [ ] **Step 6: Commit**
 
 ```bash
-git add packages/capabilities/src/main/kotlin/com/hopa/capabilities/backend packages/capabilities/src/test/kotlin/com/hopa/capabilities/backend
+git add packages/net/src/main/kotlin/com/hopa/net/backend packages/net/src/test/kotlin/com/hopa/net/backend
 git commit -m "feat(backend-client): dispatch delivered tasks, ack them, and build result frames"
 ```
 
@@ -359,10 +359,10 @@ git commit -m "feat(backend-client): dispatch delivered tasks, ack them, and bui
 ### Task 5: Refresh once, reconnect, wake window, and the processed log
 
 **Files:**
-- Modify: `packages/capabilities/src/main/kotlin/com/hopa/capabilities/backend/BackendClient.kt`
-- Create: `packages/capabilities/src/main/kotlin/com/hopa/capabilities/backend/ProcessedTaskLog.kt`
-- Test: `packages/capabilities/src/test/kotlin/com/hopa/capabilities/backend/BackendReconnectTest.kt`
-- Test: `packages/capabilities/src/test/kotlin/com/hopa/capabilities/backend/ProcessedTaskLogTest.kt`
+- Modify: `packages/net/src/main/kotlin/com/hopa/net/backend/BackendClient.kt`
+- Create: `packages/net/src/main/kotlin/com/hopa/net/backend/ProcessedTaskLog.kt`
+- Test: `packages/net/src/test/kotlin/com/hopa/net/backend/BackendReconnectTest.kt`
+- Test: `packages/net/src/test/kotlin/com/hopa/net/backend/ProcessedTaskLogTest.kt`
 
 **Interfaces:**
 - Produces:
@@ -385,7 +385,7 @@ git commit -m "feat(backend-client): dispatch delivered tasks, ack them, and bui
 
 - [ ] **Step 2: Run it and watch it fail**
 
-Run: `apps\android\gradlew.bat -p apps/android :capabilities:test --tests "*BackendReconnectTest*"`
+Run: `apps\android\gradlew.bat -p apps/android :net:test --tests "*BackendReconnectTest*"`
 Expected: FAIL.
 
 - [ ] **Step 3: Implement backoff and the single refresh**
@@ -409,13 +409,13 @@ Reconnect delays 1/2/4/8 s capped at 30 s; a refresh happens at most once per `E
 
 - [ ] **Step 5: Implement `ProcessedTaskLog` and run all client tests**
 
-Run: `apps\android\gradlew.bat -p apps/android :capabilities:test`
+Run: `apps\android\gradlew.bat -p apps/android :net:test`
 Expected: PASS.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add packages/capabilities/src/main/kotlin/com/hopa/capabilities/backend packages/capabilities/src/test/kotlin/com/hopa/capabilities/backend
+git add packages/net/src/main/kotlin/com/hopa/net/backend packages/net/src/test/kotlin/com/hopa/net/backend
 git commit -m "feat(backend-client): reconnect with backoff, refresh once per auth close, and dedupe tasks"
 ```
 
@@ -424,9 +424,9 @@ git commit -m "feat(backend-client): reconnect with backoff, refresh once per au
 ### Task 6: Persist the backend identity
 
 **Files:**
-- Modify: `packages/data/src/main/kotlin/com/hopa/data/settings/AppSettings.kt`
-- Modify: `packages/data/src/main/kotlin/com/hopa/data/settings/SettingsRepository.kt`
-- Modify: `apps/android/data/src/main/kotlin/com/hopa/data/settings/DataStoreSettingsRepository.kt`
+- Modify: `packages/stores/src/main/kotlin/com/hopa/stores/AppSettings.kt`
+- Modify: `packages/stores/src/main/kotlin/com/hopa/stores/SettingsRepository.kt`
+- Modify: `apps/android/data/src/main/kotlin/com/hopa/data/store/DataStoreSettingsRepository.kt`
 - Test: `tools/checks/check-settings-fields.py` (existing check, run as the test)
 
 **Interfaces:**
@@ -455,7 +455,7 @@ Expected: BUILD SUCCESSFUL.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add packages/data/src/main/kotlin/com/hopa/data/settings apps/android/data/src/main/kotlin/com/hopa/data/settings
+git add packages/stores/src/main/kotlin/com/hopa/stores apps/android/data/src/main/kotlin/com/hopa/data/store
 git commit -m "feat(data): store the backend device identity and keep its tokens in the keystore"
 ```
 
@@ -797,7 +797,7 @@ Add to `B1-gateway.md` row 4: phone model, Android version, pairing, the awake r
 
 - [ ] **Step 6: Full verification**
 
-Run: `apps\android\gradlew.bat -p apps/android :capabilities:test :app:testDebugUnitTest`, `apps\android\gradlew.bat -p services/backend :test` (Docker up), `.\.venv\Scripts\python.exe tools/checks/check-android-structure.py`, `check-structure.py`, `check-links.py`.
+Run: `apps\android\gradlew.bat -p apps/android :net:test :app:testDebugUnitTest`, `apps\android\gradlew.bat -p services/backend :test` (Docker up), `.\.venv\Scripts\python.exe tools/checks/check-android-structure.py`, `check-structure.py`, `check-links.py`.
 Expected: all green; only the known `check-tree.py` stale-folder warnings remain.
 
 - [ ] **Step 7: Commit**

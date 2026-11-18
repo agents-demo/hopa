@@ -1,12 +1,12 @@
 package com.hopa.app.backend
 
-import com.hopa.capabilities.backend.BackendCredentials
-import com.hopa.capabilities.backend.BackendEnvelope
-import com.hopa.capabilities.backend.BackendLink
-import com.hopa.capabilities.backend.BackendPairing
-import com.hopa.capabilities.backend.BackendState
-import com.hopa.data.settings.AppSettings
-import com.hopa.data.settings.SettingsRepository
+import com.hopa.net.backend.BackendCredentials
+import com.hopa.net.backend.BackendEnvelope
+import com.hopa.net.backend.BackendLink
+import com.hopa.net.backend.BackendPairing
+import com.hopa.net.backend.BackendState
+import com.hopa.stores.AppSettings
+import com.hopa.stores.SettingsRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

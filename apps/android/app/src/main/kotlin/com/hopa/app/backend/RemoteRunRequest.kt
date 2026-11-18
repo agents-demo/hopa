@@ -1,7 +1,7 @@
 package com.hopa.app.backend
 
-import com.hopa.core.observation.ScreenSourceDevice
-import com.hopa.data.settings.AppSettings
+import com.hopa.engine.observation.ScreenSourceDevice
+import com.hopa.stores.AppSettings
 
 /**
  * One turn a delivered task asks for. The runner owns the surface and the

@@ -1,7 +1,7 @@
 package com.hopa.app.di
 
 import com.hopa.capabilities.device.UnavailableDevicePort
-import com.hopa.core.observation.ScreenSourceDevice
+import com.hopa.engine.observation.ScreenSourceDevice
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

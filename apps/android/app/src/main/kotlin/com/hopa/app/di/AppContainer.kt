@@ -114,9 +114,9 @@ class AppContainer(context: Context) {
     val backend: BackendSession by lazy {
         BackendSession(
             settings = settings,
-            pairingFactory = { url -> com.hopa.capabilities.backend.BackendPairing(url) },
+            pairingFactory = { url -> com.hopa.net.backend.BackendPairing(url) },
             linkFactory = { credentials, name, version, pushToken, refresh ->
-                com.hopa.capabilities.backend.BackendClient(
+                com.hopa.net.backend.BackendClient(
                     credentials = { credentials },
                     pushToken = pushToken,
                     refresh = refresh,

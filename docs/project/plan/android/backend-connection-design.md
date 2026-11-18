@@ -89,8 +89,8 @@ server half is proven; this is the missing client half, on a Xiaomi 15T Pro
 
 ### 1. Client package (pure JVM, testable)
 
-New package `com.hopa.capabilities.backend` in `:capabilities`, beside
-`bridge/`. It has no Android imports, so `:capabilities:test` covers it with
+New package `com.hopa.net.backend` in `:net`, beside
+`bridge/`. It has no Android imports, so `:net:test` covers it with
 MockWebServer.
 
 - `BackendEnvelope` — the v1 envelope as `kotlinx.serialization` with
@@ -215,9 +215,9 @@ already used for FCM, then fetch its config:
 
 ## Files (expected)
 
-- `packages/capabilities/src/main/kotlin/com/hopa/capabilities/backend/` — the
+- `packages/net/src/main/kotlin/com/hopa/net/backend/` — the
   client files, one declaration per file.
-- `packages/capabilities/src/test/kotlin/com/hopa/capabilities/backend/` — tests.
+- `packages/net/src/test/kotlin/com/hopa/net/backend/` — tests.
 - `apps/android/app/src/main/kotlin/com/hopa/app/backend/` — `BackendSession`,
   `RemoteTaskRunner`, `HopaMessagingService`.
 - `apps/android/app/src/main/kotlin/com/hopa/app/di/AppContainer.kt` — the shared
@@ -235,7 +235,7 @@ already used for FCM, then fetch its config:
 
 ## Verification
 
-1. `:capabilities:test` green, including the new backend tests;
+1. `:net:test` green, including the new backend tests;
    `check-android-structure.py` and `check-structure.py` clean.
 2. Phone installed through `android-device-checks.ps1 -InstallOnly` (the
    exec-in stager, because the host blocks "install").
