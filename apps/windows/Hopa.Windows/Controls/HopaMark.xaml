@@ -9,7 +9,6 @@
             </TransformGroup>
         </Grid.RenderTransform>
         <Image x:Name="Base" Source="pack://application:,,,/Assets/mascot.png" Stretch="UniformToFill" />
-        <Image x:Name="Blink" Source="pack://application:,,,/Assets/mascot-blink.png"
-               Stretch="UniformToFill" Opacity="0" />
+        <Image x:Name="Blink" Stretch="UniformToFill" Opacity="0" />
     </Grid>
 </UserControl>

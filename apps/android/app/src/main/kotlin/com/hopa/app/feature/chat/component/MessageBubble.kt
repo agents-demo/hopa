@@ -92,7 +92,7 @@ fun MessageBubble(
                     }
                 }
             } else {
-                HopaMascot(sizeDp = 26.dp, animate = false)
+                HopaMascot(sizeDp = 26.dp, animate = false, interactive = false)
                 Column(
                     modifier = Modifier.padding(start = 8.dp, top = 2.dp, end = 8.dp),
                 ) {

@@ -93,21 +93,24 @@ def blink_frame(image: Image.Image) -> Image.Image:
     frame = image.copy()
     draw = ImageDraw.Draw(frame)
     for cx, cy in EYES:
-        # Fur from the forehead, one eye-height above, so no eye or mouth
-        # pixel can leak into the patch. A feathered ellipse keeps the seam
-        # invisible at every size.
-        patch = frame.crop((cx - 20, cy - 54, cx + 20, cy - 14))
-        patch = patch.filter(ImageFilter.GaussianBlur(1.0))
+        # Fur from the outer cheek at the eye's own height: it carries the
+        # local fur texture and tone, so the closed lid does not read as a
+        # smooth bright patch. The left eye samples left, the right eye right.
+        if cx < frame.width // 2:
+            box = (cx - 56, cy - 20, cx - 16, cy + 20)
+        else:
+            box = (cx + 16, cy - 20, cx + 56, cy + 20)
+        patch = frame.crop(box).filter(ImageFilter.GaussianBlur(0.6))
         mask = Image.new("L", patch.size, 0)
         ImageDraw.Draw(mask).ellipse([4, 3, 35, 36], fill=255)
         mask = mask.filter(ImageFilter.GaussianBlur(5))
         frame.paste(patch, (cx - 20, cy - 20), mask)
         draw.arc(
-            [cx - 12, cy - 7, cx + 12, cy + 7],
-            start=20,
-            end=160,
+            [cx - 14, cy - 6, cx + 14, cy + 10],
+            start=15,
+            end=165,
             fill=INK,
-            width=5,
+            width=6,
         )
     return frame
 

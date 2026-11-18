@@ -44,7 +44,7 @@ def test_icon_keeps_the_figure_in_the_safe_circle() -> None:
     icon = module.compose_icon(108)
     ys, xs = _saturated(icon)
     radius = float(np.sqrt((xs - 54.0) ** 2 + (ys - 54.0) ** 2).max())
-    assert radius <= 34.0
+    assert radius <= 33.0
     assert int(xs.max() - xs.min()) >= 40
 
 
@@ -68,16 +68,38 @@ def test_blink_diff_is_confined_to_the_eyes() -> None:
     )
 
 
+def test_blink_patch_matches_the_surrounding_fur() -> None:
+    module = _module()
+    base = module.square_crop(module.load_source())
+    blink = module.blink_frame(base)
+    base_rgb = np.asarray(base.convert("RGB")).astype(np.float32)
+    blink_rgb = np.asarray(blink.convert("RGB")).astype(np.float32)
+    grid = np.mgrid[-20:20, -20:20]
+    ring = (grid[1] ** 2 + grid[0] ** 2) > 16**2
+    upper = ((grid[1] ** 2 + grid[0] ** 2) <= 14**2) & (grid[0] < -2)
+    for cx, cy in module.EYES:
+        base_patch = base_rgb[cy - 20 : cy + 20, cx - 20 : cx + 20]
+        blink_patch = blink_rgb[cy - 20 : cy + 20, cx - 20 : cx + 20]
+        surround = base_patch[ring].mean(axis=0)
+        patched = blink_patch[upper].mean(axis=0)
+        assert np.abs(patched - surround).max() <= 20.0, (cx, patched, surround)
+
+
 def test_outputs_have_expected_sizes(tmp_path: Path) -> None:
     module = _module()
     module.write_all(tmp_path)
     android = tmp_path / "apps" / "android" / "app" / "src" / "main" / "res"
     windows = tmp_path / "apps" / "windows" / "Hopa.Windows" / "Assets"
-    assert Image.open(android / "mipmap-mdpi" / "ic_launcher.png").size == (48, 48)
-    assert Image.open(android / "mipmap-xxxhdpi" / "ic_launcher.png").size == (192, 192)
-    assert Image.open(android / "mipmap-mdpi" / "ic_launcher_foreground.png").size == (108, 108)
     assert Image.open(android / "drawable-nodpi" / "hopa_plush.png").size == (512, 512)
     assert Image.open(android / "drawable-nodpi" / "hopa_plush_blink.png").size == (512, 512)
+    for name, factor in module.DENSITIES.items():
+        legacy = round(48 * factor)
+        foreground = round(108 * factor)
+        assert Image.open(android / f"mipmap-{name}" / "ic_launcher.png").size == (legacy, legacy)
+        assert Image.open(android / f"mipmap-{name}" / "ic_launcher_foreground.png").size == (
+            foreground,
+            foreground,
+        )
     assert Image.open(windows / "mascot.png").size == (512, 512)
     ico = Image.open(windows / "hopa.ico")
     assert {

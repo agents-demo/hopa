@@ -93,7 +93,7 @@ fun HopaMascot(
     var pulse by remember { mutableStateOf(false) }
     var bubble by remember { mutableStateOf(false) }
     val cheerScale by animateFloatAsState(
-        targetValue = if (cheer || state == "happy") 1.06f else 1f,
+        targetValue = if (!animate) 1f else if (cheer || state == "happy") 1.06f else 1f,
         animationSpec = tween(durationMillis = 120),
         label = "cheer",
     )
@@ -136,35 +136,45 @@ fun HopaMascot(
                 scaleY = cheerScale * (1f + 0.03f * motion.breathe),
                 rotationZ = tilt + wiggle.value,
                 alpha = alpha,
-            )
-            .semantics { contentDescription = label(state) },
+            ),
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .shadow(elevation = 3.dp, shape = badge, clip = false)
                 .clip(badge)
-                .clickable(enabled = interactive) {
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    scope.launch {
-                        wiggle.animateTo(3f, tween(durationMillis = 90))
-                        wiggle.animateTo(-3f, tween(durationMillis = 90))
-                        wiggle.animateTo(0f, tween(durationMillis = 90))
-                    }
-                    cheer = true
-                    scope.launch {
-                        delay(260)
-                        cheer = false
-                    }
-                    if (sizeDp >= 56.dp && state != "thinking" && state != "acting") {
-                        scope.launch {
-                            delay(140)
-                            bubble = true
-                            delay(2200)
-                            bubble = false
+                .semantics(mergeDescendants = true) {
+                    contentDescription = label(state)
+                }
+                .then(
+                    if (interactive) {
+                        Modifier.clickable {
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                            if (motionOn) {
+                                scope.launch {
+                                    wiggle.animateTo(3f, tween(durationMillis = 90))
+                                    wiggle.animateTo(-3f, tween(durationMillis = 90))
+                                    wiggle.animateTo(0f, tween(durationMillis = 90))
+                                }
+                            }
+                            cheer = true
+                            scope.launch {
+                                delay(260)
+                                cheer = false
+                            }
+                            if (sizeDp >= 56.dp) {
+                                scope.launch {
+                                    delay(140)
+                                    bubble = true
+                                    delay(2200)
+                                    bubble = false
+                                }
+                            }
                         }
-                    }
-                },
+                    } else {
+                        Modifier
+                    },
+                ),
         ) {
             Image(
                 painter = painterResource(R.drawable.hopa_plush),

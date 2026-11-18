@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 
 namespace Hopa.Windows.Controls;
@@ -35,6 +36,17 @@ public partial class HopaMark : UserControl
             StartMotion();
         };
         Unloaded += (_, _) => StopMotion();
+        IsVisibleChanged += (_, _) =>
+        {
+            if (IsVisible)
+            {
+                StartMotion();
+            }
+            else
+            {
+                StopMotion();
+            }
+        };
         SizeChanged += (_, _) => ApplyClip();
         blinkOn.Tick += (_, _) =>
         {
@@ -76,11 +88,14 @@ public partial class HopaMark : UserControl
 
     private void StartMotion()
     {
-        if (IsStatic || !IsLoaded || !SystemParameters.ClientAreaAnimation)
+        if (IsStatic || !IsLoaded || !IsVisible || !SystemParameters.ClientAreaAnimation)
         {
             return;
         }
 
+        Blink.Source ??= new BitmapImage(
+            new Uri("pack://application:,,,/Assets/mascot-blink.png", UriKind.Absolute)
+        );
         Float.BeginAnimation(TranslateTransform.YProperty, FloatAnimation());
         Breathe.BeginAnimation(ScaleTransform.ScaleYProperty, ScaleAnimation(1.025));
         Breathe.BeginAnimation(ScaleTransform.ScaleXProperty, ScaleAnimation(0.99));
@@ -98,6 +113,10 @@ public partial class HopaMark : UserControl
         Breathe.ScaleX = 1;
         Breathe.ScaleY = 1;
         Blink.Opacity = 0;
+        if (IsStatic)
+        {
+            Blink.Source = null;
+        }
     }
 
     private static DoubleAnimation FloatAnimation() =>
