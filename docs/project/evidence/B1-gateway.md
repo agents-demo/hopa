@@ -125,6 +125,25 @@ $link = .\tools\scripts\pair-device.ps1 -HouseholdId <household> -LinkOnly
 adb shell "am start -n com.hopa.android/com.hopa.app.MainActivity --es hopa.backendPair '$link'"
 ```
 
+### The 15-minute silent outage (fixed)
+
+A paired phone stopped receiving tasks about 15 minutes after pairing while
+the FCM wake notification still appeared. A probe with the phone's expired
+access token showed the gateway's real shape: `101`, then an `error` frame
+with code `E_AUTH`, then a close that OkHttp reports as `EOFException`. The
+client only refreshed on a `1008 E_AUTH` close, so it ignored the frame and
+retried the dead token forever.
+
+`9097b96` treats the `E_AUTH` error frame as the auth signal, and the
+regression test covers the frame plus the abrupt close. Verified on the phone
+with an already-expired token: it refreshed by itself and went `Live`. Runs
+after the fix:
+
+| Run | Result | Trace |
+|---|---|---|
+| foreground | `ack state=delivered`, result "Settings is open" | `9abe7e1c62f2e96fae25752a7df37aad`: accept, route, deliver, ack |
+| background wake | `ack state=queued`, result "Settings is open on your phone" | `3116c9b012f56dffc3a8db4783987633`: **wake 103 ms**, deliver 9 ms, ack 1 ms |
+
 ## Carried out of week 1
 
 | Item | Why it left this slice | Where it is picked up |
