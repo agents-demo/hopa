@@ -203,7 +203,7 @@
           "target": "Directions button",
           "find": {
             "by": "desc",
-            "value": "Directions to ${src}",
+            "value": "Directions to",
             "match": "prefix"
           }
         }
@@ -369,9 +369,10 @@
           "action": "ui.click(suggestion '${dst}')",
           "target": "suggestion row '${dst}'",
           "find": {
-            "by": "text",
-            "value": "${dst}",
-            "match": "exact"
+            "by": "desc",
+            "value": "Activate to enter suggestion",
+            "match": "prefix",
+            "child_index": 0
           }
         }
       ],

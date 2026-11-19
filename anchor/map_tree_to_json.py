@@ -34,8 +34,11 @@ SYNTHETIC = {"finish"}
 # "child_index" = Nth matching node in document order (0-based), for cases
 # where several nodes share the same text/desc/id.
 OVERRIDES = {
-    # s4 DOM desc is "Directions to ${src}, ${src}" (extra city suffix).
-    ("s4", "click", "s5"): {"by": "desc", "value": "Directions to ${src}",
+    # The Directions button desc shows the geocoded canonical address, not
+    # the typed ${src} (e.g. 'Directions to HaHarash St 4, ...'), so the
+    # selector must not contain the address at all; the plain prefix is
+    # unique on the place page.
+    ("s4", "click", "s5"): {"by": "desc", "value": "Directions to",
                             "match": "prefix"},
     ("s9", "click", "s44"): {"by": "resource-id",
                              "value": "com.google.android.apps.maps:id/street_view_thumbnail"},
@@ -46,6 +49,12 @@ OVERRIDES = {
     ("s10", "click", "s49"): {"by": "desc", "value": "Selected route",
                               "match": "prefix"},
     ("s20", "click", "s23"): {"by": "text", "value": "Driving avatar"},
+    # The suggestion row shows the geocoded canonical form, not the typed
+    # string, so exact text='${dst}' would match the edit field instead of
+    # the row. Use the row's stable accessibility desc, first suggestion.
+    ("s8", "click", "s9"): {"by": "desc",
+                            "value": "Activate to enter suggestion",
+                            "match": "prefix", "child_index": 0},
     # Avatar images have no id/text/desc; the carousel is the stable anchor,
     # option 2 = second child. Kept flagged via needs_review (see below).
     ("s31", "click", "s32"): {"by": "resource-id",
