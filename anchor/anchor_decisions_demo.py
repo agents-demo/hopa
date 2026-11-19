@@ -99,7 +99,8 @@ class AnchorRule:
     heldout_correct: int = 0
     heldout_total: int = 0
 
-    def fires(self, case: DecisionCase) -> bool:
+    def trace(self, case: DecisionCase) -> "RuleTrace":
+        """Explain the three matching components without side effects."""
         values: Sequence[str] = (
             self.intent_value
             if isinstance(self.intent_value, (list, tuple))
@@ -114,7 +115,7 @@ class AnchorRule:
             bigrams = {a + "_" + b for a, b in zip(tokens, tokens[1:])}
             intent = any(v in bigrams for v in values)
         else:
-            return False
+            intent = False
 
         if self.progress_kind == "last_call":
             progress = bool(case.calls) and case.calls[-1] == self.progress_value
@@ -123,8 +124,24 @@ class AnchorRule:
         elif self.progress_kind == "no_calls":
             progress = not case.calls
         else:
-            return False
-        return intent and progress and self.decision in case.options
+            progress = False
+        return RuleTrace(self, intent, progress, self.decision in case.options)
+
+    def fires(self, case: DecisionCase) -> bool:
+        return self.trace(case).fires
+
+
+@dataclass(frozen=True)
+class RuleTrace:
+    """Per-component match result for one rule against one case."""
+    rule: AnchorRule
+    intent: bool
+    progress: bool
+    in_options: bool
+
+    @property
+    def fires(self) -> bool:
+        return self.intent and self.progress and self.in_options
 
 
 @dataclass(frozen=True)
@@ -300,6 +317,9 @@ class Transition:
     key: Optional[str] = None         # press key name
     needs_review: bool = False
     review_reason: str = ""
+    # Live-discovered edges may fork any captured state; exempt from the
+    # single-parent invariant.
+    live_discovered: bool = False
 
 
 @dataclass(frozen=True)
@@ -310,6 +330,14 @@ class GraphState:
     transitions: Tuple[Transition, ...]
     explored: Tuple[str, ...]
     resource_ids: FrozenSet[str]
+    # Live-dump identification landmarks: {"kind", "value"} conditions that
+    # must all hold (interpreted by the replay driver).
+    identify: Tuple[Dict[str, str], ...] = ()
+    # Higher priority wins when several states' landmarks match.
+    identify_priority: int = 0
+    # Live-discovered states may overlay or fork any captured state, so
+    # they are exempt from the single-parent invariant.
+    live_discovered: bool = False
 
 
 @dataclass(frozen=True)
@@ -352,6 +380,7 @@ def load_graph(path: str) -> Graph:
                 key=tr.get("key"),
                 needs_review=bool(tr.get("needs_review", False)),
                 review_reason=tr.get("review_reason", ""),
+                live_discovered=bool(tr.get("live_discovered", False)),
             ))
         explored = item.get("explored", [])
         if not isinstance(explored, list) or not all(isinstance(e, str) for e in explored):
@@ -360,6 +389,16 @@ def load_graph(path: str) -> Graph:
         resource_ids = signature.get("resource_ids", [])
         if not isinstance(resource_ids, list):
             raise _fail(path, item, "'signature.resource_ids' must be a list")
+        identify = item.get("identify", {"priority": 0, "conditions": []})
+        if (not isinstance(identify, dict) or "conditions" not in identify
+                or not isinstance(identify["conditions"], list)
+                or not all(isinstance(c, dict) and "kind" in c and "value" in c
+                           for c in identify["conditions"])):
+            raise _fail(path, item, "'identify' must be an object with a "
+                        "'conditions' list of {kind, value} objects")
+        priority = identify.get("priority", 0)
+        if isinstance(priority, bool) or not isinstance(priority, (int, float)):
+            raise _fail(path, item, "'identify.priority' must be a number")
         states[sid] = GraphState(
             state_id=sid,
             label=_require_str(path, item, "label"),
@@ -367,6 +406,9 @@ def load_graph(path: str) -> Graph:
             transitions=tuple(transitions),
             explored=tuple(explored),
             resource_ids=frozenset(resource_ids),
+            identify=tuple(dict(c) for c in identify["conditions"]),
+            identify_priority=int(priority),
+            live_discovered=bool(item.get("live_discovered", False)),
         )
     return Graph(meta=dict(meta), states=states)
 
@@ -547,8 +589,11 @@ def self_test(rules: Tuple[AnchorRule, ...], cases: Tuple[DecisionCase, ...],
                     self.assertIn(tr.to, ids, "{} -> {!r} missing".format(sid, tr.to))
 
         def test_graph_single_parent(self):
+            live = {sid for sid, st in graph.states.items() if st.live_discovered}
             targets = Counter(tr.to for s in graph.states.values()
-                              for tr in s.transitions)
+                              for tr in s.transitions
+                              if s.state_id not in live and tr.to not in live
+                              and not tr.live_discovered)
             multi = {k: v for k, v in targets.items() if v > 1}
             self.assertFalse(multi, "multi-parent targets: {}".format(multi))
 

@@ -29,6 +29,115 @@ DST = os.path.join(HERE, "map_tree.json")
 
 SYNTHETIC = {"finish"}
 
+# Precise state-identification landmarks, hand-authored from the capture.
+# Each entry: {"priority": N, "conditions": [ ... ]}. The conditions must
+# ALL hold; states with higher priority win when several match (the live
+# search box can hold the geocoded canonical form while a place page is
+# opening, so s4 must outrank the generic empty-search states).
+IDENTIFY = {
+    "s2": {"priority": 10, "conditions": [
+        {"kind": "focused_id", "value": "search_omnibox_edit_text"},
+        {"kind": "none_text", "value": "${src}"},
+        {"kind": "none_text", "value": "${dst}"}]},
+    "s3": {"priority": 50, "conditions": [
+        {"kind": "focused_id", "value": "search_omnibox_edit_text"},
+        {"kind": "text", "value": "${src}"},
+        {"kind": "desc_prefix", "value": "Activate to enter suggestion"},
+        {"kind": "none_desc", "value": "Swap start and destination"}]},
+    "s4": {"priority": 80, "conditions": [
+        {"kind": "desc_prefix", "value": "Directions to"}]},
+    "s5": {"priority": 70, "conditions": [
+        {"kind": "desc", "value": "Swap start and destination"},
+        {"kind": "none_text", "value": "Choose destination"}]},
+    "s6": {"priority": 70, "conditions": [
+        {"kind": "text", "value": "Choose destination"},
+        {"kind": "none_focused_id", "value": "search_omnibox_edit_text"}]},
+    "s7": {"priority": 60, "conditions": [
+        {"kind": "focused_id", "value": "search_omnibox_edit_text"},
+        {"kind": "desc", "value": "Swap start and destination"}]},
+    "s8": {"priority": 50, "conditions": [
+        {"kind": "focused_id", "value": "search_omnibox_edit_text"},
+        {"kind": "text", "value": "${dst}"},
+        {"kind": "desc_prefix", "value": "Activate to enter suggestion"}]},
+    "s9": {"priority": 90, "conditions": [
+        {"kind": "clickable_desc", "value": "Drive"}]},
+    "s10": {"priority": 90, "conditions": [
+        {"kind": "clickable_desc", "value": "Public transport"}]},
+    "s11": {"priority": 90, "conditions": [
+        {"kind": "clickable_desc", "value": "Walk"}]},
+    "s49": {"priority": 100, "conditions": [
+        {"kind": "has_id", "value": "transit_departure_row"}]},
+}
+
+# Live-discovered correction (2026-11-19, first real replay): pressing ENTER
+# on a query opens a "Partial matches" screen when the query does not
+# geocode cleanly. Tapping the TOP SUGGESTION while typing is the reliable
+# path (the same mechanism as s8 -> s9). The capture predates this.
+TRANSFORM = {
+    ("s3", "press", "s4"): {
+        "op": "click",
+        "action": "ui.click(first suggestion '${src}')",
+        "target": "top suggestion row for '${src}'",
+        "find": {"by": "desc", "value": "Activate to enter suggestion",
+                 "match": "prefix", "child_index": 0,
+                 "tap": "clickable_ancestor"},
+    },
+    # Live: tapping 'Choose destination' opens a FULL-SCREEN destination
+    # search (s2-shaped), not the capture's inline field.
+    ("s6", "click", "s7"): {"to": "s63"},
+}
+
+# Live-discovered edge (2026-11-19): the app remembers the last mode tab,
+# so a car command can land on the transit screen; switch back to driving.
+POST_TRANSITIONS = {
+    "s10": [
+        {"to": "s9", "op": "click",
+         "action": "ui.click(Driving mode tab)",
+         "target": "driving mode tab",
+         "find": {"by": "desc", "value": "Driving mode", "match": "prefix"},
+         "live_discovered": True},
+    ],
+}
+
+# Live-discovered states (2026-11-19, first real replay).
+POST_STATES = [
+    {
+        "id": "s62",
+        "label": "Typed, no suggestion (live-discovered 2026-11-19)",
+        "final": False,
+        "live_discovered": True,
+        "identify": {"priority": 55, "conditions": [
+            {"kind": "focused_id", "value": "search_omnibox_edit_text"},
+            {"kind": "text_any", "value": ["${src}", "${dst}"]},
+            {"kind": "none_desc_prefix", "value": "Activate to enter suggestion"},
+        ]},
+        "signature": {"resource_ids": []},
+        "transitions": [],
+        "explored": ["nothing to tap; the engine abstains and the model is asked"],
+    },
+    {
+        "id": "s63",
+        "label": "Destination search (live-discovered 2026-11-19)",
+        "final": False,
+        "live_discovered": True,
+        "identify": {"priority": 10, "conditions": [
+            {"kind": "focused_id", "value": "search_omnibox_edit_text"},
+            {"kind": "none_text", "value": "${src}"},
+            {"kind": "none_text", "value": "${dst}"},
+        ]},
+        "signature": {"resource_ids": []},
+        "transitions": [
+            {"to": "s8", "op": "set_text",
+             "action": "ui.setText('${dst}')",
+             "target": "destination search box (id=search_omnibox_edit_text, focused)",
+             "text": "${dst}",
+             "find": {"by": "resource-id",
+                      "value": "com.google.android.apps.maps:id/search_omnibox_edit_text"}},
+        ],
+        "explored": [],
+    },
+]
+
 # Hand-resolved selectors for transitions the heuristics cannot derive.
 # Key: (state_id, op, to) -> find dict, or None to force needs_review.
 # "child_index" = Nth matching node in document order (0-based), for cases
@@ -44,17 +153,21 @@ OVERRIDES = {
                              "value": "com.google.android.apps.maps:id/street_view_thumbnail"},
     ("s9", "click", "s51"): {"by": "resource-id",
                              "value": "com.google.android.apps.maps:id/trip_details_summary_header"},
-    # The transit trip card is the selected-route summary card (desc carries
-    # a volatile ETA, so prefix-match the stable part).
-    ("s10", "click", "s49"): {"by": "desc", "value": "Selected route",
-                              "match": "prefix"},
+    # The transit trip card is the first card in the trip list; the stable
+    # cue is its 'Duration ...' desc (ETA text varies). Tap the card's
+    # clickable ancestor, not the summary header.
+    ("s10", "click", "s49"): {"by": "desc", "value": "Duration",
+                              "match": "prefix", "child_index": 0,
+                              "tap": "clickable_ancestor"},
     ("s20", "click", "s23"): {"by": "text", "value": "Driving avatar"},
     # The suggestion row shows the geocoded canonical form, not the typed
     # string, so exact text='${dst}' would match the edit field instead of
-    # the row. Use the row's stable accessibility desc, first suggestion.
+    # the row. The row's arrow carries the stable desc 'Activate to enter
+    # suggestion ...'; tap the clickable row ancestor of that arrow.
     ("s8", "click", "s9"): {"by": "desc",
                             "value": "Activate to enter suggestion",
-                            "match": "prefix", "child_index": 0},
+                            "match": "prefix", "child_index": 0,
+                            "tap": "clickable_ancestor"},
     # Avatar images have no id/text/desc; the carousel is the stable anchor,
     # option 2 = second child. Kept flagged via needs_review (see below).
     ("s31", "click", "s32"): {"by": "resource-id",
@@ -227,6 +340,7 @@ def main() -> int:
             "id": sid,
             "label": state.attrib.get("label", ""),
             "final": state.find("final") is not None,
+            "identify": IDENTIFY.get(sid, {"priority": 0, "conditions": []}),
             "signature": {"resource_ids": signature},
             "transitions": [],
             "explored": [e.text or "" for e in state.findall("explored")],
@@ -240,6 +354,14 @@ def main() -> int:
             point = (tr.findtext("point") or "").strip()
             seen_as_target[to] = seen_as_target.get(to, 0) + 1
             key = (sid, op, to)
+            transform = TRANSFORM.get(key)
+            if transform:
+                if "to" in transform:
+                    to = transform["to"]
+                    key = (sid, op, to)
+                op = transform.get("op", op)
+                action = transform.get("action", action)
+                target = transform.get("target", target)
             if key in OVERRIDES:
                 override = OVERRIDES[key]
                 item = {"to": to, "op": op, "action": action, "target": target}
@@ -254,15 +376,27 @@ def main() -> int:
                                               int(m.group(4)) - int(m.group(2))]
                                     } if m else {"delta": [0, 0]}
             else:
-                extra, needs_review = _op_params(op, action, target, point,
-                                                 parent_nodes)
-                item = {"to": to, "op": op, "action": action,
-                        "target": target, **extra}
+                if transform and "find" in transform:
+                    item = {"to": to, "op": op, "action": action,
+                            "target": target, "find": transform["find"]}
+                else:
+                    extra, needs_review = _op_params(op, action, target, point,
+                                                     parent_nodes)
+                    item = {"to": to, "op": op, "action": action,
+                            "target": target, **extra}
             if item.get("needs_review"):
                 reviews.append((sid, op, to, item.get("review_reason", ""),
                                 action, target))
             record["transitions"].append(item)
         states_out.append(record)
+    for sid, extra_transitions in POST_TRANSITIONS.items():
+        for st in states_out:
+            if st["id"] == sid:
+                st["transitions"].extend(extra_transitions)
+                break
+    states_out.extend(POST_STATES)
+    meta["states"] = str(len(states_out))
+    meta["transitions"] = str(sum(len(s["transitions"]) for s in states_out))
 
     ids = {s["id"] for s in states_out}
     problems = []

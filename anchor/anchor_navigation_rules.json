@@ -30,7 +30,7 @@
       "progress_kind": "last_call",
       "progress_value": "s3",
       "probability": 0.85,
-      "description": "origin typed ('from A') -> press enter, open the place page"
+      "description": "origin typed ('from A') -> tap the top suggestion to open the place page"
     },
     {
       "id": "r04-open-directions-form",
@@ -54,13 +54,33 @@
     },
     {
       "id": "r06-focus-destination",
-      "decision": "s7",
+      "decision": "s63",
       "intent_kind": "task_word",
       "intent_value": "to",
       "progress_kind": "last_call",
       "progress_value": "s6",
       "probability": 0.85,
-      "description": "destination empty ('to B') -> focus the destination field"
+      "description": "destination empty ('to B') -> open the destination search (live: full-screen search page)"
+    },
+    {
+      "id": "r18-destination-search",
+      "decision": "s8",
+      "intent_kind": "task_word",
+      "intent_value": ["to", "navigate"],
+      "progress_kind": "last_call",
+      "progress_value": "s63",
+      "probability": 0.9,
+      "description": "destination search open -> type the destination (live-discovered)"
+    },
+    {
+      "id": "r19-back-to-car",
+      "decision": "s9",
+      "intent_kind": "task_word",
+      "intent_value": ["car", "drive", "driving"],
+      "progress_kind": "last_call",
+      "progress_value": "s10",
+      "probability": 0.9,
+      "description": "transit screen shown but the command asks for car -> switch back to the driving tab (live-discovered)"
     },
     {
       "id": "r07-type-destination",
