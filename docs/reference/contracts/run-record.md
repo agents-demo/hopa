@@ -20,6 +20,7 @@ action auditable after the fact.
 | `classification` | `read` / `sensitive` / `payment` | decided by the gate, never by the model |
 | `tier` | `api` / `intent` / `uia` / `input` (optional) | the path the selector chose; absent when the client has no selector |
 | `approved` | boolean or `null` | `null` when no approval was needed |
+| `approver` | `{device, at}` (optional) | who answered the approval and when (P4, ADR-0023); `device` is `pc` or `phone`, absent when no approval was asked |
 | `observationHash` | string | hash of the observation the step saw |
 | `beforeHash` / `afterHash` | string | optional screen hashes around the action |
 | `targetKey` | string | optional; what the `ref` pointed at (type, text, description, id), so a recipe can find the same control after a redraw |

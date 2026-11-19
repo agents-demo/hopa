@@ -41,6 +41,7 @@ supersede it. Format:
 | [0021](0021-windows-client-stack.md) | Windows client: .NET shell over the Kotlin engine | accepted |
 | [0022](0022-backend-kotlin-and-shape.md) | Backend language and shape: Kotlin on the JVM, one build with `packages/` | proposed |
 | [0023](0023-hidden-screen-without-staging.md) | The hidden screen keeps a shell helper and stops staging the dex | accepted |
+| [0023](0023-windows-device-identity-and-approval.md) | Device identity and approval provenance for the Windows client | accepted |
 
 Create the next ADR by copying the template below.
 

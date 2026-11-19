@@ -2,6 +2,7 @@ package com.hopa.sidecar
 
 import com.hopa.contracts.chat.Attachment
 import com.hopa.contracts.json.HopaJson
+import com.hopa.contracts.wire.Approver
 import com.hopa.sidecar.Protocol.asObject
 import com.hopa.sidecar.Protocol.text
 import com.hopa.sidecar.Protocol.type
@@ -26,9 +27,6 @@ Options:
 Headless is deterministic by construction: no model key is loaded, so the engine
 uses the scripted proposer, and no host is attached, so approvals deny and
 actions refuse. Nothing in headless mode can allow an action."""
-
-private const val TASK_NOT_IMPLEMENTED =
-    "task handoff is not implemented on this build; it arrives in P4"
 
 fun main(args: Array<String>) {
     val options = runCatching { CliOptions.parse(args) }.getOrElse { error ->
@@ -93,6 +91,7 @@ private fun runProtocol(options: CliOptions) {
     val config = RuntimeConfig()
     val approval = HostApproval(io, approvals)
     val attachments = Attachments(dataDir.resolve("attachments"))
+    val tasks = TaskStore()
     val engine = Engine(io, device, approval, store, records, config)
     io.send(Protocol.ready())
     val denied = approvals.restoreAndDeny()
@@ -200,19 +199,96 @@ private fun runProtocol(options: CliOptions) {
 
             "turn.cancel" -> engine.cancel()
 
-            // v1 freezes these shapes and refuses them until P4. A handoff that
-            // is quietly ignored would look like success, so it is an error.
-            "task.list", "task.get", "task.handoff" ->
-                io.send(
-                    Protocol.taskRefused(
-                        id = message.text("id"),
-                        type = message.type() ?: "",
-                        error = TASK_NOT_IMPLEMENTED,
-                    ),
-                )
+            // P4: the task shapes are implemented against protocol.md. The
+            // transport that carries them to the phone is added with the phone
+            // receiver; until then a task can be created and handed to "pc"
+            // locally, and a handoff to "phone" fails honestly.
+            "task.start" -> {
+                val from = message.text("device").ifBlank { "pc" }
+                val result = runCatching {
+                    tasks.create(
+                        id = message.text("taskId"),
+                        goal = message.text("goal"),
+                        from = from,
+                    )
+                }
+                val task = result.getOrNull()
+                if (task == null) {
+                    io.send(Protocol.taskError(
+                        message.text("id"), "task.start", "E_SCHEMA",
+                        result.exceptionOrNull()?.message ?: "bad task",
+                    ))
+                } else {
+                    io.send(Protocol.task(message.text("id"), task))
+                }
+            }
+
+            "task.get" -> {
+                val task = tasks.get(message.text("taskId"))
+                if (task == null) {
+                    io.send(Protocol.taskError(message.text("id"), "task.get", "E_SCHEMA", "unknown task"))
+                } else {
+                    io.send(Protocol.task(message.text("id"), task, "task.get"))
+                }
+            }
+
+            "task.list" -> io.send(Protocol.taskList(message.text("id"), tasks.list()))
+
+            "task.handoff" -> {
+                val target = message.text("target")
+                val result = runCatching { tasks.handoff(message.text("taskId"), target) }
+                val task = result.getOrNull()
+                if (task == null) {
+                    io.send(Protocol.taskError(
+                        message.text("id"), "task.handoff", "E_SCHEMA",
+                        result.exceptionOrNull()?.message ?: "unknown task",
+                    ))
+                } else {
+                    io.send(Protocol.task(message.text("id"), task, "task.handoff"))
+                }
+            }
+
+            // The host forwards gateway task events; `from` is the server-set
+            // device id, mapped to pc/phone. A `platform` on a result becomes
+            // the approver label on the record (ADR-0023).
+            "task.event" -> {
+                val result = runCatching {
+                    val platform = message.text("platform")
+                    tasks.apply(
+                        taskId = message.text("taskId"),
+                        type = message.text("event"),
+                        from = message.text("from").ifBlank { "pc" },
+                        at = message.text("at").toLongOrNull() ?: System.currentTimeMillis(),
+                        approver = platform.takeIf { it.isNotBlank() }?.let { Approver.fromPlatform(it) },
+                        error = message.text("error").ifBlank { null },
+                    )
+                }
+                val task = result.getOrNull()
+                if (task == null) {
+                    io.send(Protocol.taskError(
+                        message.text("id"), "task.event", "E_SCHEMA",
+                        result.exceptionOrNull()?.message ?: "unknown task",
+                    ))
+                } else {
+                    io.send(Protocol.task(message.text("id"), task, "task.event"))
+                }
+            }
 
             "device.result" -> device.resolve(message.text("id"), message)
-            "approval.result" -> approval.resolve(message.text("id"), message.text("allow").toBoolean())
+            "approval.result" -> {
+                val id = message.text("id")
+                val claimed = message.text("device").ifBlank { "pc" }
+                val allow = message.text("allow").toBoolean()
+                // ADR-0023: an allow that claims the phone cannot be trusted when
+                // no bridge is attached — there is no path for the phone to have
+                // answered. Refuse it rather than believe the claim (fail closed).
+                if (claimed == "phone" && !config.hasBridge) {
+                    io.log("refused an approval claiming the phone: no bridge is attached")
+                    approval.resolve(id, false, "pc")
+                } else {
+                    approval.resolve(id, allow, claimed)
+                }
+            }
             "shutdown" -> return
             else -> io.log("unknown message: ${message.type()}")
         }

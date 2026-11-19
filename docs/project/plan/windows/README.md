@@ -1,6 +1,7 @@
 # Windows client plan (P0–P6)
 
-Status: **P0, P1, P2 and P3 complete.** The
+Status: **P0–P3 complete; P4 in progress (gateway-aligned task messages and
+approval provenance landed, gateway client open).** The
 shared engine runs headless through the real gate, the PC adapter implements the
 whole `DevicePort` contract, and settings launches use a URI before any click.
 Re-baselined 2026-11-15 against the Android client (ADR-0020); merged onto the
@@ -156,15 +157,17 @@ works and log which tier fired.
 
 Gate: "open Settings → Wi-Fi" uses an intent, not a sequence of clicks.
 
-### P4. Phone link (2 weeks)
+### P4. Phone link (2 weeks) — in progress
 
 Make the Android app a peer: pair, hand off a task, push approval to the phone,
-return the verified result. Reuse the existing relay and add device identity. Do
-not invent a new transport.
+return the verified result. The transport is the **backend gateway** built by
+upstream (ADR-0022), not the legacy relay; device identity and task state come
+from the gateway contract (ADR-0023). Do not invent a second transport or a
+second task state machine.
 
-- [ ] `task.start`, `task.get` and `task.handoff` are implemented against the documented shapes.
-- [ ] A PC action can request approval on the phone and receive allow or deny.
-- [ ] The record says who approved and on which device.
+- [x] `task.start`, `task.get` and `task.handoff` are implemented against the documented shapes. (evidence: docs/project/evidence/P4-phonelink.md "Task messages"; `TaskStore` 11 tests; real NDJSON transcript)
+- [ ] A PC action can request approval on the phone and receive allow or deny. (blocked: no Windows gateway client, and `task.needs_approval` is reserved until backend week 5 — see P4-phonelink.md)
+- [ ] The record says who approved and on which device. (the `approver` field is in place and provenance is tested; it cannot name the phone until a phone approval exists)
 - [ ] A dropped link fails the task with a readable error; the conversation survives.
 
 Gate: a PC action is approved on the phone and the run record names the phone.
@@ -224,7 +227,9 @@ Gate: a signed MSI on a clean VM, with both targets working.
 - SQLite in the sidecar: when does the JSON store stop being enough?
 - Is the `uiAccess` helper a separate signed executable (recommended) or the main
   app signed with `uiAccess`?
-- Does the Windows client pair its own bridge token, or reuse the phone's?
+- ~~Does the Windows client pair its own bridge token, or reuse the phone's?~~
+  Resolved 2026-11-17: **its own** (ADR-0023). Device identity is carried
+  explicitly in task/approval messages, never inferred from a shared credential.
 
 ## 10. Evidence carried over
 

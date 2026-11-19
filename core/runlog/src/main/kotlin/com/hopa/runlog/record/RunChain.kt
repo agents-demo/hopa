@@ -21,6 +21,7 @@ object RunChain {
             classification = draft.classification,
             tier = draft.tier,
             approved = draft.approved,
+            approver = draft.approver,
             observationHash = draft.observationHash,
             beforeHash = draft.beforeHash,
             afterHash = draft.afterHash,

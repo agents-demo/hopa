@@ -28,6 +28,16 @@
     "classification": { "type": "string", "enum": ["read", "sensitive", "payment"] },
     "tier": { "type": "string", "enum": ["api", "intent", "uia", "input"] },
     "approved": { "type": ["boolean", "null"] },
+    "approver": {
+      "type": "object",
+      "description": "Who answered the approval, and when (P4, ADR-0023). Absent when no approval was asked.",
+      "required": ["device", "at"],
+      "properties": {
+        "device": { "type": "string", "enum": ["pc", "phone"] },
+        "at": { "type": "integer" }
+      },
+      "additionalProperties": false
+    },
     "observationHash": { "type": "string" },
     "beforeHash": { "type": "string" },
     "afterHash": { "type": "string" },

@@ -12,6 +12,7 @@ import com.hopa.contracts.ports.SandboxPort
 import com.hopa.contracts.ports.SystemPort
 import com.hopa.contracts.turn.ExecutionResult
 import com.hopa.contracts.wire.Action
+import com.hopa.contracts.wire.Approver
 import com.hopa.contracts.wire.Observation
 import com.hopa.observation.tree.NodeAnchor
 import com.hopa.runlog.record.RunRecordFactory
@@ -61,12 +62,15 @@ class ActionExecutor(
         val classification = gate.classify(intended.action, before)
         val needsApproval = gate.requiresApproval(intended.action, before)
         // One question for the whole action, asked before any tier runs. A
-        // fallback retries a path, never the person's decision.
-        val approved = if (needsApproval) {
-            approval.approve(gate.request(intended.action, before))
+        // fallback retries a path, never the person's decision. The answer
+        // carries its source device so the record can name who approved (P4).
+        val decision = if (needsApproval) {
+            approval.decide(gate.request(intended.action, before))
         } else {
             null
         }
+        val approved = decision?.allow
+        val approver = decision?.let { Approver(device = it.device, at = clock.nowMillis()) }
         val beforeHash = ObservationHasher.hashOf(before)
 
         if (needsApproval && approved != true) {
@@ -78,6 +82,7 @@ class ActionExecutor(
                 classification = label(classification),
                 tier = intended.tier,
                 approved = false,
+                approver = approver,
                 observation = before,
                 beforeHash = beforeHash,
                 afterHash = beforeHash,
@@ -108,6 +113,7 @@ class ActionExecutor(
                     classification = label(classification),
                     tier = attempt.tier,
                     approved = approved,
+                    approver = approver,
                     observation = after,
                     beforeHash = beforeHash,
                     afterHash = afterHash,
@@ -150,6 +156,7 @@ class ActionExecutor(
                 classification = label(classification),
                 tier = attempt.tier,
                 approved = approved,
+                approver = approver,
                 observation = before,
                 beforeHash = beforeHash,
                 afterHash = beforeHash,

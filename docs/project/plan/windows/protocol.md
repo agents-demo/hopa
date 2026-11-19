@@ -31,9 +31,11 @@ and update this file in the same commit. P0 froze this document; P1 implements
 | `conversation.delete` | `id`, `conversationId` | tombstone a conversation |
 | `conversation.export` | `id`, `conversationId` | export one conversation as JSON |
 | `conversation.search` | `id`, `query` | search titles and messages |
-| `task.list` | `id` | list handoff tasks (refused in v1) |
-| `task.get` | `id`, `taskId` | read one task (refused in v1) |
-| `task.handoff` | `id`, `taskId`, `target` | move a task to another device (refused in v1) |
+| `task.start` | `id` (request), `taskId?`, `goal`, `device?` | create a local task view (P4; refused in v1); the backend assigns the real task id, and the reply's id is generated when `taskId` is blank |
+| `task.list` | `id` | list task views (refused in v1) |
+| `task.get` | `id`, `taskId` | read one task view (refused in v1) |
+| `task.handoff` | `id`, `taskId`, `target` | record the gateway target; the host sends `task.create` to the backend (refused in v1) |
+| `task.event` | `id`, `taskId`, `event`, `from`, `at?`, `platform?`, `error?` | apply a gateway task event; `event` is the gateway type (`task.ack` …), `from` is server-set and `platform` maps to the approver label |
 | `shutdown` | - | the host is closing; the sidecar exits |
 
 ### sidecar -> host
@@ -51,7 +53,8 @@ and update this file in the same commit. P0 froze this document; P1 implements
 | `conversation.*` | echo `id` plus the payload | replies to the conversation messages above |
 | `file.attached` | `id`, `attachment?`, `error?` | the attachment was accepted or refused |
 | `file.removed` | `id`, `ok` | the pending attachment was dropped |
-| `task.error` | `id`, `ok:false`, `code`, `error` | task messages are not available on this build |
+| `task.*` | echo `id` plus the task payload | replies to the task messages above |
+| `task.error` | `id`, `ok:false`, `code`, `error` | a task message was refused (unavailable in v1, or a bad request in P4) |
 
 ## Device operations in v1
 
@@ -90,16 +93,29 @@ A `device.result` carries `ok`, and on success any of `observation`, `app`,
 
 `task.list` -> `{"type":"task.error","id":"…","ok":false,"code":"E_UNSUPPORTED","error":"task handoff is not implemented on this build"}`
 
-The same envelope answers `task.get` and `task.handoff` in v1. P4 implements:
+The same envelope answers `task.start`, `task.get`, `task.handoff` and
+`task.event` in v1. P4 implements a **local view of a backend gateway task**
+(ADR-0023). States and event names are the gateway's, from ADR-0022 and
+`contracts/schemas/gateway.v1.schema.json` — this is not a second state machine:
 
 ```json
-{"id":"t-1","state":"waiting-approval|running|done|failed",
- "steps":[{"index":0,"device":"pc|phone","outcome":"succeeded|failed"}],
+{"id":"t-1","state":"queued|delivered|acked|progress|done|failed|cancelled",
+ "from":"pc","to":"phone",
+ "events":[{"index":0,"type":"task.create|deliver|task.ack|task.progress|task.result|task.error|task.cancel","from":"pc","at":0}],
  "postconditions":["…"],"approver":{"device":"pc|phone","at":0}}
 ```
 
-Until then, a host that asks for a handoff gets an explicit refusal, never a
-silent success.
+`task.start` creates a view in `queued`. `task.handoff` records the target; the
+host sends `task.create` to the gateway, and the sidecar learns of delivery
+through `task.event`. `task.event` applies one gateway event and moves the state
+exactly as `TaskRouter` does. `task.get` returns the view; `task.list` returns
+the array. `from` is the server-set device id mapped to `pc`/`phone`; a client
+cannot name another device. An `approver` on a result comes from the gateway
+`platform` (`windows -> pc`, `android -> phone`) and the authenticated sender —
+an `allow` that claims the phone but arrived from the PC side is refused. The
+gateway reserves `task.needs_approval` until week 5, so no approval is claimed
+over this channel until that backend capability exists. Until P4, a host that
+asks for a handoff gets an explicit refusal, never a silent success.
 
 ## Rules
 

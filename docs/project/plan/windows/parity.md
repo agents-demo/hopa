@@ -18,22 +18,26 @@ source file; there is no other reference client. Status is one of `have`, `todo`
 | Approval sheet | `ui/component/ApprovalSheet.kt` | `ApprovalWindow` (title, amount, merchant, consequence) | have |
 | Settings hub with search | `feature/settings/SettingsScreen.kt` | `SettingsWindow` | out (three fields fit on one dialog) |
 | Settings — Answers (model, key, vision) | `feature/settings/SettingsModelScreen.kt` | model provider, endpoint, key | have; vision is `out` until the host sends frames |
-| Settings — My computer (bridge) | `feature/settings/SettingsBridgeScreen.kt` | bridge address and token | have |
+| Settings — My computer (pairing) | `feature/runningapps/ComputerScreen.kt` | backend pairing and bridge address | have (token entry) |
 | Settings — Tone and length | `feature/settings/SettingsCharacterScreen.kt` | tone | have |
 | Settings — Run history | `feature/settings/SettingsHistoryScreen.kt` | runs window | have |
 | Settings — Alerts | `feature/settings/SettingsNotificationsScreen.kt` | none | out (the phone owns the notifier) |
 | Settings — What left your phone | `feature/settings/SettingsPrivacyScreen.kt` | none | out |
 | Settings — Saved repetitions | `feature/settings/SettingsRecipesScreen.kt` | none | out |
-| Settings — Running apps | `feature/settings/SettingsScreenAccessScreen.kt` | none in v0; UI Automation reports the foreground app in `observe` | out |
+| Act hub (where HOPA works) | `feature/runningapps/RunningAppsScreen.kt` | none in v0; the window already picks a target per action | out |
+| Computer / "My computer" | `feature/runningapps/ComputerScreen.kt` | none: the PC *is* the device (see the note below) | out |
+| How HOPA acts | `feature/runningapps/HowHopaActsScreen.kt` | out of scope for v0; the rail states what ran | out |
+| Run preferences / setup | `feature/runningapps/RunPrefsScreen.kt`, `feature/runningapps/RunSetupScreen.kt` | none in v0 | out |
 | About | `feature/settings/AboutScreen.kt` | About row in settings | have |
 | Self check | `feature/settings/SelfCheckScreen.kt` | none | out |
 | Accessibility setup | `feature/settings/AccessibilityScreen.kt` | none: the PC uses UI Automation, not an accessibility service | out |
 | Memory | `feature/memory/MemoryScreen.kt` | none | out |
+| Skills | `feature/memory/SkillsScreen.kt` | none | out |
 | Usage | `feature/usage/UsageScreen.kt` | none | out |
 | Profiles | `feature/profiles/ProfilesScreen.kt` | none: the desktop has one shape | out |
 | Capabilities | `feature/capabilities/CapabilitiesScreen.kt` | none in v0; the bridge line on the rail carries the status | out |
 | Launchpad | `feature/launchpad/LaunchpadScreen.kt` | none: UIA launches by name, from the catalog | out |
-| Device | `feature/device/DeviceScreen.kt` | none: this PC *is* the device | out |
+| Device | `feature/runningapps/ComputerScreen.kt` | none: this PC *is* the device | out |
 | Browser | `feature/browser/BrowserScreen.kt` | none in v0 | out |
 | Notifier | `service/Notifier.kt` | none: the phone owns the event surface | out |
 | Approval on the phone | `ui/component/ApprovalSheet.kt` | request pushed to the phone, answer returned | P4 |
@@ -64,6 +68,17 @@ A row marked `out` is a deliberate product decision, not a gap: the phone is whe
 those features belong, and duplicating them would create a second product. The
 one exception is approval, which is `P4` because the PC must be able to ask the
 phone when the action runs on the desktop.
+
+## The two meanings of "computer"
+
+Android's *Act → My computer* and Windows P4 are **not** the same relationship.
+In Act, the computer is an adb **driver for the phone's screen**: the phone still
+chooses what happens, and the computer is never a silent fallback
+(`docs/guides/android/run-modes.md`, `feature/runningapps/ActMode.kt`). In P4 the
+Windows client acts on its **own UIA desktop** and asks the phone only to approve
+the action (ADR-0023). Those rows stay `out` rather than `have`: a Windows screen
+mirroring the driver mode would imply the wrong owner of the action. What the two
+sides share is the backend gateway, not the device role.
 
 ## Prompt context the PC sends
 

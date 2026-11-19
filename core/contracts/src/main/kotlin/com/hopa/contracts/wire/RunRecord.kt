@@ -15,6 +15,8 @@ data class RunRecord(
     /** Which path reached the app: api, intent, uia or input (empty when unknown). */
     val tier: String = "",
     val approved: Boolean? = null,
+    /** Who answered the approval (P4). Absent when no approval was asked. */
+    val approver: Approver? = null,
     @SerialName("observationHash") val observationHash: String,
     @SerialName("beforeHash") val beforeHash: String? = null,
     @SerialName("afterHash") val afterHash: String? = null,
