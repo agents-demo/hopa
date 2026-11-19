@@ -76,7 +76,7 @@ In Act, the computer is an adb **driver for the phone's screen**: the phone stil
 chooses what happens, and the computer is never a silent fallback
 (`docs/guides/android/run-modes.md`, `feature/runningapps/ActMode.kt`). In P4 the
 Windows client acts on its **own UIA desktop** and asks the phone only to approve
-the action (ADR-0023). Those rows stay `out` rather than `have`: a Windows screen
+the action (ADR-0024). Those rows stay `out` rather than `have`: a Windows screen
 mirroring the driver mode would imply the wrong owner of the action. What the two
 sides share is the backend gateway, not the device role.
 

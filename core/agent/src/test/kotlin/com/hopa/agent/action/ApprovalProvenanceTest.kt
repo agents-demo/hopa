@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
-/** P4: the record names the device that answered the approval (ADR-0023). */
+/** P4: the record names the device that answered the approval (ADR-0024). */
 class ApprovalProvenanceTest {
     @Test
     fun a_phone_approval_is_named_on_the_record() = runBlocking {

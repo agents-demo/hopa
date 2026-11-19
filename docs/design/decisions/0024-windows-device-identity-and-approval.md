@@ -1,4 +1,4 @@
-# ADR-0023 — Device identity and approval provenance for the Windows client
+# ADR-0024 — Device identity and approval provenance for the Windows client
 
 - Status: accepted
 - Date: 2026-11-17, revised 2026-11-17 for the backend gateway

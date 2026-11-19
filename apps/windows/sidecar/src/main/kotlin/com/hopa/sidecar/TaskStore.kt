@@ -5,7 +5,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * P4: a local *view* of gateway tasks (ADR-0023). The backend's Postgres task
+ * P4: a local *view* of gateway tasks (ADR-0024). The backend's Postgres task
  * store is authoritative; this mirror holds only what the host has received
  * over the gateway so the rail and the turn can read it.
  *
@@ -88,7 +88,7 @@ class TaskStore {
     /**
      * Apply one gateway event. State transitions match TaskRouter.kt:215–221.
      * The sender label comes from the authenticated gateway message, not from
-     * a claim in the body (ADR-0023).
+     * a claim in the body (ADR-0024).
      */
     fun apply(
         taskId: String,

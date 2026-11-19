@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 /**
  * Who answered an approval, and when. P4 pushes approvals to the phone, so the
  * record must name the device that actually approved; a token is not an
- * identity (ADR-0023). `device` is "pc" or "phone".
+ * identity (ADR-0024). `device` is "pc" or "phone".
  */
 @Serializable
 data class Approver(
@@ -17,7 +17,7 @@ data class Approver(
     }
 
     companion object {
-        /** The gateway's platform label maps to the stable record label (ADR-0023). */
+        /** The gateway's platform label maps to the stable record label (ADR-0024). */
         fun fromPlatform(platform: String): Approver = Approver(
             device = when (platform.lowercase()) {
                 "windows" -> "pc"

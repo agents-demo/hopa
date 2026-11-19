@@ -162,7 +162,7 @@ Gate: "open Settings → Wi-Fi" uses an intent, not a sequence of clicks.
 Make the Android app a peer: pair, hand off a task, push approval to the phone,
 return the verified result. The transport is the **backend gateway** built by
 upstream (ADR-0022), not the legacy relay; device identity and task state come
-from the gateway contract (ADR-0023). Do not invent a second transport or a
+from the gateway contract (ADR-0024). Do not invent a second transport or a
 second task state machine.
 
 - [x] `task.start`, `task.get` and `task.handoff` are implemented against the documented shapes. (evidence: docs/project/evidence/P4-phonelink.md "Task messages"; `TaskStore` 11 tests; real NDJSON transcript)
@@ -228,7 +228,7 @@ Gate: a signed MSI on a clean VM, with both targets working.
 - Is the `uiAccess` helper a separate signed executable (recommended) or the main
   app signed with `uiAccess`?
 - ~~Does the Windows client pair its own bridge token, or reuse the phone's?~~
-  Resolved 2026-11-17: **its own** (ADR-0023). Device identity is carried
+  Resolved 2026-11-17: **its own** (ADR-0024). Device identity is carried
   explicitly in task/approval messages, never inferred from a shared credential.
 
 ## 10. Evidence carried over

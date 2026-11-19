@@ -250,7 +250,7 @@ private fun runProtocol(options: CliOptions) {
 
             // The host forwards gateway task events; `from` is the server-set
             // device id, mapped to pc/phone. A `platform` on a result becomes
-            // the approver label on the record (ADR-0023).
+            // the approver label on the record (ADR-0024).
             "task.event" -> {
                 val result = runCatching {
                     val platform = message.text("platform")
@@ -279,7 +279,7 @@ private fun runProtocol(options: CliOptions) {
                 val id = message.text("id")
                 val claimed = message.text("device").ifBlank { "pc" }
                 val allow = message.text("allow").toBoolean()
-                // ADR-0023: an allow that claims the phone cannot be trusted when
+                // ADR-0024: an allow that claims the phone cannot be trusted when
                 // no bridge is attached — there is no path for the phone to have
                 // answered. Refuse it rather than believe the claim (fail closed).
                 if (claimed == "phone" && !config.hasBridge) {

@@ -95,7 +95,7 @@ A `device.result` carries `ok`, and on success any of `observation`, `app`,
 
 The same envelope answers `task.start`, `task.get`, `task.handoff` and
 `task.event` in v1. P4 implements a **local view of a backend gateway task**
-(ADR-0023). States and event names are the gateway's, from ADR-0022 and
+(ADR-0024). States and event names are the gateway's, from ADR-0022 and
 `contracts/schemas/gateway.v1.schema.json` — this is not a second state machine:
 
 ```json

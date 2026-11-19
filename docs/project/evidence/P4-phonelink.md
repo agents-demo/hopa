@@ -1,6 +1,6 @@
 # P4 — phone link (in progress, aligned to the backend gateway)
 
-Date: 2026-11-17. Decision: ADR-0023 (Windows pairs its own backend credential;
+Date: 2026-11-17. Decision: ADR-0024 (Windows pairs its own backend credential;
 device identity and task state come from the gateway, never from a shared token
 or a client-supplied role). This supersedes the earlier relay-based draft after
 upstream added `services/backend` (ADR-0022).
@@ -30,7 +30,7 @@ machine. The host maps IPC messages to and from `Envelope` frames and sets
 
 | Thing | Where |
 |---|---|
-| ADR-0023, gateway-aligned resolution of the plan's open token question | `docs/design/decisions/0023-windows-device-identity-and-approval.md` |
+| ADR-0024, gateway-aligned resolution of the plan's open token question | `docs/design/decisions/0024-windows-device-identity-and-approval.md` |
 | `task.start`, `task.get`, `task.list`, `task.handoff`, `task.event` | `apps/windows/sidecar/.../TaskStore.kt`, `Main.kt`, `Protocol.kt`, `protocol.md` |
 | `approver: {device, at}` on the run record | `contracts/schemas/run-record.schema.json`, `docs/reference/contracts/run-record.md`, `RunRecord`, `RunRecordDraft`, `RunRecordFactory`, `RunChain`, `RunRecordSerializer` |
 | An approval answer carries its source device | `ApprovalDecision`, `ApprovalGateway.decide`, `HostApproval.resolve`, `approval.result.device`, `Protocol.step.approver` |

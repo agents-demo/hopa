@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
-/** P4: the local task view mirrors the backend gateway state machine (ADR-0023). */
+/** P4: the local task view mirrors the backend gateway state machine (ADR-0024). */
 class TaskStoreTest {
     private val store = TaskStore()
 

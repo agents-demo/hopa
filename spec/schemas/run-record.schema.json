@@ -30,7 +30,7 @@
     "approved": { "type": ["boolean", "null"] },
     "approver": {
       "type": "object",
-      "description": "Who answered the approval, and when (P4, ADR-0023). Absent when no approval was asked.",
+      "description": "Who answered the approval, and when (P4, ADR-0024). Absent when no approval was asked.",
       "required": ["device", "at"],
       "properties": {
         "device": { "type": "string", "enum": ["pc", "phone"] },
