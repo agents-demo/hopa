@@ -1,0 +1,2597 @@
+{
+  "meta": {
+    "app": "Google Maps",
+    "package": "com.google.android.apps.maps",
+    "device": "medium_phone (emulator-5554)",
+    "screen": "1080x2400",
+    "sdk": "36",
+    "states": "61",
+    "transitions": "60",
+    "task": "Route from \"${src}\" to \"${dst}\"",
+    "note": "Origin = ${src}; destination = ${dst}. Addresses are templated: replace the placeholders with real addresses before replaying.",
+    "generated_from": "map_tree.xml",
+    "templating": "${src} = origin, ${dst} = destination; substitute real addresses before replaying",
+    "synthetic_states": [
+      "finish"
+    ]
+  },
+  "states": [
+    {
+      "id": "s1",
+      "label": "Map home (Explore)",
+      "final": false,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/below_search_omnibox_container",
+          "com.google.android.apps.maps:id/bottom_nav",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/content_container",
+          "com.google.android.apps.maps:id/contribute_tab_strip_button",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/explore_tab_home_title_card",
+          "com.google.android.apps.maps:id/explore_tab_strip_button",
+          "com.google.android.apps.maps:id/footer_container",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/grippy",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/map_controls_container",
+          "com.google.android.apps.maps:id/map_frame",
+          "com.google.android.apps.maps:id/mod_search_omnibox_layout",
+          "com.google.android.apps.maps:id/navigation_bar_item_active_indicator_view",
+          "com.google.android.apps.maps:id/navigation_bar_item_content_container",
+          "com.google.android.apps.maps:id/navigation_bar_item_icon_container",
+          "com.google.android.apps.maps:id/navigation_bar_item_icon_view",
+          "com.google.android.apps.maps:id/navigation_bar_item_inner_content_container",
+          "com.google.android.apps.maps:id/navigation_bar_item_labels_group",
+          "com.google.android.apps.maps:id/navigation_bar_item_large_label_view",
+          "com.google.android.apps.maps:id/navigation_bar_item_small_label_view",
+          "com.google.android.apps.maps:id/og_apd_internal_image_view",
+          "com.google.android.apps.maps:id/og_selected_account_disc_apd",
+          "com.google.android.apps.maps:id/recycler_view",
+          "com.google.android.apps.maps:id/saved_tab_strip_button",
+          "com.google.android.apps.maps:id/scrollable_card_stream_container",
+          "com.google.android.apps.maps:id/search_omnibox_container",
+          "com.google.android.apps.maps:id/search_omnibox_one_google_account_disc",
+          "com.google.android.apps.maps:id/search_omnibox_text_box",
+          "com.google.android.apps.maps:id/selected_account_disc",
+          "com.google.android.apps.maps:id/sidequest_container"
+        ]
+      },
+      "transitions": [
+        {
+          "to": "s2",
+          "op": "click",
+          "action": "ui.click(search box, desc='Search here')",
+          "target": "search box 'Search here' (id=search_omnibox_text_box)",
+          "find": {
+            "by": "resource-id",
+            "value": "com.google.android.apps.maps:id/search_omnibox_text_box",
+            "match": "exact"
+          }
+        }
+      ],
+      "explored": []
+    },
+    {
+      "id": "s2",
+      "label": "Search page - search box focused, empty",
+      "final": false,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/divider",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/map_controls_container",
+          "com.google.android.apps.maps:id/mod_search_omnibox_layout",
+          "com.google.android.apps.maps:id/recycler_view",
+          "com.google.android.apps.maps:id/search_omnibox_container",
+          "com.google.android.apps.maps:id/search_omnibox_edit_text",
+          "com.google.android.apps.maps:id/search_omnibox_menu_button",
+          "com.google.android.apps.maps:id/search_omnibox_text_box",
+          "com.google.android.apps.maps:id/sidequest_container",
+          "com.google.android.apps.maps:id/suggestion_layout_icon",
+          "com.google.android.apps.maps:id/textbox"
+        ]
+      },
+      "transitions": [
+        {
+          "to": "s3",
+          "op": "set_text",
+          "action": "ui.setText('${src}')",
+          "target": "search box (id=search_omnibox_edit_text, focused)",
+          "text": "${src}",
+          "find": {
+            "by": "resource-id",
+            "value": "com.google.android.apps.maps:id/search_omnibox_edit_text",
+            "match": "exact"
+          }
+        }
+      ],
+      "explored": []
+    },
+    {
+      "id": "s3",
+      "label": "Search page - origin typed, suggestion listed",
+      "final": false,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/map_controls_container",
+          "com.google.android.apps.maps:id/mod_search_omnibox_layout",
+          "com.google.android.apps.maps:id/search_omnibox_container",
+          "com.google.android.apps.maps:id/search_omnibox_edit_text",
+          "com.google.android.apps.maps:id/search_omnibox_menu_button",
+          "com.google.android.apps.maps:id/search_omnibox_text_box",
+          "com.google.android.apps.maps:id/search_omnibox_text_clear",
+          "com.google.android.apps.maps:id/sidequest_container",
+          "com.google.android.apps.maps:id/typed_suggest_container"
+        ]
+      },
+      "transitions": [
+        {
+          "to": "s4",
+          "op": "press",
+          "action": "ui.press('ENTER')",
+          "target": "committed search query '${src}'",
+          "key": "ENTER"
+        }
+      ],
+      "explored": []
+    },
+    {
+      "id": "s4",
+      "label": "Place page - ${src}",
+      "final": false,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/border",
+          "com.google.android.apps.maps:id/business_place_card",
+          "com.google.android.apps.maps:id/card_stack_header",
+          "com.google.android.apps.maps:id/card_stack_header_share_button",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/content_container",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/grippy",
+          "com.google.android.apps.maps:id/header",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/image_icon",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/map_controls_container",
+          "com.google.android.apps.maps:id/map_frame",
+          "com.google.android.apps.maps:id/mod_search_omnibox_layout",
+          "com.google.android.apps.maps:id/place_nested_scroll_view",
+          "com.google.android.apps.maps:id/place_page_tabs_container",
+          "com.google.android.apps.maps:id/place_page_view",
+          "com.google.android.apps.maps:id/place_title",
+          "com.google.android.apps.maps:id/recycler_view",
+          "com.google.android.apps.maps:id/save_action_button",
+          "com.google.android.apps.maps:id/search_omnibox_container",
+          "com.google.android.apps.maps:id/search_omnibox_text_box",
+          "com.google.android.apps.maps:id/search_omnibox_text_clear",
+          "com.google.android.apps.maps:id/sidequest_container",
+          "com.google.android.apps.maps:id/street_view_thumbnail",
+          "com.google.android.apps.maps:id/subtitle_content",
+          "com.google.android.apps.maps:id/terra_navigation_header_close_button",
+          "com.google.android.apps.maps:id/textbox"
+        ]
+      },
+      "transitions": [
+        {
+          "to": "s5",
+          "op": "click",
+          "action": "ui.click(Directions button, desc='Directions to ${src}')",
+          "target": "Directions button",
+          "find": {
+            "by": "desc",
+            "value": "Directions to ${src}",
+            "match": "prefix"
+          }
+        }
+      ],
+      "explored": []
+    },
+    {
+      "id": "s5",
+      "label": "Directions form - ${src} filled as destination, start empty",
+      "final": false,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/directions_mode_tabs",
+          "com.google.android.apps.maps:id/divider",
+          "com.google.android.apps.maps:id/expandingscrollview_container",
+          "com.google.android.apps.maps:id/fab_icon",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/header_container",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/map_frame",
+          "com.google.android.apps.maps:id/mylocation_button",
+          "com.google.android.apps.maps:id/on_map_secondary_action_button_container",
+          "com.google.android.apps.maps:id/qu_mylocation_container",
+          "com.google.android.apps.maps:id/recycler_view",
+          "com.google.android.apps.maps:id/sidequest_container",
+          "com.google.android.apps.maps:id/suggestion_layout_icon",
+          "com.google.android.apps.maps:id/textbox",
+          "com.google.android.apps.maps:id/watermark_image"
+        ]
+      },
+      "transitions": [
+        {
+          "to": "s6",
+          "op": "click",
+          "action": "ui.click(desc='Swap start and destination')",
+          "target": "swap start/destination button",
+          "find": {
+            "by": "desc",
+            "value": "Swap start and destination",
+            "match": "exact"
+          }
+        }
+      ],
+      "explored": []
+    },
+    {
+      "id": "s6",
+      "label": "Directions form - start = ${src}, destination empty",
+      "final": false,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/directions_mode_tabs",
+          "com.google.android.apps.maps:id/divider",
+          "com.google.android.apps.maps:id/expandingscrollview_container",
+          "com.google.android.apps.maps:id/fab_icon",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/header_container",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/map_frame",
+          "com.google.android.apps.maps:id/mylocation_button",
+          "com.google.android.apps.maps:id/on_map_secondary_action_button_container",
+          "com.google.android.apps.maps:id/qu_mylocation_container",
+          "com.google.android.apps.maps:id/recycler_view",
+          "com.google.android.apps.maps:id/sidequest_container",
+          "com.google.android.apps.maps:id/suggestion_layout_icon",
+          "com.google.android.apps.maps:id/textbox",
+          "com.google.android.apps.maps:id/watermark_image"
+        ]
+      },
+      "transitions": [
+        {
+          "to": "s7",
+          "op": "click",
+          "action": "ui.click(text='Choose destination')",
+          "target": "destination field 'Choose destination'",
+          "find": {
+            "by": "text",
+            "value": "Choose destination",
+            "match": "exact"
+          }
+        }
+      ],
+      "explored": []
+    },
+    {
+      "id": "s7",
+      "label": "Directions form - destination field focused",
+      "final": false,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/divider",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/mod_search_omnibox_layout",
+          "com.google.android.apps.maps:id/recycler_view",
+          "com.google.android.apps.maps:id/search_omnibox_container",
+          "com.google.android.apps.maps:id/search_omnibox_edit_text",
+          "com.google.android.apps.maps:id/search_omnibox_menu_button",
+          "com.google.android.apps.maps:id/search_omnibox_text_box",
+          "com.google.android.apps.maps:id/sidequest_container",
+          "com.google.android.apps.maps:id/suggestion_layout_icon",
+          "com.google.android.apps.maps:id/textbox"
+        ]
+      },
+      "transitions": [
+        {
+          "to": "s8",
+          "op": "set_text",
+          "action": "ui.setText('${dst}')",
+          "target": "destination field (id=search_omnibox_edit_text, focused)",
+          "text": "${dst}",
+          "find": {
+            "by": "resource-id",
+            "value": "com.google.android.apps.maps:id/search_omnibox_edit_text",
+            "match": "exact"
+          }
+        }
+      ],
+      "explored": []
+    },
+    {
+      "id": "s8",
+      "label": "Search page - destination typed, suggestion listed",
+      "final": false,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/mod_search_omnibox_layout",
+          "com.google.android.apps.maps:id/search_omnibox_container",
+          "com.google.android.apps.maps:id/search_omnibox_edit_text",
+          "com.google.android.apps.maps:id/search_omnibox_menu_button",
+          "com.google.android.apps.maps:id/search_omnibox_text_box",
+          "com.google.android.apps.maps:id/search_omnibox_text_clear",
+          "com.google.android.apps.maps:id/sidequest_container",
+          "com.google.android.apps.maps:id/typed_suggest_container"
+        ]
+      },
+      "transitions": [
+        {
+          "to": "s9",
+          "op": "click",
+          "action": "ui.click(suggestion '${dst}')",
+          "target": "suggestion row '${dst}'",
+          "find": {
+            "by": "text",
+            "value": "${dst}",
+            "match": "exact"
+          }
+        }
+      ],
+      "explored": []
+    },
+    {
+      "id": "s9",
+      "label": "Route chosen - car (driving) by default",
+      "final": false,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/card_stack_peeking_header_container",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/content_container",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/details_cardlist",
+          "com.google.android.apps.maps:id/details_content",
+          "com.google.android.apps.maps:id/directions_header_preference_action_button",
+          "com.google.android.apps.maps:id/directions_header_share_action_button",
+          "com.google.android.apps.maps:id/directions_mode_tabs",
+          "com.google.android.apps.maps:id/footer_container",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/grippy",
+          "com.google.android.apps.maps:id/header_container",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/map_controls_container",
+          "com.google.android.apps.maps:id/map_frame",
+          "com.google.android.apps.maps:id/map_overlay",
+          "com.google.android.apps.maps:id/precedence_aware_notice_list_item_bullet",
+          "com.google.android.apps.maps:id/precedence_aware_notice_list_item_icon",
+          "com.google.android.apps.maps:id/precedence_aware_notice_list_item_text",
+          "com.google.android.apps.maps:id/street_view_thumbnail",
+          "com.google.android.apps.maps:id/terra_navigation_header_close_button",
+          "com.google.android.apps.maps:id/trip_card_fuel_notice",
+          "com.google.android.apps.maps:id/trip_card_primary_notice",
+          "com.google.android.apps.maps:id/trip_details_contents",
+          "com.google.android.apps.maps:id/trip_details_footer_layout",
+          "com.google.android.apps.maps:id/trip_details_summary_header"
+        ]
+      },
+      "transitions": [
+        {
+          "to": "s10",
+          "op": "click",
+          "action": "ui.click(Transit mode tab, desc='Transit mode: 1 hour 11 minutes')",
+          "target": "transit mode tab",
+          "find": {
+            "by": "desc",
+            "value": "Transit mode",
+            "match": "prefix"
+          }
+        },
+        {
+          "to": "s11",
+          "op": "click",
+          "action": "ui.click(Walking mode tab, desc='Walking mode: 4 hours 47 minutes')",
+          "target": "walking mode tab",
+          "find": {
+            "by": "desc",
+            "value": "Walking mode",
+            "match": "prefix"
+          }
+        },
+        {
+          "to": "s50",
+          "op": "click",
+          "action": "ui.click(Bicycling mode tab, desc='Bicycling mode: 1 hour 15 minutes')",
+          "target": "bicycling mode tab",
+          "find": {
+            "by": "desc",
+            "value": "Bicycling mode",
+            "match": "prefix"
+          }
+        },
+        {
+          "to": "s12",
+          "op": "click",
+          "action": "ui.click(start location field)",
+          "target": "start location field '${src}'",
+          "find": {
+            "by": "text",
+            "value": "${src}",
+            "match": "exact"
+          }
+        },
+        {
+          "to": "s13",
+          "op": "click",
+          "action": "ui.click(destination field)",
+          "target": "destination field '${dst}'",
+          "find": {
+            "by": "text",
+            "value": "${dst}",
+            "match": "exact"
+          }
+        },
+        {
+          "to": "s14",
+          "op": "click",
+          "action": "ui.click(Overflow menu, desc='Overflow menu')",
+          "target": "overflow menu button",
+          "find": {
+            "by": "desc",
+            "value": "Overflow menu",
+            "match": "exact"
+          }
+        },
+        {
+          "to": "s36",
+          "op": "click",
+          "action": "ui.click(Layers button, desc='Layers')",
+          "target": "Layers button",
+          "find": {
+            "by": "desc",
+            "value": "Layers",
+            "match": "exact"
+          }
+        },
+        {
+          "to": "s44",
+          "op": "click",
+          "action": "ui.click(Street view thumbnail)",
+          "target": "street view thumbnail card",
+          "find": {
+            "by": "resource-id",
+            "value": "com.google.android.apps.maps:id/street_view_thumbnail"
+          }
+        },
+        {
+          "to": "s45",
+          "op": "click",
+          "action": "ui.click(My location, desc='Re-center map to your location')",
+          "target": "my-location button",
+          "find": {
+            "by": "desc",
+            "value": "Re-center map to your location",
+            "match": "exact"
+          }
+        },
+        {
+          "to": "s46",
+          "op": "click",
+          "action": "ui.click(trip header 'Drive' area -> selects a map place)",
+          "target": "trip header 'Drive'; tap selected the map place Rishon LeZion",
+          "find": {
+            "by": "text",
+            "value": "Drive",
+            "match": "exact"
+          }
+        },
+        {
+          "to": "s51",
+          "op": "click",
+          "action": "ui.click(trip summary header)",
+          "target": "trip details summary header",
+          "find": {
+            "by": "resource-id",
+            "value": "com.google.android.apps.maps:id/trip_details_summary_header"
+          }
+        }
+      ],
+      "explored": [
+        "Options button -> opens Trip options (recorded as s14->s15, not duplicated)",
+        "Share button -> opens the sharesheet (recorded as s14->s35, not duplicated)",
+        "My location (repeat press after dismissing s45) -> no new state (map re-centers)",
+        "Close (X) -> returns to place page s4 (would cycle, not recorded)",
+        "swap start/destination -> swaps fields and recomputes route (no new state captured)"
+      ]
+    },
+    {
+      "id": "s10",
+      "label": "Method: public transport (1 hr 11 min)",
+      "final": false,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/above_compass_container",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/card_stack_peeking_header_container",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/consistent_trip_card_eta_summary",
+          "com.google.android.apps.maps:id/content_container",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/directions_group_list",
+          "com.google.android.apps.maps:id/directions_header_preference_action_button",
+          "com.google.android.apps.maps:id/directions_header_share_action_button",
+          "com.google.android.apps.maps:id/directions_mode_tabs",
+          "com.google.android.apps.maps:id/fab_icon",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/grippy",
+          "com.google.android.apps.maps:id/header_container",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/layers_fab",
+          "com.google.android.apps.maps:id/layers_fab_button",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/map_frame",
+          "com.google.android.apps.maps:id/map_overlay",
+          "com.google.android.apps.maps:id/mylocation_button",
+          "com.google.android.apps.maps:id/on_map_secondary_action_button_container",
+          "com.google.android.apps.maps:id/qu_mylocation_container",
+          "com.google.android.apps.maps:id/query_options",
+          "com.google.android.apps.maps:id/query_options_filter_carousel",
+          "com.google.android.apps.maps:id/terra_navigation_header_close_button"
+        ]
+      },
+      "transitions": [
+        {
+          "to": "s49",
+          "op": "click",
+          "action": "ui.click(transit trip card)",
+          "target": "transit trip option card in the trip list",
+          "find": {
+            "by": "desc",
+            "value": "Selected route",
+            "match": "prefix"
+          }
+        }
+      ],
+      "explored": [
+        "mode tabs (Driving/Walking/Bicycling) -> s9/s11/s50 (not re-recorded)",
+        "Leave/Modes/Filter spinners, other trip items, Options/Share/Close, footer: not pressed"
+      ]
+    },
+    {
+      "id": "s11",
+      "label": "Method: walking (4 hr 47 min)",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/card_stack_peeking_header_container",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/content_container",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/details_cardlist",
+          "com.google.android.apps.maps:id/details_content",
+          "com.google.android.apps.maps:id/directions_header_preference_action_button",
+          "com.google.android.apps.maps:id/directions_header_share_action_button",
+          "com.google.android.apps.maps:id/directions_mode_tabs",
+          "com.google.android.apps.maps:id/footer_container",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/grippy",
+          "com.google.android.apps.maps:id/header_container",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/map_controls_container",
+          "com.google.android.apps.maps:id/map_frame",
+          "com.google.android.apps.maps:id/map_overlay",
+          "com.google.android.apps.maps:id/street_view_thumbnail",
+          "com.google.android.apps.maps:id/terra_navigation_header_close_button",
+          "com.google.android.apps.maps:id/trip_details_contents",
+          "com.google.android.apps.maps:id/trip_details_footer_layout",
+          "com.google.android.apps.maps:id/trip_details_summary_header"
+        ]
+      },
+      "transitions": [],
+      "explored": [
+        "mode tabs (Driving/Transit/Bicycling) -> s9/s10/s50 (not re-recorded)",
+        "Options/Share/Close, steps, footer: not pressed"
+      ]
+    },
+    {
+      "id": "s12",
+      "label": "Route screen - start location field (edit)",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/map_controls_container",
+          "com.google.android.apps.maps:id/mod_search_omnibox_layout",
+          "com.google.android.apps.maps:id/search_omnibox_container",
+          "com.google.android.apps.maps:id/search_omnibox_edit_text",
+          "com.google.android.apps.maps:id/search_omnibox_menu_button",
+          "com.google.android.apps.maps:id/search_omnibox_text_box",
+          "com.google.android.apps.maps:id/search_omnibox_text_clear",
+          "com.google.android.apps.maps:id/sidequest_container",
+          "com.google.android.apps.maps:id/street_view_thumbnail",
+          "com.google.android.apps.maps:id/typed_suggest_container"
+        ]
+      },
+      "transitions": [],
+      "explored": [
+        "Navigate up -> s9 (not recorded)"
+      ]
+    },
+    {
+      "id": "s13",
+      "label": "Route screen - destination field (edit)",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/map_controls_container",
+          "com.google.android.apps.maps:id/mod_search_omnibox_layout",
+          "com.google.android.apps.maps:id/search_omnibox_container",
+          "com.google.android.apps.maps:id/search_omnibox_edit_text",
+          "com.google.android.apps.maps:id/search_omnibox_menu_button",
+          "com.google.android.apps.maps:id/search_omnibox_text_box",
+          "com.google.android.apps.maps:id/search_omnibox_text_clear",
+          "com.google.android.apps.maps:id/sidequest_container",
+          "com.google.android.apps.maps:id/street_view_thumbnail",
+          "com.google.android.apps.maps:id/typed_suggest_container"
+        ]
+      },
+      "transitions": [],
+      "explored": [
+        "Navigate up -> s9 (not recorded)"
+      ]
+    },
+    {
+      "id": "s14",
+      "label": "Route screen - overflow menu (8 items)",
+      "final": false,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "android:id/title"
+        ]
+      },
+      "transitions": [
+        {
+          "to": "s15",
+          "op": "click",
+          "action": "ui.click('Options')",
+          "target": "menu item 'Options'",
+          "find": {
+            "by": "text",
+            "value": "Options",
+            "match": "exact"
+          }
+        },
+        {
+          "to": "s26",
+          "op": "click",
+          "action": "ui.click('Edit stops')",
+          "target": "menu item 'Edit stops'",
+          "find": {
+            "by": "text",
+            "value": "Edit stops",
+            "match": "exact"
+          }
+        },
+        {
+          "to": "s30",
+          "op": "click",
+          "action": "ui.click('Set depart or arrive time')",
+          "target": "menu item 'Set depart or arrive time'",
+          "find": {
+            "by": "text",
+            "value": "Set depart or arrive time",
+            "match": "exact"
+          }
+        },
+        {
+          "to": "s34",
+          "op": "click",
+          "action": "ui.click('Add route to Home screen')",
+          "target": "menu item 'Add route to Home screen'",
+          "find": {
+            "by": "text",
+            "value": "Add route to Home screen",
+            "match": "exact"
+          }
+        },
+        {
+          "to": "s35",
+          "op": "click",
+          "action": "ui.click('Share directions')",
+          "target": "menu item 'Share directions'",
+          "find": {
+            "by": "text",
+            "value": "Share directions",
+            "match": "exact"
+          }
+        },
+        {
+          "to": "s61",
+          "op": "click",
+          "action": "ui.click('About these results')",
+          "target": "menu item 'About these results'",
+          "find": {
+            "by": "text",
+            "value": "About these results",
+            "match": "exact"
+          }
+        }
+      ],
+      "explored": [
+        "Share your location -> exits directions to the map home s1 (would cycle, not recorded)",
+        "Refresh -> refreshes route, returns to s9 (would cycle, not recorded)"
+      ]
+    },
+    {
+      "id": "s15",
+      "label": "Trip options",
+      "final": false,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/mod_app_bar",
+          "com.google.android.apps.maps:id/mod_app_bar_button_icon",
+          "com.google.android.apps.maps:id/mod_app_bar_fullscreen_content_view",
+          "com.google.android.apps.maps:id/nav_button",
+          "com.google.android.apps.maps:id/sidequest_container",
+          "com.google.android.apps.maps:id/start_section",
+          "com.google.android.apps.maps:id/title",
+          "com.google.android.apps.maps:id/title_frame",
+          "com.google.android.apps.maps:id/title_section",
+          "com.google.android.apps.maps:id/toolbar"
+        ]
+      },
+      "transitions": [
+        {
+          "to": "s16",
+          "op": "click",
+          "action": "ui.click(switch 'Avoid tolls' -> ON)",
+          "target": "trip options row 'Avoid tolls'",
+          "find": {
+            "by": "text",
+            "value": "Avoid tolls",
+            "match": "exact"
+          }
+        },
+        {
+          "to": "s17",
+          "op": "click",
+          "action": "ui.click(switch 'Avoid highways' -> ON)",
+          "target": "trip options row 'Avoid highways'",
+          "find": {
+            "by": "text",
+            "value": "Avoid highways",
+            "match": "exact"
+          }
+        },
+        {
+          "to": "s18",
+          "op": "click",
+          "action": "ui.click(switch 'Avoid ferries' -> ON)",
+          "target": "trip options row 'Avoid ferries'",
+          "find": {
+            "by": "text",
+            "value": "Avoid ferries",
+            "match": "exact"
+          }
+        },
+        {
+          "to": "s19",
+          "op": "click",
+          "action": "ui.click(switch 'Prefer fuel-efficient routes' -> OFF)",
+          "target": "trip options row 'Prefer fuel-efficient routes'",
+          "find": {
+            "by": "text",
+            "value": "Prefer fuel-efficient routes",
+            "match": "exact"
+          }
+        },
+        {
+          "to": "s20",
+          "op": "click",
+          "action": "ui.click('Your vehicles')",
+          "target": "trip options row 'Your vehicles'",
+          "find": {
+            "by": "text",
+            "value": "Your vehicles",
+            "match": "exact"
+          }
+        }
+      ],
+      "explored": [
+        "Close (X) -> s9 (not recorded)"
+      ]
+    },
+    {
+      "id": "s16",
+      "label": "Trip options - Avoid tolls ON",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/mod_app_bar",
+          "com.google.android.apps.maps:id/mod_app_bar_button_icon",
+          "com.google.android.apps.maps:id/mod_app_bar_fullscreen_content_view",
+          "com.google.android.apps.maps:id/nav_button",
+          "com.google.android.apps.maps:id/sidequest_container",
+          "com.google.android.apps.maps:id/start_section",
+          "com.google.android.apps.maps:id/title",
+          "com.google.android.apps.maps:id/title_frame",
+          "com.google.android.apps.maps:id/title_section",
+          "com.google.android.apps.maps:id/toolbar"
+        ]
+      },
+      "transitions": [],
+      "explored": []
+    },
+    {
+      "id": "s17",
+      "label": "Trip options - Avoid highways ON",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/mod_app_bar",
+          "com.google.android.apps.maps:id/mod_app_bar_button_icon",
+          "com.google.android.apps.maps:id/mod_app_bar_fullscreen_content_view",
+          "com.google.android.apps.maps:id/nav_button",
+          "com.google.android.apps.maps:id/sidequest_container",
+          "com.google.android.apps.maps:id/start_section",
+          "com.google.android.apps.maps:id/title",
+          "com.google.android.apps.maps:id/title_frame",
+          "com.google.android.apps.maps:id/title_section",
+          "com.google.android.apps.maps:id/toolbar"
+        ]
+      },
+      "transitions": [],
+      "explored": []
+    },
+    {
+      "id": "s18",
+      "label": "Trip options - Avoid ferries ON",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/mod_app_bar",
+          "com.google.android.apps.maps:id/mod_app_bar_button_icon",
+          "com.google.android.apps.maps:id/mod_app_bar_fullscreen_content_view",
+          "com.google.android.apps.maps:id/nav_button",
+          "com.google.android.apps.maps:id/sidequest_container",
+          "com.google.android.apps.maps:id/start_section",
+          "com.google.android.apps.maps:id/title",
+          "com.google.android.apps.maps:id/title_frame",
+          "com.google.android.apps.maps:id/title_section",
+          "com.google.android.apps.maps:id/toolbar"
+        ]
+      },
+      "transitions": [],
+      "explored": []
+    },
+    {
+      "id": "s19",
+      "label": "Trip options - Prefer fuel-efficient routes OFF",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/mod_app_bar",
+          "com.google.android.apps.maps:id/mod_app_bar_button_icon",
+          "com.google.android.apps.maps:id/mod_app_bar_fullscreen_content_view",
+          "com.google.android.apps.maps:id/nav_button",
+          "com.google.android.apps.maps:id/sidequest_container",
+          "com.google.android.apps.maps:id/start_section",
+          "com.google.android.apps.maps:id/title",
+          "com.google.android.apps.maps:id/title_frame",
+          "com.google.android.apps.maps:id/title_section",
+          "com.google.android.apps.maps:id/toolbar"
+        ]
+      },
+      "transitions": [],
+      "explored": []
+    },
+    {
+      "id": "s20",
+      "label": "Your vehicles (engine type + driving avatar)",
+      "final": false,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/engine_type_layout",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/sidequest_container",
+          "com.google.android.apps.maps:id/terra_navigation_header_close_button"
+        ]
+      },
+      "transitions": [
+        {
+          "to": "s21",
+          "op": "click",
+          "action": "ui.click(engine type 'Diesel')",
+          "target": "engine type button 'Diesel'",
+          "find": {
+            "by": "text",
+            "value": "Diesel",
+            "match": "exact"
+          }
+        },
+        {
+          "to": "s22",
+          "op": "click",
+          "action": "ui.click(engine type 'Electric')",
+          "target": "engine type button 'Electric'",
+          "find": {
+            "by": "text",
+            "value": "Electric",
+            "match": "exact"
+          }
+        },
+        {
+          "to": "s23",
+          "op": "click",
+          "action": "ui.click('Driving avatar' card)",
+          "target": "driving avatar card",
+          "find": {
+            "by": "text",
+            "value": "Driving avatar"
+          }
+        }
+      ],
+      "explored": [
+        "engine type 'Gas' -> default (no change); 'Hybrid' not pressed; Close -> s15 (not recorded)"
+      ]
+    },
+    {
+      "id": "s21",
+      "label": "Your vehicles - Diesel selected",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/engine_type_layout",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/sidequest_container",
+          "com.google.android.apps.maps:id/terra_navigation_header_close_button"
+        ]
+      },
+      "transitions": [],
+      "explored": []
+    },
+    {
+      "id": "s22",
+      "label": "Your vehicles - Electric selected",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/engine_type_layout",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/sidequest_container",
+          "com.google.android.apps.maps:id/terra_navigation_header_close_button"
+        ]
+      },
+      "transitions": [],
+      "explored": []
+    },
+    {
+      "id": "s23",
+      "label": "Choose driving avatar",
+      "final": false,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/container",
+          "com.google.android.apps.maps:id/coordinator",
+          "com.google.android.apps.maps:id/design_bottom_sheet",
+          "com.google.android.apps.maps:id/navatars_carousel",
+          "com.google.android.apps.maps:id/recycler_view",
+          "com.google.android.apps.maps:id/touch_outside"
+        ]
+      },
+      "transitions": [
+        {
+          "to": "s24",
+          "op": "click",
+          "action": "ui.click(avatar option 2)",
+          "target": "avatar carousel option 2",
+          "find": null,
+          "needs_review": true,
+          "review_reason": "manual override: unresolved"
+        }
+      ],
+      "explored": [
+        "Done -> no visible change (sheet stayed open); color swatches not pressed"
+      ]
+    },
+    {
+      "id": "s24",
+      "label": "Choose driving avatar - avatar 2 selected",
+      "final": false,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/container",
+          "com.google.android.apps.maps:id/coordinator",
+          "com.google.android.apps.maps:id/design_bottom_sheet",
+          "com.google.android.apps.maps:id/navatars_carousel",
+          "com.google.android.apps.maps:id/recycler_view",
+          "com.google.android.apps.maps:id/touch_outside"
+        ]
+      },
+      "transitions": [
+        {
+          "to": "s25",
+          "op": "click",
+          "action": "ui.click(Close, desc='Close')",
+          "target": "avatar sheet close button; returns to Your vehicles with the custom avatar",
+          "find": {
+            "by": "desc",
+            "value": "Close",
+            "match": "exact"
+          }
+        }
+      ],
+      "explored": []
+    },
+    {
+      "id": "s25",
+      "label": "Your vehicles - Custom avatar",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/engine_type_layout",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/sidequest_container",
+          "com.google.android.apps.maps:id/terra_navigation_header_close_button"
+        ]
+      },
+      "transitions": [],
+      "explored": []
+    },
+    {
+      "id": "s26",
+      "label": "Edit stops",
+      "final": false,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/edit_waypoints_done_button",
+          "com.google.android.apps.maps:id/edit_waypoints_list",
+          "com.google.android.apps.maps:id/expandingscrollview_container",
+          "com.google.android.apps.maps:id/fab_icon",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/header_container",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/map_frame",
+          "com.google.android.apps.maps:id/mylocation_button",
+          "com.google.android.apps.maps:id/on_map_secondary_action_button_container",
+          "com.google.android.apps.maps:id/qu_mylocation_container"
+        ]
+      },
+      "transitions": [
+        {
+          "to": "s27",
+          "op": "click",
+          "action": "ui.click(Remove waypoint ${src})",
+          "target": "waypoint row remove button 'Remove waypoint ${src}'",
+          "find": {
+            "by": "desc",
+            "value": "Remove waypoint ${src}",
+            "match": "exact"
+          }
+        },
+        {
+          "to": "s28",
+          "op": "click",
+          "action": "ui.click('Choose destination' add-stop field)",
+          "target": "add-stop row 'Choose destination'",
+          "find": {
+            "by": "text",
+            "value": "Choose destination",
+            "match": "exact"
+          }
+        },
+        {
+          "to": "s29",
+          "op": "drag",
+          "action": "ui.drag(waypoint handle ${src}, down one row)",
+          "target": "drag handle 'Drag stop ${src}' dragged down one row",
+          "find": {
+            "by": "desc",
+            "value": "Drag stop ${src}",
+            "match": "exact"
+          },
+          "move": {
+            "delta": [
+              0,
+              126
+            ]
+          }
+        }
+      ],
+      "explored": [
+        "Done -> applies unchanged waypoints, returns to s9 (not recorded)",
+        "Navigate up -> discards, returns to s9 (not recorded)"
+      ]
+    },
+    {
+      "id": "s27",
+      "label": "Edit stops - start waypoint removed",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/edit_waypoints_done_button",
+          "com.google.android.apps.maps:id/edit_waypoints_list",
+          "com.google.android.apps.maps:id/expandingscrollview_container",
+          "com.google.android.apps.maps:id/fab_icon",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/header_container",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/map_frame",
+          "com.google.android.apps.maps:id/mylocation_button",
+          "com.google.android.apps.maps:id/on_map_secondary_action_button_container",
+          "com.google.android.apps.maps:id/qu_mylocation_container"
+        ]
+      },
+      "transitions": [],
+      "explored": [
+        "Navigate up -> discards removal, returns to s9 (not recorded)"
+      ]
+    },
+    {
+      "id": "s28",
+      "label": "Edit stops - add stop field focused",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/divider",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/mod_search_omnibox_layout",
+          "com.google.android.apps.maps:id/recycler_view",
+          "com.google.android.apps.maps:id/search_omnibox_container",
+          "com.google.android.apps.maps:id/search_omnibox_edit_text",
+          "com.google.android.apps.maps:id/search_omnibox_menu_button",
+          "com.google.android.apps.maps:id/search_omnibox_text_box",
+          "com.google.android.apps.maps:id/sidequest_container",
+          "com.google.android.apps.maps:id/suggestion_layout_icon",
+          "com.google.android.apps.maps:id/textbox"
+        ]
+      },
+      "transitions": [],
+      "explored": [
+        "Navigate up -> s26 (not recorded); text not entered in the add-stop field"
+      ]
+    },
+    {
+      "id": "s29",
+      "label": "Edit stops - stops reordered by drag",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/edit_waypoints_done_button",
+          "com.google.android.apps.maps:id/edit_waypoints_list",
+          "com.google.android.apps.maps:id/expandingscrollview_container",
+          "com.google.android.apps.maps:id/fab_icon",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/header_container",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/map_frame",
+          "com.google.android.apps.maps:id/mylocation_button",
+          "com.google.android.apps.maps:id/on_map_secondary_action_button_container",
+          "com.google.android.apps.maps:id/qu_mylocation_container"
+        ]
+      },
+      "transitions": [],
+      "explored": [
+        "Navigate up -> discards reorder, returns to s9 (not recorded)"
+      ]
+    },
+    {
+      "id": "s30",
+      "label": "Set depart or arrive time (Leave)",
+      "final": false,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "android:id/divider",
+          "android:id/numberpicker_input",
+          "android:id/timePickerLayout",
+          "com.google.android.apps.maps:id/arriveby_button",
+          "com.google.android.apps.maps:id/date_pager",
+          "com.google.android.apps.maps:id/departat_button",
+          "com.google.android.apps.maps:id/dialog_negative_button",
+          "com.google.android.apps.maps:id/dialog_positive_button",
+          "com.google.android.apps.maps:id/divider",
+          "com.google.android.apps.maps:id/forward_button",
+          "com.google.android.apps.maps:id/previous_button",
+          "com.google.android.apps.maps:id/textbox"
+        ]
+      },
+      "transitions": [
+        {
+          "to": "s31",
+          "op": "click",
+          "action": "ui.click('Arrive' tab)",
+          "target": "tab 'Arrive'",
+          "find": {
+            "by": "text",
+            "value": "Arrive",
+            "match": "exact"
+          }
+        }
+      ],
+      "explored": [
+        "Cancel / Reset to current time -> no state change (not recorded); date prev/next not pressed"
+      ]
+    },
+    {
+      "id": "s31",
+      "label": "Set depart or arrive time (Arrive)",
+      "final": false,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "android:id/divider",
+          "android:id/numberpicker_input",
+          "android:id/timePickerLayout",
+          "com.google.android.apps.maps:id/arriveby_button",
+          "com.google.android.apps.maps:id/date_pager",
+          "com.google.android.apps.maps:id/departat_button",
+          "com.google.android.apps.maps:id/dialog_negative_button",
+          "com.google.android.apps.maps:id/dialog_positive_button",
+          "com.google.android.apps.maps:id/divider",
+          "com.google.android.apps.maps:id/forward_button",
+          "com.google.android.apps.maps:id/previous_button",
+          "com.google.android.apps.maps:id/textbox"
+        ]
+      },
+      "transitions": [
+        {
+          "to": "s32",
+          "op": "click",
+          "action": "ui.click(minute picker)",
+          "target": "time picker minute column",
+          "find": {
+            "by": "resource-id",
+            "value": "android:id/numberpicker_input",
+            "child_index": 0
+          }
+        }
+      ],
+      "explored": []
+    },
+    {
+      "id": "s32",
+      "label": "Time dialog - minute changed",
+      "final": false,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "android:id/divider",
+          "android:id/numberpicker_input",
+          "android:id/timePickerLayout",
+          "com.google.android.apps.maps:id/arriveby_button",
+          "com.google.android.apps.maps:id/date_pager",
+          "com.google.android.apps.maps:id/departat_button",
+          "com.google.android.apps.maps:id/dialog_negative_button",
+          "com.google.android.apps.maps:id/dialog_positive_button",
+          "com.google.android.apps.maps:id/divider",
+          "com.google.android.apps.maps:id/forward_button",
+          "com.google.android.apps.maps:id/previous_button",
+          "com.google.android.apps.maps:id/textbox"
+        ]
+      },
+      "transitions": [
+        {
+          "to": "s33",
+          "op": "click",
+          "action": "ui.click('Set')",
+          "target": "dialog button 'Set'",
+          "find": {
+            "by": "text",
+            "value": "Set",
+            "match": "exact"
+          }
+        }
+      ],
+      "explored": []
+    },
+    {
+      "id": "s33",
+      "label": "Route screen - time applied, route recomputed",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/card_stack_peeking_header_container",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/content_container",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/details_cardlist",
+          "com.google.android.apps.maps:id/details_content",
+          "com.google.android.apps.maps:id/directions_header_preference_action_button",
+          "com.google.android.apps.maps:id/directions_header_share_action_button",
+          "com.google.android.apps.maps:id/directions_mode_tabs",
+          "com.google.android.apps.maps:id/expandingscrollview_container",
+          "com.google.android.apps.maps:id/footer_container",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/grippy",
+          "com.google.android.apps.maps:id/header_container",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/map_controls_container",
+          "com.google.android.apps.maps:id/map_frame",
+          "com.google.android.apps.maps:id/map_overlay",
+          "com.google.android.apps.maps:id/precedence_aware_notice_list_item_bullet",
+          "com.google.android.apps.maps:id/precedence_aware_notice_list_item_icon",
+          "com.google.android.apps.maps:id/precedence_aware_notice_list_item_text",
+          "com.google.android.apps.maps:id/street_view_thumbnail",
+          "com.google.android.apps.maps:id/terra_navigation_header_close_button",
+          "com.google.android.apps.maps:id/trip_card_fuel_notice",
+          "com.google.android.apps.maps:id/trip_card_primary_notice",
+          "com.google.android.apps.maps:id/trip_details_contents",
+          "com.google.android.apps.maps:id/trip_details_footer_layout",
+          "com.google.android.apps.maps:id/trip_details_summary_header"
+        ]
+      },
+      "transitions": [],
+      "explored": [
+        "(route recomputed after Set time; data varies with time of day)"
+      ]
+    },
+    {
+      "id": "s34",
+      "label": "Add route to Home screen (widget picker)",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.nexuslauncher:id/actions_container",
+          "com.google.android.apps.nexuslauncher:id/add_item_bottom_sheet_content",
+          "com.google.android.apps.nexuslauncher:id/add_item_drag_layer",
+          "com.google.android.apps.nexuslauncher:id/widget_appName",
+          "com.google.android.apps.nexuslauncher:id/widget_cell",
+          "com.google.android.apps.nexuslauncher:id/widget_dims",
+          "com.google.android.apps.nexuslauncher:id/widget_drag_instruction",
+          "com.google.android.apps.nexuslauncher:id/widget_name",
+          "com.google.android.apps.nexuslauncher:id/widget_preview",
+          "com.google.android.apps.nexuslauncher:id/widget_preview_container",
+          "com.google.android.apps.nexuslauncher:id/widget_preview_scroll_view",
+          "com.google.android.apps.nexuslauncher:id/widget_text_container"
+        ]
+      },
+      "transitions": [],
+      "explored": [
+        "Add to home screen -> widget placed, returns to the route screen (not recorded); Cancel not pressed"
+      ]
+    },
+    {
+      "id": "s35",
+      "label": "Share directions (Android sharesheet)",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/chooser_header",
+          "android:id/chooser_row_text_option",
+          "android:id/content",
+          "android:id/contentPanel",
+          "android:id/content_preview_container",
+          "android:id/content_preview_text",
+          "android:id/content_preview_text_area",
+          "android:id/content_preview_title",
+          "android:id/drag",
+          "android:id/icon",
+          "android:id/profile_pager",
+          "android:id/profile_tabhost",
+          "android:id/resolver_list",
+          "android:id/tabcontent",
+          "android:id/text1",
+          "android:id/text2",
+          "com.android.intentresolver:id/chooser_headline_row",
+          "com.android.intentresolver:id/chooser_headline_row_container",
+          "com.android.intentresolver:id/chooser_scrollable_container",
+          "com.android.intentresolver:id/copy",
+          "com.android.intentresolver:id/headline",
+          "com.android.intentresolver:id/item",
+          "com.android.intentresolver:id/shortcuts_container",
+          "com.android.intentresolver:id/suggested_apps_container",
+          "com.android.intentresolver:id/text_preview_layout"
+        ]
+      },
+      "transitions": [],
+      "explored": [
+        "Copy link -> copies link, sheet closes to the route screen (not recorded); app targets not pressed (leave Maps)"
+      ]
+    },
+    {
+      "id": "s36",
+      "label": "Layers menu",
+      "final": false,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "android:id/title",
+          "com.google.android.apps.maps:id/layers_menu_air_quality_layer",
+          "com.google.android.apps.maps:id/layers_menu_bicycling_layer",
+          "com.google.android.apps.maps:id/layers_menu_default_layer",
+          "com.google.android.apps.maps:id/layers_menu_satellite_layer",
+          "com.google.android.apps.maps:id/layers_menu_streetview_layer",
+          "com.google.android.apps.maps:id/layers_menu_terrain_layer",
+          "com.google.android.apps.maps:id/layers_menu_three_dimensional_layer",
+          "com.google.android.apps.maps:id/layers_menu_traffic_layer",
+          "com.google.android.apps.maps:id/layers_menu_transit_layer",
+          "com.google.android.apps.maps:id/layers_menu_wildfires_layer"
+        ]
+      },
+      "transitions": [
+        {
+          "to": "s37",
+          "op": "click",
+          "action": "ui.click(layer 'Satellite')",
+          "target": "map type checkbox 'Satellite'",
+          "find": {
+            "by": "text",
+            "value": "Satellite",
+            "match": "exact"
+          }
+        },
+        {
+          "to": "s38",
+          "op": "click",
+          "action": "ui.click(layer 'Terrain')",
+          "target": "map type checkbox 'Terrain'",
+          "find": {
+            "by": "text",
+            "value": "Terrain",
+            "match": "exact"
+          }
+        },
+        {
+          "to": "s39",
+          "op": "click",
+          "action": "ui.click(detail 'Traffic')",
+          "target": "map detail checkbox 'Traffic'",
+          "find": {
+            "by": "text",
+            "value": "Traffic",
+            "match": "exact"
+          }
+        },
+        {
+          "to": "s40",
+          "op": "click",
+          "action": "ui.click(detail 'Bicycling')",
+          "target": "map detail checkbox 'Bicycling'",
+          "find": {
+            "by": "text",
+            "value": "Bicycling",
+            "match": "exact"
+          }
+        },
+        {
+          "to": "s41",
+          "op": "click",
+          "action": "ui.click(detail 'Street View')",
+          "target": "map detail checkbox 'Street View'",
+          "find": {
+            "by": "text",
+            "value": "Street View",
+            "match": "exact"
+          }
+        },
+        {
+          "to": "s42",
+          "op": "click",
+          "action": "ui.click(detail 'Public transit')",
+          "target": "map detail checkbox 'Public transit'",
+          "find": {
+            "by": "text",
+            "value": "Public transit",
+            "match": "exact"
+          }
+        },
+        {
+          "to": "s43",
+          "op": "click",
+          "action": "ui.click(detail 'Raised buildings')",
+          "target": "map detail checkbox 'Raised buildings'",
+          "find": {
+            "by": "text",
+            "value": "Raised buildings",
+            "match": "exact"
+          }
+        }
+      ],
+      "explored": [
+        "Close menu -> s9 (not recorded)"
+      ]
+    },
+    {
+      "id": "s37",
+      "label": "Layers - Satellite map type",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "android:id/title",
+          "com.google.android.apps.maps:id/layers_menu_air_quality_layer",
+          "com.google.android.apps.maps:id/layers_menu_bicycling_layer",
+          "com.google.android.apps.maps:id/layers_menu_default_layer",
+          "com.google.android.apps.maps:id/layers_menu_satellite_layer",
+          "com.google.android.apps.maps:id/layers_menu_streetview_layer",
+          "com.google.android.apps.maps:id/layers_menu_terrain_layer",
+          "com.google.android.apps.maps:id/layers_menu_three_dimensional_layer",
+          "com.google.android.apps.maps:id/layers_menu_traffic_layer",
+          "com.google.android.apps.maps:id/layers_menu_transit_layer",
+          "com.google.android.apps.maps:id/layers_menu_wildfires_layer"
+        ]
+      },
+      "transitions": [],
+      "explored": [
+        "toggle back to Default -> s36 (not recorded)"
+      ]
+    },
+    {
+      "id": "s38",
+      "label": "Layers - Terrain map type",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "android:id/title",
+          "com.google.android.apps.maps:id/layers_menu_air_quality_layer",
+          "com.google.android.apps.maps:id/layers_menu_bicycling_layer",
+          "com.google.android.apps.maps:id/layers_menu_default_layer",
+          "com.google.android.apps.maps:id/layers_menu_satellite_layer",
+          "com.google.android.apps.maps:id/layers_menu_streetview_layer",
+          "com.google.android.apps.maps:id/layers_menu_terrain_layer",
+          "com.google.android.apps.maps:id/layers_menu_three_dimensional_layer",
+          "com.google.android.apps.maps:id/layers_menu_traffic_layer",
+          "com.google.android.apps.maps:id/layers_menu_transit_layer",
+          "com.google.android.apps.maps:id/layers_menu_wildfires_layer"
+        ]
+      },
+      "transitions": [],
+      "explored": [
+        "toggle back to Default -> s36 (not recorded)"
+      ]
+    },
+    {
+      "id": "s39",
+      "label": "Layers - Traffic ON",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "android:id/title",
+          "com.google.android.apps.maps:id/layers_menu_air_quality_layer",
+          "com.google.android.apps.maps:id/layers_menu_bicycling_layer",
+          "com.google.android.apps.maps:id/layers_menu_default_layer",
+          "com.google.android.apps.maps:id/layers_menu_satellite_layer",
+          "com.google.android.apps.maps:id/layers_menu_streetview_layer",
+          "com.google.android.apps.maps:id/layers_menu_terrain_layer",
+          "com.google.android.apps.maps:id/layers_menu_three_dimensional_layer",
+          "com.google.android.apps.maps:id/layers_menu_traffic_layer",
+          "com.google.android.apps.maps:id/layers_menu_transit_layer",
+          "com.google.android.apps.maps:id/layers_menu_wildfires_layer"
+        ]
+      },
+      "transitions": [],
+      "explored": [
+        "toggle Traffic OFF -> s36 (not recorded)"
+      ]
+    },
+    {
+      "id": "s40",
+      "label": "Layers - Bicycling ON",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "android:id/title",
+          "com.google.android.apps.maps:id/layers_menu_air_quality_layer",
+          "com.google.android.apps.maps:id/layers_menu_bicycling_layer",
+          "com.google.android.apps.maps:id/layers_menu_default_layer",
+          "com.google.android.apps.maps:id/layers_menu_satellite_layer",
+          "com.google.android.apps.maps:id/layers_menu_streetview_layer",
+          "com.google.android.apps.maps:id/layers_menu_terrain_layer",
+          "com.google.android.apps.maps:id/layers_menu_three_dimensional_layer",
+          "com.google.android.apps.maps:id/layers_menu_traffic_layer",
+          "com.google.android.apps.maps:id/layers_menu_transit_layer",
+          "com.google.android.apps.maps:id/layers_menu_wildfires_layer"
+        ]
+      },
+      "transitions": [],
+      "explored": [
+        "toggle Bicycling OFF -> s36 (not recorded)"
+      ]
+    },
+    {
+      "id": "s41",
+      "label": "Layers - Street View ON",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "android:id/title",
+          "com.google.android.apps.maps:id/layers_menu_air_quality_layer",
+          "com.google.android.apps.maps:id/layers_menu_bicycling_layer",
+          "com.google.android.apps.maps:id/layers_menu_default_layer",
+          "com.google.android.apps.maps:id/layers_menu_satellite_layer",
+          "com.google.android.apps.maps:id/layers_menu_streetview_layer",
+          "com.google.android.apps.maps:id/layers_menu_terrain_layer",
+          "com.google.android.apps.maps:id/layers_menu_three_dimensional_layer",
+          "com.google.android.apps.maps:id/layers_menu_traffic_layer",
+          "com.google.android.apps.maps:id/layers_menu_transit_layer",
+          "com.google.android.apps.maps:id/layers_menu_wildfires_layer"
+        ]
+      },
+      "transitions": [],
+      "explored": [
+        "toggle Street View OFF -> s36 (not recorded)"
+      ]
+    },
+    {
+      "id": "s42",
+      "label": "Layers - Public transit ON",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "android:id/title",
+          "com.google.android.apps.maps:id/layers_menu_air_quality_layer",
+          "com.google.android.apps.maps:id/layers_menu_bicycling_layer",
+          "com.google.android.apps.maps:id/layers_menu_default_layer",
+          "com.google.android.apps.maps:id/layers_menu_satellite_layer",
+          "com.google.android.apps.maps:id/layers_menu_streetview_layer",
+          "com.google.android.apps.maps:id/layers_menu_terrain_layer",
+          "com.google.android.apps.maps:id/layers_menu_three_dimensional_layer",
+          "com.google.android.apps.maps:id/layers_menu_traffic_layer",
+          "com.google.android.apps.maps:id/layers_menu_transit_layer",
+          "com.google.android.apps.maps:id/layers_menu_wildfires_layer"
+        ]
+      },
+      "transitions": [],
+      "explored": [
+        "toggle Public transit OFF -> s36 (not recorded)"
+      ]
+    },
+    {
+      "id": "s43",
+      "label": "Layers - Raised buildings ON",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "android:id/title",
+          "com.google.android.apps.maps:id/layers_menu_air_quality_layer",
+          "com.google.android.apps.maps:id/layers_menu_bicycling_layer",
+          "com.google.android.apps.maps:id/layers_menu_default_layer",
+          "com.google.android.apps.maps:id/layers_menu_satellite_layer",
+          "com.google.android.apps.maps:id/layers_menu_streetview_layer",
+          "com.google.android.apps.maps:id/layers_menu_terrain_layer",
+          "com.google.android.apps.maps:id/layers_menu_three_dimensional_layer",
+          "com.google.android.apps.maps:id/layers_menu_traffic_layer",
+          "com.google.android.apps.maps:id/layers_menu_transit_layer",
+          "com.google.android.apps.maps:id/layers_menu_wildfires_layer"
+        ]
+      },
+      "transitions": [],
+      "explored": [
+        "toggle Raised buildings OFF -> s36 (not recorded)"
+      ]
+    },
+    {
+      "id": "s44",
+      "label": "Street view panorama (half screen)",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/map_frame",
+          "com.google.android.apps.maps:id/map_overlay",
+          "com.google.android.apps.maps:id/sidequest_container",
+          "com.google.android.apps.maps:id/street_view_footer",
+          "com.google.android.apps.maps:id/street_view_minimap_toggle_button",
+          "com.google.android.apps.maps:id/street_view_pano_container",
+          "com.google.android.apps.maps:id/street_view_route_cards_container",
+          "com.google.android.apps.maps:id/street_view_toolbar",
+          "com.google.android.apps.maps:id/user",
+          "com.google.android.apps.maps:id/user_avatar",
+          "com.google.android.apps.maps:id/user_display_name",
+          "com.google.android.apps.maps:id/zen_app_bar_immersive_nav_button",
+          "com.google.android.apps.maps:id/zen_app_bar_immersive_overflow_button"
+        ]
+      },
+      "transitions": [],
+      "explored": [
+        "BACK -> s9 (not recorded)"
+      ]
+    },
+    {
+      "id": "s45",
+      "label": "Google Location Accuracy dialog",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/button1",
+          "android:id/button2",
+          "android:id/content",
+          "com.google.android.gms:id/action_bar_root",
+          "com.google.android.gms:id/buttonPanel",
+          "com.google.android.gms:id/custom",
+          "com.google.android.gms:id/customPanel",
+          "com.google.android.gms:id/details_end",
+          "com.google.android.gms:id/details_start",
+          "com.google.android.gms:id/image",
+          "com.google.android.gms:id/message",
+          "com.google.android.gms:id/messages",
+          "com.google.android.gms:id/parentPanel",
+          "com.google.android.gms:id/text"
+        ]
+      },
+      "transitions": [],
+      "explored": [
+        "No thanks -> dismisses, returns to s9 (not recorded); 'Turn on' could not be re-triggered"
+      ]
+    },
+    {
+      "id": "s46",
+      "label": "Place page - Rishon LeZion (map place)",
+      "final": false,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/business_place_card",
+          "com.google.android.apps.maps:id/card_stack_header",
+          "com.google.android.apps.maps:id/card_stack_header_share_button",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/content_container",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/grippy",
+          "com.google.android.apps.maps:id/header",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/map_controls_container",
+          "com.google.android.apps.maps:id/map_frame",
+          "com.google.android.apps.maps:id/mod_search_omnibox_layout",
+          "com.google.android.apps.maps:id/og_apd_internal_image_view",
+          "com.google.android.apps.maps:id/og_selected_account_disc_apd",
+          "com.google.android.apps.maps:id/place_nested_scroll_view",
+          "com.google.android.apps.maps:id/place_page_view",
+          "com.google.android.apps.maps:id/recycler_view",
+          "com.google.android.apps.maps:id/save_action_button",
+          "com.google.android.apps.maps:id/search_omnibox_container",
+          "com.google.android.apps.maps:id/search_omnibox_one_google_account_disc",
+          "com.google.android.apps.maps:id/search_omnibox_text_box",
+          "com.google.android.apps.maps:id/selected_account_disc",
+          "com.google.android.apps.maps:id/sidequest_container",
+          "com.google.android.apps.maps:id/street_view_thumbnail",
+          "com.google.android.apps.maps:id/terra_navigation_header_close_button"
+        ]
+      },
+      "transitions": [
+        {
+          "to": "s47",
+          "op": "click",
+          "action": "ui.click('Add stop' for Rishon LeZion)",
+          "target": "place page button 'Add stop'",
+          "find": {
+            "by": "text",
+            "value": "Add stop",
+            "match": "exact"
+          }
+        }
+      ],
+      "explored": [
+        "Share / Save / More buttons: not pressed"
+      ]
+    },
+    {
+      "id": "s47",
+      "label": "Edit stops - Rishon LeZion added",
+      "final": false,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/edit_waypoints_done_button",
+          "com.google.android.apps.maps:id/edit_waypoints_list",
+          "com.google.android.apps.maps:id/expandingscrollview_container",
+          "com.google.android.apps.maps:id/fab_icon",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/header_container",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/map_frame",
+          "com.google.android.apps.maps:id/mylocation_button",
+          "com.google.android.apps.maps:id/on_map_secondary_action_button_container",
+          "com.google.android.apps.maps:id/qu_mylocation_container"
+        ]
+      },
+      "transitions": [
+        {
+          "to": "s48",
+          "op": "click",
+          "action": "ui.click('Done')",
+          "target": "edit waypoints Done button",
+          "find": {
+            "by": "resource-id",
+            "value": "com.google.android.apps.maps:id/edit_waypoints_done_button"
+          }
+        }
+      ],
+      "explored": []
+    },
+    {
+      "id": "s48",
+      "label": "Route screen - with Rishon LeZion stop",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/card_stack_peeking_header_container",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/content_container",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/details_cardlist",
+          "com.google.android.apps.maps:id/details_content",
+          "com.google.android.apps.maps:id/directions_header_preference_action_button",
+          "com.google.android.apps.maps:id/directions_header_share_action_button",
+          "com.google.android.apps.maps:id/directions_mode_tabs",
+          "com.google.android.apps.maps:id/expandingscrollview_container",
+          "com.google.android.apps.maps:id/footer_container",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/grippy",
+          "com.google.android.apps.maps:id/header_container",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/map_controls_container",
+          "com.google.android.apps.maps:id/map_frame",
+          "com.google.android.apps.maps:id/map_overlay",
+          "com.google.android.apps.maps:id/precedence_aware_notice_list_item_bullet",
+          "com.google.android.apps.maps:id/precedence_aware_notice_list_item_icon",
+          "com.google.android.apps.maps:id/precedence_aware_notice_list_item_text",
+          "com.google.android.apps.maps:id/street_view_thumbnail",
+          "com.google.android.apps.maps:id/terra_navigation_header_close_button",
+          "com.google.android.apps.maps:id/trip_card_fuel_notice",
+          "com.google.android.apps.maps:id/trip_card_primary_notice",
+          "com.google.android.apps.maps:id/trip_details_contents",
+          "com.google.android.apps.maps:id/trip_details_footer_layout",
+          "com.google.android.apps.maps:id/trip_details_summary_header"
+        ]
+      },
+      "transitions": [],
+      "explored": [
+        "route with stop: restored to s9 by Edit stops -> remove waypoint -> Done (not recorded)"
+      ]
+    },
+    {
+      "id": "s49",
+      "label": "Transit trip card (expanded)",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/content_container",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/details_cardlist",
+          "com.google.android.apps.maps:id/details_non_transit_leg",
+          "com.google.android.apps.maps:id/divider",
+          "com.google.android.apps.maps:id/footer_container",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/grippy",
+          "com.google.android.apps.maps:id/header_container",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/map_controls_container",
+          "com.google.android.apps.maps:id/map_frame",
+          "com.google.android.apps.maps:id/map_overlay",
+          "com.google.android.apps.maps:id/terra_navigation_header_close_button",
+          "com.google.android.apps.maps:id/transit_departure_row",
+          "com.google.android.apps.maps:id/transit_trip_details_departure_content",
+          "com.google.android.apps.maps:id/transit_trip_details_footer",
+          "com.google.android.apps.maps:id/trip_details_contents",
+          "com.google.android.apps.maps:id/trip_details_footer_layout"
+        ]
+      },
+      "transitions": [],
+      "explored": [
+        "Close -> s10 (not recorded)"
+      ]
+    },
+    {
+      "id": "s50",
+      "label": "Method: bicycling (1 hr 15 min)",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/card_stack_peeking_header_container",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/content_container",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/details_cardlist",
+          "com.google.android.apps.maps:id/details_content",
+          "com.google.android.apps.maps:id/directions_header_preference_action_button",
+          "com.google.android.apps.maps:id/directions_header_share_action_button",
+          "com.google.android.apps.maps:id/directions_mode_tabs",
+          "com.google.android.apps.maps:id/footer_container",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/grippy",
+          "com.google.android.apps.maps:id/header_container",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/map_controls_container",
+          "com.google.android.apps.maps:id/map_frame",
+          "com.google.android.apps.maps:id/map_overlay",
+          "com.google.android.apps.maps:id/street_view_thumbnail",
+          "com.google.android.apps.maps:id/terra_navigation_header_close_button",
+          "com.google.android.apps.maps:id/trip_details_contents",
+          "com.google.android.apps.maps:id/trip_details_footer_layout",
+          "com.google.android.apps.maps:id/trip_details_summary_header"
+        ]
+      },
+      "transitions": [],
+      "explored": [
+        "mode tabs (Driving/Transit/Walking) -> s9/s10/s11 (not re-recorded); Options/Share/Close/footer not pressed"
+      ]
+    },
+    {
+      "id": "s51",
+      "label": "Route screen - trip details expanded",
+      "final": false,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/card_stack_peeking_header_container",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/content_container",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/details_cardlist",
+          "com.google.android.apps.maps:id/details_content",
+          "com.google.android.apps.maps:id/directions_header_preference_action_button",
+          "com.google.android.apps.maps:id/directions_header_share_action_button",
+          "com.google.android.apps.maps:id/directions_mode_tabs",
+          "com.google.android.apps.maps:id/footer_container",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/grippy",
+          "com.google.android.apps.maps:id/header_container",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/map_controls_container",
+          "com.google.android.apps.maps:id/map_frame",
+          "com.google.android.apps.maps:id/map_overlay",
+          "com.google.android.apps.maps:id/query_options",
+          "com.google.android.apps.maps:id/query_options_filter_carousel",
+          "com.google.android.apps.maps:id/terra_navigation_header_close_button",
+          "com.google.android.apps.maps:id/trip_details_contents",
+          "com.google.android.apps.maps:id/trip_details_footer_layout",
+          "com.google.android.apps.maps:id/trip_details_summary_header"
+        ]
+      },
+      "transitions": [
+        {
+          "to": "s52",
+          "op": "click",
+          "action": "ui.click(quick chip 'Avoid tolls')",
+          "target": "query options chip 'Avoid tolls'",
+          "find": {
+            "by": "text",
+            "value": "Avoid tolls",
+            "match": "exact"
+          }
+        },
+        {
+          "to": "s53",
+          "op": "click",
+          "action": "ui.click(step '${dst}')",
+          "target": "first step item in the details list",
+          "find": {
+            "by": "text",
+            "value": "${dst}",
+            "child_index": 0
+          }
+        },
+        {
+          "to": "s54",
+          "op": "swipe",
+          "action": "ui.swipe(details list down, short)",
+          "target": "trip details list scrolled down (short)",
+          "find": null,
+          "move": {
+            "delta": [
+              0,
+              -950
+            ]
+          }
+        },
+        {
+          "to": "s56",
+          "op": "swipe",
+          "action": "ui.swipe(details list down, long)",
+          "target": "trip details list scrolled down (long)",
+          "find": null,
+          "move": {
+            "delta": [
+              0,
+              -1250
+            ]
+          }
+        }
+      ],
+      "explored": [
+        "Leave spinner, 'Avoid highways' chip, street view button, 'Change vehicle settings': not pressed"
+      ]
+    },
+    {
+      "id": "s52",
+      "label": "Route screen - Avoid tolls ON (quick chip)",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/card_stack_peeking_header_container",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/content_container",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/details_cardlist",
+          "com.google.android.apps.maps:id/details_content",
+          "com.google.android.apps.maps:id/directions_header_preference_action_button",
+          "com.google.android.apps.maps:id/directions_header_share_action_button",
+          "com.google.android.apps.maps:id/directions_mode_tabs",
+          "com.google.android.apps.maps:id/footer_container",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/grippy",
+          "com.google.android.apps.maps:id/header_container",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/map_controls_container",
+          "com.google.android.apps.maps:id/map_frame",
+          "com.google.android.apps.maps:id/map_overlay",
+          "com.google.android.apps.maps:id/precedence_aware_notice_list_item_bullet",
+          "com.google.android.apps.maps:id/precedence_aware_notice_list_item_icon",
+          "com.google.android.apps.maps:id/precedence_aware_notice_list_item_text",
+          "com.google.android.apps.maps:id/query_options",
+          "com.google.android.apps.maps:id/query_options_filter_carousel",
+          "com.google.android.apps.maps:id/street_view_thumbnail",
+          "com.google.android.apps.maps:id/terra_navigation_header_close_button",
+          "com.google.android.apps.maps:id/trip_card_fuel_notice",
+          "com.google.android.apps.maps:id/trip_card_primary_notice",
+          "com.google.android.apps.maps:id/trip_details_contents",
+          "com.google.android.apps.maps:id/trip_details_footer_layout",
+          "com.google.android.apps.maps:id/trip_details_summary_header"
+        ]
+      },
+      "transitions": [],
+      "explored": [
+        "toggle chip OFF -> back to s9-like overview (not recorded)"
+      ]
+    },
+    {
+      "id": "s53",
+      "label": "Step details - ${dst}",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/content_container",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/footer_container",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/grippy",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/map_controls_container",
+          "com.google.android.apps.maps:id/map_frame"
+        ]
+      },
+      "transitions": [],
+      "explored": [
+        "BACK -> s51 (not recorded)"
+      ]
+    },
+    {
+      "id": "s54",
+      "label": "Trip details scrolled (steps list)",
+      "final": false,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/card_stack_peeking_header_container",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/content_container",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/details_cardlist",
+          "com.google.android.apps.maps:id/details_content",
+          "com.google.android.apps.maps:id/directions_header_preference_action_button",
+          "com.google.android.apps.maps:id/directions_header_share_action_button",
+          "com.google.android.apps.maps:id/directions_mode_tabs",
+          "com.google.android.apps.maps:id/footer_container",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/grippy",
+          "com.google.android.apps.maps:id/header_container",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/map_controls_container",
+          "com.google.android.apps.maps:id/map_frame",
+          "com.google.android.apps.maps:id/map_overlay",
+          "com.google.android.apps.maps:id/terra_navigation_header_close_button",
+          "com.google.android.apps.maps:id/trip_details_contents",
+          "com.google.android.apps.maps:id/trip_details_footer_layout"
+        ]
+      },
+      "transitions": [
+        {
+          "to": "s55",
+          "op": "click",
+          "action": "ui.click(step 'Head east')",
+          "target": "step 2 item 'Head east'",
+          "find": {
+            "by": "text",
+            "value": "Head east",
+            "match": "exact"
+          }
+        }
+      ],
+      "explored": []
+    },
+    {
+      "id": "s55",
+      "label": "Step details - Head east (step 2)",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/bottommapoverlay_container",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/divider",
+          "com.google.android.apps.maps:id/end_button_start_space",
+          "com.google.android.apps.maps:id/end_section",
+          "com.google.android.apps.maps:id/fab_icon",
+          "com.google.android.apps.maps:id/footer_container",
+          "com.google.android.apps.maps:id/footer_container_above_shadow",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/header_container",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/map_frame",
+          "com.google.android.apps.maps:id/mod_app_bar",
+          "com.google.android.apps.maps:id/mod_app_bar_button_icon",
+          "com.google.android.apps.maps:id/mylocation_button",
+          "com.google.android.apps.maps:id/nav_button",
+          "com.google.android.apps.maps:id/on_map_secondary_action_button_container",
+          "com.google.android.apps.maps:id/overflow_button",
+          "com.google.android.apps.maps:id/qu_mylocation_container",
+          "com.google.android.apps.maps:id/start_section",
+          "com.google.android.apps.maps:id/title",
+          "com.google.android.apps.maps:id/title_frame",
+          "com.google.android.apps.maps:id/title_section",
+          "com.google.android.apps.maps:id/toolbar"
+        ]
+      },
+      "transitions": [],
+      "explored": [
+        "BACK -> s51 (not recorded)"
+      ]
+    },
+    {
+      "id": "s56",
+      "label": "Trip details scrolled to footer",
+      "final": false,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/card_stack_peeking_header_container",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/content_container",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/details_cardlist",
+          "com.google.android.apps.maps:id/details_content",
+          "com.google.android.apps.maps:id/directions_header_preference_action_button",
+          "com.google.android.apps.maps:id/directions_header_share_action_button",
+          "com.google.android.apps.maps:id/directions_mode_tabs",
+          "com.google.android.apps.maps:id/footer_container",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/grippy",
+          "com.google.android.apps.maps:id/header_container",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/map_controls_container",
+          "com.google.android.apps.maps:id/map_frame",
+          "com.google.android.apps.maps:id/map_overlay",
+          "com.google.android.apps.maps:id/terra_navigation_header_close_button",
+          "com.google.android.apps.maps:id/trip_details_contents",
+          "com.google.android.apps.maps:id/trip_details_footer_layout"
+        ]
+      },
+      "transitions": [
+        {
+          "to": "s57",
+          "op": "click",
+          "action": "ui.click(footer 'Preview')",
+          "target": "footer button 'Preview'",
+          "find": {
+            "by": "text",
+            "value": "Preview",
+            "match": "exact"
+          }
+        },
+        {
+          "to": "s58",
+          "op": "click",
+          "action": "ui.click(footer 'Add stops')",
+          "target": "footer button 'Add stops'",
+          "find": {
+            "by": "text",
+            "value": "Add stops",
+            "match": "exact"
+          }
+        },
+        {
+          "to": "s59",
+          "op": "click",
+          "action": "ui.click(footer 'Save trip')",
+          "target": "footer button 'Save trip'",
+          "find": {
+            "by": "desc",
+            "value": "Save trip",
+            "child_index": 0
+          }
+        }
+      ],
+      "explored": [
+        "Share -> opens sharesheet s35 (already recorded under s14, not duplicated)"
+      ]
+    },
+    {
+      "id": "s57",
+      "label": "Route preview",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/bottommapoverlay_container",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/divider",
+          "com.google.android.apps.maps:id/end_button_start_space",
+          "com.google.android.apps.maps:id/end_section",
+          "com.google.android.apps.maps:id/fab_icon",
+          "com.google.android.apps.maps:id/footer_container",
+          "com.google.android.apps.maps:id/footer_container_above_shadow",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/header_container",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/map_frame",
+          "com.google.android.apps.maps:id/mod_app_bar",
+          "com.google.android.apps.maps:id/mod_app_bar_button_icon",
+          "com.google.android.apps.maps:id/mylocation_button",
+          "com.google.android.apps.maps:id/nav_button",
+          "com.google.android.apps.maps:id/on_map_secondary_action_button_container",
+          "com.google.android.apps.maps:id/overflow_button",
+          "com.google.android.apps.maps:id/qu_mylocation_container",
+          "com.google.android.apps.maps:id/start_section",
+          "com.google.android.apps.maps:id/title",
+          "com.google.android.apps.maps:id/title_frame",
+          "com.google.android.apps.maps:id/title_section",
+          "com.google.android.apps.maps:id/toolbar"
+        ]
+      },
+      "transitions": [],
+      "explored": [
+        "BACK -> s51 (not recorded)"
+      ]
+    },
+    {
+      "id": "s58",
+      "label": "Add stops to your route",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/content_container",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/grippy",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/map_controls_container",
+          "com.google.android.apps.maps:id/map_frame",
+          "com.google.android.apps.maps:id/mod_search_omnibox_layout",
+          "com.google.android.apps.maps:id/recycler_view",
+          "com.google.android.apps.maps:id/search_omnibox_text_box",
+          "com.google.android.apps.maps:id/terra_navigation_header_close_button"
+        ]
+      },
+      "transitions": [],
+      "explored": [
+        "Close -> s51 (not recorded); 'Search along route' field not used"
+      ]
+    },
+    {
+      "id": "s59",
+      "label": "Trip saved (confirmation)",
+      "final": false,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "android:id/custom",
+          "android:id/customPanel",
+          "android:id/parentPanel",
+          "com.google.android.apps.maps:id/dialog_body_text",
+          "com.google.android.apps.maps:id/dialog_negative_button",
+          "com.google.android.apps.maps:id/dialog_positive_button",
+          "com.google.android.apps.maps:id/dialog_title"
+        ]
+      },
+      "transitions": [
+        {
+          "to": "s60",
+          "op": "click",
+          "action": "ui.click('See trip')",
+          "target": "dialog button 'See trip'",
+          "find": {
+            "by": "text",
+            "value": "See trip",
+            "match": "exact"
+          }
+        }
+      ],
+      "explored": [
+        "Close -> dismisses dialog (not recorded)"
+      ]
+    },
+    {
+      "id": "s60",
+      "label": "Saved trips",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.apps.maps:id/above_compass_container",
+          "com.google.android.apps.maps:id/action_bar_root",
+          "com.google.android.apps.maps:id/compass_container",
+          "com.google.android.apps.maps:id/content_container",
+          "com.google.android.apps.maps:id/custom_slider_container",
+          "com.google.android.apps.maps:id/fab_icon",
+          "com.google.android.apps.maps:id/fullscreens_group",
+          "com.google.android.apps.maps:id/gmmactivity_root_layout",
+          "com.google.android.apps.maps:id/grippy",
+          "com.google.android.apps.maps:id/home_bottom_sheet_container",
+          "com.google.android.apps.maps:id/layers_fab",
+          "com.google.android.apps.maps:id/layers_fab_button",
+          "com.google.android.apps.maps:id/mainmap_container",
+          "com.google.android.apps.maps:id/map_frame",
+          "com.google.android.apps.maps:id/mod_search_omnibox_layout",
+          "com.google.android.apps.maps:id/mylocation_button",
+          "com.google.android.apps.maps:id/og_apd_internal_image_view",
+          "com.google.android.apps.maps:id/og_selected_account_disc_apd",
+          "com.google.android.apps.maps:id/on_map_secondary_action_button_container",
+          "com.google.android.apps.maps:id/qu_mylocation_container",
+          "com.google.android.apps.maps:id/search_omnibox_container",
+          "com.google.android.apps.maps:id/search_omnibox_one_google_account_disc",
+          "com.google.android.apps.maps:id/search_omnibox_text_box",
+          "com.google.android.apps.maps:id/selected_account_disc",
+          "com.google.android.apps.maps:id/sidequest_container",
+          "com.google.android.apps.maps:id/terra_navigation_header_close_button",
+          "com.google.android.apps.maps:id/transportation_tab_scrollable",
+          "com.google.android.apps.maps:id/watermark_image"
+        ]
+      },
+      "transitions": [],
+      "explored": [
+        "Close -> s51 (not recorded)"
+      ]
+    },
+    {
+      "id": "s61",
+      "label": "About these results (help page)",
+      "final": true,
+      "signature": {
+        "resource_ids": [
+          "android:id/content",
+          "com.google.android.gms:id/action_bar_root",
+          "com.google.android.gms:id/gh_help_app_bar",
+          "com.google.android.gms:id/gh_help_section",
+          "com.google.android.gms:id/gh_help_toolbar",
+          "com.google.android.gms:id/gh_help_toolbar_text",
+          "com.google.android.gms:id/gh_open_search_view",
+          "com.google.android.gms:id/gh_progress_bar",
+          "com.google.android.gms:id/product_name",
+          "com.google.android.gms:id/scrim"
+        ]
+      },
+      "transitions": [],
+      "explored": [
+        "Navigate up -> s9 (not recorded)"
+      ]
+    }
+  ]
+}

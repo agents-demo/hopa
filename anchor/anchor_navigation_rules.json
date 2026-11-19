@@ -1,0 +1,166 @@
+{
+  "name": "Google Maps navigation - next-state rules",
+  "provenance": "Rules hand-written for the command template 'navigate from ${src} to ${dst} by ...' (mode = car, walk, public transportation), anchored on the UI state graph in map_tree.json (converted from the captured Google Maps state tree in map_tree.xml, emulator-5554, Android SDK 36; addresses templated as ${src} / ${dst}). State ids and transitions come from that graph: s1 -> s2 -> s3 -> s4 -> s5 -> s6 -> s7 -> s8 -> s9 (route chosen, car by default), and s9 -> s10 (Transit mode tab), s9 -> s11 (Walking mode tab), s9 -> s50 (Bicycling mode tab), s10 -> s49 (transit trip card). State labels live in the graph, not here. Probabilities are ILLUSTRATIVE: assigned by hand from the transition structure, not estimated from any held-out evaluation. 'finish' is a synthetic next state meaning 'goal reached, stay'; it is not a state id in map_tree.json.",
+  "rules": [
+    {
+      "id": "r01-open-search",
+      "decision": "s2",
+      "intent_kind": "task_word",
+      "intent_value": ["navigate", "route", "directions"],
+      "progress_kind": "last_call",
+      "progress_value": "s1",
+      "probability": 0.95,
+      "description": "navigation command at map home -> open the search box"
+    },
+    {
+      "id": "r02-type-origin",
+      "decision": "s3",
+      "intent_kind": "task_word",
+      "intent_value": ["navigate", "route", "directions"],
+      "progress_kind": "last_call",
+      "progress_value": "s2",
+      "probability": 0.9,
+      "description": "search box focused -> type the origin"
+    },
+    {
+      "id": "r03-commit-origin",
+      "decision": "s4",
+      "intent_kind": "task_word",
+      "intent_value": "from",
+      "progress_kind": "last_call",
+      "progress_value": "s3",
+      "probability": 0.85,
+      "description": "origin typed ('from A') -> press enter, open the place page"
+    },
+    {
+      "id": "r04-open-directions-form",
+      "decision": "s5",
+      "intent_kind": "task_word",
+      "intent_value": ["to", "navigate"],
+      "progress_kind": "last_call",
+      "progress_value": "s4",
+      "probability": 0.9,
+      "description": "origin place page + destination requested ('to B') -> tap Directions"
+    },
+    {
+      "id": "r05-swap-to-start",
+      "decision": "s6",
+      "intent_kind": "task_word",
+      "intent_value": "from",
+      "progress_kind": "last_call",
+      "progress_value": "s5",
+      "probability": 0.85,
+      "description": "origin parked as destination ('from A') -> swap start/destination"
+    },
+    {
+      "id": "r06-focus-destination",
+      "decision": "s7",
+      "intent_kind": "task_word",
+      "intent_value": "to",
+      "progress_kind": "last_call",
+      "progress_value": "s6",
+      "probability": 0.85,
+      "description": "destination empty ('to B') -> focus the destination field"
+    },
+    {
+      "id": "r07-type-destination",
+      "decision": "s8",
+      "intent_kind": "task_word",
+      "intent_value": "to",
+      "progress_kind": "last_call",
+      "progress_value": "s7",
+      "probability": 0.9,
+      "description": "destination field focused -> type the destination"
+    },
+    {
+      "id": "r08-commit-destination",
+      "decision": "s9",
+      "intent_kind": "task_word",
+      "intent_value": ["to", "navigate"],
+      "progress_kind": "last_call",
+      "progress_value": "s8",
+      "probability": 0.9,
+      "description": "destination typed -> tap the suggestion, route shown (car default)"
+    },
+    {
+      "id": "r09-mode-car",
+      "decision": "finish",
+      "intent_kind": "task_word",
+      "intent_value": ["car", "drive", "driving"],
+      "progress_kind": "last_call",
+      "progress_value": "s9",
+      "probability": 0.92,
+      "description": "'by car' at the route screen -> car is already active, goal reached"
+    },
+    {
+      "id": "r10-mode-walk",
+      "decision": "s11",
+      "intent_kind": "task_word",
+      "intent_value": ["walk", "walking", "foot"],
+      "progress_kind": "last_call",
+      "progress_value": "s9",
+      "probability": 0.9,
+      "description": "'by walk' at the route screen -> tap the Walking mode tab"
+    },
+    {
+      "id": "r11-mode-walk-bigram",
+      "decision": "s11",
+      "intent_kind": "task_bigram",
+      "intent_value": "on_foot",
+      "progress_kind": "last_call",
+      "progress_value": "s9",
+      "probability": 0.9,
+      "description": "'on foot' at the route screen -> tap the Walking mode tab"
+    },
+    {
+      "id": "r12-mode-transit",
+      "decision": "s10",
+      "intent_kind": "task_word",
+      "intent_value": ["transit", "public", "transportation", "bus", "train", "metro"],
+      "progress_kind": "last_call",
+      "progress_value": "s9",
+      "probability": 0.88,
+      "description": "'by public transportation' at the route screen -> tap the Transit mode tab"
+    },
+    {
+      "id": "r13-mode-unspecified",
+      "decision": "finish",
+      "intent_kind": "task_word",
+      "intent_value": ["navigate", "route"],
+      "progress_kind": "last_call",
+      "progress_value": "s9",
+      "probability": 0.1,
+      "description": "mode missing or unknown at the route screen -> low-confidence stay; below threshold, so the model is asked"
+    },
+    {
+      "id": "r14-mode-question",
+      "decision": "s10",
+      "intent_kind": "question_word",
+      "intent_value": ["transit", "public", "bus", "train"],
+      "progress_kind": "last_call",
+      "progress_value": "s9",
+      "probability": 0.85,
+      "description": "the agent's question mentions transit at the route screen -> tap the Transit mode tab"
+    },
+    {
+      "id": "r15-transit-card",
+      "decision": "s49",
+      "intent_kind": "task_word",
+      "intent_value": ["transit", "public", "bus", "train"],
+      "progress_kind": "last_call",
+      "progress_value": "s10",
+      "probability": 0.85,
+      "description": "transit method shown -> tap the first transit trip card"
+    },
+    {
+      "id": "r16-walk-arrived",
+      "decision": "finish",
+      "intent_kind": "task_word",
+      "intent_value": ["walk", "walking", "foot"],
+      "progress_kind": "last_call",
+      "progress_value": "s11",
+      "probability": 0.9,
+      "description": "walking route shown -> goal reached"
+    }
+  ]
+}

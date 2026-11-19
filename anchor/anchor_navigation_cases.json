@@ -1,0 +1,158 @@
+{
+  "name": "Google Maps navigation - next-state cases",
+  "provenance": "Case inputs follow the command template 'navigate from ${src} to ${dst} by ...' (mode = car, walk, public transportation). The captured source and destination addresses are templated as ${src} / ${dst}, matching map_tree.json; substitute real addresses to replay a concrete route. 'calls' is the UI operation history; its last element is the current state id from map_tree.json. 'options' is the set of next states the agent is choosing between at that step, taken from the map_tree.json transitions of the current state (s9 cases consider only the mode tabs plus the synthetic 'finish'). 'expected' is the outcome the loaded rules must produce: a next state, or 'ask_model' when the engine must fall back to the model. These cases are illustrative, NOT held-out evaluation data.",
+  "cases": [
+    {
+      "id": "c01-home",
+      "task": "navigate from ${src} to ${dst} by car",
+      "question": "Where would you like to go?",
+      "calls": ["s1"],
+      "options": ["s2"],
+      "expected": "s2"
+    },
+    {
+      "id": "c02-focus-search",
+      "task": "navigate from ${src} to ${dst} by car",
+      "question": "",
+      "calls": ["s1", "s2"],
+      "options": ["s3"],
+      "expected": "s3"
+    },
+    {
+      "id": "c03-origin-typed",
+      "task": "navigate from ${src} to ${dst} by car",
+      "question": "",
+      "calls": ["s1", "s2", "s3"],
+      "options": ["s4"],
+      "expected": "s4"
+    },
+    {
+      "id": "c04-origin-place",
+      "task": "navigate from ${src} to ${dst} by car",
+      "question": "",
+      "calls": ["s1", "s2", "s3", "s4"],
+      "options": ["s5"],
+      "expected": "s5"
+    },
+    {
+      "id": "c05-directions-form",
+      "task": "navigate from ${src} to ${dst} by car",
+      "question": "",
+      "calls": ["s1", "s2", "s3", "s4", "s5"],
+      "options": ["s6"],
+      "expected": "s6"
+    },
+    {
+      "id": "c06-start-filled",
+      "task": "navigate from ${src} to ${dst} by car",
+      "question": "",
+      "calls": ["s1", "s2", "s3", "s4", "s5", "s6"],
+      "options": ["s7"],
+      "expected": "s7"
+    },
+    {
+      "id": "c07-destination-focus",
+      "task": "navigate from ${src} to ${dst} by car",
+      "question": "",
+      "calls": ["s1", "s2", "s3", "s4", "s5", "s6", "s7"],
+      "options": ["s8"],
+      "expected": "s8"
+    },
+    {
+      "id": "c08-destination-typed",
+      "task": "navigate from ${src} to ${dst} by car",
+      "question": "",
+      "calls": ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8"],
+      "options": ["s9"],
+      "expected": "s9"
+    },
+    {
+      "id": "c09-route-car",
+      "task": "navigate from ${src} to ${dst} by car",
+      "question": "Which travel mode?",
+      "calls": ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9"],
+      "options": ["s10", "s11", "s50", "finish"],
+      "expected": "finish"
+    },
+    {
+      "id": "c10-route-walk",
+      "task": "navigate from ${src} to ${dst} by walking",
+      "question": "Which travel mode?",
+      "calls": ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9"],
+      "options": ["s10", "s11", "s50", "finish"],
+      "expected": "s11"
+    },
+    {
+      "id": "c11-route-transit",
+      "task": "navigate from ${src} to ${dst} by public transportation",
+      "question": "Which travel mode?",
+      "calls": ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9"],
+      "options": ["s10", "s11", "s50", "finish"],
+      "expected": "s10"
+    },
+    {
+      "id": "c12-route-on-foot",
+      "task": "navigate from ${src} to ${dst} on foot",
+      "question": "Which travel mode?",
+      "calls": ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9"],
+      "options": ["s10", "s11", "s50", "finish"],
+      "expected": "s11"
+    },
+    {
+      "id": "c13-route-no-mode",
+      "task": "navigate from ${src} to ${dst}",
+      "question": "Which travel mode?",
+      "calls": ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9"],
+      "options": ["s10", "s11", "s50", "finish"],
+      "expected": "ask_model"
+    },
+    {
+      "id": "c14-route-unknown-mode",
+      "task": "navigate from ${src} to ${dst} by bicycle",
+      "question": "Which travel mode?",
+      "calls": ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9"],
+      "options": ["s10", "s11", "s50", "finish"],
+      "expected": "ask_model"
+    },
+    {
+      "id": "c15-route-car-blocked",
+      "task": "navigate from ${src} to ${dst} by car",
+      "question": "Which travel mode?",
+      "calls": ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9"],
+      "options": ["s10", "s11", "s50"],
+      "expected": "ask_model"
+    },
+    {
+      "id": "c16-transit-card",
+      "task": "navigate from ${src} to ${dst} by public transportation",
+      "question": "",
+      "calls": ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10"],
+      "options": ["s49"],
+      "expected": "s49"
+    },
+    {
+      "id": "c17-walk-arrived",
+      "task": "navigate from ${src} to ${dst} by walking",
+      "question": "",
+      "calls": ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s11"],
+      "options": ["finish"],
+      "expected": "finish"
+    },
+    {
+      "id": "c18-route-question-transit",
+      "task": "navigate from ${src} to ${dst}",
+      "question": "Prefer the bus?",
+      "calls": ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9"],
+      "options": ["s10", "s11", "s50", "finish"],
+      "expected": "s10"
+    },
+    {
+      "id": "c19-home-unrelated",
+      "task": "play some music",
+      "question": "",
+      "calls": ["s1"],
+      "options": ["s2"],
+      "expected": "ask_model"
+    }
+  ]
+}
