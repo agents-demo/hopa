@@ -24,7 +24,7 @@ class ApprovalProvenanceTest {
     @Test
     fun a_phone_approval_is_named_on_the_record() = runBlocking {
         val harness = Harness(PhoneApproval())
-        val result = harness.execute(Action(kind = "payment.pay", text = "100", x = 640, y = 480))
+        val result = harness.execute(Action(kind = "payment.pay", text = "100", ref = "pay-button"))
 
         assertTrue(result.record.executed)
         assertEquals(true, result.record.approved)
@@ -36,7 +36,7 @@ class ApprovalProvenanceTest {
     @Test
     fun a_pc_approval_is_named_on_the_record() = runBlocking {
         val harness = Harness(PcApproval())
-        val result = harness.execute(Action(kind = "payment.pay", text = "100", x = 640, y = 480))
+        val result = harness.execute(Action(kind = "payment.pay", text = "100", ref = "pay-button"))
 
         assertTrue(result.record.executed)
         assertEquals("pc", result.record.approver?.device)
@@ -45,7 +45,7 @@ class ApprovalProvenanceTest {
     @Test
     fun a_denial_keeps_the_device_that_denied() = runBlocking {
         val harness = Harness(PhoneDeny())
-        val result = harness.execute(Action(kind = "payment.pay", text = "100", x = 640, y = 480))
+        val result = harness.execute(Action(kind = "payment.pay", text = "100", ref = "pay-button"))
 
         assertEquals(false, result.record.executed)
         assertEquals(false, result.record.approved)
