@@ -15,7 +15,7 @@ object GraphCatalog {
         isLenient = false
     }
 
-    /** One line per app for the Act page: what the written paths can finish. */
+    /** One line per app for the Act page: what the graphs can finish. */
     fun summary(graphs: List<AppGraph> = load()): List<String> = graphs.map { graph ->
         val actions = graph.edges.filter { it.done }.mapNotNull { edge ->
             when {

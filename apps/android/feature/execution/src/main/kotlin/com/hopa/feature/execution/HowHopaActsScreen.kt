@@ -351,8 +351,8 @@ private fun decisionLabel(id: String?): String = when (id) {
 
 private fun stepSourceNote(source: String): String = when (source) {
     "model" -> "The model writes every step, as before."
-    "graph" -> "Only written paths for Settings, Clock and Camera; a goal they do not cover is refused."
-    else -> "A written path first for Settings, Clock and Camera; the model for everything else."
+    "graph" -> "Graph only: Settings, Clock and Camera; other goals are refused."
+    else -> "A graph first for Settings, Clock and Camera; the model for everything else."
 }
 
 private fun modelNote(provider: String, cloudModel: String): String = when (provider) {

@@ -39,7 +39,7 @@ interface ChatDependencies {
     /** Pieces of an on-device answer as they are produced; empty for cloud. */
     val localTokens: kotlinx.coroutines.flow.Flow<String>
 
-    /** Where a written path would go before any screen is read, or null. */
+    /** Where a graph would go before any screen is read, or null. */
     fun graphTarget(goal: String): com.hopa.decision.graph.GraphTarget?
 
     fun resolveApproval(allow: Boolean)

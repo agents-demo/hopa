@@ -42,7 +42,7 @@ data class SettingsUiState(
     val decisionLayers: List<DecisionLayerInfo> = emptyList(),
     /** Who decides now for read, change and dangerous actions; `model` when none. */
     val decisionActive: Map<String, String> = emptyMap(),
-    /** One line per known app and its written paths. */
+    /** One line per known app and its graphs. */
     val graphPaths: List<String> = emptyList(),
     /** The model files on this phone, for the picker on Act. */
     val installedModels: List<ModelOption> = emptyList(),

@@ -252,7 +252,7 @@ class AppContainer @Inject constructor(@ApplicationContext context: Context) : C
     /** Canonical commands that need no model at all. */
     val commands: IntentClassifier = IntentClassifier()
 
-    /** Hand-written paths for a few known apps; a miss goes to the model. */
+    /** Hand-written graphs for a few known apps; a miss goes to the model. */
     val graphs: GraphStepSource = HandGraphSource(GraphCatalog.load())
 
     override val decisionLayers: List<LayerMetadata>

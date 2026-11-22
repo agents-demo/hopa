@@ -6,7 +6,7 @@ pictures: the whole turn, with the loop as one box, and the loop itself.
 
 A few words are used throughout:
 
-- **written path** - a few hand-written steps for an app HOPA knows (Settings,
+- **graph** - a few hand-written steps for an app HOPA knows (Settings,
   Clock, Camera). It remembers where it is: the current screen is a node, and the
   things it can do next are the edges from that node.
 - **model** - the AI that writes the next step or the answer. It is either
@@ -23,14 +23,14 @@ flowchart TD
   A(["The person writes a prompt"]) --> B{"Plan first?"}
   B -->|"yes"| C["Show the plan<br/>nothing runs yet"]
   C --> D{"Approved?"}
-  D -->|"no"| Z1["Stop"]:::stop
+  D -->|"no"| Z1["Stop"]
   D -->|"yes"| E
   B -->|"no"| E
-  E{"Can HOPA reach the apps?<br/>is a screen readable?"} -->|"no"| Z2["Say what is missing<br/>stop"]:::stop
+  E{"Can HOPA reach the apps?<br/>is a screen readable?"} -->|"no"| Z2["Say what is missing<br/>stop"]
   E -->|"yes"| F["Work on the chosen screen<br/>hidden display or your screen"]
   F --> G["The first step opens the app<br/>the goal needs, if any"]
-  G --> L(["The loop<br/>one step at a time<br/>see the next picture"]):::loop
-  L --> R(["Done"]):::answer
+  G --> L(["The loop<br/>one step at a time<br/>see the next picture"])
+  L --> R(["Done"])
 
   classDef io fill:#EAF1FB,stroke:#5B7FD4,color:#1C2B4A,stroke-width:1.5px
   classDef core fill:#E7F4EA,stroke:#3F8F5A,color:#16301F,stroke-width:1.5px
@@ -40,63 +40,122 @@ flowchart TD
 
   class A,F,G io
   class B,C,D,E core
+  class L loop
   class R result
   class Z1,Z2 stop
 ```
 
-## 2. The loop
+## 2. The loop, simply
 
-One loop, two engines, one hand-over:
-
-- while the current screen has a **written path**, the path decides the next
-  edge at this node; if it has a confident edge, HOPA takes it and reads the
-  screen again;
-- if the path has **no edge** here (very low confidence), the rest of the turn
-  is handed to the model;
-- the model runs **in the cloud** or **on this phone**, and can answer, ask, or
-  act.
+The loop is one question repeated: look at the screen, ask a model what to do,
+act on the answer. Nothing here says where the model runs or which path was
+tried; that is the next picture.
 
 ```mermaid
 flowchart TD
-  IN(["From the turn<br/>the app is open, the screen is read"]) --> HAS{"Is there a written path<br/>for this app?"}
-  HAS -->|"yes"| NODE{"At this node:<br/>which edge next?"}
-  NODE -->|"a confident edge"| STEP["The path's next step"]
-  STEP --> FIN{"Does it finish<br/>the goal?"}
-  FIN -->|"no"| DO["Do it<br/>read the screen again"]
-  DO --> NODE
-  FIN -->|"yes"| END(["The turn ends<br/>the answer and its note"])
-  NODE -->|"no edge here<br/>very low confidence"| WHICH{"Which model?"}
-  HAS -->|"no"| WHICH
-  WHICH -->|"cloud"| CLOUD["API call<br/>e.g. DeepSeek"]
-  WHICH -->|"local"| LOCAL["A file on this phone"]
-  CLOUD --> WHAT{"What came back?"}
-  LOCAL --> WHAT
-  WHAT -->|"a final answer"| END
-  WHAT -->|"a question"| ASK["Show the question<br/>and wait for the person"]
-  ASK -->|"the person answers"| WHICH
-  WHAT -->|"an action"| ACT["Do it<br/>read the screen again"]
-  ACT --> WHICH
+  IN(["From the turn<br/>the app is open"]) --> S(["Loop start<br/>read the screen tree"])
+  S --> ASK["Ask the model:<br/>what is the next move?"]
+  ASK --> R{"What came back?"}
+  ACT["Do the action"]:::execute
+  ACT --> S
+  R -->|"an action"| ACT
+  R -->|"a final answer"| END(["The turn ends"]):::answer
+  R -->|"a question"| Q["Show it to the person<br/>and wait"]:::question
+  Q -->|"the person answers"| S
 
   classDef io fill:#EAF1FB,stroke:#5B7FD4,color:#1C2B4A,stroke-width:1.5px
-  classDef core fill:#E7F4EA,stroke:#3F8F5A,color:#16301F,stroke-width:1.5px
-  classDef cloud fill:#E8F0FE,stroke:#3B6FD4,color:#15294D,stroke-width:1.5px
-  classDef local fill:#E7F4EA,stroke:#3F8F5A,color:#16301F,stroke-width:1.5px
+  classDef model fill:#FFF4D6,stroke:#C9962F,color:#3A2C08,stroke-width:1.5px
   classDef execute fill:#DDF3E4,stroke:#2F7D4F,color:#12301D,stroke-width:1.5px
   classDef answer fill:#E0F2F1,stroke:#2F7D7A,color:#0F2E2C,stroke-width:1.5px
   classDef question fill:#EAF1FB,stroke:#5B7FD4,color:#1C2B4A,stroke-width:1.5px,stroke-dasharray:5 3
 
-  class IN,ASK io
-  class HAS,NODE,FIN,WHICH,WHAT core
-  class CLOUD cloud
-  class LOCAL local
-  class STEP,DO,ACT execute
-  class END answer
+  class IN,S io
+  class ASK model
+  class R io
 ```
+
+## 3. The loop: four paths, tried in order
+
+Every turn starts the loop the same way: **read the screen tree**, then try the
+four paths in order. Each path is asked one question - "what is the next action?"
+- and returns one of three things: an action, a question, or a final answer.
+
+```mermaid
+flowchart TD
+  IN(["From the turn<br/>the app is open"]) --> S(["Loop start<br/>read the screen tree"])
+  S --> G{"1. Graph for this app?"}
+  G -->|"yes"| GD["Decision model at this node:<br/>which edge next?"]
+  GD --> C1{"Confident?"}
+  G -->|"no"| T
+  C1 -->|"yes"| KIND
+  C1 -->|"no"| T{"2. TRC language model<br/>(not in this build yet)"}
+  T --> TD["Ask: what is the next action?"]
+  TD --> C2{"Confident?"}
+  C2 -->|"yes"| KIND
+  C2 -->|"no"| H{"3. Small model on this phone<br/>(a Hugging Face file)"}
+  H --> HD["Ask: what is the next action?"]
+  HD --> C3{"Confident?"}
+  C3 -->|"yes"| KIND
+  C3 -->|"no"| A{"4. API language model<br/>(e.g. DeepSeek)"}
+  A --> AD["Ask: what is the next action?"]
+  AD --> C4{"Confident?"}
+  C4 -->|"yes"| KIND
+  C4 -->|"no"| FAIL["No path is sure<br/>the turn stops"]:::stop
+  KIND{"What did the path answer?"}
+  KIND -->|"an action"| ACT["Do the action<br/>the screen changes"]
+  ACT --> S
+  KIND -->|"a question"| ASK["Show it<br/>the person answers"]
+  ASK --> S
+  KIND -->|"a final answer"| END(["The turn ends"]):::answer
+
+  classDef io fill:#EAF1FB,stroke:#5B7FD4,color:#1C2B4A,stroke-width:1.5px
+  classDef core fill:#E7F4EA,stroke:#3F8F5A,color:#16301F,stroke-width:1.5px
+  classDef model fill:#FFF4D6,stroke:#C9962F,color:#3A2C08,stroke-width:1.5px
+  classDef execute fill:#DDF3E4,stroke:#2F7D4F,color:#12301D,stroke-width:1.5px
+  classDef answer fill:#E0F2F1,stroke:#2F7D7A,color:#0F2E2C,stroke-width:1.5px
+  classDef question fill:#EAF1FB,stroke:#5B7FD4,color:#1C2B4A,stroke-width:1.5px,stroke-dasharray:5 3
+  classDef stop fill:#FBE4E4,stroke:#BF5252,color:#3D1414,stroke-width:1.5px
+
+  class IN,S,KIND,ASK io
+  class G,GD,C1,C2,C3,C4 core
+  class T,TD,H,HD,A,AD model
+  class ACT execute
+  class END answer
+  class FAIL stop
+```
+
+| Order | Path | Asked | If it is not sure |
+|---|---|---|---|
+| 1 | **Graph** for this app | the decision model at the current node: which edge next? | next path |
+| 2 | **TRC language model** (not in this build yet) | what is the next action? | next path |
+| 3 | **Small model on this phone** (a Hugging Face file) | what is the next action? | next path |
+| 4 | **API language model** (e.g. DeepSeek) | what is the next action? | the turn stops |
+
+What comes back decides what happens next:
+
+- **an action** - HOPA does it, the app's screen changes, and the loop starts
+  again with a new screen tree;
+- **a question** - shown to the person, and their answer brings the loop back to
+  the start;
+- **a final answer** - the turn ends. In a graph this is a leaf edge: the node
+  that finishes the goal.
+
+The graph does not ask a language model: its "confidence" is how sure it is that
+one of the current node's edges fits the screen and the goal. A language model's
+confidence is part of its reply. A path that is not sure enough hands the step to
+the next path instead of guessing.
 
 ## Two notes about the picture
 
+**What is in the build today.** The four-path loop is the intended shape. The
+current code tries: graph, then a simple command, then a saved recipe, then the
+model chosen in settings (cloud or a file on this phone). There is no TRC path,
+and the model is not retried down a confidence ladder - a graph that finds no
+edge hands the turn to the next source. The picture is where those pieces go as
+they are added.
+
 **The decision at a node.** The picture says a decision is asked at the current
-node. In today's code that decision is the written path's own matcher: it reads
+node. In today's code that decision is the graph's own matcher: it reads
 the visible screen, matches the node, and looks for an edge whose words fit the
 goal. The decision layers (Rules, LAIX) currently vote on the model's proposed
 steps, not on graph edges. Letting a layer decide the graph edge is a code change
@@ -110,8 +169,8 @@ fast paths that would crowd the picture:
 - a **saved recipe** (steps that worked before for the same words) is replayed
   before the model is asked.
 
-**Writing paths only.** If the person chose **Written paths only** on How HOPA
-acts - Steps, there is no hand-over: an app or edge the path does not know ends
+**Graph only.** If the person chose **Graph** on How HOPA
+acts - Steps, there is no hand-over: an app or edge the graph does not know ends
 the turn with a note to switch to Auto or Model.
 
 ## What the person sees
@@ -123,8 +182,8 @@ the turn with a note to switch to Auto or Model.
 | Tap the note | which screen was used, how long it took, and every step |
 | Activity | the same steps, the usage and the runs, kept on the phone |
 
-The note under the answer is saved with the message, so a written path still
-looks like a written path months later. It appears only when at least one step
+The note under the answer is saved with the message, so a graph still
+looks like a graph months later. It appears only when at least one step
 actually ran.
 
 ## Where this lives in the code
@@ -133,6 +192,6 @@ actually ran.
 |---|---|
 | The doorway, the hand-over and the order | `core/agent/.../turn/TurnRunner.kt` |
 | The model loop, the three outcomes | `core/agent/.../loop/AgentLoop.kt` |
-| The written path: nodes, edges, the current screen | `core/decision/.../graph/` |
+| The graph: nodes, edges, the current screen | `core/decision/.../graph/` |
 | Doing a step and the approval question | `core/agent/.../action/ActionExecutor.kt` |
 | Cloud or local: the model choice | `core/inference/...`, `apps/android/app/.../di/AppContainer.kt` |

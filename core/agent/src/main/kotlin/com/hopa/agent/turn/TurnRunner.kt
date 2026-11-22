@@ -82,27 +82,27 @@ class TurnRunner(
                 millis = clock.nowMillis() - started,
             )
         }
-        val written = if (request.useGraphs) {
+        val known = if (request.useGraphs) {
             runCatching { graphs?.target(request.goal) }.getOrNull()
         } else {
             null
         }
-        // Graph only: the person asked for written paths, so neither a command
+        // Graph only: the person asked for graphs, so neither a command
         // nor the model may answer in their place.
         if (request.useGraphs && graphs != null && !request.graphFallback) {
             graph(request, started, tables, isCancelled)?.let { return it }
             return TurnOutcome(
                 source = TurnSource.GRAPH,
-                answer = "I only have written paths for a few apps. " +
+                answer = "I only have graphs for a few apps. " +
                     "Switch Steps to Auto or Model for this goal.",
-                error = HopaError(ErrorCodes.BLOCKED, "no written path for this goal"),
+                error = HopaError(ErrorCodes.BLOCKED, "no graph for this goal"),
                 surfaceName = request.surfaceName,
                 millis = clock.nowMillis() - started,
             )
         }
         // A goal the graph can finish goes first: its steps are written, its
         // receipt says Graph, and no model is asked for something already known.
-        val graphFirst = written?.completes == true
+        val graphFirst = known?.completes == true
         if (!graphFirst && request.instantCommands && commands != null) {
             command(request, started, tables)?.let { return it }
         }
@@ -219,7 +219,7 @@ class TurnRunner(
     }
 
     /**
-     * A hand-written path for a known app.
+     * A hand-written graph for a known app.
      *
      * It executes at most a few steps, each through the normal executor, so an
      * approval or a failed tap stops it honestly. A miss on the first screen
@@ -434,7 +434,7 @@ class TurnRunner(
     }
 
     private companion object {
-        /** A hand-written path is five edges at most; beyond that it is a plan. */
+        /** A hand-written graph is five edges at most; beyond that it is a plan. */
         const val MAX_GRAPH_STEPS = 5
         const val GRAPH_SETTLE_MS = 800L
     }

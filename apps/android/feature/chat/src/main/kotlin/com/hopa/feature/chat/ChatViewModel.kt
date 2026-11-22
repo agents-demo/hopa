@@ -331,7 +331,7 @@ class ChatViewModel @Inject constructor(
         val target = runCatching { container.graphTarget(goal) }.getOrNull()
         return when {
             target != null -> "Graph \u00B7 ${target.name}"
-            settings.stepSource == "graph" -> "Only written paths"
+            settings.stepSource == "graph" -> "Graph only"
             else -> ""
         }
     }
@@ -374,7 +374,7 @@ class ChatViewModel @Inject constructor(
             if (appendUser) appendUserMessage(conversation.id, body, attachment, now)
             val history = conversation.messages.map { ModelMessage(it.role, it.text) }
             val current = container.settings.settings.first()
-            // A written path needs no plan: asking for steps to "open Wi-Fi
+            // A graph needs no plan: asking for steps to "open Wi-Fi
             // settings" is slower than following them, and the turn has the
             // same rule before its own plan gate.
             val graphTarget = if (current.stepSource == "model") {

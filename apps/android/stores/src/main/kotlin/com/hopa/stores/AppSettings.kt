@@ -23,8 +23,8 @@ data class AppSettings(
     /** Run a recognized command (open, back, home, scroll, wait) without a model. */
     val instantCommands: Boolean = true,
     /**
-     * Where a step comes from: `auto` (a written graph for known apps, the model
-     * otherwise), `model` (the model only) or `graph` (written paths only).
+     * Where a step comes from: `auto` (a graph for known apps, the model
+     * otherwise), `model` (the model only) or `graph` (graphs only).
      */
     val stepSource: String = "auto",
     /** Attach a screenshot to each model call (needs a model that sees images). */

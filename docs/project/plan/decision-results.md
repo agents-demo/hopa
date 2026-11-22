@@ -79,15 +79,15 @@ be on screen. Anything else returns null. Every step goes through the normal
 executor, so an approval or a failed tap stops it honestly.
 
 The source is a first-class choice on **How HOPA acts -> Steps**:
-**Auto** (a written path when the app is known, the model otherwise), **Model**
-(model only, exactly as before) or **Graph** (written paths only; a goal they do
+**Auto** (a graph when the app is known, the model otherwise), **Model**
+(model only, exactly as before) or **Graph** (graphs only; a goal they do
 not cover is refused with a note to switch to Auto or Model, and neither a
 command nor the model answers in their place). Under the segment,
 the same page lists **Known paths**, built from `graphs.v1.json`, so a person can
 see the concrete scenarios without opening a second screen.
 
 A goal the graph can finish goes before an instant command: "open camera" is a
-written path with an answer, so its receipt says Graph, not Command. A goal that
+graph with an answer, so its receipt says Graph, not Command. A goal that
 only opens an app ("open settings") stays with the command, because the graph has
 no edge that finishes it.
 

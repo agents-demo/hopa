@@ -230,7 +230,7 @@ with a tap resolved from the control's label. A node counts only inside its own
 app; an unknown screen inside a known app can have an `any` edge (Settings uses
 it to step back to a page it knows). A miss on the screen, the control
 or the goal returns null. **How HOPA acts -> Steps** chooses **Auto** (graph,
-then model), **Model** (model only) or **Graph** (written paths only, unknown
+then model), **Model** (model only) or **Graph** (graphs only, unknown
 goals refused); stored as `stepSource` in settings. The same section lists the
 concrete **Known paths** per app from `graphs.v1.json`, and a graph answer keeps
 its source in the chat receipt, so the claim survives the turn.
