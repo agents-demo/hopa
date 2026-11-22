@@ -314,7 +314,7 @@ jobs:
       - name: Sidecar tests
         working-directory: apps/android
         run: .\gradlew.bat -p ../windows/sidecar test --no-daemon
-      - name: Headless turn (P1 gate)
+      - name: Headless turn and task protocol (P1/P4 gates)
         working-directory: apps/android
         shell: pwsh
         run: |
@@ -327,7 +327,9 @@ jobs:
           if ($pay -notmatch '"denied":1') { throw "the payment gate did not deny: $pay" }
           if ($pay -notmatch '"executed":0') { throw "a denied payment executed: $pay" }
           $tasks = @('{"type":"task.list","id":"ci-1"}') | & java -cp $cp com.hopa.sidecar.MainKt --data-dir $dir
-          if (($tasks -join "`n") -notmatch '"code":"E_UNSUPPORTED"') { throw "task.* was not refused" }
+          if (($tasks -join "`n") -notmatch '"type":"task.list".*"ok":true') { throw "task.list was not answered: $tasks" }
+          $missing = @('{"type":"task.get","id":"ci-2","task":"missing"}') | & java -cp $cp com.hopa.sidecar.MainKt --data-dir $dir
+          if (($missing -join "`n") -notmatch '"code":"E_SCHEMA"') { throw "an unknown task was not refused: $missing" }
       - name: Build the client
         working-directory: apps/windows/Hopa.Windows
         run: dotnet build -c Debug
