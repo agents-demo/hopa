@@ -20,16 +20,13 @@ The loop is a single box here; the next picture opens it.
 
 ```mermaid
 flowchart TD
-  A(["The person writes a prompt"]) --> B{"Plan first?"}
-  B -->|"yes"| C["Show the plan<br/>nothing runs yet"]
-  C --> D{"Approved?"}
+  A(["The person writes a prompt"]) --> B{"Plan Mode?"}
+  B -->|"yes"| D{"Person Approves?"}
   D -->|"no"| Z1["Stop"]
-  D -->|"yes"| E
-  B -->|"no"| E
-  E{"Can HOPA reach the apps?<br/>is a screen readable?"} -->|"no"| Z2["Say what is missing<br/>stop"]
-  E -->|"yes"| F["Work on the chosen screen<br/>hidden display or your screen"]
-  F --> G["The first step opens the app<br/>the goal needs, if any"]
-  G --> L(["The loop<br/>one step at a time<br/>see the next picture"])
+  D -->|"yes"| G
+  B -->|"no"| G
+  G["Run target app"]
+  G --> L(["The loop: step by step"])
   L --> R(["Done"])
 
   classDef io fill:#EAF1FB,stroke:#5B7FD4,color:#1C2B4A,stroke-width:1.5px
@@ -38,11 +35,11 @@ flowchart TD
   classDef result fill:#E0F2F1,stroke:#2F7D7A,color:#0F2E2C,stroke-width:1.5px
   classDef stop fill:#FBE4E4,stroke:#BF5252,color:#3D1414,stroke-width:1.5px
 
-  class A,F,G io
-  class B,C,D,E core
+  class A,G io
+  class B,D core
   class L loop
   class R result
-  class Z1,Z2 stop
+  class Z1 stop
 ```
 
 ## 2. The loop, simply
@@ -53,14 +50,14 @@ tried; that is the next picture.
 
 ```mermaid
 flowchart TD
-  IN(["From the turn<br/>the app is open"]) --> S(["Loop start<br/>read the screen tree"])
+  IN(["HOPA opens target app"]) --> S(["Read target app current screen tree"])
   S --> ASK["Ask the model:<br/>what is the next move?"]
   ASK --> R{"What came back?"}
   ACT["Do the action"]:::execute
   ACT --> S
   R -->|"an action"| ACT
   R -->|"a final answer"| END(["The turn ends"]):::answer
-  R -->|"a question"| Q["Show it to the person<br/>and wait"]:::question
+  R -->|"a question"| Q["Ask the person"]:::execute
   Q -->|"the person answers"| S
 
   classDef io fill:#EAF1FB,stroke:#5B7FD4,color:#1C2B4A,stroke-width:1.5px
@@ -82,7 +79,7 @@ four paths in order. Each path is asked one question - "what is the next action?
 
 ```mermaid
 flowchart TD
-  IN(["From the turn<br/>the app is open"]) --> S(["Loop start<br/>read the screen tree"])
+  IN(["HOPA opens target app"]) --> S(["Read target app current screen tree"])
   S --> G{"1. Graph for this app?"}
   G -->|"yes"| GD["Decision model at this node:<br/>which edge next?"]
   GD --> C1{"Confident?"}
@@ -104,7 +101,7 @@ flowchart TD
   KIND{"What did the path answer?"}
   KIND -->|"an action"| ACT["Do the action<br/>the screen changes"]
   ACT --> S
-  KIND -->|"a question"| ASK["Show it<br/>the person answers"]
+  KIND -->|"a question"| ASK["Ask the person a question"]:::execute
   ASK --> S
   KIND -->|"a final answer"| END(["The turn ends"]):::answer
 
