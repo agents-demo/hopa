@@ -275,15 +275,22 @@ private fun runProtocol(options: CliOptions) {
             }
 
             "device.result" -> device.resolve(message.text("id"), message)
+            // The .NET host owns the gateway socket. It tells the sidecar only
+            // whether a phone peer is reachable, so a phone answer can be
+            // attributed honestly and a forged one is refused.
+            "gateway.state" -> config.setGatewayState(
+                paired = message.text("paired").toBoolean(),
+                phoneOnline = message.text("phoneOnline").toBoolean(),
+            )
             "approval.result" -> {
                 val id = message.text("id")
                 val claimed = message.text("device").ifBlank { "pc" }
                 val allow = message.text("allow").toBoolean()
-                // ADR-0024: an allow that claims the phone cannot be trusted when
-                // no bridge is attached — there is no path for the phone to have
-                // answered. Refuse it rather than believe the claim (fail closed).
-                if (claimed == "phone" && !config.hasBridge) {
-                    io.log("refused an approval claiming the phone: no bridge is attached")
+                // ADR-0024: a phone answer cannot be trusted when no phone link
+                // exists — there is no path for the phone to have answered.
+                // Refuse it rather than believe the claim (fail closed).
+                if (claimed == "phone" && !config.hasPhoneLink) {
+                    io.log("refused an approval claiming the phone: no phone link is attached")
                     approval.resolve(id, false, "pc")
                 } else {
                     approval.resolve(id, allow, claimed)

@@ -62,6 +62,10 @@ class BackendSession(
     @Volatile
     var onTask: (suspend (BackendEnvelope) -> Unit)? = null
 
+    /** A question from another device; it never runs a turn. */
+    @Volatile
+    var onApproval: (suspend (BackendEnvelope) -> Unit)? = null
+
     /** The live socket, for the runner that answers a delivery on it. */
     fun currentLink(): BackendLink? = link
 
@@ -243,6 +247,7 @@ class BackendSession(
             )
             onTask?.invoke(envelope)
         }
+        created.onApproval = { envelope -> onApproval?.invoke(envelope) }
         link = created
         refresh.onConnected()
         stateJob = scope.launch { created.state.collect { publish(it) } }

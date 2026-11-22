@@ -58,6 +58,9 @@ class BackendClient(
     @Volatile
     override var onTask: (suspend (BackendEnvelope) -> Unit)? = null
 
+    @Volatile
+    override var onApproval: (suspend (BackendEnvelope) -> Unit)? = null
+
     private var job: Job? = null
 
     /** The connection attempt, not the socket field, owns the hello handshake. */
@@ -181,6 +184,7 @@ class BackendClient(
             "pong" -> pongs.trySend(Unit)
             "ping" -> answerPing(webSocket, frame)
             "task.create" -> dispatch(frame)
+            "task.needs_approval" -> dispatchApproval(frame)
         }
     }
 
@@ -229,6 +233,21 @@ class BackendClient(
                 throw cancelled
             } catch (error: Exception) {
                 // A failed delivery must not close the link or kill the handler scope.
+            }
+        }
+    }
+
+    /** An approval is a question, not a goal: it has its own handler. */
+    private fun dispatchApproval(frame: BackendEnvelope) {
+        val handler = onApproval ?: return
+        val live = session ?: return
+        live.launch {
+            try {
+                handler(frame)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                // A failed approval must not close the link.
             }
         }
     }

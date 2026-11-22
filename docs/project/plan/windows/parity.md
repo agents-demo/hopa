@@ -2,7 +2,7 @@
 
 The reference is the **Android app**. Every row names an Android screen and its
 source file; there is no other reference client. Status is one of `have`, `todo`,
-`out` (deliberately not on Windows), or `P4`/`P5` (scheduled).
+`out` (deliberately not on Windows), or `P5` (scheduled).
 
 | Android screen | Source | Windows equivalent | Status |
 |---|---|---|---|
@@ -40,7 +40,7 @@ source file; there is no other reference client. Status is one of `have`, `todo`
 | Device | `feature/runningapps/ComputerScreen.kt` | none: this PC *is* the device | out |
 | Browser | `feature/browser/BrowserScreen.kt` | none in v0 | out |
 | Notifier | `service/Notifier.kt` | none: the phone owns the event surface | out |
-| Approval on the phone | `ui/component/ApprovalSheet.kt` | request pushed to the phone, answer returned | P4 |
+| Approval on the phone | `ui/component/ApprovalSheet.kt` | request pushed to the phone, answer returned | have |
 | Takeover / signature | none yet | pause, hand over, resume, verify | P5 |
 
 ## Token check
@@ -66,8 +66,8 @@ Body sizes follow `HopaType`: 15, 13.5, 11, with the answer at 13.5.
 
 A row marked `out` is a deliberate product decision, not a gap: the phone is where
 those features belong, and duplicating them would create a second product. The
-one exception is approval, which is `P4` because the PC must be able to ask the
-phone when the action runs on the desktop.
+one exception is approval, which is `have`: the PC can ask the phone when the
+action runs on the desktop (P4).
 
 ## The two meanings of "computer"
 

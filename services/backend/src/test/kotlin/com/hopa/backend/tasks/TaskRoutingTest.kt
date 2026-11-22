@@ -56,6 +56,25 @@ class TaskRoutingTest {
         body = buildJsonObject { put("goal", "open the settings app") },
     )
 
+    private fun needsApproval(to: String, id: String = UUID.randomUUID().toString()) = Envelope(
+        v = 1,
+        id = id,
+        type = "task.needs_approval",
+        ts = 1,
+        to = to,
+        body = buildJsonObject {
+            put("goal", "approve the payment")
+            put(
+                "approval",
+                buildJsonObject {
+                    put("title", "Confirm payment")
+                    put("isPayment", true)
+                    put("action", buildJsonObject { put("kind", "payment.pay") })
+                },
+            )
+        },
+    )
+
     @Test
     fun `a task is delivered to the target and acked to the sender`() = testApplication {
         application { module(config()) }
@@ -255,5 +274,46 @@ class TaskRoutingTest {
         pc.expect("device.hello.ack")
         pc.expect("task.create")
         pc.expectNothing("task.create")
+    }
+
+    @Test
+    fun `an approval request reaches the phone and its decision returns to the pc`() = testApplication {
+        application { module(config()) }
+        val http = createClient { install(WebSockets) }
+        val phone = FakeDevice("dev-phone", "tok-dev-phone")
+        val pc = FakeDevice("dev-pc", "tok-dev-pc")
+        phone.connect(http)
+        phone.send(hello("dev-phone"))
+        phone.expect("device.hello.ack")
+        pc.connect(http)
+        pc.send(hello("dev-pc"))
+        pc.expect("device.hello.ack")
+        phone.expect("presence")
+
+        pc.send(needsApproval("dev-phone"))
+        val ack = pc.expect("task.ack")
+        val taskId = ack.bodyString("task")
+        val request = phone.expect("task.needs_approval")
+        assertEquals(taskId, request.task)
+        assertEquals("approve the payment", request.bodyString("goal"))
+
+        phone.send(
+            Envelope(
+                v = 1,
+                id = UUID.randomUUID().toString(),
+                type = "task.result",
+                ts = 2,
+                to = "dev-pc",
+                task = taskId,
+                body = buildJsonObject {
+                    put("approval", buildJsonObject { put("allow", true) })
+                    put("summary", "approved")
+                },
+            ),
+        )
+
+        val result = pc.expect("task.result")
+        assertEquals(taskId, result.task)
+        assertEquals("approved", result.bodyString("summary"))
     }
 }

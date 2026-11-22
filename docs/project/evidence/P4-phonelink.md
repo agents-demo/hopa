@@ -1,95 +1,88 @@
-# P4 — phone link (in progress, aligned to the backend gateway)
+# P4 — phone link
 
-Date: 2026-11-17. Decision: ADR-0024 (Windows pairs its own backend credential;
+Date: 2026-11-19. Decision: ADR-0024 (Windows pairs its own backend credential;
 device identity and task state come from the gateway, never from a shared token
-or a client-supplied role). This supersedes the earlier relay-based draft after
-upstream added `services/backend` (ADR-0022).
+or a client-supplied role).
 
-This file records the part of P4 that has landed: the first checkbox (task
-messages) and the record-contract groundwork for approval provenance. The phone
-approval transport itself is **not** done: the gateway reserves
-`task.needs_approval` until backend week 5, and there is no Windows gateway
-client yet. The remaining three P4 checkboxes stay open.
+Status: **P4 code complete; the hardware gate remains to be run.** The Windows
+host owns its own gateway pairing and socket, a PC action can ask the phone to
+approve it, and the run record names the device that answered. The backend now
+accepts the approval request that the week-1 plan had reserved; role routing and
+signed household decisions remain the week-5 work described in the backend plan.
 
-## Alignment with the gateway
+## The wire
 
-| Local (Windows IPC) | Backend gateway | Where |
-|---|---|---|
-| `task.start` / `task.get` / `task.list` / `task.handoff` | local view of `task.create` | `TaskStore.kt`, `Main.kt` |
-| `task.event` | `task.ack` / `task.progress` / `task.result` / `task.error` / `task.cancel` | `Main.kt` |
-| `queued → delivered → acked → progress → done / failed / cancelled` | same states | `TaskRouter.kt:215–221` |
-| `from`/`to` = `pc`/`phone` | server-set `deviceId`, `platform = windows\|android` | `gateway.v1.schema.json:44–51` |
-| `approver.device = pc\|phone` | `platform` (`windows → pc`, `android → phone`) | `Approver.fromPlatform` |
+An approval is a task, not a second queue:
 
-The backend's Postgres task store is authoritative. `TaskStore` is only a local
-projection, rebuilt from gateway events; it does not invent a second state
-machine. The host maps IPC messages to and from `Envelope` frames and sets
-`approval.result.device` from the authenticated gateway sender.
+```text
+PC                                      backend                         phone
+ | task.create (optional handoff)          |                               |
+ |---------------------------------------->| route / queue / wake          |
+ |                                         |------------------------------>|
+ |                                         |                               |
+ | task.needs_approval {goal, approval}     |                               |
+ |---------------------------------------->| task state needs_approval     |
+ |                                         |------------------------------>|
+ |                                         |                      approval sheet
+ |                                         |                               |
+ |                                         |<------------------------------|
+ |                                         |       task.result             |
+ |<----------------------------------------|       {approval:{allow}}      |
+ | execute or stop; record approver=phone  |                               |
+```
+
+`task.needs_approval` carries the same `ApprovalRequest` fields the local sheet
+uses: title, body, amount, merchant, consequence, `isPayment` and the action. A
+phone answer is `task.result` with `{"approval":{"allow":true|false}}`. The
+server sets `from`; the client never names another device.
 
 ## What landed
 
 | Thing | Where |
 |---|---|
-| ADR-0024, gateway-aligned resolution of the plan's open token question | `docs/design/decisions/0024-windows-device-identity-and-approval.md` |
-| `task.start`, `task.get`, `task.list`, `task.handoff`, `task.event` | `apps/windows/sidecar/.../TaskStore.kt`, `Main.kt`, `Protocol.kt`, `protocol.md` |
-| `approver: {device, at}` on the run record | `contracts/schemas/run-record.schema.json`, `docs/reference/contracts/run-record.md`, `RunRecord`, `RunRecordDraft`, `RunRecordFactory`, `RunChain`, `RunRecordSerializer` |
-| An approval answer carries its source device | `ApprovalDecision`, `ApprovalGateway.decide`, `HostApproval.resolve`, `approval.result.device`, `Protocol.step.approver` |
-| Fail-closed provenance: no bridge means no phone approval | `Main.kt` `approval.result` handler |
-| Gateway states/events and the `platform → device` mapping | `TaskStore`, `Approver.fromPlatform` |
+| `task.needs_approval` in the gateway schema, validator, router and store | `contracts/schemas/gateway.v1.schema.json`, `services/backend/.../EnvelopeValidator.kt`, `TaskRouter.kt`, `TaskStore.kt`, `PgTaskStore.kt` |
+| `needs_approval` is a durable task state; offline phones receive it on hello, and delivery keeps the request type | `TaskRouter.deliver`, `TaskStore.pendingFor`, `V2__task_needs_approval.sql` |
+| Windows owns its own pairing: `hopa://pair` → `/v1/pair/claim`, `platform=windows`, its own key, Credential Manager | `apps/windows/Hopa.Windows/GatewayClient.cs`, `CredentialStore.cs` |
+| Windows gateway socket: `device.hello`, presence, `task.create`, `task.needs_approval`, `task.result`, refresh on auth close | `GatewayClient.cs` |
+| The host asks the phone before the local sheet; a timeout or dead link denies | `MainWindow.OnApprovalRequested`, `HostApproval` |
+| The sidecar only learns whether a phone peer is reachable; a phone claim without that link is refused | `RuntimeConfig.hasPhoneLink`, `Main.kt` `approval.result`, `SidecarClient.SendGatewayState` |
+| Android shows the same approval sheet for a remote request and returns the decision | `apps/android/app/.../RemoteApprovalRunner.kt`, `BackendClient.onApproval`, `AppContainer` |
+| Approval provenance on the record | `Approver`, `ApprovalDecision`, `RunRecord.approver`, `Protocol.step` |
+| A dropped link or a late answer is a denial, never a silent yes | `RemoteApprovalRunner` timeout, `HostApproval` timeout, `TaskStore.failLink` |
 
-## Task messages (real NDJSON transcript)
+## Settings
 
-```
-host -> {"type":"hello"}
-sidecar -> {"type":"ready","version":1}
-host -> {"type":"task.start","id":"a","taskId":"t-1","goal":"open notepad","device":"pc"}
-sidecar -> {"type":"task.start","id":"a","ok":true,"task":{"id":"t-1","goal":"open notepad","state":"queued","from":"pc","events":[{"index":0,"type":"task.create","from":"pc","at":…}]}}
-host -> {"type":"task.handoff","id":"b","taskId":"t-1","target":"phone"}
-sidecar -> {"type":"task.handoff","id":"b","ok":true,"task":{… "to":"phone", "state":"queued" …}}
-host -> {"type":"task.event","id":"c","taskId":"t-1","event":"deliver","from":"phone"}
-sidecar -> {"type":"task.event","id":"c","ok":true,"task":{… "state":"delivered", "events":[…{"type":"deliver","from":"phone"}…] …}}
-host -> {"type":"task.event","id":"d","taskId":"t-1","event":"task.result","from":"phone","platform":"android"}
-sidecar -> {"type":"task.event","id":"d","ok":true,"task":{… "state":"done", "events":[…{"type":"task.result","from":"phone"}…], "approver":{"device":"phone","at":…} …}}
-```
-
-No step claims a result the target has not reported: `task.handoff` records the
-target but leaves the state at `queued`, and a result event is required to reach
-`done`. An invalid target or event is refused with `E_SCHEMA`, never silently
-accepted.
-
-## Approval provenance
-
-- `ActionExecutor` asks `ApprovalGateway.decide()` once, before any tier runs.
-  The returned `ApprovalDecision(device)` is written to the step as
-  `approver: {device, at}`; a gateway that has not been taught about the phone
-  keeps its old behaviour (`pc`).
-- `approval.result` accepts `device: "pc" | "phone"`, which the host must set
-  from the authenticated gateway `from`. A phone allow is refused when no bridge
-  is attached, because there is no path by which the phone could have answered.
-  This is fail-closed, not proof of source.
-- `Protocol.step` carries `approver`, so the rail can name the device before
-  `turn.end`.
+**Windows → Settings → Phone link** takes the `hopa://pair?...` link and pairs
+this PC. The link is claimed once; the token pair is stored in Windows
+Credential Manager, never in the app's JSON settings.
 
 ## Tests
 
-| Suite | Tests | Coverage |
-|---|---|---|
-| `ApprovalProvenanceTest` (core) | 4 | phone/pc named on the record, denial keeps the device, no approval means no approver |
-| `TaskStoreTest` (sidecar) | 11 | gateway states/events, target validation, fail-link, platform mapping, frozen shape on the wire |
-| `ProtocolTest` (sidecar) | 6 | `step.approver`, v1 task refusal still available |
+| Suite | What it proves |
+|---|---|
+| `TaskRoutingTest` (backend) | an approval reaches the phone and its result returns to the PC |
+| `RemoteApprovalRunnerTest` (Android) | a request is acked, the sheet is asked once, and allow/deny becomes a `task.result` |
+| `TaskStoreTest` (sidecar) | `needs_approval` is a state; a result names its approver |
+| `ApprovalProvenanceTest` (core) | pc/phone provenance is recorded; a denial keeps the source |
+| `GatewayCodecTest` / fixture check | the new message type is accepted by the schema and codec |
 
-## What is deliberately not done
+Commands used:
 
-1. A **Windows gateway client** in the C# host (WebSocket `Envelope` codec,
-   pairing, token storage) that maps IPC `task.event` to real gateway frames.
-2. **Approval over the gateway.** `task.needs_approval` is reserved and refused
-   with `E_UNSUPPORTED` until backend week 5; signed device-key decisions land
-   there. Do not invent a gateway message that the server will reject.
-3. **Real source authentication** on `approval.result.device`: today the sidecar
-   trusts the host's label and only fails closed without a bridge. It cannot yet
-   prove the sender is the phone.
-4. Wire link-loss from the gateway client into `TaskStore.failLink`.
+```powershell
+.\apps\android\gradlew.bat -p services\backend :test --no-daemon
+.\apps\android\gradlew.bat -p apps\windows\sidecar test --no-daemon
+.\apps\android\gradlew.bat :app:testDebugUnitTest --no-daemon
+cd apps\windows\Hopa.Windows; dotnet build -c Debug
+python tools\checks\check-gateway-fixtures.py
+```
 
-Until those land, the three remaining P4 checkboxes stay unchecked. Doing
-otherwise would record an approval as coming from the phone when nothing proves
-it did.
+## Limits left for the backend's week 5
+
+1. **Role routing.** The request goes to the paired peer; choosing a parent or
+   guardian by household role is week-5 work.
+2. **Signed decisions.** The backend attributes the answer to the authenticated
+   socket. A device-key signature over the decision is not added yet.
+3. **Key wrapping.** Pairing enrolls the PC's public key, but payload encryption
+   and household-key wrapping remain the week-2/week-6 contract.
+4. **Incoming task execution UI.** A phone-originated `task.create` is delivered
+   to the host and logged; the general task inbox is not part of P4.

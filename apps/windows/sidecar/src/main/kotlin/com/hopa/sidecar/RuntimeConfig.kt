@@ -27,12 +27,26 @@ class RuntimeConfig {
         private set
     var tone: String = "warm"
         private set
+    /** P4: this PC has its own gateway credential and a phone peer online. */
+    var gatewayPaired: Boolean = false
+        private set
+    var gatewayPhoneOnline: Boolean = false
+        private set
 
     val hasBridge: Boolean
         get() = useBridge && bridgeUrl.isNotBlank() && bridgeToken.isNotBlank()
 
+    /** A phone answer can only have crossed the gateway when this is true. */
+    val hasPhoneLink: Boolean
+        get() = gatewayPaired && gatewayPhoneOnline
+
     val hasModel: Boolean
         get() = modelKey.isNotBlank()
+
+    fun setGatewayState(paired: Boolean, phoneOnline: Boolean) {
+        gatewayPaired = paired
+        gatewayPhoneOnline = phoneOnline
+    }
 
     fun setSession(token: String, refresh: String) {
         bridgeToken = token
@@ -53,6 +67,8 @@ class RuntimeConfig {
     /** Safe to log: no token, no key, no credentials in the URL. */
     fun summary(): String =
         "bridge=${if (hasBridge) "on" else "off"} url=${bridgeUrl.ifBlank { "-" }} " +
+            "gateway=${if (gatewayPaired) "paired" else "off"}" +
+            "/phone=${if (gatewayPhoneOnline) "on" else "off"} " +
             "model=${if (hasModel) modelProvider else "none"} tone=$tone"
 
     private fun JsonObject.text(key: String): String =

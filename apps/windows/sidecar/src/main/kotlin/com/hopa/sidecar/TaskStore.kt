@@ -43,9 +43,12 @@ data class HandoffTask(
     }
 
     companion object {
-        val STATES = setOf("queued", "delivered", "acked", "progress", "done", "failed", "cancelled")
+        val STATES = setOf(
+            "queued", "delivered", "acked", "progress", "needs_approval",
+            "done", "failed", "cancelled",
+        )
         val EVENTS = setOf(
-            "task.create", "deliver", "task.ack", "task.progress",
+            "task.create", "task.needs_approval", "deliver", "task.ack", "task.progress",
             "task.result", "task.error", "task.cancel",
         )
     }
@@ -103,6 +106,7 @@ class TaskStore {
         require(from == "pc" || from == "phone") { "event from must be pc or phone" }
         val state = when (type) {
             "task.create" -> "queued"
+            "task.needs_approval" -> "needs_approval"
             "deliver" -> "delivered"
             "task.ack" -> "acked"
             "task.progress" -> "progress"

@@ -1,9 +1,10 @@
 # HOPA for Windows
 
-Status: **P1 and P3 complete; P2 code complete with one manual gate open.** The
+Status: **P1–P4 code complete; the P4 hardware gate is pending.** The
 shared engine runs headless through the real gate, the PC adapter implements the
-whole `DevicePort` contract, and a settings launch becomes a URI before any
-click. The desktop leg of the Android program
+whole `DevicePort` contract, a settings launch becomes a URI before any
+click, and a PC action can ask the paired phone for approval. The desktop leg of
+the Android program
 ([plan](../../docs/project/plan/windows/README.md),
 [protocol](../../docs/project/plan/windows/protocol.md),
 [parity](../../docs/project/plan/windows/parity.md), [ADR-0021](../../docs/design/decisions/0021-windows-client-stack.md)).
@@ -96,6 +97,19 @@ dotnet run -c Debug -- --turn "open wifi settings" --out "$env:TEMP\hopa-p3\turn
 The first refuses `file:` and `shell:` and opens `ms-settings:network-wifi`; the
 second must log `step 0: system.openLink tier=intent` and verify against the
 Settings window. `--turn` starts the sidecar, so `JAVA_HOME` must be set.
+
+## Pair the phone (P4)
+
+Open **Settings → Phone link**, paste the `hopa://pair?...` link the backend
+printed for this PC, and press **Pair this PC**. The PC claims its own credential
+with `platform=windows`; the token pair is stored in Windows Credential Manager.
+When the phone is online, an approval for a PC action is sent to it, and the
+answer is written to the run record as `approver.device = "phone"`. A dead link
+or a late answer denies, never allows.
+
+The gateway flow is in `GatewayClient.cs`; the phone side is
+`RemoteApprovalRunner.kt`. The implementation record is
+[`docs/project/evidence/P4-phonelink.md`](../../docs/project/evidence/P4-phonelink.md).
 
 ## Rules
 

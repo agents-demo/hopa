@@ -17,6 +17,7 @@ object EnvelopeValidator {
         "device.hello.ack",
         "presence",
         "task.create",
+        "task.needs_approval",
         "task.ack",
         "task.progress",
         "task.result",

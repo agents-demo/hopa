@@ -1,7 +1,9 @@
 package com.hopa.contracts.approval
 
 import com.hopa.contracts.wire.Action
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class ApprovalRequest(
     val title: String,
     val body: String,

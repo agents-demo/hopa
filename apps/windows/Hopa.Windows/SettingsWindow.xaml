@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Settings"
         Icon="Assets/hopa.ico"
-        Height="660" Width="580"
+        Height="760" Width="580"
         Background="#F7F4EE"
         WindowStartupLocation="CenterOwner"
         WindowStyle="None"
@@ -26,7 +26,18 @@
             </Grid>
         </Border>
 
-        <StackPanel Grid.Row="2" Margin="0,16,0,0">
+        <ScrollViewer Grid.Row="2" Margin="0,16,0,0" VerticalScrollBarVisibility="Auto">
+        <StackPanel>
+            <TextBlock Text="Phone link (backend gateway)" FontSize="11.5" Foreground="#6B665C" />
+            <TextBox x:Name="GatewayLinkBox" Height="32" Margin="0,4,0,0"
+                     ToolTip="Paste the hopa://pair?... link the backend printed for this PC." />
+            <TextBlock Text="Paste the hopa://pair link for this PC, then pair once."
+                       FontSize="9.5" Foreground="#9A9488" Margin="0,3,0,6" />
+            <Button x:Name="PairGatewayButton" Content="Pair this PC" Width="120" Height="32"
+                    HorizontalAlignment="Left" Click="PairGateway_Click" />
+            <TextBlock x:Name="GatewayStatusText" FontSize="10" Foreground="#6B665C"
+                       Margin="0,4,0,12" TextWrapping="Wrap" />
+
             <TextBlock Text="Bridge" FontSize="11.5" Foreground="#6B665C" />
             <TextBox x:Name="BridgeUrlBox" Height="32" Margin="0,4,0,0" />
             <TextBlock Text="Bridge address, e.g. http://127.0.0.1:8901" FontSize="9.5"
@@ -56,6 +67,7 @@
                 <ComboBoxItem Content="brief" />
             </ComboBox>
         </StackPanel>
+        </ScrollViewer>
 
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right"
                     Margin="0,16,0,0">

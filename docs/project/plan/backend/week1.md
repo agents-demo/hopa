@@ -110,7 +110,10 @@ a client cannot ask for another household's data even by accident.
 | `error` | server → device | `E_AUTH`, `E_TENANT`, `E_VERSION`, `E_RATE`, `E_QUEUE`, `E_SCHEMA` |
 | `ping` / `pong` | both | application-level liveness alongside WS ping |
 
-`task.needs_approval` is reserved and rejected with `E_UNSUPPORTED` until week 5.
+`task.needs_approval` is accepted as an approval-only task: the actor sends it
+with `{goal, approval}`, the approver answers with `task.result` carrying
+`{approval:{allow}}`, and the server stores `needs_approval` as a task state.
+Role routing and signed household decisions remain week-5 work.
 
 ### 4.4 Invariants
 
@@ -136,7 +139,7 @@ a client cannot ask for another household's data even by accident.
 - `spec/fixtures/gateway-v0.json`: 14 vectors — happy path each direction,
   duplicate id, unknown version, unknown type, cross-household `to`, offline
   target, expired deadline, oversized frame, bad token, revoked token, cancel
-  after result, missing trace, invalid trace, `needs_approval` refusal.
+  after result, missing trace, invalid trace, `needs_approval` acceptance.
 - `docs/reference/protocols.md`: a row for the gateway; `spec/openapi/README.md`
   gains `backend.v1.yaml`.
 

@@ -282,12 +282,27 @@ public sealed class SidecarClient : IAsyncDisposable
         Send(new JsonObject { ["type"] = "turn.cancel" });
     }
 
-    public void SendApprovalResult(string id, bool allow)    {
+    public void SendApprovalResult(string id, bool allow, string device = "pc")    {
         Send(new JsonObject
         {
             ["type"] = "approval.result",
             ["id"] = id,
             ["allow"] = allow,
+            ["device"] = device,
+        });
+    }
+
+    /// <summary>
+    /// P4: the host owns the gateway socket; the sidecar only learns whether a
+    /// phone peer is reachable, so it can attribute an approval honestly.
+    /// </summary>
+    public void SendGatewayState(bool paired, bool phoneOnline)
+    {
+        Send(new JsonObject
+        {
+            ["type"] = "gateway.state",
+            ["paired"] = paired,
+            ["phoneOnline"] = phoneOnline,
         });
     }
 

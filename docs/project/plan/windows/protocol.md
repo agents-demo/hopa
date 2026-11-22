@@ -6,7 +6,7 @@ free-form logging and never carries protocol messages.
 
 Version: `1` (the `ready` message carries it). Breaking changes bump the number
 and update this file in the same commit. P0 froze this document; P1 implements
-`step` and refuses `task.*` explicitly until P4.
+`step`, and P4 implements the `task.*` view plus `gateway.state`.
 
 ## Messages
 
@@ -18,8 +18,9 @@ and update this file in the same commit. P0 froze this document; P1 implements
 | `turn.start` | `id`, `goal`, `conversationId?`, `attachment?` | run one turn for this goal in that conversation (a blank id creates one) |
 | `turn.cancel` | - | stop the running turn at the next safe point |
 | `configure` | `bridgeUrl`, `useBridge`, `bridgeToken`, `bridgeRefresh`, `modelProvider`, `modelBaseUrl`, `modelName`, `modelKey`, `tone` | settings in memory; secrets are never written to disk here |
+| `gateway.state` | `paired`, `phoneOnline` | P4: whether this PC has a gateway credential and a phone peer; a phone approval is only accepted while both are true |
 | `device.result` | `id`, `ok`, `error?`, `observation?`, `app?` | the host performed, or refused, a requested device action |
-| `approval.result` | `id`, `allow` | the answer to one `approval.request` |
+| `approval.result` | `id`, `allow`, `device?` | the answer to one `approval.request`; `device` is `pc` or `phone` and is checked against the live gateway link |
 | `file.attach` | `id`, `path` | copy a file into the sidecar's attachment directory |
 | `file.remove` | `id`, `path` | drop a pending attachment |
 | `conversations.list` | `id`, `includeArchived?` | list conversations |
@@ -31,10 +32,10 @@ and update this file in the same commit. P0 froze this document; P1 implements
 | `conversation.delete` | `id`, `conversationId` | tombstone a conversation |
 | `conversation.export` | `id`, `conversationId` | export one conversation as JSON |
 | `conversation.search` | `id`, `query` | search titles and messages |
-| `task.start` | `id` (request), `taskId?`, `goal`, `device?` | create a local task view (P4; refused in v1); the backend assigns the real task id, and the reply's id is generated when `taskId` is blank |
-| `task.list` | `id` | list task views (refused in v1) |
-| `task.get` | `id`, `taskId` | read one task view (refused in v1) |
-| `task.handoff` | `id`, `taskId`, `target` | record the gateway target; the host sends `task.create` to the backend (refused in v1) |
+| `task.start` | `id` (request), `taskId?`, `goal`, `device?` | create a local task view (P4); the backend assigns the real task id, and the reply's id is generated when `taskId` is blank |
+| `task.list` | `id` | list task views (P4) |
+| `task.get` | `id`, `taskId` | read one task view (P4) |
+| `task.handoff` | `id`, `taskId`, `target` | record the gateway target; the host sends `task.create` to the backend (P4) |
 | `task.event` | `id`, `taskId`, `event`, `from`, `at?`, `platform?`, `error?` | apply a gateway task event; `event` is the gateway type (`task.ack` …), `from` is server-set and `platform` maps to the approver label |
 | `shutdown` | - | the host is closing; the sidecar exits |
 
@@ -54,7 +55,7 @@ and update this file in the same commit. P0 froze this document; P1 implements
 | `file.attached` | `id`, `attachment?`, `error?` | the attachment was accepted or refused |
 | `file.removed` | `id`, `ok` | the pending attachment was dropped |
 | `task.*` | echo `id` plus the task payload | replies to the task messages above |
-| `task.error` | `id`, `ok:false`, `code`, `error` | a task message was refused (unavailable in v1, or a bad request in P4) |
+| `task.error` | `id`, `ok:false`, `code`, `error` | a task message was refused (a bad request in P4) |
 
 ## Device operations in v1
 
@@ -89,19 +90,23 @@ A `device.result` carries `ok`, and on success any of `observation`, `app`,
 - A payment is denied unless the person answers this exact request. No token,
   flag or environment variable changes that.
 
-## Task shapes (frozen for P4, refused in v1)
+## Task shapes (P4)
 
-`task.list` -> `{"type":"task.error","id":"…","ok":false,"code":"E_UNSUPPORTED","error":"task handoff is not implemented on this build"}`
+`task.list` -> `{"type":"task.list","id":"…","ok":true,"tasks":[{"id":"t-1","state":"queued",…}]}`
 
-The same envelope answers `task.start`, `task.get`, `task.handoff` and
-`task.event` in v1. P4 implements a **local view of a backend gateway task**
+`task.needs_approval` creates a task in `needs_approval` with
+`{goal, approval:{title, body, amount, merchant, consequence, isPayment, action}}`.
+The target answers with `task.result` carrying `{approval:{allow}}`.
+
+`task.start`, `task.get`, `task.handoff` and `task.event` share the task object
+below. P4 implements a **local view of a backend gateway task**
 (ADR-0024). States and event names are the gateway's, from ADR-0022 and
 `contracts/schemas/gateway.v1.schema.json` — this is not a second state machine:
 
 ```json
-{"id":"t-1","state":"queued|delivered|acked|progress|done|failed|cancelled",
+{"id":"t-1","state":"queued|delivered|acked|progress|needs_approval|done|failed|cancelled",
  "from":"pc","to":"phone",
- "events":[{"index":0,"type":"task.create|deliver|task.ack|task.progress|task.result|task.error|task.cancel","from":"pc","at":0}],
+ "events":[{"index":0,"type":"task.create|task.needs_approval|deliver|task.ack|task.progress|task.result|task.error|task.cancel","from":"pc","at":0}],
  "postconditions":["…"],"approver":{"device":"pc|phone","at":0}}
 ```
 
@@ -112,10 +117,12 @@ exactly as `TaskRouter` does. `task.get` returns the view; `task.list` returns
 the array. `from` is the server-set device id mapped to `pc`/`phone`; a client
 cannot name another device. An `approver` on a result comes from the gateway
 `platform` (`windows -> pc`, `android -> phone`) and the authenticated sender —
-an `allow` that claims the phone but arrived from the PC side is refused. The
-gateway reserves `task.needs_approval` until week 5, so no approval is claimed
-over this channel until that backend capability exists. Until P4, a host that
-asks for a handoff gets an explicit refusal, never a silent success.
+an `allow` that claims the phone but arrived from the PC side is refused. P4
+also carries `task.needs_approval` as its own state: the host sends the approval
+request on the gateway, the phone answers with `task.result` containing
+`{approval:{allow}}`, and the sidecar records `approver.device` from the answer
+source. A host with no live phone link gets a local sheet and never claims a
+phone approval.
 
 ## Rules
 

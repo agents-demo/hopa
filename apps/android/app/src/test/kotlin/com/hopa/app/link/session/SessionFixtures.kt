@@ -61,6 +61,7 @@ internal object SessionFixtures {
     ) : BackendLink {
         override val state = MutableStateFlow<BackendState>(BackendState.Disconnected)
         override var onTask: (suspend (BackendEnvelope) -> Unit)? = null
+        override var onApproval: (suspend (BackendEnvelope) -> Unit)? = null
 
         @Volatile
         var started = false

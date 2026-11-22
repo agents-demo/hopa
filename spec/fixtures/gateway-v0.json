@@ -204,10 +204,9 @@
       }
     },
     {
-      "name": "needs_approval is reserved until week 5",
-      "ok": false,
-      "schema": false,
-      "error": "E_UNSUPPORTED",
+      "name": "an approval request is accepted",
+      "ok": true,
+      "schema": true,
       "message": {
         "v": 1,
         "id": "018f3a5e-6b1c-7c3a-9d2e-4f5a6b7c8da7",
@@ -216,7 +215,16 @@
         "to": "dev-01h-parent",
         "task": "tsk-01h-2",
         "body": {
-          "amount": 1240
+          "goal": "approve a payment",
+          "approval": {
+            "title": "Confirm payment",
+            "body": "Money may leave your account.",
+            "amount": "12.40",
+            "merchant": "Example Shop",
+            "consequence": "HOPA cannot undo a payment.",
+            "isPayment": true,
+            "action": { "schemaVersion": "1", "kind": "payment.pay", "timeoutMs": 3000 }
+          }
         }
       }
     },

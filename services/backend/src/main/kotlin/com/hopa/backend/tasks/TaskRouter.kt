@@ -13,6 +13,8 @@ import com.hopa.backend.trace.TraceIds
 import com.hopa.backend.trace.TraceRecorder
 import java.util.UUID
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
 
@@ -99,6 +101,8 @@ class TaskRouter(
 
         return when (envelope.type) {
             "task.create" -> create(identity, envelope, traceparent)
+            "task.needs_approval" ->
+                create(identity, envelope, traceparent, state = "needs_approval", event = "task.needs_approval")
             "task.ack", "task.progress", "task.result", "task.error", "task.cancel" ->
                 relay(identity, envelope)
 
@@ -113,6 +117,8 @@ class TaskRouter(
         identity: DeviceIdentity,
         envelope: Envelope,
         traceparent: String,
+        state: String = "",
+        event: String = "create",
     ): RouteResult {
         val to = envelope.to
             ?: return RouteResult.Refused(GatewayError("E_SCHEMA", "a task needs a target"), envelope.trace)
@@ -143,7 +149,7 @@ class TaskRouter(
             trace = traceparent,
             ts = envelope.ts,
             body = envelope.body,
-            state = if (registry.online(to)) "delivered" else "queued",
+            state = state.ifEmpty { if (registry.online(to)) "delivered" else "queued" },
             deadlineAt = deadlineFrom(envelope.body),
         )
         if (!store.remember(identity.householdId, envelope.id, task)) {
@@ -154,7 +160,7 @@ class TaskRouter(
                 )
             return RouteResult.Accepted(existing, duplicate = true)
         }
-        store.event(task.id, identity.householdId, "create", envelope.body, now())
+        store.event(task.id, identity.householdId, event, envelope.body, now())
 
         val routed = if (registry.online(to)) {
             deliver(task)
@@ -201,7 +207,9 @@ class TaskRouter(
         val next = when (envelope.type) {
             "task.ack" -> task.copy(state = "acked")
             "task.progress" -> task.copy(state = "progress")
-            "task.result" -> task.copy(state = "done")
+            "task.result" -> task.copy(
+                state = if (envelope.body.approvalAllowed() == false) "failed" else "done",
+            )
             "task.error" -> task.copy(state = "failed")
             "task.cancel" -> task.copy(state = "cancelled")
             else -> task
@@ -251,12 +259,16 @@ class TaskRouter(
             // would duplicate the frame; a reconnect gets a fresh session, so an
             // unacked task is still redelivered then.
             if (!session.sent.add(task.id)) return@span task
+            // An approval request is its own frame type; a normal handoff is
+            // still `task.create`. The state survives delivery so a reconnect
+            // can send the same request again until the target acks it.
+            val type = if (task.state == "needs_approval") "task.needs_approval" else "task.create"
             val sent = session.outgoing.trySend(
                 GatewayCodec.encode(
                     Envelope(
                         v = 1,
                         id = task.messageId,
-                        type = "task.create",
+                        type = type,
                         ts = task.ts,
                         trace = task.trace,
                         from = task.from,
@@ -272,10 +284,21 @@ class TaskRouter(
                 registry.leave(session)
                 return@span task
             }
+            if (task.state == "needs_approval") {
+                store.event(task.id, task.householdId, "deliver", JsonObject(emptyMap()), now())
+                return@span task
+            }
             store.markDelivered(task.id, task.householdId)
             store.event(task.id, task.householdId, "deliver", JsonObject(emptyMap()), now())
             task.copy(state = "delivered")
         }
+
+    /** Null when the result is not an approval; false is a denial. */
+    private fun JsonObject.approvalAllowed(): Boolean? =
+        (this["approval"] as? JsonObject)
+            ?.get("allow")
+            ?.jsonPrimitive
+            ?.booleanOrNull
 
     private fun traceId(traceparent: String): String =
         TraceIds.traceId(traceparent) ?: TraceIds.traceId(TraceIds.newTraceparent())!!

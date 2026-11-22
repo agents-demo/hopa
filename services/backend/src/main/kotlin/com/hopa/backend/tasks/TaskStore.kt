@@ -65,7 +65,7 @@ class InMemoryTaskStore : TaskStore {
             .filter {
                 it.to == deviceId &&
                     it.householdId == householdId &&
-                    it.state in setOf("queued", "delivered") &&
+                    it.state in setOf("queued", "delivered", "needs_approval") &&
                     it.deadlineAt > now
             }
             .sortedBy { it.ts }

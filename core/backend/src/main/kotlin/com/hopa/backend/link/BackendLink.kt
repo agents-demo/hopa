@@ -12,6 +12,9 @@ import kotlinx.coroutines.flow.StateFlow
 interface BackendLink {
     val state: StateFlow<BackendState>
     var onTask: (suspend (BackendEnvelope) -> Unit)?
+
+    /** A `task.needs_approval` delivery: show the question, not run a goal. */
+    var onApproval: (suspend (BackendEnvelope) -> Unit)?
     fun start(scope: CoroutineScope)
     suspend fun stop()
 

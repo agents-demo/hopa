@@ -19,6 +19,37 @@ public partial class SettingsWindow : Window
         ModelNameBox.Text = settings.ModelName;
         ModelKeyBox.Password = CredentialStore.Read("hopa.model.key");
         Select(ToneBox, settings.Tone);
+        var gateway = GatewayClient.Load();
+        GatewayStatusText.Text = gateway == null
+            ? "Not paired. Pairing is the first step for phone approval."
+            : $"Paired as {gateway.DeviceId}.";
+    }
+
+    private async void PairGateway_Click(object sender, RoutedEventArgs e)
+    {
+        var link = GatewayLinkBox.Text.Trim();
+        if (link.Length == 0)
+        {
+            GatewayStatusText.Text = "Paste the hopa://pair link first.";
+            return;
+        }
+
+        PairGatewayButton.IsEnabled = false;
+        GatewayStatusText.Text = "Pairing...";
+        try
+        {
+            var credentials = await GatewayClient.PairAsync(link, Environment.MachineName);
+            GatewayLinkBox.Clear();
+            GatewayStatusText.Text = $"Paired as {credentials.DeviceId}.";
+        }
+        catch (Exception error)
+        {
+            GatewayStatusText.Text = error.Message;
+        }
+        finally
+        {
+            PairGatewayButton.IsEnabled = true;
+        }
     }
 
     private void Header_Drag(object sender, System.Windows.Input.MouseButtonEventArgs e)

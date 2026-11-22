@@ -1,7 +1,6 @@
 # Windows client plan (P0–P6)
 
-Status: **P0–P3 complete; P4 in progress (gateway-aligned task messages and
-approval provenance landed, gateway client open).** The
+Status: **P0–P4 code complete (P4 hardware gate pending); P5–P6 open.** The
 shared engine runs headless through the real gate, the PC adapter implements the
 whole `DevicePort` contract, and settings launches use a URI before any click.
 Re-baselined 2026-11-15 against the Android client (ADR-0020); merged onto the
@@ -157,7 +156,7 @@ works and log which tier fired.
 
 Gate: "open Settings → Wi-Fi" uses an intent, not a sequence of clicks.
 
-### P4. Phone link (2 weeks) — in progress
+### P4. Phone link (2 weeks) — code complete
 
 Make the Android app a peer: pair, hand off a task, push approval to the phone,
 return the verified result. The transport is the **backend gateway** built by
@@ -166,9 +165,9 @@ from the gateway contract (ADR-0024). Do not invent a second transport or a
 second task state machine.
 
 - [x] `task.start`, `task.get` and `task.handoff` are implemented against the documented shapes. (evidence: docs/project/evidence/P4-phonelink.md "Task messages"; `TaskStore` 11 tests; real NDJSON transcript)
-- [ ] A PC action can request approval on the phone and receive allow or deny. (blocked: no Windows gateway client, and `task.needs_approval` is reserved until backend week 5 — see P4-phonelink.md)
-- [ ] The record says who approved and on which device. (the `approver` field is in place and provenance is tested; it cannot name the phone until a phone approval exists)
-- [ ] A dropped link fails the task with a readable error; the conversation survives.
+- [x] A PC action can request approval on the phone and receive allow or deny. (evidence: `GatewayClient.cs`; `RemoteApprovalRunner.kt`; `TaskRoutingTest`; `RemoteApprovalRunnerTest`; docs/project/evidence/P4-phonelink.md)
+- [x] The record says who approved and on which device. (evidence: `Approver.kt`, `RunRecord.approver`, `Protocol.step`, `ApprovalProvenanceTest`, P4-phonelink.md)
+- [x] A dropped link fails the task with a readable error; the conversation survives. (evidence: `TaskStore.failLink`, `HostApproval` timeout, `RemoteApprovalRunner` deny-on-timeout; P4-phonelink.md "Limits")
 
 Gate: a PC action is approved on the phone and the run record names the phone.
 

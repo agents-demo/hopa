@@ -113,7 +113,7 @@ class PgTaskStore(
     override fun pendingFor(deviceId: String, householdId: String, now: Long): List<TaskRecord> =
         db.tenant(householdId) { connection ->
             connection.prepareStatement(
-                "$SELECT where to_device = ?::uuid and state in ('queued','delivered') " +
+                "$SELECT where to_device = ?::uuid and state in ('queued','delivered','needs_approval') " +
                     "and deadline_at > ? order by created_at",
             ).use {
                 it.setString(1, deviceId)

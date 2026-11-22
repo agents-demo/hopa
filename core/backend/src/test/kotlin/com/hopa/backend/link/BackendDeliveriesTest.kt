@@ -130,6 +130,32 @@ class BackendDeliveriesTest {
     }
 
     @Test
+    fun `an approval is handed to onApproval and never to onTask`() = runBlocking {
+        val approval = CompletableDeferred<BackendEnvelope>()
+        val server = MockWebServer()
+        server.enqueue(MockResponse().withWebSocketUpgrade(object : FakeGateway() {
+            override fun onOpen(webSocket: WebSocket, response: Response) {
+                webSocket.send(helloAck(id = "a1", queued = 1))
+                webSocket.send(
+                    """{"v":1,"id":"m1","type":"task.needs_approval","ts":2,"from":"dev-9","to":"dev-1",
+                    "task":"task-1","body":{"goal":"approve","approval":{"title":"Confirm"}}}""".trimIndent()
+                )
+            }
+        }))
+        val client = clientFor(server)
+        val taskCalls = AtomicInteger()
+        client.onTask = { taskCalls.incrementAndGet() }
+        client.onApproval = { frame -> approval.complete(frame) }
+        client.start(this)
+        val frame = withTimeout(5_000) { approval.await() }
+        assertEquals("task.needs_approval", frame.type)
+        assertEquals("task-1", frame.task)
+        assertEquals(0, taskCalls.get())
+        client.stop()
+        server.shutdown()
+    }
+
+    @Test
     fun `a slow handler does not stall the socket reader`() = runBlocking {
         val gate = CompletableDeferred<Unit>()
         val handled = CompletableDeferred<Unit>()

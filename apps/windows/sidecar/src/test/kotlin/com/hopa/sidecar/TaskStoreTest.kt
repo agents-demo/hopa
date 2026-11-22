@@ -51,6 +51,17 @@ class TaskStoreTest {
     }
 
     @Test
+    fun an_approval_request_is_its_own_state_then_a_result_finishes_it() {
+        store.create("t-1", "approve a payment")
+        store.handoff("t-1", "phone")
+
+        assertEquals("needs_approval", store.apply("t-1", "task.needs_approval", "pc")!!.state)
+        val done = store.apply("t-1", "task.result", "phone")
+        assertEquals("done", done!!.state)
+        assertEquals("phone", done.events.last().from)
+    }
+
+    @Test
     fun a_result_from_the_phone_sets_the_approver() {
         store.create("t-1", "pay 100")
         val approver = Approver("phone", 1234)

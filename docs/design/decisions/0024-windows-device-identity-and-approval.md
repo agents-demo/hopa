@@ -30,8 +30,8 @@ Three facts of the gateway contract shape the decision:
    `queued`, `delivered`, `acked`, `progress`, `done`, `failed`, `cancelled`
    (`TaskRouter.kt:215–221`); the only client task messages are `task.create`,
    `task.ack`, `task.progress`, `task.result`, `task.error`, `task.cancel`
-   (`gateway.v1.schema.json:19–32`). `task.needs_approval` is reserved and
-   refused with `E_UNSUPPORTED` until backend week 5.
+   (`gateway.v1.schema.json:19–32`). `task.needs_approval` is now an accepted
+   approval-only task; role routing and signed decisions remain backend week 5.
 3. **A credential is still not an identity.** The old relay's rotating paired
    token and the gateway's opaque access token both identify a *device* only
    because the server resolves the token. A client cannot safely name another
@@ -67,10 +67,11 @@ user's approval even if its shape is valid.
   authenticated sender is refused.
 - **Approval provenance stays in the device gate.** `ActionExecutor` asks once,
   before any tier runs, and writes `approver` on the record. The backend
-  transports and attributes; it never decides. `task.needs_approval` is reserved
-  until backend week 5, so until then the Windows client does not claim a phone
-  approval over the gateway — it uses the local gate and fails closed when an
-  answer claims a device no link could have supplied.
+  transports and attributes; it never decides. P4 now carries
+  `task.needs_approval`; the phone answers with `task.result` and the record keeps
+  the source device. When no phone link is live the Windows client uses the local
+  gate and fails closed when an answer claims a device no link could have
+  supplied.
 - **A dropped link fails the task with a readable error** and leaves the
   conversation intact. No task is silently marked done.
 - A threat-model entry covering forged approval and device impersonation is
@@ -83,10 +84,9 @@ user's approval even if its shape is valid.
   other clients until they move.
 - Task state is durable in Postgres. The sidecar's in-memory view can be
   rebuilt from gateway events and is never the authority.
-- Approval over the gateway is gated on backend week 5 (`task.needs_approval`
-  and signed device-key decisions). P4's first slice can land against the
-  gateway task contract now; the "approved on the phone" checkbox stays open
-  until that backend capability exists.
+- P4 implements the approval transport (`task.needs_approval` and the phone's
+  `task.result`). Role routing and signed device-key decisions remain backend
+  week 5; the gate still lives on the acting device.
 - The approval identity changes vocabulary at the wire boundary only
   (`platform`/`deviceId` → `pc`/`phone`), so the run-record schema stays stable.
 - The host must set `approval.result.device` from the authenticated gateway

@@ -408,6 +408,7 @@ private class RecordingLink : BackendLink {
     val frames = mutableListOf<BackendEnvelope>()
     override val state = MutableStateFlow<BackendState>(BackendState.Disconnected)
     override var onTask: (suspend (BackendEnvelope) -> Unit)? = null
+    override var onApproval: (suspend (BackendEnvelope) -> Unit)? = null
 
     override fun start(scope: CoroutineScope) = Unit
     override suspend fun stop() = Unit

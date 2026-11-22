@@ -28,6 +28,21 @@ object BackendReplies {
         body = buildJsonObject { put("summary", summary) },
     )
 
+    /**
+     * The answer to `task.needs_approval`. The decision travels in the body;
+     * the server attributes the sender from the authenticated socket, never
+     * from a device name supplied here.
+     */
+    fun approval(task: BackendEnvelope, deviceId: String, allow: Boolean): BackendEnvelope = reply(
+        delivery = task,
+        deviceId = deviceId,
+        type = "task.result",
+        body = buildJsonObject {
+            put("approval", buildJsonObject { put("allow", allow) })
+            put("summary", if (allow) "approved" else "denied")
+        },
+    )
+
     /** [code] is one of the stable codes in `contracts/errors.md`. */
     fun error(
         task: BackendEnvelope,
