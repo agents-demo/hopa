@@ -8,6 +8,5 @@ interface ApprovalGateway {
      * as a PC answer, so any gateway that has not been taught about the phone
      * (Android, headless, tests) keeps its existing behaviour.
      */
-    suspend fun decide(request: ApprovalRequest): ApprovalDecision =
-        ApprovalDecision(approve(request))
+    suspend fun decide(request: ApprovalRequest): ApprovalDecision = ApprovalDecision(approve(request))
 }

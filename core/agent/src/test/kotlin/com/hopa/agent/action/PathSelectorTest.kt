@@ -103,15 +103,14 @@ class PathSelectorTest {
     }
 
     private class IntentSelector : PathSelector {
-        override fun choose(action: Action): PlannedAction =
-            if (action.kind == "ui.launch" && action.app == "wifi") {
-                PlannedAction(
-                    action.copy(kind = "system.openLink", url = "ms-settings:network-wifi", app = null),
-                    PathTier.INTENT,
-                )
-            } else {
-                PlannedAction(action, PathTier.UIA)
-            }
+        override fun choose(action: Action): PlannedAction = if (action.kind == "ui.launch" && action.app == "wifi") {
+            PlannedAction(
+                action.copy(kind = "system.openLink", url = "ms-settings:network-wifi", app = null),
+                PathTier.INTENT,
+            )
+        } else {
+            PlannedAction(action, PathTier.UIA)
+        }
     }
 
     private class SingleTierSelector : PathSelector {
@@ -212,8 +211,7 @@ class PathSelectorTest {
     }
 
     private class FailingSystem : SystemPort {
-        override suspend fun openLink(url: String) =
-            throw UnsupportedOperationException("no system port")
+        override suspend fun openLink(url: String) = throw UnsupportedOperationException("no system port")
 
         override suspend fun setAlarm(hour: Int, minute: Int, label: String) = Unit
 
@@ -231,12 +229,10 @@ class PathSelectorTest {
     }
 
     private class UnsupportedLaunchDevice : DevicePort by FakeDevice() {
-        override suspend fun launch(packageName: String) =
-            throw UnsupportedOperationException("no launcher")
+        override suspend fun launch(packageName: String) = throw UnsupportedOperationException("no launcher")
     }
 
     private class BrokenLaunchDevice : DevicePort by FakeDevice() {
-        override suspend fun launch(packageName: String) =
-            throw IllegalStateException("launcher exploded")
+        override suspend fun launch(packageName: String) = throw IllegalStateException("launcher exploded")
     }
 }
