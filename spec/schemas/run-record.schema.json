@@ -26,9 +26,10 @@
     "traceId": { "type": "string" },
     "action": { "$ref": "action.schema.json" },
     "classification": { "type": "string", "enum": ["read", "sensitive", "payment"] },
-    "tier": { "type": "string", "enum": ["api", "intent", "uia", "input"] },
+    "tier": { "type": "string", "enum": ["", "api", "intent", "uia", "input"], "default": "" },
     "approved": { "type": ["boolean", "null"] },
     "approver": {
+      "title": "Approver",
       "type": "object",
       "description": "Who answered the approval, and when (P4, ADR-0024). Absent when no approval was asked.",
       "required": ["device", "at"],
