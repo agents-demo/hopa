@@ -39,9 +39,6 @@ public partial class MainWindow : Window
         await ApplySettingsAsync();
     }
 
-    private void NoBridge_Click(object sender, System.Windows.Input.MouseButtonEventArgs e) =>
-        Settings_Click(this, new RoutedEventArgs());
-
     private async void Window_Drop(object sender, DragEventArgs e)
     {
         if (client == null || !e.Data.GetDataPresent(DataFormats.FileDrop))

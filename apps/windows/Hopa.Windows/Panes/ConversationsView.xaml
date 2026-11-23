@@ -1,0 +1,105 @@
+<UserControl x:Class="Hopa.Windows.Panes.ConversationsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="Visible" />
+
+        <DataTemplate x:Key="ConversationTemplate">
+            <Grid Height="30" Margin="0,1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding Title}" FontSize="12.5" VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis" Foreground="{Binding TitleInk}" />
+                <Grid Grid.Column="1" VerticalAlignment="Center">
+                    <StackPanel x:Name="RowMeta" Orientation="Horizontal">
+                        <TextBlock Text="{Binding PinLabel}" FontSize="9" FontWeight="SemiBold"
+                                   Foreground="#E8703A" Margin="6,0,0,0" />
+                        <TextBlock Text="{Binding UpdatedLabel}" FontSize="9.5" Foreground="#9A9488"
+                                   Margin="8,0,0,0" />
+                    </StackPanel>
+                    <TextBlock x:Name="More" Text="\u22EF" FontSize="13" Foreground="#9A9488"
+                               HorizontalAlignment="Right" Cursor="Hand" Visibility="Collapsed"
+                               MouseLeftButtonUp="More_Click" Margin="6,0,0,0" />
+                </Grid>
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"
+                             Value="True">
+                    <Setter TargetName="More" Property="Visibility" Value="Visible" />
+                    <Setter TargetName="RowMeta" Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Border Background="#F3EFE7">
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Top" Margin="12,14,12,8">
+                <Button Content="+ New chat" Height="30" HorizontalContentAlignment="Left"
+                        Padding="10,0" Background="Transparent" BorderThickness="0"
+                        Foreground="#6B665C" FontSize="12.5" Click="NewChat_Click"
+                        AutomationProperties.Name="New chat" />
+                <Grid Margin="0,6,0,0">
+                    <TextBox x:Name="SearchBox" Height="34" VerticalContentAlignment="Center"
+                             Padding="8,0,52,0" FontSize="12" BorderThickness="1"
+                             BorderBrush="#E9E4DA" Background="#F1ECE3"
+                             Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}"
+                             AutomationProperties.Name="Search conversations"
+                             TextChanged="SearchBox_TextChanged" />
+                    <TextBlock x:Name="SearchPlaceholder" Text="Search" IsHitTestVisible="False"
+                               Margin="10,0,0,0" VerticalAlignment="Center"
+                               FontSize="12" Foreground="#9A9488" />
+                    <TextBlock Text="Ctrl K" IsHitTestVisible="False" HorizontalAlignment="Right"
+                               VerticalAlignment="Center" Margin="0,0,9,0" FontSize="9.5"
+                               Foreground="#9A9488" Opacity="0.45" />
+                </Grid>
+                <CheckBox x:Name="ShowArchivedBox" Content="Show archived" Margin="2,8,0,0"
+                          FontSize="9.5" Foreground="#6B665C"
+                          IsChecked="{Binding IncludeArchived}" Click="ShowArchived_Click"
+                          AutomationProperties.Name="Show archived conversations" />
+            </StackPanel>
+
+            <Border DockPanel.Dock="Bottom" BorderBrush="#E9E4DA" BorderThickness="0,1,0,0"
+                    Padding="12,10">
+                <StackPanel>
+                    <Button x:Name="SettingsButton" Content="Settings" Height="28"
+                            HorizontalContentAlignment="Left" Padding="8,0" Background="Transparent"
+                            BorderThickness="0" Foreground="#6B665C" FontSize="12"
+                            Click="Settings_Click" AutomationProperties.Name="Settings" />
+                    <TextBlock x:Name="NoBridgeHint" Text="No bridge · Set up" FontSize="11"
+                               Foreground="#B26A00" Margin="8,4,0,0"
+                               Visibility="{Binding BridgeMissing, Converter={StaticResource Visible}}"
+                               MouseLeftButtonUp="NoBridge_Click" />
+                </StackPanel>
+            </Border>
+
+            <ListBox x:Name="ConversationList" BorderThickness="0" Background="Transparent"
+                     ItemTemplate="{StaticResource ConversationTemplate}" Margin="12,0,12,8"
+                     SelectedItem="{Binding Selected, Mode=TwoWay}"
+                     SelectionChanged="ConversationList_SelectionChanged"
+                     AutomationProperties.Name="Conversations">
+                <ListBox.GroupStyle>
+                    <GroupStyle>
+                        <GroupStyle.HeaderTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}" FontSize="9" FontWeight="Bold"
+                                           Foreground="#9A9488" Margin="4,8,0,2" />
+                            </DataTemplate>
+                        </GroupStyle.HeaderTemplate>
+                    </GroupStyle>
+                </ListBox.GroupStyle>
+                <ListBox.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Pin / Unpin" Click="Pin_Click" />
+                        <MenuItem Header="Archive / Unarchive" Click="Archive_Click" />
+                        <MenuItem Header="Rename" Click="Rename_Click" />
+                        <MenuItem Header="Export..." Click="Export_Click" />
+                        <MenuItem Header="Delete" Click="Delete_Click" />
+                    </ContextMenu>
+                </ListBox.ContextMenu>
+            </ListBox>
+        </DockPanel>
+    </Border>
+</UserControl>

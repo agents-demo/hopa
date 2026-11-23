@@ -98,26 +98,21 @@ public partial class MainWindow : Window
             return;
         }
 
-        var items = await client.ListConversationsAsync(ShowArchivedBox.IsChecked == true);
-        allConversations.Clear();
-        foreach (var item in items)
-        {
-            allConversations.Add(ConversationRow.From(item));
-        }
-
-        if (allConversations.Count == 0)
+        var items = await client.ListConversationsAsync(Sidebar.Model.IncludeArchived);
+        var rows = items.Select(ConversationRow.From).ToList();
+        if (rows.Count == 0)
         {
             var created = await client.CreateConversationAsync();
             if (created != null)
             {
-                allConversations.Add(ConversationRow.From(created));
+                rows.Add(ConversationRow.From(created));
             }
         }
 
-        ApplyFilter();
-        if (allConversations.Count > 0)
+        Sidebar.Model.ReplaceAll(rows);
+        if (Sidebar.Model.All.Count > 0)
         {
-            await SelectAsync(allConversations[0].Id);
+            await SelectAsync(Sidebar.Model.All[0].Id);
         }
     }
 
@@ -150,10 +145,8 @@ public partial class MainWindow : Window
         Composer.Text = drafts.TryGetValue(id, out var draft) ? draft : "";
         TitleText.Text = open?["title"]?.GetValue<string>() ?? "New chat";
         EmptyState.Visibility = messages.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-        switching = true;
-        ConversationList.SelectedItem = conversations.FirstOrDefault(item => item.Id == id)
-            ?? allConversations.FirstOrDefault(item => item.Id == id);
-        switching = false;
+        Sidebar.Select(conversations.FirstOrDefault(item => item.Id == id)
+            ?? allConversations.FirstOrDefault(item => item.Id == id));
         ScrollToEnd();
         StatusText.Text = "";
     }
@@ -276,7 +269,7 @@ public partial class MainWindow : Window
         var settings = new SettingsStore().Load();
         var live = settings.BridgeUrl.Length > 0;
         Rail.Model.ShowBridge(live);
-        NoBridgeHint.Visibility = live ? Visibility.Collapsed : Visibility.Visible;
+        Sidebar.Model.BridgeMissing = !live;
         var useBridge = settings.UseBridge;
         TargetChip.Visibility = live ? Visibility.Visible : Visibility.Collapsed;
         TargetChip.Text = useBridge ? "Phone" : "Laptop";
@@ -286,38 +279,9 @@ public partial class MainWindow : Window
         SubtitleText.Text = live ? "HOPA · Running on this laptop" : "Running on this laptop";
     }
 
-    private void MarkSelected(string? id)
-    {
-        foreach (var item in allConversations)
-        {
-            item.Selected = item.Id == id;
-        }
-    }
+    private void MarkSelected(string? id) => Sidebar.Model.MarkSelected(id);
 
-    private void UpsertConversation(string id, string title)
-    {
-        var existing = allConversations.FirstOrDefault(item => item.Id == id);
-        if (existing != null)
-        {
-            existing.Title = title;
-            existing.UpdatedLabel = "now";
-            existing.UpdatedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            return;
-        }
-
-        var created = new ConversationRow
-        {
-            Id = id,
-            Title = title,
-            UpdatedLabel = "now",
-            UpdatedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-        };
-        allConversations.Insert(0, created);
-        if (SearchBox.Text.Trim().Length == 0)
-        {
-            conversations.Insert(0, created);
-        }
-    }
+    private void UpsertConversation(string id, string title) => Sidebar.Model.Upsert(id, title);
 
     protected override void OnPreviewKeyDown(KeyEventArgs e)
     {
@@ -326,13 +290,12 @@ public partial class MainWindow : Window
             switch (e.Key)
             {
                 case Key.N:
-                    NewChat_Click(this, new RoutedEventArgs());
+                    _ = NewChatAsync();
                     e.Handled = true;
                     break;
                 case Key.F:
                 case Key.K:
-                    SearchBox.Focus();
-                    SearchBox.SelectAll();
+                    Sidebar.FocusSearch();
                     e.Handled = true;
                     break;
             }
@@ -352,7 +315,7 @@ public partial class MainWindow : Window
         base.OnPreviewKeyDown(e);
     }
 
-    private async void Settings_Click(object sender, RoutedEventArgs e)
+    private async Task OpenSettingsAsync()
     {
         var dialog = new SettingsWindow { Owner = this };
         if (dialog.ShowDialog() == true)
@@ -390,7 +353,8 @@ public partial class MainWindow : Window
         }
     }
 
-    private async void NewChat_Click(object sender, RoutedEventArgs e)    {
+    private async Task NewChatAsync()
+    {
         if (client == null)
         {
             return;
@@ -402,23 +366,13 @@ public partial class MainWindow : Window
             return;
         }
 
-        var vm = ConversationRow.From(created);
-        allConversations.Insert(0, vm);
-        SearchBox.Clear();
-        ApplyFilter();
+        var row = ConversationRow.From(created);
+        Sidebar.Model.All.Insert(0, row);
+        Sidebar.ClearSearch();
+        Sidebar.Model.ApplyFilter();
         currentId = null;
-        MarkSelected(vm.Id);
-        await SelectAsync(vm.Id);
-    }
-
-    private async void ConversationList_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (switching || ConversationList.SelectedItem is not ConversationRow vm)
-        {
-            return;
-        }
-
-        await SelectAsync(vm.Id);
+        MarkSelected(row.Id);
+        await SelectAsync(row.Id);
     }
 
     private async void Send_Click(object sender, RoutedEventArgs e)

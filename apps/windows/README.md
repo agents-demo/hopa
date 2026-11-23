@@ -23,7 +23,7 @@ Inside `Hopa.Windows/`:
 |---|---|
 | `Cli/` | how the process starts and which mode it runs |
 | `Shell/` | the main window, one file per concern |
-| `Panes/` | the window's panes and their view models (the run rail is first) |
+| `Panes/` | the window's panes and their view models: run rail, sidebar, chat next |
 | `Chat/` | the rows and the mark a conversation is drawn from |
 | `Dialogs/` | approval, settings, rename, run details |
 | `Device/` | this PC as a device: screen, input, apps, observation rules |

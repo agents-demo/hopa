@@ -26,8 +26,8 @@ namespace Hopa.Windows.Shell;
 
 public partial class MainWindow : Window
 {
-    private readonly ObservableCollection<ConversationRow> conversations = new();
-    private readonly List<ConversationRow> allConversations = new();
+    private ObservableCollection<ConversationRow> conversations => Sidebar.Model.Visible;
+    private List<ConversationRow> allConversations => Sidebar.Model.All;
     private readonly ObservableCollection<MessageBubble> messages = new();
     private readonly Dictionary<string, string> drafts = new();
     private readonly List<string> log = new();
@@ -45,7 +45,6 @@ public partial class MainWindow : Window
     private JsonObject? pendingAttachment;
     private string? autoApproval;
     private string? outputPath;
-    private bool switching;
     private bool running;
     private string lastQuestion = "";
 
@@ -71,10 +70,17 @@ public partial class MainWindow : Window
         StateChanged += (_, _) => MaximizeButton.Content = WindowState == WindowState.Maximized
             ? "\u2750"
             : "\u25A1";
-        var grouped = new System.Windows.Data.CollectionViewSource { Source = conversations };
-        grouped.GroupDescriptions.Add(new System.Windows.Data.PropertyGroupDescription("GroupLabel"));
-        ConversationList.ItemsSource = grouped.View;
         MessagesList.ItemsSource = messages;
+        Sidebar.NewChatRequested += () => _ = NewChatAsync();
+        Sidebar.SettingsRequested += () => _ = OpenSettingsAsync();
+        Sidebar.BridgeHintRequested += () => _ = OpenSettingsAsync();
+        Sidebar.IncludeArchivedChanged += () => _ = ReloadConversationsAsync();
+        Sidebar.SelectionChanged += row => _ = SelectAsync(row.Id);
+        Sidebar.PinRequested += row => _ = PinAsync(row);
+        Sidebar.ArchiveRequested += row => _ = ArchiveAsync(row);
+        Sidebar.RenameRequested += row => _ = RenameAsync(row);
+        Sidebar.DeleteRequested += row => _ = DeleteAsync(row);
+        Sidebar.ExportRequested += row => _ = ExportAsync(row);
         tray = new TrayIcon(this, () => client?.CancelTurn(), () => Close());
         using (var icon = TrayIcon.LaptopIcon())
         {

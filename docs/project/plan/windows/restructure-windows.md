@@ -266,7 +266,10 @@ Adopted:
   not window state.
 - `RunRailView` + `RunRailViewModel`: the right rail is a `UserControl` with its
   own view model and four tests; the window no longer writes `RailTitle`,
-  `RailSteps` or the bridge line. The sidebar and chat are the next slices.
+  `RailSteps` or the bridge line.
+- `ConversationsView` + `ConversationsViewModel`: the sidebar list, search,
+  archive switch, selection and context-menu actions are a control with four
+  more tests. The window only handles the engine calls and dialogs.
 
 Not adopted, with reasons:
 
@@ -281,7 +284,7 @@ Not adopted, with reasons:
   `Gateway/`. `backend` is an accepted HOPA term, and the proposed structure
   still kept `BackendGateway` inside `link/`. Move to `link` only when every
   client (Android and Windows) does it together.
-- MainWindow -> ViewModels and UserControls: started, one pane at a time. The
-  rail is done (`Panes/RunRailView`). Next: `ConversationsViewModel` + sidebar,
-  then `ChatViewModel` + chat pane. `MainWindow` keeps only lifecycle, chrome,
-  tray and event routing.
+- MainWindow -> ViewModels and UserControls: in progress, one pane at a time.
+  The rail and the sidebar are done (`Panes/RunRailView`,
+  `Panes/ConversationsView`). Next: `ChatViewModel` + chat pane. `MainWindow`
+  keeps only lifecycle, chrome, tray and event routing.
