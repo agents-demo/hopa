@@ -51,10 +51,10 @@ public partial class MainWindow : Window
 
         row.Archived = archived;
         Sidebar.Model.ApplyFilter();
-        if (archived && !Sidebar.Model.IncludeArchived && currentId == row.Id)
+        if (archived && !Sidebar.Model.IncludeArchived && chatController?.CurrentId == row.Id)
         {
-            currentId = null;
-            messages.Clear();
+            chatController.Forget();
+            Chat.Model.ShowConversation(messages: null, draft: "");
             if (Sidebar.Model.All.FirstOrDefault(item => !item.Archived) is { } next)
             {
                 await SelectAsync(next.Id);
@@ -102,13 +102,13 @@ public partial class MainWindow : Window
         }
 
         Sidebar.Model.Remove(row);
-        if (currentId != row.Id)
+        if (chatController?.CurrentId != row.Id)
         {
             return;
         }
 
-        currentId = null;
-        messages.Clear();
+        chatController.Forget();
+        Chat.Model.ShowConversation(messages: null, draft: "");
         if (Sidebar.Model.All.FirstOrDefault() is { } next)
         {
             await SelectAsync(next.Id);

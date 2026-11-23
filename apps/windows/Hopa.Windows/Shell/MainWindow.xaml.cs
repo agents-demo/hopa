@@ -35,13 +35,12 @@ public partial class MainWindow : Window
     private SpeechSynthesizer? speech;
     private TrayIcon? tray;
     private EngineHostClient? client;
+    private ChatController? chatController;
     private GatewayClient? gateway;
     private Task? connecting;
-    private string? currentId;
     private JsonObject? pendingAttachment;
     private string? autoApproval;
     private string? outputPath;
-    private bool running;
 
     public MainWindow()
     {

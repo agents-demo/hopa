@@ -22,12 +22,12 @@ Inside `Hopa.Windows/`:
 | Folder | What the reader finds |
 |---|---|
 | `Cli/` | how the process starts and which mode it runs |
-| `Shell/` | the main window, one file per concern |
+| `Shell/` | the main window, `ChatController`, the headless modes and the checks |
 | `Panes/` | the window's panes and their view models: run rail, sidebar and chat |
 | `Chat/` | the rows and the mark a conversation is drawn from |
 | `Dialogs/` | approval, settings, rename, run details |
 | `Device/` | this PC as a device: screen, input, apps, observation rules |
-| `Engine/` | the Kotlin engine host: process, NDJSON client, turn result |
+| `Engine/` | the Kotlin engine host: client, `IChatEngine`, process, turn result |
 | `Gateway/` | the phone link: credentials, pairing, socket |
 | `Voice/` | microphone, bridge speech, WAV |
 | `Storage/` | settings and Windows Credential Manager |

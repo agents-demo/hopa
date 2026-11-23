@@ -273,7 +273,8 @@ Adopted:
 - `ChatView` + `ChatViewModel`: the bubbles, answer actions, error, attachment
   and composer are a control with five tests. The window still starts the turn,
   routes approval/device events and owns the client; the pane renders the model.
-- Thirteen view-model tests in total; the client suite is 36.
+- The pane and controller tests cover rows, filters, attachments, drafts, turn
+  reports and errors; the client suite is 40.
 
 Not adopted, with reasons:
 
@@ -290,6 +291,8 @@ Not adopted, with reasons:
   client (Android and Windows) does it together.
 - MainWindow -> ViewModels and UserControls: done for the three panes
   (`Panes/RunRailView`, `Panes/ConversationsView`, `Panes/ChatView`).
-  `MainWindow` keeps the lifecycle, chrome, tray, client and event routing. The
-  next architectural step would be a `ChatController` for send/cancel, but that
-  is not required for the pane split.
+  `ChatController` now owns send/select/create and the running flag; the window
+  keeps lifecycle, chrome, tray, client and event routing.
+- `MainWindow.Checks.cs` is split by family: `MainWindow.Headless.cs` (turn and
+  list modes, screenshots), `MainWindow.Screenshots.cs` (W4/W6 and the controls)
+  and `MainWindow.Checks.cs` (engine and bridge checks).

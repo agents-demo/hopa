@@ -60,6 +60,8 @@ public partial class MainWindow : Window
                 Log($"step {index}: {action} tier={tier} executed={executed}");
             };
             client = started;
+            chatController = new ChatController(started, Chat.Model, Sidebar.Model);
+            chatController.MessagesChanged += Chat.ScrollToEnd;
 
             gateway = CreateGateway();
 
@@ -117,21 +119,18 @@ public partial class MainWindow : Window
 
     private async Task SelectAsync(string id)
     {
-        if (client == null || currentId == id)
+        if (chatController == null)
         {
             return;
         }
 
-        if (currentId != null)
+        var title = await chatController.SelectAsync(id);
+        if (title == null)
         {
-            Chat.Model.Drafts[currentId] = Chat.Model.ComposerText;
+            return;
         }
 
-        var open = await client.OpenConversationAsync(id);
-        currentId = id;
-        var draft = Chat.Model.Drafts.TryGetValue(id, out var saved) ? saved : "";
-        Chat.Model.ShowConversation(open?["messages"] as JsonArray, draft);
-        TitleText.Text = open?["title"]?.GetValue<string>() ?? "New chat";
+        TitleText.Text = title;
         Sidebar.Select(conversations.FirstOrDefault(item => item.Id == id)
             ?? allConversations.FirstOrDefault(item => item.Id == id));
         Chat.ScrollToEnd();
@@ -140,7 +139,7 @@ public partial class MainWindow : Window
 
     private async Task SendAsync(string goal)
     {
-        if (client == null || running)
+        if (chatController == null || chatController.Running)
         {
             return;
         }
@@ -152,10 +151,6 @@ public partial class MainWindow : Window
             ? goal
             : attachment != null ? Describe(attachment) : "";
 
-        var previousQuestion = Chat.Model.LastQuestion;
-        var clock = System.Diagnostics.Stopwatch.StartNew();
-        running = true;
-        Chat.Model.SetRunning(true);
         if (tray != null)
         {
             tray.Tooltip = "HOPA (working)";
@@ -163,51 +158,40 @@ public partial class MainWindow : Window
         }
 
         StatusText.Text = "Working...";
-        Chat.Model.ClearError();
-        Chat.Model.AddUser(body);
         Chat.ScrollToEnd();
         try
         {
-            var (answer, conversationId, title, steps, chainOk) =
-                await client.StartTurnAsync(body, currentId, attachment);
-            currentId = conversationId;
-            MarkSelected(conversationId);
-            Chat.Model.AddAnswer(answer, steps, chainOk);
-            Log($"HOPA: {answer}");
+            var report = await chatController.SendAsync(body, attachment);
+            if (report.Error != null)
+            {
+                StatusText.Text = report.Error;
+                Log($"error: {report.Error}");
+                return;
+            }
+
+            Log($"HOPA: {report.Answer}");
             if (!IsActive)
             {
-                var preview = answer.Length > 140 ? answer[..140] + "..." : answer;
+                var preview = report.Answer.Length > 140 ? report.Answer[..140] + "..." : report.Answer;
                 tray?.ShowBalloon("HOPA", preview);
             }
-            foreach (var line in RunStepRow.Lines(steps))
+            foreach (var line in RunStepRow.Lines(report.Steps))
             {
                 Log($"step {line}");
             }
 
-            if (steps is { Count: > 0 })
+            if (report.Steps is { Count: > 0 })
             {
-                Log($"chain: {(chainOk ? "ok" : "failed")}");
+                Log($"chain: {(report.ChainOk ? "ok" : "failed")}");
             }
 
-            TitleText.Text = title;
-            clock.Stop();
-            Rail.Model.ShowTurn(steps, chainOk, clock.Elapsed, previousQuestion);
-
-            Chat.Model.LastQuestion = body;
-            UpsertConversation(conversationId, title);
+            TitleText.Text = report.Title;
+            Rail.Model.ShowTurn(report.Steps, report.ChainOk, report.Elapsed, report.Earlier);
             Chat.ScrollToEnd();
             StatusText.Text = "";
         }
-        catch (Exception error)
-        {
-            StatusText.Text = error.Message;
-            Chat.Model.ShowError(error.Message);
-            Log($"error: {error.Message}");
-        }
         finally
         {
-            running = false;
-            Chat.Model.SetRunning(false);
             if (tray != null)
             {
                 tray.Tooltip = "HOPA";
@@ -220,7 +204,7 @@ public partial class MainWindow : Window
 
     private async Task SendFromComposerAsync()
     {
-        if (running)
+        if (chatController?.Running == true)
         {
             client?.CancelTurn();
             StatusText.Text = "Stopping...";
@@ -233,9 +217,9 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (currentId != null)
+        if (chatController?.CurrentId is { } current)
         {
-            Chat.Model.Drafts[currentId] = "";
+            Chat.Model.Drafts[current] = "";
         }
 
         Chat.Model.ComposerText = "";
@@ -254,8 +238,6 @@ public partial class MainWindow : Window
     }
 
     private void MarkSelected(string? id) => Sidebar.Model.MarkSelected(id);
-
-    private void UpsertConversation(string id, string title) => Sidebar.Model.Upsert(id, title);
 
     protected override void OnPreviewKeyDown(KeyEventArgs e)
     {
@@ -277,7 +259,7 @@ public partial class MainWindow : Window
 
         if (e.Key == Key.Escape)
         {
-            if (running)
+            if (chatController?.Running == true)
             {
                 client?.CancelTurn();
             }
@@ -329,22 +311,19 @@ public partial class MainWindow : Window
 
     private async Task NewChatAsync()
     {
-        if (client == null)
+        if (chatController == null)
         {
             return;
         }
 
-        var created = await client.CreateConversationAsync();
-        if (created == null)
+        var row = await chatController.CreateAsync();
+        if (row == null)
         {
             return;
         }
 
-        var row = ConversationRow.From(created);
-        Sidebar.Model.All.Insert(0, row);
         Sidebar.ClearSearch();
         Sidebar.Model.ApplyFilter();
-        currentId = null;
         MarkSelected(row.Id);
         await SelectAsync(row.Id);
     }

@@ -7,7 +7,7 @@ using Hopa.Windows.Storage;
 namespace Hopa.Windows.Engine;
 
 /// <summary>The .NET half of the NDJSON protocol with the Kotlin engine.</summary>
-public sealed class EngineHostClient : IAsyncDisposable
+public sealed class EngineHostClient : IAsyncDisposable, IChatEngine
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
