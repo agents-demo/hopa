@@ -1,4 +1,4 @@
-package com.hopa.sidecar.engine
+package com.hopa.sidecar.turn
 
 import java.nio.file.Files
 import java.nio.file.Path
@@ -11,12 +11,11 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
 
 import com.hopa.sidecar.approval.HostApproval
-import com.hopa.sidecar.config.RuntimeConfig
 import com.hopa.sidecar.device.HostDevice
 import com.hopa.sidecar.store.ChatStore
 import com.hopa.sidecar.store.PendingApprovals
 import com.hopa.sidecar.store.RecordStore
-import com.hopa.sidecar.support.Stdio
+import com.hopa.sidecar.protocol.Stdio
 
 /**
  * The engine's end hook is the gateway's only way out of a turn, so it must

@@ -1,4 +1,4 @@
-package com.hopa.sidecar.config
+package com.hopa.sidecar.turn
 
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull

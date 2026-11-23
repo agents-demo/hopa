@@ -18,7 +18,7 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import com.hopa.sidecar.protocol.Protocol
-import com.hopa.sidecar.support.Stdio
+import com.hopa.sidecar.protocol.Stdio
 
 /**
  * W3: the PC target. Observation and every action travel to the .NET host,

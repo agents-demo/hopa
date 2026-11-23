@@ -1,4 +1,4 @@
-package com.hopa.sidecar.engine
+package com.hopa.sidecar.turn
 
 import com.hopa.agent.action.ActionExecutor
 import com.hopa.agent.action.ApprovalPolicy
@@ -31,17 +31,13 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import com.hopa.sidecar.config.RuntimeConfig
 import com.hopa.sidecar.device.HostDevice
 import com.hopa.sidecar.device.HostSystem
 import com.hopa.sidecar.device.WindowsPathSelector
 import com.hopa.sidecar.protocol.Protocol
 import com.hopa.sidecar.store.ChatStore
 import com.hopa.sidecar.store.RecordStore
-import com.hopa.sidecar.support.SidecarKnowledge
-import com.hopa.sidecar.support.Stdio
-import com.hopa.sidecar.support.StubModel
-import com.hopa.sidecar.support.SystemClock
+import com.hopa.sidecar.protocol.Stdio
 
 /** What one turn produced, for the protocol and for `--turn`. */
 class Engine(

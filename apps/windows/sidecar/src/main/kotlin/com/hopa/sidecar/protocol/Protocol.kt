@@ -13,7 +13,7 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
-import com.hopa.sidecar.engine.TurnOutcome
+import com.hopa.sidecar.turn.TurnOutcome
 import com.hopa.sidecar.store.HandoffTask
 
 /** The NDJSON messages between the .NET host and this sidecar. */

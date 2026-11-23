@@ -8,7 +8,7 @@ import com.hopa.sidecar.backend.EngineTaskRunner
 import com.hopa.sidecar.backend.GatewayHost
 import com.hopa.sidecar.backend.backendContentKey
 import com.hopa.sidecar.device.HostDevice
-import com.hopa.sidecar.engine.Engine
+import com.hopa.sidecar.turn.Engine
 import com.hopa.sidecar.protocol.Dispatcher
 import com.hopa.sidecar.protocol.Protocol
 import com.hopa.sidecar.protocol.handlers.ApprovalHandler
@@ -24,8 +24,8 @@ import com.hopa.sidecar.store.ChatStore
 import com.hopa.sidecar.store.PendingApprovals
 import com.hopa.sidecar.store.RecordStore
 import com.hopa.sidecar.store.TaskStore
-import com.hopa.sidecar.support.Stdio
-import com.hopa.sidecar.config.RuntimeConfig
+import com.hopa.sidecar.protocol.Stdio
+import com.hopa.sidecar.turn.RuntimeConfig
 import java.nio.file.Files
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope

@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
-import com.hopa.sidecar.engine.Engine
+import com.hopa.sidecar.turn.Engine
 
 /**
  * The Engine adapter receives turns through Engine's `onTurnEnd` hook (R31).

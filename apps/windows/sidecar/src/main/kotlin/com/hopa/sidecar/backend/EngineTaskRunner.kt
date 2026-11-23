@@ -10,7 +10,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeout
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import com.hopa.sidecar.engine.Engine
+import com.hopa.sidecar.turn.Engine
 
 /**
  * Adapts the engine's fire-and-forget turns to the gateway's

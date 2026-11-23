@@ -3,7 +3,7 @@ package com.hopa.sidecar.protocol.handlers
 import com.hopa.sidecar.protocol.Protocol
 import com.hopa.sidecar.protocol.Protocol.text
 import com.hopa.sidecar.store.ChatStore
-import com.hopa.sidecar.support.Stdio
+import com.hopa.sidecar.protocol.Stdio
 import kotlinx.serialization.json.JsonObject
 
 /** Listing, naming and archiving conversations; one message in, one reply out. */

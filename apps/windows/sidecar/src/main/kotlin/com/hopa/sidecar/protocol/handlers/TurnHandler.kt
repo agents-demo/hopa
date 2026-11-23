@@ -2,9 +2,9 @@ package com.hopa.sidecar.protocol.handlers
 
 import com.hopa.contracts.chat.Attachment
 import com.hopa.contracts.json.HopaJson
-import com.hopa.sidecar.engine.Engine
+import com.hopa.sidecar.turn.Engine
 import com.hopa.sidecar.protocol.Protocol.text
-import com.hopa.sidecar.support.Stdio
+import com.hopa.sidecar.protocol.Stdio
 import kotlinx.serialization.json.JsonObject
 
 /** Starting and cancelling a turn; the engine owns everything after that. */

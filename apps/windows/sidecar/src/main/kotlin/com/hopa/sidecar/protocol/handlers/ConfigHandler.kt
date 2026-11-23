@@ -1,9 +1,9 @@
 package com.hopa.sidecar.protocol.handlers
 
-import com.hopa.sidecar.config.RuntimeConfig
+import com.hopa.sidecar.turn.RuntimeConfig
 import com.hopa.sidecar.protocol.Protocol
 import com.hopa.sidecar.protocol.Protocol.text
-import com.hopa.sidecar.support.Stdio
+import com.hopa.sidecar.protocol.Stdio
 import kotlinx.serialization.json.JsonObject
 
 /** Model and host settings the window sends before a turn. */

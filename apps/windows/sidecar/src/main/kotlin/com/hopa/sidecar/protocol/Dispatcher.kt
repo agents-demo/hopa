@@ -3,7 +3,6 @@ package com.hopa.sidecar.protocol
 import com.hopa.sidecar.protocol.Protocol.asObject
 import com.hopa.sidecar.protocol.Protocol.type
 import com.hopa.sidecar.protocol.handlers.MessageHandler
-import com.hopa.sidecar.support.Stdio
 
 /**
  * One NDJSON line in, one message out. It knows the envelope (`hello`,

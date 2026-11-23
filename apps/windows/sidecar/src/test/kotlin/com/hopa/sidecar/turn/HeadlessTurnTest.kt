@@ -1,4 +1,4 @@
-package com.hopa.sidecar.engine
+package com.hopa.sidecar.turn
 
 import com.hopa.contracts.approval.ApprovalGateway
 import com.hopa.contracts.error.ErrorCodes
@@ -18,13 +18,12 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 import com.hopa.sidecar.approval.DenyAllApproval
-import com.hopa.sidecar.config.RuntimeConfig
 import com.hopa.sidecar.device.HeadlessDevice
 import com.hopa.sidecar.device.HostDevice
 import com.hopa.sidecar.protocol.Protocol
 import com.hopa.sidecar.store.ChatStore
 import com.hopa.sidecar.store.RecordStore
-import com.hopa.sidecar.support.Stdio
+import com.hopa.sidecar.protocol.Stdio
 
 /**
  * P1: the engine runs through the real loop and the real gate without a window.

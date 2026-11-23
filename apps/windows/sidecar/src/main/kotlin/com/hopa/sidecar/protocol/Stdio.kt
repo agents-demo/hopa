@@ -1,4 +1,4 @@
-package com.hopa.sidecar.support
+package com.hopa.sidecar.protocol
 
 import kotlinx.serialization.json.JsonObject
 

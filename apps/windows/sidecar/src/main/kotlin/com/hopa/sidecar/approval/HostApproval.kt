@@ -9,7 +9,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.withTimeoutOrNull
 import com.hopa.sidecar.protocol.Protocol
 import com.hopa.sidecar.store.PendingApprovals
-import com.hopa.sidecar.support.Stdio
+import com.hopa.sidecar.protocol.Stdio
 
 /** W2: approvals travel to the window and wait up to two minutes. */
 class HostApproval(

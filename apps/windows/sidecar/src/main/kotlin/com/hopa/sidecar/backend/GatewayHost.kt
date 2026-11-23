@@ -7,7 +7,7 @@ import com.hopa.backend.pairing.BackendPairing
 import com.hopa.sidecar.protocol.Protocol
 import com.hopa.sidecar.store.ChatStore
 import com.hopa.sidecar.store.RecordStore
-import com.hopa.sidecar.support.Stdio
+import com.hopa.sidecar.protocol.Stdio
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob

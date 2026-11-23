@@ -1,13 +1,13 @@
 package com.hopa.sidecar.cli
 
 import com.hopa.sidecar.approval.DenyAllApproval
-import com.hopa.sidecar.engine.Engine
+import com.hopa.sidecar.turn.Engine
 import com.hopa.sidecar.protocol.Protocol
 import com.hopa.sidecar.store.ChatStore
 import com.hopa.sidecar.store.RecordStore
 import com.hopa.sidecar.device.HeadlessDevice
-import com.hopa.sidecar.support.Stdio
-import com.hopa.sidecar.config.RuntimeConfig
+import com.hopa.sidecar.protocol.Stdio
+import com.hopa.sidecar.turn.RuntimeConfig
 import kotlinx.coroutines.runBlocking
 
 /** One turn through the real loop, the real gate and the fail-closed stubs. */

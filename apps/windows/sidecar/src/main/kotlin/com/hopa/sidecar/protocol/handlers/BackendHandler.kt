@@ -6,7 +6,7 @@ import com.hopa.sidecar.backend.GatewayHost
 import com.hopa.sidecar.backend.backendContentKey
 import com.hopa.sidecar.protocol.Protocol
 import com.hopa.sidecar.protocol.Protocol.text
-import com.hopa.sidecar.support.Stdio
+import com.hopa.sidecar.protocol.Stdio
 import java.nio.file.Path
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope

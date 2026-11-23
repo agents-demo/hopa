@@ -4,7 +4,7 @@ import com.hopa.contracts.wire.Approver
 import com.hopa.sidecar.protocol.Protocol
 import com.hopa.sidecar.protocol.Protocol.text
 import com.hopa.sidecar.store.TaskStore
-import com.hopa.sidecar.support.Stdio
+import com.hopa.sidecar.protocol.Stdio
 import kotlinx.serialization.json.JsonObject
 
 /**
