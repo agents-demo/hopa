@@ -97,11 +97,7 @@ public partial class MainWindow : Window
         StatusText.Text = "";
         ErrorText.Text = "The bridge is not running; the last step was not verified.";
         ErrorText.Visibility = Visibility.Visible;
-        RailStatus.Text = "Succeeded";
-        RailFacts.Text = "4 steps · 6.2 s";
-        RailDot.Fill = new SolidColorBrush(Color.FromRgb(0x2E, 0x7D, 0x5B));
-        RailTitle.Text = "LAST RUN";
-        RailSteps.ItemsSource = new[]
+        Rail.Model.ShowMock("Succeeded", "4 steps · 6.2 s", new[]
         {
             new RunStepRow { Number = "1", Verb = "Open app", Detail = "Calculator, brought to the front",
                 Dot = new SolidColorBrush(Color.FromRgb(0x2E, 0x7D, 0x5B)) },
@@ -111,7 +107,7 @@ public partial class MainWindow : Window
                 Dot = new SolidColorBrush(Color.FromRgb(0x2E, 0x7D, 0x5B)) },
             new RunStepRow { Number = "4", Verb = "Verified", Detail = "receipt sent; the paid screen matched",
                 Dot = new SolidColorBrush(Color.FromRgb(0x7B, 0x61, 0x3A)) },
-        };
+        });
         WindowScreenshot.Save(this, Path.Combine(directory, "windows-w6-chat.png"));
         Application.Current.Shutdown();
     }

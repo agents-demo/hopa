@@ -264,6 +264,9 @@ Adopted:
 - First testable UI rules: `ConversationRow`, `RunStepRow` and
   `ConversationFilter` now have unit tests; the sidebar filter is a pure class,
   not window state.
+- `RunRailView` + `RunRailViewModel`: the right rail is a `UserControl` with its
+  own view model and four tests; the window no longer writes `RailTitle`,
+  `RailSteps` or the bridge line. The sidebar and chat are the next slices.
 
 Not adopted, with reasons:
 
@@ -278,8 +281,7 @@ Not adopted, with reasons:
   `Gateway/`. `backend` is an accepted HOPA term, and the proposed structure
   still kept `BackendGateway` inside `link/`. Move to `link` only when every
   client (Android and Windows) does it together.
-- MainWindow -> ViewModels and UserControls: deferred. The diagnosis is right
-  (the partials share mutable state), but this is an architectural project, not
-  a rename. Next steps: `ConversationsViewModel`, then `RunRailViewModel`, then
-  `ChatViewModel`, with `MainWindow` owning only lifecycle, chrome, tray and
-  event routing.
+- MainWindow -> ViewModels and UserControls: started, one pane at a time. The
+  rail is done (`Panes/RunRailView`). Next: `ConversationsViewModel` + sidebar,
+  then `ChatViewModel` + chat pane. `MainWindow` keeps only lifecycle, chrome,
+  tray and event routing.

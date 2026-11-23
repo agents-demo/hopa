@@ -10,9 +10,9 @@ the Android program
 [parity](../../docs/project/plan/windows/parity.md), [ADR-0021](../../docs/design/decisions/0021-windows-client-stack.md)).
 
 ```
-Hopa.Windows/   WPF app: Shell (window), Chat, Dialogs, Device (FlaUI/UIA),
-                Engine (Kotlin engine host client), Gateway (phone link),
-                Voice, Storage, Checks
+Hopa.Windows/   WPF app: Shell (window), Panes (rail, sidebar, chat), Chat,
+                Dialogs, Device (FlaUI/UIA), Engine (Kotlin engine host client),
+                Gateway (phone link), Voice, Storage, Checks
 sidecar/        Kotlin engine host for packages/ (NDJSON over stdio)
 installer/      WiX MSI
 ```
@@ -23,6 +23,7 @@ Inside `Hopa.Windows/`:
 |---|---|
 | `Cli/` | how the process starts and which mode it runs |
 | `Shell/` | the main window, one file per concern |
+| `Panes/` | the window's panes and their view models (the run rail is first) |
 | `Chat/` | the rows and the mark a conversation is drawn from |
 | `Dialogs/` | approval, settings, rename, run details |
 | `Device/` | this PC as a device: screen, input, apps, observation rules |

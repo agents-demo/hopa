@@ -64,7 +64,7 @@ public partial class MainWindow : Window
             gateway = CreateGateway();
 
             StatusText.Text = "Ready";
-            UpdateRailBridge();
+            UpdateBridgeStatus();
             await RefreshAsync();
             await ApplySettingsAsync();
         }
@@ -216,34 +216,11 @@ public partial class MainWindow : Window
             if (steps is { Count: > 0 })
             {
                 Log($"chain: {(chainOk ? "ok" : "failed")}");
-                RailTitle.Text = "LAST RUN";
-                RailStatus.Text = chainOk ? "Succeeded" : "Failed";
-                RailFacts.Text = $"{steps.Count} steps";
-                RailDot.Fill = new SolidColorBrush(chainOk
-                    ? Color.FromRgb(0x2E, 0x7D, 0x5B)
-                    : Color.FromRgb(0xC0, 0x39, 0x2B));
-                RailSteps.ItemsSource = steps
-                    .OfType<JsonObject>()
-                    .Select(step => RunStepRow.From(step))
-                    .ToList();
-            }
-            else
-            {
-                RailTitle.Text = "THIS ANSWER";
-                RailStatus.Text = "Answered";
-                RailFacts.Text = "no local record";
-                RailDot.Fill = new SolidColorBrush(Color.FromRgb(0x2E, 0x7D, 0x5B));
             }
 
             TitleText.Text = title;
             clock.Stop();
-            RailMeasured.Text = $"answered in {clock.Elapsed.TotalSeconds:0.0} s";
-            RailMeasured.Visibility = Visibility.Visible;
-            if (previousQuestion.Length > 0)
-            {
-                RailEarlier.Text = "Earlier: " + previousQuestion;
-                RailEarlier.Visibility = Visibility.Visible;
-            }
+            Rail.Model.ShowTurn(steps, chainOk, clock.Elapsed, previousQuestion);
 
             lastQuestion = body;
             UpsertConversation(conversationId, title);
@@ -294,24 +271,19 @@ public partial class MainWindow : Window
         await SendAsync(goal);
     }
 
-    private void UpdateRailBridge()
+    private void UpdateBridgeStatus()
     {
         var settings = new SettingsStore().Load();
         var live = settings.BridgeUrl.Length > 0;
-        RailBridge.Text = live
-            ? "Bridge connected · every action asks first."
-            : "No bridge · HOPA sees only this conversation.";
+        Rail.Model.ShowBridge(live);
         NoBridgeHint.Visibility = live ? Visibility.Collapsed : Visibility.Visible;
-        var useBridge = new SettingsStore().Load().UseBridge;
+        var useBridge = settings.UseBridge;
         TargetChip.Visibility = live ? Visibility.Visible : Visibility.Collapsed;
         TargetChip.Text = useBridge ? "Phone" : "Laptop";
         TargetChip.Foreground = useBridge
             ? new SolidColorBrush(Color.FromRgb(0x0A, 0x59, 0xF7))
             : new SolidColorBrush(Color.FromRgb(0x6B, 0x66, 0x5C));
         SubtitleText.Text = live ? "HOPA · Running on this laptop" : "Running on this laptop";
-        RailBridgeDot.Fill = new SolidColorBrush(live
-            ? Color.FromRgb(0x2E, 0x7D, 0x5B)
-            : Color.FromRgb(0xB2, 0x6A, 0x00));
     }
 
     private void MarkSelected(string? id)

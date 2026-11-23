@@ -35,7 +35,7 @@ public partial class MainWindow : Window
         var settings = store.Load();
         settings.UseBridge = !settings.UseBridge;
         store.Save(settings);
-        UpdateRailBridge();
+        UpdateBridgeStatus();
         await ApplySettingsAsync();
     }
 
