@@ -10,10 +10,27 @@ the Android program
 [parity](../../docs/project/plan/windows/parity.md), [ADR-0021](../../docs/design/decisions/0021-windows-client-stack.md)).
 
 ```
-Hopa.Windows/   WPF app: window, sidecar client, WindowsDevice (FlaUI/UIA)
+Hopa.Windows/   WPF app: Shell (window), Chat, Dialogs, Device (FlaUI/UIA),
+                Engine (Kotlin engine host client), Gateway (phone link),
+                Voice, Storage, Checks
 sidecar/        Kotlin engine host for packages/ (NDJSON over stdio)
 installer/      WiX MSI
 ```
+
+Inside `Hopa.Windows/`:
+
+| Folder | What the reader finds |
+|---|---|
+| `Cli/` | how the process starts and which mode it runs |
+| `Shell/` | the main window, one file per concern |
+| `Chat/` | the rows and the mark a conversation is drawn from |
+| `Dialogs/` | approval, settings, rename, run details |
+| `Device/` | this PC as a device: screen, input, apps, observation rules |
+| `Engine/` | the Kotlin engine host: process, NDJSON client, turn result |
+| `Gateway/` | the phone link: credentials, pairing, socket |
+| `Voice/` | microphone, bridge speech, WAV |
+| `Storage/` | settings and Windows Credential Manager |
+| `Checks/` | the developer checks behind the `--…-check` flags |
 
 The C# app is the host; the loop, the gate and the records run in the Kotlin
 sidecar from `packages/` (ADR-0016, ADR-0021). There is no second brain.
