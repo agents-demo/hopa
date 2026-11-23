@@ -90,6 +90,50 @@ public sealed class ChatControllerTests
         Assert.Single(conversations.Visible);
     }
 
+    [Fact]
+    public async Task LoadCreatesTheFirstConversationOnlyWhenAsked()
+    {
+        var engine = new FakeEngine
+        {
+            Created = new JsonObject { ["id"] = "c1", ["title"] = "First" },
+        };
+        var conversations = new ConversationsViewModel();
+        var controller = new ChatController(engine, new ChatViewModel(), conversations);
+
+        var first = await controller.LoadAsync(includeArchived: false, createIfEmpty: true);
+        Assert.Equal("c1", first);
+        Assert.Single(conversations.All);
+
+        var empty = new ConversationsViewModel();
+        var second = new ChatController(
+            new FakeEngine { Created = null },
+            new ChatViewModel(),
+            empty);
+        Assert.Null(await second.LoadAsync(includeArchived: true, createIfEmpty: false));
+        Assert.Empty(empty.All);
+    }
+
+    [Fact]
+    public async Task LoadReplacesTheListItWasGiven()
+    {
+        var engine = new FakeEngine
+        {
+            Conversations = new List<JsonObject>
+            {
+                new() { ["id"] = "a", ["title"] = "A", ["updatedAt"] = 10L },
+                new() { ["id"] = "b", ["title"] = "B", ["updatedAt"] = 20L },
+            },
+        };
+        var conversations = new ConversationsViewModel();
+        var controller = new ChatController(engine, new ChatViewModel(), conversations);
+
+        var first = await controller.LoadAsync(includeArchived: false, createIfEmpty: false);
+
+        Assert.Equal("b", first);
+        Assert.Equal(2, conversations.All.Count);
+        Assert.Equal("b", conversations.Visible[0].Id);
+    }
+
     private sealed class FakeEngine : IChatEngine
     {
         public TurnResult Turn { get; set; } =
@@ -98,6 +142,8 @@ public sealed class ChatControllerTests
         public Exception? Failure { get; set; }
 
         public JsonObject? Created { get; set; }
+
+        public List<JsonObject> Conversations { get; set; } = new();
 
         public Func<string, JsonObject?> Open { get; set; } = _ => new JsonObject();
 
@@ -114,5 +160,8 @@ public sealed class ChatControllerTests
 
         public Task<JsonObject?> CreateConversationAsync() =>
             Task.FromResult(Created);
+
+        public Task<List<JsonObject>> ListConversationsAsync(bool includeArchived = false) =>
+            Task.FromResult(Conversations);
     }
 }

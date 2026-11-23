@@ -10,4 +10,6 @@ public interface IChatEngine
     Task<JsonObject?> OpenConversationAsync(string id);
 
     Task<JsonObject?> CreateConversationAsync();
+
+    Task<List<JsonObject>> ListConversationsAsync(bool includeArchived = false);
 }

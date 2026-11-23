@@ -107,4 +107,27 @@ public sealed class ChatController
         conversations.ApplyFilter();
         return row;
     }
+
+    /// <summary>
+    /// Loads the list, optionally creating the first conversation, and returns
+    /// the row the window should open. Both the first load and the archive
+    /// switch go through here.
+    /// </summary>
+    public async Task<string?> LoadAsync(bool includeArchived, bool createIfEmpty)
+    {
+        var items = await engine.ListConversationsAsync(includeArchived);
+        var rows = items.Select(ConversationRow.From).ToList();
+        if (rows.Count == 0 && createIfEmpty)
+        {
+            var created = await engine.CreateConversationAsync();
+            if (created != null)
+            {
+                rows.Add(ConversationRow.From(created));
+            }
+        }
+
+        conversations.ReplaceAll(rows);
+        return conversations.Visible.FirstOrDefault()?.Id
+            ?? conversations.All.FirstOrDefault()?.Id;
+    }
 }

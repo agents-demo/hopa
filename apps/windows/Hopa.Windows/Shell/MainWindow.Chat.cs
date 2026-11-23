@@ -94,26 +94,17 @@ public partial class MainWindow : Window
 
     private async Task RefreshAsync()
     {
-        if (client == null)
+        if (chatController == null)
         {
             return;
         }
 
-        var items = await client.ListConversationsAsync(Sidebar.Model.IncludeArchived);
-        var rows = items.Select(ConversationRow.From).ToList();
-        if (rows.Count == 0)
+        var id = await chatController.LoadAsync(
+            Sidebar.Model.IncludeArchived,
+            createIfEmpty: true);
+        if (id != null)
         {
-            var created = await client.CreateConversationAsync();
-            if (created != null)
-            {
-                rows.Add(ConversationRow.From(created));
-            }
-        }
-
-        Sidebar.Model.ReplaceAll(rows);
-        if (Sidebar.Model.All.Count > 0)
-        {
-            await SelectAsync(Sidebar.Model.All[0].Id);
+            await SelectAsync(id);
         }
     }
 

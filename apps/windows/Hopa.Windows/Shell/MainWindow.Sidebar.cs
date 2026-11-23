@@ -12,13 +12,14 @@ public partial class MainWindow : Window
     /// <summary>Reloads the sidebar after the archive switch asks for a wider list.</summary>
     private async Task ReloadConversationsAsync()
     {
-        if (client == null)
+        if (chatController == null)
         {
             return;
         }
 
-        var items = await client.ListConversationsAsync(Sidebar.Model.IncludeArchived);
-        Sidebar.Model.ReplaceAll(items.Select(ConversationRow.From));
+        await chatController.LoadAsync(
+            Sidebar.Model.IncludeArchived,
+            createIfEmpty: false);
     }
 
     private async Task PinAsync(ConversationRow row)
