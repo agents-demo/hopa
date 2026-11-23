@@ -294,22 +294,22 @@ git commit -m "feat(android): animate the plush in chats"
 ### Task 4: Windows icon and living mark
 
 **Files:**
-- Create: `apps/windows/Hopa.Windows/Controls/HopaMark.xaml`
-- Create: `apps/windows/Hopa.Windows/Controls/HopaMark.xaml.cs`
-- Modify: `apps/windows/Hopa.Windows/MainWindow.xaml`
-- Modify: `apps/windows/Hopa.Windows/ApprovalWindow.xaml`, `RenameWindow.xaml`, `SettingsWindow.xaml`, `StepsWindow.xaml`
+- Create: `apps/windows/Hopa.Windows/Chat/HopaMark.xaml`
+- Create: `apps/windows/Hopa.Windows/Chat/HopaMark.xaml.cs`
+- Modify: `apps/windows/Hopa.Windows/Shell/MainWindow.xaml`
+- Modify: `apps/windows/Hopa.Windows/Dialogs/ApprovalWindow.xaml`, `Dialogs/RenameWindow.xaml`, `Dialogs/SettingsWindow.xaml`, `Dialogs/RunDetailsWindow.xaml`
 - Modify: `apps/windows/Hopa.Windows/Hopa.Windows.csproj`
 
 **Interfaces:**
 - Consumes: `Assets/mascot.png`, `Assets/mascot-blink.png`, `Assets/hopa.ico` from Task 1.
-- Produces: `Hopa.Windows.Controls.HopaMark`, a `UserControl` with a `bool IsStatic` dependency property (default `false`).
+- Produces: `Hopa.Windows.Chat.HopaMark`, a `UserControl` with a `bool IsStatic` dependency property (default `false`).
 
 - [ ] **Step 1: Add the control**
 
-`Controls/HopaMark.xaml`:
+`Chat/HopaMark.xaml`:
 
 ```xml
-<UserControl x:Class="Hopa.Windows.Controls.HopaMark"
+<UserControl x:Class="Hopa.Windows.Chat.HopaMark"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid x:Name="Surface" RenderTransformOrigin="0.5,0.5">
@@ -326,7 +326,7 @@ git commit -m "feat(android): animate the plush in chats"
 </UserControl>
 ```
 
-`Controls/HopaMark.xaml.cs` implements:
+`Chat/HopaMark.xaml.cs` implements:
 
 - `public static readonly DependencyProperty IsStaticProperty` with a `PropertyChangedCallback`.
 - `Loaded`/`Unloaded` handlers and `SizeChanged`:
@@ -340,18 +340,18 @@ git commit -m "feat(android): animate the plush in chats"
 
 - [ ] **Step 2: Use it in the main window**
 
-In `MainWindow.xaml`:
+In `Shell/MainWindow.xaml`:
 
-- Add `xmlns:controls="clr-namespace:Hopa.Windows.Controls"` to the `<Window>` element.
+- Add `xmlns:chat="clr-namespace:Hopa.Windows.Chat"` to the `<Window>` element.
 - Delete the `LaptopMarkTemplate` `ControlTemplate`.
-- Header: replace the 26 px `<Control Template=...>` with `<controls:HopaMark Width="26" Height="26" IsStatic="True" Margin="0,0,12,0" VerticalAlignment="Center" />`. The header stays still; only the empty state breathes.
-- Empty state: replace the 108 px `<Control Template=...>` with `<controls:HopaMark Width="108" Height="108" />`.
-- Message template: replace `<Image x:Name="Mark" Source="Assets/mascot.png" ... />` with `<controls:HopaMark x:Name="Mark" Width="22" Height="22" IsStatic="True" Margin="0,1,12,0" VerticalAlignment="Top" Visibility="Collapsed" />`. Keep the `DataTrigger` targeting `Mark`.
+- Header: replace the 26 px `<Control Template=...>` with `<chat:HopaMark Width="26" Height="26" IsStatic="True" Margin="0,0,12,0" VerticalAlignment="Center" />`. The header stays still; only the empty state breathes.
+- Empty state: replace the 108 px `<Control Template=...>` with `<chat:HopaMark Width="108" Height="108" />`.
+- Message template: replace `<Image x:Name="Mark" Source="Assets/mascot.png" ... />` with `<chat:HopaMark x:Name="Mark" Width="22" Height="22" IsStatic="True" Margin="0,1,12,0" VerticalAlignment="Top" Visibility="Collapsed" />`. Keep the `DataTrigger` targeting `Mark`.
 
 - [ ] **Step 3: Set the app icon**
 
 - In `Hopa.Windows.csproj`, add `<ApplicationIcon>Assets\hopa.ico</ApplicationIcon>` to the first `PropertyGroup`, and add `<Resource Include="Assets\mascot-blink.png" />` and `<Resource Include="Assets\hopa.ico" />` beside the existing `mascot.png` resource.
-- Add `Icon="Assets/hopa.ico"` to the `<Window>` root of `MainWindow.xaml`, `ApprovalWindow.xaml`, `RenameWindow.xaml`, `SettingsWindow.xaml` and `StepsWindow.xaml`.
+- Add `Icon="Assets/hopa.ico"` to the `<Window>` root of `Shell/MainWindow.xaml`, `Dialogs/ApprovalWindow.xaml`, `Dialogs/RenameWindow.xaml`, `Dialogs/SettingsWindow.xaml` and `Dialogs/RunDetailsWindow.xaml`.
 
 - [ ] **Step 4: Build and test**
 

@@ -14,7 +14,7 @@ source file; there is no other reference client. Status is one of `have`, `todo`
 | Conversation list | `feature/conversations/ChatsSheet.kt` | sidebar list with pin, archive, rename, export, delete | have |
 | Easy history | `feature/conversations/EasyHistoryScreen.kt` | none | out (no profiles on the PC) |
 | Activity | `feature/activity/ActivityScreen.kt` | run rail plus the runs window | have |
-| Runs | `feature/runs/RunsScreen.kt` | `StepsWindow` (steps, classification, chain) | have |
+| Runs | `feature/runs/RunsScreen.kt` | `RunDetailsWindow` (steps, classification, chain) | have |
 | Approval sheet | `ui/component/ApprovalSheet.kt` | `ApprovalWindow` (title, amount, merchant, consequence) | have |
 | Settings hub with search | `feature/settings/SettingsScreen.kt` | `SettingsWindow` | out (three fields fit on one dialog) |
 | Settings — Answers (model, key, vision) | `feature/settings/SettingsModelScreen.kt` | model provider, endpoint, key | have; vision is `out` until the host sends frames |

@@ -1,7 +1,7 @@
 # P2 — the PC target
 
 Date: 2026-11-16. Host: Windows 11 (10.0.22631), .NET 8.0.428, JDK 17.
-Adapter: `apps/windows/Hopa.Windows/WindowsDevice.cs`.
+Adapter: `apps/windows/Hopa.Windows/Device/WindowsDevice.cs`.
 Guide: [`docs/guides/windows/p2-testing.md`](../../guides/windows/p2-testing.md).
 
 ## What P2 added

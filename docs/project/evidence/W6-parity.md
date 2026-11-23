@@ -1,7 +1,7 @@
 # W6 parity: the look, Harmony laptop vs Windows
 
 Reference values are read from the code on both sides, not from screenshots:
-`apps/harmony/laptop/src/main/ets` and `apps/windows/Hopa.Windows/MainWindow.xaml`.
+`apps/harmony/laptop/src/main/ets` and `apps/windows/Hopa.Windows/Shell/MainWindow.xaml`.
 The Windows screenshot is `docs/media/windows-w4.png`.
 
 ## Tokens

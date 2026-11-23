@@ -4,7 +4,7 @@ Date: 2026-11-14. Host: Windows; .NET 8; session unlocked for the final matrix.
 
 ## What exists
 
-- `apps/windows/Hopa.Windows/WindowsDevice.cs`: a real UI Automation adapter.
+- `apps/windows/Hopa.Windows/Device/WindowsDevice.cs`: a real UI Automation adapter.
   - `Observe` builds the observation JSON for the Kotlin contract: a pre-order
     tree with refs (`e1`..), control type, name, automation id, bounds,
     clickable/scrollable/focused/enabled/visible, and password fields marked as

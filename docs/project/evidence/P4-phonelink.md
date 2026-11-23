@@ -42,10 +42,10 @@ server sets `from`; the client never names another device.
 |---|---|
 | `task.needs_approval` in the gateway schema, validator, router and store | `contracts/schemas/gateway.v1.schema.json`, `services/backend/.../EnvelopeValidator.kt`, `TaskRouter.kt`, `TaskStore.kt`, `PgTaskStore.kt` |
 | `needs_approval` is a durable task state; offline phones receive it on hello, and delivery keeps the request type | `TaskRouter.deliver`, `TaskStore.pendingFor`, `V5__task_needs_approval.sql` |
-| Windows owns its own pairing: `hopa://pair` → `/v1/pair/claim`, `platform=windows`, its own key, Credential Manager | `apps/windows/Hopa.Windows/GatewayClient.cs`, `CredentialStore.cs` |
+| Windows owns its own pairing: `hopa://pair` → `/v1/pair/claim`, `platform=windows`, its own key, Credential Manager | `apps/windows/Hopa.Windows/Gateway/GatewayClient.cs`, `Storage/CredentialStore.cs` |
 | Windows gateway socket: `device.hello`, presence, `task.create`, `task.needs_approval`, `task.result`, refresh on auth close | `GatewayClient.cs` |
 | The host asks the phone before the local sheet; a timeout or dead link denies | `MainWindow.OnApprovalRequested`, `HostApproval` |
-| The sidecar only learns whether a phone peer is reachable; a phone claim without that link is refused | `RuntimeConfig.hasPhoneLink`, `Main.kt` `approval.result`, `SidecarClient.SendGatewayState` |
+| The sidecar only learns whether a phone peer is reachable; a phone claim without that link is refused | `RuntimeConfig.hasPhoneLink`, `Main.kt` `approval.result`, `EngineHostClient.SendGatewayState` |
 | Android shows the same approval sheet for a remote request and returns the decision | `apps/android/app/.../RemoteApprovalRunner.kt`, `BackendClient.onApproval`, `AppContainer` |
 | Approval provenance on the record | `Approver`, `ApprovalDecision`, `RunRecord.approver`, `Protocol.step` |
 | A dropped link or a late answer is a denial, never a silent yes | `RemoteApprovalRunner` timeout, `HostApproval` timeout, `TaskStore.failLink` |

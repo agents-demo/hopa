@@ -81,7 +81,8 @@ legitimately lack the accessibility capability, and the PC must still work.
 
 ```
 apps/windows/
-  Hopa.Windows/           WPF app (C#): windows, views, view models, WindowsDevice
+  Hopa.Windows/           WPF app (C#): Shell, Chat, Dialogs, Device, Engine,
+                          Gateway, Voice, Storage, Checks
   sidecar/                Kotlin engine host for packages/ (NDJSON over stdio)
   installer/              WiX MSI
 

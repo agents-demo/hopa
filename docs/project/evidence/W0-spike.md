@@ -9,7 +9,7 @@ Kotlin engine and the engine asks the host to perform one UI Automation action.
 
 ```
 apps/windows/
-  Hopa.Windows/           WPF app (C#): window, SidecarClient, NotepadClicker
+  Hopa.Windows/           WPF app (C#): window, EngineHostClient, NotepadClicker
   sidecar/                Kotlin host for packages/core + packages/capabilities
 docs/design/decisions/0021-windows-client-stack.md
 docs/project/plan/windows/protocol.md

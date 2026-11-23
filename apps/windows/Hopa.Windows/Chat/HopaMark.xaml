@@ -1,0 +1,14 @@
+<UserControl x:Class="Hopa.Windows.Chat.HopaMark"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid x:Name="Surface" RenderTransformOrigin="0.5,0.5">
+        <Grid.RenderTransform>
+            <TransformGroup>
+                <ScaleTransform x:Name="Breathe" ScaleX="1" ScaleY="1" />
+                <TranslateTransform x:Name="Float" Y="0" />
+            </TransformGroup>
+        </Grid.RenderTransform>
+        <Image x:Name="Base" Source="pack://application:,,,/Assets/mascot.png" Stretch="UniformToFill" />
+        <Image x:Name="Blink" Stretch="UniformToFill" Opacity="0" />
+    </Grid>
+</UserControl>

@@ -1,4 +1,4 @@
-using Hopa.Windows;
+using Hopa.Windows.Device;
 using Xunit;
 
 namespace Hopa.Windows.Tests;

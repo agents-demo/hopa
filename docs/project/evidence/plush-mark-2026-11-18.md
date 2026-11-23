@@ -11,7 +11,7 @@ Date: 2026-11-18. Source artwork: a user-supplied photo, committed at
   rounded badge and animates it: float, breathe, blink, thinking pulse, listening
   lean, happy scale, and a tap wiggle plus the existing greeting bubble.
 - **Windows:** every window and the executable carry `Assets/hopa.ico`. A new
-  `Controls/HopaMark` control shows the badge in the empty state and animates it;
+  `Chat/HopaMark` control shows the badge in the empty state and animates it;
   the header and answer avatars use the same control with `IsStatic="True"`.
 - Transcript avatars stay still on both clients. `animate = false` /
   `IsStatic = true` also freeze tap motion, and static Windows rows never load
