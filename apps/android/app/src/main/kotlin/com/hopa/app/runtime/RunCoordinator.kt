@@ -29,6 +29,7 @@ class RunCoordinator(
     private val runner by lazy {
         TurnRunner(
             steps = ModelStepPolicy(container.model),
+            fallbackSteps = ModelStepPolicy(container.cloudModel),
             executorFor = container::executorFor,
             recorder = container.recorder,
             clock = container.clock,
@@ -122,6 +123,7 @@ class RunCoordinator(
             instantCommands = settings.instantCommands,
             useGraphs = settings.stepSource != "model",
             graphFallback = settings.stepSource != "graph",
+            cloudFallback = settings.cloudFallback,
             surfaceName = device.sourceName,
             surfaceAvailable = device.sourceName != "fallback",
             surfaceError = device.lastError,

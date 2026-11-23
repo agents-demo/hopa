@@ -33,6 +33,11 @@ data class AppSettings(
      * otherwise), `model` (the model only) or `graph` (graphs only).
      */
     val stepSource: String = "auto",
+    /**
+     * When the on-device model is not sure, ask the API model with the same
+     * request. Off by default: it means the screen and the goal leave the phone.
+     */
+    val cloudFallback: Boolean = false,
     /** Attach a screenshot to each model call (needs a model that sees images). */
     val vision: Boolean = false,
     /**

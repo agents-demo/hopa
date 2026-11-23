@@ -50,6 +50,12 @@ data class TurnRequest(
     val useGraphs: Boolean = true,
     /** When false, a goal the graph does not know is refused instead of handed to the model. */
     val graphFallback: Boolean = true,
+    /**
+     * Ask the API model when the on-device one cannot answer. Off by default:
+     * the flag carries the person's consent, and with it the screen and the goal
+     * leave the phone.
+     */
+    val cloudFallback: Boolean = false,
     /** One deadline for the whole turn, not per step. */
     val timeoutMillis: Long = 120_000,
 

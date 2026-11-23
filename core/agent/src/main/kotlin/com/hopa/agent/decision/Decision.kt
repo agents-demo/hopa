@@ -13,13 +13,24 @@ import com.hopa.contracts.wire.Observation
  */
 sealed interface Decision {
     /** Do one action on the screen. */
-    data class Act(val action: Action) : Decision
+    data class Act(
+        val action: Action,
+        /**
+         * When set, this action finishes the goal: the loop executes it and then
+         * ends the turn with this answer. A graph's last edge uses it.
+         */
+        val then: String? = null,
+    ) : Decision
 
     /** Stop and ask the person, with the options the layer offers. */
     data class Ask(val answer: String, val options: List<String> = emptyList()) : Decision
 
     /** Answer in plain text and finish the turn. */
-    data class Say(val answer: String) : Decision
+    data class Say(
+        val answer: String,
+        /** Set when the turn ends because something is missing, not because it is done. */
+        val error: HopaError? = null,
+    ) : Decision
 
     /** This layer knows no safe next step here; the caller decides what to do. */
     data object NoPath : Decision
@@ -49,6 +60,11 @@ data class DecisionOutcome(
     val decision: Decision,
     /** Tokens a model spent; zero for a graph or a rule layer. */
     val usage: ModelUsage = ModelUsage(),
+    /**
+     * The reply as the policy produced it, when it has one. The loop keeps it in
+     * the notes so a model still sees its own earlier steps.
+     */
+    val raw: String? = null,
 )
 
 /**

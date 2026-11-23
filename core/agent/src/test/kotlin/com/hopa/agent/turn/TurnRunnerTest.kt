@@ -546,7 +546,10 @@ class TurnRunnerTest {
             screens = listOf(labelled("Home")),
             replies = emptyList(),
             plan = listOf("Open Settings", "Tap Connections"),
-            graphs = FakeGraph(listOf(step)),
+            graphs = FakeGraph(
+                listOf(step),
+                com.hopa.decision.graph.GraphTarget(SETTINGS, "Settings", completes = true),
+            ),
         )
 
         val outcome = harness.runner.run(harness.request("open settings", planFirst = true))

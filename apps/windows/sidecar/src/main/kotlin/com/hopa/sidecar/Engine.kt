@@ -6,6 +6,7 @@ import com.hopa.inference.client.ModelFactory
 import com.hopa.agent.action.ActionExecutor
 import com.hopa.agent.action.ApprovalPolicy
 import com.hopa.agent.loop.AgentLoop
+import com.hopa.agent.decision.model.ModelDecisionPolicy
 import com.hopa.agent.decision.model.ModelStepPolicy
 import com.hopa.contracts.turn.TurnContext
 import com.hopa.contracts.model.ModelMessage
@@ -114,7 +115,10 @@ class Engine(
                 clock = clock,
             )
             val loop = AgentLoop(
-                stepPolicy = ModelStepPolicy(model),
+                policy = ModelDecisionPolicy(
+                    steps = ModelStepPolicy(model),
+                    knowledge = { SidecarKnowledge.value },
+                ),
                 device = device,
                 executor = executor,
                 recorder = recorder,

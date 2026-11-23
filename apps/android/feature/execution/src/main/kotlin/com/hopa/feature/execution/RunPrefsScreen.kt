@@ -32,6 +32,7 @@ fun RunPrefsScreen(
     onPlanFirst: (Boolean) -> Unit,
     onVision: (Boolean) -> Unit,
     onReplaySkills: (Boolean) -> Unit,
+    onCloudFallback: (Boolean) -> Unit,
 ) {
     Scaffold(
         containerColor = HopaColor.Bg,
@@ -70,6 +71,14 @@ fun RunPrefsScreen(
                         "Skip the model next time",
                         state.settings.replaySkills,
                         onReplaySkills,
+                    )
+                    RunPrefsLine()
+                    SwitchRow(
+                        "Cloud fallback",
+                        "If the on-device model is not sure, ask the API model. " +
+                            "The screen and the goal leave the phone.",
+                        state.settings.cloudFallback,
+                        onCloudFallback,
                     )
                 }
             }

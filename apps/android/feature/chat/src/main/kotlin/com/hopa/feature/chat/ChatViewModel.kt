@@ -330,8 +330,8 @@ class ChatViewModel @Inject constructor(
         }
         val target = runCatching { container.graphTarget(goal) }.getOrNull()
         return when {
-            target != null -> "Graph \u00B7 ${target.name}"
-            settings.stepSource == "graph" -> "Graph only"
+            target != null -> "Anchors \u00B7 ${target.name}"
+            settings.stepSource == "graph" -> "Anchors only"
             else -> ""
         }
     }

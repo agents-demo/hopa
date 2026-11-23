@@ -1,8 +1,13 @@
 package com.hopa.agent.turn
 
 import com.hopa.agent.action.ActionExecutor
+import com.hopa.agent.decision.DecisionPolicy
 import com.hopa.agent.decision.DecisionRuntime
 import com.hopa.agent.decision.StepPolicy
+import com.hopa.agent.decision.graph.ChainDecisionPolicy
+import com.hopa.agent.decision.graph.HandGraphDecisionPolicy
+import com.hopa.agent.decision.graph.SayDecisionPolicy
+import com.hopa.agent.decision.model.ModelDecisionPolicy
 import com.hopa.agent.goal.GoalVerification
 import com.hopa.agent.goal.GoalVerifier
 import com.hopa.agent.loop.AgentLoop
@@ -20,8 +25,6 @@ import com.hopa.contracts.ports.Clock
 import com.hopa.contracts.ports.DevicePort
 import com.hopa.contracts.turn.TurnContext
 import com.hopa.contracts.turn.TurnResult
-import com.hopa.contracts.wire.RunRecord
-import com.hopa.decision.ActionSignature
 import com.hopa.decision.classifier.IntentClassifier
 import com.hopa.decision.graph.GraphStepSource
 import com.hopa.runlog.store.RunRecorder
@@ -46,6 +49,8 @@ import kotlinx.coroutines.withTimeoutOrNull
  */
 class TurnRunner(
     private val steps: StepPolicy,
+    /** The API model, used only when the request allows cloud fallback. */
+    private val fallbackSteps: StepPolicy? = null,
     private val executorFor: (DevicePort) -> ActionExecutor,
     private val recorder: RunRecorder,
     private val clock: Clock,
@@ -87,35 +92,42 @@ class TurnRunner(
         } else {
             null
         }
-        // Graph only: the person asked for graphs, so neither a command
-        // nor the model may answer in their place.
-        if (request.useGraphs && graphs != null && !request.graphFallback) {
-            graph(request, started, tables, isCancelled)?.let { return it }
-            return TurnOutcome(
-                source = TurnSource.GRAPH,
-                answer = "I only have graphs for a few apps. " +
-                    "Switch Steps to Auto or Model for this goal.",
-                error = HopaError(ErrorCodes.BLOCKED, "no graph for this goal"),
-                surfaceName = request.surfaceName,
-                millis = clock.nowMillis() - started,
-            )
-        }
-        // A goal the graph can finish goes first: its steps are written, its
-        // receipt says Graph, and no model is asked for something already known.
         val graphFirst = known?.completes == true
-        if (!graphFirst && request.instantCommands && commands != null) {
-            command(request, started, tables)?.let { return it }
+        val graphOnly = request.useGraphs && graphs != null && !request.graphFallback
+
+        // The loop decides every step. These only choose which rungs it gets:
+        // the graph first, then the model. A graph-only turn ends with the
+        // refusal when the graph has nothing to say.
+        val model = ModelDecisionPolicy(steps = steps, knowledge = { tables })
+        val cloud = fallbackSteps
+            ?.takeIf { request.cloudFallback }
+            ?.let { ModelDecisionPolicy(steps = it, knowledge = { tables }) }
+        val graph = if (request.useGraphs && graphs != null) {
+            HandGraphDecisionPolicy(graphs)
+        } else {
+            null
         }
-        if (request.useGraphs && graphs != null) {
-            graph(request, started, tables, isCancelled)?.let { return it }
+        val policy = when {
+            graphOnly -> ChainDecisionPolicy(
+                listOfNotNull(
+                    graph,
+                    SayDecisionPolicy(
+                        answer = GRAPH_ONLY_ANSWER,
+                        error = HopaError(ErrorCodes.BLOCKED, "no graph for this goal"),
+                    ),
+                ),
+            )
+            else -> ChainDecisionPolicy(listOfNotNull(graph, model, cloud))
         }
-        if (graphFirst && request.instantCommands && commands != null) {
-            command(request, started, tables)?.let { return it }
-        }
+
         // A canonical command needs no plan: asking a model to write steps for
         // "open settings" is slower and less predictable than opening it. The
         // path still falls through to the plan gate on any doubt.
-        if (request.planFirst && !request.planApproved) {
+        if (!graphOnly && !graphFirst && request.instantCommands && commands != null) {
+            command(request, started, tables)?.let { return it }
+        }
+        // A goal a graph covers needs no plan: its steps are written already.
+        if (!graphOnly && request.planFirst && !request.planApproved && known == null) {
             return plan(request, started)
         }
         if (request.replay) {
@@ -124,7 +136,7 @@ class TurnRunner(
                 replay(recipe, request, started, tables)?.let { return it }
             }
         }
-        return fromModel(request, started, isCancelled, tables)
+        return fromModel(request, started, isCancelled, tables, policy, graph != null)
     }
 
     /**
@@ -218,113 +230,16 @@ class TurnRunner(
         )
     }
 
-    /**
-     * A hand-written graph for a known app.
-     *
-     * It executes at most a few steps, each through the normal executor, so an
-     * approval or a failed tap stops it honestly. A miss on the first screen
-     * returns null and the model handles the turn; a miss after some progress
-     * returns a partial outcome that names what was opened.
-     */
-    private suspend fun graph(
-        request: TurnRequest,
-        started: Long,
-        tables: CatalogSnapshot,
-        isCancelled: () -> Boolean,
-    ): TurnOutcome? {
-        val source = graphs ?: return null
-        var observation = runCatching { request.device.observe() }.getOrNull() ?: return null
-        val executor = executorFor(request.device)
-        val records = mutableListOf<RunRecord>()
-        val narration = mutableListOf<String>()
-        val seen = mutableSetOf<String>()
-        var answer: String = ""
-        for (step in 0 until MAX_GRAPH_STEPS) {
-            if (isCancelled()) {
-                break
-            }
-            val next = runCatching { source.next(observation, request.goal) }.getOrNull()
-                ?: break
-            val signature = ActionSignature.of(next.action)
-            // Back is how a graph walks out of a screen it did not expect; a
-            // second identical tap or scroll is a loop, a second back is not.
-            if (next.action.kind != "ui.back" && !seen.add(signature)) {
-                break
-            }
-            val result = runCatching {
-                executor.execute(
-                    runId = request.runId,
-                    step = step,
-                    traceId = request.traceId,
-                    action = next.action,
-                    before = observation,
-                )
-            }.getOrNull() ?: break
-            records += result.record
-            narration += RunNarrator.lines(listOf(result.record))
-            observation = result.observation
-            if (!result.record.executed || !result.record.error.isNullOrBlank()) {
-                return TurnOutcome(
-                    source = TurnSource.GRAPH,
-                    knowledgeVersion = tables.version,
-                    answer = "I could not finish that in ${next.graph}.",
-                    records = records,
-                    narration = narration,
-                    error = HopaError(
-                        ErrorCodes.BLOCKED,
-                        result.record.error ?: "the graph step did not run",
-                    ),
-                    surfaceName = request.surfaceName,
-                    finalScreen = observation,
-                    millis = clock.nowMillis() - started,
-                )
-            }
-            if (next.answer.isNotBlank()) {
-                answer = next.answer
-            }
-            if (next.done) {
-                return TurnOutcome(
-                    source = TurnSource.GRAPH,
-                    knowledgeVersion = tables.version,
-                    answer = answer.ifBlank { "Done." },
-                    records = records,
-                    narration = narration,
-                    surfaceName = request.surfaceName,
-                    finalScreen = observation,
-                    millis = clock.nowMillis() - started,
-                )
-            }
-            // The executor reads the screen the instant the tap lands, often
-            // before the next page has drawn. Read again after the settle, or the
-            // graph judges a transition and finds nothing to do.
-            settle(GRAPH_SETTLE_MS)
-            observation = runCatching { request.device.observe() }.getOrNull() ?: observation
-        }
-        if (records.isEmpty()) {
-            return null
-        }
-        return TurnOutcome(
-            source = TurnSource.GRAPH,
-            knowledgeVersion = tables.version,
-            answer = answer.ifBlank {
-                "I opened the app, but I do not know the next step for that goal."
-            },
-            records = records,
-            narration = narration,
-            surfaceName = request.surfaceName,
-            finalScreen = observation,
-            millis = clock.nowMillis() - started,
-        )
-    }
-
     private suspend fun fromModel(
         request: TurnRequest,
         started: Long,
         isCancelled: () -> Boolean,
         tables: CatalogSnapshot,
+        policy: DecisionPolicy,
+        graphInChain: Boolean = false,
     ): TurnOutcome {
         val loop = AgentLoop(
-            stepPolicy = steps,
+            policy = policy,
             device = request.device,
             executor = executorFor(request.device),
             recorder = recorder,
@@ -354,7 +269,7 @@ class TurnRunner(
 
         if (result == null) {
             return TurnOutcome(
-                source = TurnSource.MODEL,
+                source = sourceOf(graphInChain, ModelUsage()),
                 knowledgeVersion = tables.version,
                 answer = stoppedAfter(request.timeoutMillis),
                 error = HopaError(ErrorCodes.TIMEOUT, "the turn ran out of time"),
@@ -377,7 +292,7 @@ class TurnRunner(
         }
 
         return TurnOutcome(
-            source = TurnSource.MODEL,
+            source = sourceOf(graphInChain, result.usage),
             knowledgeVersion = tables.version,
             answer = result.answer,
             records = result.records,
@@ -434,8 +349,14 @@ class TurnRunner(
     }
 
     private companion object {
-        /** A hand-written graph is five edges at most; beyond that it is a plan. */
-        const val MAX_GRAPH_STEPS = 5
-        const val GRAPH_SETTLE_MS = 800L
+        /**
+         * A graph step spends no tokens, so a turn that never asked a model is a
+         * graph turn: the receipt can say Graph without a per-step source.
+         */
+        fun sourceOf(graphInChain: Boolean, usage: ModelUsage): TurnSource =
+            if (graphInChain && usage.totalTokens == 0) TurnSource.GRAPH else TurnSource.MODEL
+
+        const val GRAPH_ONLY_ANSWER =
+            "I only have graphs for a few apps. Switch Steps to Auto or Model for this goal."
     }
 }

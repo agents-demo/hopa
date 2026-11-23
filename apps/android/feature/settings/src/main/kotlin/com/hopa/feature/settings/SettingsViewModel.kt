@@ -195,6 +195,13 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun setCloudFallback(value: Boolean) {
+        viewModelScope.launch {
+            preferences.setCloudFallback(value)
+            reload()
+        }
+    }
+
     fun setPlanFirst(value: Boolean) {
         viewModelScope.launch {
             preferences.setPlanFirst(value)

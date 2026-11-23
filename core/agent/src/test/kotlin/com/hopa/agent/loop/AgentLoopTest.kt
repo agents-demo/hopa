@@ -3,6 +3,7 @@ package com.hopa.agent.loop
 import com.hopa.agent.action.ActionExecutor
 import com.hopa.agent.action.ApprovalPolicy
 import com.hopa.agent.decision.DecisionRuntime
+import com.hopa.agent.decision.model.ModelDecisionPolicy
 import com.hopa.agent.decision.model.ModelStepPolicy
 import com.hopa.catalog.testing.TestCatalog
 import com.hopa.contracts.model.ModelPort
@@ -248,7 +249,10 @@ class AgentLoopTest {
         val model = ScriptedModel(replies)
         val clock = FakeClock()
         val loop = AgentLoop(
-            stepPolicy = ModelStepPolicy(model),
+            policy = ModelDecisionPolicy(
+                steps = ModelStepPolicy(model),
+                knowledge = { TestCatalog.value },
+            ),
             device = device,
             executor = ActionExecutor(
                 device = device,

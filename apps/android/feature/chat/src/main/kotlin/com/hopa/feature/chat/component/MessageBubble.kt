@@ -261,7 +261,7 @@ private fun tokensText(tokens: Int): String =
 
 /** What ran the steps, in one word, for the receipt's summary line. */
 private fun sourceLabel(source: String): String = when (source) {
-    "graph" -> "Graph \u00B7 "
+    "graph" -> "Anchors \u00B7 "
     "command" -> "Command \u00B7 "
     "recipe" -> "Skill \u00B7 "
     "model" -> "Model \u00B7 "

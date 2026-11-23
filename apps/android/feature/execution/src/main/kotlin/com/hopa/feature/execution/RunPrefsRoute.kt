@@ -20,5 +20,6 @@ fun RunPrefsRoute(
         onPlanFirst = viewModel::setPlanFirst,
         onVision = viewModel::setVision,
         onReplaySkills = viewModel::setReplaySkills,
+        onCloudFallback = viewModel::setCloudFallback,
     )
 }

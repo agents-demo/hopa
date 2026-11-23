@@ -30,6 +30,7 @@ import com.hopa.capabilities.accessibility.tree.AccessibilityDevice
 import com.hopa.capabilities.system.AndroidClock
 import com.hopa.capabilities.system.AndroidPackageCatalog
 import com.hopa.capabilities.system.AndroidSystemPort
+import com.hopa.contracts.model.ModelPort
 import com.hopa.contracts.ports.DevicePort
 import com.hopa.data.database.HopaDatabase
 import com.hopa.data.store.DataStoreSettingsRepository
@@ -481,6 +482,8 @@ class AppContainer @Inject constructor(@ApplicationContext context: Context) : C
     override val localTokens: kotlinx.coroutines.flow.Flow<String> = localEngine.tokens
 
     val model = SettingsModelPort(settings, modelFactory, ProviderChoiceRules())
+    /** The last rung: the API model, used only when the turn allows it. */
+    val cloudModel: ModelPort = CloudModelPort(settings, modelFactory)
     /** Shared by the settings screen's "Test the model" button. */
 
     /** A bridge-backed device when Settings has an address and a token. */
