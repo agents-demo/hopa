@@ -37,8 +37,8 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
-    implementation(project(":core:ui"))
-    implementation(project(":core:privacy"))
+    implementation(project(":platform:ui"))
+    implementation(project(":platform:privacy"))
 
     api(project(":contracts"))
     api(project(":stores"))

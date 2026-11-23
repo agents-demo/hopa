@@ -1,4 +1,4 @@
-package com.hopa.localmodel
+package com.hopa.engine.llama
 
 import android.content.Context
 import android.net.Uri

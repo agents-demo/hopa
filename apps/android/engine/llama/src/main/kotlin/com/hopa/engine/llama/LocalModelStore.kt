@@ -1,4 +1,4 @@
-package com.hopa.localmodel
+package com.hopa.engine.llama
 
 import android.net.Uri
 import com.hopa.inference.local.ImportOutcome

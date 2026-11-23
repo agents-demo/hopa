@@ -90,8 +90,8 @@ class AppContainer @Inject constructor(@ApplicationContext context: Context) : C
     EasyDependencies, PowerDependencies, LaunchpadDependencies, CapabilitiesDependencies,
     ExecutionDependencies, LocalModelHost {
     override val context: Context = context.applicationContext
-    override val localModels: com.hopa.localmodel.LocalModelStore =
-        com.hopa.localmodel.AndroidLocalModelStore(context)
+    override val localModels: com.hopa.engine.llama.LocalModelStore =
+        com.hopa.engine.llama.AndroidLocalModelStore(context)
 
     override val ramGb: Int
         get() = run {
@@ -482,7 +482,7 @@ class AppContainer @Inject constructor(@ApplicationContext context: Context) : C
      * One engine for the process: the file is resolved per turn, so importing or
      * deleting a model takes effect without a restart.
      */
-    private val localEngine: com.hopa.localmodel.LlamaEngine = com.hopa.localmodel.LlamaEngine(
+    private val localEngine: com.hopa.engine.llama.LlamaEngine = com.hopa.engine.llama.LlamaEngine(
         pathProvider = { localModelFile()?.absolutePath },
         thermalStatus = {
             (context.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager)

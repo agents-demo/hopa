@@ -379,7 +379,7 @@ feature/
 
 ### PR 5 — Gradle modules
 
-20. `:core:ui` with the theme and the shared Compose chrome — done
+20. `:platform:ui` with the theme and the shared Compose chrome — done
 21. The plush drawables and `HopaMascot` moved into the library — done
 22. Extract feature modules one at a time — `:feature:usage` is the first
 23. Continue with `:feature:settings`, then the rest

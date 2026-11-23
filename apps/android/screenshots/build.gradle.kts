@@ -35,7 +35,7 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.material3)
-    implementation(project(":core:ui"))
+    implementation(project(":platform:ui"))
     implementation(project(":feature:settings"))
     implementation(project(":feature:execution"))
     implementation(project(":feature:capabilities"))

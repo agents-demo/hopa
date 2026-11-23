@@ -41,8 +41,8 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
-    implementation(project(":core:ui"))
-    api(project(":core:localmodel"))
+    implementation(project(":platform:ui"))
+    api(project(":engine:llama"))
 
     api(project(":contracts"))
     api(project(":stores"))

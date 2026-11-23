@@ -231,7 +231,7 @@ Each slice compiles, keeps CI green, and can be merged on its own.
 
 ### S4 - the engine
 
-- `apps/android/core/localmodel/src/main/cpp`: CMake with llama.cpp fetched at a
+- `apps/android/engine/llama/src/main/cpp`: CMake with llama.cpp fetched at a
   pinned tag (`v1.0.0`, `FetchContent`, no vendored tree), NDK 28.2.13676358,
   `arm64-v8a` for the phone and `x86_64` for the emulator.
 - JNI surface: `nativeLoad(path, contextTokens, threads)`,
@@ -420,7 +420,7 @@ that needs a file, a context, a service or a native library lives under
 `apps/android`. So the provider seam, the catalogue metadata, the prompt budget
 and the grammar are JVM; storage, download, SAF and JNI are Android.
 
-The only new module is `:core:localmodel` (`apps/android/core/localmodel`).
+The only new module is `:engine:llama` (`apps/android/engine/llama`).
 
 ### S1 - the seam
 
@@ -438,7 +438,7 @@ The only new module is `:core:localmodel` (`apps/android/core/localmodel`).
 | Where | What |
 |---|---|
 | `core/inference` | `ModelSource` port, `ModelManifest` codec, `LocalModelCatalogue` metadata, `LocalModelRecommendation`, and `FileModelStore` (`.part`, sha256, atomic rename, cleanup, totals) — all JVM and tested on the JVM |
-| `apps/android/core/localmodel` (new) | SAF import, the download service, and from S4 the engine host; it receives the storage root from the app |
+| `apps/android/engine/llama` (new) | SAF import, the download service, and from S4 the engine host; it receives the storage root from the app |
 | `apps/android/feature/settings` | model cards, import/download, delete, totals, states |
 | `apps/android/stores` | the selected model id and the provider |
 | `apps/android/app` | Hilt bindings, the service entry in the merged manifest |
@@ -459,7 +459,7 @@ The only new module is `:core:localmodel` (`apps/android/core/localmodel`).
 
 | Where | What |
 |---|---|
-| `apps/android/core/localmodel` | `src/main/cpp` with the pinned llama.cpp, CMake, JNI (`load`/`complete`/`cancel`/`release`), the `LocalEngine` implementation, proguard keep rules |
+| `apps/android/engine/llama` | `src/main/cpp` with the pinned llama.cpp, CMake, JNI (`load`/`complete`/`cancel`/`release`), the `LocalEngine` implementation, proguard keep rules |
 | `core/inference` | `LocalModel` delegates to the `LocalEngine` interface, so the JVM side stays testable with a fake |
 | `apps/android/app` | load/unload lifecycle, the engine is built with the verified file path |
 | tests | JVM parser and grammar tests; the native path is covered in S5 |
@@ -489,7 +489,7 @@ The only new module is `:core:localmodel` (`apps/android/core/localmodel`).
 | `services/backend` | `GET /v1/models` and `/v1/models/{id}`, ETag, paired token, manifest generation |
 | `core/backend` | `ModelClient` next to `CatalogClient` (manifest fetch, 304) |
 | `core/inference` | nothing; the manifest codec already exists from S2 |
-| `apps/android/core/localmodel` | reuse the S2 downloader unchanged |
+| `apps/android/engine/llama` | reuse the S2 downloader unchanged |
 | `spec/` + `tools/scripts` | a manifest fixture and a drift check, the way the knowledge bundle has one |
 | tests | backend endpoint tests, `core/backend` client test, the drift check in CI |
 

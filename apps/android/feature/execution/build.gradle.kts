@@ -36,7 +36,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.hilt.navigation.compose)
-    implementation(project(":core:ui"))
+    implementation(project(":platform:ui"))
 
     api(project(":feature:settings"))
 

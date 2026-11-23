@@ -16,7 +16,7 @@ interface SettingsDependencies {
     val settings: SettingsRepository
     val modelFactory: ModelFactory
     /** The model files on this phone, for the picker on Act. */
-    val localModels: com.hopa.localmodel.LocalModelStore
+    val localModels: com.hopa.engine.llama.LocalModelStore
     val backendState: StateFlow<BackendState>
     val backendTask: StateFlow<BackendTaskState>
     val backendNotice: MutableStateFlow<String?>

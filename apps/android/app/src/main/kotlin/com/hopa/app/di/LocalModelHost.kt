@@ -1,6 +1,6 @@
 package com.hopa.app.di
 
-import com.hopa.localmodel.LocalModelStore
+import com.hopa.engine.llama.LocalModelStore
 
 /**
  * What the on-device settings page reads.

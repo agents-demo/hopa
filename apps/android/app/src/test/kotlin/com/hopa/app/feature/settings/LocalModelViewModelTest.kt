@@ -6,7 +6,7 @@ import com.hopa.inference.local.ImportOutcome
 import com.hopa.inference.local.InstalledModel
 import com.hopa.inference.local.LocalModelCatalogue
 import com.hopa.inference.local.ModelSpec
-import com.hopa.localmodel.LocalModelStore
+import com.hopa.engine.llama.LocalModelStore
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

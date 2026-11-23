@@ -1,4 +1,4 @@
-package com.hopa.localmodel
+package com.hopa.engine.llama
 
 import com.hopa.contracts.model.ModelReply
 import com.hopa.contracts.model.ModelRequest
