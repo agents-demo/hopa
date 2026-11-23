@@ -28,25 +28,20 @@ public partial class MainWindow : Window
 {
     private ObservableCollection<ConversationRow> conversations => Sidebar.Model.Visible;
     private List<ConversationRow> allConversations => Sidebar.Model.All;
-    private readonly ObservableCollection<MessageBubble> messages = new();
-    private readonly Dictionary<string, string> drafts = new();
+    private ObservableCollection<MessageBubble> messages => Chat.Model.Messages;
     private readonly List<string> log = new();
     private readonly WindowsDevice device = new();
     private readonly VoiceClient voice = new();
     private SpeechSynthesizer? speech;
     private TrayIcon? tray;
-    private string lastAnswer = "";
     private EngineHostClient? client;
     private GatewayClient? gateway;
     private Task? connecting;
     private string? currentId;
-    private JsonArray? lastSteps;
-    private bool lastChainOk;
     private JsonObject? pendingAttachment;
     private string? autoApproval;
     private string? outputPath;
     private bool running;
-    private string lastQuestion = "";
 
     public MainWindow()
     {
@@ -70,7 +65,7 @@ public partial class MainWindow : Window
         StateChanged += (_, _) => MaximizeButton.Content = WindowState == WindowState.Maximized
             ? "\u2750"
             : "\u25A1";
-        MessagesList.ItemsSource = messages;
+        Sidebar.ExportRequested += row => _ = ExportAsync(row);
         Sidebar.NewChatRequested += () => _ = NewChatAsync();
         Sidebar.SettingsRequested += () => _ = OpenSettingsAsync();
         Sidebar.BridgeHintRequested += () => _ = OpenSettingsAsync();
@@ -80,7 +75,14 @@ public partial class MainWindow : Window
         Sidebar.ArchiveRequested += row => _ = ArchiveAsync(row);
         Sidebar.RenameRequested += row => _ = RenameAsync(row);
         Sidebar.DeleteRequested += row => _ = DeleteAsync(row);
-        Sidebar.ExportRequested += row => _ = ExportAsync(row);
+        Chat.SendRequested += () => _ = SendFromComposerAsync();
+        Chat.MicRequested += () => _ = MicAsync();
+        Chat.CopyRequested += CopyAnswer;
+        Chat.SpeakRequested += () => _ = SpeakAnswerAsync();
+        Chat.DetailsRequested += ShowRunDetails;
+        Chat.AttachmentRemoveRequested += RemoveAttachment;
+        Chat.FileDropped += path => _ = AttachAsync(path);
+        Chat.TargetChipRequested += () => _ = ToggleTargetAsync();
         tray = new TrayIcon(this, () => client?.CancelTurn(), () => Close());
         using (var icon = TrayIcon.LaptopIcon())
         {
@@ -135,11 +137,6 @@ public partial class MainWindow : Window
     private void Close_Click(object sender, RoutedEventArgs e)
     {
         SystemCommands.CloseWindow(this);
-    }
-
-    private void ScrollToEnd()
-    {
-        Dispatcher.Invoke(() => MessagesScroll.ScrollToEnd());
     }
 
     private void Log(string line)

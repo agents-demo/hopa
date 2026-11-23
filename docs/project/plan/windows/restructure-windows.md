@@ -270,6 +270,10 @@ Adopted:
 - `ConversationsView` + `ConversationsViewModel`: the sidebar list, search,
   archive switch, selection and context-menu actions are a control with four
   more tests. The window only handles the engine calls and dialogs.
+- `ChatView` + `ChatViewModel`: the bubbles, answer actions, error, attachment
+  and composer are a control with five tests. The window still starts the turn,
+  routes approval/device events and owns the client; the pane renders the model.
+- Thirteen view-model tests in total; the client suite is 36.
 
 Not adopted, with reasons:
 
@@ -284,7 +288,8 @@ Not adopted, with reasons:
   `Gateway/`. `backend` is an accepted HOPA term, and the proposed structure
   still kept `BackendGateway` inside `link/`. Move to `link` only when every
   client (Android and Windows) does it together.
-- MainWindow -> ViewModels and UserControls: in progress, one pane at a time.
-  The rail and the sidebar are done (`Panes/RunRailView`,
-  `Panes/ConversationsView`). Next: `ChatViewModel` + chat pane. `MainWindow`
-  keeps only lifecycle, chrome, tray and event routing.
+- MainWindow -> ViewModels and UserControls: done for the three panes
+  (`Panes/RunRailView`, `Panes/ConversationsView`, `Panes/ChatView`).
+  `MainWindow` keeps the lifecycle, chrome, tray, client and event routing. The
+  next architectural step would be a `ChatController` for send/cancel, but that
+  is not required for the pane split.

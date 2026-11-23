@@ -1,43 +1,29 @@
-using System.Collections.ObjectModel;
 using System.IO;
-using System.Net.Http;
-using System.Speech.Synthesis;
-using System.Text;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Windows;
-using System.Windows.Automation;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using Microsoft.Win32;
-using System.Windows.Shell;
 using Hopa.Windows.Chat;
-using Hopa.Windows.Checks;
 using Hopa.Windows.Dialogs;
-using Hopa.Windows.Device;
-using Hopa.Windows.Engine;
-using Hopa.Windows.Gateway;
 using Hopa.Windows.Storage;
-using Hopa.Windows.Voice;
 
 namespace Hopa.Windows.Shell;
 
 public partial class MainWindow : Window
 {
-    private void Copy_Click(object sender, RoutedEventArgs e)
+    private void CopyAnswer()
     {
-        if (lastAnswer.Length > 0)
+        if (Chat.Model.LastAnswer.Length == 0)
         {
-            Clipboard.SetText(lastAnswer);
-            StatusText.Text = "Copied";
+            return;
         }
+
+        Clipboard.SetText(Chat.Model.LastAnswer);
+        StatusText.Text = "Copied";
     }
 
-    private async void Speak_Click(object sender, RoutedEventArgs e)
+    private async Task SpeakAnswerAsync()
     {
-        if (lastAnswer.Length == 0)
+        var answer = Chat.Model.LastAnswer;
+        if (answer.Length == 0)
         {
             return;
         }
@@ -48,7 +34,7 @@ public partial class MainWindow : Window
         {
             try
             {
-                var wav = await voice.SpeakAsync(settings.BridgeUrl, token, lastAnswer);
+                var wav = await voice.SpeakAsync(settings.BridgeUrl, token, answer);
                 if (wav is { Length: > 44 })
                 {
                     voice.Play(wav);
@@ -62,27 +48,27 @@ public partial class MainWindow : Window
             }
         }
 
-        speech ??= new SpeechSynthesizer();
+        speech ??= new System.Speech.Synthesis.SpeechSynthesizer();
         speech.SpeakAsyncCancelAll();
-        speech.SpeakAsync(lastAnswer);
+        speech.SpeakAsync(answer);
         StatusText.Text = "Reading aloud";
     }
 
-    private void Details_Click(object sender, RoutedEventArgs e)
+    private void ShowRunDetails()
     {
-        if (lastSteps == null)
+        if (Chat.Model.LastSteps == null)
         {
             return;
         }
 
-        var lines = RunStepRow.Lines(lastSteps).ToList();
+        var lines = RunStepRow.Lines(Chat.Model.LastSteps).ToList();
         if (lines.Count == 0)
         {
             lines.Add("No steps: the answer came without an action.");
         }
         else
         {
-            lines.Add($"chain: {(lastChainOk ? "ok" : "failed")}");
+            lines.Add($"chain: {(Chat.Model.LastChainOk ? "ok" : "failed")}");
         }
 
         new RunDetailsWindow(lines) { Owner = this }.ShowDialog();

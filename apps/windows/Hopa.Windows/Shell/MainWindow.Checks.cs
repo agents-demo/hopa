@@ -79,24 +79,24 @@ public partial class MainWindow : Window
     public void ShotChat(string directory)
     {
         Directory.CreateDirectory(directory);
-        EmptyState.Visibility = Visibility.Collapsed;
-        messages.Clear();
-        messages.Add(new MessageBubble { Role = "user", Text = "Pay the internet bill, then email me the receipt." });
-        messages.Add(new MessageBubble
-        {
-            Role = "assistant",
-            Text = "Done. CityNet was paid 42.00 from the household account, the payment screen " +
-                   "confirmed it, and the receipt went to your inbox. The bank app is still open " +
-                   "on the payments screen if you want to check the reference number yourself.",
-        });
-        messages.Add(new MessageBubble { Role = "user", Text = "Thanks, and remind me on the 3rd." });
+        Chat.Model.ShowMock(
+            new[]
+            {
+                new MessageBubble { Role = "user", Text = "Pay the internet bill, then email me the receipt." },
+                new MessageBubble
+                {
+                    Role = "assistant",
+                    Text = "Done. CityNet was paid 42.00 from the household account, the payment screen " +
+                           "confirmed it, and the receipt went to your inbox. The bank app is still open " +
+                           "on the payments screen if you want to check the reference number yourself.",
+                },
+                new MessageBubble { Role = "user", Text = "Thanks, and remind me on the 3rd." },
+            },
+            "The bridge is not running; the last step was not verified.",
+            "bill-2026-11.pdf",
+            "48 KB \u00B7 application/pdf");
         pendingAttachment = null;
-        PendingAttachmentName.Text = "bill-2026-11.pdf";
-        PendingAttachmentDetail.Text = "48 KB \u00B7 application/pdf";
-        PendingAttachmentBar.Visibility = Visibility.Visible;
         StatusText.Text = "";
-        ErrorText.Text = "The bridge is not running; the last step was not verified.";
-        ErrorText.Visibility = Visibility.Visible;
         Rail.Model.ShowMock("Succeeded", "4 steps · 6.2 s", new[]
         {
             new RunStepRow { Number = "1", Verb = "Open app", Detail = "Calculator, brought to the front",
@@ -314,11 +314,11 @@ public partial class MainWindow : Window
             return;
         }
 
-        Composer.Text = "draft one";
+        Chat.Model.ComposerText = "draft one";
         await SelectAsync(other.Id);
-        var cleared = Composer.Text;
+        var cleared = Chat.Model.ComposerText;
         await SelectAsync(firstId);
-        var restored = Composer.Text;
+        var restored = Chat.Model.ComposerText;
         lines.Add($"second conversation: {other.Id}");
         lines.Add($"composer after switch: '{cleared}' (expected '')");
         lines.Add($"draft restored: '{restored}' (expected 'draft one')");

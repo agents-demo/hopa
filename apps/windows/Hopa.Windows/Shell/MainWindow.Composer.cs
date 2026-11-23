@@ -1,35 +1,14 @@
-using System.Collections.ObjectModel;
 using System.IO;
-using System.Net.Http;
-using System.Speech.Synthesis;
-using System.Text;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Windows;
-using System.Windows.Automation;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using Microsoft.Win32;
-using System.Windows.Shell;
-using Hopa.Windows.Chat;
-using Hopa.Windows.Checks;
-using Hopa.Windows.Dialogs;
-using Hopa.Windows.Device;
-using Hopa.Windows.Engine;
-using Hopa.Windows.Gateway;
 using Hopa.Windows.Storage;
-using Hopa.Windows.Voice;
 
 namespace Hopa.Windows.Shell;
 
 public partial class MainWindow : Window
 {
-    private void Composer_TextChanged(object sender, TextChangedEventArgs e) =>
-        ComposerPlaceholder.Visibility = Composer.Text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
-
-    private async void TargetChip_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    /// <summary>The target chip toggles between the phone and this laptop.</summary>
+    private async Task ToggleTargetAsync()
     {
         var store = new SettingsStore();
         var settings = store.Load();
@@ -39,27 +18,22 @@ public partial class MainWindow : Window
         await ApplySettingsAsync();
     }
 
-    private async void Window_Drop(object sender, DragEventArgs e)
+    /// <summary>A file dropped on the conversation is attached through the engine.</summary>
+    private async Task AttachAsync(string path)
     {
-        if (client == null || !e.Data.GetDataPresent(DataFormats.FileDrop))
-        {
-            return;
-        }
-
-        if (e.Data.GetData(DataFormats.FileDrop) is not string[] files || files.Length == 0)
+        if (client == null)
         {
             return;
         }
 
         try
         {
-            var attachment = await client.AttachFileAsync(files[0]);
+            var attachment = await client.AttachFileAsync(path);
             pendingAttachment = attachment;
-            PendingAttachmentName.Text = attachment["name"]?.GetValue<string>() ?? "file";
+            var name = attachment["name"]?.GetValue<string>() ?? "file";
             var bytes = attachment["bytes"]?.GetValue<long>() ?? 0;
-            PendingAttachmentDetail.Text =
-                $"{HumanSize(bytes)} \u00B7 {attachment["mime"]?.GetValue<string>()}";
-            PendingAttachmentBar.Visibility = Visibility.Visible;
+            var mime = attachment["mime"]?.GetValue<string>() ?? "";
+            Chat.Model.ShowAttachment(name, $"{HumanSize(bytes)} \u00B7 {mime}");
             StatusText.Text = "File ready to send";
         }
         catch (Exception error)
@@ -68,11 +42,11 @@ public partial class MainWindow : Window
         }
     }
 
-    private async void RemoveAttachment_Click(object sender, RoutedEventArgs e)
+    private async void RemoveAttachment()
     {
         var path = pendingAttachment?["path"]?.GetValue<string>();
         pendingAttachment = null;
-        PendingAttachmentBar.Visibility = Visibility.Collapsed;
+        Chat.Model.ClearAttachment();
         if (path != null && client != null)
         {
             try
@@ -103,12 +77,13 @@ public partial class MainWindow : Window
             : $"Shared a file: {name}";
     }
 
-    private async void Mic_Click(object sender, RoutedEventArgs e)
+    /// <summary>One microphone button: start capture, or stop and transcribe.</summary>
+    private async Task MicAsync()
     {
         if (voice.Recording)
         {
             var wav = voice.StopCapture();
-            MicButton.Content = "Mic";
+            Chat.Model.SetMic(recording: false);
             StatusText.Text = "";
             if (wav.Length <= 44)
             {
@@ -123,7 +98,7 @@ public partial class MainWindow : Window
         try
         {
             voice.StartCapture();
-            MicButton.Content = "Stop";
+            Chat.Model.SetMic(recording: true);
             StatusText.Text = "Listening...";
         }
         catch (Exception error)
@@ -152,8 +127,7 @@ public partial class MainWindow : Window
                 return;
             }
 
-            Composer.Text = Composer.Text.Length == 0 ? text : $"{Composer.Text} {text}";
-            Composer.CaretIndex = Composer.Text.Length;
+            Chat.Model.AppendComposer(text);
             StatusText.Text = "";
         }
         catch (Exception error)

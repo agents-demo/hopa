@@ -70,8 +70,7 @@ public partial class MainWindow : Window
         }
         catch (Exception error)
         {
-            ErrorText.Text = error.Message;
-            ErrorText.Visibility = Visibility.Visible;
+            Chat.Model.ShowError(error.Message);
             StatusText.Text = error.Message;
             Log($"error: {error.Message}");
         }
@@ -125,29 +124,17 @@ public partial class MainWindow : Window
 
         if (currentId != null)
         {
-            drafts[currentId] = Composer.Text;
+            Chat.Model.Drafts[currentId] = Chat.Model.ComposerText;
         }
 
         var open = await client.OpenConversationAsync(id);
         currentId = id;
-        messages.Clear();
-        if (open?["messages"] is JsonArray list)
-        {
-            foreach (var node in list)
-            {
-                if (node is JsonObject message)
-                {
-                    messages.Add(MessageBubble.From(message));
-                }
-            }
-        }
-
-        Composer.Text = drafts.TryGetValue(id, out var draft) ? draft : "";
+        var draft = Chat.Model.Drafts.TryGetValue(id, out var saved) ? saved : "";
+        Chat.Model.ShowConversation(open?["messages"] as JsonArray, draft);
         TitleText.Text = open?["title"]?.GetValue<string>() ?? "New chat";
-        EmptyState.Visibility = messages.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         Sidebar.Select(conversations.FirstOrDefault(item => item.Id == id)
             ?? allConversations.FirstOrDefault(item => item.Id == id));
-        ScrollToEnd();
+        Chat.ScrollToEnd();
         StatusText.Text = "";
     }
 
@@ -160,16 +147,15 @@ public partial class MainWindow : Window
 
         var attachment = pendingAttachment;
         pendingAttachment = null;
-        PendingAttachmentBar.Visibility = Visibility.Collapsed;
+        Chat.Model.ClearAttachment();
         var body = goal.Length > 0
             ? goal
             : attachment != null ? Describe(attachment) : "";
 
-        var previousQuestion = lastQuestion;
+        var previousQuestion = Chat.Model.LastQuestion;
         var clock = System.Diagnostics.Stopwatch.StartNew();
         running = true;
-        SendButton.IsEnabled = true;
-        SendButton.Content = "\u25A0";
+        Chat.Model.SetRunning(true);
         if (tray != null)
         {
             tray.Tooltip = "HOPA (working)";
@@ -177,30 +163,22 @@ public partial class MainWindow : Window
         }
 
         StatusText.Text = "Working...";
-        ErrorText.Visibility = Visibility.Collapsed;
-        messages.Add(new MessageBubble { Role = "user", Text = body });
-        EmptyState.Visibility = Visibility.Collapsed;
-        ScrollToEnd();
+        Chat.Model.ClearError();
+        Chat.Model.AddUser(body);
+        Chat.ScrollToEnd();
         try
         {
             var (answer, conversationId, title, steps, chainOk) =
                 await client.StartTurnAsync(body, currentId, attachment);
             currentId = conversationId;
             MarkSelected(conversationId);
-            messages.Add(new MessageBubble { Role = "assistant", Text = answer });
+            Chat.Model.AddAnswer(answer, steps, chainOk);
             Log($"HOPA: {answer}");
-            lastAnswer = answer;
-            CopyButton.IsEnabled = answer.Length > 0;
-            SpeakButton.IsEnabled = answer.Length > 0;
-            AnswerActions.Visibility = Visibility.Visible;
             if (!IsActive)
             {
                 var preview = answer.Length > 140 ? answer[..140] + "..." : answer;
                 tray?.ShowBalloon("HOPA", preview);
             }
-            lastSteps = steps;
-            lastChainOk = chainOk;
-            DetailsButton.IsEnabled = steps is { Count: > 0 };
             foreach (var line in RunStepRow.Lines(steps))
             {
                 Log($"step {line}");
@@ -215,21 +193,21 @@ public partial class MainWindow : Window
             clock.Stop();
             Rail.Model.ShowTurn(steps, chainOk, clock.Elapsed, previousQuestion);
 
-            lastQuestion = body;
+            Chat.Model.LastQuestion = body;
             UpsertConversation(conversationId, title);
-            ScrollToEnd();
+            Chat.ScrollToEnd();
             StatusText.Text = "";
         }
         catch (Exception error)
         {
             StatusText.Text = error.Message;
+            Chat.Model.ShowError(error.Message);
             Log($"error: {error.Message}");
         }
         finally
         {
             running = false;
-            SendButton.IsEnabled = true;
-            SendButton.Content = "\u2191";
+            Chat.Model.SetRunning(false);
             if (tray != null)
             {
                 tray.Tooltip = "HOPA";
@@ -249,7 +227,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        var goal = Composer.Text.Trim();
+        var goal = Chat.Model.ComposerText.Trim();
         if (goal.Length == 0 && pendingAttachment == null)
         {
             return;
@@ -257,10 +235,10 @@ public partial class MainWindow : Window
 
         if (currentId != null)
         {
-            drafts[currentId] = "";
+            Chat.Model.Drafts[currentId] = "";
         }
 
-        Composer.Text = "";
+        Chat.Model.ComposerText = "";
         await SendAsync(goal);
     }
 
@@ -271,11 +249,7 @@ public partial class MainWindow : Window
         Rail.Model.ShowBridge(live);
         Sidebar.Model.BridgeMissing = !live;
         var useBridge = settings.UseBridge;
-        TargetChip.Visibility = live ? Visibility.Visible : Visibility.Collapsed;
-        TargetChip.Text = useBridge ? "Phone" : "Laptop";
-        TargetChip.Foreground = useBridge
-            ? new SolidColorBrush(Color.FromRgb(0x0A, 0x59, 0xF7))
-            : new SolidColorBrush(Color.FromRgb(0x6B, 0x66, 0x5C));
+        Chat.Model.SetTarget(live, useBridge);
         SubtitleText.Text = live ? "HOPA · Running on this laptop" : "Running on this laptop";
     }
 
@@ -375,17 +349,4 @@ public partial class MainWindow : Window
         await SelectAsync(row.Id);
     }
 
-    private async void Send_Click(object sender, RoutedEventArgs e)
-    {
-        await SendFromComposerAsync();
-    }
-
-    private async void Composer_KeyDown(object sender, KeyEventArgs e)
-    {
-        if (e.Key == Key.Enter && (Keyboard.Modifiers & ModifierKeys.Shift) == 0)
-        {
-            e.Handled = true;
-            await SendFromComposerAsync();
-        }
-    }
 }
