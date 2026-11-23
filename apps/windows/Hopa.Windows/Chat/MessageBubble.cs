@@ -1,3 +1,4 @@
+using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Media;
 
@@ -21,4 +22,11 @@ public sealed class MessageBubble
     public Brush Ink => IsUser
         ? new SolidColorBrush(Colors.White)
         : new SolidColorBrush(Color.FromRgb(0x1C, 0x1B, 0x18));
+
+    /// <summary>Builds a bubble from one message in the engine's conversation JSON.</summary>
+    public static MessageBubble From(JsonObject message) => new()
+    {
+        Role = message["role"]?.GetValue<string>() ?? "assistant",
+        Text = message["text"]?.GetValue<string>() ?? "",
+    };
 }

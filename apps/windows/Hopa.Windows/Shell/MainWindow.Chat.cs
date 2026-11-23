@@ -142,11 +142,7 @@ public partial class MainWindow : Window
             {
                 if (node is JsonObject message)
                 {
-                    messages.Add(new MessageBubble
-                    {
-                        Role = message["role"]?.GetValue<string>() ?? "assistant",
-                        Text = message["text"]?.GetValue<string>() ?? "",
-                    });
+                    messages.Add(MessageBubble.From(message));
                 }
             }
         }

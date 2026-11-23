@@ -33,7 +33,9 @@ Inside `Hopa.Windows/`:
 | `Checks/` | the developer checks behind the `--…-check` flags |
 
 The C# app is the host; the loop, the gate and the records run in the Kotlin
-sidecar from `packages/` (ADR-0016, ADR-0021). There is no second brain.
+sidecar from `packages/` (ADR-0016, ADR-0021). There is no second brain. The
+sidecar folder has its own [README](sidecar/README.md) with its layout and
+message families.
 
 ## Build
 

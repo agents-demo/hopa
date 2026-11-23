@@ -92,7 +92,8 @@ public partial class MainWindow : Window
             speech?.Dispose();
             voice.Dispose();
             device.Dispose();
-            _ = gateway?.StopAsync();
+            _ = gateway?.DisposeAsync();
+            _ = client?.DisposeAsync();
         };
         Loaded += async (_, _) => await ConnectAsync();
     }
