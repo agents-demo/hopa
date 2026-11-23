@@ -174,6 +174,11 @@ class AgentLoop(
             if (action.kind == "ui.launch") {
                 val app = action.app.orEmpty()
                 if (app.isNotEmpty() && !launched.add(app)) {
+                    // The command already put this app in front: its answer is the
+                    // turn, not a reason to ask again until the step limit.
+                    if (then != null) {
+                        return finish(then)
+                    }
                     notes += ModelMessage(
                         "user",
                         "The app $app is already in the foreground. Do not launch it again; " +
