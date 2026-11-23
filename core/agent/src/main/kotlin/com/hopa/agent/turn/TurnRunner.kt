@@ -13,14 +13,11 @@ import com.hopa.agent.goal.GoalVerification
 import com.hopa.agent.goal.GoalVerifier
 import com.hopa.agent.loop.AgentLoop
 import com.hopa.agent.plan.PlanSource
-import com.hopa.agent.recipe.Recipe
+import com.hopa.agent.recipe.RecipeDecisionPolicy
 import com.hopa.agent.recipe.RecipeStore
-import com.hopa.agent.recipe.ReplayAnswer
-import com.hopa.agent.recipe.Replayer
 import com.hopa.catalog.store.CatalogSnapshot
 import com.hopa.contracts.error.ErrorCodes
 import com.hopa.contracts.error.HopaError
-import com.hopa.contracts.model.ModelUsage
 import com.hopa.contracts.ports.Clock
 import com.hopa.contracts.ports.DevicePort
 import com.hopa.contracts.turn.TurnContext
@@ -28,7 +25,6 @@ import com.hopa.contracts.turn.TurnResult
 import com.hopa.decision.classifier.IntentClassifier
 import com.hopa.decision.graph.GraphStepSource
 import com.hopa.runlog.store.RunRecorder
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
@@ -55,7 +51,6 @@ class TurnRunner(
     private val recorder: RunRecorder,
     private val clock: Clock,
     private val recipes: RecipeStore? = null,
-    private val replayAnswer: ReplayAnswer? = null,
     private val plans: PlanSource? = null,
     private val verifier: GoalVerifier = GoalVerifier(),
     /** The tables this client uses; read per turn, so an update applies next time. */
@@ -66,8 +61,6 @@ class TurnRunner(
     private val commands: IntentClassifier? = null,
     /** Hand-written known-app graphs; null disables the path. */
     private val graphs: GraphStepSource? = null,
-    /** How long the screen gets between replayed steps; a test passes a no-op. */
-    private val settle: suspend (Long) -> Unit = { delay(it) },
 ) {
     suspend fun run(request: TurnRequest, isCancelled: () -> Boolean = { false }): TurnOutcome {
         val started = clock.nowMillis()
@@ -109,19 +102,7 @@ class TurnRunner(
         val command = commands
             ?.takeIf { request.instantCommands }
             ?.let { CommandDecisionPolicy(it) }
-        val policy = when {
-            graphOnly -> ChainDecisionPolicy(
-                listOfNotNull(
-                    graph,
-                    SayDecisionPolicy(
-                        answer = GRAPH_ONLY_ANSWER,
-                        error = HopaError(ErrorCodes.BLOCKED, "no graph for this goal"),
-                    ),
-                ),
-            )
-            else -> ChainDecisionPolicy(listOfNotNull(graph, command, model, cloud))
-        }
-
+        // The plan gate comes before any of this: it needs no screen.
         // A canonical command needs no plan: asking a model to write steps for
         // "open settings" is slower and less predictable than opening it. The
         // policy runs it inside the loop; this only skips the plan gate.
@@ -134,11 +115,32 @@ class TurnRunner(
         if (!graphOnly && request.planFirst && !request.planApproved && known == null && !commandCanAnswer) {
             return plan(request, started)
         }
-        if (request.replay) {
-            val recipe = runCatching { recipes?.find(request.goal) }.getOrNull()
-            if (recipe != null) {
-                replay(recipe, request, started, tables)?.let { return it }
-            }
+
+        // A stored recipe is the first rung: its steps already worked once. It
+        // asks the same loop for one recorded action per pass and gives up
+        // quietly when an anchor is gone.
+        val recipe = if (!graphOnly && request.replay) {
+            runCatching { recipes?.find(request.goal) }.getOrNull()
+                ?.takeIf { it.replayable }
+                ?.takeIf { stored ->
+                    stored.app.isBlank() ||
+                        request.installedApps.any { it.packageName.equals(stored.app, ignoreCase = true) }
+                }
+                ?.let { RecipeDecisionPolicy(it) }
+        } else {
+            null
+        }
+        val policy = when {
+            graphOnly -> ChainDecisionPolicy(
+                listOfNotNull(
+                    graph,
+                    SayDecisionPolicy(
+                        answer = GRAPH_ONLY_ANSWER,
+                        error = HopaError(ErrorCodes.BLOCKED, "no graph for this goal"),
+                    ),
+                ),
+            )
+            else -> ChainDecisionPolicy(listOfNotNull(recipe, graph, command, model, cloud))
         }
         return fromModel(request, started, isCancelled, tables, policy, graph != null)
     }
@@ -153,44 +155,6 @@ class TurnRunner(
             pendingPlan = steps,
             error = if (steps.isEmpty()) HopaError(ErrorCodes.MODEL, "No plan came back") else null,
             surfaceName = request.surfaceName,
-            millis = clock.nowMillis() - started,
-        )
-    }
-
-    /** Null when the recipe did not run to the end; the caller uses the model. */
-    private suspend fun replay(
-        recipe: Recipe,
-        request: TurnRequest,
-        started: Long,
-        tables: CatalogSnapshot,
-    ): TurnOutcome? {
-        val installed = request.installedApps.map { it.packageName }
-        val outcome = runCatching {
-            Replayer(
-                executorFor = executorFor,
-                installedApps = { installed },
-                settle = settle,
-            ).replay(recipe, request.device)
-        }.getOrNull() ?: return null
-        if (!outcome.trustworthy) {
-            return null
-        }
-
-        // The recipe knows the taps, not the words: one cheap call reads the
-        // final screen, so the person gets an answer and not a step count.
-        val spoken = outcome.screen?.let { screen ->
-            replayAnswer?.let { answer ->
-                runCatching { answer.answer(request.goal, screen) }.getOrNull()
-            }
-        }
-        return TurnOutcome(
-            source = TurnSource.RECIPE,
-            knowledgeVersion = tables.version,
-            answer = spoken?.first ?: "Repeated the ${outcome.done} steps that worked last time.",
-            usage = ModelUsage(totalTokens = spoken?.second ?: 0),
-            surfaceName = request.surfaceName,
-            finalScreen = outcome.screen,
-            replaySteps = recipe.steps.mapIndexed { index, action -> "${index + 1}. ${action.kind}" },
             millis = clock.nowMillis() - started,
         )
     }
@@ -256,8 +220,9 @@ class TurnRunner(
             verifier.verify(screen, request.checkpoints)
         }
 
+        val source = sourceOf(graphInChain, result.sources)
         return TurnOutcome(
-            source = sourceOf(graphInChain, result.sources),
+            source = source,
             knowledgeVersion = tables.version,
             answer = result.answer,
             records = result.records,
@@ -268,6 +233,13 @@ class TurnRunner(
             surfaceName = request.surfaceName,
             checkpoints = verification,
             finalScreen = screen,
+            // The recipe is a policy now, but its receipt still lists the steps
+            // it replayed, exactly as the old fast path did.
+            replaySteps = if (source == TurnSource.RECIPE) {
+                result.records.mapIndexed { index, record -> "${index + 1}. ${record.action.kind}" }
+            } else {
+                emptyList()
+            },
             recipeSaved = saveRecipe(request, result, verification),
             millis = clock.nowMillis() - started,
         )
@@ -323,6 +295,7 @@ class TurnRunner(
          * command outranks anchors, and anchors outranks the refusal sentence.
          */
         fun sourceOf(graphInChain: Boolean, sources: Set<String>): TurnSource = when {
+            "recipe" in sources -> TurnSource.RECIPE
             "model" in sources -> TurnSource.MODEL
             "command" in sources -> TurnSource.COMMAND
             "anchors" in sources -> TurnSource.GRAPH

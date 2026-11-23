@@ -175,7 +175,6 @@ class TurnRunnerTest {
             recipes = store,
             plans = plan?.let { planned -> PlanSource { planned } },
             knowledge = { knowledge },
-            settle = {},
             commands = if (commands) IntentClassifier() else null,
             decisions = decisions,
             graphs = graphs,

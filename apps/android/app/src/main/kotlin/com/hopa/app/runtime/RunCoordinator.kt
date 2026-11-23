@@ -34,7 +34,6 @@ class RunCoordinator(
             recorder = container.recorder,
             clock = container.clock,
             recipes = container.recipes,
-            replayAnswer = ReplayAnswer(container.model),
             plans = ModelPlanSource(container.model) { planEnvironment() },
             knowledge = { container.knowledge },
             decisions = container.decisions,
