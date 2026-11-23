@@ -51,8 +51,7 @@ tried; that is the next picture.
 ```mermaid
 flowchart TD
   IN(["HOPA opens target app"]) --> S(["Read target app current screen tree"])
-  S --> ASK["Ask the model:<br/>what is the next move?"]
-  ASK --> R{"What came back?"}
+  S --> R{"Ask the model:<br/>what is the next move?"}
   ACT["Do the action"]:::execute
   ACT --> S
   R -->|"an action"| ACT
@@ -67,8 +66,7 @@ flowchart TD
   classDef question fill:#EAF1FB,stroke:#5B7FD4,color:#1C2B4A,stroke-width:1.5px,stroke-dasharray:5 3
 
   class IN,S io
-  class ASK model
-  class R io
+  class R model
 ```
 
 ## 3. The loop: four paths, tried in order
@@ -144,19 +142,17 @@ the next path instead of guessing.
 
 ## Two notes about the picture
 
-**What is in the build today.** The four-path loop is the intended shape. The
-current code tries: graph, then a simple command, then a saved recipe, then the
-model chosen in settings (cloud or a file on this phone). There is no TRC path,
-and the model is not retried down a confidence ladder - a graph that finds no
-edge hands the turn to the next source. The picture is where those pieces go as
-they are added.
+**What is in the build today.** The graph is no longer a way around the loop: it
+is a step policy, so it walks one edge per pass inside the loop and answers with
+the same three things a model does - an action, a question or a final answer. A
+turn asks the graph first and the model second (`ChainDecisionPolicy`); the
+command and the saved recipe are still turn-level shortcuts and move into the
+chain next. There is no TRC path yet.
 
-**The decision at a node.** The picture says a decision is asked at the current
-node. In today's code that decision is the graph's own matcher: it reads
-the visible screen, matches the node, and looks for an edge whose words fit the
-goal. The decision layers (Rules, LAIX) currently vote on the model's proposed
-steps, not on graph edges. Letting a layer decide the graph edge is a code change
-that has not been made; the picture shows the place where it would happen.
+**The decision at a node.** The graph policy reads the visible screen, matches
+the node by its labels and looks for an edge whose words fit the goal. The
+decision layers (Rules, LAIX) now see the graph's step too, because every step
+reaches them the same way, whoever proposed it.
 
 **Shortcuts left out on purpose.** Between the doorway and the loop there are two
 fast paths that would crowd the picture:
