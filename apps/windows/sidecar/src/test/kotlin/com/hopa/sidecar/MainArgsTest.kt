@@ -6,6 +6,10 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 
+import com.hopa.sidecar.backend.BackendSession
+import com.hopa.sidecar.cli.pairBackendUrl
+import com.hopa.sidecar.backend.backendContentKey
+
 /** The pieces of the admission entry point that do not need a live backend. */
 class MainArgsTest {
     @Test
