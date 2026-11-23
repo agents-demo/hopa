@@ -9,10 +9,10 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
- * The stub is a proposer. These tests defend that it never presents itself as an
- * approval and never invents a success after a refusal.
+ * The scripted model is a proposer. These tests defend that it never presents
+ * itself as an approval and never invents a success after a refusal.
  */
-class StubModelTest {
+class ScriptedModelTest {
     @Test
     fun a_plain_goal_is_answered_in_text() {
         val reply = reply(ModelMessage("user", "say hello"))
@@ -64,5 +64,5 @@ class StubModelTest {
     }
 
     private fun reply(vararg messages: ModelMessage) =
-        runBlocking { StubModel().complete(ModelRequest(messages.toList())) }
+        runBlocking { ScriptedModel().complete(ModelRequest(messages.toList())) }
 }

@@ -1,6 +1,6 @@
-package com.hopa.sidecar.protocol.handlers
+package com.hopa.sidecar.protocol.handler
 
-import com.hopa.sidecar.backend.BackendPairing
+import com.hopa.sidecar.backend.BackendAdmission
 import com.hopa.sidecar.backend.BackendSessionStore
 import com.hopa.sidecar.backend.GatewayHost
 import com.hopa.sidecar.backend.backendContentKey
@@ -35,7 +35,7 @@ internal class BackendHandler(
                 Protocol.backendPair(ok = false, error = "IllegalArgumentException")
             } else {
                 try {
-                    BackendPairing(dataDir).admit(url, name)
+                    BackendAdmission(dataDir).admit(url, name)
                     val saved = sessionStore.load()
                         ?: throw IllegalStateException("admission did not store a session")
                     val key = backendContentKey(saved)

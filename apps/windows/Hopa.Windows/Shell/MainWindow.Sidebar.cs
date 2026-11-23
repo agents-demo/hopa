@@ -37,25 +37,14 @@ public partial class MainWindow : Window
 
     private void ApplyFilter()
     {
-        var query = SearchBox.Text.Trim();
-        var showArchived = ShowArchivedBox.IsChecked == true;
-        var ordered = allConversations
-            .OrderByDescending(item => item.Pinned)
-            .ThenByDescending(item => item.UpdatedAt)
-            .ToList();
+        var rows = ConversationFilter.Apply(
+            allConversations,
+            SearchBox.Text,
+            ShowArchivedBox.IsChecked == true);
         conversations.Clear();
-        foreach (var conversation in ordered)
+        foreach (var row in rows)
         {
-            if (!showArchived && conversation.Archived)
-            {
-                continue;
-            }
-
-            if (query.Length == 0 ||
-                conversation.SearchText.Contains(query, StringComparison.OrdinalIgnoreCase))
-            {
-                conversations.Add(conversation);
-            }
+            conversations.Add(row);
         }
     }
 

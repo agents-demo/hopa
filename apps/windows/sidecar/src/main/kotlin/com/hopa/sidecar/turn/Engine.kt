@@ -122,7 +122,7 @@ class Engine(
      * offered, and the prompt says a launch may still fail.
      */
     private fun windowsApps(): List<InstalledApp> = CatalogRoutes
-        .targets(platform = "windows", knowledge = SidecarKnowledge.value)
+        .targets(platform = "windows", knowledge = SidecarCatalog.value)
         .filter { it.kind == "app" && it.bundle.isNotEmpty() }
         .map { InstalledApp(packageName = it.bundle, label = it.display) }
 
@@ -249,14 +249,14 @@ class Engine(
         val loop = AgentLoop(
             policy = ModelDecisionPolicy(
                 steps = ModelStepPolicy(model),
-                knowledge = { SidecarKnowledge.value },
+                knowledge = { SidecarCatalog.value },
             ),
             device = device,
             executor = executor,
             recorder = recorder,
             clock = clock,
             webAvailable = false,
-            knowledge = SidecarKnowledge.value,
+            knowledge = SidecarCatalog.value,
         )
         val outcome = runCatching {
             loop.run(
@@ -327,7 +327,7 @@ class Engine(
                 modelName = config.modelName,
             )
         } else {
-            StubModel()
+            ScriptedModel()
         }
 
     private fun notifyTurnEnd(id: String, answer: String) {

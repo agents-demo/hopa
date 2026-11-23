@@ -36,7 +36,7 @@ data class AdmissionResult(
  * only channel to the phone is the backend, and the content key never leaves
  * except wrapped.
  */
-class BackendPairing(
+class BackendAdmission(
     private val dataDir: Path,
     private val clientFor: (String) -> CorePairing = { CorePairing(it) },
     private val out: (String) -> Unit = { System.err.println(it) },

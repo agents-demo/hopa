@@ -1,4 +1,4 @@
-package com.hopa.sidecar.protocol.handlers
+package com.hopa.sidecar.protocol.handler
 
 import com.hopa.contracts.wire.Approver
 import com.hopa.sidecar.protocol.Protocol

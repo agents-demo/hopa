@@ -9,15 +9,15 @@ using System.Windows.Threading;
 namespace Hopa.Windows.Chat;
 
 /// <summary>
-/// The plush HOPA mark. The empty state uses the idle float, breathe and blink;
+/// The plush HOPA avatar. The empty state uses the idle float, breathe and blink;
 /// transcript avatars set <see cref="IsStatic"/> so dozens of rows cost nothing.
 /// </summary>
-public partial class HopaMark : UserControl
+public partial class HopaAvatar : UserControl
 {
     public static readonly DependencyProperty IsStaticProperty = DependencyProperty.Register(
         nameof(IsStatic),
         typeof(bool),
-        typeof(HopaMark),
+        typeof(HopaAvatar),
         new PropertyMetadata(false, OnIsStaticChanged));
 
     private static readonly TimeSpan IdleDuration = TimeSpan.FromMilliseconds(2400);
@@ -27,7 +27,7 @@ public partial class HopaMark : UserControl
     private readonly DispatcherTimer blinkOn = new() { Interval = BlinkInterval };
     private readonly DispatcherTimer blinkOff = new() { Interval = BlinkHold };
 
-    public HopaMark()
+    public HopaAvatar()
     {
         InitializeComponent();
         Loaded += (_, _) =>
@@ -68,7 +68,7 @@ public partial class HopaMark : UserControl
 
     private static void OnIsStaticChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is not HopaMark mark)
+        if (d is not HopaAvatar mark)
         {
             return;
         }

@@ -124,7 +124,7 @@ video, extra codecs, or asset weight.
 - `Hopa.Windows.csproj` gains `<ApplicationIcon>Assets\hopa.ico</ApplicationIcon>`
   and resource entries for the new assets. Each of the five windows gains
   `Icon="Assets/hopa.ico"`.
-- A new `Chat/HopaMark` user control shows the avatar, clips it to a 20%
+- A new `Chat/HopaAvatar` user control shows the avatar, clips it to a 20%
   rounded square, and owns the idle motion:
   - float: `TranslateTransform.Y` 0 → -2.2 px, 2.4 s each way, forever;
   - breathe: `ScaleY` 1 → 1.025 and `ScaleX` 1 → 0.99, 2.4 s each way;

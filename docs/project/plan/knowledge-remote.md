@@ -8,7 +8,7 @@ download, keeps a downloaded copy atomically with rollback, and asks
 
 - The bootstrap is `knowledge.v1.json`: a generated asset in the app, a resource
   in the sidecar, nothing compiled into Kotlin. `AssetKnowledgeSource` and
-  `SidecarKnowledge` read it once.
+  `SidecarCatalog` read it once.
 - `Knowledge` (version, catalog, sites, approval, prompt rules) is passed into
   `CatalogRoutes`, `AgentLoop` and `TurnRunner`; the engine reads a value, not
   `com.hopa.knowledge` constants.

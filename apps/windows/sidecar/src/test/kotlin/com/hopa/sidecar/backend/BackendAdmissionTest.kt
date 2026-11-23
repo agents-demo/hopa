@@ -42,7 +42,7 @@ import org.junit.jupiter.api.Test
  * key. MockWebServer plays the backend; the wrap is produced by the real
  * [KeyWrap], so the test proves the byte layout end to end.
  */
-class BackendPairingTest {
+class BackendAdmissionTest {
     private val contentKey = KeyWrap.generateContentKey()
     private val phonePrivateKey = X25519Keys.generatePrivateKey()
     private val phonePublicKey = X25519Keys.publicKeyBytes(phonePrivateKey)
@@ -54,7 +54,7 @@ class BackendPairingTest {
         try {
             val dataDir = Files.createTempDirectory("hopa-admit")
             val lines = mutableListOf<String>()
-            val result = BackendPairing(dataDir, out = { lines += it })
+            val result = BackendAdmission(dataDir, out = { lines += it })
                 .admit(backendUrl(server), "Studio")
 
             assertArrayEquals(contentKey, result.contentKey)
@@ -110,7 +110,7 @@ class BackendPairingTest {
             val dataDir = Files.createTempDirectory("hopa-admit-backoff")
             val sleeps = mutableListOf<Long>()
             val result = runBlocking {
-                BackendPairing(dataDir, sleep = { sleeps += it })
+                BackendAdmission(dataDir, sleep = { sleeps += it })
                     .admit(backendUrl(server), "Studio")
             }
 
@@ -128,7 +128,7 @@ class BackendPairingTest {
         val server = server(ResolveStep.State("expired"))
         try {
             val dataDir = Files.createTempDirectory("hopa-admit-expired")
-            val pairing = BackendPairing(dataDir)
+            val pairing = BackendAdmission(dataDir)
             val failure = assertThrows(IllegalStateException::class.java) {
                 runBlocking { pairing.admit(backendUrl(server), "Studio") }
             }
@@ -147,7 +147,7 @@ class BackendPairingTest {
         try {
             val dataDir = Files.createTempDirectory("hopa-admit-claimed")
             val failure = assertThrows(IllegalStateException::class.java) {
-                runBlocking { BackendPairing(dataDir).admit(backendUrl(server), "Studio") }
+                runBlocking { BackendAdmission(dataDir).admit(backendUrl(server), "Studio") }
             }
 
             assertTrue(failure.message.orEmpty().contains("already claimed"))
@@ -164,7 +164,7 @@ class BackendPairingTest {
         try {
             val dataDir = Files.createTempDirectory("hopa-admit-timeout")
             var clock = 0L
-            val pairing = BackendPairing(
+            val pairing = BackendAdmission(
                 dataDir,
                 sleep = { clock += it },
                 now = { clock },
@@ -192,7 +192,7 @@ class BackendPairingTest {
         System.setErr(PrintStream(stderr, true, StandardCharsets.UTF_8))
         try {
             val dataDir = Files.createTempDirectory("hopa-admit-stderr")
-            runTest { BackendPairing(dataDir).admit(backendUrl(server), "Studio") }
+            runTest { BackendAdmission(dataDir).admit(backendUrl(server), "Studio") }
 
             val out = stdout.toString(StandardCharsets.UTF_8)
             val err = stderr.toString(StandardCharsets.UTF_8)

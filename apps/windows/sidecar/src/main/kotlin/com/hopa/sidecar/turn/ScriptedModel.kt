@@ -5,7 +5,7 @@ import com.hopa.contracts.model.ModelReply
 import com.hopa.contracts.model.ModelRequest
 
 /**
- * P1: the deterministic stand-in for a model.
+ * A deterministic, scripted proposer.
  *
  * It is a **proposer, never an approver**. The text it returns may become one
  * action, and the real `ApprovalPolicy` in `packages/core` decides whether that
@@ -13,10 +13,10 @@ import com.hopa.contracts.model.ModelRequest
  * reproducible.
  *
  * The script is deliberately small and explicit. A real provider replaces it
- * when a key is configured; `--stub-model` keeps it available for tests and
+ * when a key is configured; headless turns keep it available for tests and
  * demos.
  */
-class StubModel : ModelPort {
+class ScriptedModel : ModelPort {
     override suspend fun complete(request: ModelRequest): ModelReply {
         val goal = request.messages
             .lastOrNull { it.role == "user" && !it.content.startsWith("SCREEN") }

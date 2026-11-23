@@ -137,7 +137,7 @@ The gateway flow is in `GatewayClient.cs`; the phone side is
 3. Payment and destructive actions go through the same ask-first gate; the
    adapter only reports.
 4. A stub may be dumb, never permissive: the headless approval gateway denies,
-   the stub model only proposes, and a missing host means "cannot act", not
+   the scripted model only proposes, and a missing host means "cannot act", not
    "done".
 5. Keys stay in Windows Credential Manager; the sidecar receives them in memory
    only.

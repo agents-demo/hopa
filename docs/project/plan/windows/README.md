@@ -119,7 +119,7 @@ Boot the shared `packages/core` loop inside the sidecar. Use a stub model. Add
 the conversation store and records. Expose a headless `--turn` mode.
 
 - [x] The sidecar runs the real `AgentLoop` in a headless `--turn` mode. (evidence: docs/project/evidence/P1-engine.md)
-- [x] The stub model is deterministic, offline and only proposes; it cannot approve anything. (evidence: `apps/windows/sidecar/src/main/kotlin/com/hopa/sidecar/StubModel.kt`; `StubModelTest`)
+- [x] The scripted model is deterministic, offline and only proposes; it cannot approve anything. (evidence: `apps/windows/sidecar/src/main/kotlin/com/hopa/sidecar/turn/ScriptedModel.kt`; `ScriptedModelTest`)
 - [x] Headless approvals deny by default, and the gate is the real `ActionExecutor`. (evidence: `DenyAllApproval.kt`; `HeadlessTurnTest`)
 - [x] A denied payment leaves `executed=false`, `approved=false`, and never reaches the device. (evidence: `HeadlessTurnTest.payment_is_refused_before_the_device_is_touched`; docs/project/evidence/P1-engine.md)
 - [x] Conversations and records survive a reload, and the record chain verifies. (evidence: `HeadlessTurnTest`; docs/project/evidence/P1-engine.md)

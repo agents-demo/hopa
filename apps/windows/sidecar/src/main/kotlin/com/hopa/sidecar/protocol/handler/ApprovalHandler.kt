@@ -1,4 +1,4 @@
-package com.hopa.sidecar.protocol.handlers
+package com.hopa.sidecar.protocol.handler
 
 import com.hopa.sidecar.approval.HostApproval
 import com.hopa.sidecar.turn.RuntimeConfig

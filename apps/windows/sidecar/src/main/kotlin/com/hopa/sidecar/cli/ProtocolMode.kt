@@ -1,7 +1,7 @@
 package com.hopa.sidecar.cli
 
 import com.hopa.sidecar.approval.HostApproval
-import com.hopa.sidecar.backend.BackendPairing
+import com.hopa.sidecar.backend.BackendAdmission
 import com.hopa.sidecar.backend.BackendSession
 import com.hopa.sidecar.backend.BackendSessionStore
 import com.hopa.sidecar.backend.EngineTaskRunner
@@ -11,14 +11,14 @@ import com.hopa.sidecar.device.HostDevice
 import com.hopa.sidecar.turn.Engine
 import com.hopa.sidecar.protocol.Dispatcher
 import com.hopa.sidecar.protocol.Protocol
-import com.hopa.sidecar.protocol.handlers.ApprovalHandler
-import com.hopa.sidecar.protocol.handlers.BackendHandler
-import com.hopa.sidecar.protocol.handlers.ConfigHandler
-import com.hopa.sidecar.protocol.handlers.ConversationHandler
-import com.hopa.sidecar.protocol.handlers.DeviceHandler
-import com.hopa.sidecar.protocol.handlers.FileHandler
-import com.hopa.sidecar.protocol.handlers.TaskHandler
-import com.hopa.sidecar.protocol.handlers.TurnHandler
+import com.hopa.sidecar.protocol.handler.ApprovalHandler
+import com.hopa.sidecar.protocol.handler.BackendHandler
+import com.hopa.sidecar.protocol.handler.ConfigHandler
+import com.hopa.sidecar.protocol.handler.ConversationHandler
+import com.hopa.sidecar.protocol.handler.DeviceHandler
+import com.hopa.sidecar.protocol.handler.FileHandler
+import com.hopa.sidecar.protocol.handler.TaskHandler
+import com.hopa.sidecar.protocol.handler.TurnHandler
 import com.hopa.sidecar.store.Attachments
 import com.hopa.sidecar.store.ChatStore
 import com.hopa.sidecar.store.PendingApprovals
@@ -98,7 +98,7 @@ internal fun runProtocol(options: CliOptions) {
     var started = false
     if (options.pairBackend != null) {
         try {
-            runBlocking { BackendPairing(dataDir).admit(options.pairBackend, "Windows PC") }
+            runBlocking { BackendAdmission(dataDir).admit(options.pairBackend, "Windows PC") }
             started = startStoredSession()
         } catch (cancelled: CancellationException) {
             throw cancelled
