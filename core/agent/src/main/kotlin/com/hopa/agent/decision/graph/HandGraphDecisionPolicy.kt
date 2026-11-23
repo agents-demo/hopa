@@ -20,9 +20,9 @@ class HandGraphDecisionPolicy(
     override val name: String = "anchors"
 
     override suspend fun decide(input: DecisionInput): DecisionOutcome {
-        val screen = input.observation ?: return DecisionOutcome(Decision.NoPath)
+        val screen = input.observation ?: return DecisionOutcome(Decision.NoPath, policy = name)
         val step = runCatching { source.next(screen, input.context.goal) }.getOrNull()
-            ?: return DecisionOutcome(Decision.NoPath)
+            ?: return DecisionOutcome(Decision.NoPath, policy = name)
         return DecisionOutcome(
             Decision.Act(
                 action = step.action,

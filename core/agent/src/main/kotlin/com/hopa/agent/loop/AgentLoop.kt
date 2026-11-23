@@ -71,11 +71,25 @@ class AgentLoop(
 
         // What earlier steps did; the policy turns this into messages.
         val notes = mutableListOf<ModelMessage>()
+        // Which policies answered a step: the receipt names the path from this.
+        val used = mutableSetOf<String>()
         var usage = ModelUsage()
+
+        fun finish(answer: String, options: List<String> = emptyList(), error: HopaError? = null): TurnResult {
+            return TurnResult(
+                answer = answer,
+                records = records,
+                narration = narration,
+                options = options,
+                error = error,
+                usage = usage,
+                sources = used.toSet(),
+            )
+        }
 
         repeat(config.maxSteps) { step ->
             if (isCancelled()) {
-                return TurnResult("Stopped.", records, narration, usage = usage)
+                return finish("Stopped.")
             }
             val frames = if (context.vision) {
                 runCatching { device.screenshot() }.getOrNull()?.let { bytes ->
@@ -96,41 +110,24 @@ class AgentLoop(
                 ),
             )
             usage = usage.plus(outcome.usage)
+            outcome.policy?.let { used += it }
             outcome.raw?.let { notes += ModelMessage("assistant", it) }
 
             when (val decision = outcome.decision) {
-                is Decision.Failed -> return TurnResult(
+                is Decision.Failed -> return finish(
                     answer = "I could not decide the next step: ${decision.error.message}. " +
                         "Check the provider and the screen.",
-                    records = records,
-                    narration = narration,
                     error = decision.error,
-                    usage = usage,
                 )
 
-                Decision.NoPath -> return TurnResult(
+                Decision.NoPath -> return finish(
                     answer = "I could not find a safe next step on this screen, so I stopped.",
-                    records = records,
-                    narration = narration,
                     error = HopaError(ErrorCodes.BLOCKED, "no path for this screen"),
-                    usage = usage,
                 )
 
-                is Decision.Say -> return TurnResult(
-                    answer = decision.answer,
-                    records = records,
-                    narration = narration,
-                    error = decision.error,
-                    usage = usage,
-                )
+                is Decision.Say -> return finish(decision.answer, error = decision.error)
 
-                is Decision.Ask -> return TurnResult(
-                    answer = decision.answer,
-                    records = records,
-                    narration = narration,
-                    options = decision.options,
-                    usage = usage,
-                )
+                is Decision.Ask -> return finish(decision.answer, options = decision.options)
 
                 is Decision.Act -> Unit
             }
@@ -163,26 +160,13 @@ class AgentLoop(
                         return@repeat
                     }
 
-                    Verb.WAIT -> return TurnResult(
-                        answer = "I am waiting: ${chosen.trace}",
-                        records = records,
-                        narration = narration,
-                        usage = usage,
-                    )
+                    Verb.WAIT -> return finish("I am waiting: ${chosen.trace}")
 
-                    Verb.ASK -> return TurnResult(
-                        answer = "I need your go-ahead before this step. ${chosen.trace}",
-                        records = records,
-                        narration = narration,
-                        usage = usage,
-                    )
+                    Verb.ASK -> return finish("I need your go-ahead before this step. ${chosen.trace}")
 
-                    Verb.ESCALATE -> return TurnResult(
+                    Verb.ESCALATE -> return finish(
                         answer = "I need you to take over: ${chosen.trace}",
-                        records = records,
-                        narration = narration,
                         error = HopaError(ErrorCodes.BLOCKED, chosen.reason),
-                        usage = usage,
                     )
                 }
             }
@@ -205,17 +189,14 @@ class AgentLoop(
             }
             if (steps.count { it == signature } >= 3) {
                 // Tapping the same field forever is a failure, not progress.
-                return TurnResult(
+                return finish(
                     answer = "I kept repeating the same step, so I stopped. " +
                         "The screen did not react the way I expected.",
-                    records = records,
-                    narration = narration,
                     error = HopaError(ErrorCodes.BLOCKED, "repeated action: ${action.kind}"),
-                    usage = usage,
                 )
             }
             if (isCancelled()) {
-                return TurnResult("Stopped.", records, narration, usage = usage)
+                return finish("Stopped.")
             }
             val before = observation ?: emptyObservation()
             val result = executor.execute(
@@ -235,12 +216,12 @@ class AgentLoop(
             }
             // The policy said this action finishes the goal: answer and stop.
             if (then != null) {
-                return TurnResult(then, records, narration, usage = usage)
+                return finish(then)
             }
         }
 
         if (isCancelled()) {
-            return TurnResult("Stopped.", records, narration, usage = usage)
+            return finish("Stopped.")
         }
         val final = policy.decide(
             DecisionInput(
@@ -253,23 +234,15 @@ class AgentLoop(
             ),
         )
         usage = usage.plus(final.usage)
+        final.policy?.let { used += it }
         return when (val decision = final.decision) {
-            is Decision.Say -> TurnResult(decision.answer, records, narration, usage = usage)
+            is Decision.Say -> finish(decision.answer, error = decision.error)
 
-            is Decision.Ask -> TurnResult(
-                answer = decision.answer,
-                records = records,
-                narration = narration,
-                options = decision.options,
-                usage = usage,
-            )
+            is Decision.Ask -> finish(decision.answer, options = decision.options)
 
-            else -> TurnResult(
+            else -> finish(
                 answer = "I stopped after ${config.maxSteps} steps.",
-                records = records,
-                narration = narration,
                 error = HopaError(ErrorCodes.TIMEOUT, "step limit"),
-                usage = usage,
             )
         }
     }

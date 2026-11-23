@@ -11,4 +11,9 @@ data class TurnResult(
     val options: List<String> = emptyList(),
     val error: HopaError? = null,
     val usage: ModelUsage = ModelUsage(),
+    /**
+     * Which policies answered a step, in no particular order: "anchors",
+     * "command", "model". The receipt names the path from this, not from a guess.
+     */
+    val sources: Set<String> = emptySet(),
 )

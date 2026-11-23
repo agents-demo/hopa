@@ -145,9 +145,10 @@ the next path instead of guessing.
 **What is in the build today.** The graph is no longer a way around the loop: it
 is a step policy, so it walks one edge per pass inside the loop and answers with
 the same three things a model does - an action, a question or a final answer. A
-turn asks the graph first and the model second (`ChainDecisionPolicy`); the
-command and the saved recipe are still turn-level shortcuts and move into the
-chain next. There is no TRC path yet.
+turn asks the graph first, then a canonical command, then the model
+(`ChainDecisionPolicy`), and the API model last when the person allowed it. The
+saved recipe is the one turn-level shortcut left. There is no TRC path yet, and
+the receipt names the path from the policies that actually answered.
 
 **The decision at a node.** The graph policy reads the visible screen, matches
 the node by its labels and looks for an edge whose words fit the goal. The

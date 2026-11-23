@@ -4,6 +4,7 @@ import com.hopa.agent.action.ActionExecutor
 import com.hopa.agent.decision.DecisionPolicy
 import com.hopa.agent.decision.DecisionRuntime
 import com.hopa.agent.decision.StepPolicy
+import com.hopa.agent.decision.command.CommandDecisionPolicy
 import com.hopa.agent.decision.graph.ChainDecisionPolicy
 import com.hopa.agent.decision.graph.HandGraphDecisionPolicy
 import com.hopa.agent.decision.graph.SayDecisionPolicy
@@ -11,7 +12,6 @@ import com.hopa.agent.decision.model.ModelDecisionPolicy
 import com.hopa.agent.goal.GoalVerification
 import com.hopa.agent.goal.GoalVerifier
 import com.hopa.agent.loop.AgentLoop
-import com.hopa.agent.loop.RunNarrator
 import com.hopa.agent.plan.PlanSource
 import com.hopa.agent.recipe.Recipe
 import com.hopa.agent.recipe.RecipeStore
@@ -92,12 +92,11 @@ class TurnRunner(
         } else {
             null
         }
-        val graphFirst = known?.completes == true
         val graphOnly = request.useGraphs && graphs != null && !request.graphFallback
 
         // The loop decides every step. These only choose which rungs it gets:
-        // the graph first, then the model. A graph-only turn ends with the
-        // refusal when the graph has nothing to say.
+        // the graph, a canonical command, the model, and the API last when the
+        // person allowed it. A graph-only turn ends with the refusal.
         val model = ModelDecisionPolicy(steps = steps, knowledge = { tables })
         val cloud = fallbackSteps
             ?.takeIf { request.cloudFallback }
@@ -107,6 +106,9 @@ class TurnRunner(
         } else {
             null
         }
+        val command = commands
+            ?.takeIf { request.instantCommands }
+            ?.let { CommandDecisionPolicy(it) }
         val policy = when {
             graphOnly -> ChainDecisionPolicy(
                 listOfNotNull(
@@ -117,17 +119,19 @@ class TurnRunner(
                     ),
                 ),
             )
-            else -> ChainDecisionPolicy(listOfNotNull(graph, model, cloud))
+            else -> ChainDecisionPolicy(listOfNotNull(graph, command, model, cloud))
         }
 
         // A canonical command needs no plan: asking a model to write steps for
         // "open settings" is slower and less predictable than opening it. The
-        // path still falls through to the plan gate on any doubt.
-        if (!graphOnly && !graphFirst && request.instantCommands && commands != null) {
-            command(request, started, tables)?.let { return it }
-        }
+        // policy runs it inside the loop; this only skips the plan gate.
+        val commandCanAnswer = commands?.let { classifier ->
+            request.instantCommands &&
+                runCatching { classifier.classify(request.goal, request.installedApps) }
+                    .getOrNull() != null
+        } == true
         // A goal a graph covers needs no plan: its steps are written already.
-        if (!graphOnly && request.planFirst && !request.planApproved && known == null) {
+        if (!graphOnly && request.planFirst && !request.planApproved && known == null && !commandCanAnswer) {
             return plan(request, started)
         }
         if (request.replay) {
@@ -139,46 +143,7 @@ class TurnRunner(
         return fromModel(request, started, isCancelled, tables, policy, graph != null)
     }
 
-    /**
-     * A canonical command, executed without a model.
-     *
-     * The classifier returns null for anything it is not sure about, and so
-     * does this path when the screen cannot be read or the step throws: the
-     * model then handles the turn exactly as before. One step, one record, no
-     * tokens, and the answer names what happened.
-     */
-    private suspend fun command(request: TurnRequest, started: Long, tables: CatalogSnapshot): TurnOutcome? {
-        val classifier = commands ?: return null
-        val match = runCatching { classifier.classify(request.goal, request.installedApps) }
-            .getOrNull() ?: return null
-        val before = runCatching { request.device.observe() }.getOrNull() ?: return null
-        val result = runCatching {
-            executorFor(request.device).execute(
-                runId = request.runId,
-                step = 0,
-                traceId = request.traceId,
-                action = match.intent.action,
-                before = before,
-            )
-        }.getOrNull() ?: return null
-        val error = result.record.error
-        return TurnOutcome(
-            source = TurnSource.COMMAND,
-            knowledgeVersion = tables.version,
-            answer = match.intent.answer,
-            records = listOf(result.record),
-            narration = RunNarrator.lines(listOf(result.record)),
-            error = if (result.record.executed && error.isNullOrBlank()) {
-                null
-            } else {
-                HopaError(ErrorCodes.BLOCKED, error ?: "the step did not run")
-            },
-            surfaceName = request.surfaceName,
-            millis = clock.nowMillis() - started,
-        )
-    }
-
-    /** Answers with the steps to approve; the person's yes sends a new request. */
+/** Answers with the steps to approve; the person's yes sends a new request. */
     private suspend fun plan(request: TurnRequest, started: Long): TurnOutcome {
         val steps = plans
             ?.let { source -> runCatching { source.plan(request.goal) }.getOrDefault(emptyList()) }
@@ -269,7 +234,7 @@ class TurnRunner(
 
         if (result == null) {
             return TurnOutcome(
-                source = sourceOf(graphInChain, ModelUsage()),
+                source = sourceOf(graphInChain, emptySet()),
                 knowledgeVersion = tables.version,
                 answer = stoppedAfter(request.timeoutMillis),
                 error = HopaError(ErrorCodes.TIMEOUT, "the turn ran out of time"),
@@ -292,7 +257,7 @@ class TurnRunner(
         }
 
         return TurnOutcome(
-            source = sourceOf(graphInChain, result.usage),
+            source = sourceOf(graphInChain, result.sources),
             knowledgeVersion = tables.version,
             answer = result.answer,
             records = result.records,
@@ -353,8 +318,18 @@ class TurnRunner(
          * A graph step spends no tokens, so a turn that never asked a model is a
          * graph turn: the receipt can say Graph without a per-step source.
          */
-        fun sourceOf(graphInChain: Boolean, usage: ModelUsage): TurnSource =
-            if (graphInChain && usage.totalTokens == 0) TurnSource.GRAPH else TurnSource.MODEL
+        /**
+         * The path the receipt may name: a model rung outranks a command, a
+         * command outranks anchors, and anchors outranks the refusal sentence.
+         */
+        fun sourceOf(graphInChain: Boolean, sources: Set<String>): TurnSource = when {
+            "model" in sources -> TurnSource.MODEL
+            "command" in sources -> TurnSource.COMMAND
+            "anchors" in sources -> TurnSource.GRAPH
+            sources.isEmpty() && graphInChain -> TurnSource.GRAPH
+            sources.isEmpty() -> TurnSource.MODEL
+            else -> TurnSource.GRAPH
+        }
 
         const val GRAPH_ONLY_ANSWER =
             "I only have graphs for a few apps. Switch Steps to Auto or Model for this goal."

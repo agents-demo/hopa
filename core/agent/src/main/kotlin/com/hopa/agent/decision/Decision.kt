@@ -65,6 +65,8 @@ data class DecisionOutcome(
      * the notes so a model still sees its own earlier steps.
      */
     val raw: String? = null,
+    /** Which policy spoke, so the receipt can name the path that ran. */
+    val policy: String? = null,
 )
 
 /**

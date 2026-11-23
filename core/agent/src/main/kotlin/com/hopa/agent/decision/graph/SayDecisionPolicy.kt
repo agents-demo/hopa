@@ -14,6 +14,6 @@ class SayDecisionPolicy(
     override val name: String = "say"
 
     override suspend fun decide(input: DecisionInput): DecisionOutcome {
-        return DecisionOutcome(Decision.Say(answer, error))
+        return DecisionOutcome(Decision.Say(answer, error), policy = name)
     }
 }

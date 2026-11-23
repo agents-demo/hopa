@@ -84,15 +84,34 @@ class ModelDecisionPolicy(
         val usage = reply.usage
 
         if (input.atStepLimit) {
-            return DecisionOutcome(Decision.Say(ModelReplyText.clean(reply.text)), usage, raw = reply.text)
+            return DecisionOutcome(
+                Decision.Say(ModelReplyText.clean(reply.text)),
+                usage,
+                raw = reply.text,
+                policy = name,
+            )
         }
 
         val outcome = parser.parse(reply.text)
-        outcome.error?.let { return DecisionOutcome(Decision.Failed(it), usage, raw = reply.text) }
-        outcome.text?.let { return DecisionOutcome(Decision.Say(ModelReplyText.clean(it)), usage, raw = reply.text) }
+        outcome.error?.let {
+            return DecisionOutcome(Decision.Failed(it), usage, raw = reply.text, policy = name)
+        }
+        outcome.text?.let {
+            return DecisionOutcome(
+                Decision.Say(ModelReplyText.clean(it)),
+                usage,
+                raw = reply.text,
+                policy = name,
+            )
+        }
 
         val decision = outcome.decision
-            ?: return DecisionOutcome(Decision.Say("I did not understand the answer."), usage, raw = reply.text)
+            ?: return DecisionOutcome(
+                Decision.Say("I did not understand the answer."),
+                usage,
+                raw = reply.text,
+                policy = name,
+            )
         if (decision.done) {
             return DecisionOutcome(
                 Decision.Say(ModelReplyText.clean(decision.say.ifBlank { "Done." })),
@@ -112,7 +131,7 @@ class ModelDecisionPolicy(
                 usage,
                 raw = reply.text,
             )
-        return DecisionOutcome(Decision.Act(action), usage, raw = reply.text)
+        return DecisionOutcome(Decision.Act(action), usage, raw = reply.text, policy = name)
     }
 
     /** A short block for the foreground app's typed functions, when it has any. */
