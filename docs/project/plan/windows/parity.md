@@ -1,89 +1,80 @@
-# Windows parity checklist
+# Windows parity matrix
 
 The reference is the **Android app**. Every row names an Android screen and its
-source file; there is no other reference client. Status is one of `have`, `todo`,
-`out` (deliberately not on Windows), or `P5` (scheduled).
+source file. Status is one of:
+
+| Status | Meaning |
+|---|---|
+| `have` | the Windows behaviour exists and an artifact proves it |
+| `adapt` | the same job exists in a desktop-native form; planned or in progress |
+| `new` | no direct Android screen, but parity needs the surface; planned |
+| `not-applicable` | the platform cannot honestly provide the job; the reason is written down |
+
+This matrix follows [ADR-0027](../../../design/decisions/0027-windows-semantic-parity.md).
+It is not a literal screen copy: the "Windows equivalent" column names the
+desktop form. The phase plan is [total-parity.md](total-parity.md).
+
+## Foundation
 
 | Android screen | Source | Windows equivalent | Status |
 |---|---|---|---|
-| Chat (top-level tab) | `apps/android/app/src/main/kotlin/com/hopa/app/feature/chat/ChatScreen.kt` | chat column in `MainWindow` | have |
-| Message bubble | `feature/chat/component/MessageBubble.kt` | `MessageTemplate` | have |
-| Composer | `feature/chat/component/Composer.kt` | composer pill, Enter = newline, Ctrl+Enter = send | have |
-| Empty state | `feature/chat/component/ChatEmptyState.kt` | empty state with the mark | have |
-| Attachment preview | `feature/chat/component/AttachmentPreview.kt` | pending attachment bar | have |
-| Conversation list | `feature/conversations/ChatsSheet.kt` | sidebar list with pin, archive, rename, export, delete | have |
-| Easy history | `feature/conversations/EasyHistoryScreen.kt` | none | out (no profiles on the PC) |
-| Activity | `feature/activity/ActivityScreen.kt` | run rail plus the runs window | have |
-| Runs | `feature/runs/RunsScreen.kt` | `RunDetailsWindow` (steps, classification, chain) | have |
-| Approval sheet | `ui/component/ApprovalSheet.kt` | `ApprovalWindow` (title, amount, merchant, consequence) | have |
-| Settings hub with search | `feature/settings/SettingsScreen.kt` | `SettingsWindow` | out (three fields fit on one dialog) |
-| Settings — Answers (model, key, vision) | `feature/settings/SettingsModelScreen.kt` | model provider, endpoint, key | have; vision is `out` until the host sends frames |
-| Settings — My computer (pairing) | `feature/runningapps/ComputerScreen.kt` | backend pairing and bridge address | have (token entry) |
-| Settings — Tone and length | `feature/settings/SettingsCharacterScreen.kt` | tone | have |
-| Settings — Run history | `feature/settings/SettingsHistoryScreen.kt` | runs window | have |
-| Settings — Alerts | `feature/settings/SettingsNotificationsScreen.kt` | none | out (the phone owns the notifier) |
-| Settings — What left your phone | `feature/settings/SettingsPrivacyScreen.kt` | none | out |
-| Settings — Saved repetitions | `feature/settings/SettingsRecipesScreen.kt` | none | out |
-| Act hub (where HOPA works) | `feature/runningapps/RunningAppsScreen.kt` | none in v0; the window already picks a target per action | out |
-| Computer / "My computer" | `feature/runningapps/ComputerScreen.kt` | none: the PC *is* the device (see the note below) | out |
-| How HOPA acts | `feature/runningapps/HowHopaActsScreen.kt` | out of scope for v0; the rail states what ran | out |
-| Run preferences / setup | `feature/runningapps/RunPrefsScreen.kt`, `feature/runningapps/RunSetupScreen.kt` | none in v0 | out |
-| About | `feature/settings/AboutScreen.kt` | About row in settings | have |
-| Self check | `feature/settings/SelfCheckScreen.kt` | none | out |
-| Accessibility setup | `feature/settings/AccessibilityScreen.kt` | none: the PC uses UI Automation, not an accessibility service | out |
-| Memory | `feature/memory/MemoryScreen.kt` | none | out |
-| Skills | `feature/memory/SkillsScreen.kt` | none | out |
-| Usage | `feature/usage/UsageScreen.kt` | none | out |
-| Profiles | `feature/profiles/ProfilesScreen.kt` | none: the desktop has one shape | out |
-| Capabilities | `feature/capabilities/CapabilitiesScreen.kt` | none in v0; the bridge line on the rail carries the status | out |
-| Launchpad | `feature/launchpad/LaunchpadScreen.kt` | none: UIA launches by name, from the catalog | out |
-| Device | `feature/runningapps/ComputerScreen.kt` | none: this PC *is* the device | out |
-| Browser | `feature/browser/BrowserScreen.kt` | none in v0 | out |
-| Notifier | `service/Notifier.kt` | none: the phone owns the event surface | out |
-| Approval on the phone | `ui/component/ApprovalSheet.kt` | request pushed to the phone, answer returned | have |
-| Takeover / signature | none yet | pause, hand over, resume, verify | P5 |
+| Chat (top-level tab) | `apps/android/feature/chat/src/main/kotlin/com/hopa/feature/chat/ChatScreen.kt` | chat column in `MainWindow` | have |
+| Message bubble | `apps/android/feature/chat/src/main/kotlin/com/hopa/feature/chat/component/MessageBubble.kt` | `MessageBubble` in the chat pane | have |
+| Composer | `apps/android/feature/chat/src/main/kotlin/com/hopa/feature/chat/component/Composer.kt` | composer pill; Enter sends, Shift+Enter is a newline | have |
+| Empty state | `apps/android/feature/chat/src/main/kotlin/com/hopa/feature/chat/component/ChatEmptyState.kt` | empty state with the mark | have |
+| Attachment preview | `apps/android/feature/chat/src/main/kotlin/com/hopa/feature/chat/component/AttachmentPreview.kt` | pending attachment bar | have |
+| Conversation list | `apps/android/feature/conversations/src/main/kotlin/com/hopa/feature/conversations/ChatsSheet.kt` | sidebar with pin, archive, rename, export, delete | have |
+| Vision attachment | `apps/android/feature/chat/src/main/kotlin/com/hopa/feature/chat/component/Composer.kt` | a frame can ride with a model call; the host has no frame path yet | new |
 
-## Token check
+## Execution
 
-The WPF palette is the Android palette, not a lookalike:
+| Android screen | Source | Windows equivalent | Status |
+|---|---|---|---|
+| Activity | `apps/android/feature/history/src/main/kotlin/com/hopa/feature/history/ActivityScreen.kt` | run rail plus the runs window | have |
+| Runs | `apps/android/feature/runs/src/main/kotlin/com/hopa/feature/runs/RunsScreen.kt` | `RunDetailsWindow` (steps, classification, chain) | have |
+| Approval sheet | `apps/android/platform/ui/src/main/kotlin/com/hopa/ui/component/ApprovalSheet.kt` | `ApprovalWindow` (title, amount, merchant, consequence) | have |
+| Approval on the phone | `apps/android/platform/ui/src/main/kotlin/com/hopa/ui/component/ApprovalSheet.kt` | request pushed to the phone, answer returned | have |
+| History / activity timeline | `apps/android/feature/history/src/main/kotlin/com/hopa/feature/history/HistoryScreen.kt` | a combined conversation + run timeline | adapt |
+| Easy history | `apps/android/feature/easy/src/main/kotlin/com/hopa/feature/easy/EasyHistoryScreen.kt` | mode/workspace history in the same timeline | adapt |
+| Easy mode | `apps/android/feature/easy/src/main/kotlin/com/hopa/feature/easy/EasyHistoryScreen.kt` | a desktop "Easy" mode: fewer controls, guided target | new |
+| Power mode | `apps/android/feature/power/src/main/kotlin/com/hopa/feature/power/PowerHomeScreen.kt` | a desktop "Power" mode: runs, preferences, raw tiers | new |
+| Act hub | `apps/android/feature/execution/src/main/kotlin/com/hopa/feature/execution/RunningAppsScreen.kt` | target chooser: this PC through UIA, or hand off to the phone | adapt |
+| Computer / "My computer" | `apps/android/feature/execution/src/main/kotlin/com/hopa/feature/execution/ComputerScreen.kt` | phone handoff over the gateway; the PC does not mirror the phone screen | adapt |
+| How HOPA acts | `apps/android/feature/execution/src/main/kotlin/com/hopa/feature/execution/HowHopaActsScreen.kt` | tier/policy explanation inside the run rail | new |
+| Run preferences / setup | `apps/android/feature/execution/src/main/kotlin/com/hopa/feature/execution/RunPrefsScreen.kt`, `RunSetupScreen.kt` | saved target and tier preferences | new |
+| Device | `apps/android/feature/execution/src/main/kotlin/com/hopa/feature/execution/ComputerScreen.kt` | this PC is the device; the phone is a peer target | adapt |
+| Takeover / signature | none yet | pause, hand over, resume, verify | new (P5) |
+| Launchpad | `apps/android/feature/launchpad/src/main/kotlin/com/hopa/feature/launchpad/LaunchpadScreen.kt` | Start-menu catalog with launch and stop | new |
+| Browser | `apps/android/feature/browser/src/main/kotlin/com/hopa/feature/browser/BrowserScreen.kt` | embedded WebView2 pane, link-out fallback | new |
+| Notifier | `apps/android/app/src/main/kotlin/com/hopa/app/service/Notifier.kt` | Windows toast + notification center | adapt |
 
-| Token | Android | Windows |
-|---|---|---|
-| background | `#F7F4EE` | `#F7F4EE` |
-| surface | `#FFFFFF` | `#FFFFFF` |
-| sidebar | `#F3EFE7` | `#F3EFE7` |
-| muted | `#F1ECE3` | `#F1ECE3` |
-| ink | `#1C1B18` | `#1C1B18` |
-| hint | `#9A9488` | `#9A9488` |
-| primary | `#0A59F7` | `#0A59F7` |
-| accent | `#E8703A` | `#E8703A` |
-| danger | `#C0392B` | `#C0392B` |
-| divider | `#E9E4DA` | `#E9E4DA` |
+## Settings and information
 
-Body sizes follow `HopaType`: 15, 13.5, 11, with the answer at 13.5.
+| Android screen | Source | Windows equivalent | Status |
+|---|---|---|---|
+| Settings hub with search | `apps/android/feature/settings/src/main/kotlin/com/hopa/feature/settings/SettingsScreen.kt` | navigation hub with search and subpages | new |
+| Settings — Answers (model, key, vision) | `apps/android/feature/settings/src/main/kotlin/com/hopa/feature/settings/SettingsModelScreen.kt` | model provider, endpoint, key | have; vision is new |
+| Settings — My computer (pairing) | `apps/android/feature/execution/src/main/kotlin/com/hopa/feature/execution/ComputerScreen.kt` | backend pairing and bridge address | have |
+| Settings — Tone and length | `apps/android/feature/settings/src/main/kotlin/com/hopa/feature/settings/PreferencesSettings.kt` | tone; length joins the Answers subpage | have |
+| Settings — Run history | `apps/android/feature/history/src/main/kotlin/com/hopa/feature/history/HistoryScreen.kt` | runs window | have |
+| Settings — Alerts | `apps/android/feature/settings/src/main/kotlin/com/hopa/feature/settings/SettingsNotificationsScreen.kt` | Windows notification preferences + history | adapt |
+| Settings — What left this phone | `apps/android/app/src/main/kotlin/com/hopa/app/feature/settings/SettingsPrivacyScreen.kt` | "What left this PC" and the record export | adapt |
+| Settings — Saved repetitions | `apps/android/feature/history/src/main/kotlin/com/hopa/feature/history/RecipesScreen.kt` | recipes stored through the shared contract | new |
+| Settings — Profiles | `apps/android/feature/profiles/src/main/kotlin/com/hopa/feature/profiles/ProfilesScreen.kt` | workspaces over the same profile contract | adapt |
+| Settings — Memory | `apps/android/feature/memory/src/main/kotlin/com/hopa/feature/memory/MemoryScreen.kt` | memory list, add, edit, forget | new |
+| Settings — Skills | `apps/android/feature/skills/src/main/kotlin/com/hopa/feature/skills/SkillsScreen.kt` | skill list and enable/disable | new |
+| Settings — Usage | `apps/android/feature/usage/src/main/kotlin/com/hopa/feature/usage/UsageScreen.kt` | usage totals from `core/runlog` | new |
+| Settings — Capabilities | `apps/android/feature/capabilities/src/main/kotlin/com/hopa/feature/capabilities/CapabilitiesScreen.kt` | UIA, bridge, gateway and model probe | new |
+| Settings — Self check | `apps/android/feature/settings/src/main/kotlin/com/hopa/feature/settings/SelfCheckScreen.kt` | sidecar, device, bridge and credential checks | new |
+| Settings — Accessibility setup | `apps/android/feature/settings/src/main/kotlin/com/hopa/feature/settings/AccessibilityScreen.kt` | UIA/elevation/uiAccess readiness | adapt |
+| About | `apps/android/app/src/main/kotlin/com/hopa/app/feature/settings/AboutScreen.kt` | About subpage in the hub | have |
 
-## What "out" means
+## Cross-cutting
 
-A row marked `out` is a deliberate product decision, not a gap: the phone is where
-those features belong, and duplicating them would create a second product. The
-one exception is approval, which is `have`: the PC can ask the phone when the
-action runs on the desktop (P4).
-
-## The two meanings of "computer"
-
-Android's *Act → My computer* and Windows P4 are **not** the same relationship.
-In Act, the computer is an adb **driver for the phone's screen**: the phone still
-chooses what happens, and the computer is never a silent fallback
-(`docs/guides/android/run-modes.md`, `feature/runningapps/ActMode.kt`). In P4 the
-Windows client acts on its **own UIA desktop** and asks the phone only to approve
-the action (ADR-0024). Those rows stay `out` rather than `have`: a Windows screen
-mirroring the driver mode would imply the wrong owner of the action. What the two
-sides share is the backend gateway, not the device role.
-
-## Prompt context the PC sends
-
-The sidecar passes `platform = "windows"` and the catalog's Windows app list to
-the shared loop, so the model launches by a package the PC can actually open.
-`phoneAccess` is true only when a host is attached; headless passes false. The
-catalog still cannot prove an app is installed, so the prompt says a launch may
-fail, and the adapter reports the real foreground afterwards.
+| Area | Android | Windows | Status |
+|---|---|---|---|
+| Palette and type | `HopaType`, `HopaTheme` | shared WPF tokens in `Themes/Controls.xaml` | have |
+| Gate and records | `core/agent`, `core/runlog` | sidecar uses the same modules | have |
+| Approval provenance | `Approver.kt` | `approver.device` in the record | have |
+| Protocol | bridge/gateway v1 | NDJSON v1 + additive parity families | adapt |
+| Callback privacy | no screen text in logs | same rule; screenshots and crash dumps reviewed | have |

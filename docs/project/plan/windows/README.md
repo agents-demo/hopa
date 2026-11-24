@@ -1,10 +1,13 @@
 # Windows client plan (P0–P6)
 
-Status: **P0–P4 code complete (P4 hardware gate pending); P5–P6 open.** The
-shared engine runs headless through the real gate, the PC adapter implements the
-whole `DevicePort` contract, and settings launches use a URI before any click.
-Re-baselined 2026-11-15 against the Android client (ADR-0020); merged onto the
-Android parity branch 2026-11-16. Counted with:
+Status: **P0–P4 code complete (P4 hardware gate pending); P5–P6 open; W7
+parity contract done, W8 next.** The shared engine runs headless through the real
+gate, the PC adapter implements the whole `DevicePort` contract, and settings
+launches use a URI before any click. The product goal is now **semantic parity
+with Android** ([ADR-0027](../../../design/decisions/0027-windows-semantic-parity.md));
+the phase plan is [total-parity.md](total-parity.md). Re-baselined 2026-11-15
+against the Android client (ADR-0020); merged onto the Android parity branch
+2026-11-16. Counted with:
 
 ```bash
 python tools/scripts/plan-status.py --plan docs/project/plan/windows
@@ -15,21 +18,22 @@ tick carries `(evidence: ...)`.
 
 ## 1. Position
 
-HOPA's product client is Android. The Windows app is the **desktop leg**, not a
-second product and not a port of a retired shell. It exists for the three jobs
-only a PC can do:
+HOPA's reference client is Android. Windows is a **full client with semantic
+parity** ([ADR-0027](../../../design/decisions/0027-windows-semantic-parity.md)):
+the same jobs and outcomes, in a desktop-native surface. The PC is especially
+good at three jobs:
 
-1. drive desktop applications that expose no intent or API, through UI Automation;
-2. host a long form, a document, or a signature that a phone cannot comfortably
-   complete;
-3. ask the phone for approval when the action runs on the PC.
+1. driving desktop applications that expose no intent or API, through UI
+   Automation;
+2. hosting a long form, a document, or a signature that a phone cannot
+   comfortably complete;
+3. asking the phone for approval when the action runs on the PC.
 
-Everything else belongs on Android: the notifier, the event card, history,
-profiles, memory, usage, the launchpad, and approval whenever the phone is in
-hand.
-
-The one rule that keeps this a ten-week plan: if the phone can do it better, it
-is not a Windows feature.
+Everything else that Android has is still in scope; the screen-by-screen matrix
+is [parity.md](parity.md) and the phases are [total-parity.md](total-parity.md).
+Parity means **semantic**, not a literal phone screen: the notifier becomes a
+Windows toast, accessibility becomes UIA readiness, and "Act → My computer"
+becomes a phone handoff rather than a screen mirror.
 
 ## 2. Goals
 
@@ -45,10 +49,11 @@ is not a Windows feature.
 
 ## 3. Non-goals
 
-- A .NET port of the loop.
-- A second UI product: no profiles, memory, usage, launchpad, self-check or
-  browser panes in v0.
-- A notifier on Windows; the phone owns the event surface.
+- A .NET port of the loop or a second shared brain.
+- A literal screen-for-screen copy of the phone; desktop adaptations are
+  first-class, and `adapt` is a parity status.
+- Mirroring the phone screen or driving it as a remote display. A desktop task
+  handed to the phone is owned by the phone ([ADR-0024](../../../design/decisions/0024-windows-device-identity-and-approval.md)).
 - Batch-approved payments. Payment is one action, one question, every time.
 - MSIX, the Microsoft Store and auto-update in v0.
 - macOS or Linux hosts.
@@ -58,13 +63,14 @@ is not a Windows feature.
 
 | Decision | Where |
 |---|---|
-| Android is the product client; Windows is the desktop leg | ADR-0020, this plan |
+| Android is the reference client; Windows has full semantic parity | ADR-0020, ADR-0027, [total-parity.md](total-parity.md) |
 | .NET 8 + WPF shell, Kotlin engine as a sidecar, NDJSON over stdio | ADR-0021 |
-| The client engine is `packages/core`, `packages/data`, `packages/capabilities` | ADR-0007 addendum |
+| The client engine is the shared `core/` modules | ADR-0007 addendum |
 | Clients own the loop; the bridge stays transport | ADR-0016 |
 | PC device control is a `DevicePort` adapter (FlaUI/UIA), like Android's accessibility adapter | ADR-0017 pattern |
 | IPC v1 is frozen: `step`, `approval.*`, `session`, `task.*` | [protocol.md](protocol.md) |
 | The parity reference is the Android app, screen by screen | [parity.md](parity.md) |
+| Parity phases and evidence rules | [total-parity.md](total-parity.md) |
 
 ### Android distribution (P0 decision)
 
@@ -196,6 +202,16 @@ Windows CI runner.
 - [ ] Windows CI builds, tests and packages on every pull request.
 
 Gate: a signed MSI on a clean VM, with both targets working.
+
+### Parity phases (W7–W11)
+
+The total-parity work is a separate phase set after P0–P6. W7 makes the contract
+reviewable; W8 builds the shared data and protocol path; W9–W10 add the
+information and action surfaces; W11 proves the matrix. Details, checkboxes and
+evidence rules are in [total-parity.md](total-parity.md).
+
+Gate: every row in [parity.md](parity.md) is `have`, `adapt` or `new` with an
+artifact, or `not-applicable` with a written platform reason.
 
 ## 7. Acceptance: assertions, not "opens"
 

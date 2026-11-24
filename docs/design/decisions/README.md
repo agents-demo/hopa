@@ -44,6 +44,7 @@ supersede it. Format:
 | [0024](0024-windows-device-identity-and-approval.md) | Device identity and approval provenance for the Windows client | accepted |
 | [0025](0025-app-dependency-injection.md) | Dependency injection in the Android app: Hilt is the standard | accepted |
 | [0026](0026-household-content-key.md) | Household content key: one key per household, wrapped per device; diag-only plaintext | accepted |
+| [0027](0027-windows-semantic-parity.md) | Windows is a full semantic-parity client, not only the desktop leg | accepted |
 
 Create the next ADR by copying the template below.
 
