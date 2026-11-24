@@ -16,7 +16,7 @@ memory/skill families as additive v1 messages.
 | type | fields | meaning |
 |---|---|---|
 | `hello` | - | optional; the sidecar answers `ready` anyway at start |
-| `turn.start` | `id`, `goal`, `conversationId?`, `attachment?`, `planApproved?`, `checkpoints?` | run one turn for this goal in that conversation (a blank id creates one); `planApproved` skips the plan gate, `checkpoints` names what must be visible at the end |
+| `turn.start` | `id`, `goal`, `conversationId?`, `attachment?`, `planApproved?`, `checkpoints?`, `paused?` | run one turn for this goal in that conversation (a blank id creates one); `planApproved` skips the plan gate, `checkpoints` names what must be visible at the end, `paused` hands the foreground over before the first step |
 | `turn.cancel` | - | stop the running turn at the next safe point |
 | `turn.pause` | - | pause before the next step and hand the foreground to the person |
 | `turn.resume` | - | resume after a takeover; the loop re-observes before deciding |

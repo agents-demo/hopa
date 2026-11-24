@@ -45,6 +45,7 @@ Hosted runners are session 0 and cannot produce it; see
 | Web surface | `--web-check <dir>` | navigate, read, type, click; `Signed by Michael` visible |
 | Web engine turn | `--turn "Use the web browser: navigate to https://example.com, call web.read..."` | `web.navigate` and `web.read` steps; answer `Example Domain` |
 | Vision | `deepseek-v4-flash-vision-exp` | a nonce drawn only in the frame; answer matches |
+| Takeover/signature | `--p5-check <dir> [--auto-sign]` | `paused: True`, `signed: Signed by Michael`, `checkpoint complete: True` |
 
 ## Pairing with Android
 

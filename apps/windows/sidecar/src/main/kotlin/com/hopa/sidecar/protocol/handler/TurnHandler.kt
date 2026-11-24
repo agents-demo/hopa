@@ -33,6 +33,7 @@ internal class TurnHandler(
                         ?.filter { it.isNotBlank() }
                         ?.map { Checkpoint(anchor = it) }
                         .orEmpty(),
+                    startPaused = message.text("paused").toBoolean(),
                 )
             }
 

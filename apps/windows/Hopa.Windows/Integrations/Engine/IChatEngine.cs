@@ -5,7 +5,7 @@ namespace Hopa.Windows.Integrations.Engine;
 /// <summary>The engine operations the chat controller uses; the process client implements it.</summary>
 public interface IChatEngine
 {
-    Task<TurnResult> StartTurnAsync(string goal, string? conversationId, JsonObject? attachment = null, bool planApproved = false, IReadOnlyList<string>? checkpoints = null);
+    Task<TurnResult> StartTurnAsync(string goal, string? conversationId, JsonObject? attachment = null, bool planApproved = false, IReadOnlyList<string>? checkpoints = null, bool paused = false);
 
     Task<JsonObject?> OpenConversationAsync(string id);
 

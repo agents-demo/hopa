@@ -104,6 +104,9 @@ internal static class DevRunModes
             case RunMode.PcCheck:
                 _ = PcCheck.Run(window, command.Arg(0));
                 break;
+            case RunMode.P5Check:
+                _ = P5Check.Run(window, command.Arg(0), command.ArgOr(1, "human") == "auto");
+                break;
             case RunMode.Pair:
                 _ = PairCheck.Run(window, command.Arg(0), command.Arg(1), command.Arg(2));
                 break;

@@ -1,0 +1,50 @@
+<Window x:Class="Hopa.Windows.DevTools.Checks.P5FormWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="HOPA signature form"
+        Height="390" Width="580"
+        Background="#F7F4EE"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        Topmost="True">
+    <Grid Margin="26">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Signature form" FontSize="20" FontWeight="SemiBold"
+                   Foreground="#1C1B18" Margin="0,0,0,4" />
+
+        <TextBlock Grid.Row="1" Text="Full name" FontSize="12" Foreground="#6B665C"
+                   Margin="0,14,0,4" />
+        <TextBox x:Name="FullNameBox" Grid.Row="2" Height="34" FontSize="14"
+                 AutomationProperties.Name="Full name" />
+
+        <TextBlock Grid.Row="3" Text="Signature" FontSize="12" Foreground="#6B665C"
+                   Margin="0,14,0,4" />
+        <TextBox x:Name="SignatureBox" Grid.Row="4" Height="34" FontSize="14"
+                 AutomationProperties.Name="Signature" />
+
+        <Grid Grid.Row="5" Margin="0,18,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock x:Name="ResultText" VerticalAlignment="Center" FontSize="13"
+                       Foreground="#0A59F7" TextWrapping="Wrap" />
+            <Button Grid.Column="1" Content="Submit" Width="110" Height="36"
+                    Background="#0A59F7" Foreground="#FFFFFF" BorderThickness="0"
+                    AutomationProperties.Name="Submit" Click="Submit_Click" />
+        </Grid>
+
+        <TextBlock Grid.Row="6" Text="The person signs here while the turn is paused."
+                   FontSize="11" Foreground="#6B665C" VerticalAlignment="Bottom" />
+    </Grid>
+</Window>

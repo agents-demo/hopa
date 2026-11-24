@@ -169,8 +169,13 @@ class TurnEngine(
         attachment: Attachment? = null,
         planApproved: Boolean = false,
         checkpoints: List<Checkpoint> = emptyList(),
+        startPaused: Boolean = false,
     ) {
         queuedTurns += id
+        if (startPaused) {
+            takeovers[id] = CompletableDeferred()
+            io.log("turn $id starts paused for takeover")
+        }
         scope.launch {
             runSerialized(id) {
                 var lastAt = System.currentTimeMillis()
@@ -181,6 +186,7 @@ class TurnEngine(
                     attachment,
                     planApproved = planApproved,
                     checkpoints = checkpoints,
+                    startPaused = startPaused,
                 ) { index, record ->
                     val now = System.currentTimeMillis()
                     io.send(Protocol.step(id, index, record, now, now - lastAt))
@@ -216,6 +222,7 @@ class TurnEngine(
                 guardedTurn(id, turn)
             } finally {
                 cancelledBeforeStart.remove(id)
+                takeovers.remove(id)
             }
         }
     }
@@ -256,6 +263,7 @@ class TurnEngine(
         attachment: Attachment? = null,
         planApproved: Boolean = false,
         checkpoints: List<Checkpoint> = emptyList(),
+        startPaused: Boolean = false,
         onRecord: ((Int, RunRecord) -> Unit)? = null,
     ): TurnOutcome = turnLock.withLock {
         val requested = conversationId?.takeIf { it.isNotBlank() }
@@ -328,7 +336,9 @@ class TurnEngine(
                     useGraphs = false,
                     graphFallback = false,
                     cloudFallback = false,
-                    timeoutMillis = 120_000,
+                    // A person may need minutes to sign; the takeover pause is
+                    // part of the turn's budget, so a paused turn gets longer.
+                    timeoutMillis = if (startPaused) 600_000 else 120_000,
                 ),
                 isCancelled = { cancelled },
                 beforeStep = {

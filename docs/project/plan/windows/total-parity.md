@@ -155,6 +155,11 @@ The screens that change what HOPA does.
   answers `Example Domain`; `--web-check` fills a loopback form and shows
   `Signed by Michael`)
 - [ ] Takeover/signature P5. (evidence: form transcript + verified postcondition)
+  - [x] A real form, pause before the first step, resume and a verified
+    `Signed by Michael` checkpoint. (evidence: `--p5-check --auto-sign`;
+    transcript says `paused: True`, `signed: Signed by Michael`,
+    `checkpoint complete: True`)
+  - [ ] A human-signed rerun: `--p5-check` without `--auto-sign`.
 - [ ] Vision frame round-trip when a model accepts images. (evidence: protocol
   test + one real frame)
 - [x] Phone handoff semantics: a task sent from the PC is owned by the phone;

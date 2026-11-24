@@ -58,7 +58,8 @@ public sealed partial class EngineHostClient : IAsyncDisposable, IChatEngine
         string? conversationId,
         JsonObject? attachment = null,
         bool planApproved = false,
-        IReadOnlyList<string>? checkpoints = null)
+        IReadOnlyList<string>? checkpoints = null,
+        bool paused = false)
     {
         var fields = new JsonObject { ["goal"] = goal };
         if (conversationId != null)
@@ -81,7 +82,15 @@ public sealed partial class EngineHostClient : IAsyncDisposable, IChatEngine
             fields["checkpoints"] = new JsonArray(checkpoints.Select(value => (JsonNode?)value).ToArray());
         }
 
-        var response = await RequestAsync("turn.start", fields, TimeSpan.FromSeconds(120));
+        if (paused)
+        {
+            fields["paused"] = true;
+        }
+
+        // A paused turn does not answer until the person resumes; the normal
+        // two-minute turn deadline must not expire while they sign.
+        var wait = paused ? TimeSpan.FromMinutes(10) : TimeSpan.FromSeconds(120);
+        var response = await RequestAsync("turn.start", fields, wait);
         var plan = new List<string>();
         if (response["plan"] is JsonArray array)
         {

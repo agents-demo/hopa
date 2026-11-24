@@ -152,7 +152,8 @@ public sealed class ChatControllerTests
             string? conversationId,
             JsonObject? attachment = null,
             bool planApproved = false,
-            IReadOnlyList<string>? checkpoints = null) =>
+            IReadOnlyList<string>? checkpoints = null,
+            bool paused = false) =>
             Failure != null
                 ? Task.FromException<TurnResult>(Failure)
                 : Task.FromResult(Turn);

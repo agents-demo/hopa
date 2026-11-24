@@ -53,6 +53,35 @@ public sealed class EngineTransportTests
     }
 
     [Fact]
+    public async Task AStartTurnCanAskForAPausedTurn()
+    {
+        var reader = new QueueReader();
+        var writer = new LineWriter();
+        string? start = null;
+        writer.OnLine = line =>
+        {
+            if (!line.Contains("\"type\":\"turn.start\"", StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            start = line;
+            var id = JsonNode.Parse(line)!["id"]!.GetValue<string>();
+            reader.Push(
+                $"{{\"type\":\"turn.end\",\"id\":\"{id}\",\"conversationId\":\"c\"," +
+                "\"title\":\"t\",\"answer\":\"ok\",\"steps\":[],\"chainOk\":true}");
+        };
+        var transport = new EngineTransport(writer, reader);
+        transport.Start();
+        await using var client = new EngineHostClient(transport);
+
+        await client.StartTurnAsync("sign the form", null, paused: true);
+
+        Assert.NotNull(start);
+        Assert.Contains("\"paused\":true", start);
+    }
+
+    [Fact]
     public async Task BrowserRequestsAreEventsNotPendingReplies()
     {
         var reader = new QueueReader();
