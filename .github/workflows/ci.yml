@@ -421,16 +421,26 @@ jobs:
           distribution: temurin
           java-version: "21"
       - name: Package (zip and MSI)
+        shell: pwsh
         env:
           HOPA_JLINK_HOME: ${{ steps.jlink.outputs.path }}
-        run: powershell -NoProfile -ExecutionPolicy Bypass -File tools/scripts/windows-package.ps1
+          HOPA_SIGN_PFX_BASE64: ${{ secrets.WINDOWS_CERTIFICATE_BASE64 }}
+          HOPA_SIGN_PFX_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          $arguments = @("-Output", "out/windows")
+          if ($env:HOPA_SIGN_PFX_BASE64) {
+            $pfx = Join-Path $env:RUNNER_TEMP "hopa-signing.pfx"
+            [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:HOPA_SIGN_PFX_BASE64))
+            $arguments += @("-CertificatePath", $pfx)
+          }
+          & powershell -NoProfile -ExecutionPolicy Bypass -File tools/scripts/windows-package.ps1 @arguments
       - name: Upload package
         uses: actions/upload-artifact@v7
         with:
           name: hopa-windows-package
           path: |
-            out/windows/hopa-windows-0.1.0.zip
-            out/windows/hopa-windows-0.1.0.zip.sha256
-            out/windows/hopa-windows-0.1.0.msi
-            out/windows/hopa-windows-0.1.0.msi.sha256
+            out/windows/hopa-windows-0.1.0*.zip
+            out/windows/hopa-windows-0.1.0*.zip.sha256
+            out/windows/hopa-windows-0.1.0*.msi
+            out/windows/hopa-windows-0.1.0*.msi.sha256
           if-no-files-found: error

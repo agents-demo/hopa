@@ -213,10 +213,14 @@ Windows CI runner.
   - [ ] Install it on a clean VM and confirm it uses `runtime\bin\java.exe`.
 - [ ] A clean VM runs one PC turn and one phone-approved turn.
 - [ ] The installer is signed and its hash is recorded.
-  - [x] The package script writes `hopa-windows-0.1.0.msi.sha256` and
-    `hopa-windows-0.1.0.zip.sha256`.
-  - [ ] Sign the MSI with the release certificate and verify it with
-    `signtool verify /pa`.
+  - [x] The package script writes hash files; unsigned artifacts are named
+    `*-unsigned`.
+  - [x] The signing hook signs the exe and MSI, timestamps, and verifies with
+    `signtool verify /pa`. Exercised with a temporary self-signed certificate;
+    the certificate was removed afterwards.
+    (evidence: [P6-package.md](../../evidence/P6-package.md))
+  - [ ] Sign with the real release certificate (PFX/store/Trusted Signing) and
+    keep that signature on the clean-VM artifact.
 - [x] Windows CI builds, tests and packages on every pull request.
   - [x] CI installs WiX 5, builds the MSI, records both hashes and uploads the
     zip, MSI and hash files.

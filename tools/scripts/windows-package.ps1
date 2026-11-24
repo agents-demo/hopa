@@ -1,6 +1,10 @@
 param(
     [string]$Output = "out/windows",
     [string]$JdkHome = "",
+    [string]$CertificatePath = "",
+    [string]$CertificateThumbprint = "",
+    [string]$TimestampUrl = "http://timestamp.digicert.com",
+    [string]$SigntoolPath = "",
     [switch]$SkipMsi
 )
 
@@ -10,6 +14,57 @@ $out = Join-Path $root $Output
 $stage = Join-Path $out "hopa-windows-0.1.0"
 $sidecar = Join-Path $root "apps/windows/sidecar"
 $client = Join-Path $root "apps/windows/Hopa.Windows/Hopa.Windows.csproj"
+$signing = [bool]$CertificatePath -or [bool]$CertificateThumbprint
+$suffix = if ($signing) { "" } else { "-unsigned" }
+
+function Resolve-Signtool {
+    if ($SigntoolPath) {
+        if (-not (Test-Path $SigntoolPath)) {
+            throw "signtool not found at $SigntoolPath"
+        }
+        return $SigntoolPath
+    }
+
+    $command = Get-Command signtool.exe -ErrorAction SilentlyContinue
+    if ($command) { return $command.Source }
+
+    $kits = Join-Path ${env:ProgramFiles(x86)} "Windows Kits\10\bin"
+    if (Test-Path $kits) {
+        $candidate = Get-ChildItem $kits -Recurse -Filter signtool.exe |
+            Where-Object { $_.FullName -match '\\x64\\' } |
+            Sort-Object FullName -Descending |
+            Select-Object -First 1
+        if ($candidate) { return $candidate.FullName }
+    }
+
+    throw "signtool not found; install the Windows SDK or pass -SigntoolPath."
+}
+
+function Invoke-Sign([string]$file) {
+    $tool = Resolve-Signtool
+    $arguments = @("sign", "/fd", "SHA256")
+    if ($TimestampUrl) {
+        $arguments += @("/tr", $TimestampUrl, "/td", "SHA256")
+    }
+    if ($CertificatePath) {
+        $arguments += @("/f", $CertificatePath)
+        if ($env:HOPA_SIGN_PFX_PASSWORD) {
+            $arguments += @("/p", $env:HOPA_SIGN_PFX_PASSWORD)
+        }
+    } elseif ($CertificateThumbprint) {
+        $arguments += @("/sha1", $CertificateThumbprint)
+    } else {
+        throw "signing needs -CertificatePath or -CertificateThumbprint"
+    }
+
+    $arguments += $file
+    & $tool @arguments
+    if ($LASTEXITCODE -ne 0) { throw "signtool sign failed for $file" }
+
+    & $tool verify /pa $file
+    if ($LASTEXITCODE -ne 0) { throw "signtool verify failed for $file" }
+    Write-Host "signed: $file"
+}
 $jdk = if ($JdkHome) {
     $JdkHome
 } elseif ($env:HOPA_JLINK_HOME) {
@@ -66,6 +121,12 @@ if (-not (Test-Path (Join-Path $stage "Hopa.Windows.exe"))) {
     throw "the product exe is missing from the package"
 }
 
+if ($signing) {
+    Invoke-Sign (Join-Path $stage "Hopa.Windows.exe")
+} else {
+    Write-Warning "building an unsigned package; artifact names get the '$suffix' suffix"
+}
+
 Write-Host "3/5 jlink runtime"
 & (Join-Path $jdk "bin/jlink.exe") --add-modules java.base,java.logging,java.net.http,java.desktop,java.management,java.naming,java.security.jgss,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported,jdk.zipfs --strip-debug --no-header-files --no-man-pages --compress=zip-6 --output (Join-Path $stage "runtime")
 if ($LASTEXITCODE -ne 0) { throw "jlink failed" }
@@ -77,7 +138,7 @@ if ($runtimeRelease -notmatch 'JAVA_VERSION="21\.') {
 Write-Host "runtime: JDK 21"
 
 Write-Host "4/5 zip"
-$zip = Join-Path $out "hopa-windows-0.1.0.zip"
+$zip = Join-Path $out "hopa-windows-0.1.0$suffix.zip"
 if (Test-Path $zip) { Remove-Item $zip -Force }
 # dotnet publish can leave a build server holding a DLL for a moment. The
 # archive is large enough that a retry is cheaper than a flaky package job.
@@ -95,7 +156,7 @@ for ($attempt = 0; ; $attempt++) {
     }
 }
 $hash = (Get-FileHash $zip -Algorithm SHA256).Hash
-Set-Content -Path (Join-Path $out "hopa-windows-0.1.0.zip.sha256") -Value $hash -Encoding ascii
+Set-Content -Path (Join-Path $out "hopa-windows-0.1.0$suffix.zip.sha256") -Value $hash -Encoding ascii
 Write-Host "zip: $zip"
 Write-Host "sha256: $hash"
 
@@ -111,7 +172,7 @@ if ($null -eq $wix) {
     return
 }
 
-$msi = Join-Path $out "hopa-windows-0.1.0.msi"
+$msi = Join-Path $out "hopa-windows-0.1.0$suffix.msi"
 $wxs = Join-Path $root "apps/windows/installer/Hopa.wxs"
 
 $license = Get-Content (Join-Path $root "LICENSE") -Raw
@@ -122,7 +183,12 @@ Set-Content -Path $licenseRtf -Value $rtf -Encoding ascii
 
 & wix build -ext WixToolset.UI.wixext -d SourceDir="$stage" -d LicenseRtf="$licenseRtf" -o $msi $wxs
 if ($LASTEXITCODE -ne 0) { throw "wix build failed" }
+
+if ($signing) {
+    Invoke-Sign $msi
+}
+
 $msiHash = (Get-FileHash $msi -Algorithm SHA256).Hash
-Set-Content -Path (Join-Path $out "hopa-windows-0.1.0.msi.sha256") -Value $msiHash -Encoding ascii
+Set-Content -Path (Join-Path $out "hopa-windows-0.1.0$suffix.msi.sha256") -Value $msiHash -Encoding ascii
 Write-Host ("msi: {0}" -f $msi)
 Write-Host ("msi sha256: {0}" -f $msiHash)
