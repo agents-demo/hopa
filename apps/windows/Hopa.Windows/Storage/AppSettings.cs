@@ -17,6 +17,12 @@ public sealed class AppSettings
 
     public string Profile { get; set; } = "everyday";
 
+    /// <summary>Try a stored recipe before asking the model.</summary>
+    public bool ReplaySkills { get; set; } = true;
+
+    /// <summary>Attach a screenshot when the model accepts images.</summary>
+    public bool Vision { get; set; }
+
     public double? WindowLeft { get; set; }
 
     public double? WindowTop { get; set; }

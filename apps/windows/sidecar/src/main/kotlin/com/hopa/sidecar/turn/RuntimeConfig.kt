@@ -30,6 +30,12 @@ class RuntimeConfig {
     /** The shell profile; the catalogue is shared in com.hopa.stores.Profiles. */
     var profile: String = "everyday"
         private set
+    /** Try a stored recipe before the model. */
+    var replay: Boolean = true
+        private set
+    /** Attach a screenshot to each model call when the model accepts images. */
+    var vision: Boolean = false
+        private set
     /** P4: this PC has its own gateway credential and a phone peer online. */
     var gatewayPaired: Boolean = false
         private set
@@ -70,6 +76,8 @@ class RuntimeConfig {
         modelName = message.text("modelName").ifBlank { "gpt-4o-mini" }
         tone = message.text("tone").ifBlank { "warm" }
         profile = message.text("profile").ifBlank { profile }
+        replay = message.bool("replay", replay)
+        vision = message.bool("vision", vision)
     }
 
     /** Safe to log: no token, no key, no credentials in the URL. */
@@ -81,4 +89,7 @@ class RuntimeConfig {
 
     private fun JsonObject.text(key: String): String =
         this[key]?.jsonPrimitive?.contentOrNull.orEmpty()
+
+    private fun JsonObject.bool(key: String, fallback: Boolean): Boolean =
+        this[key]?.jsonPrimitive?.contentOrNull?.toBooleanStrictOrNull() ?: fallback
 }

@@ -2,9 +2,11 @@ package com.hopa.sidecar.turn
 
 import com.hopa.agent.action.ActionExecutor
 import com.hopa.agent.action.ApprovalPolicy
-import com.hopa.agent.decision.model.ModelDecisionPolicy
 import com.hopa.agent.decision.model.ModelStepPolicy
-import com.hopa.agent.loop.AgentLoop
+import com.hopa.agent.plan.ModelPlanSource
+import com.hopa.agent.recipe.RecipeStore
+import com.hopa.agent.turn.TurnRequest
+import com.hopa.agent.turn.TurnRunner
 import com.hopa.bridge.device.AdbDevice
 import com.hopa.bridge.session.BridgeClient
 import com.hopa.catalog.routing.CatalogRoutes
@@ -51,6 +53,7 @@ class TurnEngine(
     private val config: RuntimeConfig,
     private val memory: MemoryStore,
     private val skills: SkillStore,
+    private val recipes: RecipeStore,
     private val forceStub: Boolean = false,
     /** False in headless: no host is attached, so the prompt must not claim access. */
     private val deviceAttached: Boolean = true,
@@ -226,63 +229,67 @@ class TurnEngine(
 
         val device = device()
         val model = model()
-        // Windows picks a path per action; the phone target keeps its own order
-        // until P4 gives it a selector.
-        val selector = if (config.hasBridge) null else WindowsPathSelector()
-        val system = if (config.hasBridge) {
-            null
-        } else {
-            (hostDevice as? HostDevice)?.let { HostSystem(it) }
-        }
         val buffer = InMemoryRunRecorder()
         val recorder = if (onRecord == null) buffer else EmittingRecorder(buffer, onRecord)
         val memoryText = memory.promptText()
         val skillText = skills.promptText()
 
-        val executor = ActionExecutor(
-            device = device,
-            browser = null,
-            system = system,
-            sandbox = null,
-            policy = { ApprovalPolicy() },
-            approval = approval,
+        // The shared runner owns plan-first, recipe replay, the step loop and the
+        // deadline. Windows supplies the ports and turns the outcome into a
+        // conversation; it does not keep a second copy of the order.
+        val runner = TurnRunner(
+            steps = ModelStepPolicy(model),
+            executorFor = { target ->
+                val selector = if (config.hasBridge) null else WindowsPathSelector()
+                val system = (target as? HostDevice)?.let { HostSystem(it) }
+                ActionExecutor(
+                    device = target,
+                    browser = null,
+                    system = system,
+                    sandbox = null,
+                    policy = { ApprovalPolicy() },
+                    approval = approval,
+                    recorder = recorder,
+                    factory = RunRecordFactory(clock),
+                    clock = clock,
+                    selector = selector,
+                    onFallback = { message -> io.log(message) },
+                )
+            },
             recorder = recorder,
-            factory = RunRecordFactory(clock),
             clock = clock,
-            selector = selector,
-            onFallback = { message -> io.log(message) },
-        )
-        val loop = AgentLoop(
-            policy = ModelDecisionPolicy(
-                steps = ModelStepPolicy(model),
-                knowledge = { SidecarCatalog.value },
-            ),
-            device = device,
-            executor = executor,
-            recorder = recorder,
-            clock = clock,
-            webAvailable = false,
-            knowledge = SidecarCatalog.value,
+            recipes = recipes,
+            plans = ModelPlanSource(model),
+            knowledge = { SidecarCatalog.value },
         )
         val outcome = runCatching {
-            loop.run(
-                runId = "run-$id",
-                traceId = UUID.randomUUID().toString(),
-                context = TurnContext(
+            runner.run(
+                TurnRequest(
                     goal = goal,
+                    device = device,
+                    runId = "run-$id",
+                    traceId = UUID.randomUUID().toString(),
                     history = history,
                     memory = memoryText,
                     skills = skillText,
-                    platform = "windows",
                     installedApps = windowsApps(),
+                    platform = "windows",
+                    vision = config.vision,
                     phoneAccess = deviceAttached,
+                    planFirst = false,
+                    replay = config.replay,
+                    instantCommands = false,
+                    useGraphs = false,
+                    graphFallback = false,
+                    cloudFallback = false,
+                    timeoutMillis = 120_000,
                 ),
                 isCancelled = { cancelled },
             )
         }
 
         val result = outcome.getOrNull()
-        val answer = result?.answer
+        val answer = result?.answer?.ifBlank { result.error?.message.orEmpty() }
             ?: "The sidecar failed: ${outcome.exceptionOrNull()?.message ?: "unknown error"}"
         val records = result?.records.orEmpty()
         recordStore.append(conversation.id, "run-$id", records)

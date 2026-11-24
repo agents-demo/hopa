@@ -63,7 +63,7 @@ internal fun runProtocol(options: CliOptions) {
     val approval = HostApproval(io, approvals)
     val attachments = Attachments(dataDir.resolve("attachments"))
     val tasks = TaskStore()
-    val engine = TurnEngine(io, device, approval, store, records, config, memory, skills)
+    val engine = TurnEngine(io, device, approval, store, records, config, memory, skills, recipes)
     val backendScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     val sessionPath = dataDir.resolve("backend-session.json")
     val sessionStore = BackendSessionStore(sessionPath)

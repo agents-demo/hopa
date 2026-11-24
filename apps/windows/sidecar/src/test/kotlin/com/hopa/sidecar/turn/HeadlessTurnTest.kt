@@ -21,6 +21,7 @@ import com.hopa.sidecar.approval.DenyAllApproval
 import com.hopa.sidecar.device.HeadlessDevice
 import com.hopa.sidecar.device.HostDevice
 import com.hopa.sidecar.protocol.Protocol
+import com.hopa.agent.recipe.RecipeStore
 import com.hopa.sidecar.store.ChatStore
 import com.hopa.sidecar.store.MemoryFileStore
 import com.hopa.sidecar.store.RecordStore
@@ -110,6 +111,7 @@ class HeadlessTurnTest {
             config = RuntimeConfig(),
             memory = MemoryFileStore(dataDir.resolve("memory.json")),
             skills = SkillFileStore(dataDir.resolve("skills.json")),
+            recipes = RecipeStore(dataDir.resolve("recipes.txt").toFile()),
             forceStub = true,
             deviceAttached = false,
         )
@@ -187,6 +189,7 @@ class HeadlessTurnTest {
         config = RuntimeConfig(),
         memory = MemoryFileStore(dataDir.resolve("memory.json")),
         skills = SkillFileStore(dataDir.resolve("skills.json")),
+            recipes = RecipeStore(dataDir.resolve("recipes.txt").toFile()),
         forceStub = true,
     )
 }

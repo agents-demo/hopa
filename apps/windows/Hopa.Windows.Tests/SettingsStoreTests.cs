@@ -40,6 +40,9 @@ public sealed class SettingsStoreTests
                 ModelBaseUrl = "http://127.0.0.1:11434/v1",
                 ModelName = "llama",
                 Tone = "brief",
+                Profile = "power",
+                ReplaySkills = false,
+                Vision = true,
                 WindowLeft = 10,
                 WindowTop = 20,
                 WindowWidth = 900,
@@ -55,6 +58,9 @@ public sealed class SettingsStoreTests
             Assert.Equal("lan", loaded.ModelProvider);
             Assert.Equal("llama", loaded.ModelName);
             Assert.Equal("brief", loaded.Tone);
+            Assert.Equal("power", loaded.Profile);
+            Assert.False(loaded.ReplaySkills);
+            Assert.True(loaded.Vision);
             Assert.Equal(900, loaded.WindowWidth);
             Assert.True(loaded.WindowMaximized);
         }

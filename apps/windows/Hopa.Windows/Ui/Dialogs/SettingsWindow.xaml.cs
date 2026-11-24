@@ -48,6 +48,8 @@ public partial class SettingsWindow : Window
         ActStatus.Text = settings.UseBridge
             ? "Tasks go to the phone when the gateway is live."
             : "Tasks run on this PC.";
+        ReplayBox.IsChecked = settings.ReplaySkills;
+        VisionBox.IsChecked = settings.Vision;
         Select(ProviderBox, settings.ModelProvider);
         BaseUrlBox.Text = settings.ModelBaseUrl;
         ModelNameBox.Text = settings.ModelName;
@@ -629,6 +631,7 @@ public partial class SettingsWindow : Window
         var tag = (SettingsNav.SelectedItem as ListBoxItem)?.Tag?.ToString() ?? "general";
         GeneralPage.Visibility = tag == "general" ? Visibility.Visible : Visibility.Collapsed;
         ActPage.Visibility = tag == "act" ? Visibility.Visible : Visibility.Collapsed;
+        RunPage.Visibility = tag == "run" ? Visibility.Visible : Visibility.Collapsed;
         ProfilesPage.Visibility = tag == "profiles" ? Visibility.Visible : Visibility.Collapsed;
         MemoryPage.Visibility = tag == "memory" ? Visibility.Visible : Visibility.Collapsed;
         SkillsPage.Visibility = tag == "skills" ? Visibility.Visible : Visibility.Collapsed;
@@ -717,6 +720,8 @@ public partial class SettingsWindow : Window
         settings.ModelName = ModelNameBox.Text.Trim();
         settings.Tone = Value(ToneBox, "warm");
         settings.Profile = SelectedProfile(settings.Profile);
+        settings.ReplaySkills = ReplayBox.IsChecked == true;
+        settings.Vision = VisionBox.IsChecked == true;
         store.Save(settings);
         SaveSecret("hopa.bridge.token", BridgeTokenBox.Password);
         SaveSecret("hopa.model.key", ModelKeyBox.Password);

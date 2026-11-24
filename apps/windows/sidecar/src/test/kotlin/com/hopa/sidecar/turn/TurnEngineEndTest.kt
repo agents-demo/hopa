@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test
 
 import com.hopa.sidecar.approval.HostApproval
 import com.hopa.sidecar.device.HostDevice
+import com.hopa.agent.recipe.RecipeStore
 import com.hopa.sidecar.store.ChatStore
 import com.hopa.sidecar.store.MemoryFileStore
 import com.hopa.sidecar.store.PendingApprovals
@@ -95,6 +96,7 @@ class TurnEngineEndTest {
             config = RuntimeConfig(),
             memory = MemoryFileStore(directory.resolve("memory.json")),
             skills = SkillFileStore(directory.resolve("skills.json")),
+            recipes = RecipeStore(directory.resolve("recipes.txt").toFile()),
         )
     }
 }

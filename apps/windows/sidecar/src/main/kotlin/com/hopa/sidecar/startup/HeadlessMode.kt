@@ -7,6 +7,7 @@ import com.hopa.sidecar.store.ChatStore
 import com.hopa.sidecar.store.MemoryFileStore
 import com.hopa.sidecar.store.RecordStore
 import com.hopa.sidecar.store.SkillFileStore
+import com.hopa.agent.recipe.RecipeStore
 import com.hopa.sidecar.device.HeadlessDevice
 import com.hopa.sidecar.protocol.Stdio
 import com.hopa.sidecar.turn.RuntimeConfig
@@ -20,6 +21,7 @@ internal fun runHeadless(options: CliOptions): Int {
     val records = RecordStore(dataDir.resolve("records.json"))
     val memory = MemoryFileStore(dataDir.resolve("memory.json"))
     val skills = SkillFileStore(dataDir.resolve("skills.json"))
+    val recipes = RecipeStore(dataDir.resolve("recipes.txt").toFile())
     val approvals = DenyAllApproval()
     val engine = TurnEngine(
         io = io,
@@ -30,6 +32,7 @@ internal fun runHeadless(options: CliOptions): Int {
         config = RuntimeConfig(),
         memory = memory,
         skills = skills,
+        recipes = recipes,
         forceStub = true,
         deviceAttached = false,
     )
