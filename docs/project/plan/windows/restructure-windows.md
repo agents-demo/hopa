@@ -289,7 +289,7 @@ Adopted:
   a temp file instead of the user's settings, and every documented CLI flag has
   a parser test (74 tests).
 - The pane and controller tests cover rows, filters, attachments, drafts, turn
-  reports, approvals and errors; the client suite is 79.
+  reports, approvals and errors; the client suite is 85.
 
 Not adopted, with reasons:
 
@@ -324,3 +324,5 @@ Not adopted, with reasons:
 - `GatewayClient` is split into the main lifecycle, `GatewayClient.Requests.cs`
   and `GatewayClient.Socket.cs`; `WindowsDevice.Apps` uses a top-level
   `DeviceApp` instead of a nested record.
+- `GatewayFrames` parses the frame type and fields once; the socket loop switches
+  on the parsed kind. Six tests cover the frame contract without a socket.

@@ -122,31 +122,27 @@ public sealed partial class GatewayClient
 
     private async Task HandleFrameAsync(ClientWebSocket ws, JsonObject frame, CancellationToken cancellationToken)
     {
-        var type = frame["type"]?.GetValue<string>() ?? "";
-        switch (type)
+        var parsed = GatewayFrames.Parse(frame);
+        switch (parsed.Kind)
         {
-            case "device.hello.ack":
-                DeviceId = frame["to"]?.GetValue<string>() ?? DeviceId;
+            case GatewayFrameKind.HelloAck:
+                DeviceId = parsed.DeviceId ?? DeviceId;
                 peers.Clear();
-                if (Body(frame)?["peers"] is JsonArray roster)
+                if (parsed.Peers != null)
                 {
-                    foreach (var item in roster)
+                    foreach (var id in parsed.Peers)
                     {
-                        if (item?.GetValue<string>() is { Length: > 0 } id)
-                        {
-                            peers.Add(id);
-                        }
+                        peers.Add(id);
                     }
                 }
                 UpdatePhone();
                 SetState("live", live: true);
                 break;
 
-            case "presence":
-                if (Body(frame)?["device"]?.GetValue<string>() is { Length: > 0 } device)
+            case GatewayFrameKind.Presence:
+                if (parsed.PresenceDevice is { Length: > 0 } device)
                 {
-                    var online = Body(frame)?["online"]?.GetValue<bool>() ?? false;
-                    if (online)
+                    if (parsed.PresenceOnline)
                     {
                         peers.Add(device);
                     }
@@ -159,19 +155,19 @@ public sealed partial class GatewayClient
                 }
                 break;
 
-            case "ping":
+            case GatewayFrameKind.Ping:
                 await SendOnSocketAsync(ws, new JsonObject
                 {
                     ["v"] = 1,
                     ["id"] = Guid.NewGuid().ToString(),
                     ["type"] = "pong",
                     ["ts"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                    ["to"] = frame["from"]?.GetValue<string>(),
+                    ["to"] = parsed.From,
                 }, cancellationToken);
                 break;
 
-            case "task.ack":
-                if (Body(frame)?["task"]?.GetValue<string>() is { Length: > 0 } taskId)
+            case GatewayFrameKind.TaskAck:
+                if (parsed.TaskId is { Length: > 0 } taskId)
                 {
                     lock (pendingGate)
                     {
@@ -184,56 +180,55 @@ public sealed partial class GatewayClient
                 }
                 break;
 
-            case "task.result":
+            case GatewayFrameKind.TaskResult:
                 // A decision is only accepted from the phone peer the server
                 // authenticated; a result from anywhere else is not an answer.
-                var from = frame["from"]?.GetValue<string>() ?? "";
+                var from = parsed.From ?? "";
                 if (from.Length == 0 || from == PhoneDeviceId)
                 {
                     lock (pendingGate)
                     {
                         if (waiting != null &&
-                            (waiting.TaskId == null || waiting.TaskId == frame["task"]?.GetValue<string>()))
+                            (waiting.TaskId == null || waiting.TaskId == parsed.TaskId))
                         {
-                            waiting.TaskId ??= frame["task"]?.GetValue<string>();
+                            waiting.TaskId ??= parsed.TaskId;
                             waiting.Ack.TrySetResult(waiting.TaskId ?? "");
                             waiting.Result.TrySetResult(frame);
                         }
                     }
                 }
-                if (Body(frame)?["approval"] != null)
+                if (parsed.Body?["approval"] != null)
                 {
                     // The host reads the authenticated `from` to name the device.
                     ApprovalReceived?.Invoke(frame);
                 }
                 break;
 
-            case "task.needs_approval":
+            case GatewayFrameKind.NeedsApproval:
                 ApprovalReceived?.Invoke(frame);
                 break;
 
-            case "task.create":
+            case GatewayFrameKind.TaskCreate:
                 TaskReceived?.Invoke(frame);
                 break;
 
-            case "error":
+            case GatewayFrameKind.Error:
                 lock (pendingGate)
                 {
                     if (waiting != null)
                     {
-                        var message = Body(frame)?["message"]?.GetValue<string>() ?? "gateway error";
+                        var message = parsed.Error ?? "gateway error";
                         waiting.Ack.TrySetException(new InvalidOperationException(message));
                         waiting.Result.TrySetException(new InvalidOperationException(message));
                     }
                 }
                 break;
 
-            case "pong":
+            case GatewayFrameKind.Pong:
+            default:
                 break;
         }
     }
-
-    private static JsonObject? Body(JsonObject frame) => frame["body"] as JsonObject;
 
     private void FailPending(string message)
     {
