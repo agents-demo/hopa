@@ -2,10 +2,8 @@ using System.Globalization;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using Hopa.Windows.Integrations.Device;
 using Hopa.Windows.Storage;
 using Hopa.Windows.Ui;
 using Hopa.Windows.Ui.Shell;
@@ -55,7 +53,7 @@ internal static class VisionCheck
             var frame = Render(word);
             Save(frame, framePath);
             surface = Show(frame);
-            ForceForeground(surface);
+            DesktopFocus.Bring(surface);
             await Task.Delay(700);
             var foreground = tools.Device.ForegroundApp();
             lines.Add("foreground: " + foreground);
@@ -171,15 +169,6 @@ internal static class VisionCheck
         surface.Show();
         surface.Activate();
         return surface;
-    }
-
-    private static void ForceForeground(Window surface)
-    {
-        var handle = new WindowInteropHelper(surface).Handle;
-        Win32.ShowWindow(handle, 5);
-        Win32.SetForegroundWindow(handle);
-        surface.Activate();
-        surface.Focus();
     }
 
     private static void Save(BitmapSource bitmap, string path)

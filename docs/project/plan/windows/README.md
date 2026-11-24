@@ -1,7 +1,7 @@
 # Windows client plan (P0–P6)
 
-Status: **P0–P4 code complete (P4 hardware gate pending); P5–P6 open; W7–W9
-done, W10/W11 in progress.** The shared engine runs headless through the real
+Status: **P0-P4 code complete (P4 hardware gate pending); P5 done; P6 packaging
+in progress; W7-W9 done, W10/W11 in progress.** The shared engine runs headless through the real
 gate, the PC adapter implements the whole `DevicePort` contract, and settings
 launches use a URI before any click. The product goal is now **semantic parity
 with Android** ([ADR-0027](../../../design/decisions/0027-windows-semantic-parity.md));
@@ -179,7 +179,7 @@ second task state machine.
 
 Gate: a PC action is approved on the phone and the run record names the phone.
 
-### P5. Signature and HITL (1 week) — in progress
+### P5. Signature and HITL (1 week) - done
 
 Add a takeover surface: pause, hand the form to the user, resume. Capture the
 verified postcondition.
@@ -192,7 +192,9 @@ verified postcondition.
 - [x] A cancelled takeover leaves the task failed, not silently done. (evidence:
   `AgentLoopTest.a_cancelled_takeover_stops_instead_of_claiming_success`;
   `turn.cancel` releases the pause)
-- [ ] Evidence: a form pre-filled, signed, submitted and confirmed.
+- [x] Evidence: a form pre-filled, signed, submitted and confirmed by a human.
+  (evidence: [P5-takeover.md](../../../evidence/P5-takeover.md);
+  `operator: human`, `checkpoint complete: True`)
 
 Gate: a signed form produces a verified postcondition and a record.
 

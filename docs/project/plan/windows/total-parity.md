@@ -156,12 +156,13 @@ The screens that change what HOPA does.
   `--turn "Use the web browser..."` runs `web.navigate` then `web.read` and
   answers `Example Domain`; `--web-check` fills a loopback form and shows
   `Signed by Michael`)
-- [ ] Takeover/signature P5. (evidence: form transcript + verified postcondition)
+- [x] Takeover/signature P5. (evidence:
+  [P5-takeover.md](../../../evidence/P5-takeover.md))
   - [x] A real form, pause before the first step, resume and a verified
-    `Signed by Michael` checkpoint. (evidence: `--p5-check --auto-sign`;
-    transcript says `paused: True`, `signed: Signed by Michael`,
-    `checkpoint complete: True`)
-  - [ ] A human-signed rerun: `--p5-check` without `--auto-sign`.
+    `Signed by Michael` checkpoint.
+  - [x] A human-signed rerun: `--p5-check` without `--auto-sign`; the
+    transcript says `operator: human`, `paused: True`, `signed: Signed by
+    Michael`, `checkpoint complete: True`.
 - [x] Vision frame round-trip when a model accepts images. (evidence:
   `--vision-check` draws a word only in the frame; the model's answer matches;
   `vision-check.txt`, `vision-nonce.png`, `vision-screen.png`)

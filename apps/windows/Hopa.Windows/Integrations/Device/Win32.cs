@@ -24,6 +24,9 @@ internal static class Win32
     public static extern bool SetForegroundWindow(IntPtr hwnd);
 
     [DllImport("user32.dll")]
+    public static extern bool BringWindowToTop(IntPtr hwnd);
+
+    [DllImport("user32.dll")]
     public static extern void keybd_event(byte virtualKey, byte scan, uint flags, UIntPtr extra);
 
     [DllImport("user32.dll")]

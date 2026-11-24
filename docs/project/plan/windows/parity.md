@@ -43,7 +43,7 @@ desktop form. The phase plan is [total-parity.md](total-parity.md).
 | How HOPA acts | `apps/android/feature/execution/src/main/kotlin/com/hopa/feature/execution/HowHopaActsScreen.kt` | tier/policy explanation inside the run rail | new |
 | Run preferences / setup | `apps/android/feature/execution/src/main/kotlin/com/hopa/feature/execution/RunPrefsScreen.kt`, `RunSetupScreen.kt` | saved target and tier preferences | new |
 | Device | `apps/android/feature/execution/src/main/kotlin/com/hopa/feature/execution/ComputerScreen.kt` | this PC is the device; the phone is a peer target | adapt |
-| Takeover / signature | none yet | pause, hand over, resume, verify | new (P5) |
+| Takeover / signature | none yet | pause, hand over, resume, verify | new |
 | Launchpad | `apps/android/feature/launchpad/src/main/kotlin/com/hopa/feature/launchpad/LaunchpadScreen.kt` | Start-menu catalog with launch and stop | new |
 | Browser | `apps/android/feature/browser/src/main/kotlin/com/hopa/feature/browser/BrowserScreen.kt` | WebView2 pane with link-out fallback; engine `web.navigate/read/click/type` drive the same window | have |
 | Notifier | `apps/android/app/src/main/kotlin/com/hopa/app/service/Notifier.kt` | Windows toast + notification center | adapt |

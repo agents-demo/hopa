@@ -1,0 +1,10 @@
+target: this PC (the bridge target was restored afterwards)
+foreground: Hopa.Windows.DevTools
+form visible: True
+prefill: Michael
+operator: human
+paused: True
+signed: Signed by Michael
+answer: Confirmed � the form is signed. Full name is Michael, the signature field reads Michael, and the page shows "Signed by Michael". I haven't taken any action and Submit hasn't been pressed.
+checkpoint complete: True
+checkpoint missing: 

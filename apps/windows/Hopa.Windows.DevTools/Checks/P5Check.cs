@@ -1,8 +1,6 @@
 using System.IO;
 using System.Text.Json.Nodes;
 using System.Windows;
-using System.Windows.Interop;
-using Hopa.Windows.Integrations.Device;
 using Hopa.Windows.Storage;
 using Hopa.Windows.Ui;
 using Hopa.Windows.Ui.Shell;
@@ -43,7 +41,7 @@ internal static class P5Check
             form = new P5FormWindow { Owner = window };
             form.PreFill("Michael");
             form.Show();
-            ForceForeground(form);
+            DesktopFocus.Bring(form);
             await Task.Delay(1_200);
             var foreground = tools.Device.ForegroundApp();
             JsonObject observation = new();
@@ -137,12 +135,4 @@ internal static class P5Check
         }
     }
 
-    private static void ForceForeground(Window surface)
-    {
-        var handle = new WindowInteropHelper(surface).Handle;
-        Win32.ShowWindow(handle, 5);
-        Win32.SetForegroundWindow(handle);
-        surface.Activate();
-        surface.Focus();
-    }
 }
