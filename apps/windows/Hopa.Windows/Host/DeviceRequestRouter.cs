@@ -66,7 +66,9 @@ public sealed class DeviceRequestRouter
 
                 case "openLink":
                     var opened = device.OpenLink(message["url"]?.GetValue<string>() ?? "");
-                    log($"device: {opened}");
+                    // The result may repeat the URL; the log records only that
+                    // a link was opened, not where it goes.
+                    log("device: opened a link");
                     reply(new DeviceResult(id, true, Text: opened));
                     return;
 

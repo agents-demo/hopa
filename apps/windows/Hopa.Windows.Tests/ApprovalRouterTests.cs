@@ -130,6 +130,28 @@ public sealed class ApprovalRouterTests
     }
 
     [Fact]
+    public async Task TheApprovalTitleNeverEntersTheLog()
+    {
+        var logs = new List<string>();
+        var router = new ApprovalRouter(
+            askUser: _ => true,
+            phone: () => null,
+            reply: (_, _, _) => { },
+            log: logs.Add,
+            autoApproval: null);
+
+        await router.HandleAsync(new JsonObject
+        {
+            ["id"] = "a1",
+            ["title"] = "Pay hunter2 invoice",
+            ["action"] = "ui.tap",
+        });
+
+        Assert.Contains(logs, line => line.StartsWith("approval:", StringComparison.Ordinal));
+        Assert.DoesNotContain(logs, line => line.Contains("hunter2", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void ApprovalAllowedNeedsAnExplicitTrue()
     {
         Assert.True(ApprovalRouter.ApprovalAllowed(Approval(allow: true)));

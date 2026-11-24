@@ -191,8 +191,10 @@ Prove the matrix instead of asserting it.
   `ProtocolFamilyTest` enumerates every envelope; `DataProtocolTest`,
   `ProtocolTest`, `HostBrowserTest` and the handler/store suites cover payloads
   and refusals)
-- [ ] No screen text or secrets in logs, screenshots or crash dumps. (evidence:
-  grep + review)
+- [x] No screen text or secrets in logs, screenshots or crash dumps. (evidence:
+  [W11-log-hygiene.md](../../evidence/W11-log-hygiene.md); approval title and
+  open-link URL removed from logs, regression tests; chat answer is explicit
+  product output)
 - [ ] The signed MSI installs on a clean VM and passes the same smoke. (evidence:
   MSI hash + VM transcript)
 - [ ] `parity.md` has no planned row without an artifact or an explicit

@@ -94,6 +94,25 @@ public sealed class DeviceRequestRouterTests
         Assert.Equal("stale ref e9", failed.Error);
     }
 
+    [Fact]
+    public void TheOpenLinkLogDoesNotRepeatTheUrl()
+    {
+        var device = new FakeDevice { OpenLinkResult = "opened https://secret.example/token" };
+        var logs = new List<string>();
+        var results = new List<DeviceResult>();
+
+        new DeviceRequestRouter(device, results.Add, logs.Add)
+            .Handle(new JsonObject
+            {
+                ["id"] = "d1",
+                ["op"] = "openLink",
+                ["url"] = "https://secret.example/token",
+            });
+
+        Assert.True(Assert.Single(results).Ok);
+        Assert.DoesNotContain(logs, line => line.Contains("secret", StringComparison.Ordinal));
+    }
+
     private sealed class FakeDevice : IDevice
     {
         public JsonObject Observation { get; set; } = new();

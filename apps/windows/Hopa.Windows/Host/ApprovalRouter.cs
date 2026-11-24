@@ -34,33 +34,31 @@ public sealed class ApprovalRouter
     public async Task HandleAsync(JsonObject message)
     {
         var id = Text(message, "id");
-        var title = Text(message, "title");
 
         if (autoApproval != null)
         {
             var allowed = autoApproval == "allow";
             reply(id, allowed, "pc");
-            log($"approval: auto-{(allowed ? "allow" : "deny")} {title}");
+            log($"approval: auto-{(allowed ? "allow" : "deny")}");
             return;
         }
 
         var live = phone();
         if (live is { IsLive: true } && live.PhoneDeviceId.Length > 0)
         {
-            await AskPhoneAsync(live, message, id, title);
+            await AskPhoneAsync(live, message, id);
             return;
         }
 
         var allow = askUser(message);
         reply(id, allow, "pc");
-        log($"approval: {(allow ? "allow" : "deny")} {title}");
+        log($"approval: {(allow ? "allow" : "deny")}");
     }
 
     private async Task AskPhoneAsync(
         IApprovalPhone live,
         JsonObject message,
-        string id,
-        string title)
+        string id)
     {
         var allow = false;
         var source = "pc";
@@ -84,7 +82,7 @@ public sealed class ApprovalRouter
         finally
         {
             reply(id, allow, source);
-            log($"approval: {(allow ? "allow" : "deny")} from {source}: {title}");
+            log($"approval: {(allow ? "allow" : "deny")} from {source}");
         }
     }
 
