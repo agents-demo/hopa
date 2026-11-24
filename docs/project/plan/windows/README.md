@@ -207,6 +207,9 @@ Windows CI runner.
   - [x] `windows-package.ps1` builds a WiX MSI from the staged client, sidecar
     jars and jlink runtime; the local run produced
     `hopa-windows-0.1.0.msi` with a recorded SHA-256.
+  - [x] An administrative extract contains `Hopa.Windows.exe`, `sidecar\lib`
+    and `runtime\bin\java.exe` with `JAVA_VERSION="21.0.11"`.
+    (evidence: [P6-package.md](../../evidence/P6-package.md))
   - [ ] Install it on a clean VM and confirm it uses `runtime\bin\java.exe`.
 - [ ] A clean VM runs one PC turn and one phone-approved turn.
 - [ ] The installer is signed and its hash is recorded.
