@@ -45,6 +45,11 @@
                 <ListBoxItem Tag="capabilities" Content="Capabilities" />
                 <ListBoxItem Tag="recipes" Content="Recipes" />
                 <ListBoxItem Tag="history" Content="History" />
+                <ListBoxItem Tag="privacy" Content="Privacy" />
+                <ListBoxItem Tag="notifications" Content="Notifications" />
+                <ListBoxItem Tag="launchpad" Content="Launchpad" />
+                <ListBoxItem Tag="selfcheck" Content="Self check" />
+                <ListBoxItem Tag="about" Content="About" />
             </ListBox>
 
             <Border Grid.Column="1" Background="#E9E4DA" Margin="12,0" />
@@ -182,6 +187,62 @@
                         <Button x:Name="HistoryRefreshButton" Content="Refresh" Width="100" Height="32"
                                 HorizontalAlignment="Left" Margin="0,8,0,0" Click="HistoryRefresh_Click" />
                         <TextBlock x:Name="HistoryStatus" FontSize="10" Foreground="#6B665C" Margin="0,8,0,0" />
+                    </StackPanel>
+
+                    <StackPanel x:Name="PrivacyPage" Visibility="Collapsed">
+                        <TextBlock Text="Privacy" FontSize="15" FontWeight="SemiBold" Foreground="#1C1B18" />
+                        <TextBlock Text="What left this PC: finished turns and the actions they sent."
+                                   FontSize="11" Foreground="#9A9488" Margin="0,4,0,12" TextWrapping="Wrap" />
+                        <ListBox x:Name="PrivacyList" Height="320" />
+                        <Button x:Name="PrivacyRefreshButton" Content="Refresh" Width="100" Height="32"
+                                HorizontalAlignment="Left" Margin="0,8,0,0" Click="PrivacyRefresh_Click" />
+                        <TextBlock x:Name="PrivacyStatus" FontSize="10" Foreground="#6B665C" Margin="0,8,0,0" />
+                    </StackPanel>
+
+                    <StackPanel x:Name="NotificationsPage" Visibility="Collapsed">
+                        <TextBlock Text="Notifications" FontSize="15" FontWeight="SemiBold" Foreground="#1C1B18" />
+                        <TextBlock Text="Recent Windows toasts. The PC owns this surface."
+                                   FontSize="11" Foreground="#9A9488" Margin="0,4,0,12" />
+                        <ListBox x:Name="NotificationList" Height="300" />
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <Button x:Name="NotificationClearButton" Content="Clear" Width="100" Height="32"
+                                    Click="NotificationClear_Click" />
+                            <Button x:Name="NotificationRefreshButton" Content="Refresh" Width="100" Height="32"
+                                    Margin="8,0,0,0" Click="NotificationRefresh_Click" />
+                        </StackPanel>
+                        <TextBlock x:Name="NotificationStatus" FontSize="10" Foreground="#6B665C" Margin="0,8,0,0" />
+                    </StackPanel>
+
+                    <StackPanel x:Name="LaunchpadPage" Visibility="Collapsed">
+                        <TextBlock Text="Launchpad" FontSize="15" FontWeight="SemiBold" Foreground="#1C1B18" />
+                        <TextBlock Text="Apps the Start menu offers." FontSize="11" Foreground="#9A9488"
+                                   Margin="0,4,0,12" />
+                        <ListBox x:Name="LaunchpadList" Height="300" />
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <Button x:Name="LaunchpadLaunchButton" Content="Launch" Width="100" Height="32"
+                                    Click="LaunchpadLaunch_Click" />
+                            <Button x:Name="LaunchpadStopButton" Content="Stop" Width="100" Height="32"
+                                    Margin="8,0,0,0" Click="LaunchpadStop_Click" />
+                            <Button x:Name="LaunchpadRefreshButton" Content="Refresh" Width="100" Height="32"
+                                    Margin="8,0,0,0" Click="LaunchpadRefresh_Click" />
+                        </StackPanel>
+                        <TextBlock x:Name="LaunchpadStatus" FontSize="10" Foreground="#6B665C" Margin="0,8,0,0" />
+                    </StackPanel>
+
+                    <StackPanel x:Name="SelfCheckPage" Visibility="Collapsed">
+                        <TextBlock Text="Self check" FontSize="15" FontWeight="SemiBold" Foreground="#1C1B18" />
+                        <TextBlock Text="Sidecar, device, bridge and credentials, checked live."
+                                   FontSize="11" Foreground="#9A9488" Margin="0,4,0,12" />
+                        <Button x:Name="SelfCheckButton" Content="Run checks" Width="110" Height="32"
+                                HorizontalAlignment="Left" Click="SelfCheck_Click" />
+                        <TextBlock x:Name="SelfCheckText" FontSize="11" Foreground="#1C1B18"
+                                   TextWrapping="Wrap" LineHeight="20" Margin="0,12,0,0" />
+                    </StackPanel>
+
+                    <StackPanel x:Name="AboutPage" Visibility="Collapsed">
+                        <TextBlock Text="About" FontSize="15" FontWeight="SemiBold" Foreground="#1C1B18" />
+                        <TextBlock x:Name="AboutText" FontSize="12" Foreground="#1C1B18"
+                                   TextWrapping="Wrap" LineHeight="22" Margin="0,12,0,0" />
                     </StackPanel>
                 </Grid>
             </ScrollViewer>

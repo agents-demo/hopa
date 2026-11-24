@@ -2,9 +2,12 @@
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Linq;
+using System.Text.Json.Nodes;
+using Hopa.Windows.Integrations.Device;
 using Hopa.Windows.Integrations.Engine;
 using Hopa.Windows.Integrations.Gateway;
 using Hopa.Windows.Storage;
+using Hopa.Windows.Ui.Shell;
 
 namespace Hopa.Windows.Ui.Dialogs;
 
@@ -16,15 +19,17 @@ public partial class SettingsWindow : Window
 {
     private readonly SettingsStore store = new();
     private readonly EngineHostClient? engine;
+    private readonly WindowsDevice? device;
     private bool loaded;
 
-    public SettingsWindow() : this(null)
+    public SettingsWindow() : this(null, null)
     {
     }
 
-    public SettingsWindow(EngineHostClient? engine)
+    public SettingsWindow(EngineHostClient? engine, WindowsDevice? device = null)
     {
         this.engine = engine;
+        this.device = device;
         InitializeComponent();
         LoadSettings();
         SettingsNav.SelectedIndex = 0;
@@ -47,6 +52,12 @@ public partial class SettingsWindow : Window
         GatewayStatusText.Text = gateway == null
             ? "Not paired. Pairing is the first step for phone approval."
             : $"Paired as {gateway.DeviceId}.";
+        AboutText.Text =
+            "HOPA for Windows\n" +
+            $"Version {typeof(SettingsWindow).Assembly.GetName().Version}\n\n" +
+            "The loop, the gate and the records come from the shared core; " +
+            "the Kotlin sidecar is the Windows engine host.\n\n" +
+            "Screen text stays out of logs; secrets stay in Windows Credential Manager.";
     }
 
     private async Task RefreshAllAsync()
@@ -64,6 +75,8 @@ public partial class SettingsWindow : Window
         await RefreshCapabilitiesAsync();
         await RefreshRecipesAsync();
         await RefreshHistoryAsync();
+        await RefreshPrivacyAsync();
+        RefreshNotifications();
     }
 
     private async Task RefreshProfilesAsync()
@@ -408,6 +421,184 @@ public partial class SettingsWindow : Window
         await RefreshHistoryAsync();
     }
 
+    private async Task RefreshPrivacyAsync()
+    {
+        if (engine == null)
+        {
+            PrivacyStatus.Text = "Start the sidecar from the main window to load the record summary.";
+            return;
+        }
+
+        try
+        {
+            var history = await engine.ListHistoryAsync();
+            PrivacyList.Items.Clear();
+            foreach (var entry in history)
+            {
+                var at = DateTimeOffset.FromUnixTimeMilliseconds(entry.CreatedAt).LocalDateTime;
+                PrivacyList.Items.Add(new ListBoxItem
+                {
+                    Content = $"{at:g} · {entry.Title} · {entry.Steps} step(s) · " +
+                              $"{entry.Executed} executed / {entry.Failed} failed",
+                });
+            }
+
+            PrivacyStatus.Text = history.Count == 0
+                ? "No finished turns yet."
+                : $"{history.Count} turn(s) in the record chain.";
+        }
+        catch (Exception error)
+        {
+            PrivacyStatus.Text = error.Message;
+        }
+    }
+
+    private void RefreshNotifications()
+    {
+        NotificationList.Items.Clear();
+        foreach (var entry in NotificationHistory.Recent())
+        {
+            NotificationList.Items.Add(new ListBoxItem
+            {
+                Content = $"{entry.At:g} · {entry.Title}: {entry.Text}",
+            });
+        }
+
+        NotificationStatus.Text = NotificationHistory.Recent().Count == 0
+            ? "No toasts yet."
+            : $"{NotificationHistory.Recent().Count} toast(s).";
+    }
+
+    private async void PrivacyRefresh_Click(object sender, RoutedEventArgs e)
+    {
+        await RefreshPrivacyAsync();
+    }
+
+    private void NotificationRefresh_Click(object sender, RoutedEventArgs e) => RefreshNotifications();
+
+    private void NotificationClear_Click(object sender, RoutedEventArgs e)
+    {
+        NotificationHistory.Clear();
+        RefreshNotifications();
+    }
+
+    private async void LaunchpadRefresh_Click(object sender, RoutedEventArgs e)
+    {
+        if (device == null)
+        {
+            LaunchpadStatus.Text = "The device adapter is not attached in this window.";
+            return;
+        }
+
+        LaunchpadStatus.Text = "Reading the Start menu...";
+        LaunchpadRefreshButton.IsEnabled = false;
+        try
+        {
+            var apps = await Task.Run(() => device.Apps());
+            LaunchpadList.Items.Clear();
+            foreach (var app in apps)
+            {
+                LaunchpadList.Items.Add(new ListBoxItem
+                {
+                    Content = $"{app.Label} · {app.Package}",
+                    Tag = app,
+                });
+            }
+
+            LaunchpadStatus.Text = $"{apps.Count} app(s) from the Start menu.";
+        }
+        catch (Exception error)
+        {
+            LaunchpadStatus.Text = error.Message;
+        }
+        finally
+        {
+            LaunchpadRefreshButton.IsEnabled = true;
+        }
+    }
+
+    private void LaunchpadLaunch_Click(object sender, RoutedEventArgs e)
+    {
+        if (device == null || LaunchpadList.SelectedItem is not ListBoxItem { Tag: DeviceApp app })
+        {
+            return;
+        }
+
+        try
+        {
+            LaunchpadStatus.Text = device.Act("launch", new JsonObject { ["app"] = app.Package });
+        }
+        catch (Exception error)
+        {
+            LaunchpadStatus.Text = error.Message;
+        }
+    }
+
+    private void LaunchpadStop_Click(object sender, RoutedEventArgs e)
+    {
+        if (device == null || LaunchpadList.SelectedItem is not ListBoxItem { Tag: DeviceApp app })
+        {
+            return;
+        }
+
+        try
+        {
+            LaunchpadStatus.Text = device.Act("stop", new JsonObject { ["app"] = app.Package });
+        }
+        catch (Exception error)
+        {
+            LaunchpadStatus.Text = error.Message;
+        }
+    }
+
+    private async void SelfCheck_Click(object sender, RoutedEventArgs e)
+    {
+        SelfCheckButton.IsEnabled = false;
+        var lines = new List<string>();
+        try
+        {
+            lines.Add($"Sidecar: {(engine == null ? "not connected" : "connected")}");
+            if (engine != null)
+            {
+                try
+                {
+                    var capabilities = await engine.CapabilitiesAsync();
+                    lines.Add($"Model: {capabilities.ModelProvider} / {capabilities.ModelName} " +
+                              $"({(capabilities.ModelReady ? "key present" : "no key")})");
+                    lines.Add($"Bridge: {(capabilities.Bridge ? "on" : "off")}");
+                    lines.Add($"Gateway: {(capabilities.GatewayPaired ? "paired" : "not paired")}; " +
+                              $"phone {(capabilities.PhoneOnline ? "online" : "offline")}");
+                    lines.Add($"Runtime: {capabilities.Runs} run(s), {capabilities.WindowsApps} Windows app(s)");
+                }
+                catch (Exception error)
+                {
+                    lines.Add($"Sidecar probe failed: {error.Message}");
+                }
+            }
+
+            if (device == null)
+            {
+                lines.Add("UI Automation: not attached in this window");
+            }
+            else
+            {
+                lines.Add($"UI Automation: {device.UnreadableReason() ?? "ready"}");
+                lines.Add($"Foreground: {device.ForegroundApp()}");
+            }
+
+            lines.Add($"Bridge token: {Present("hopa.bridge.token")}");
+            lines.Add($"Model key: {Present("hopa.model.key")}");
+        }
+        finally
+        {
+            SelfCheckText.Text = string.Join("\n", lines);
+            SelfCheckButton.IsEnabled = true;
+        }
+    }
+
+    private static string Present(string name) =>
+        CredentialStore.Read(name).Length > 0 ? "present" : "missing";
+
     private void SettingsNav_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (GeneralPage == null)
@@ -424,6 +615,11 @@ public partial class SettingsWindow : Window
         CapabilitiesPage.Visibility = tag == "capabilities" ? Visibility.Visible : Visibility.Collapsed;
         RecipesPage.Visibility = tag == "recipes" ? Visibility.Visible : Visibility.Collapsed;
         HistoryPage.Visibility = tag == "history" ? Visibility.Visible : Visibility.Collapsed;
+        PrivacyPage.Visibility = tag == "privacy" ? Visibility.Visible : Visibility.Collapsed;
+        NotificationsPage.Visibility = tag == "notifications" ? Visibility.Visible : Visibility.Collapsed;
+        LaunchpadPage.Visibility = tag == "launchpad" ? Visibility.Visible : Visibility.Collapsed;
+        SelfCheckPage.Visibility = tag == "selfcheck" ? Visibility.Visible : Visibility.Collapsed;
+        AboutPage.Visibility = tag == "about" ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void SettingsSearch_TextChanged(object sender, TextChangedEventArgs e)

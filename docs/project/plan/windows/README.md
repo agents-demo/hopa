@@ -1,7 +1,7 @@
 # Windows client plan (P0–P6)
 
-Status: **P0–P4 code complete (P4 hardware gate pending); P5–P6 open; W7–W8
-done, W9 in progress.** The shared engine runs headless through the real
+Status: **P0–P4 code complete (P4 hardware gate pending); P5–P6 open; W7–W9
+done, W10 next.** The shared engine runs headless through the real
 gate, the PC adapter implements the whole `DevicePort` contract, and settings
 launches use a URI before any click. The product goal is now **semantic parity
 with Android** ([ADR-0027](../../../design/decisions/0027-windows-semantic-parity.md));

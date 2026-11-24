@@ -50,12 +50,15 @@ internal sealed class TrayIcon : IDisposable
         return new System.Drawing.Icon(stream);
     }
 
-    public void ShowBalloon(string title, string text) =>
+    public void ShowBalloon(string title, string text)
+    {
+        NotificationHistory.Record(title, text);
         icon.ShowBalloonTip(
             4000,
             title,
             text,
             System.Windows.Forms.ToolTipIcon.Info);
+    }
 
     private static void Show(Window window)
     {
