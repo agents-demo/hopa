@@ -38,6 +38,7 @@
 
             <ListBox x:Name="SettingsNav" SelectionChanged="SettingsNav_SelectionChanged">
                 <ListBoxItem Tag="general" Content="General" />
+                <ListBoxItem Tag="act" Content="Act" />
                 <ListBoxItem Tag="profiles" Content="Profiles" />
                 <ListBoxItem Tag="memory" Content="Memory" />
                 <ListBoxItem Tag="skills" Content="Skills" />
@@ -74,8 +75,6 @@
                                    Foreground="#9A9488" Margin="0,3,0,8" />
                         <TextBlock Text="Bridge token" FontSize="11.5" Foreground="#6B665C" />
                         <PasswordBox x:Name="BridgeTokenBox" Height="32" Margin="0,4,0,8" />
-                        <CheckBox x:Name="UseBridgeBox" Content="Use the bridge as the device target"
-                                  Foreground="#1C1B18" Margin="0,0,0,12" />
 
                         <TextBlock Text="Model" FontSize="11.5" Foreground="#6B665C" />
                         <ComboBox x:Name="ProviderBox" Height="32" Margin="0,4,0,8">
@@ -105,6 +104,25 @@
                         <ListBox x:Name="ProfileList" Height="220" />
                         <TextBlock x:Name="ProfileStatus" FontSize="10" Foreground="#6B665C"
                                    Margin="0,8,0,0" />
+                    </StackPanel>
+
+                    <StackPanel x:Name="ActPage" Visibility="Collapsed">
+                        <TextBlock Text="Act" FontSize="15" FontWeight="SemiBold" Foreground="#1C1B18" />
+                        <TextBlock Text="Where the next task runs." FontSize="11" Foreground="#9A9488"
+                                   Margin="0,4,0,12" />
+                        <RadioButton x:Name="PcTargetRadio" GroupName="Target" Content="This PC"
+                                     Foreground="#1C1B18" Margin="0,0,0,6"
+                                     Checked="Target_Changed" />
+                        <TextBlock Text="UI Automation on this desktop; the PC is the acting device."
+                                   FontSize="10" Foreground="#9A9488" Margin="22,0,0,14"
+                                   TextWrapping="Wrap" />
+                        <RadioButton x:Name="PhoneTargetRadio" GroupName="Target" Content="The phone"
+                                     Foreground="#1C1B18" Margin="0,0,0,6"
+                                     Checked="Target_Changed" />
+                        <TextBlock Text="Hand the task to the phone over the gateway. The phone owns the run; the PC does not mirror its screen."
+                                   FontSize="10" Foreground="#9A9488" Margin="22,0,0,14"
+                                   TextWrapping="Wrap" />
+                        <TextBlock x:Name="ActStatus" FontSize="10" Foreground="#6B665C" TextWrapping="Wrap" />
                     </StackPanel>
 
                     <StackPanel x:Name="MemoryPage" Visibility="Collapsed">

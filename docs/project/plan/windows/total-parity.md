@@ -140,8 +140,8 @@ The screens that change what HOPA does.
   `HowActsPage`)
 - [ ] Feed the How HOPA acts page live tier/selector data. (evidence: a selector
   trace on the page)
-- [ ] Act hub with the this-PC / phone-handoff target chooser. (evidence:
-  screenshot + both paths)
+- [x] Act hub with the this-PC / phone-handoff target chooser. (evidence:
+  `ActPage`; the target chip uses the same setting)
 - [ ] Browser pane with WebView2 and the shared browser contract. (evidence:
   screenshot + navigation test)
 - [ ] Takeover/signature P5. (evidence: form transcript + verified postcondition)

@@ -21,6 +21,7 @@ public partial class SettingsWindow : Window
     private readonly EngineHostClient? engine;
     private readonly WindowsDevice? device;
     private bool loaded;
+    private bool loadingSettings;
 
     public SettingsWindow() : this(null, null)
     {
@@ -38,10 +39,15 @@ public partial class SettingsWindow : Window
 
     private void LoadSettings()
     {
+        loadingSettings = true;
         var settings = store.Load();
         BridgeUrlBox.Text = settings.BridgeUrl;
         BridgeTokenBox.Password = CredentialStore.Read("hopa.bridge.token");
-        UseBridgeBox.IsChecked = settings.UseBridge;
+        PhoneTargetRadio.IsChecked = settings.UseBridge;
+        PcTargetRadio.IsChecked = !settings.UseBridge;
+        ActStatus.Text = settings.UseBridge
+            ? "Tasks go to the phone when the gateway is live."
+            : "Tasks run on this PC.";
         Select(ProviderBox, settings.ModelProvider);
         BaseUrlBox.Text = settings.ModelBaseUrl;
         ModelNameBox.Text = settings.ModelName;
@@ -58,6 +64,7 @@ public partial class SettingsWindow : Window
             "The loop, the gate and the records come from the shared core; " +
             "the Kotlin sidecar is the Windows engine host.\n\n" +
             "Screen text stays out of logs; secrets stay in Windows Credential Manager.";
+        loadingSettings = false;
     }
 
     private async Task RefreshAllAsync()
@@ -599,6 +606,19 @@ public partial class SettingsWindow : Window
     private static string Present(string name) =>
         CredentialStore.Read(name).Length > 0 ? "present" : "missing";
 
+    private void Target_Changed(object sender, RoutedEventArgs e)
+    {
+        if (loadingSettings || ActStatus == null)
+        {
+            return;
+        }
+
+        var phone = PhoneTargetRadio.IsChecked == true;
+        ActStatus.Text = phone
+            ? "Tasks go to the phone when the gateway is live."
+            : "Tasks run on this PC.";
+    }
+
     private void SettingsNav_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (GeneralPage == null)
@@ -608,6 +628,7 @@ public partial class SettingsWindow : Window
 
         var tag = (SettingsNav.SelectedItem as ListBoxItem)?.Tag?.ToString() ?? "general";
         GeneralPage.Visibility = tag == "general" ? Visibility.Visible : Visibility.Collapsed;
+        ActPage.Visibility = tag == "act" ? Visibility.Visible : Visibility.Collapsed;
         ProfilesPage.Visibility = tag == "profiles" ? Visibility.Visible : Visibility.Collapsed;
         MemoryPage.Visibility = tag == "memory" ? Visibility.Visible : Visibility.Collapsed;
         SkillsPage.Visibility = tag == "skills" ? Visibility.Visible : Visibility.Collapsed;
@@ -690,7 +711,7 @@ public partial class SettingsWindow : Window
     {
         var settings = store.Load();
         settings.BridgeUrl = BridgeUrlBox.Text.Trim();
-        settings.UseBridge = UseBridgeBox.IsChecked == true;
+        settings.UseBridge = PhoneTargetRadio.IsChecked == true;
         settings.ModelProvider = Value(ProviderBox, "openai");
         settings.ModelBaseUrl = BaseUrlBox.Text.Trim();
         settings.ModelName = ModelNameBox.Text.Trim();
