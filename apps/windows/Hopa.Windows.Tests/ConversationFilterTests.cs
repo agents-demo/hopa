@@ -1,4 +1,4 @@
-using Hopa.Windows.Chat;
+using Hopa.Windows.Ui.Chat;
 using Xunit;
 
 namespace Hopa.Windows.Tests;

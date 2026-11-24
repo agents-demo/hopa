@@ -265,6 +265,10 @@ Adopted:
 - `turn/Engine.kt` -> `turn/TurnEngine.kt`: the class is the turn engine; the
   name says so and no longer collides with the C# `Engine/` folder. The test is
   `TurnEngineEndTest`.
+- Top-level groups: `Ui/` (shell, panes, chat, dialogs), `Integrations/`
+  (engine, gateway, voice, device), `Host/`, `Storage/`, `Cli/`, `Checks/`.
+  No single-file folders; the smallest groups are `Cli/` and `Voice/` with two
+  files each.
 - C#: `HopaMark` -> `HopaAvatar`.
 - First testable UI rules: `ConversationRow`, `RunStepRow` and
   `ConversationFilter` now have unit tests; the sidebar filter is a pure class,

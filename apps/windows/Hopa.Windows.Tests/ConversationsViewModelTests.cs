@@ -1,5 +1,5 @@
-using Hopa.Windows.Chat;
-using Hopa.Windows.Panes;
+using Hopa.Windows.Ui.Chat;
+using Hopa.Windows.Ui.Panes;
 using Xunit;
 
 namespace Hopa.Windows.Tests;

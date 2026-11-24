@@ -10,10 +10,8 @@ the Android program
 [parity](../../docs/project/plan/windows/parity.md), [ADR-0021](../../docs/design/decisions/0021-windows-client-stack.md)).
 
 ```
-Hopa.Windows/   WPF app: Shell (window), Host (coordination), Panes (rail,
-                sidebar, chat), Chat, Dialogs, Device (FlaUI/UIA), Engine
-                (Kotlin engine host client), Gateway (phone link), Voice,
-                Storage, Checks
+Hopa.Windows/   WPF app: Ui (shell, panes, chat, dialogs), Integrations
+                (engine, gateway, voice, device), Host, Storage, Cli, Checks
 sidecar/        Kotlin engine host for packages/ (NDJSON over stdio)
 installer/      WiX MSI
 ```
@@ -22,17 +20,17 @@ Inside `Hopa.Windows/`:
 
 | Folder | What the reader finds |
 |---|---|
-| `Cli/` | how the process starts and which mode it runs |
-| `Shell/` | the main window, its parts, the tray and the placement |
+| `Ui/Shell/` | the main window, its parts, the tray and the placement |
+| `Ui/Panes/` | the window's panes and their view models: rail, sidebar, chat |
+| `Ui/Chat/` | the rows and the mark a conversation is drawn from |
+| `Ui/Dialogs/` | approval, settings, rename, run details |
+| `Integrations/Engine/` | the Kotlin engine host: client, `IChatEngine`, process, turn result |
+| `Integrations/Gateway/` | the phone/backend link: credentials, pairing, socket |
+| `Integrations/Voice/` | microphone, bridge speech, WAV |
+| `Integrations/Device/` | this PC as a device: screen, input, apps, observation rules |
 | `Host/` | app coordination: `EngineSession`, `ChatController`, `ApprovalRouter`, `DeviceRequestRouter`, reports |
-| `Panes/` | the window's panes and their view models: run rail, sidebar and chat |
-| `Chat/` | the rows and the mark a conversation is drawn from |
-| `Dialogs/` | approval, settings, rename, run details |
-| `Device/` | this PC as a device: screen, input, apps, observation rules |
-| `Engine/` | the Kotlin engine host: client, `IChatEngine`, process, turn result |
-| `Gateway/` | the phone link: credentials, pairing, socket |
-| `Voice/` | microphone, bridge speech, WAV |
 | `Storage/` | settings and Windows Credential Manager |
+| `Cli/` | optional command-line modes |
 | `Checks/` | the developer checks behind the `--…-check` flags |
 
 The C# app is the host; the loop, the gate and the records run in the Kotlin

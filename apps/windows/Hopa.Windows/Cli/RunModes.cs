@@ -1,6 +1,6 @@
 using System.Windows;
 using Hopa.Windows.Checks;
-using Hopa.Windows.Shell;
+using Hopa.Windows.Ui.Shell;
 
 namespace Hopa.Windows.Cli;
 

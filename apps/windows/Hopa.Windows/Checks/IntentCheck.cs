@@ -1,6 +1,6 @@
 using System.IO;
 using System.Text.Json.Nodes;
-using Hopa.Windows.Device;
+using Hopa.Windows.Integrations.Device;
 
 namespace Hopa.Windows.Checks;
 

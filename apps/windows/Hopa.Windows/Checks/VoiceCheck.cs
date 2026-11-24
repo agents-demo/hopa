@@ -1,6 +1,6 @@
 using System.IO;
 using Hopa.Windows.Storage;
-using Hopa.Windows.Voice;
+using Hopa.Windows.Integrations.Voice;
 
 namespace Hopa.Windows.Checks;
 

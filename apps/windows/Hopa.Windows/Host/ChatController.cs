@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using System.Text.Json.Nodes;
-using Hopa.Windows.Chat;
-using Hopa.Windows.Engine;
-using Hopa.Windows.Panes;
+using Hopa.Windows.Ui.Chat;
+using Hopa.Windows.Integrations.Engine;
+using Hopa.Windows.Ui.Panes;
 
 namespace Hopa.Windows.Host;
 

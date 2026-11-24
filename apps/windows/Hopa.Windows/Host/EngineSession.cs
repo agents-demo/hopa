@@ -1,6 +1,6 @@
 using System.Text.Json.Nodes;
-using Hopa.Windows.Engine;
-using Hopa.Windows.Gateway;
+using Hopa.Windows.Integrations.Engine;
+using Hopa.Windows.Integrations.Gateway;
 
 namespace Hopa.Windows.Host;
 

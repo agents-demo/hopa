@@ -1,5 +1,5 @@
 using System.Text.Json.Nodes;
-using Hopa.Windows.Gateway;
+using Hopa.Windows.Integrations.Gateway;
 using Hopa.Windows.Host;
 using Xunit;
 

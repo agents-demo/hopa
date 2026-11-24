@@ -1,6 +1,6 @@
 using System.Text.Json.Nodes;
-using Hopa.Windows.Engine;
-using Hopa.Windows.Panes;
+using Hopa.Windows.Integrations.Engine;
+using Hopa.Windows.Ui.Panes;
 using Hopa.Windows.Host;
 using Xunit;
 
