@@ -30,6 +30,7 @@ Hosted runners are session 0 and cannot produce it; see
 | Settings dialog | `--shot-settings <path>` | `windows-settings.png` |
 | Keyboard order | `--keyboard-check <dir>` | `keyboard-check.txt` |
 | WebView2 surface (W10f) | `--web-check <dir>` | `web-check.txt`, `windows-web-check.png` |
+| Android + Windows matrix | `tools/scripts/windows-parity-matrix.ps1` | `out/windows-parity/index.md`, `windows/`, `android/` |
 
 ## Transcripts
 

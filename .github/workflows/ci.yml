@@ -392,7 +392,8 @@ jobs:
             "tools/scripts/build-windows-icon.ps1",
             "tools/scripts/windows-baseline.ps1",
             "tools/scripts/windows-desktop-checks.ps1",
-            "tools/scripts/windows-package.ps1")) {
+            "tools/scripts/windows-package.ps1",
+            "tools/scripts/windows-parity-matrix.ps1")) {
             $tokens = $null
             $errors = $null
             [System.Management.Automation.Language.Parser]::ParseFile(
