@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using Hopa.Windows.Integrations.Engine;
 
 namespace Hopa.Windows.Host;
 
@@ -11,4 +12,5 @@ public sealed record TurnReport(
     TimeSpan Elapsed,
     string Earlier,
     string? Error,
-    IReadOnlyList<string>? Plan = null);
+    IReadOnlyList<string>? Plan = null,
+    CheckpointVerification? Checkpoints = null);

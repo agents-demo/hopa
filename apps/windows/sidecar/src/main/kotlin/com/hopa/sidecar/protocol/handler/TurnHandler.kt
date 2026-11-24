@@ -1,11 +1,15 @@
 package com.hopa.sidecar.protocol.handler
 
 import com.hopa.contracts.chat.Attachment
+import com.hopa.agent.goal.Checkpoint
 import com.hopa.contracts.json.HopaJson
 import com.hopa.sidecar.turn.TurnEngine
 import com.hopa.sidecar.protocol.Protocol.text
 import com.hopa.sidecar.protocol.Stdio
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonPrimitive
 
 /** Starting and cancelling a turn; the engine owns everything after that. */
 internal class TurnHandler(
@@ -24,6 +28,11 @@ internal class TurnHandler(
                     conversationId = message.text("conversationId").ifBlank { null },
                     attachment = attachment,
                     planApproved = message.text("planApproved").toBoolean(),
+                    checkpoints = (message["checkpoints"] as? JsonArray)
+                        ?.mapNotNull { it.jsonPrimitive.contentOrNull }
+                        ?.filter { it.isNotBlank() }
+                        ?.map { Checkpoint(anchor = it) }
+                        .orEmpty(),
                 )
             }
 

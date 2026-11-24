@@ -55,7 +55,8 @@ public sealed partial class EngineHostClient : IAsyncDisposable, IChatEngine
         string goal,
         string? conversationId,
         JsonObject? attachment = null,
-        bool planApproved = false)
+        bool planApproved = false,
+        IReadOnlyList<string>? checkpoints = null)
     {
         var fields = new JsonObject { ["goal"] = goal };
         if (conversationId != null)
@@ -73,6 +74,11 @@ public sealed partial class EngineHostClient : IAsyncDisposable, IChatEngine
             fields["planApproved"] = true;
         }
 
+        if (checkpoints is { Count: > 0 })
+        {
+            fields["checkpoints"] = new JsonArray(checkpoints.Select(value => (JsonNode?)value).ToArray());
+        }
+
         var response = await RequestAsync("turn.start", fields, TimeSpan.FromSeconds(120));
         var plan = new List<string>();
         if (response["plan"] is JsonArray array)
@@ -86,13 +92,34 @@ public sealed partial class EngineHostClient : IAsyncDisposable, IChatEngine
             }
         }
 
+        CheckpointVerification? verification = null;
+        if (response["checkpoints"] is JsonObject checkpoint)
+        {
+            var missing = new List<string>();
+            if (checkpoint["missing"] is JsonArray missingItems)
+            {
+                foreach (var item in missingItems)
+                {
+                    if (item?.GetValue<string>() is { Length: > 0 } anchor)
+                    {
+                        missing.Add(anchor);
+                    }
+                }
+            }
+
+            verification = new CheckpointVerification(
+                checkpoint["complete"]?.GetValue<bool>() == true,
+                missing);
+        }
+
         return new TurnResult(
             response["answer"]?.GetValue<string>() ?? "",
             response["conversationId"]?.GetValue<string>() ?? "",
             response["title"]?.GetValue<string>() ?? "New chat",
             response["steps"] as JsonArray,
             response["chainOk"]?.GetValue<bool>() == true,
-            plan);
+            plan,
+            verification);
     }
 
     public async Task<List<JsonObject>> ListConversationsAsync(bool includeArchived = false)

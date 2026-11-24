@@ -3,6 +3,7 @@ package com.hopa.sidecar.turn
 import com.hopa.agent.action.ActionExecutor
 import com.hopa.agent.action.ApprovalPolicy
 import com.hopa.agent.decision.model.ModelStepPolicy
+import com.hopa.agent.goal.Checkpoint
 import com.hopa.agent.loop.StepGate
 import com.hopa.agent.plan.ModelPlanSource
 import com.hopa.agent.recipe.RecipeStore
@@ -164,12 +165,20 @@ class TurnEngine(
         conversationId: String?,
         attachment: Attachment? = null,
         planApproved: Boolean = false,
+        checkpoints: List<Checkpoint> = emptyList(),
     ) {
         queuedTurns += id
         scope.launch {
             runSerialized(id) {
                 var lastAt = System.currentTimeMillis()
-                val outcome = runTurn(id, goal, conversationId, attachment, planApproved = planApproved) { index, record ->
+                val outcome = runTurn(
+                    id,
+                    goal,
+                    conversationId,
+                    attachment,
+                    planApproved = planApproved,
+                    checkpoints = checkpoints,
+                ) { index, record ->
                     val now = System.currentTimeMillis()
                     io.send(Protocol.step(id, index, record, now, now - lastAt))
                     lastAt = now
@@ -183,6 +192,8 @@ class TurnEngine(
                         steps = outcome.records,
                         chainOk = outcome.chainOk,
                         plan = outcome.plan,
+                        checkpointsComplete = outcome.checkpointsComplete,
+                        checkpointsMissing = outcome.checkpointsMissing,
                     ),
                 )
                 outcome.answer
@@ -241,6 +252,7 @@ class TurnEngine(
         conversationId: String?,
         attachment: Attachment? = null,
         planApproved: Boolean = false,
+        checkpoints: List<Checkpoint> = emptyList(),
         onRecord: ((Int, RunRecord) -> Unit)? = null,
     ): TurnOutcome = turnLock.withLock {
         val requested = conversationId?.takeIf { it.isNotBlank() }
@@ -308,6 +320,7 @@ class TurnEngine(
                     planApproved = planApproved,
                     replay = config.replay,
                     instantCommands = config.instantCommands,
+                    checkpoints = checkpoints,
                     useGraphs = false,
                     graphFallback = false,
                     cloudFallback = false,
@@ -344,6 +357,8 @@ class TurnEngine(
             narration = result?.narration.orEmpty(),
             error = result?.error?.message,
             plan = result?.pendingPlan.orEmpty(),
+            checkpointsComplete = result?.checkpoints?.complete,
+            checkpointsMissing = result?.checkpoints?.missing?.map { it.anchor }.orEmpty(),
         )
     }
 

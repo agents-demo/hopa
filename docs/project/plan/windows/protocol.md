@@ -16,7 +16,7 @@ memory/skill families as additive v1 messages.
 | type | fields | meaning |
 |---|---|---|
 | `hello` | - | optional; the sidecar answers `ready` anyway at start |
-| `turn.start` | `id`, `goal`, `conversationId?`, `attachment?`, `planApproved?` | run one turn for this goal in that conversation (a blank id creates one); `planApproved` skips the plan gate |
+| `turn.start` | `id`, `goal`, `conversationId?`, `attachment?`, `planApproved?`, `checkpoints?` | run one turn for this goal in that conversation (a blank id creates one); `planApproved` skips the plan gate, `checkpoints` names what must be visible at the end |
 | `turn.cancel` | - | stop the running turn at the next safe point |
 | `turn.pause` | - | pause before the next step and hand the foreground to the person |
 | `turn.resume` | - | resume after a takeover; the loop re-observes before deciding |
@@ -69,7 +69,7 @@ memory/skill families as additive v1 messages.
 | `device.request` | `id`, `op`, plus op fields | perform one device action on the host |
 | `approval.request` | `id`, `title`, `body`, `amount`, `merchant`, `consequence`, `isPayment`, `action` | ask the person |
 | `session` | `token`, `refresh` | the sidecar rotated the bridge pair; the host persists it |
-| `turn.end` | `id`, `conversationId`, `title`, `answer`, `steps[]`, `chainOk`, `plan[]` | the turn finished; `plan` is the steps waiting for approval on a plan-first turn |
+| `turn.end` | `id`, `conversationId`, `title`, `answer`, `steps[]`, `chainOk`, `plan[]`, `checkpoints?` | the turn finished; `plan` is the steps waiting for approval on a plan-first turn; `checkpoints` is `{complete, missing[]}` when the request named any |
 | `conversation.*` | echo `id` plus the payload | replies to the conversation messages above |
 | `memory.list` | `id`, `ok`, `items:[string]` | the memory facts; also the reply to add/delete/clear |
 | `skills.list` | `id`, `ok`, `items:[{trigger, action}]` | the learned pairs; also the reply to add/delete/clear |

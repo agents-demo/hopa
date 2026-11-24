@@ -45,6 +45,8 @@ object Protocol {
         steps: List<RunRecord>,
         chainOk: Boolean,
         plan: List<String> = emptyList(),
+        checkpointsComplete: Boolean? = null,
+        checkpointsMissing: List<String> = emptyList(),
     ): JsonObject =
         buildJsonObject {
             put("type", "turn.end")
@@ -54,6 +56,14 @@ object Protocol {
             put("answer", answer)
             put("chainOk", chainOk)
             put("plan", buildJsonArray { plan.forEach { add(kotlinx.serialization.json.JsonPrimitive(it)) } })
+            if (checkpointsComplete != null) {
+                put("checkpoints", buildJsonObject {
+                    put("complete", checkpointsComplete)
+                    put("missing", buildJsonArray {
+                        checkpointsMissing.forEach { add(kotlinx.serialization.json.JsonPrimitive(it)) }
+                    })
+                })
+            }
             put("steps", buildJsonArray {
                 steps.forEach { add(json.encodeToJsonElement(RunRecord.serializer(), it)) }
             })
@@ -100,6 +110,14 @@ object Protocol {
         put("plan", buildJsonArray {
             outcome.plan.forEach { add(kotlinx.serialization.json.JsonPrimitive(it)) }
         })
+        if (outcome.checkpointsComplete != null) {
+            put("checkpoints", buildJsonObject {
+                put("complete", outcome.checkpointsComplete)
+                put("missing", buildJsonArray {
+                    outcome.checkpointsMissing.forEach { add(kotlinx.serialization.json.JsonPrimitive(it)) }
+                })
+            })
+        }
         put("records", outcome.records.size)
         put("executed", outcome.records.count { it.executed })
         put("denied", outcome.records.count { it.approved == false && !it.executed })

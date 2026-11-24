@@ -9,4 +9,5 @@ public sealed record TurnResult(
     string Title,
     JsonArray? Steps,
     bool ChainOk,
-    IReadOnlyList<string>? Plan = null);
+    IReadOnlyList<string>? Plan = null,
+    CheckpointVerification? Checkpoints = null);

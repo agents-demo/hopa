@@ -13,4 +13,7 @@ data class TurnOutcome(
     val error: String? = null,
     /** Plan-first steps waiting for the person; empty on an ordinary turn. */
     val plan: List<String> = emptyList(),
+    /** Null when the request had no checkpoints. */
+    val checkpointsComplete: Boolean? = null,
+    val checkpointsMissing: List<String> = emptyList(),
 )

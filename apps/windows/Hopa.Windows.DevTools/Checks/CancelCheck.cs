@@ -23,7 +23,7 @@ internal static class CancelCheck
                 var turn = tools.Engine.StartTurnAsync("slow turn please", tools.CurrentConversationId);
                 await Task.Delay(1000);
                 tools.Engine.CancelTurn();
-                var (answer, _, _, steps, _, _) = await turn;
+                var (answer, _, _, steps, _, _, _) = await turn;
                 lines.Add($"answer: {answer}");
                 lines.Add($"cancelled: {answer.Contains("Stopped", StringComparison.OrdinalIgnoreCase)}");
                 lines.Add($"steps: {steps?.Count ?? 0}");

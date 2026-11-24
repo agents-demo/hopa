@@ -186,8 +186,9 @@ verified postcondition.
 
 - [x] The loop can pause before a step and hand the foreground to the user.
   (evidence: `turn.pause`/`turn.resume`; `TakeoverWindow`)
-- [x] Resuming re-observes before the next decision. (evidence: `StepGate.Refresh`
-  in `AgentLoop`; `TurnEngine` gates the next step)
+- [x] Resuming re-observes and verifies the postcondition before continuing.
+  (evidence: `StepGate.Refresh`; `checkpoints` in `turn.start`/`turn.end`;
+  `GoalVerifier`)
 - [x] A cancelled takeover leaves the task failed, not silently done. (evidence:
   `AgentLoopTest.a_cancelled_takeover_stops_instead_of_claiming_success`;
   `turn.cancel` releases the pause)

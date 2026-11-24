@@ -83,7 +83,9 @@ public sealed class ChatController
                 result.ChainOk,
                 clock.Elapsed,
                 earlier,
-                null);
+                null,
+                null,
+                result.Checkpoints);
         }
         catch (Exception error)
         {
