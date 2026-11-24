@@ -13,8 +13,10 @@ import org.junit.jupiter.api.Test
 import com.hopa.sidecar.approval.HostApproval
 import com.hopa.sidecar.device.HostDevice
 import com.hopa.sidecar.store.ChatStore
+import com.hopa.sidecar.store.MemoryFileStore
 import com.hopa.sidecar.store.PendingApprovals
 import com.hopa.sidecar.store.RecordStore
+import com.hopa.sidecar.store.SkillFileStore
 import com.hopa.sidecar.protocol.Stdio
 
 /**
@@ -91,6 +93,8 @@ class TurnEngineEndTest {
             store = ChatStore(directory.resolve("conversations.json")),
             recordStore = RecordStore(directory.resolve("records.json")),
             config = RuntimeConfig(),
+            memory = MemoryFileStore(directory.resolve("memory.json")),
+            skills = SkillFileStore(directory.resolve("skills.json")),
         )
     }
 }

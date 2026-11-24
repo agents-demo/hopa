@@ -4,7 +4,9 @@ import com.hopa.sidecar.approval.DenyAllApproval
 import com.hopa.sidecar.turn.TurnEngine
 import com.hopa.sidecar.protocol.Protocol
 import com.hopa.sidecar.store.ChatStore
+import com.hopa.sidecar.store.MemoryFileStore
 import com.hopa.sidecar.store.RecordStore
+import com.hopa.sidecar.store.SkillFileStore
 import com.hopa.sidecar.device.HeadlessDevice
 import com.hopa.sidecar.protocol.Stdio
 import com.hopa.sidecar.turn.RuntimeConfig
@@ -16,6 +18,8 @@ internal fun runHeadless(options: CliOptions): Int {
     val dataDir = options.dataDir ?: defaultDataDir()
     val store = ChatStore(dataDir.resolve("conversations.json"))
     val records = RecordStore(dataDir.resolve("records.json"))
+    val memory = MemoryFileStore(dataDir.resolve("memory.json"))
+    val skills = SkillFileStore(dataDir.resolve("skills.json"))
     val approvals = DenyAllApproval()
     val engine = TurnEngine(
         io = io,
@@ -24,6 +28,8 @@ internal fun runHeadless(options: CliOptions): Int {
         store = store,
         recordStore = records,
         config = RuntimeConfig(),
+        memory = memory,
+        skills = skills,
         forceStub = true,
         deviceAttached = false,
     )

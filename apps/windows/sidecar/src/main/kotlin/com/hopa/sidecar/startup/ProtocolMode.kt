@@ -17,12 +17,16 @@ import com.hopa.sidecar.protocol.handler.ConfigHandler
 import com.hopa.sidecar.protocol.handler.ConversationHandler
 import com.hopa.sidecar.protocol.handler.DeviceHandler
 import com.hopa.sidecar.protocol.handler.FileHandler
+import com.hopa.sidecar.protocol.handler.MemoryHandler
+import com.hopa.sidecar.protocol.handler.SkillHandler
 import com.hopa.sidecar.protocol.handler.TaskHandler
 import com.hopa.sidecar.protocol.handler.TurnHandler
 import com.hopa.sidecar.store.Attachments
 import com.hopa.sidecar.store.ChatStore
+import com.hopa.sidecar.store.MemoryFileStore
 import com.hopa.sidecar.store.PendingApprovals
 import com.hopa.sidecar.store.RecordStore
+import com.hopa.sidecar.store.SkillFileStore
 import com.hopa.sidecar.store.TaskStore
 import com.hopa.sidecar.protocol.Stdio
 import com.hopa.sidecar.turn.RuntimeConfig
@@ -44,11 +48,13 @@ internal fun runProtocol(options: CliOptions) {
     val store = ChatStore(dataDir.resolve("conversations.json"))
     val approvals = PendingApprovals(dataDir.resolve("approvals.json"))
     val records = RecordStore(dataDir.resolve("records.json"))
+    val memory = MemoryFileStore(dataDir.resolve("memory.json"))
+    val skills = SkillFileStore(dataDir.resolve("skills.json"))
     val config = RuntimeConfig()
     val approval = HostApproval(io, approvals)
     val attachments = Attachments(dataDir.resolve("attachments"))
     val tasks = TaskStore()
-    val engine = TurnEngine(io, device, approval, store, records, config)
+    val engine = TurnEngine(io, device, approval, store, records, config, memory, skills)
     val backendScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     val sessionPath = dataDir.resolve("backend-session.json")
     val sessionStore = BackendSessionStore(sessionPath)
@@ -121,6 +127,8 @@ internal fun runProtocol(options: CliOptions) {
             ConversationHandler(io, store),
             TurnHandler(io, engine),
             FileHandler(io, attachments),
+            MemoryHandler(io, memory),
+            SkillHandler(io, skills),
             ConfigHandler(io, config),
             TaskHandler(io, tasks),
             DeviceHandler(io, device, config),

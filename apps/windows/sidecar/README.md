@@ -17,7 +17,7 @@ graph live in `core/`.
 | `protocol/handler/` | one message family per class, behind `MessageHandler` |
 | `turn/` | one turn: `TurnEngine`, `TurnOutcome`, `TurnRecorder`, `RuntimeConfig`, `ScriptedModel`, `SidecarCatalog`, `SystemClock` |
 | `device/` | this PC as a device: `HostDevice`, `HeadlessDevice`, `HostSystem`, `WindowsIntents`, `WindowsPathSelector` |
-| `store/` | what lives on disk: conversations, records, tasks, pending approvals, attachments |
+| `store/` | what lives on disk: conversations, records, tasks, pending approvals, attachments, memory, skills |
 | `backend/` | the backend link: `BackendAdmission`, `BackendGateway`, `BackendSessionStore`, `GatewayHost`, `EngineTaskRunner`, `ContentKey`, `QrRender` |
 | `approval/` | who allowed an action: `HostApproval`, `DenyAllApproval` |
 
@@ -28,6 +28,8 @@ graph live in `core/`.
 | `conversations.*`, `conversation.*` | `ConversationHandler` |
 | `turn.start`, `turn.cancel` | `TurnHandler` |
 | `file.attach`, `file.remove` | `FileHandler` |
+| `memory.*` | `MemoryHandler` |
+| `skills.*` | `SkillHandler` |
 | `configure` | `ConfigHandler` |
 | `task.*` | `TaskHandler` |
 | `device.result`, `gateway.state` | `DeviceHandler` |

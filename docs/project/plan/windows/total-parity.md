@@ -1,6 +1,6 @@
 # Windows total parity plan (W7–W11)
 
-Status: **W7 done. W8 next; W9–W11 planned.** The product decision is
+Status: **W7 done. W8 in progress; W9–W11 planned.** The product decision is
 [ADR-0027](../../../design/decisions/0027-windows-semantic-parity.md): Windows is a
 full client with **semantic** parity against Android. Android remains the
 reference; the screen-by-screen matrix is [parity.md](parity.md).
@@ -53,24 +53,41 @@ Make the scope reviewable and stop using `out` as a silent product decision.
 Gate: a reader can tell, for every Android screen, whether Windows has it,
 adapts it, still needs it, or cannot have it — and why.
 
-### W8. Shared data and protocol — planned
+### W8. Shared data and protocol — in progress
 
 Build the data path before the screens.
 
-- [ ] Audit `apps/android/stores` and the feature data used by memory, skills,
+- [x] Audit `apps/android/stores` and the feature data used by memory, skills,
   profiles, recipes, usage and history; classify each as platform-neutral,
-  Android-only, or already shared. (evidence: an audit table in this file or a
-  linked note)
+  Android-only, or already shared. (evidence: the table below)
 - [ ] Move or expose the platform-neutral stores through a shared JVM contract;
   keep Android's platform implementation and add a Windows file-backed adapter.
   (evidence: module paths and tests)
-- [ ] Add sidecar protocol families: `memory.*`, `skills.*`, `profiles.*`,
-  `recipes.*`, `usage.*`, `history.*`, `notifications.*`, `capabilities.*`,
-  `launchpad.*`, `selfcheck.*`. (evidence: `protocol.md` and schema)
-- [ ] Add round-trip contract tests for every new family, including an empty
-  result and a malformed request. (evidence: sidecar tests and host tests)
-- [ ] Keep v1 hosts working for the existing messages; document any additive
-  version rule. (evidence: protocol tests)
+- [x] Add the `memory.*` and `skills.*` sidecar families and their round-trip
+  tests. (evidence: `MemoryHandler`, `SkillHandler`, `MemoryFileStoreTest`,
+  `SkillFileStoreTest`, `DataProtocolTest`)
+- [ ] Add the remaining sidecar families: `profiles.*`, `recipes.*`, `usage.*`,
+  `history.*`, `notifications.*`, `capabilities.*`, `launchpad.*`,
+  `selfcheck.*`. (evidence: `protocol.md` and schema)
+- [x] Add host methods and a real-process integration test for memory and
+  skills. (evidence: `EngineHostClient.Memory.cs`, `EngineHostClient.Skills.cs`,
+  `EngineDataTests`)
+- [x] Keep v1 hosts working for the existing messages; the new families are
+  additive and documented. (evidence: `protocol.md`; sidecar suite)
+
+### W8 audit
+
+| Data | Where it lives | Platform | Windows path |
+|---|---|---|---|
+| memory facts | `apps/android/stores/MemoryStore.kt`; Android impl `data/DbMemoryStore.kt` | JVM interface + Android Room | `sidecar/store/MemoryFileStore.kt` |
+| skills | `apps/android/stores/Skill.kt`, `SkillStore.kt`; Android impl `data/DbSkillStore.kt` | JVM interface + Android Room | `sidecar/store/SkillFileStore.kt` |
+| settings/profile | `apps/android/stores/AppSettings.kt`, `SettingsRepository.kt` | JVM contract; Android DataStore | `RuntimeConfig` + C# `SettingsStore`; profile field/UI next |
+| conversations | `apps/android/stores/ConversationStore.kt`; Android impl `data/DbConversationStore.kt` | JVM interface + Android Room | `sidecar/store/ChatStore.kt` |
+| run history / usage | `core/runlog`; Android `data/DbRunHistory.kt` | shared core + Android Room | `sidecar/store/RecordStore.kt` |
+| recipes | `core/agent/recipe/RecipeStore.kt` | shared JVM | sidecar already depends on `agent`; expose commands |
+| profiles | `AppSettings.profile` over `SettingsRepository` | JVM contract | setting field + W9 workspaces UI |
+| notifications | Android `app/service/Notifier.kt` | Android-only | Windows tray/toast; no shared store |
+| capabilities / launchpad | `core/catalog`, Android feature modules | shared data + Android UI | catalog + Windows app catalog |
 
 Gate: the Windows sidecar can list, read and mutate each parity data family
 without Android code or a second store implementation.

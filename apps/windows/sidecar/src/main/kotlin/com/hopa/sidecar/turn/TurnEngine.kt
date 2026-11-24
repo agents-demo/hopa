@@ -22,6 +22,8 @@ import com.hopa.runlog.record.RunRecordDraft
 import com.hopa.runlog.record.RunRecordFactory
 import com.hopa.runlog.store.InMemoryRunRecorder
 import com.hopa.runlog.store.RunRecorder
+import com.hopa.stores.MemoryStore
+import com.hopa.stores.SkillStore
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CancellationException
@@ -47,6 +49,8 @@ class TurnEngine(
     private val store: ChatStore,
     private val recordStore: RecordStore,
     private val config: RuntimeConfig,
+    private val memory: MemoryStore,
+    private val skills: SkillStore,
     private val forceStub: Boolean = false,
     /** False in headless: no host is attached, so the prompt must not claim access. */
     private val deviceAttached: Boolean = true,
@@ -230,8 +234,10 @@ class TurnEngine(
         } else {
             (hostDevice as? HostDevice)?.let { HostSystem(it) }
         }
-        val memory = InMemoryRunRecorder()
-        val recorder = if (onRecord == null) memory else EmittingRecorder(memory, onRecord)
+        val buffer = InMemoryRunRecorder()
+        val recorder = if (onRecord == null) buffer else EmittingRecorder(buffer, onRecord)
+        val memoryText = memory.promptText()
+        val skillText = skills.promptText()
 
         val executor = ActionExecutor(
             device = device,
@@ -265,6 +271,8 @@ class TurnEngine(
                 context = TurnContext(
                     goal = goal,
                     history = history,
+                    memory = memoryText,
+                    skills = skillText,
                     platform = "windows",
                     installedApps = windowsApps(),
                     phoneAccess = deviceAttached,

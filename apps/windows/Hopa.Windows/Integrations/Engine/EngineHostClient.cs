@@ -6,9 +6,9 @@ using Hopa.Windows.Storage;
 namespace Hopa.Windows.Integrations.Engine;
 
 /// <summary>The .NET half of the NDJSON protocol with the Kotlin engine.</summary>
-public sealed class EngineHostClient : IAsyncDisposable, IChatEngine
+public sealed partial class EngineHostClient : IAsyncDisposable, IChatEngine
 {
-    private readonly Process process;
+    private readonly Process? process;
     private readonly EngineTransport transport;
 
     public event Action<string>? LogReceived;
@@ -25,18 +25,27 @@ public sealed class EngineHostClient : IAsyncDisposable, IChatEngine
     public EngineHostClient()
     {
         var host = EngineHostProcess.Start();
-        process = host.Process;
+        var started = host.Process;
+        process = started;
         transport = new EngineTransport(host.Input, host.Output);
         transport.MessageReceived += OnMessage;
         transport.Start();
         _ = Task.Run(() =>
         {
             string? line;
-            while ((line = process.StandardError.ReadLine()) != null)
+            while ((line = started.StandardError.ReadLine()) != null)
             {
                 LogReceived?.Invoke(line);
             }
         });
+    }
+
+    /// <summary>Integration tests own the process and hand over only its pipes.</summary>
+    internal EngineHostClient(EngineTransport transport)
+    {
+        this.transport = transport;
+        transport.MessageReceived += OnMessage;
+        transport.Start();
     }
 
     public Task<JsonObject> RequestAsync(string type, JsonObject fields, TimeSpan timeout) =>
@@ -307,6 +316,12 @@ public sealed class EngineHostClient : IAsyncDisposable, IChatEngine
 
     public async ValueTask DisposeAsync()
     {
+        if (process == null)
+        {
+            // The integration test owns the process and its pipes.
+            return;
+        }
+
         try
         {
             Send(new JsonObject { ["type"] = "shutdown" });

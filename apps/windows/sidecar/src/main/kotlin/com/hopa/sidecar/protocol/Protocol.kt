@@ -15,6 +15,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import com.hopa.sidecar.turn.TurnOutcome
 import com.hopa.sidecar.store.HandoffTask
+import com.hopa.stores.Skill
 
 /** The NDJSON messages between the .NET host and this sidecar. */
 object Protocol {
@@ -230,6 +231,38 @@ object Protocol {
         put("type", "file.removed")
         put("id", id)
         put("ok", ok)
+    }
+
+    /** The Windows memory list, in the same order and shape as the phone. */
+    fun memoryList(id: String, items: List<String>): JsonObject = buildJsonObject {
+        put("type", "memory.list")
+        put("id", id)
+        put("ok", true)
+        put("items", buildJsonArray { items.forEach { add(kotlinx.serialization.json.JsonPrimitive(it)) } })
+    }
+
+    /** The Windows skill list: trigger → action pairs. */
+    fun skillList(id: String, items: List<Skill>): JsonObject = buildJsonObject {
+        put("type", "skills.list")
+        put("id", id)
+        put("ok", true)
+        put("items", buildJsonArray {
+            items.forEach { skill ->
+                add(buildJsonObject {
+                    put("trigger", skill.trigger)
+                    put("action", skill.action)
+                })
+            }
+        })
+    }
+
+    /** A malformed or unsupported memory/skill request. */
+    fun dataError(id: String, family: String, code: String, error: String): JsonObject = buildJsonObject {
+        put("type", "$family.error")
+        put("id", id)
+        put("ok", false)
+        put("code", code)
+        put("error", error)
     }
 
     fun conversationExported(id: String, conversation: Conversation?): JsonObject = buildJsonObject {

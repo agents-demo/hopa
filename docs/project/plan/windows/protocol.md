@@ -6,7 +6,8 @@ free-form logging and never carries protocol messages.
 
 Version: `1` (the `ready` message carries it). Breaking changes bump the number
 and update this file in the same commit. P0 froze this document; P1 implements
-`step`, and P4 implements the `task.*` view plus `gateway.state`.
+`step`, P4 implements the `task.*` view plus `gateway.state`, and W8 adds the
+memory/skill families as additive v1 messages.
 
 ## Messages
 
@@ -23,6 +24,14 @@ and update this file in the same commit. P0 froze this document; P1 implements
 | `approval.result` | `id`, `allow`, `device?` | the answer to one `approval.request`; `device` is `pc` or `phone` and is checked against the live gateway link |
 | `file.attach` | `id`, `path` | copy a file into the sidecar's attachment directory |
 | `file.remove` | `id`, `path` | drop a pending attachment |
+| `memory.list` | `id` | list the remembered facts |
+| `memory.add` | `id`, `text` | remember one fact; replies with the new list |
+| `memory.delete` | `id`, `text` | forget one fact; replies with the new list |
+| `memory.clear` | `id` | forget all facts; replies with the new list |
+| `skills.list` | `id` | list trigger → action pairs |
+| `skills.add` | `id`, `trigger`, `action` | teach one pair; replies with the new list |
+| `skills.delete` | `id`, `trigger` | forget one trigger; replies with the new list |
+| `skills.clear` | `id` | forget all skills; replies with the new list |
 | `conversations.list` | `id`, `includeArchived?` | list conversations |
 | `conversation.create` | `id` | create an empty conversation |
 | `conversation.open` | `id`, `conversationId` | read one conversation |
@@ -52,6 +61,9 @@ and update this file in the same commit. P0 froze this document; P1 implements
 | `session` | `token`, `refresh` | the sidecar rotated the bridge pair; the host persists it |
 | `turn.end` | `id`, `conversationId`, `title`, `answer`, `steps[]`, `chainOk` | the turn finished; `answer` is what the user sees |
 | `conversation.*` | echo `id` plus the payload | replies to the conversation messages above |
+| `memory.list` | `id`, `ok`, `items:[string]` | the memory facts; also the reply to add/delete/clear |
+| `skills.list` | `id`, `ok`, `items:[{trigger, action}]` | the learned pairs; also the reply to add/delete/clear |
+| `memory.error` / `skills.error` | `id`, `ok:false`, `code`, `error` | a malformed or unsupported memory/skill request |
 | `file.attached` | `id`, `attachment?`, `error?` | the attachment was accepted or refused |
 | `file.removed` | `id`, `ok` | the pending attachment was dropped |
 | `task.*` | echo `id` plus the task payload | replies to the task messages above |
@@ -79,6 +91,15 @@ A `device.result` carries `ok`, and on success any of `observation`, `app`,
 `text` (which path an action took), `image` (base64 PNG) or `apps`
 (`[{package, label}]`). An unimplemented op must answer `ok: false` with an
 `error` the user can read; silence is a bug.
+
+## Memory and skills
+
+The sidecar stores memory facts in `memory.json` and trigger → action pairs in
+`skills.json` under the data directory. Both implement the same
+`com.hopa.stores` contracts as Android, and their prompt text is identical. A
+turn passes the current text in `TurnContext.memory` and `TurnContext.skills`;
+the host never needs to resend them. Facts and triggers are user content: log
+counts, not their text.
 
 ## Approval rules
 

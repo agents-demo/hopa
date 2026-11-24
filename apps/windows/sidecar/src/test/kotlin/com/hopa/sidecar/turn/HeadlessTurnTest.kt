@@ -22,7 +22,9 @@ import com.hopa.sidecar.device.HeadlessDevice
 import com.hopa.sidecar.device.HostDevice
 import com.hopa.sidecar.protocol.Protocol
 import com.hopa.sidecar.store.ChatStore
+import com.hopa.sidecar.store.MemoryFileStore
 import com.hopa.sidecar.store.RecordStore
+import com.hopa.sidecar.store.SkillFileStore
 import com.hopa.sidecar.protocol.Stdio
 
 /**
@@ -106,6 +108,8 @@ class HeadlessTurnTest {
             store = ChatStore(dataDir.resolve("conversations.json")),
             recordStore = RecordStore(dataDir.resolve("records.json")),
             config = RuntimeConfig(),
+            memory = MemoryFileStore(dataDir.resolve("memory.json")),
+            skills = SkillFileStore(dataDir.resolve("skills.json")),
             forceStub = true,
             deviceAttached = false,
         )
@@ -181,6 +185,8 @@ class HeadlessTurnTest {
         store = ChatStore(dataDir.resolve("conversations.json")),
         recordStore = RecordStore(dataDir.resolve("records.json")),
         config = RuntimeConfig(),
+        memory = MemoryFileStore(dataDir.resolve("memory.json")),
+        skills = SkillFileStore(dataDir.resolve("skills.json")),
         forceStub = true,
     )
 }

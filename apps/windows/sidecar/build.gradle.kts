@@ -13,11 +13,11 @@ dependencies {
     implementation(project(":observation"))
     implementation(project(":runlog"))
     implementation(project(":catalog"))
-    implementation(project(":catalog"))
     implementation(project(":inference"))
     implementation(project(":bridge"))
     implementation(project(":contracts"))
     implementation(project(":backend"))
+    implementation(project(":stores"))
 
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
