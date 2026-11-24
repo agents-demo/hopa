@@ -38,13 +38,15 @@ supersede it. Format:
 | [0018](0018-shared-data-per-client-code.md) | Share the data and the fixtures, not the loop | accepted |
 | [0019](0019-offline-and-model-network.md) | The model needs a network; the shell does not | accepted |
 | [0020](0020-android-is-the-active-client.md) | Android is the active client; Windows is next; Harmony is frozen | accepted |
-| [0021](0021-windows-client-stack.md) | Windows client: .NET shell over the Kotlin engine | accepted |
+| [0021](0021-windows-client-stack.md) | Windows client: .NET shell over the Kotlin engine | accepted, superseded in part by 0028 |
 | [0022](0022-backend-kotlin-and-shape.md) | Backend language and shape: Kotlin on the JVM, one build with `core/` | accepted |
 | [0023](0023-hidden-screen-without-staging.md) | The hidden screen keeps a shell helper and stops staging the dex | accepted |
 | [0024](0024-windows-device-identity-and-approval.md) | Device identity and approval provenance for the Windows client | accepted |
 | [0025](0025-app-dependency-injection.md) | Dependency injection in the Android app: Hilt is the standard | accepted |
 | [0026](0026-household-content-key.md) | Household content key: one key per household, wrapped per device; diag-only plaintext | accepted |
 | [0027](0027-windows-semantic-parity.md) | Windows is a full semantic-parity client, not only the desktop leg | accepted |
+| [0028](0028-windows-modernization.md) | Windows modernization: .NET 10, Kotlin 2.4/JDK 21 runtime, JSON Schema frames | accepted |
+| [0029](0029-windows-signing.md) | Windows signing: exe+MSI, timestamp, PFX/store/Trusted Signing | accepted |
 
 Create the next ADR by copying the template below.
 

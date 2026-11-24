@@ -348,6 +348,11 @@ jobs:
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: "8.0.x"
+      - name: Restore locked packages
+        run: |
+          dotnet restore apps/windows/Hopa.Windows.DevTools -p:RestoreLockedMode=true
+          dotnet restore apps/windows/Hopa.Windows.Tests -p:RestoreLockedMode=true
+          dotnet restore apps/windows/Hopa.Windows.IntegrationTests -p:RestoreLockedMode=true
       - uses: gradle/actions/setup-gradle@v6
       - name: Sidecar tests
         working-directory: apps/android
@@ -378,6 +383,7 @@ jobs:
         run: |
           foreach ($script in @(
             "tools/scripts/build-windows-icon.ps1",
+            "tools/scripts/windows-baseline.ps1",
             "tools/scripts/windows-desktop-checks.ps1",
             "tools/scripts/windows-package.ps1")) {
             $tokens = $null

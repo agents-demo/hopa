@@ -1,0 +1,9 @@
+<Project>
+
+  <PropertyGroup>
+    <!-- The Windows client is the only .NET build in this repository. -->
+    <LangVersion>latest</LangVersion>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+
+</Project>
