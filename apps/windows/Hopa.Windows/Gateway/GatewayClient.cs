@@ -10,7 +10,7 @@ namespace Hopa.Windows.Gateway;
 /// and approval traffic is one WebSocket. The host owns the token (Credential
 /// Manager) and the sidecar only ever learns whether a phone peer is reachable.
 /// </summary>
-public sealed class GatewayClient : IAsyncDisposable
+public sealed class GatewayClient : IAsyncDisposable, IApprovalPhone
 {
     private const int MaxFrameBytes = 65_536;
 

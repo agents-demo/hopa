@@ -273,8 +273,11 @@ Adopted:
 - `ChatView` + `ChatViewModel`: the bubbles, answer actions, error, attachment
   and composer are a control with five tests. The window still starts the turn,
   routes approval/device events and owns the client; the pane renders the model.
+- `ApprovalRouter`: auto/phone/dialog routing is one testable class; a silent
+  phone, a failed link and a refusal all deny. `MainWindow.EngineRequests.cs`
+  only wires the dialog and the client now.
 - The pane and controller tests cover rows, filters, attachments, drafts, turn
-  reports and errors; the client suite is 40.
+  reports, approvals and errors; the client suite is 48.
 
 Not adopted, with reasons:
 
