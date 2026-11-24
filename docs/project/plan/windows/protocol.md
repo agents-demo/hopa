@@ -37,6 +37,8 @@ memory/skill families as additive v1 messages.
 | `recipes.list` | `id` | saved repetitions |
 | `recipes.delete` | `id`, `goal` | forget one repetition; replies with the new list |
 | `recipes.clear` | `id` | forget all repetitions; replies with the new list |
+| `profiles.list` | `id` | the shared profile catalogue and the selected key |
+| `profiles.select` | `id`, `profile` | choose a shell; replies with the catalogue and selection |
 | `conversations.list` | `id`, `includeArchived?` | list conversations |
 | `conversation.create` | `id` | create an empty conversation |
 | `conversation.open` | `id`, `conversationId` | read one conversation |
@@ -73,6 +75,8 @@ memory/skill families as additive v1 messages.
 | `usage.summary` | `id`, `ok`, `total`, `executed`, `failed`, `payments`, `lastSevenDays`, `topActions:[{kind,count}]` | usage counters |
 | `recipes.list` | `id`, `ok`, `items:[{goal,app,steps,at,replayable,screenHash,endHash}]` | saved repetitions; also the reply to delete/clear |
 | `history.error` / `usage.error` / `recipes.error` | `id`, `ok:false`, `code`, `error` | a refused read or mutation |
+| `profiles.list` | `id`, `ok`, `selected`, `items:[{key,label}]` | the shared profile catalogue |
+| `profiles.error` | `id`, `ok:false`, `code`, `error` | an unknown profile |
 | `file.attached` | `id`, `attachment?`, `error?` | the attachment was accepted or refused |
 | `file.removed` | `id`, `ok` | the pending attachment was dropped |
 | `task.*` | echo `id` plus the task payload | replies to the task messages above |

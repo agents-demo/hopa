@@ -19,6 +19,7 @@ import com.hopa.sidecar.protocol.handler.DeviceHandler
 import com.hopa.sidecar.protocol.handler.FileHandler
 import com.hopa.sidecar.protocol.handler.HistoryHandler
 import com.hopa.sidecar.protocol.handler.MemoryHandler
+import com.hopa.sidecar.protocol.handler.ProfilesHandler
 import com.hopa.sidecar.protocol.handler.RecipesHandler
 import com.hopa.sidecar.protocol.handler.SkillHandler
 import com.hopa.sidecar.protocol.handler.TaskHandler
@@ -137,6 +138,7 @@ internal fun runProtocol(options: CliOptions) {
             HistoryHandler(io, records, store),
             UsageHandler(io, records),
             RecipesHandler(io, recipes),
+            ProfilesHandler(io, config),
             ConfigHandler(io, config),
             TaskHandler(io, tasks),
             DeviceHandler(io, device, config),

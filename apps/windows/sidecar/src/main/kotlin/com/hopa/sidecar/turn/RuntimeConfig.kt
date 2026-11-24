@@ -27,6 +27,9 @@ class RuntimeConfig {
         private set
     var tone: String = "warm"
         private set
+    /** The shell profile; the catalogue is shared in com.hopa.stores.Profiles. */
+    var profile: String = "everyday"
+        private set
     /** P4: this PC has its own gateway credential and a phone peer online. */
     var gatewayPaired: Boolean = false
         private set
@@ -53,6 +56,10 @@ class RuntimeConfig {
         bridgeRefresh = refresh
     }
 
+    fun setProfile(value: String) {
+        profile = value
+    }
+
     fun update(message: JsonObject) {        bridgeUrl = message.text("bridgeUrl")
         useBridge = message.text("useBridge").toBoolean()
         bridgeToken = message.text("bridgeToken")
@@ -62,6 +69,7 @@ class RuntimeConfig {
         modelKey = message.text("modelKey")
         modelName = message.text("modelName").ifBlank { "gpt-4o-mini" }
         tone = message.text("tone").ifBlank { "warm" }
+        profile = message.text("profile").ifBlank { profile }
     }
 
     /** Safe to log: no token, no key, no credentials in the URL. */
@@ -69,7 +77,7 @@ class RuntimeConfig {
         "bridge=${if (hasBridge) "on" else "off"} url=${bridgeUrl.ifBlank { "-" }} " +
             "gateway=${if (gatewayPaired) "paired" else "off"}" +
             "/phone=${if (gatewayPhoneOnline) "on" else "off"} " +
-            "model=${if (hasModel) modelProvider else "none"} tone=$tone"
+            "model=${if (hasModel) modelProvider else "none"} tone=$tone profile=$profile"
 
     private fun JsonObject.text(key: String): String =
         this[key]?.jsonPrimitive?.contentOrNull.orEmpty()

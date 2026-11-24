@@ -5,6 +5,7 @@ using System.Text.Json.Nodes;
 var memory = new List<string>();
 var skills = new List<(string Trigger, string Action)>();
 var recipes = new List<(string Goal, string App)> { ("open mail", "mail") };
+var profile = "everyday";
 
 string? line;
 while ((line = Console.In.ReadLine()) != null)
@@ -138,6 +139,27 @@ while ((line = Console.In.ReadLine()) != null)
             reply["ok"] = true;
             reply["items"] = RecipeItems(recipes);
             break;
+        case "profiles.list":
+            reply["ok"] = true;
+            reply["selected"] = profile;
+            reply["items"] = ProfileItems();
+            break;
+        case "profiles.select":
+            var requested = message?["profile"]?.GetValue<string>() ?? "";
+            if (!KnownProfiles().Any(entry => entry.Key == requested))
+            {
+                Error(reply, "E_SCHEMA", "unknown profile");
+            }
+            else
+            {
+                profile = requested;
+                reply["type"] = "profiles.list";
+                reply["ok"] = true;
+                reply["selected"] = profile;
+                reply["items"] = ProfileItems();
+            }
+
+            break;
         default:
             reply["answer"] = "hello";
             reply["conversationId"] = "c1";
@@ -189,6 +211,26 @@ static JsonArray RecipeItems(IEnumerable<(string Goal, string App)> values)
 
     return array;
 }
+
+static JsonArray ProfileItems()
+{
+    var array = new JsonArray();
+    foreach (var (key, label) in KnownProfiles())
+    {
+        array.Add(new JsonObject { ["key"] = key, ["label"] = label });
+    }
+
+    return array;
+}
+
+static (string Key, string Label)[] KnownProfiles() => new[]
+{
+    ("everyday", "Everyday"),
+    ("easy", "Easy"),
+    ("kid", "Kid"),
+    ("power", "Power"),
+    ("social", "Social"),
+};
 
 static void Error(JsonObject reply, string code, string message)
 {

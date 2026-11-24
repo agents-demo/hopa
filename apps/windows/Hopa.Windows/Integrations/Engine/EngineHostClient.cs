@@ -190,6 +190,7 @@ public sealed partial class EngineHostClient : IAsyncDisposable, IChatEngine
             ["modelName"] = settings.ModelName,
             ["modelKey"] = modelKey,
             ["tone"] = settings.Tone,
+            ["profile"] = settings.Profile,
         };
         return await RequestAsync("configure", fields, TimeSpan.FromSeconds(10));
     }

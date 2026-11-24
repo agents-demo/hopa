@@ -66,12 +66,12 @@ Build the data path before the screens.
 - [x] Add the `memory.*` and `skills.*` sidecar families and their round-trip
   tests. (evidence: `MemoryHandler`, `SkillHandler`, `MemoryFileStoreTest`,
   `SkillFileStoreTest`, `DataProtocolTest`)
-- [ ] Add the remaining sidecar families: `profiles.*`, `notifications.*`,
+- [ ] Add the remaining sidecar families: `notifications.*`,
   `capabilities.*`, `launchpad.*`, `selfcheck.*`. (evidence: `protocol.md` and
   schema)
-- [x] Add the `history.*`, `usage.*` and `recipes.*` families and their tests.
-  (evidence: `HistoryHandler`, `UsageHandler`, `RecipesHandler`,
-  `RecordStatsTest`, `DataProtocolTest`)
+- [x] Add the `history.*`, `usage.*`, `recipes.*` and `profiles.*` families and
+  their tests. (evidence: `HistoryHandler`, `UsageHandler`, `RecipesHandler`,
+  `ProfilesHandler`, `RecordStatsTest`, `DataProtocolTest`)
 - [x] Add host methods and a real-process integration test for memory, skills,
   history, usage and recipes. (evidence: `EngineHostClient.Memory.cs`,
   `EngineHostClient.Skills.cs`, `EngineHostClient.History.cs`,

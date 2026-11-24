@@ -3,6 +3,7 @@ package com.hopa.sidecar.protocol
 import com.hopa.sidecar.protocol.Protocol
 import com.hopa.sidecar.protocol.Protocol.text
 import com.hopa.sidecar.protocol.handler.MemoryHandler
+import com.hopa.sidecar.protocol.handler.ProfilesHandler
 import com.hopa.sidecar.protocol.handler.SkillHandler
 import com.hopa.sidecar.store.MemoryFileStore
 import com.hopa.sidecar.store.SkillFileStore
@@ -66,6 +67,28 @@ class DataProtocolTest {
         ))
         assertEquals("recipes.list", recipes.text("type"))
         assertTrue(recipes["items"].toString().contains("\"goal\":\"open mail\""))
+    }
+
+    @Test
+    fun the_profile_handler_lists_and_selects_a_shared_profile() {
+        val config = com.hopa.sidecar.turn.RuntimeConfig()
+        val handler = ProfilesHandler(Stdio(), config)
+
+        val listed = capture { handler.handle("profiles.list", message("profiles.list", "id" to "p-1")) }
+        val first = listed.single()
+        assertEquals("profiles.list", first.text("type"))
+        assertEquals("everyday", first.text("selected"))
+        assertTrue(first["items"].toString().contains("\"key\":\"power\""))
+
+        val selected = capture {
+            handler.handle("profiles.select", message("profiles.select", "id" to "p-2", "profile" to "power"))
+        }
+        assertEquals("power", selected.single().text("selected"))
+
+        val refused = capture {
+            handler.handle("profiles.select", message("profiles.select", "id" to "p-3", "profile" to "nope"))
+        }
+        assertEquals("profiles.error", refused.single().text("type"))
     }
 
     @Test

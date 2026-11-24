@@ -82,6 +82,26 @@ public sealed class EngineDataTests
     }
 
     [Fact]
+    public async Task ProfilesListAndSelect()
+    {
+        await using var host = FakeEngineProcess.Start();
+        await using var client = new EngineHostClient(host.Transport);
+
+        var (selected, profiles) = await client.ListProfilesAsync();
+        Assert.Equal("everyday", selected);
+        Assert.Equal(5, profiles.Count);
+        Assert.Contains(profiles, profile => profile.Key == "power");
+
+        var (changed, _) = await client.SelectProfileAsync("power");
+        Assert.Equal("power", changed);
+
+        var (reloaded, _) = await client.ListProfilesAsync();
+        Assert.Equal("power", reloaded);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => client.SelectProfileAsync("nope"));
+    }
+
+    [Fact]
     public async Task AMalformedMemoryAddIsAnError()
     {
         await using var host = FakeEngineProcess.Start();

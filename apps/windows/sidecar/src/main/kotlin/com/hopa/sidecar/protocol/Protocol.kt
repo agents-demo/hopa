@@ -19,6 +19,7 @@ import com.hopa.sidecar.store.HistoryEntry
 import com.hopa.sidecar.store.UsageStats
 import com.hopa.agent.recipe.Recipe
 import com.hopa.stores.Skill
+import com.hopa.stores.Profile
 
 /** The NDJSON messages between the .NET host and this sidecar. */
 object Protocol {
@@ -320,6 +321,21 @@ object Protocol {
                     put("replayable", recipe.replayable)
                     put("screenHash", recipe.screenHash)
                     put("endHash", recipe.endHash)
+                })
+            }
+        })
+    }
+
+    fun profileList(id: String, profiles: List<Profile>, selected: String): JsonObject = buildJsonObject {
+        put("type", "profiles.list")
+        put("id", id)
+        put("ok", true)
+        put("selected", selected)
+        put("items", buildJsonArray {
+            profiles.forEach { profile ->
+                add(buildJsonObject {
+                    put("key", profile.key)
+                    put("label", profile.label)
                 })
             }
         })

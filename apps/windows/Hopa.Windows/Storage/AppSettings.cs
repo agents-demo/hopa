@@ -15,6 +15,8 @@ public sealed class AppSettings
 
     public string Tone { get; set; } = "warm";
 
+    public string Profile { get; set; } = "everyday";
+
     public double? WindowLeft { get; set; }
 
     public double? WindowTop { get; set; }

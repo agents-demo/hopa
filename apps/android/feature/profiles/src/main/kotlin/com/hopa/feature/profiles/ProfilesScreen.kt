@@ -19,6 +19,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.hopa.stores.Profiles
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,13 +28,7 @@ fun ProfilesScreen(
     onBack: () -> Unit,
     onSelect: (String) -> Unit,
 ) {
-    val profiles = listOf(
-        "everyday" to "Everyday",
-        "easy" to "Easy",
-        "kid" to "Kid",
-        "power" to "Power",
-        "social" to "Social",
-    )
+    val profiles = Profiles.all
     Scaffold(
         topBar = {
             TopAppBar(
@@ -54,16 +49,16 @@ fun ProfilesScreen(
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text("Choose the shell HOPA uses.", style = MaterialTheme.typography.bodyLarge)
-            profiles.forEach { (key, label) ->
+            profiles.forEach { profile ->
                 androidx.compose.foundation.layout.Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { onSelect(key) }
+                        .clickable { onSelect(profile.key) }
                         .padding(vertical = 12.dp),
                 ) {
-                    RadioButton(selected = selected == key, onClick = { onSelect(key) })
+                    RadioButton(selected = selected == profile.key, onClick = { onSelect(profile.key) })
                     Text(
-                        text = label,
+                        text = profile.label,
                         modifier = Modifier.padding(start = 8.dp, top = 12.dp),
                     )
                 }

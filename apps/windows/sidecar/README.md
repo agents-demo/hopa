@@ -33,6 +33,7 @@ graph live in `core/`.
 | `history.list` | `HistoryHandler` |
 | `usage.summary` | `UsageHandler` |
 | `recipes.*` | `RecipesHandler` |
+| `profiles.*` | `ProfilesHandler` |
 | `configure` | `ConfigHandler` |
 | `task.*` | `TaskHandler` |
 | `device.result`, `gateway.state` | `DeviceHandler` |
