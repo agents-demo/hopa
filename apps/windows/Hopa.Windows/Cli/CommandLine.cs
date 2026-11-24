@@ -13,6 +13,7 @@ public enum RunMode
     Turn,
     ConversationList,
     SettingsShot,
+    SettingsPagesShot,
     DraftCheck,
     BridgeCheck,
     ChatShot,
@@ -88,6 +89,7 @@ internal static class CommandLine
             "--settings-check" => new Command(RunMode.SettingsCheck, new[] { args[1] }),
             "--turn" => Turn(args),
             "--shot-settings" => new Command(RunMode.SettingsShot, new[] { args[1] }),
+            "--shot-settings-pages" => new Command(RunMode.SettingsPagesShot, new[] { args[1] }),
             "--draft-check" => new Command(RunMode.DraftCheck, new[] { args[1] }),
             "--bridge-check" => args.Length >= 4
                 ? new Command(RunMode.BridgeCheck, new[] { args[1], args[2], args[3] })

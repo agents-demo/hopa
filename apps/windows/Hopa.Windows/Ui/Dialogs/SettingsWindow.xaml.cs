@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.IO;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Linq;
@@ -630,6 +631,21 @@ public partial class SettingsWindow : Window
 
     private static string Present(string name) =>
         CredentialStore.Read(name).Length > 0 ? "present" : "missing";
+
+    /// <summary>The W11 parity evidence: one PNG per settings page.</summary>
+    internal void CapturePages(string directory)
+    {
+        Directory.CreateDirectory(directory);
+        foreach (var item in SettingsNav.Items.OfType<ListBoxItem>())
+        {
+            SettingsNav.SelectedItem = item;
+            UpdateLayout();
+            var tag = item.Tag?.ToString() ?? "page";
+            Hopa.Windows.Ui.WindowScreenshot.Save(
+                this,
+                Path.Combine(directory, $"windows-settings-{tag}.png"));
+        }
+    }
 
     private void Target_Changed(object sender, RoutedEventArgs e)
     {

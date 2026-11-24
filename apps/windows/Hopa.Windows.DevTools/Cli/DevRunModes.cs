@@ -65,6 +65,9 @@ internal static class DevRunModes
             case RunMode.SettingsShot:
                 _ = SettingsShot.Run(window, command.Arg(0));
                 break;
+            case RunMode.SettingsPagesShot:
+                _ = SettingsPagesShot.Run(window, command.Arg(0));
+                break;
             case RunMode.DraftCheck:
                 _ = DraftCheck.Run(window, command.Arg(0));
                 break;

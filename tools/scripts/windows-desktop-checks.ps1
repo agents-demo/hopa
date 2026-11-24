@@ -176,6 +176,11 @@ try {
 
     Invoke-DevTool "settings shot (W6)" @("--shot-settings", (Join-Path $shots "windows-settings.png"))
     Assert-Screenshot (Join-Path $shots "windows-settings.png") "settings shot"
+
+    Invoke-DevTool "settings pages (W11)" @("--shot-settings-pages", $shots)
+    Assert-Screenshot (Join-Path $shots "windows-settings-general.png") "settings pages"
+    Assert-Screenshot (Join-Path $shots "windows-settings-run.png") "settings pages"
+    Assert-Screenshot (Join-Path $shots "windows-settings-browser.png") "settings pages"
 }
 finally {
     foreach ($name in $watched) {

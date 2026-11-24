@@ -1,6 +1,6 @@
 # Windows total parity plan (W7–W11)
 
-Status: **W7–W9 done. W10 in progress; W11 planned.** The product decision is
+Status: **W7–W9 done. W10 in progress; W11 evidence started.** The product decision is
 [ADR-0027](../../../design/decisions/0027-windows-semantic-parity.md): Windows is a
 full client with **semantic** parity against Android. Android remains the
 reference; the screen-by-screen matrix is [parity.md](parity.md).
@@ -163,12 +163,14 @@ The screens that change what HOPA does.
 Gate: an Android action screen has a Windows counterpart that produces the same
 record and the same gate decision.
 
-### W11. Parity evidence — planned
+### W11. Parity evidence — in progress
 
 Prove the matrix instead of asserting it.
 
 - [ ] A screenshot for every `have`/`adapt`/`new` surface, Android and Windows
   side by side in one artifact. (evidence: `out/windows-parity` artifact)
+  - [x] Every settings page is captured by `--shot-settings-pages` and checked
+    by the desktop smoke script. (evidence: `windows-settings-*.png`)
 - [ ] The desktop CI job runs the parity smoke: launch, observe, approve,
   settings, memory/skills/usage read, notification, screenshot. (evidence:
   `windows-desktop.yml` run)
