@@ -302,3 +302,6 @@ Not adopted, with reasons:
 - `MainWindow.Checks.cs` is split by family: `MainWindow.Headless.cs` (turn and
   list modes, screenshots), `MainWindow.Screenshots.cs` (W4/W6 and the controls)
   and `MainWindow.Checks.cs` (engine and bridge checks).
+- `MainWindow.Chat` is split into `MainWindow.Connection` (client, gateway,
+  settings, bridge status) and `MainWindow.Chat` (refresh, select, send, new
+  chat, keyboard). It is a readability split; behaviour is unchanged.
