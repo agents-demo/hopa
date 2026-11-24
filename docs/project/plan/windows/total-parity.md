@@ -171,6 +171,8 @@ Prove the matrix instead of asserting it.
   side by side in one artifact. (evidence: `out/windows-parity` artifact)
   - [x] Every settings page is captured by `--shot-settings-pages` and checked
     by the desktop smoke script. (evidence: `windows-settings-*.png`)
+  - [x] The evidence commands, artifacts and remaining gaps are written down.
+    (evidence: [parity-evidence.md](parity-evidence.md))
 - [ ] The desktop CI job runs the parity smoke: launch, observe, approve,
   settings, memory/skills/usage read, notification, screenshot. (evidence:
   `windows-desktop.yml` run)
