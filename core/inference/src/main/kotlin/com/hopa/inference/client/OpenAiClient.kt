@@ -123,18 +123,18 @@ class OpenAiClient(
         return if (base.endsWith("/chat/completions")) base else "$base/chat/completions"
     }
 
+    /**
+     * Android screenshots are JPEG and Windows screenshots are PNG. Sending a
+     * PNG body as `image/jpeg` makes some providers drop the frame; the
+     * signature is cheap to read and keeps both clients honest.
+     */
+    private fun imageMime(frame: String): String = when {
+        frame.startsWith("iVBORw0KGgo") -> "image/png"
+        frame.startsWith("/9j/") -> "image/jpeg"
+        else -> "image/jpeg"
+    }
+
     private companion object {
         val JSON = "application/json; charset=utf-8".toMediaType()
     }
-}
-
-/**
- * Android screenshots are JPEG and Windows screenshots are PNG. Sending a PNG
- * body as `image/jpeg` makes some providers drop the frame; the signature is
- * cheap to read and keeps both clients honest.
- */
-internal fun imageMime(frame: String): String = when {
-    frame.startsWith("iVBORw0KGgo") -> "image/png"
-    frame.startsWith("/9j/") -> "image/jpeg"
-    else -> "image/jpeg"
 }
