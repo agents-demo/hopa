@@ -144,7 +144,7 @@ class RunCoordinator(
     suspend fun run(
         request: TurnRequest,
         isCancelled: () -> Boolean = { false },
-    ): TurnOutcome = runner.run(request, isCancelled)
+    ): TurnOutcome = runner.run(request, isCancelled = isCancelled)
 
     /**
      * Ask the helper what the foreground app publishes, so the model can choose a
