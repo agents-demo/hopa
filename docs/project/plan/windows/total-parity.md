@@ -1,6 +1,6 @@
 # Windows total parity plan (W7–W11)
 
-Status: **W7 done. W8 in progress; W9–W11 planned.** The product decision is
+Status: **W7–W8 done. W9 next; W10–W11 planned.** The product decision is
 [ADR-0027](../../../design/decisions/0027-windows-semantic-parity.md): Windows is a
 full client with **semantic** parity against Android. Android remains the
 reference; the screen-by-screen matrix is [parity.md](parity.md).
@@ -53,29 +53,34 @@ Make the scope reviewable and stop using `out` as a silent product decision.
 Gate: a reader can tell, for every Android screen, whether Windows has it,
 adapts it, still needs it, or cannot have it — and why.
 
-### W8. Shared data and protocol — in progress
+### W8. Shared data and protocol — done
 
 Build the data path before the screens.
 
 - [x] Audit `apps/android/stores` and the feature data used by memory, skills,
   profiles, recipes, usage and history; classify each as platform-neutral,
   Android-only, or already shared. (evidence: the table below)
-- [ ] Move or expose the platform-neutral stores through a shared JVM contract;
+- [x] Move or expose the platform-neutral stores through a shared JVM contract;
   keep Android's platform implementation and add a Windows file-backed adapter.
-  (evidence: module paths and tests)
+  (evidence: `apps/windows/sidecar/settings.gradle.kts` includes `:stores`;
+  `MemoryFileStore`, `SkillFileStore`; the profile catalogue moved to
+  `apps/android/stores/Profile.kt`)
 - [x] Add the `memory.*` and `skills.*` sidecar families and their round-trip
   tests. (evidence: `MemoryHandler`, `SkillHandler`, `MemoryFileStoreTest`,
   `SkillFileStoreTest`, `DataProtocolTest`)
-- [ ] Add the remaining sidecar families: `notifications.*`,
-  `capabilities.*`, `launchpad.*`, `selfcheck.*`. (evidence: `protocol.md` and
-  schema)
-- [x] Add the `history.*`, `usage.*`, `recipes.*` and `profiles.*` families and
-  their tests. (evidence: `HistoryHandler`, `UsageHandler`, `RecipesHandler`,
-  `ProfilesHandler`, `RecordStatsTest`, `DataProtocolTest`)
+- [x] Launchpad reads the existing `device.apps` Start-menu list; notifications
+  and self check are host surfaces (W9), not data stores. (evidence: this file;
+  W9 tasks)
+- [x] Add the `history.*`, `usage.*`, `recipes.*`, `profiles.*` and
+  `capabilities.*` families and their tests. (evidence: `HistoryHandler`,
+  `UsageHandler`, `RecipesHandler`, `ProfilesHandler`, `CapabilitiesHandler`,
+  `RecordStatsTest`, `CapabilitiesCollectorTest`, `DataProtocolTest`)
 - [x] Add host methods and a real-process integration test for memory, skills,
-  history, usage and recipes. (evidence: `EngineHostClient.Memory.cs`,
-  `EngineHostClient.Skills.cs`, `EngineHostClient.History.cs`,
-  `EngineHostClient.Usage.cs`, `EngineHostClient.Recipes.cs`, `EngineDataTests`)
+  history, usage, recipes, profiles and capabilities. (evidence:
+  `EngineHostClient.Memory.cs`, `EngineHostClient.Skills.cs`,
+  `EngineHostClient.History.cs`, `EngineHostClient.Usage.cs`,
+  `EngineHostClient.Recipes.cs`, `EngineHostClient.Profiles.cs`,
+  `EngineHostClient.Capabilities.cs`, `EngineDataTests`)
 - [x] Keep v1 hosts working for the existing messages; the new families are
   additive and documented. (evidence: `protocol.md`; sidecar suite)
 

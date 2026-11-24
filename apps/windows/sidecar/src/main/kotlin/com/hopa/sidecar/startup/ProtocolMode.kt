@@ -9,10 +9,12 @@ import com.hopa.sidecar.backend.GatewayHost
 import com.hopa.sidecar.backend.backendContentKey
 import com.hopa.sidecar.device.HostDevice
 import com.hopa.sidecar.turn.TurnEngine
+import com.hopa.sidecar.capabilities.CapabilitiesCollector
 import com.hopa.sidecar.protocol.Dispatcher
 import com.hopa.sidecar.protocol.Protocol
 import com.hopa.sidecar.protocol.handler.ApprovalHandler
 import com.hopa.sidecar.protocol.handler.BackendHandler
+import com.hopa.sidecar.protocol.handler.CapabilitiesHandler
 import com.hopa.sidecar.protocol.handler.ConfigHandler
 import com.hopa.sidecar.protocol.handler.ConversationHandler
 import com.hopa.sidecar.protocol.handler.DeviceHandler
@@ -57,6 +59,7 @@ internal fun runProtocol(options: CliOptions) {
     val skills = SkillFileStore(dataDir.resolve("skills.json"))
     val recipes = RecipeStore(dataDir.resolve("recipes.txt").toFile())
     val config = RuntimeConfig()
+    val capabilities = CapabilitiesCollector(config, memory, skills, recipes, records)
     val approval = HostApproval(io, approvals)
     val attachments = Attachments(dataDir.resolve("attachments"))
     val tasks = TaskStore()
@@ -139,6 +142,7 @@ internal fun runProtocol(options: CliOptions) {
             UsageHandler(io, records),
             RecipesHandler(io, recipes),
             ProfilesHandler(io, config),
+            CapabilitiesHandler(io, capabilities),
             ConfigHandler(io, config),
             TaskHandler(io, tasks),
             DeviceHandler(io, device, config),

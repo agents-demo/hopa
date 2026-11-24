@@ -34,6 +34,7 @@ graph live in `core/`.
 | `usage.summary` | `UsageHandler` |
 | `recipes.*` | `RecipesHandler` |
 | `profiles.*` | `ProfilesHandler` |
+| `capabilities.summary` | `CapabilitiesHandler` |
 | `configure` | `ConfigHandler` |
 | `task.*` | `TaskHandler` |
 | `device.result`, `gateway.state` | `DeviceHandler` |

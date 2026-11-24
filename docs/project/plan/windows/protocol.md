@@ -39,6 +39,7 @@ memory/skill families as additive v1 messages.
 | `recipes.clear` | `id` | forget all repetitions; replies with the new list |
 | `profiles.list` | `id` | the shared profile catalogue and the selected key |
 | `profiles.select` | `id`, `profile` | choose a shell; replies with the catalogue and selection |
+| `capabilities.summary` | `id` | live platform, profile, model, bridge, gateway and store counts |
 | `conversations.list` | `id`, `includeArchived?` | list conversations |
 | `conversation.create` | `id` | create an empty conversation |
 | `conversation.open` | `id`, `conversationId` | read one conversation |
@@ -77,6 +78,7 @@ memory/skill families as additive v1 messages.
 | `history.error` / `usage.error` / `recipes.error` | `id`, `ok:false`, `code`, `error` | a refused read or mutation |
 | `profiles.list` | `id`, `ok`, `selected`, `items:[{key,label}]` | the shared profile catalogue |
 | `profiles.error` | `id`, `ok:false`, `code`, `error` | an unknown profile |
+| `capabilities.summary` | `id`, `ok`, `platform`, `profile`, `model*`, `bridge`, `gateway*`, `memory`, `skills`, `recipes`, `runs`, `windowsApps` | the live capability probe |
 | `file.attached` | `id`, `attachment?`, `error?` | the attachment was accepted or refused |
 | `file.removed` | `id`, `ok` | the pending attachment was dropped |
 | `task.*` | echo `id` plus the task payload | replies to the task messages above |

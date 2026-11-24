@@ -17,6 +17,7 @@ import com.hopa.sidecar.turn.TurnOutcome
 import com.hopa.sidecar.store.HandoffTask
 import com.hopa.sidecar.store.HistoryEntry
 import com.hopa.sidecar.store.UsageStats
+import com.hopa.sidecar.capabilities.CapabilitiesSummary
 import com.hopa.agent.recipe.Recipe
 import com.hopa.stores.Skill
 import com.hopa.stores.Profile
@@ -339,6 +340,25 @@ object Protocol {
                 })
             }
         })
+    }
+
+    fun capabilities(id: String, summary: CapabilitiesSummary): JsonObject = buildJsonObject {
+        put("type", "capabilities.summary")
+        put("id", id)
+        put("ok", true)
+        put("platform", summary.platform)
+        put("profile", summary.profile)
+        put("modelProvider", summary.modelProvider)
+        put("modelName", summary.modelName)
+        put("modelReady", summary.modelReady)
+        put("bridge", summary.bridge)
+        put("gatewayPaired", summary.gatewayPaired)
+        put("phoneOnline", summary.phoneOnline)
+        put("memory", summary.memory)
+        put("skills", summary.skills)
+        put("recipes", summary.recipes)
+        put("runs", summary.runs)
+        put("windowsApps", summary.windowsApps)
     }
 
     fun conversationExported(id: String, conversation: Conversation?): JsonObject = buildJsonObject {

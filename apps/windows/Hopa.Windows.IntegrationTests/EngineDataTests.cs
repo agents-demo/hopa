@@ -102,6 +102,20 @@ public sealed class EngineDataTests
     }
 
     [Fact]
+    public async Task CapabilitiesReflectTheLiveState()
+    {
+        await using var host = FakeEngineProcess.Start();
+        await using var client = new EngineHostClient(host.Transport);
+
+        var summary = await client.CapabilitiesAsync();
+        Assert.Equal("windows", summary.Platform);
+        Assert.Equal("everyday", summary.Profile);
+        Assert.False(summary.ModelReady);
+        Assert.Equal(2, summary.WindowsApps);
+        Assert.Equal(1, summary.Runs);
+    }
+
+    [Fact]
     public async Task AMalformedMemoryAddIsAnError()
     {
         await using var host = FakeEngineProcess.Start();

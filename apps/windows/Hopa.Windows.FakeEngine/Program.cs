@@ -160,6 +160,22 @@ while ((line = Console.In.ReadLine()) != null)
             }
 
             break;
+        case "capabilities.summary":
+            reply["ok"] = true;
+            reply["platform"] = "windows";
+            reply["profile"] = profile;
+            reply["modelProvider"] = "openai";
+            reply["modelName"] = "fake";
+            reply["modelReady"] = false;
+            reply["bridge"] = false;
+            reply["gatewayPaired"] = false;
+            reply["phoneOnline"] = false;
+            reply["memory"] = memory.Count;
+            reply["skills"] = skills.Count;
+            reply["recipes"] = recipes.Count;
+            reply["runs"] = 1;
+            reply["windowsApps"] = 2;
+            break;
         default:
             reply["answer"] = "hello";
             reply["conversationId"] = "c1";
