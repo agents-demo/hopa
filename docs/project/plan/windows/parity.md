@@ -24,7 +24,7 @@ desktop form. The phase plan is [total-parity.md](total-parity.md).
 | Empty state | `apps/android/feature/chat/src/main/kotlin/com/hopa/feature/chat/component/ChatEmptyState.kt` | empty state with the mark | have |
 | Attachment preview | `apps/android/feature/chat/src/main/kotlin/com/hopa/feature/chat/component/AttachmentPreview.kt` | pending attachment bar | have |
 | Conversation list | `apps/android/feature/conversations/src/main/kotlin/com/hopa/feature/conversations/ChatsSheet.kt` | sidebar with pin, archive, rename, export, delete | have |
-| Vision attachment | `apps/android/feature/chat/src/main/kotlin/com/hopa/feature/chat/component/Composer.kt` | a frame can ride with a model call; the host has no frame path yet | new |
+| Vision attachment | `apps/android/feature/chat/src/main/kotlin/com/hopa/feature/chat/component/Composer.kt` | a frame can ride with a model call; verified by `--vision-check` | have |
 
 ## Execution
 
@@ -53,7 +53,7 @@ desktop form. The phase plan is [total-parity.md](total-parity.md).
 | Android screen | Source | Windows equivalent | Status |
 |---|---|---|---|
 | Settings hub with search | `apps/android/feature/settings/src/main/kotlin/com/hopa/feature/settings/SettingsScreen.kt` | navigation hub with search and subpages | new |
-| Settings — Answers (model, key, vision) | `apps/android/feature/settings/src/main/kotlin/com/hopa/feature/settings/SettingsModelScreen.kt` | model provider, endpoint, key | have; vision is new |
+| Settings - Answers (model, key, vision) | `apps/android/feature/settings/src/main/kotlin/com/hopa/feature/settings/SettingsModelScreen.kt` | model provider, endpoint, key, vision | have |
 | Settings — My computer (pairing) | `apps/android/feature/execution/src/main/kotlin/com/hopa/feature/execution/ComputerScreen.kt` | backend pairing and bridge address | have |
 | Settings — Tone and length | `apps/android/feature/settings/src/main/kotlin/com/hopa/feature/settings/PreferencesSettings.kt` | tone; length joins the Answers subpage | have |
 | Settings — Run history | `apps/android/feature/history/src/main/kotlin/com/hopa/feature/history/HistoryScreen.kt` | runs window | have |
@@ -78,7 +78,7 @@ desktop form. The phase plan is [total-parity.md](total-parity.md).
 | Replay | stored recipe before the model | same, through the shared `TurnRunner` | have |
 | Instant commands | canonical launch/back/home/scroll/wait | same, through `IntentClassifier` | have |
 | Plan-first | plan, approve, resend | same, with `PlanWindow` | have |
-| Vision | screenshot with the model call | wired through `TurnContext.vision`; a real image-model round-trip is still pending | adapt |
+| Vision | screenshot with the model call | wired through `TurnContext.vision`; `--vision-check` proves a frame-only word round-trip | have |
 
 ## Cross-cutting
 

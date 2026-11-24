@@ -59,6 +59,40 @@ class OpenAiClientTest {
     }
 
     @Test
+    fun a_png_frame_is_sent_as_png_not_jpeg() = runBlocking {
+        server.enqueue(MockResponse().setBody("""{"choices":[{"message":{"content":"ok"}}]}"""))
+        val client = OpenAiClient(
+            endpoint = base,
+            apiKey = "sk-test",
+            modelName = "deepseek-v4-flash-vision-exp",
+        )
+        client.complete(
+            ModelRequest(
+                messages = listOf(ModelMessage("user", "what word is shown?")),
+                images = listOf("iVBORw0KGgoAAAANSUhEUg"),
+            ),
+        )
+
+        val body = server.takeRequest().body.readUtf8()
+        assertTrue(body.contains("data:image/png;base64,iVBORw0KGgo"))
+        assertFalse(body.contains("data:image/jpeg;base64,iVBORw0KGgo"))
+    }
+
+    @Test
+    fun a_jpeg_frame_keeps_the_jpeg_mime() = runBlocking {
+        server.enqueue(MockResponse().setBody("""{"choices":[{"message":{"content":"ok"}}]}"""))
+        val client = OpenAiClient(endpoint = base, apiKey = "sk-test", modelName = "m")
+        client.complete(
+            ModelRequest(
+                messages = listOf(ModelMessage("user", "what word is shown?")),
+                images = listOf("/9j/4AAQSkZJRg"),
+            ),
+        )
+
+        assertTrue(server.takeRequest().body.readUtf8().contains("data:image/jpeg;base64,/9j/"))
+    }
+
+    @Test
     fun an_endpoint_already_ending_in_chat_completions_is_not_doubled() = runBlocking {
         server.enqueue(MockResponse().setBody("""{"choices":[{"message":{"content":"ok"}}]}"""))
         val client = OpenAiClient(

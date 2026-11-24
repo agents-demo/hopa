@@ -4,6 +4,6 @@ data class ModelRequest(
     val messages: List<ModelMessage>,
     val maxTokens: Int = 2048,
     val reasoningEffort: String = "",
-    /** Base64 JPEG frames of the screen, when the model can see them. */
+    /** Base64 frames of the screen; the client detects PNG or JPEG from the signature. */
     val images: List<String> = emptyList(),
 )

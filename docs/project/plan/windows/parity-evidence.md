@@ -44,7 +44,7 @@ Hosted runners are session 0 and cannot produce it; see
 | Instant commands | `--turn "open notepad"` | one launch step, no model call |
 | Web surface | `--web-check <dir>` | navigate, read, type, click; `Signed by Michael` visible |
 | Web engine turn | `--turn "Use the web browser: navigate to https://example.com, call web.read..."` | `web.navigate` and `web.read` steps; answer `Example Domain` |
-| Vision | `deepseek-v4-flash-vision-exp` | a nonce drawn only in the frame; answer matches |
+| Vision | `--vision-check <dir>` | a word drawn only in the frame; `vision-check.txt` says `match: True` |
 | Takeover/signature | `--p5-check <dir> [--auto-sign]` | `paused: True`, `signed: Signed by Michael`, `checkpoint complete: True` |
 
 ## Pairing with Android
@@ -66,5 +66,6 @@ in the matrix; rows marked `not-applicable` carry the platform reason.
   same one-file-per-surface treatment.
 - Android and Windows screenshots are not yet stored in one artifact tree.
 - The signed-form P5 transcript needs a real form, not a synthetic screenshot.
-- A real vision round-trip waits for an image-capable model.
+- Vision evidence needs a configured image-capable model; `--vision-check`
+  records the nonce, answer and frame for the model that is configured.
 - The desktop CI job is ready but its self-hosted runner is not registered.

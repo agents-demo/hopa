@@ -29,6 +29,7 @@ public enum RunMode
     StaleCheck,
     WebCheck,
     P5Check,
+    VisionCheck,
 }
 
 /// <summary>One command line, already split into a mode and its operands.</summary>
@@ -117,6 +118,7 @@ internal static class CommandLine
             "--p5-check" => new Command(
                 RunMode.P5Check,
                 new[] { args[1], args.Length >= 3 && args[2] == "--auto-sign" ? "auto" : null }),
+            "--vision-check" => new Command(RunMode.VisionCheck, new[] { args[1] }),
             _ => null,
         };
     }

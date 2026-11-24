@@ -35,7 +35,8 @@ These are settled for planning; W7 records them in `parity.md`.
 - **Browser** → embedded WebView2 pane, with the shared browser contract; link
   opening remains the fallback.
 - **Vision** → send frames when the host enables it and the selected model
-  accepts images. The parity row is not `have` until a frame round-trip works.
+  accepts images. A round-trip with an image-capable model passes
+  `--vision-check`.
 - **Takeover/signature** → P5 in the existing plan, still a parity row.
 
 ## 3. Phases
@@ -141,7 +142,8 @@ The screens that change what HOPA does.
     Windows has no graph catalogue.
   - [x] Cloud fallback is `not-applicable`: the Windows model is already the
     configured API, with no on-device model to fall back from.
-  - [x] Vision is wired; a real image-model round-trip is still pending.
+  - [x] Vision is wired and verified by `--vision-check` with an
+    image-capable model.
 - [x] How HOPA acts: a page with the real tier order and gate rules. (evidence:
   `HowActsPage`)
 - [ ] Feed the How HOPA acts page live tier/selector data. (evidence: a selector
@@ -160,8 +162,9 @@ The screens that change what HOPA does.
     transcript says `paused: True`, `signed: Signed by Michael`,
     `checkpoint complete: True`)
   - [ ] A human-signed rerun: `--p5-check` without `--auto-sign`.
-- [ ] Vision frame round-trip when a model accepts images. (evidence: protocol
-  test + one real frame)
+- [x] Vision frame round-trip when a model accepts images. (evidence:
+  `--vision-check` draws a word only in the frame; the model's answer matches;
+  `vision-check.txt`, `vision-nonce.png`, `vision-screen.png`)
 - [x] Phone handoff semantics: a task sent from the PC is owned by the phone;
   the PC does not mirror its screen. (evidence:
   `GatewaySocketTests.AHandoffGoesToThePhoneAsTaskCreate`; the frame is a

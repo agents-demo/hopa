@@ -276,6 +276,7 @@ class TurnEngine(
         store.append(conversation.id, "user", goal, attachment)
         // The goal may be private; it is persisted in the chat store, never logged.
         io.log("turn $id in ${conversation.id}")
+        io.log("turn $id vision=${config.vision}")
 
         val device = device()
         val model = model()

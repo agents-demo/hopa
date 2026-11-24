@@ -25,6 +25,7 @@ public sealed class CommandLineTests
     [InlineData("--shot-settings-pages", RunMode.SettingsPagesShot)]
     [InlineData("--web-check", RunMode.WebCheck)]
     [InlineData("--p5-check", RunMode.P5Check)]
+    [InlineData("--vision-check", RunMode.VisionCheck)]
     public void OnePathCheckMapsToItsMode(string flag, RunMode mode)
     {
         var command = CommandLine.Parse(new[] { flag, "out.txt" });
