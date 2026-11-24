@@ -219,8 +219,17 @@ class AgentLoop(
             if (result.text.isNotEmpty()) {
                 notes += ModelMessage("user", result.text)
             }
-            // The policy said this action finishes the goal: answer and stop.
+            // The policy said this action finishes the goal: answer and stop -
+            // but only when the action actually ran. A failed launch must not
+            // keep the policy's success sentence.
             if (then != null) {
+                if (!result.record.executed) {
+                    return finish(
+                        answer = "I did not run that. " +
+                            result.text.ifBlank { "the step failed (${result.record.error})" },
+                        error = HopaError(ErrorCodes.DEVICE, result.record.error ?: "step failed"),
+                    )
+                }
                 return finish(then)
             }
         }

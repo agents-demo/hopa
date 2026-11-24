@@ -15,6 +15,7 @@ class FakeDevice(
     var taps = 0
     var doubleTaps = 0
     var longPresses = 0
+    var launchError: Exception? = null
 
     override suspend fun observe(): Observation = observation
 
@@ -41,6 +42,7 @@ class FakeDevice(
 
     override suspend fun launch(packageName: String) {
         launches += 1
+        launchError?.let { throw it }
     }
 
     override suspend fun stop(packageName: String) = Unit

@@ -3,6 +3,7 @@ package com.hopa.agent.loop
 import com.hopa.agent.action.ActionExecutor
 import com.hopa.agent.action.ApprovalPolicy
 import com.hopa.agent.decision.DecisionRuntime
+import com.hopa.agent.decision.command.CommandDecisionPolicy
 import com.hopa.agent.decision.model.ModelDecisionPolicy
 import com.hopa.agent.decision.model.ModelStepPolicy
 import com.hopa.catalog.testing.TestCatalog
@@ -10,6 +11,7 @@ import com.hopa.contracts.model.ModelPort
 import com.hopa.contracts.model.ModelReply
 import com.hopa.contracts.model.ModelRequest
 import com.hopa.contracts.model.ModelUsage
+import com.hopa.contracts.error.ErrorCodes
 import com.hopa.contracts.ports.InstalledApp
 import com.hopa.contracts.testing.FakeApproval
 import com.hopa.contracts.testing.FakeClock
@@ -17,6 +19,7 @@ import com.hopa.contracts.testing.FakeDevice
 import com.hopa.contracts.turn.TurnContext
 import com.hopa.decision.ActionClass
 import com.hopa.decision.ConformanceStatus
+import com.hopa.decision.classifier.IntentClassifier
 import com.hopa.decision.DecisionContext
 import com.hopa.decision.DecisionCoordinator
 import com.hopa.decision.DecisionLayer
@@ -37,6 +40,46 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class AgentLoopTest {
+    @Test
+    fun a_failed_command_does_not_keep_its_success_sentence() {
+        val device = FakeDevice().apply { launchError = IllegalStateException("no window") }
+        val clock = FakeClock()
+        val recorder = InMemoryRunRecorder()
+        val loop = AgentLoop(
+            policy = CommandDecisionPolicy(IntentClassifier()),
+            device = device,
+            executor = ActionExecutor(
+                device = device,
+                browser = null,
+                system = null,
+                sandbox = null,
+                policy = { ApprovalPolicy() },
+                approval = FakeApproval(),
+                recorder = recorder,
+                factory = RunRecordFactory(clock),
+                clock = clock,
+            ),
+            recorder = recorder,
+            clock = clock,
+            knowledge = TestCatalog.value,
+        )
+
+        val result = runBlocking {
+            loop.run(
+                "run-c",
+                "trace-c",
+                TurnContext(
+                    goal = "open calculator",
+                    installedApps = listOf(InstalledApp("calc.exe", "Calculator")),
+                ),
+            ) { false }
+        }
+
+        assertFalse(result.records.single().executed)
+        assertTrue(result.answer.startsWith("I did not run that."), result.answer)
+        assertEquals(ErrorCodes.DEVICE, result.error?.code)
+    }
+
     @Test
     fun a_read_action_runs_then_the_loop_answers() {
         val harness = Harness(replies = listOf(TAP, "All done."))
