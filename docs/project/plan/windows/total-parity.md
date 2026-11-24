@@ -136,9 +136,12 @@ The screens that change what HOPA does.
 - [x] Easy/power modes change the shell: Easy, Kid and Social hide the run
   rail; Everyday and Power keep it. (evidence: `MainWindow.Profile.cs`)
 - [x] Run preferences and setup. (evidence: screenshot + persisted settings)
-  - [x] Plan-first, replay, vision and instant commands are wired through
-    `TurnRunner`.
-  - [ ] Step source and cloud fallback.
+  - [x] Plan-first, replay and instant commands are wired through `TurnRunner`.
+  - [x] Step source is `auto`/`model`; `graph` is `not-applicable` because
+    Windows has no graph catalogue.
+  - [x] Cloud fallback is `not-applicable`: the Windows model is already the
+    configured API, with no on-device model to fall back from.
+  - [x] Vision is wired; a real image-model round-trip is still pending.
 - [x] How HOPA acts: a page with the real tier order and gate rules. (evidence:
   `HowActsPage`)
 - [ ] Feed the How HOPA acts page live tier/selector data. (evidence: a selector

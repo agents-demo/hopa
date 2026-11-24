@@ -69,6 +69,17 @@ desktop form. The phase plan is [total-parity.md](total-parity.md).
 | Settings — Accessibility setup | `apps/android/feature/settings/src/main/kotlin/com/hopa/feature/settings/AccessibilityScreen.kt` | UIA/elevation/uiAccess readiness | adapt |
 | About | `apps/android/app/src/main/kotlin/com/hopa/app/feature/settings/AboutScreen.kt` | About subpage in the hub | have |
 
+## Run preferences
+
+| Preference | Android | Windows | Status |
+|---|---|---|---|
+| Step source | `auto` / `model` / `graph`, with a graph catalogue | `auto` / `model` only; Windows has no graph catalogue | not-applicable for `graph`; auto and model are the model/recipe/command order |
+| Cloud fallback | on-device model falls back to the API with consent | the Windows model is already the configured API provider; there is no on-device model to fall back from | not-applicable |
+| Replay | stored recipe before the model | same, through the shared `TurnRunner` | have |
+| Instant commands | canonical launch/back/home/scroll/wait | same, through `IntentClassifier` | have |
+| Plan-first | plan, approve, resend | same, with `PlanWindow` | have |
+| Vision | screenshot with the model call | wired through `TurnContext.vision`; a real image-model round-trip is still pending | adapt |
+
 ## Cross-cutting
 
 | Area | Android | Windows | Status |
