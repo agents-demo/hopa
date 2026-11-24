@@ -103,3 +103,5 @@ out/
 
 # Superpowers execution workspace (ledger and briefs, never committed)
 .superpowers/
+
+.wix/
