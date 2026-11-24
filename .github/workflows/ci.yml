@@ -23,6 +23,43 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Android and Windows are the two expensive jobs. They are gated by the paths
+  # they actually build: core/build-logic changes both, while a WPF-only change
+  # skips Android and an Android-only change skips Windows.
+  changes:
+    name: Changed paths
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      android: ${{ steps.filter.outputs.android }}
+      windows: ${{ steps.filter.outputs.windows }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            android:
+              - 'apps/android/**'
+              - 'core/**'
+              - 'build-logic/**'
+              - 'tools/checks/check-android-structure.py'
+              - '.github/workflows/ci.yml'
+            windows:
+              - 'apps/windows/**'
+              - 'core/**'
+              - 'build-logic/**'
+              - 'apps/android/gradle/libs.versions.toml'
+              - 'apps/android/gradle/wrapper/**'
+              - 'apps/android/gradlew'
+              - 'apps/android/gradlew.bat'
+              - 'tools/scripts/windows-package.ps1'
+              - '.github/workflows/ci.yml'
+
   python:
     name: bridge + evals (Linux)
     runs-on: ubuntu-latest
@@ -249,6 +286,8 @@ jobs:
   android:
     name: Android (JDK 17)
     runs-on: ubuntu-latest
+    needs: changes
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.android == 'true'
     steps:
       - uses: actions/checkout@v7
       # Seconds, not minutes: a structure mistake must fail before the SDK and
@@ -272,9 +311,6 @@ jobs:
       - name: Screenshot tests
         working-directory: apps/android
         run: ./gradlew :screenshots:verifyRoborazziDebug --no-daemon
-      - name: Windows sidecar tests
-        working-directory: apps/android
-        run: ./gradlew -p ../windows/sidecar test --no-daemon
       - name: Upload APK
         uses: actions/upload-artifact@v7
         with:
@@ -301,6 +337,8 @@ jobs:
   windows:
     name: Windows client (dotnet)
     runs-on: windows-latest
+    needs: changes
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.windows == 'true'
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-java@v6
