@@ -7,11 +7,11 @@ import com.hopa.agent.decision.command.CommandDecisionPolicy
 import com.hopa.agent.decision.model.ModelDecisionPolicy
 import com.hopa.agent.decision.model.ModelStepPolicy
 import com.hopa.catalog.testing.TestCatalog
+import com.hopa.contracts.error.ErrorCodes
 import com.hopa.contracts.model.ModelPort
 import com.hopa.contracts.model.ModelReply
 import com.hopa.contracts.model.ModelRequest
 import com.hopa.contracts.model.ModelUsage
-import com.hopa.contracts.error.ErrorCodes
 import com.hopa.contracts.ports.InstalledApp
 import com.hopa.contracts.testing.FakeApproval
 import com.hopa.contracts.testing.FakeClock
@@ -19,7 +19,6 @@ import com.hopa.contracts.testing.FakeDevice
 import com.hopa.contracts.turn.TurnContext
 import com.hopa.decision.ActionClass
 import com.hopa.decision.ConformanceStatus
-import com.hopa.decision.classifier.IntentClassifier
 import com.hopa.decision.DecisionContext
 import com.hopa.decision.DecisionCoordinator
 import com.hopa.decision.DecisionLayer
@@ -31,6 +30,7 @@ import com.hopa.decision.LayerDecision
 import com.hopa.decision.LayerMetadata
 import com.hopa.decision.LayerStatus
 import com.hopa.decision.Verb
+import com.hopa.decision.classifier.IntentClassifier
 import com.hopa.runlog.record.RunRecordFactory
 import com.hopa.runlog.store.InMemoryRunRecorder
 import kotlinx.coroutines.runBlocking
