@@ -17,10 +17,11 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/scripts/windows-baseli
 
 | Metric | Median | p95 |
 |---|---:|---:|
-| Cold start (ms) | 1917 | 9559 |
-| Unit tests (ms) | 3336 | - |
-| Integration tests (ms) | 5552 | - |
-| Headless turn (ms) | 781 | 872 |
+| Cold start (ms) | 2896 | 10851 |
+| Idle working set (MB) | 197 | 198 |
+| Unit tests (ms) | 4983 | - |
+| Integration tests (ms) | 6594 | - |
+| Headless turn (ms) | 1228 | 1304 |
 
 | Package | Bytes |
 |---|---:|

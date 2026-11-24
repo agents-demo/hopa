@@ -35,6 +35,7 @@ if (-not (Test-Path $exe)) { throw "client exe not found at $exe" }
 # window after each run so the sidecar disposes through the normal path.
 Get-Process Hopa.Windows -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
 $starts = @()
+$memories = @()
 for ($i = 1; $i -le $Runs; $i++) {
     $watch = [System.Diagnostics.Stopwatch]::StartNew()
     $process = Start-Process -FilePath $exe -PassThru
@@ -44,6 +45,8 @@ for ($i = 1; $i -le $Runs; $i++) {
         if ($process.MainWindowHandle -ne [IntPtr]::Zero) { break }
     }
     $starts += $watch.Elapsed.TotalMilliseconds
+    $process.Refresh()
+    $memories += ($process.WorkingSet64 / 1MB)
     if ($process.MainWindowHandle -ne [IntPtr]::Zero) {
         [void]$process.CloseMainWindow()
         [void]$process.WaitForExit(5000)
@@ -116,6 +119,7 @@ $lines = @(
     "| Metric | Median | p95 |",
     "|---|---:|---:|",
     ("| Cold start (ms) | {0:0} | {1:0} |" -f (Median $starts), (Percentile $starts 95)),
+    ("| Idle working set (MB) | {0:0} | {1:0} |" -f (Median $memories), (Percentile $memories 95)),
     ("| Unit tests (ms) | {0:0} | - |" -f $unitMs),
     ("| Integration tests (ms) | {0:0} | - |" -f $integrationMs)
 )

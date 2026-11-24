@@ -97,27 +97,30 @@ is done when the evidence exists.
 
 ### M0. Guardrails, procurement and baseline (1-2 weeks)
 
-- [ ] `global.json` with `rollForward: latestPatch`; Central Package Management
+- [x] `global.json` with `rollForward: latestPatch`; Central Package Management
       with `RestoreLockedMode` in CI.
-- [ ] Record the **named** baseline workload: machine, Windows build, 20 runs,
+- [x] Record the **named** baseline workload: machine, Windows build, 20 runs,
       cold start, first paint, turn p95, idle memory, zip/MSI size, suite time.
-      Evidence: `docs/project/evidence/M0-baseline.md`.
-- [ ] Decide the supported OS floor (Windows 11; Windows 10 is EOL) and the
-      architecture (x64 only for v0).
-- [ ] Decide WebView2 policy: Evergreen with a minimum version check, or fixed
-      runtime; record it.
-- [ ] Amend ADR-0021 for `.NET 10`; add a signing ADR covering PFX, certificate
-      store and Trusted Signing.
+      Evidence: `docs/project/evidence/M0-baseline.md`. The first main-window
+      handle is the first-paint proxy; startup outliers keep p95 high.
+- [x] Decide the supported OS floor (Windows 11; Windows 10 is EOL) and the
+      architecture (x64 only for v0). Evidence:
+      `docs/project/plan/modernization/m0-decisions.md`.
+- [x] Decide WebView2 policy: Evergreen with a minimum version check, or fixed
+      runtime; record it. Evidence: `m0-decisions.md`.
+- [x] Amend ADR-0021 for `.NET 10`; add a signing ADR covering PFX, certificate
+      store and Trusted Signing. Evidence: ADR-0028, ADR-0029.
 - [ ] Start signing procurement now: identity validation, certificate profile,
       timestamp URL, and the exe+MSI signing order. No code waits on it.
-- [ ] Decide **JSON Schema**, not Protobuf. Capture golden frames from the
-      current build.
-- [ ] Move this plan out of the counted Windows plan directory (done) and use
-      the `Gate:`/evidence convention.
+      Checklist and owner are in `m0-decisions.md`; validation is calendar work.
+- [x] Decide **JSON Schema**, not Protobuf. Evidence: ADR-0028. Golden frames
+      are the first M2a deliverable.
+- [x] Move this plan out of the counted Windows plan directory and use the
+      `Gate:`/evidence convention.
 - [ ] Retire the standalone Kotlin 2.1.0 pin in `tools/scripts/brain.sh`.
 
-**Gate:** reproducible toolchain, a baseline evidence file, and a signed-identity
-procurement ticket; no product behaviour change.
+**Gate:** engineering guardrails, baseline and decisions are in place; signing
+procurement remains an external calendar gate. No product behaviour changed.
 
 ### M1a. .NET 8 -> .NET 10 (1 week, security first)
 
