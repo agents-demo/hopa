@@ -79,8 +79,23 @@ Write-Host "runtime: JDK 21"
 Write-Host "4/5 zip"
 $zip = Join-Path $out "hopa-windows-0.1.0.zip"
 if (Test-Path $zip) { Remove-Item $zip -Force }
-Compress-Archive -Path (Join-Path $stage "*") -DestinationPath $zip -Force
+# dotnet publish can leave a build server holding a DLL for a moment. The
+# archive is large enough that a retry is cheaper than a flaky package job.
+dotnet build-server shutdown 2>$null | Out-Null
+for ($attempt = 0; ; $attempt++) {
+    try {
+        Compress-Archive -Path (Join-Path $stage "*") -DestinationPath $zip -Force
+        break
+    }
+    catch {
+        if ($attempt -ge 2) { throw }
+        Write-Warning "zip attempt $($attempt + 1) failed: $($_.Exception.Message)"
+        Start-Sleep -Seconds 2
+        dotnet build-server shutdown 2>$null | Out-Null
+    }
+}
 $hash = (Get-FileHash $zip -Algorithm SHA256).Hash
+Set-Content -Path (Join-Path $out "hopa-windows-0.1.0.zip.sha256") -Value $hash -Encoding ascii
 Write-Host "zip: $zip"
 Write-Host "sha256: $hash"
 
@@ -107,5 +122,7 @@ Set-Content -Path $licenseRtf -Value $rtf -Encoding ascii
 
 & wix build -ext WixToolset.UI.wixext -d SourceDir="$stage" -d LicenseRtf="$licenseRtf" -o $msi $wxs
 if ($LASTEXITCODE -ne 0) { throw "wix build failed" }
+$msiHash = (Get-FileHash $msi -Algorithm SHA256).Hash
+Set-Content -Path (Join-Path $out "hopa-windows-0.1.0.msi.sha256") -Value $msiHash -Encoding ascii
 Write-Host ("msi: {0}" -f $msi)
-Write-Host ("msi sha256: {0}" -f (Get-FileHash $msi -Algorithm SHA256).Hash)
+Write-Host ("msi sha256: {0}" -f $msiHash)

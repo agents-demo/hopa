@@ -353,6 +353,13 @@ jobs:
           dotnet restore apps/windows/Hopa.Windows.DevTools -p:RestoreLockedMode=true
           dotnet restore apps/windows/Hopa.Windows.Tests -p:RestoreLockedMode=true
           dotnet restore apps/windows/Hopa.Windows.IntegrationTests -p:RestoreLockedMode=true
+      - name: Install WiX 5
+        shell: pwsh
+        run: |
+          $tool = Join-Path $env:RUNNER_TEMP "wix"
+          dotnet tool install --tool-path $tool wix --version 5.0.2
+          & (Join-Path $tool "wix.exe") extension add WixToolset.UI.wixext/5.0.2
+          $tool | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
       - uses: gradle/actions/setup-gradle@v6
       - name: Sidecar tests
         working-directory: apps/android
@@ -412,13 +419,17 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
-      - name: Package (zip)
+      - name: Package (zip and MSI)
         env:
           HOPA_JLINK_HOME: ${{ steps.jlink.outputs.path }}
-        run: powershell -NoProfile -ExecutionPolicy Bypass -File tools/scripts/windows-package.ps1 -SkipMsi
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File tools/scripts/windows-package.ps1
       - name: Upload package
         uses: actions/upload-artifact@v7
         with:
           name: hopa-windows-package
-          path: out/windows/hopa-windows-0.1.0.zip
+          path: |
+            out/windows/hopa-windows-0.1.0.zip
+            out/windows/hopa-windows-0.1.0.zip.sha256
+            out/windows/hopa-windows-0.1.0.msi
+            out/windows/hopa-windows-0.1.0.msi.sha256
           if-no-files-found: error

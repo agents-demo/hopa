@@ -12,6 +12,7 @@ reviewer can open.
 | Integration | `dotnet test apps/windows/Hopa.Windows.IntegrationTests -c Debug` | test log, **10** tests |
 | Sidecar | `gradlew -p apps/windows/sidecar test` | test log, engine/transport/data |
 | Desktop | `tools/scripts/windows-desktop-checks.ps1 -Output out/windows-desktop` | transcripts + PNGs |
+| Package | `tools/scripts/windows-package.ps1` | zip + MSI + `*.sha256` in `out/windows` |
 
 The desktop script is the only layer that needs an interactive Windows session.
 Hosted runners are session 0 and cannot produce it; see

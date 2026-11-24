@@ -204,9 +204,19 @@ Ship a jlink runtime plus the sidecar inside a WiX MSI. Add a checksum. Add a
 Windows CI runner.
 
 - [ ] The MSI installs the sidecar and a private runtime; no machine-wide Java is required.
+  - [x] `windows-package.ps1` builds a WiX MSI from the staged client, sidecar
+    jars and jlink runtime; the local run produced
+    `hopa-windows-0.1.0.msi` with a recorded SHA-256.
+  - [ ] Install it on a clean VM and confirm it uses `runtime\bin\java.exe`.
 - [ ] A clean VM runs one PC turn and one phone-approved turn.
 - [ ] The installer is signed and its hash is recorded.
-- [ ] Windows CI builds, tests and packages on every pull request.
+  - [x] The package script writes `hopa-windows-0.1.0.msi.sha256` and
+    `hopa-windows-0.1.0.zip.sha256`.
+  - [ ] Sign the MSI with the release certificate and verify it with
+    `signtool verify /pa`.
+- [x] Windows CI builds, tests and packages on every pull request.
+  - [x] CI installs WiX 5, builds the MSI, records both hashes and uploads the
+    zip, MSI and hash files.
 
 Gate: a signed MSI on a clean VM, with both targets working.
 
