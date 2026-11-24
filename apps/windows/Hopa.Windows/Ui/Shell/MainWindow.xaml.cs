@@ -83,12 +83,6 @@ public partial class MainWindow : Window
         Chat.FileDropped += path => _ = AttachAsync(path);
         Chat.TargetChipRequested += () => _ = ToggleTargetAsync();
         tray = new TrayIcon(this, () => client?.CancelTurn(), () => Close());
-        using (var icon = TrayIcon.LaptopIcon())
-        {
-            Icon = System.Windows.Interop.Imaging.CreateBitmapSourceFromHIcon(
-                icon.Handle, Int32Rect.Empty,
-                System.Windows.Media.Imaging.BitmapSizeOptions.FromEmptyOptions());
-        }
 
         SourceInitialized += (_, _) => RoundCorners();
         Loaded += (_, _) => WindowPlacement.Restore(this);

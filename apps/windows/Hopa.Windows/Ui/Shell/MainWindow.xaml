@@ -4,7 +4,7 @@
         xmlns:chat="clr-namespace:Hopa.Windows.Ui.Chat"
         xmlns:panes="clr-namespace:Hopa.Windows.Ui.Panes"
         Title="HOPA"
-        Icon="pack://application:,,,/Assets/hopa.ico"
+        Icon="pack://application:,,,/Hopa.Windows;component/Assets/hopa.ico"
         Height="760" Width="1140"
         Background="#F7F4EE"
         FontFamily="Segoe UI Variable Text, Segoe UI"
@@ -53,10 +53,6 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <chat:HopaAvatar Width="26" Height="26" IsStatic="True"
                                        Margin="0,0,12,0" VerticalAlignment="Center" />
@@ -70,19 +66,6 @@
                     <TextBlock x:Name="StatusText" Grid.Column="2" Text="" VerticalAlignment="Center"
                                Margin="16,0" FontSize="10" Foreground="#9A9488"
                                TextTrimming="CharacterEllipsis" Visibility="Collapsed" />
-
-                    <StackPanel x:Name="WindowButtons" Grid.Column="6" Orientation="Horizontal"
-                                VerticalAlignment="Center">
-                        <Button x:Name="MinimizeButton" Content="&#x2013;" Width="30" Height="28"
-                                Background="Transparent" BorderThickness="0" Foreground="#6B665C"
-                                Click="Minimize_Click" AutomationProperties.Name="Minimize" />
-                        <Button x:Name="MaximizeButton" Content="&#x25A1;" Width="30" Height="28"
-                                Background="Transparent" BorderThickness="0" Foreground="#6B665C"
-                                Click="Maximize_Click" AutomationProperties.Name="Maximize" />
-                        <Button x:Name="CloseButton" Content="&#x2715;" Width="30" Height="28"
-                                Background="Transparent" BorderThickness="0" Foreground="#6B665C"
-                                Click="Close_Click" AutomationProperties.Name="Close" />
-                    </StackPanel>
                 </Grid>
             </Border>
 
@@ -94,5 +77,21 @@
         <Border Grid.Column="3" Width="258" Background="Transparent" Padding="10,68,10,12">
             <panes:RunRailView x:Name="Rail" />
         </Border>
+
+        <!-- Window controls sit at the window's top-right, over the rail. The
+             rail starts below them, so the buttons never cover its content. -->
+        <StackPanel x:Name="WindowButtons" Grid.ColumnSpan="4" Orientation="Horizontal"
+                    HorizontalAlignment="Right" VerticalAlignment="Top"
+                    Margin="0,14,12,0" Panel.ZIndex="1">
+            <Button x:Name="MinimizeButton" Content="&#x2013;" Width="30" Height="28"
+                    Background="Transparent" BorderThickness="0" Foreground="#6B665C"
+                    Click="Minimize_Click" AutomationProperties.Name="Minimize" />
+            <Button x:Name="MaximizeButton" Content="&#x25A1;" Width="30" Height="28"
+                    Background="Transparent" BorderThickness="0" Foreground="#6B665C"
+                    Click="Maximize_Click" AutomationProperties.Name="Maximize" />
+            <Button x:Name="CloseButton" Content="&#x2715;" Width="30" Height="28"
+                    Background="Transparent" BorderThickness="0" Foreground="#6B665C"
+                    Click="Close_Click" AutomationProperties.Name="Close" />
+        </StackPanel>
     </Grid>
 </Window>

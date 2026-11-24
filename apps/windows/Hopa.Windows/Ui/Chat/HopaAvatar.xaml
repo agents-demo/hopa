@@ -8,7 +8,7 @@
                 <TranslateTransform x:Name="Float" Y="0" />
             </TransformGroup>
         </Grid.RenderTransform>
-        <Image x:Name="Base" Source="pack://application:,,,/Assets/mascot.png" Stretch="UniformToFill" />
+        <Image x:Name="Base" Source="pack://application:,,,/Hopa.Windows;component/Assets/mascot.png" Stretch="UniformToFill" />
         <Image x:Name="Blink" Stretch="UniformToFill" Opacity="0" />
     </Grid>
 </UserControl>

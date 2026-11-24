@@ -180,6 +180,19 @@ The developer tools are a separate build (and a separate CI artifact):
 dotnet publish apps\windows\Hopa.Windows.DevTools -c Debug -o out\windows-devtools
 ```
 
+## Icon
+
+The app, window, dialogs and tray all use `Assets/hopa.ico`, generated from
+`Assets/mascot.png`:
+
+```powershell
+powershell -File tools\scripts\build-windows-icon.ps1
+```
+
+Small sizes use a face crop so the icon still reads in the title bar and tray;
+128/256 use the full character. The script writes a multi-size PNG-compressed
+ICO.
+
 ## Rules
 
 1. The loop, the gate and the records live in `packages/`, inside the sidecar.

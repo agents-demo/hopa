@@ -1,3 +1,4 @@
+using System.IO;
 using System.Windows;
 
 namespace Hopa.Windows.Ui.Shell;
@@ -7,12 +8,14 @@ internal sealed class TrayIcon : IDisposable
 {
     private readonly System.Windows.Forms.NotifyIcon icon;
     private readonly System.Windows.Forms.ToolStripItem stop;
+    private readonly System.Drawing.Icon iconImage;
 
     public TrayIcon(Window window, Action stopTurn, Action exit)
     {
+        iconImage = AppIcon();
         icon = new System.Windows.Forms.NotifyIcon
         {
-            Icon = LaptopIcon(),
+            Icon = iconImage,
             Text = "HOPA",
             Visible = true,
         };
@@ -37,29 +40,14 @@ internal sealed class TrayIcon : IDisposable
         set => icon.Text = value;
     }
 
-    /// <summary>The laptop mark, drawn once at 32 px for the tray and the taskbar.</summary>
-    public static System.Drawing.Icon LaptopIcon()
+    /// <summary>The same mascot the window and the executable use.</summary>
+    public static System.Drawing.Icon AppIcon()
     {
-        var bitmap = new System.Drawing.Bitmap(32, 32);
-        using (var g = System.Drawing.Graphics.FromImage(bitmap))
-        {
-            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            g.Clear(System.Drawing.Color.Transparent);
-            var orange = new System.Drawing.SolidBrush(System.Drawing.Color.FromArgb(0xE8, 0x70, 0x3A));
-            var cream = new System.Drawing.SolidBrush(System.Drawing.Color.FromArgb(0xFF, 0xFD, 0xF7));
-            var ink = new System.Drawing.SolidBrush(System.Drawing.Color.FromArgb(0x1C, 0x1B, 0x18));
-            g.FillRectangle(orange, 5, 6, 22, 16);
-            g.FillRectangle(orange, 25, 10, 3, 5);
-            g.FillRectangle(cream, 8, 9, 16, 10);
-            g.FillEllipse(ink, 11, 12, 2, 2);
-            g.FillEllipse(ink, 17, 12, 2, 2);
-            g.DrawArc(new System.Drawing.Pen(ink, 1.6f), 12, 14, 8, 4, 20, 140);
-            g.FillRectangle(orange, 2, 23, 28, 4);
-            g.FillRectangle(cream, 14, 24, 4, 1);
-        }
-
-        var handle = bitmap.GetHicon();
-        return System.Drawing.Icon.FromHandle(handle);
+        var resource = Application.GetResourceStream(
+            new Uri("pack://application:,,,/Hopa.Windows;component/Assets/hopa.ico", UriKind.Absolute))
+            ?? throw new InvalidOperationException("the HOPA icon resource is missing");
+        using var stream = resource.Stream;
+        return new System.Drawing.Icon(stream);
     }
 
     public void ShowBalloon(string title, string text) =>
@@ -80,5 +68,9 @@ internal sealed class TrayIcon : IDisposable
         window.Activate();
     }
 
-    public void Dispose() => icon.Dispose();
+    public void Dispose()
+    {
+        icon.Dispose();
+        iconImage.Dispose();
+    }
 }

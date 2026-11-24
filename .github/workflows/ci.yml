@@ -377,6 +377,7 @@ jobs:
         shell: pwsh
         run: |
           foreach ($script in @(
+            "tools/scripts/build-windows-icon.ps1",
             "tools/scripts/windows-desktop-checks.ps1",
             "tools/scripts/windows-package.ps1")) {
             $tokens = $null

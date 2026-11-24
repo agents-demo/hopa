@@ -94,7 +94,7 @@ public partial class HopaAvatar : UserControl
         }
 
         Blink.Source ??= new BitmapImage(
-            new Uri("pack://application:,,,/Assets/mascot-blink.png", UriKind.Absolute)
+            new Uri("pack://application:,,,/Hopa.Windows;component/Assets/mascot-blink.png", UriKind.Absolute)
         );
         Float.BeginAnimation(TranslateTransform.YProperty, FloatAnimation());
         Breathe.BeginAnimation(ScaleTransform.ScaleYProperty, ScaleAnimation(1.025));
