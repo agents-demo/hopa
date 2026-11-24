@@ -193,7 +193,7 @@ verified postcondition.
   `AgentLoopTest.a_cancelled_takeover_stops_instead_of_claiming_success`;
   `turn.cancel` releases the pause)
 - [x] Evidence: a form pre-filled, signed, submitted and confirmed by a human.
-  (evidence: [P5-takeover.md](../../../evidence/P5-takeover.md);
+  (evidence: [P5-takeover.md](../../evidence/P5-takeover.md);
   `operator: human`, `checkpoint complete: True`)
 
 Gate: a signed form produces a verified postcondition and a record.

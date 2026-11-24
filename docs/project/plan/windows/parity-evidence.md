@@ -45,7 +45,7 @@ Hosted runners are session 0 and cannot produce it; see
 | Web surface | `--web-check <dir>` | navigate, read, type, click; `Signed by Michael` visible |
 | Web engine turn | `--turn "Use the web browser: navigate to https://example.com, call web.read..."` | `web.navigate` and `web.read` steps; answer `Example Domain` |
 | Vision | `--vision-check <dir>` | a word drawn only in the frame; `vision-check.txt` says `match: True` |
-| Takeover/signature | `--p5-check <dir> [--auto-sign]` | human run: `operator: human`, `paused: True`, `signed: Signed by Michael`, `checkpoint complete: True`; see [P5-takeover.md](../../../evidence/P5-takeover.md) |
+| Takeover/signature | `--p5-check <dir> [--auto-sign]` | human run: `operator: human`, `paused: True`, `signed: Signed by Michael`, `checkpoint complete: True`; see [P5-takeover.md](../../evidence/P5-takeover.md) |
 
 ## Pairing with Android
 

@@ -157,7 +157,7 @@ The screens that change what HOPA does.
   answers `Example Domain`; `--web-check` fills a loopback form and shows
   `Signed by Michael`)
 - [x] Takeover/signature P5. (evidence:
-  [P5-takeover.md](../../../evidence/P5-takeover.md))
+  [P5-takeover.md](../../evidence/P5-takeover.md))
   - [x] A real form, pause before the first step, resume and a verified
     `Signed by Michael` checkpoint.
   - [x] A human-signed rerun: `--p5-check` without `--auto-sign`; the
