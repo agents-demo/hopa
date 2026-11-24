@@ -289,7 +289,7 @@ Adopted:
   a temp file instead of the user's settings, and every documented CLI flag has
   a parser test (74 tests).
 - The pane and controller tests cover rows, filters, attachments, drafts, turn
-  reports, approvals and errors; the client suite is 85.
+  reports, approvals and errors; the client suite is 89.
 
 Not adopted, with reasons:
 
@@ -326,3 +326,7 @@ Not adopted, with reasons:
   `DeviceApp` instead of a nested record.
 - `GatewayFrames` parses the frame type and fields once; the socket loop switches
   on the parsed kind. Six tests cover the frame contract without a socket.
+- `EngineTransport` owns the NDJSON request/reply map, events and read loop over
+  any two text streams; `EngineHostClient` keeps the process and stderr. Four
+  tests cover a reply by id, events, a malformed line and a timeout, so the
+  client suite is 89.

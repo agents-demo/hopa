@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.IO;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using Hopa.Windows.Storage;
 
@@ -9,16 +8,8 @@ namespace Hopa.Windows.Integrations.Engine;
 /// <summary>The .NET half of the NDJSON protocol with the Kotlin engine.</summary>
 public sealed class EngineHostClient : IAsyncDisposable, IChatEngine
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = null,
-    };
-
     private readonly Process process;
-    private readonly StreamWriter input;
-    private readonly StreamReader output;
-    private readonly Dictionary<string, TaskCompletionSource<JsonObject>> pending = new();
-    private readonly Task readLoop;
+    private readonly EngineTransport transport;
 
     public event Action<string>? LogReceived;
 
@@ -35,9 +26,9 @@ public sealed class EngineHostClient : IAsyncDisposable, IChatEngine
     {
         var host = EngineHostProcess.Start();
         process = host.Process;
-        input = host.Input;
-        output = host.Output;
-        readLoop = Task.Run(ReadLoopAsync);
+        transport = new EngineTransport(host.Input, host.Output);
+        transport.MessageReceived += OnMessage;
+        transport.Start();
         _ = Task.Run(() =>
         {
             string? line;
@@ -48,39 +39,8 @@ public sealed class EngineHostClient : IAsyncDisposable, IChatEngine
         });
     }
 
-    public async Task<JsonObject> RequestAsync(string type, JsonObject fields, TimeSpan timeout)
-    {
-        var id = $"r-{Guid.NewGuid():N}";
-        var completion = new TaskCompletionSource<JsonObject>(TaskCreationOptions.RunContinuationsAsynchronously);
-        lock (pending)
-        {
-            pending[id] = completion;
-        }
-
-        var message = new JsonObject
-        {
-            ["type"] = type,
-            ["id"] = id,
-        };
-        foreach (var pair in fields)
-        {
-            message[pair.Key] = pair.Value?.DeepClone();
-        }
-
-        Send(message);
-        var finished = await Task.WhenAny(completion.Task, Task.Delay(timeout));
-        if (finished != completion.Task)
-        {
-            lock (pending)
-            {
-                pending.Remove(id);
-            }
-
-            throw new TimeoutException($"the sidecar did not answer {type} in {timeout.TotalSeconds:0} s");
-        }
-
-        return await completion.Task;
-    }
+    public Task<JsonObject> RequestAsync(string type, JsonObject fields, TimeSpan timeout) =>
+        transport.RequestAsync(type, fields, timeout);
 
     public async Task<TurnResult> StartTurnAsync(
         string goal,
@@ -317,71 +277,31 @@ public sealed class EngineHostClient : IAsyncDisposable, IChatEngine
         Send(message);
     }
 
-    private void Send(JsonObject message)
+    private void Send(JsonObject message) => transport.Send(message);
+
+    private void OnMessage(JsonObject message)
     {
-        lock (input)
+        switch (message["type"]?.GetValue<string>())
         {
-            input.WriteLine(message.ToJsonString(JsonOptions));
-            input.Flush();
-        }
-    }
-
-    private async Task ReadLoopAsync()
-    {
-        string? line;
-        while ((line = await output.ReadLineAsync()) != null)
-        {
-            JsonObject? message;
-            try
-            {
-                message = JsonNode.Parse(line) as JsonObject;
-            }
-            catch (JsonException)
-            {
-                continue;
-            }
-
-            if (message == null)
-            {
-                continue;
-            }
-
-            switch (message["type"]?.GetValue<string>())
-            {
-                case "ready":
-                    break;
-                case "log":
-                    LogReceived?.Invoke(message["text"]?.GetValue<string>() ?? "");
-                    break;
-                case "device.request":
-                    DeviceRequested?.Invoke(message);
-                    break;
-                case "approval.request":
-                    ApprovalRequested?.Invoke(message);
-                    break;
-                case "session":
-                    SessionUpdated?.Invoke(message);
-                    break;
-                case "step":
-                    // Additive in v1: the turn's id lives on this message too, so
-                    // it must not fall through to the pending-request switch.
-                    StepReceived?.Invoke(message);
-                    break;
-                default:
-                    var id = message["id"]?.GetValue<string>();
-                    if (id != null)
-                    {
-                        TaskCompletionSource<JsonObject>? completion;
-                        lock (pending)
-                        {
-                            pending.Remove(id, out completion);
-                        }
-
-                        completion?.TrySetResult(message);
-                    }
-
-                    break;
-            }
+            case "ready":
+                break;
+            case "log":
+                LogReceived?.Invoke(message["text"]?.GetValue<string>() ?? "");
+                break;
+            case "device.request":
+                DeviceRequested?.Invoke(message);
+                break;
+            case "approval.request":
+                ApprovalRequested?.Invoke(message);
+                break;
+            case "session":
+                SessionUpdated?.Invoke(message);
+                break;
+            case "step":
+                // Additive in v1: the turn's id lives on this message too, so
+                // it must not fall through to the pending-request switch.
+                StepReceived?.Invoke(message);
+                break;
         }
     }
 
@@ -400,7 +320,7 @@ public sealed class EngineHostClient : IAsyncDisposable, IChatEngine
             // The process already exited.
         }
 
-        await readLoop.WaitAsync(TimeSpan.FromSeconds(2)).ConfigureAwait(false);
+        await transport.Completion.WaitAsync(TimeSpan.FromSeconds(2)).ConfigureAwait(false);
         process.Dispose();
     }
 }
