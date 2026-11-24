@@ -1,4 +1,4 @@
-package com.hopa.sidecar.cli
+package com.hopa.sidecar.startup
 
 /** Printed by `--help`; one place, so the options and the text cannot drift. */
 internal const val USAGE = """hopa-sidecar — the HOPA engine host for Windows

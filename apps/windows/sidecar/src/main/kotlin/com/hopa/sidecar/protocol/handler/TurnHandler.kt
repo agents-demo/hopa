@@ -2,7 +2,7 @@ package com.hopa.sidecar.protocol.handler
 
 import com.hopa.contracts.chat.Attachment
 import com.hopa.contracts.json.HopaJson
-import com.hopa.sidecar.turn.Engine
+import com.hopa.sidecar.turn.TurnEngine
 import com.hopa.sidecar.protocol.Protocol.text
 import com.hopa.sidecar.protocol.Stdio
 import kotlinx.serialization.json.JsonObject
@@ -10,7 +10,7 @@ import kotlinx.serialization.json.JsonObject
 /** Starting and cancelling a turn; the engine owns everything after that. */
 internal class TurnHandler(
     private val io: Stdio,
-    private val engine: Engine,
+    private val engine: TurnEngine,
 ) : MessageHandler {
     override fun handle(type: String, message: JsonObject): Boolean {
         when (type) {

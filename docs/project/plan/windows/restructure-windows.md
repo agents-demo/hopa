@@ -79,7 +79,7 @@ com.hopa.sidecar/
 
 Main.kt
 
-cli/
+startup/
   CliOptions.kt
   Paths.kt
   Usage.kt
@@ -260,6 +260,11 @@ Adopted:
 - Kotlin: `SidecarKnowledge` -> `SidecarCatalog`, `StubModel` -> `ScriptedModel`,
   `WindowMode.kt` -> `ProtocolMode.kt`, sidecar `BackendPairing` ->
   `BackendAdmission`, `protocol/handlers/` -> `protocol/handler/`.
+- `cli/` -> `startup/`: it parses the flags and chooses a mode; the normal path
+  is the NDJSON protocol with the window, not a command line.
+- `turn/Engine.kt` -> `turn/TurnEngine.kt`: the class is the turn engine; the
+  name says so and no longer collides with the C# `Engine/` folder. The test is
+  `TurnEngineEndTest`.
 - C#: `HopaMark` -> `HopaAvatar`.
 - First testable UI rules: `ConversationRow`, `RunStepRow` and
   `ConversationFilter` now have unit tests; the sidebar filter is a pure class,

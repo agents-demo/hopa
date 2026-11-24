@@ -12,10 +12,10 @@ graph live in `core/`.
 
 | Folder | What the reader finds |
 |---|---|
-| `cli/` | how the process starts: `CliOptions`, `Usage`, `Paths`, `HeadlessMode`, `ProtocolMode` |
+| `startup/` | how the process starts: `CliOptions`, `Usage`, `Paths`, `HeadlessMode`, `ProtocolMode` |
 | `protocol/` | the wire: `Protocol` (version and envelopes), `Stdio`, `Dispatcher` |
 | `protocol/handler/` | one message family per class, behind `MessageHandler` |
-| `turn/` | one turn: `Engine`, `TurnOutcome`, `TurnRecorder`, `RuntimeConfig`, `ScriptedModel`, `SidecarCatalog`, `SystemClock` |
+| `turn/` | one turn: `TurnEngine`, `TurnOutcome`, `TurnRecorder`, `RuntimeConfig`, `ScriptedModel`, `SidecarCatalog`, `SystemClock` |
 | `device/` | this PC as a device: `HostDevice`, `HeadlessDevice`, `HostSystem`, `WindowsIntents`, `WindowsPathSelector` |
 | `store/` | what lives on disk: conversations, records, tasks, pending approvals, attachments |
 | `backend/` | the backend link: `BackendAdmission`, `BackendGateway`, `BackendSessionStore`, `GatewayHost`, `EngineTaskRunner`, `ContentKey`, `QrRender` |
@@ -58,7 +58,7 @@ engine uses `ScriptedModel`, and no host is attached, so approvals deny and
 actions refuse. `--data-dir` and `HOPA_DATA_DIR` choose where conversations and
 records go.
 
-The full flag list is in `cli/Usage.kt`; unknown flags fail closed.
+The full flag list is in `startup/Usage.kt`; unknown flags fail closed.
 
 ## Stability
 

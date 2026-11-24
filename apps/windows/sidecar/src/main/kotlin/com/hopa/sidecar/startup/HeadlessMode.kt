@@ -1,7 +1,7 @@
-package com.hopa.sidecar.cli
+package com.hopa.sidecar.startup
 
 import com.hopa.sidecar.approval.DenyAllApproval
-import com.hopa.sidecar.turn.Engine
+import com.hopa.sidecar.turn.TurnEngine
 import com.hopa.sidecar.protocol.Protocol
 import com.hopa.sidecar.store.ChatStore
 import com.hopa.sidecar.store.RecordStore
@@ -17,7 +17,7 @@ internal fun runHeadless(options: CliOptions): Int {
     val store = ChatStore(dataDir.resolve("conversations.json"))
     val records = RecordStore(dataDir.resolve("records.json"))
     val approvals = DenyAllApproval()
-    val engine = Engine(
+    val engine = TurnEngine(
         io = io,
         hostDevice = HeadlessDevice(),
         approval = approvals,

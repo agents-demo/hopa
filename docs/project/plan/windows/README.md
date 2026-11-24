@@ -245,5 +245,5 @@ valid and are linked here so nothing is lost:
 | `docs/project/evidence/W3-device.md` | the UIA adapter, its matrix and its failure taxonomy |
 | `docs/project/evidence/W4-desktop.md` | tray, toast, shortcuts, attachments and voice |
 | `docs/project/evidence/W5-package.md` | the packaged build and its hashes |
-| `apps/windows/sidecar/Engine.kt` | the prompt names the Windows apps the catalog offers, marks `platform = "windows"`, and claims phone access only when a host is attached |
+| `apps/windows/sidecar/src/main/kotlin/com/hopa/sidecar/turn/TurnEngine.kt` | the prompt names the Windows apps the catalog offers, marks `platform = "windows"`, and claims phone access only when a host is attached |
 | `packages/core` (`TurnContext.vision`) | a frame can ride with a model call; the Windows host does not enable it yet, so the parity row stays `out` |

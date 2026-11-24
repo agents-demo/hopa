@@ -20,9 +20,9 @@ import com.hopa.sidecar.protocol.Stdio
 /**
  * The engine's end hook is the gateway's only way out of a turn, so it must
  * fire once even when the turn fails before `turn.end` (R31, Important 2).
- * [Engine.guardedTurn] is the failure seam; no model or host is started.
+ * [TurnEngine.guardedTurn] is the failure seam; no model or host is started.
  */
-class EngineTurnEndTest {
+class TurnEngineEndTest {
     @Test
     fun `a turn that throws before its end still fires the hook exactly once`() = runBlocking {
         val engine = engine()
@@ -81,10 +81,10 @@ class EngineTurnEndTest {
         assertEquals(listOf("turn-2" to "opened settings"), ends)
     }
 
-    private fun engine(): Engine {
+    private fun engine(): TurnEngine {
         val directory: Path = Files.createTempDirectory("hopa-engine-turn-end")
         val io = Stdio()
-        return Engine(
+        return TurnEngine(
             io = io,
             hostDevice = HostDevice(io),
             approval = HostApproval(io, PendingApprovals(directory.resolve("approvals.json"))),

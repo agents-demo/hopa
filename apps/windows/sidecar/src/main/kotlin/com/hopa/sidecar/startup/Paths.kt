@@ -1,4 +1,4 @@
-package com.hopa.sidecar.cli
+package com.hopa.sidecar.startup
 
 import java.nio.file.Path
 

@@ -10,7 +10,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeout
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import com.hopa.sidecar.turn.Engine
+import com.hopa.sidecar.turn.TurnEngine
 
 /**
  * Adapts the engine's fire-and-forget turns to the gateway's
@@ -21,7 +21,7 @@ import com.hopa.sidecar.turn.Engine
  * engine's current turn. The lambdas keep the adapter testable without a
  * model; production supplies `engine.startTurn` and `engine.onTurnEnd`.
  *
- * The runner still keeps its own lock even though `Engine.startTurn` now holds
+ * The runner still keeps its own lock even though `TurnEngine.startTurn` now holds
  * a turn gate too: the runner's lock is also its pending-turn bookkeeping, and
  * a second `task.create` must not queue a second engine turn just to wait.
  * The engine gate is the one that serializes host and backend turns. Each turn

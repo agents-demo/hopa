@@ -1,4 +1,4 @@
-package com.hopa.sidecar.cli
+package com.hopa.sidecar.startup
 
 import com.hopa.sidecar.approval.HostApproval
 import com.hopa.sidecar.backend.BackendAdmission
@@ -8,7 +8,7 @@ import com.hopa.sidecar.backend.EngineTaskRunner
 import com.hopa.sidecar.backend.GatewayHost
 import com.hopa.sidecar.backend.backendContentKey
 import com.hopa.sidecar.device.HostDevice
-import com.hopa.sidecar.turn.Engine
+import com.hopa.sidecar.turn.TurnEngine
 import com.hopa.sidecar.protocol.Dispatcher
 import com.hopa.sidecar.protocol.Protocol
 import com.hopa.sidecar.protocol.handler.ApprovalHandler
@@ -48,7 +48,7 @@ internal fun runProtocol(options: CliOptions) {
     val approval = HostApproval(io, approvals)
     val attachments = Attachments(dataDir.resolve("attachments"))
     val tasks = TaskStore()
-    val engine = Engine(io, device, approval, store, records, config)
+    val engine = TurnEngine(io, device, approval, store, records, config)
     val backendScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     val sessionPath = dataDir.resolve("backend-session.json")
     val sessionStore = BackendSessionStore(sessionPath)

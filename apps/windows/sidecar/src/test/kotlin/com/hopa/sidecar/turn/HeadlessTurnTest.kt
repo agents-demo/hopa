@@ -99,7 +99,7 @@ class HeadlessTurnTest {
     @Test
     fun the_headless_device_refuses_instead_of_pretending() {
         val dataDir = Files.createTempDirectory("hopa-p1-no-device")
-        val engine = Engine(
+        val engine = TurnEngine(
             io = Stdio(),
             hostDevice = HeadlessDevice(),
             approval = DenyAllApproval(),
@@ -174,7 +174,7 @@ class HeadlessTurnTest {
         dataDir: Path,
         device: DevicePort = RecordingDevice(),
         approvals: ApprovalGateway = DenyAllApproval(),
-    ): Engine = Engine(
+    ): TurnEngine = TurnEngine(
         io = Stdio(),
         hostDevice = device,
         approval = approvals,

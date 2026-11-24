@@ -1,15 +1,15 @@
 package com.hopa.sidecar
 
-import com.hopa.sidecar.cli.CliOptions
-import com.hopa.sidecar.cli.USAGE
-import com.hopa.sidecar.cli.runHeadless
-import com.hopa.sidecar.cli.runProtocol
+import com.hopa.sidecar.startup.CliOptions
+import com.hopa.sidecar.startup.USAGE
+import com.hopa.sidecar.startup.runHeadless
+import com.hopa.sidecar.startup.runProtocol
 import com.hopa.sidecar.protocol.Protocol
 import kotlin.system.exitProcess
 
 /**
  * The engine host's entry point: choose a mode, hand over, get out of the way.
- * Everything a mode needs lives in `cli/`.
+ * Everything a mode needs lives in `startup/`.
  */
 fun main(args: Array<String>) {
     val options = runCatching { CliOptions.parse(args) }.getOrElse { error ->

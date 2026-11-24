@@ -40,7 +40,7 @@ import com.hopa.sidecar.store.RecordStore
 import com.hopa.sidecar.protocol.Stdio
 
 /** What one turn produced, for the protocol and for `--turn`. */
-class Engine(
+class TurnEngine(
     private val io: Stdio,
     private val hostDevice: DevicePort,
     private val approval: ApprovalGateway,

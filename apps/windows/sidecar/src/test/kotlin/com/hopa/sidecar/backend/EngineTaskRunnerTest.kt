@@ -10,10 +10,10 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
-import com.hopa.sidecar.turn.Engine
+import com.hopa.sidecar.turn.TurnEngine
 
 /**
- * The Engine adapter receives turns through Engine's `onTurnEnd` hook (R31).
+ * The TurnEngine adapter receives turns through TurnEngine's `onTurnEnd` hook (R31).
  * It is built from lambdas so the test needs no model or host.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
