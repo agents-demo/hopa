@@ -56,22 +56,19 @@ public sealed partial class WindowsDevice
         return $"opened {url} (foreground={ForegroundApp()})";
     }
 
-    /// <summary>One app the Start menu offers: a launchable target and a label.</summary>
-    public sealed record AppEntry(string Package, string Label);
-
     /// <summary>
     /// The apps a person can actually start, read from the Start menu shortcuts.
     /// A shortcut is only offered when its target exists and is an executable;
     /// the list is cached for a minute because the shell walk is not free.
     /// </summary>
-    public List<AppEntry> Apps()
+    public List<DeviceApp> Apps()
     {
         if (appsCache != null && DateTime.UtcNow - appsCachedAt < TimeSpan.FromMinutes(1))
         {
             return appsCache;
         }
 
-        var found = new Dictionary<string, AppEntry>(StringComparer.OrdinalIgnoreCase);
+        var found = new Dictionary<string, DeviceApp>(StringComparer.OrdinalIgnoreCase);
         object? shell = null;
         try
         {
@@ -113,7 +110,7 @@ public sealed partial class WindowsDevice
                             continue;
                         }
 
-                        found.TryAdd(target, new AppEntry(target, label));
+                        found.TryAdd(target, new DeviceApp(target, label));
                     }
                     catch
                     {

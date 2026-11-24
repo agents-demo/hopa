@@ -280,7 +280,7 @@ Adopted:
   a temp file instead of the user's settings, and every documented CLI flag has
   a parser test (74 tests).
 - The pane and controller tests cover rows, filters, attachments, drafts, turn
-  reports, approvals and errors; the client suite is 74.
+  reports, approvals and errors; the client suite is 79.
 
 Not adopted, with reasons:
 
@@ -308,3 +308,10 @@ Not adopted, with reasons:
 - `Shell/` is the window again; `Host/` holds `ChatController`, `ApprovalRouter`
   and `TurnReport`, so `Hopa.Windows.Shell` no longer covers app-level
   coordination.
+- `DeviceRequestRouter` + `DeviceResult` map an engine device request through an
+  `IDevice` seam and send exactly one reply; five tests.
+- `EngineSession` owns the `EngineHostClient` and `GatewayClient` construction,
+  event plumbing, gateway restart and shutdown; the window only reacts.
+- `GatewayClient` is split into the main lifecycle, `GatewayClient.Requests.cs`
+  and `GatewayClient.Socket.cs`; `WindowsDevice.Apps` uses a top-level
+  `DeviceApp` instead of a nested record.

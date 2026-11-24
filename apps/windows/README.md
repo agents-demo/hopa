@@ -24,7 +24,7 @@ Inside `Hopa.Windows/`:
 |---|---|
 | `Cli/` | how the process starts and which mode it runs |
 | `Shell/` | the main window, its parts, the tray and the placement |
-| `Host/` | the app's coordination: `ChatController`, `ApprovalRouter`, `TurnReport` |
+| `Host/` | app coordination: `EngineSession`, `ChatController`, `ApprovalRouter`, `DeviceRequestRouter`, reports |
 | `Panes/` | the window's panes and their view models: run rail, sidebar and chat |
 | `Chat/` | the rows and the mark a conversation is drawn from |
 | `Dialogs/` | approval, settings, rename, run details |

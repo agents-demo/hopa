@@ -1,27 +1,8 @@
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Net.Http;
-using System.Speech.Synthesis;
-using System.Text;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Windows;
-using System.Windows.Automation;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using Microsoft.Win32;
-using System.Windows.Shell;
-using Hopa.Windows.Chat;
-using Hopa.Windows.Checks;
 using Hopa.Windows.Dialogs;
-using Hopa.Windows.Device;
-using Hopa.Windows.Engine;
-using Hopa.Windows.Gateway;
-using Hopa.Windows.Storage;
-using Hopa.Windows.Voice;
 using Hopa.Windows.Host;
+using Hopa.Windows.Storage;
 
 namespace Hopa.Windows.Shell;
 
@@ -37,8 +18,8 @@ public partial class MainWindow : Window
     {
         try
         {
-            var started = new EngineHostClient();
-            started.LogReceived += line => Log($"sidecar: {line}");
+            var started = new EngineSession();
+            started.Log += line => Log($"sidecar: {line}");
             started.DeviceRequested += OnDeviceRequested;
             started.ApprovalRequested += OnApprovalRequested;
             started.SessionUpdated += message =>
@@ -60,11 +41,19 @@ public partial class MainWindow : Window
                 var executed = message["executed"]?.GetValue<bool>() == true;
                 Log($"step {index}: {action} tier={tier} executed={executed}");
             };
-            client = started;
-            chatController = new ChatController(started, Chat.Model, Sidebar.Model);
-            chatController.MessagesChanged += Chat.ScrollToEnd;
+            started.GatewayStateChanged += gateway => Dispatcher.BeginInvoke(() =>
+            {
+                client?.SendGatewayState(gateway.Paired, gateway.HasPhone);
+                Log($"gateway: {gateway.Status}; phone={(gateway.HasPhone ? "online" : "offline")}");
+            });
+            started.TaskReceived += message => Dispatcher.BeginInvoke(() =>
+                Log($"gateway task: {(message["body"] as JsonObject)?["goal"]?.GetValue<string>() ?? message["task"]?.GetValue<string>()}"));
 
-            gateway = CreateGateway();
+            session = started;
+            client = started.Client;
+            chatController = new ChatController(started.Client, Chat.Model, Sidebar.Model);
+            chatController.MessagesChanged += Chat.ScrollToEnd;
+            started.Start();
 
             StatusText.Text = "Ready";
             UpdateBridgeStatus();
@@ -77,20 +66,6 @@ public partial class MainWindow : Window
             StatusText.Text = error.Message;
             Log($"error: {error.Message}");
         }
-    }
-
-    private GatewayClient CreateGateway()
-    {
-        var created = new GatewayClient();
-        created.StateChanged += () => Dispatcher.BeginInvoke(() =>
-        {
-            client?.SendGatewayState(created.Paired, created.HasPhone);
-            Log($"gateway: {created.Status}; phone={(created.HasPhone ? "online" : "offline")}");
-        });
-        created.TaskReceived += message => Dispatcher.BeginInvoke(() =>
-            Log($"gateway task: {(message["body"] as JsonObject)?["goal"]?.GetValue<string>() ?? message["task"]?.GetValue<string>()}"));
-        created.Start();
-        return created;
     }
 
     private void UpdateBridgeStatus()
@@ -110,12 +85,11 @@ public partial class MainWindow : Window
         if (dialog.ShowDialog() == true)
         {
             await ApplySettingsAsync();
-            if (gateway != null)
+            if (session != null)
             {
-                await gateway.StopAsync();
-                await gateway.DisposeAsync();
+                await session.RestartGatewayAsync();
             }
-            gateway = CreateGateway();
+
             StatusText.Text = "Settings saved";
         }
     }

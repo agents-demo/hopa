@@ -37,7 +37,7 @@ public partial class MainWindow : Window
     private TrayIcon? tray;
     private EngineHostClient? client;
     private ChatController? chatController;
-    private GatewayClient? gateway;
+    private EngineSession? session;
     private Task? connecting;
     private JsonObject? pendingAttachment;
     private string? autoApproval;
@@ -100,8 +100,7 @@ public partial class MainWindow : Window
             speech?.Dispose();
             voice.Dispose();
             device.Dispose();
-            _ = gateway?.DisposeAsync();
-            _ = client?.DisposeAsync();
+            _ = session?.DisposeAsync();
         };
         Loaded += async (_, _) => await ConnectAsync();
     }

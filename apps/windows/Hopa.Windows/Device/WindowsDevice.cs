@@ -18,7 +18,7 @@ namespace Hopa.Windows.Device;
 /// pattern first and fall back to the input stack. Every UIA call has a timeout:
 /// a hung provider is reported, never allowed to freeze the turn.
 /// </summary>
-public sealed partial class WindowsDevice : IDisposable
+public sealed partial class WindowsDevice : IDisposable, IDevice
 {
     private static readonly TimeSpan CallTimeout = TimeSpan.FromMilliseconds(1500);
     private static readonly TimeSpan PropertyTimeout = TimeSpan.FromMilliseconds(700);
@@ -242,7 +242,7 @@ public sealed partial class WindowsDevice : IDisposable
         }
     }
 
-    private List<AppEntry>? appsCache;
+    private List<DeviceApp>? appsCache;
     private DateTime appsCachedAt;
 
     public string Act(string op, JsonObject message)
