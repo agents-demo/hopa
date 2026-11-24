@@ -162,6 +162,24 @@ the gateway frame contract, the NDJSON transport and the device ports through
 fakes. The integration suite starts a real engine child process and a loopback
 WebSocket server; it needs no interactive desktop.
 
+## Package
+
+The product zip and MSI contain only `Hopa.Windows`:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\scripts\windows-package.ps1 -SkipMsi
+```
+
+`tools/scripts/windows-package.ps1` publishes the product, builds the jlink
+runtime, and refuses to continue if any DevTools, Checks, FakeEngine or test
+assembly leaked into the stage. The MSI consumes the same product-only stage.
+
+The developer tools are a separate build (and a separate CI artifact):
+
+```powershell
+dotnet publish apps\windows\Hopa.Windows.DevTools -c Debug -o out\windows-devtools
+```
+
 ## Rules
 
 1. The loop, the gate and the records live in `packages/`, inside the sidecar.

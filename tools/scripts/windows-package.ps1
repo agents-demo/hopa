@@ -25,6 +25,26 @@ Write-Host "2/5 publish"
 dotnet publish $client -c Release -r win-x64 --self-contained -o $stage
 if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed" }
 
+# The package is the product. The developer exe, the checks and the test
+# fixtures are separate artifacts; a leak here would ship them to clients.
+$forbidden = @(
+    "Hopa.Windows.DevTools.exe",
+    "Hopa.Windows.DevTools.dll",
+    "Hopa.Windows.Checks.dll",
+    "Hopa.Windows.FakeEngine.dll",
+    "Hopa.Windows.IntegrationTests.dll",
+    "Hopa.Windows.Tests.dll"
+)
+foreach ($name in $forbidden) {
+    if (Test-Path (Join-Path $stage $name)) {
+        throw "developer artifact leaked into the product package: $name"
+    }
+}
+
+if (-not (Test-Path (Join-Path $stage "Hopa.Windows.exe"))) {
+    throw "the product exe is missing from the package"
+}
+
 Write-Host "3/5 jlink runtime"
 & (Join-Path $jdk "bin/jlink.exe") --add-modules java.base,java.logging,java.net.http,java.desktop,java.management,java.naming,java.security.jgss,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported,jdk.zipfs --strip-debug --no-header-files --no-man-pages --compress=2 --output (Join-Path $stage "runtime")
 if ($LASTEXITCODE -ne 0) { throw "jlink failed" }

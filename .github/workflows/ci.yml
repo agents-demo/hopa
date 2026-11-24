@@ -373,20 +373,32 @@ jobs:
         run: dotnet build -c Debug
       - name: Build the developer tools
         run: dotnet build apps/windows/Hopa.Windows.DevTools -c Debug
-      - name: Desktop script parses
+      - name: PowerShell scripts parse
         shell: pwsh
         run: |
-          $tokens = $null
-          $errors = $null
-          [System.Management.Automation.Language.Parser]::ParseFile(
-            "tools/scripts/windows-desktop-checks.ps1", [ref]$tokens, [ref]$errors) | Out-Null
-          if ($errors.Count -gt 0) {
-            throw ($errors | ForEach-Object { $_.Message } | Out-String)
+          foreach ($script in @(
+            "tools/scripts/windows-desktop-checks.ps1",
+            "tools/scripts/windows-package.ps1")) {
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile(
+              $script, [ref]$tokens, [ref]$errors) | Out-Null
+            if ($errors.Count -gt 0) {
+              throw "$($script): " + ($errors | ForEach-Object { $_.Message } | Out-String)
+            }
           }
       - name: Client tests (observation rules)
         run: dotnet test apps/windows/Hopa.Windows.Tests -c Debug
       - name: Integration tests (engine process, local WebSocket)
         run: dotnet test apps/windows/Hopa.Windows.IntegrationTests -c Debug
+      - name: Publish the developer tools
+        run: dotnet publish apps/windows/Hopa.Windows.DevTools -c Debug -o out/windows-devtools
+      - name: Upload developer tools
+        uses: actions/upload-artifact@v7
+        with:
+          name: hopa-windows-devtools
+          path: out/windows-devtools
+          if-no-files-found: error
       - name: Package (zip)
         run: powershell -NoProfile -ExecutionPolicy Bypass -File tools/scripts/windows-package.ps1 -SkipMsi
       - name: Upload package

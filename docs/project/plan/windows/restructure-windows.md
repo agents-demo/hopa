@@ -344,3 +344,6 @@ Not adopted, with reasons:
   and the W6 screenshots through `tools/scripts/windows-desktop-checks.ps1`,
   asserts the transcripts, and uploads the artifacts. It is manual or
   `ENABLE_WINDOWS_DESKTOP=true` only, and never runs fork PRs.
+- Packaging is product-only: `windows-package.ps1` fails if DevTools, Checks,
+  FakeEngine or test assemblies appear in the stage, and the MSI consumes that
+  stage. DevTools is published as its own `hopa-windows-devtools` artifact.
