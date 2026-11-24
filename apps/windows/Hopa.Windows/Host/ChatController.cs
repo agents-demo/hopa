@@ -4,7 +4,7 @@ using Hopa.Windows.Chat;
 using Hopa.Windows.Engine;
 using Hopa.Windows.Panes;
 
-namespace Hopa.Windows.Shell;
+namespace Hopa.Windows.Host;
 
 /// <summary>
 /// The turn lifecycle: one send, one select, one create. It owns the current

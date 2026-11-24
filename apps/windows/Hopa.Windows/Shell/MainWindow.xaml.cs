@@ -21,6 +21,7 @@ using Hopa.Windows.Engine;
 using Hopa.Windows.Gateway;
 using Hopa.Windows.Storage;
 using Hopa.Windows.Voice;
+using Hopa.Windows.Host;
 
 namespace Hopa.Windows.Shell;
 

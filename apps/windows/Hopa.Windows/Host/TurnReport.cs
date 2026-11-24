@@ -1,6 +1,6 @@
 using System.Text.Json.Nodes;
 
-namespace Hopa.Windows.Shell;
+namespace Hopa.Windows.Host;
 
 /// <summary>What one turn did, in the terms the window needs to draw it.</summary>
 public sealed record TurnReport(

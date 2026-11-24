@@ -2,6 +2,7 @@ using System.Text.Json.Nodes;
 using System.Windows;
 using Hopa.Windows.Dialogs;
 using Hopa.Windows.Gateway;
+using Hopa.Windows.Host;
 
 namespace Hopa.Windows.Shell;
 

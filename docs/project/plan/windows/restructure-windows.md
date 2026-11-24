@@ -305,3 +305,6 @@ Not adopted, with reasons:
 - `MainWindow.Chat` is split into `MainWindow.Connection` (client, gateway,
   settings, bridge status) and `MainWindow.Chat` (refresh, select, send, new
   chat, keyboard). It is a readability split; behaviour is unchanged.
+- `Shell/` is the window again; `Host/` holds `ChatController`, `ApprovalRouter`
+  and `TurnReport`, so `Hopa.Windows.Shell` no longer covers app-level
+  coordination.

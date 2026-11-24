@@ -1,7 +1,7 @@
 using System.Text.Json.Nodes;
 using Hopa.Windows.Gateway;
 
-namespace Hopa.Windows.Shell;
+namespace Hopa.Windows.Host;
 
 /// <summary>
 /// Where one approval goes: the automation override, the paired phone, or the
