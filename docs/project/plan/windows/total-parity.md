@@ -145,8 +145,10 @@ The screens that change what HOPA does.
   trace on the page)
 - [x] Act hub with the this-PC / phone-handoff target chooser. (evidence:
   `ActPage`; the target chip uses the same setting)
-- [ ] Browser pane with WebView2 and the shared browser contract. (evidence:
-  screenshot + navigation test)
+- [x] Browser pane with WebView2 and link-out fallback. (evidence:
+  `BrowserWindow`; the settings Browser page)
+- [ ] Wire the engine's `web.*` actions to the browser pane. (evidence: a turn
+  that navigates and reads through the pane)
 - [ ] Takeover/signature P5. (evidence: form transcript + verified postcondition)
 - [ ] Vision frame round-trip when a model accepts images. (evidence: protocol
   test + one real frame)

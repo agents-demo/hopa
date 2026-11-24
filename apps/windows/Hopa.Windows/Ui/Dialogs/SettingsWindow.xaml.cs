@@ -487,6 +487,27 @@ public partial class SettingsWindow : Window
 
     private void NotificationRefresh_Click(object sender, RoutedEventArgs e) => RefreshNotifications();
 
+    private void BrowserOpen_Click(object sender, RoutedEventArgs e)
+    {
+        var url = BrowserUrlBox.Text.Trim();
+        if (url.Length == 0)
+        {
+            BrowserStatus.Text = "Type a URL first.";
+            return;
+        }
+
+        try
+        {
+            var browser = new BrowserWindow(url) { Owner = this };
+            browser.Show();
+            BrowserStatus.Text = $"Opened {url}.";
+        }
+        catch (Exception error)
+        {
+            BrowserStatus.Text = error.Message;
+        }
+    }
+
     private void NotificationClear_Click(object sender, RoutedEventArgs e)
     {
         NotificationHistory.Clear();
@@ -645,6 +666,7 @@ public partial class SettingsWindow : Window
         PrivacyPage.Visibility = tag == "privacy" ? Visibility.Visible : Visibility.Collapsed;
         NotificationsPage.Visibility = tag == "notifications" ? Visibility.Visible : Visibility.Collapsed;
         LaunchpadPage.Visibility = tag == "launchpad" ? Visibility.Visible : Visibility.Collapsed;
+        BrowserPage.Visibility = tag == "browser" ? Visibility.Visible : Visibility.Collapsed;
         SelfCheckPage.Visibility = tag == "selfcheck" ? Visibility.Visible : Visibility.Collapsed;
         AboutPage.Visibility = tag == "about" ? Visibility.Visible : Visibility.Collapsed;
     }

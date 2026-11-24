@@ -51,6 +51,7 @@
                 <ListBoxItem Tag="privacy" Content="Privacy" />
                 <ListBoxItem Tag="notifications" Content="Notifications" />
                 <ListBoxItem Tag="launchpad" Content="Launchpad" />
+                <ListBoxItem Tag="browser" Content="Browser" />
                 <ListBoxItem Tag="selfcheck" Content="Self check" />
                 <ListBoxItem Tag="about" Content="About" />
             </ListBox>
@@ -283,6 +284,18 @@
                                     Margin="8,0,0,0" Click="LaunchpadRefresh_Click" />
                         </StackPanel>
                         <TextBlock x:Name="LaunchpadStatus" FontSize="10" Foreground="#6B665C" Margin="0,8,0,0" />
+                    </StackPanel>
+
+                    <StackPanel x:Name="BrowserPage" Visibility="Collapsed">
+                        <TextBlock Text="Browser" FontSize="15" FontWeight="SemiBold" Foreground="#1C1B18" />
+                        <TextBlock Text="A WebView2 surface on this PC; link-out remains the fallback."
+                                   FontSize="11" Foreground="#9A9488" Margin="0,4,0,12"
+                                   TextWrapping="Wrap" />
+                        <TextBox x:Name="BrowserUrlBox" Height="32" Margin="0,0,0,8"
+                                 ToolTip="A URL to open" />
+                        <Button x:Name="BrowserOpenButton" Content="Open browser" Width="130" Height="32"
+                                HorizontalAlignment="Left" Click="BrowserOpen_Click" />
+                        <TextBlock x:Name="BrowserStatus" FontSize="10" Foreground="#6B665C" Margin="0,8,0,0" />
                     </StackPanel>
 
                     <StackPanel x:Name="SelfCheckPage" Visibility="Collapsed">
