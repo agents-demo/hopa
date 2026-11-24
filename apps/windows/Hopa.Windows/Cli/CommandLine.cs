@@ -1,7 +1,7 @@
 namespace Hopa.Windows.Cli;
 
 /// <summary>Every way the process can be started, as named by its command line.</summary>
-internal enum RunMode
+public enum RunMode
 {
     ObservationCheck,
     DevicePortCheck,
@@ -50,6 +50,19 @@ internal static class CommandLine
 {
     public static Command? Parse(string[] args)
     {
+        if (args.Length == 0)
+        {
+            return null;
+        }
+
+        // `--list` has no required operand; every other mode does.
+        if (args[0] == "--list")
+        {
+            return new Command(
+                RunMode.ConversationList,
+                new[] { args.Length >= 3 && args[1] == "--out" ? args[2] : null });
+        }
+
         if (args.Length < 2)
         {
             return null;
@@ -74,9 +87,6 @@ internal static class CommandLine
                 : null,
             "--settings-check" => new Command(RunMode.SettingsCheck, new[] { args[1] }),
             "--turn" => Turn(args),
-            "--list" => new Command(
-                RunMode.ConversationList,
-                new[] { args.Length >= 3 && args[1] == "--out" ? args[2] : null }),
             "--shot-settings" => new Command(RunMode.SettingsShot, new[] { args[1] }),
             "--draft-check" => new Command(RunMode.DraftCheck, new[] { args[1] }),
             "--bridge-check" => args.Length >= 4

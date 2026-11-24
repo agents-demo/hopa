@@ -3,22 +3,29 @@ using System.Text.Json;
 
 namespace Hopa.Windows.Storage;
 
-/// <summary>settings.json in %LOCALAPPDATA%\HOPA; secrets stay out of it.</summary>
+/// <summary>settings.json in %LOCALAPPDATA%\HOPA, or an explicit path; secrets stay out of it.</summary>
 public sealed class SettingsStore
 {
     private static readonly JsonSerializerOptions Options = new() { WriteIndented = true };
 
     private readonly string configPath;
 
-    public SettingsStore()
+    public SettingsStore() : this(DefaultPath())
     {
-        configPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "HOPA",
-            "settings.json");
+    }
+
+    /// <summary>A store at an explicit path, for tests and the settings check.</summary>
+    public SettingsStore(string path)
+    {
+        configPath = path;
     }
 
     public string FilePath => configPath;
+
+    private static string DefaultPath() => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "HOPA",
+        "settings.json");
 
     public AppSettings Load()
     {

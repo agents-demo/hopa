@@ -276,8 +276,11 @@ Adopted:
 - `ApprovalRouter`: auto/phone/dialog routing is one testable class; a silent
   phone, a failed link and a refusal all deny. `MainWindow.EngineRequests.cs`
   only wires the dialog and the client now.
+- Testability: `SettingsStore` takes an explicit path, the settings check writes
+  a temp file instead of the user's settings, and every documented CLI flag has
+  a parser test (74 tests).
 - The pane and controller tests cover rows, filters, attachments, drafts, turn
-  reports, approvals and errors; the client suite is 48.
+  reports, approvals and errors; the client suite is 74.
 
 Not adopted, with reasons:
 
