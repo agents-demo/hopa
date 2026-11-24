@@ -1,0 +1,65 @@
+name: Windows desktop (UIA)
+
+# This job needs a logged-in, unlocked interactive Windows desktop. A
+# GitHub-hosted runner runs in session 0 and cannot see or drive a UI, so it
+# targets a self-hosted machine with the labels below. The job is off by default
+# for pushes and the schedule; set the repository variable
+# ENABLE_WINDOWS_DESKTOP=true to turn it on. A manual run always runs.
+#
+# Do not add pull_request here: self-hosted runners execute the repository's
+# code, and a fork PR must never reach that machine.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 4 * * 1"
+  push:
+    branches: [main]
+    paths:
+      - "apps/windows/**"
+      - "tools/scripts/windows-desktop-checks.ps1"
+      - ".github/workflows/windows-desktop.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-desktop-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  desktop:
+    name: Desktop UIA (self-hosted)
+    runs-on: [self-hosted, windows, x64, hopa-desktop]
+    if: github.event_name == 'workflow_dispatch' || vars.ENABLE_WINDOWS_DESKTOP == 'true'
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "8.0.x"
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Runner desktop is ready
+        shell: powershell
+        run: ./tools/scripts/windows-desktop-checks.ps1 -ReadyOnly
+
+      - name: Build the sidecar
+        working-directory: apps/android
+        run: .\gradlew.bat -p ../windows/sidecar installDist --no-daemon
+
+      - name: Real UIA checks and screenshots
+        shell: powershell
+        run: ./tools/scripts/windows-desktop-checks.ps1 -Output out/windows-desktop
+
+      - name: Upload transcripts and screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: hopa-windows-desktop
+          path: out/windows-desktop
+          if-no-files-found: warn

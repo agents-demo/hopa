@@ -106,6 +106,8 @@ called.
 
 The full first-run guide is
 [`docs/guides/windows/p2-testing.md`](../../docs/guides/windows/p2-testing.md).
+The self-hosted desktop run is
+[`docs/guides/windows/desktop-ci.md`](../../docs/guides/windows/desktop-ci.md).
 The short version, after building the sidecar:
 
 ```powershell

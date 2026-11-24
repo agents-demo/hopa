@@ -339,3 +339,8 @@ Not adopted, with reasons:
   server, so the protocol is covered on the wire, not only through mocks.
 - The suites are **104 unit** (89 + 13 device + 2 separation) and **2 integration**
   tests.
+- `.github/workflows/windows-desktop.yml` targets a self-hosted Windows runner
+  with a logged-in, unlocked desktop. It runs the W3/P2/matrix/W4/keyboard checks
+  and the W6 screenshots through `tools/scripts/windows-desktop-checks.ps1`,
+  asserts the transcripts, and uploads the artifacts. It is manual or
+  `ENABLE_WINDOWS_DESKTOP=true` only, and never runs fork PRs.
