@@ -16,6 +16,7 @@ public sealed class EngineSession : IAsyncDisposable
         Client = new EngineHostClient();
         Client.LogReceived += line => Log?.Invoke(line);
         Client.DeviceRequested += message => DeviceRequested?.Invoke(message);
+        Client.BrowserRequested += message => BrowserRequested?.Invoke(message);
         Client.ApprovalRequested += message => ApprovalRequested?.Invoke(message);
         Client.SessionUpdated += message => SessionUpdated?.Invoke(message);
         Client.StepReceived += message => StepReceived?.Invoke(message);
@@ -29,6 +30,8 @@ public sealed class EngineSession : IAsyncDisposable
     public event Action<string>? Log;
 
     public event Action<JsonObject>? DeviceRequested;
+
+    public event Action<JsonObject>? BrowserRequested;
 
     public event Action<JsonObject>? ApprovalRequested;
 

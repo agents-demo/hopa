@@ -17,6 +17,7 @@ import com.hopa.contracts.approval.ApprovalGateway
 import com.hopa.contracts.chat.Attachment
 import com.hopa.contracts.model.ModelMessage
 import com.hopa.contracts.model.ModelPort
+import com.hopa.contracts.ports.BrowserPort
 import com.hopa.contracts.ports.DevicePort
 import com.hopa.contracts.ports.InstalledApp
 import com.hopa.contracts.turn.TurnContext
@@ -58,6 +59,8 @@ class TurnEngine(
     private val memory: MemoryStore,
     private val skills: SkillStore,
     private val recipes: RecipeStore,
+    /** The WebView2 surface; null in headless, where no host is attached. */
+    private val browser: BrowserPort? = null,
     private val forceStub: Boolean = false,
     /** False in headless: no host is attached, so the prompt must not claim access. */
     private val deviceAttached: Boolean = true,
@@ -283,7 +286,7 @@ class TurnEngine(
                 val system = (target as? HostDevice)?.let { HostSystem(it) }
                 ActionExecutor(
                     device = target,
-                    browser = null,
+                    browser = browser,
                     system = system,
                     sandbox = null,
                     policy = { ApprovalPolicy() },
@@ -316,6 +319,7 @@ class TurnEngine(
                     platform = "windows",
                     vision = config.vision,
                     phoneAccess = deviceAttached,
+                    webAvailable = browser != null,
                     planFirst = config.planFirst,
                     planApproved = planApproved,
                     replay = config.replay,

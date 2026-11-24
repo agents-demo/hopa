@@ -27,6 +27,7 @@ public enum RunMode
     PcCheck,
     Pair,
     StaleCheck,
+    WebCheck,
 }
 
 /// <summary>One command line, already split into a mode and its operands.</summary>
@@ -111,6 +112,7 @@ internal static class CommandLine
             "--stale-check" => args.Length >= 3
                 ? new Command(RunMode.StaleCheck, new[] { args[1], args[2] })
                 : null,
+            "--web-check" => new Command(RunMode.WebCheck, new[] { args[1] }),
             _ => null,
         };
     }

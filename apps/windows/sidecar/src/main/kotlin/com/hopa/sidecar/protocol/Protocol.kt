@@ -407,6 +407,15 @@ object Protocol {
             fields()
         }
 
+    /** A `web.*` action for the host's WebView2 surface; one reply by id. */
+    fun browserRequest(id: String, op: String, fields: JsonObjectBuilder.() -> Unit): JsonObject =
+        buildJsonObject {
+            put("type", "browser.request")
+            put("id", id)
+            put("op", op)
+            fields()
+        }
+
     fun String.asObject(): JsonObject? = runCatching {
         json.parseToJsonElement(this).let { it as? JsonObject }
     }.getOrNull()

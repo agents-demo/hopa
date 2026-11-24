@@ -122,5 +122,5 @@ internal sealed class EngineTransport
     }
 
     private static bool IsEvent(string type) => type is
-        "ready" or "log" or "device.request" or "approval.request" or "session" or "step";
+        "ready" or "log" or "device.request" or "browser.request" or "approval.request" or "session" or "step";
 }

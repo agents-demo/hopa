@@ -150,8 +150,10 @@ The screens that change what HOPA does.
   `ActPage`; the target chip uses the same setting)
 - [x] Browser pane with WebView2 and link-out fallback. (evidence:
   `BrowserWindow`; the settings Browser page)
-- [ ] Wire the engine's `web.*` actions to the browser pane. (evidence: a turn
-  that navigates and reads through the pane)
+- [x] Wire the engine's `web.*` actions to the browser pane. (evidence:
+  `--turn "Use the web browser..."` runs `web.navigate` then `web.read` and
+  answers `Example Domain`; `--web-check` fills a loopback form and shows
+  `Signed by Michael`)
 - [ ] Takeover/signature P5. (evidence: form transcript + verified postcondition)
 - [ ] Vision frame round-trip when a model accepts images. (evidence: protocol
   test + one real frame)

@@ -46,6 +46,9 @@ internal static class DevRunModes
                 SettingsCheck.Run(command.Arg(0));
                 app.Shutdown();
                 return;
+            case RunMode.WebCheck:
+                Finish(WebCheck.Run(command.Arg(0)), app);
+                return;
         }
 
         var window = new MainWindow();

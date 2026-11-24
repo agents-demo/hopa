@@ -117,7 +117,8 @@ New-Item -ItemType Directory -Path $outDir -Force | Out-Null
 $shots = Join-Path $outDir "shots"
 $w4 = Join-Path $outDir "w4"
 $w6 = Join-Path $outDir "w6"
-New-Item -ItemType Directory -Path $shots, $w4, $w6 -Force | Out-Null
+$web = Join-Path $outDir "web"
+New-Item -ItemType Directory -Path $shots, $w4, $w6, $web -Force | Out-Null
 
 # The checks launch real apps. Remember what was already running so cleanup
 # only closes what this run started.
@@ -181,6 +182,14 @@ try {
     Assert-Screenshot (Join-Path $shots "windows-settings-general.png") "settings pages"
     Assert-Screenshot (Join-Path $shots "windows-settings-run.png") "settings pages"
     Assert-Screenshot (Join-Path $shots "windows-settings-browser.png") "settings pages"
+
+    Invoke-DevTool "web surface (W10f)" @("--web-check", $web)
+    $webText = Read-Transcript (Join-Path $web "web-check.txt") "W10f"
+    Assert-NoFailure $webText "W10f"
+    Assert-Match $webText "has heading: True" "W10f"
+    Assert-Match $webText "has refs: True" "W10f"
+    Assert-Match $webText "signed visible: True" "W10f"
+    Assert-Screenshot (Join-Path $web "windows-web-check.png") "W10f"
 }
 finally {
     foreach ($name in $watched) {

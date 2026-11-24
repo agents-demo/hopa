@@ -53,6 +53,28 @@ public sealed class EngineTransportTests
     }
 
     [Fact]
+    public async Task BrowserRequestsAreEventsNotPendingReplies()
+    {
+        var reader = new QueueReader();
+        var transport = new EngineTransport(new LineWriter(), reader);
+        var request = new TaskCompletionSource<JsonObject>(TaskCreationOptions.RunContinuationsAsynchronously);
+        transport.MessageReceived += message =>
+        {
+            if (message["type"]?.GetValue<string>() == "browser.request")
+            {
+                request.TrySetResult(message);
+            }
+        };
+        transport.Start();
+
+        reader.Push("{\"type\":\"browser.request\",\"id\":\"b1\",\"op\":\"read\"}");
+        var received = await request.Task.WaitAsync(TimeSpan.FromSeconds(1));
+
+        Assert.Equal("b1", received["id"]!.GetValue<string>());
+        Assert.Equal("read", received["op"]!.GetValue<string>());
+    }
+
+    [Fact]
     public async Task AMalformedLineIsIgnored()
     {
         var reader = new QueueReader();

@@ -92,6 +92,7 @@ public partial class MainWindow : Window
             tray?.Dispose();
             speech?.Dispose();
             voice.Dispose();
+            browser?.Dispose();
             device.Dispose();
             _ = session?.DisposeAsync();
         };

@@ -21,6 +21,7 @@ public partial class MainWindow : Window
             var started = new EngineSession();
             started.Log += line => Log($"sidecar: {line}");
             started.DeviceRequested += OnDeviceRequested;
+            started.BrowserRequested += OnBrowserRequested;
             started.ApprovalRequested += OnApprovalRequested;
             started.SessionUpdated += message =>
             {

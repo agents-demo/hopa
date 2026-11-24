@@ -23,6 +23,7 @@ memory/skill families as additive v1 messages.
 | `configure` | `bridgeUrl`, `useBridge`, `bridgeToken`, `bridgeRefresh`, `modelProvider`, `modelBaseUrl`, `modelName`, `modelKey`, `tone`, `profile`, `replay`, `planFirst`, `instantCommands`, `vision` | settings in memory; secrets are never written to disk here |
 | `gateway.state` | `paired`, `phoneOnline` | P4: whether this PC has a gateway credential and a phone peer; a phone approval is only accepted while both are true |
 | `device.result` | `id`, `ok`, `error?`, `observation?`, `app?` | the host performed, or refused, a requested device action |
+| `browser.result` | `id`, `ok`, `error?`, `text?` | the host performed, or refused, a `web.*` action in the WebView2 surface |
 | `approval.result` | `id`, `allow`, `device?` | the answer to one `approval.request`; `device` is `pc` or `phone` and is checked against the live gateway link |
 | `file.attach` | `id`, `path` | copy a file into the sidecar's attachment directory |
 | `file.remove` | `id`, `path` | drop a pending attachment |
@@ -67,6 +68,7 @@ memory/skill families as additive v1 messages.
 | `log` | `text` | a human-readable line for the host's log |
 | `step` | `id` (turn), `index`, `action`, `classification`, `tier`, `approved`, `executed`, `verified`, `error?`, `at`, `durationMs` | one action finished; the rail can fill live |
 | `device.request` | `id`, `op`, plus op fields | perform one device action on the host |
+| `browser.request` | `id`, `op` (`navigate`, `read`, `click`, `type`), plus op fields | perform one `web.*` action in the host's WebView2 window |
 | `approval.request` | `id`, `title`, `body`, `amount`, `merchant`, `consequence`, `isPayment`, `action` | ask the person |
 | `session` | `token`, `refresh` | the sidecar rotated the bridge pair; the host persists it |
 | `turn.end` | `id`, `conversationId`, `title`, `answer`, `steps[]`, `chainOk`, `plan[]`, `checkpoints?` | the turn finished; `plan` is the steps waiting for approval on a plan-first turn; `checkpoints` is `{complete, missing[]}` when the request named any |
@@ -108,6 +110,11 @@ A `device.result` carries `ok`, and on success any of `observation`, `app`,
 `text` (which path an action took), `image` (base64 PNG) or `apps`
 (`[{package, label}]`). An unimplemented op must answer `ok: false` with an
 `error` the user can read; silence is a bug.
+
+A `browser.result` carries `ok` and, on success, `text`. `web.read` returns the
+page as `URL`, `TITLE`, one `[wN] role "label"` line per control, then `TEXT`;
+`web.navigate`, `web.click` and `web.type` return a short sentence. A missing
+WebView2 runtime answers `ok: false`; it is never reported as an empty page.
 
 ## Memory and skills
 
@@ -171,6 +178,8 @@ phone approval.
 - One message per line, UTF-8, no pretty printing.
 - `id` is unique per request. The sidecar waits at most **20 s** for a
   `device.result`, then the action fails with a device error.
+- The sidecar waits at most **30 s** for a `browser.result`; a page load is
+  slower than a UIA action, and a timeout is a browser error.
 - The host waits at most **120 s** for a `turn.end`.
 - A `turn.end` without a matching `turn.start` is ignored and logged.
 - The sidecar never writes logs to stdout; a stray `println` breaks the stream.

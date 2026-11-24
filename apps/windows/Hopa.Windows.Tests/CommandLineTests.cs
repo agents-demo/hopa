@@ -23,6 +23,7 @@ public sealed class CommandLineTests
     [InlineData("--w4-check", RunMode.WindowCheck)]
     [InlineData("--shot-settings", RunMode.SettingsShot)]
     [InlineData("--shot-settings-pages", RunMode.SettingsPagesShot)]
+    [InlineData("--web-check", RunMode.WebCheck)]
     public void OnePathCheckMapsToItsMode(string flag, RunMode mode)
     {
         var command = CommandLine.Parse(new[] { flag, "out.txt" });

@@ -2,6 +2,7 @@ package com.hopa.sidecar.startup
 
 import com.hopa.sidecar.approval.HostApproval
 import com.hopa.sidecar.backend.BackendAdmission
+import com.hopa.sidecar.browser.HostBrowser
 import com.hopa.sidecar.backend.BackendSession
 import com.hopa.sidecar.backend.BackendSessionStore
 import com.hopa.sidecar.backend.EngineTaskRunner
@@ -14,6 +15,7 @@ import com.hopa.sidecar.protocol.Dispatcher
 import com.hopa.sidecar.protocol.Protocol
 import com.hopa.sidecar.protocol.handler.ApprovalHandler
 import com.hopa.sidecar.protocol.handler.BackendHandler
+import com.hopa.sidecar.protocol.handler.BrowserHandler
 import com.hopa.sidecar.protocol.handler.CapabilitiesHandler
 import com.hopa.sidecar.protocol.handler.ConfigHandler
 import com.hopa.sidecar.protocol.handler.ConversationHandler
@@ -51,6 +53,7 @@ import kotlinx.coroutines.runBlocking
 internal fun runProtocol(options: CliOptions) {
     val io = Stdio()
     val device = HostDevice(io)
+    val browser = HostBrowser(io::send)
     val dataDir = options.dataDir ?: defaultDataDir()
     val store = ChatStore(dataDir.resolve("conversations.json"))
     val approvals = PendingApprovals(dataDir.resolve("approvals.json"))
@@ -63,7 +66,7 @@ internal fun runProtocol(options: CliOptions) {
     val approval = HostApproval(io, approvals)
     val attachments = Attachments(dataDir.resolve("attachments"))
     val tasks = TaskStore()
-    val engine = TurnEngine(io, device, approval, store, records, config, memory, skills, recipes)
+    val engine = TurnEngine(io, device, approval, store, records, config, memory, skills, recipes, browser = browser)
     val backendScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     val sessionPath = dataDir.resolve("backend-session.json")
     val sessionStore = BackendSessionStore(sessionPath)
@@ -145,6 +148,7 @@ internal fun runProtocol(options: CliOptions) {
             CapabilitiesHandler(io, capabilities),
             ConfigHandler(io, config),
             TaskHandler(io, tasks),
+            BrowserHandler(browser),
             DeviceHandler(io, device, config),
             ApprovalHandler(io, approval, config),
             BackendHandler(io, dataDir, sessionStore, gateways, backendScope),

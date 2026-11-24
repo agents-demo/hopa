@@ -28,6 +28,7 @@ Hosted runners are session 0 and cannot produce it; see
 | W6 frame | `--shot-frame <path>` | `windows-frame.png` |
 | Settings dialog | `--shot-settings <path>` | `windows-settings.png` |
 | Keyboard order | `--keyboard-check <dir>` | `keyboard-check.txt` |
+| WebView2 surface (W10f) | `--web-check <dir>` | `web-check.txt`, `windows-web-check.png` |
 
 ## Transcripts
 
@@ -41,7 +42,9 @@ Hosted runners are session 0 and cannot produce it; see
 | Plan-first | `--turn ... --approval`/PlanWindow | `plan[]` in `turn.end`, then approved replay |
 | Replay | second `--turn` with the same goal | recipe step in the run record |
 | Instant commands | `--turn "open notepad"` | one launch step, no model call |
-| Vision | a model that accepts images | frame in the request; blocked until model available |
+| Web surface | `--web-check <dir>` | navigate, read, type, click; `Signed by Michael` visible |
+| Web engine turn | `--turn "Use the web browser: navigate to https://example.com, call web.read..."` | `web.navigate` and `web.read` steps; answer `Example Domain` |
+| Vision | `deepseek-v4-flash-vision-exp` | a nonce drawn only in the frame; answer matches |
 
 ## Pairing with Android
 

@@ -15,6 +15,8 @@ public sealed partial class EngineHostClient : IAsyncDisposable, IChatEngine
 
     public event Action<JsonObject>? DeviceRequested;
 
+    public event Action<JsonObject>? BrowserRequested;
+
     public event Action<JsonObject>? ApprovalRequested;
 
     public event Action<JsonObject>? SessionUpdated;
@@ -343,6 +345,27 @@ public sealed partial class EngineHostClient : IAsyncDisposable, IChatEngine
         Send(message);
     }
 
+    public void SendBrowserResult(string id, bool ok, string? error = null, string? text = null)
+    {
+        var message = new JsonObject
+        {
+            ["type"] = "browser.result",
+            ["id"] = id,
+            ["ok"] = ok,
+        };
+        if (error != null)
+        {
+            message["error"] = error;
+        }
+
+        if (text != null)
+        {
+            message["text"] = text;
+        }
+
+        Send(message);
+    }
+
     private void Send(JsonObject message) => transport.Send(message);
 
     private void OnMessage(JsonObject message)
@@ -356,6 +379,9 @@ public sealed partial class EngineHostClient : IAsyncDisposable, IChatEngine
                 break;
             case "device.request":
                 DeviceRequested?.Invoke(message);
+                break;
+            case "browser.request":
+                BrowserRequested?.Invoke(message);
                 break;
             case "approval.request":
                 ApprovalRequested?.Invoke(message);
