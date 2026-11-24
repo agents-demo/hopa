@@ -124,16 +124,22 @@ procurement remains an external calendar gate. No product behaviour changed.
 
 ### M1a. .NET 8 -> .NET 10 (1 week, security first)
 
-- [ ] Move the five Windows projects to `net10.0-windows` (host, DevTools,
+- [x] Move the five Windows projects to `net10.0-windows` (host, DevTools,
       checks, tests, integration tests) and the fake engine to `net10.0`.
-- [ ] Update WebView2, FlaUI and test packages; fix warnings.
-- [ ] Update both workflows (`ci.yml`, `windows-desktop.yml`) to .NET 10.
-- [ ] Run a **behavioural** smoke, not just unit tests: tray icon, toast,
-      voice, WebView2 navigation, UIA observe/type, self-contained publish.
-- [ ] Keep the previous **signed MSI** as rollback; do not keep .NET 8 bits.
+- [x] Update WebView2, FlaUI and test packages; fix warnings. The package set
+      now builds with 0 warnings; `System.Drawing.Common` was unnecessary and
+      `WFO0003` is suppressed with the WPF-manifest rationale.
+- [x] Update both workflows (`ci.yml`, `windows-desktop.yml`) to .NET 10.
+- [x] Run a **behavioural** smoke: tray/toast, WebView2, UIA, takeover,
+      vision and self-contained publish. Evidence: `M1a-net10.md`.
+- [ ] Run the voice bridge round-trip; it needs a live bridge URL and was not
+      available in this smoke.
+- [ ] Keep the previous **signed MSI** as rollback; the signed artifact does
+      not exist yet (M7a). .NET 8 bits are not kept.
 
-**Gate:** all suites green on .NET 10; the smoke transcript covers tray, toast,
-voice, WebView2 and UIA; package starts on a machine without .NET installed.
+**Gate:** all suites green on .NET 10; the smoke covers tray, toast, WebView2,
+UIA, takeover, vision and a self-contained start without machine .NET. Voice and
+the signed rollback remain external.
 
 ### M1b. Kotlin/JDK truth (1 week)
 

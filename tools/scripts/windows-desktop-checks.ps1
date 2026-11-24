@@ -107,7 +107,7 @@ if (-not $SkipBuild) {
     Assert-True ($LASTEXITCODE -eq 0) "DevTools did not build"
 }
 
-$dev = Join-Path $root "apps/windows/Hopa.Windows.DevTools/bin/Release/net8.0-windows/Hopa.Windows.DevTools.exe"
+$dev = Join-Path $root "apps/windows/Hopa.Windows.DevTools/bin/Release/net10.0-windows/Hopa.Windows.DevTools.exe"
 Assert-True (Test-Path $dev) "DevTools is not built at $dev"
 
 $sidecar = Join-Path $root "apps/windows/sidecar/build/install/hopa-windows-sidecar/lib"

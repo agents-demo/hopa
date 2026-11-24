@@ -347,7 +347,7 @@ jobs:
           java-version: "17"
       - uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: "8.0.x"
+          dotnet-version: "10.0.201"
       - name: Restore locked packages
         run: |
           dotnet restore apps/windows/Hopa.Windows.DevTools -p:RestoreLockedMode=true

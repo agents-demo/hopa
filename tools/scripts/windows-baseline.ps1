@@ -1,6 +1,6 @@
 param(
     [int]$Runs = 20,
-    [string]$Framework = "net8.0-windows",
+    [string]$Framework = "net10.0-windows",
     [string]$Output = "docs/project/evidence/M0-baseline.md"
 )
 

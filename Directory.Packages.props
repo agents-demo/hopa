@@ -9,7 +9,6 @@
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
     <PackageVersion Include="Microsoft.Web.WebView2" Version="1.0.4370.26" />
     <PackageVersion Include="NAudio" Version="2.2.1" />
-    <PackageVersion Include="System.Drawing.Common" Version="8.0.0" />
     <PackageVersion Include="System.Speech" Version="8.0.0" />
     <PackageVersion Include="xunit" Version="2.9.2" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
