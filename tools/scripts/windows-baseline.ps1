@@ -84,8 +84,12 @@ if (Test-Path $sidecarLib) {
     Remove-Item $data -Recurse -Force -ErrorAction SilentlyContinue
 }
 
-$zip = Join-Path $root "out/windows/hopa-windows-0.1.0.zip"
-$msi = Join-Path $root "out/windows/hopa-windows-0.1.0.msi"
+$zip = Get-ChildItem (Join-Path $root "out/windows") -Filter "hopa-windows-0.1.0*.zip" -File -ErrorAction SilentlyContinue |
+    Sort-Object LastWriteTime -Descending |
+    Select-Object -First 1
+$msi = Get-ChildItem (Join-Path $root "out/windows") -Filter "hopa-windows-0.1.0*.msi" -File -ErrorAction SilentlyContinue |
+    Sort-Object LastWriteTime -Descending |
+    Select-Object -First 1
 $os = Get-CimInstance Win32_OperatingSystem
 $cpu = Get-CimInstance Win32_Processor | Select-Object -First 1
 $dotnet = (& dotnet --version).Trim()
