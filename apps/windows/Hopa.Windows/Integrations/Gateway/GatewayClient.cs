@@ -17,10 +17,18 @@ public sealed partial class GatewayClient : IAsyncDisposable, IApprovalPhone
     private readonly SemaphoreSlim sendGate = new(1, 1);
     private readonly object pendingGate = new();
     private readonly HashSet<string> peers = new(StringComparer.Ordinal);
+    private readonly Func<GatewayCredentials?> credentials;
     private ClientWebSocket? socket;
     private CancellationTokenSource? cts;
     private Task? loop;
     private PendingOperation? waiting;
+
+    public GatewayClient() : this(GatewayCredentials.Load)
+    {
+    }
+
+    /// <summary>The loader is a seam: integration tests point it at a local gateway.</summary>
+    internal GatewayClient(Func<GatewayCredentials?> credentials) => this.credentials = credentials;
 
     public event Action? StateChanged;
 
@@ -34,7 +42,7 @@ public sealed partial class GatewayClient : IAsyncDisposable, IApprovalPhone
     public string PhoneDeviceId { get; private set; } = "";
     public string Status { get; private set; } = "not paired";
     public bool IsLive { get; private set; }
-    public bool Paired => GatewayCredentials.Load() != null;
+    public bool Paired => credentials() != null;
     public bool HasPhone => IsLive && PhoneDeviceId.Length > 0;
 
     public void Start()

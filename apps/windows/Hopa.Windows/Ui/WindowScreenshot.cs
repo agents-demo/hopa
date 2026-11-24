@@ -3,7 +3,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace Hopa.Windows.Checks;
+namespace Hopa.Windows.Ui;
 
 public static class WindowScreenshot
 {

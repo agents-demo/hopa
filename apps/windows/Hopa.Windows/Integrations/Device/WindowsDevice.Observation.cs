@@ -1,41 +1,30 @@
-using System.Diagnostics;
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json.Nodes;
-using FlaUI.Core.AutomationElements;
-using FlaUI.Core.Definitions;
-using FlaUI.Core.Input;
-using FlaUI.Core.WindowsAPI;
-using FlaUI.UIA3;
 
 namespace Hopa.Windows.Integrations.Device;
 
 /// <summary>
-/// W3: the Windows device adapter. Observation is a real UI Automation tree with
+/// W3: the Windows device adapter. Observation is a UI Automation tree with
 /// pre-order refs, bounded depth, bounded text and a hash. Actions try the UIA
-/// pattern first and fall back to the input stack. Every UIA call has a timeout:
-/// a hung provider is reported, never allowed to freeze the turn.
+/// pattern first and fall back to the input stack. The tree, input, desktop and
+/// app ports keep the rules testable without a real desktop.
 /// </summary>
 public sealed partial class WindowsDevice
 {
     /// <summary>Builds the observation JSON the Kotlin contract decodes.</summary>
     public (JsonObject Observation, int Nodes) Observe()
     {
-        RefuseSecureSurface();
-        RefuseElevatedBoundary();
+        Refuse();
         counter = 0;
         textChars = 0;
         refs.Clear();
-        root = ForegroundElement();
+        root = tree.Foreground();
         var lines = new List<string>();
         var truncated = false;
-        var tree = root == null
+        var treeJson = root == null
             ? Node("root", "root", "", "", null, false, true, false, true, false, false, new List<JsonObject>())
             : Walk(root, 0, lines, ref truncated);
-        var app = ForegroundApp();
-        var screen = ScreenSize();
+        var app = desktop.ForegroundApp();
+        var screen = desktop.ScreenSize();
         var text = ObservationRules.JoinText(lines, out var textTruncated);
         if (ObservationRules.IsTreeOnlyRoot(counter, text))
         {
@@ -43,7 +32,7 @@ public sealed partial class WindowsDevice
                 $"'{app}' exposes no UI Automation tree; HOPA cannot see its controls");
         }
 
-        var dpi = DpiFor(GetForegroundWindow());
+        var dpi = desktop.Dpi();
         var observation = new JsonObject
         {
             ["schemaVersion"] = "1",
@@ -60,7 +49,7 @@ public sealed partial class WindowsDevice
             },
             ["focus"] = "",
             ["text"] = text,
-            ["tree"] = tree,
+            ["tree"] = treeJson,
             ["screenshotRef"] = "",
             ["app"] = app,
             ["hash"] = ObservationRules.Hash(app, (int)screen.Width, (int)screen.Height, lines),
@@ -69,38 +58,21 @@ public sealed partial class WindowsDevice
         return (observation, refs.Count);
     }
 
-    private static double DpiFor(IntPtr hwnd) => hwnd == IntPtr.Zero ? 96 : Math.Max(96, GetDpiForWindow(hwnd));
-
-    private AutomationElement? ForegroundElement()
-    {
-        try
-        {
-            var hwnd = GetForegroundWindow();
-            return hwnd == IntPtr.Zero ? null : automation.FromHandle(hwnd);
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
-    private JsonObject Walk(AutomationElement element, int depth, List<string> lines, ref bool truncated)
+    private JsonObject Walk(IUiNode element, int depth, List<string> lines, ref bool truncated)
     {
         var refId = $"e{++counter}";
-        var controlType = Property(() => element.Properties.ControlType.ValueOrDefault.ToString(), "Unknown");
-        var name = ObservationRules.Cap(Property(() => element.Properties.Name.ValueOrDefault ?? "", ""));
-        var automationId = Property(() => element.Properties.AutomationId.ValueOrDefault ?? "", "");
-        var isPassword = Property(() => element.Properties.IsPassword.ValueOrDefault, false);
-        var enabled = Property(() => element.Properties.IsEnabled.ValueOrDefault, false);
-        var offscreen = Property(() => element.Properties.IsOffscreen.ValueOrDefault, true);
-        var focused = Property(() => element.Properties.HasKeyboardFocus.ValueOrDefault, false);
-        var clickable = Property(
-            () => element.Patterns.Invoke.IsSupported
-                || element.Patterns.Toggle.IsSupported
-                || element.Patterns.SelectionItem.IsSupported,
+        var controlType = UiCalls.Property(() => element.ControlType, "Unknown");
+        var name = ObservationRules.Cap(UiCalls.Property(() => element.Name, ""));
+        var automationId = UiCalls.Property(() => element.AutomationId, "");
+        var isPassword = UiCalls.Property(() => element.IsPassword, false);
+        var enabled = UiCalls.Property(() => element.IsEnabled, false);
+        var offscreen = UiCalls.Property(() => element.IsOffscreen, true);
+        var focused = UiCalls.Property(() => element.HasKeyboardFocus, false);
+        var clickable = UiCalls.Property(
+            () => element.CanInvoke || element.CanToggle || element.CanSelectItem,
             false);
-        var scrollable = Property(() => element.Patterns.Scroll.IsSupported, false);
-        var bounds = Property<System.Drawing.Rectangle?>(() => element.BoundingRectangle, null);
+        var scrollable = UiCalls.Property(() => element.CanScroll, false);
+        var bounds = UiCalls.Property<System.Drawing.Rectangle?>(() => element.Bounds, null);
 
         var type = isPassword ? "password" : controlType.ToLowerInvariant();
         if (!isPassword)
@@ -129,15 +101,15 @@ public sealed partial class WindowsDevice
         }
         else
         {
-            AutomationElement[] kids;
+            IReadOnlyList<IUiNode> kids;
             try
             {
-                kids = Call(() => element.FindAllChildren(), "children");
+                kids = UiCalls.Call(() => element.Children(), "children");
             }
             catch (Exception error) when (error is TimeoutException or InvalidOperationException)
             {
                 truncated = true;
-                kids = Array.Empty<AutomationElement>();
+                kids = Array.Empty<IUiNode>();
             }
 
             foreach (var child in kids)
@@ -206,7 +178,7 @@ public sealed partial class WindowsDevice
     {
         foreach (var pair in refs)
         {
-            if (Call(() => pair.Value.Patterns.Value.IsSupported, "Value support"))
+            if (UiCalls.Call(() => pair.Value.SupportsValue, "Value support"))
             {
                 return pair.Key;
             }
@@ -224,49 +196,13 @@ public sealed partial class WindowsDevice
 
         try
         {
-            return Call(
-                () => element.Patterns.Value.IsSupported
-                    ? element.Patterns.Value.Pattern.Value.Value ?? ""
-                    : "",
+            return UiCalls.Call(
+                () => element.SupportsValue ? element.Value : "",
                 "read value");
         }
         catch
         {
             return "";
-        }
-    }
-
-    /// <summary>PNG of the foreground window, or null when the screen is not capturable.</summary>
-    public byte[]? CaptureWindow()
-    {
-        try
-        {
-            var handle = GetForegroundWindow();
-            if (!GetWindowRect(handle, out var rect))
-            {
-                return null;
-            }
-
-            var width = rect.Right - rect.Left;
-            var height = rect.Bottom - rect.Top;
-            if (width <= 0 || height <= 0)
-            {
-                return null;
-            }
-
-            using var bitmap = new System.Drawing.Bitmap(width, height);
-            using (var graphics = System.Drawing.Graphics.FromImage(bitmap))
-            {
-                graphics.CopyFromScreen(rect.Left, rect.Top, 0, 0, bitmap.Size);
-            }
-
-            using var stream = new MemoryStream();
-            bitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
-            return stream.ToArray();
-        }
-        catch
-        {
-            return null;
         }
     }
 }

@@ -34,6 +34,8 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Hopa.Windows.Tests" />
+    <InternalsVisibleTo Include="Hopa.Windows.IntegrationTests" />
+    <InternalsVisibleTo Include="Hopa.Windows.DevTools" />
   </ItemGroup>
 
   <ItemGroup>

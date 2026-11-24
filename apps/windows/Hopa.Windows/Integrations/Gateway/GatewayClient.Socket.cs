@@ -17,20 +17,20 @@ public sealed partial class GatewayClient
         var backoffMs = 1_000;
         while (!cancellationToken.IsCancellationRequested)
         {
-            var credentials = GatewayCredentials.Load();
-            if (credentials == null)
+            var current = credentials();
+            if (current == null)
             {
                 SetState("not paired", live: false);
                 return;
             }
 
-            DeviceId = credentials.DeviceId;
+            DeviceId = current.DeviceId;
             var authClose = false;
             try
             {
                 using var ws = new ClientWebSocket();
-                ws.Options.SetRequestHeader("Authorization", "Bearer " + credentials.AccessToken);
-                await ws.ConnectAsync(new Uri(credentials.GatewayUrl), cancellationToken);
+                ws.Options.SetRequestHeader("Authorization", "Bearer " + current.AccessToken);
+                await ws.ConnectAsync(new Uri(current.GatewayUrl), cancellationToken);
                 socket = ws;
                 await SendOnSocketAsync(ws, new JsonObject
                 {
@@ -65,7 +65,7 @@ public sealed partial class GatewayClient
 
             if (authClose)
             {
-                var refreshed = await GatewayPairing.RefreshAsync(credentials, cancellationToken);
+                var refreshed = await GatewayPairing.RefreshAsync(current, cancellationToken);
                 if (refreshed == null)
                 {
                     SetState("pair again: the access token expired", live: false);

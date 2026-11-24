@@ -371,8 +371,12 @@ jobs:
       - name: Build the client
         working-directory: apps/windows/Hopa.Windows
         run: dotnet build -c Debug
+      - name: Build the developer tools
+        run: dotnet build apps/windows/Hopa.Windows.DevTools -c Debug
       - name: Client tests (observation rules)
         run: dotnet test apps/windows/Hopa.Windows.Tests -c Debug
+      - name: Integration tests (engine process, local WebSocket)
+        run: dotnet test apps/windows/Hopa.Windows.IntegrationTests -c Debug
       - name: Package (zip)
         run: powershell -NoProfile -ExecutionPolicy Bypass -File tools/scripts/windows-package.ps1 -SkipMsi
       - name: Upload package

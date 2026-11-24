@@ -1,22 +1,12 @@
-using System.Diagnostics;
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json.Nodes;
-using FlaUI.Core.AutomationElements;
-using FlaUI.Core.Definitions;
-using FlaUI.Core.Input;
-using FlaUI.Core.WindowsAPI;
-using FlaUI.UIA3;
 
 namespace Hopa.Windows.Integrations.Device;
 
 /// <summary>
-/// W3: the Windows device adapter. Observation is a real UI Automation tree with
+/// W3: the Windows device adapter. Observation is a UI Automation tree with
 /// pre-order refs, bounded depth, bounded text and a hash. Actions try the UIA
-/// pattern first and fall back to the input stack. Every UIA call has a timeout:
-/// a hung provider is reported, never allowed to freeze the turn.
+/// pattern first and fall back to the input stack. The tree, input, desktop and
+/// app ports keep the rules testable without a real desktop.
 /// </summary>
 public sealed partial class WindowsDevice
 {
@@ -30,7 +20,8 @@ public sealed partial class WindowsDevice
                 throw new InvalidOperationException($"stale ref {refId}; observe again");
             }
 
-            var bounds = Call(() => element.BoundingRectangle, "bounds");
+            var bounds = UiCalls.Call(() => element.Bounds, "bounds")
+                ?? throw new InvalidOperationException($"ref {refId} has no bounds; observe again");
             return ((int)(bounds.X + bounds.Width / 2), (int)(bounds.Y + bounds.Height / 2));
         }
 
@@ -51,18 +42,18 @@ public sealed partial class WindowsDevice
             }
         }
 
-        Mouse.Click(new System.Drawing.Point(point.X, point.Y));
+        input.Click(point.X, point.Y);
         return $"clicked {point.X},{point.Y}";
     }
 
     /// <summary>Pattern first: the control's own contract, not the mouse position.</summary>
-    private static string? TryPattern(AutomationElement element, string refId)
+    private static string? TryPattern(IUiNode element, string refId)
     {
-        if (Call(() => element.Patterns.Invoke.IsSupported, "Invoke support"))
+        if (UiCalls.Call(() => element.CanInvoke, "Invoke support"))
         {
             try
             {
-                Call(() => element.Patterns.Invoke.Pattern.Invoke(), "Invoke");
+                UiCalls.Call(() => element.Invoke(), "Invoke");
                 return $"invoked {refId}";
             }
             catch (Exception error) when (error is TimeoutException or InvalidOperationException)
@@ -71,11 +62,11 @@ public sealed partial class WindowsDevice
             }
         }
 
-        if (Call(() => element.Patterns.Toggle.IsSupported, "Toggle support"))
+        if (UiCalls.Call(() => element.CanToggle, "Toggle support"))
         {
             try
             {
-                Call(() => element.Patterns.Toggle.Pattern.Toggle(), "Toggle");
+                UiCalls.Call(() => element.Toggle(), "Toggle");
                 return $"toggled {refId}";
             }
             catch (Exception error) when (error is TimeoutException or InvalidOperationException)
@@ -83,11 +74,11 @@ public sealed partial class WindowsDevice
             }
         }
 
-        if (Call(() => element.Patterns.SelectionItem.IsSupported, "SelectionItem support"))
+        if (UiCalls.Call(() => element.CanSelectItem, "SelectionItem support"))
         {
             try
             {
-                Call(() => element.Patterns.SelectionItem.Pattern.Select(), "Select");
+                UiCalls.Call(() => element.SelectItem(), "Select");
                 return $"selected {refId}";
             }
             catch (Exception error) when (error is TimeoutException or InvalidOperationException)
@@ -113,11 +104,11 @@ public sealed partial class WindowsDevice
             throw new InvalidOperationException($"stale ref {refId}; observe again");
         }
 
-        if (Call(() => element.Patterns.Value.IsSupported, "Value support"))
+        if (UiCalls.Call(() => element.SupportsValue, "Value support"))
         {
             try
             {
-                Call(() => element.Patterns.Value.Pattern.SetValue(text), "SetValue");
+                UiCalls.Call(() => element.SetValue(text), "SetValue");
                 return $"set {refId} to {text.Length} chars";
             }
             catch (Exception error) when (error is TimeoutException or InvalidOperationException)
@@ -126,8 +117,8 @@ public sealed partial class WindowsDevice
             }
         }
 
-        Call(() => element.Focus(), "Focus");
-        Keyboard.Type(text);
+        UiCalls.Call(() => element.Focus(), "Focus");
+        input.Type(text);
         return $"typed {text.Length} chars";
     }
 
@@ -137,11 +128,11 @@ public sealed partial class WindowsDevice
         var fromY = message["fromY"]?.GetValue<int>() ?? 0;
         var toX = message["toX"]?.GetValue<int>() ?? 0;
         var toY = message["toY"]?.GetValue<int>() ?? 0;
-        Mouse.MoveTo(new System.Drawing.Point(fromX, fromY));
-        Mouse.Down(MouseButton.Left);
+        input.MoveTo(fromX, fromY);
+        input.MouseDown();
         Thread.Sleep(80);
-        Mouse.MoveTo(new System.Drawing.Point(toX, toY));
-        Mouse.Up(MouseButton.Left);
+        input.MoveTo(toX, toY);
+        input.MouseUp();
         return $"swiped {fromX},{fromY} -> {toX},{toY}";
     }
 
@@ -151,12 +142,10 @@ public sealed partial class WindowsDevice
         switch (key)
         {
             case "back":
-                Keyboard.Type(VirtualKeyShort.ESC);
+                input.PressBack();
                 return "pressed Escape (back)";
             case "home":
-                Keyboard.Press(VirtualKeyShort.LWIN);
-                Keyboard.Type(VirtualKeyShort.KEY_D);
-                Keyboard.Release(VirtualKeyShort.LWIN);
+                input.ShowDesktop();
                 return "showed the desktop (home)";
             default:
                 throw new InvalidOperationException($"unknown key {key}");

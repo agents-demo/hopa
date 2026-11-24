@@ -308,9 +308,10 @@ Not adopted, with reasons:
   (`Panes/RunRailView`, `Panes/ConversationsView`, `Panes/ChatView`).
   `ChatController` now owns send/select/create and the running flag; the window
   keeps lifecycle, chrome, tray, client and event routing.
-- `MainWindow.Checks.cs` is split by family: `MainWindow.Headless.cs` (turn and
-  list modes, screenshots), `MainWindow.Screenshots.cs` (W4/W6 and the controls)
-  and `MainWindow.Checks.cs` (engine and bridge checks).
+- `MainWindow` no longer carries the developer checks. `Hopa.Windows.Checks`
+  owns the windowless gates, `Hopa.Windows.DevTools` owns every `--…-check`,
+  W4/W6 and the screenshots, and the product keeps only `--turn`, `--list` and a
+  narrow harness API for the dev exe. An assembly test guards the split.
 - `MainWindow.Chat` is split into `MainWindow.Connection` (client, gateway,
   settings, bridge status) and `MainWindow.Chat` (refresh, select, send, new
   chat, keyboard). It is a readability split; behaviour is unchanged.
@@ -328,5 +329,13 @@ Not adopted, with reasons:
   on the parsed kind. Six tests cover the frame contract without a socket.
 - `EngineTransport` owns the NDJSON request/reply map, events and read loop over
   any two text streams; `EngineHostClient` keeps the process and stderr. Four
-  tests cover a reply by id, events, a malformed line and a timeout, so the
-  client suite is 89.
+  tests cover a reply by id, events, a malformed line and a timeout.
+- `WindowsDevice` is now a composition of `IUiTree`/`IUiNode`, `IInput`,
+  `IDesktopSession`, `IAppCatalog` and `IAppLauncher`. FlaUI, Win32, the shell and
+  the Start menu live in adapters; observation, refs and input have unit tests
+  against fakes, and a fake tree needs no interactive desktop.
+- `Hopa.Windows.IntegrationTests` runs the NDJSON transport against a real
+  fake-engine child process and `GatewayClient` against a loopback WebSocket
+  server, so the protocol is covered on the wire, not only through mocks.
+- The suites are **104 unit** (89 + 13 device + 2 separation) and **2 integration**
+  tests.

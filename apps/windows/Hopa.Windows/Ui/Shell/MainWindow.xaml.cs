@@ -14,7 +14,6 @@ using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 using System.Windows.Shell;
 using Hopa.Windows.Ui.Chat;
-using Hopa.Windows.Checks;
 using Hopa.Windows.Ui.Dialogs;
 using Hopa.Windows.Integrations.Device;
 using Hopa.Windows.Integrations.Engine;

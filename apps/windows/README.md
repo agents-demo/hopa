@@ -10,28 +10,38 @@ the Android program
 [parity](../../docs/project/plan/windows/parity.md), [ADR-0021](../../docs/design/decisions/0021-windows-client-stack.md)).
 
 ```
-Hopa.Windows/   WPF app: Ui (shell, panes, chat, dialogs), Integrations
-                (engine, gateway, voice, device), Host, Storage, Cli, Checks
-sidecar/        Kotlin engine host for packages/ (NDJSON over stdio)
-installer/      WiX MSI
+Hopa.Windows/               WPF app: Ui (shell, panes, chat, dialogs), Themes,
+                            Integrations (engine, gateway, voice, device), Host,
+                            Storage, Cli (--turn, --list)
+Hopa.Windows.Checks/        windowless developer gates (device, intent, voice)
+Hopa.Windows.DevTools/      dev WPF exe: every --…-check, W4/W6 and screenshots
+Hopa.Windows.Tests/         unit tests
+Hopa.Windows.IntegrationTests/  a real engine process and a loopback WebSocket
+Hopa.Windows.FakeEngine/    the tiny NDJSON host those integration tests start
+sidecar/                    Kotlin engine host for packages/ (NDJSON over stdio)
+installer/                  WiX MSI
 ```
 
 Inside `Hopa.Windows/`:
 
 | Folder | What the reader finds |
 |---|---|
-| `Ui/Shell/` | the main window, its parts, the tray and the placement |
+| `Ui/Shell/` | the main window, its parts, the tray, placement and the automation harness |
 | `Ui/Panes/` | the window's panes and their view models: rail, sidebar, chat |
 | `Ui/Chat/` | the rows and the mark a conversation is drawn from |
 | `Ui/Dialogs/` | approval, settings, rename, run details |
-| `Integrations/Engine/` | the Kotlin engine host: client, `IChatEngine`, process, turn result |
+| `Themes/` | the shared product styles, merged by the app and by DevTools |
+| `Integrations/Engine/` | the Kotlin engine host: client, transport, `IChatEngine`, process, turn result |
 | `Integrations/Gateway/` | the phone/backend link: credentials, pairing, socket |
 | `Integrations/Voice/` | microphone, bridge speech, WAV |
-| `Integrations/Device/` | this PC as a device: screen, input, apps, observation rules |
+| `Integrations/Device/` | this PC as a device: UI tree, input, desktop, apps, observation rules |
 | `Host/` | app coordination: `EngineSession`, `ChatController`, `ApprovalRouter`, `DeviceRequestRouter`, reports |
 | `Storage/` | settings and Windows Credential Manager |
-| `Cli/` | optional command-line modes |
-| `Checks/` | the developer checks behind the `--…-check` flags |
+| `Cli/` | the two product modes: `--turn` and `--list` |
+
+`Hopa.Windows.Checks` has no window; `Hopa.Windows.DevTools` owns the developer
+flags, the W4/W6 checks and the screenshots, so the shipped exe does not carry
+them.
 
 The C# app is the host; the loop, the gate and the records run in the Kotlin
 sidecar from `packages/` (ADR-0016, ADR-0021). There is no second brain. The
@@ -46,6 +56,12 @@ cd apps\android
 
 cd ..\windows\Hopa.Windows
 dotnet build -c Debug
+```
+
+The developer tools build against the product:
+
+```powershell
+dotnet build apps\windows\Hopa.Windows.DevTools -c Debug
 ```
 
 The app finds the sidecar at `sidecar/build/install/hopa-windows-sidecar/lib`;
@@ -93,7 +109,7 @@ The full first-run guide is
 The short version, after building the sidecar:
 
 ```powershell
-cd apps\windows\Hopa.Windows
+cd apps\windows\Hopa.Windows.DevTools
 New-Item -ItemType Directory -Force -Path "$env:TEMP\hopa-p2" | Out-Null
 dotnet run -c Debug -- --p2-check "$env:TEMP\hopa-p2\p2-check.txt"
 ```
@@ -111,6 +127,7 @@ dotnet run -c Debug -- --p2-wait "$env:TEMP\hopa-p2\uac.txt" 60 elevated    # ap
 
 ```powershell
 dotnet run -c Debug -- --p3-check "$env:TEMP\hopa-p3\check.txt"
+cd ..\Hopa.Windows
 dotnet run -c Debug -- --turn "open wifi settings" --out "$env:TEMP\hopa-p3\turn.txt"
 ```
 
@@ -130,6 +147,18 @@ or a late answer denies, never allows.
 The gateway flow is in `GatewayClient.cs`; the phone side is
 `RemoteApprovalRunner.kt`. The implementation record is
 [`docs/project/evidence/P4-phonelink.md`](../../docs/project/evidence/P4-phonelink.md).
+
+## Run the tests
+
+```powershell
+dotnet test apps\windows\Hopa.Windows.Tests -c Debug
+dotnet test apps\windows\Hopa.Windows.IntegrationTests -c Debug
+```
+
+The unit suite covers rules, rows, view models, approvals, settings, the CLI,
+the gateway frame contract, the NDJSON transport and the device ports through
+fakes. The integration suite starts a real engine child process and a loopback
+WebSocket server; it needs no interactive desktop.
 
 ## Rules
 

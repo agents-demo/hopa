@@ -61,7 +61,9 @@ internal sealed class EngineTransport
                 pending.Remove(id);
             }
 
-            throw new TimeoutException($"the sidecar did not answer {type} in {timeout.TotalSeconds:0} s");
+            throw new TimeoutException(
+                $"the sidecar did not answer {type} in {timeout.TotalSeconds:0} s" +
+                (loop is { IsFaulted: true } ? $"; read loop: {loop.Exception?.InnerException?.Message}" : ""));
         }
 
         return await completion.Task;

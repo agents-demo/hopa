@@ -108,7 +108,11 @@ Then the C# tests:
 ```powershell
 cd ..\windows\Hopa.Windows
 dotnet test ..\Hopa.Windows.Tests -c Debug
+dotnet test ..\Hopa.Windows.IntegrationTests -c Debug
 ```
+
+The second suite starts a fake engine process and a loopback WebSocket; it does
+not need an interactive desktop.
 
 Expected: **11 tests, 0 failures** (observation caps, hash, password rule,
 empty-tree rule).
@@ -119,7 +123,7 @@ This is the main check. It opens Notepad and Calculator, so keep the desktop
 free for about 30 seconds.
 
 ```powershell
-cd C:\work\hopa\apps\windows\Hopa.Windows
+cd C:\work\hopa\apps\windows\Hopa.Windows.DevTools
 New-Item -ItemType Directory -Force -Path "$env:TEMP\hopa-p2" | Out-Null
 dotnet run -c Debug -- --p2-check "$env:TEMP\hopa-p2\p2-check.txt"
 ```
@@ -242,7 +246,7 @@ desktop (which looks like the lock screen) and stops only when an approved,
 elevated window is in front:
 
 ```powershell
-cd C:\work\hopa\apps\windows\Hopa.Windows
+cd C:\work\hopa\apps\windows\Hopa.Windows.DevTools
 dotnet run -c Debug -- --p2-wait "$env:TEMP\hopa-p2\uac.txt" 60 elevated
 ```
 
@@ -336,7 +340,7 @@ Settings app, and records which path ran.
 ### 8.1 The host check
 
 ```powershell
-cd C:\work\hopa\apps\windows\Hopa.Windows
+cd C:\work\hopa\apps\windows\Hopa.Windows.DevTools
 New-Item -ItemType Directory -Force -Path "$env:TEMP\hopa-p3" | Out-Null
 dotnet run -c Debug -- --p3-check "$env:TEMP\hopa-p3\check.txt"
 Get-Content "$env:TEMP\hopa-p3\check.txt"
