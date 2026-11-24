@@ -1,6 +1,6 @@
 # Windows total parity plan (W7–W11)
 
-Status: **W7–W9 done. W10–W11 planned.** The product decision is
+Status: **W7–W9 done. W10 in progress; W11 planned.** The product decision is
 [ADR-0027](../../../design/decisions/0027-windows-semantic-parity.md): Windows is a
 full client with **semantic** parity against Android. Android remains the
 reference; the screen-by-screen matrix is [parity.md](parity.md).
@@ -129,16 +129,19 @@ The settings hub and the screens that read the shared data.
 Gate: every information row in `parity.md` has a working screen fed by real
 data, not a fixture.
 
-### W10. Action parity — planned
+### W10. Action parity — in progress
 
 The screens that change what HOPA does.
 
-- [ ] Easy/power modes. (evidence: screenshot + mode test)
+- [x] Easy/power modes change the shell: Easy, Kid and Social hide the run
+  rail; Everyday and Power keep it. (evidence: `MainWindow.Profile.cs`)
 - [ ] Run preferences and setup. (evidence: screenshot + persisted settings)
+- [x] How HOPA acts: a page with the real tier order and gate rules. (evidence:
+  `HowActsPage`)
+- [ ] Feed the How HOPA acts page live tier/selector data. (evidence: a selector
+  trace on the page)
 - [ ] Act hub with the this-PC / phone-handoff target chooser. (evidence:
   screenshot + both paths)
-- [ ] How HOPA acts: the tier/policy explanation. (evidence: screenshot +
-  selector test)
 - [ ] Browser pane with WebView2 and the shared browser contract. (evidence:
   screenshot + navigation test)
 - [ ] Takeover/signature P5. (evidence: form transcript + verified postcondition)

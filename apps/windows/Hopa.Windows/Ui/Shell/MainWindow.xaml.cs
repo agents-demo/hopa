@@ -96,6 +96,7 @@ public partial class MainWindow : Window
             _ = session?.DisposeAsync();
         };
         Loaded += async (_, _) => await ConnectAsync();
+        ApplyProfile();
     }
 
     [System.Runtime.InteropServices.DllImport("dwmapi.dll")]

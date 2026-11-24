@@ -613,6 +613,7 @@ public partial class SettingsWindow : Window
         SkillsPage.Visibility = tag == "skills" ? Visibility.Visible : Visibility.Collapsed;
         UsagePage.Visibility = tag == "usage" ? Visibility.Visible : Visibility.Collapsed;
         CapabilitiesPage.Visibility = tag == "capabilities" ? Visibility.Visible : Visibility.Collapsed;
+        HowActsPage.Visibility = tag == "howacts" ? Visibility.Visible : Visibility.Collapsed;
         RecipesPage.Visibility = tag == "recipes" ? Visibility.Visible : Visibility.Collapsed;
         HistoryPage.Visibility = tag == "history" ? Visibility.Visible : Visibility.Collapsed;
         PrivacyPage.Visibility = tag == "privacy" ? Visibility.Visible : Visibility.Collapsed;

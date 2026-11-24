@@ -43,6 +43,7 @@
                 <ListBoxItem Tag="skills" Content="Skills" />
                 <ListBoxItem Tag="usage" Content="Usage" />
                 <ListBoxItem Tag="capabilities" Content="Capabilities" />
+                <ListBoxItem Tag="howacts" Content="How HOPA acts" />
                 <ListBoxItem Tag="recipes" Content="Recipes" />
                 <ListBoxItem Tag="history" Content="History" />
                 <ListBoxItem Tag="privacy" Content="Privacy" />
@@ -163,6 +164,16 @@
                         <TextBlock x:Name="CapabilityText" FontSize="12" Foreground="#1C1B18"
                                    TextWrapping="Wrap" LineHeight="22" />
                         <TextBlock x:Name="CapabilityStatus" FontSize="10" Foreground="#6B665C" Margin="0,8,0,0" />
+                    </StackPanel>
+
+                    <StackPanel x:Name="HowActsPage" Visibility="Collapsed">
+                        <TextBlock Text="How HOPA acts" FontSize="15" FontWeight="SemiBold" Foreground="#1C1B18" />
+                        <TextBlock Text="The same gate and the same tiers on the PC." FontSize="11"
+                                   Foreground="#9A9488" Margin="0,4,0,12" />
+                        <TextBlock FontSize="12" Foreground="#1C1B18" TextWrapping="Wrap" LineHeight="22"
+                                   Text="Each action is classified first. HOPA then picks the cheapest tier that can do the job:&#10;&#10;1. API — a typed function or a known system call.&#10;2. Intent — a Windows URI or shell activation, before any click.&#10;3. UI Automation — the control's own pattern; a real click only when the pattern is absent.&#10;4. Input — the mouse or keyboard, used last.&#10;&#10;Every step records the tier it used. A payment or destructive action always asks first; a missing, late or malformed answer denies and executes nothing. The record chain names the tier, the verification and the device that approved." />
+                        <TextBlock Text="Profiles: Everyday and Power keep the run rail; Easy, Kid and Social hide it."
+                                   FontSize="11" Foreground="#6B665C" Margin="0,14,0,0" TextWrapping="Wrap" />
                     </StackPanel>
 
                     <StackPanel x:Name="RecipesPage" Visibility="Collapsed">

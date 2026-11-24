@@ -84,6 +84,7 @@ public partial class MainWindow : Window
         var dialog = new SettingsWindow(client, device) { Owner = this };
         if (dialog.ShowDialog() == true)
         {
+            ApplyProfile();
             await ApplySettingsAsync();
             if (session != null)
             {
