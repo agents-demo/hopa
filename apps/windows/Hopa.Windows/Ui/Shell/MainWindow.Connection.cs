@@ -81,7 +81,7 @@ public partial class MainWindow : Window
 
     private async Task OpenSettingsAsync()
     {
-        var dialog = new SettingsWindow { Owner = this };
+        var dialog = new SettingsWindow(client) { Owner = this };
         if (dialog.ShowDialog() == true)
         {
             await ApplySettingsAsync();

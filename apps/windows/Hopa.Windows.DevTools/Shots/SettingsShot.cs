@@ -11,7 +11,7 @@ internal static class SettingsShot
     {
         var tools = window.Tools;
         await tools.ConnectAsync();
-        var dialog = new SettingsWindow { Owner = window };
+        var dialog = new SettingsWindow(window.Tools.Engine) { Owner = window };
         dialog.Show();
         await Task.Delay(600);
         WindowScreenshot.Save(dialog, path);

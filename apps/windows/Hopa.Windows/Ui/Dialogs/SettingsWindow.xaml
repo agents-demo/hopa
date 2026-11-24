@@ -3,74 +3,192 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Settings"
         Icon="pack://application:,,,/Hopa.Windows;component/Assets/hopa.ico"
-        Height="760" Width="580"
+        Height="760" Width="900"
         Background="#F7F4EE"
         WindowStartupLocation="CenterOwner"
         WindowStyle="None"
-        ResizeMode="NoResize">
-    <Grid Margin="22">
+        ResizeMode="CanResize">
+    <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" Background="#F7F4EE" Margin="-22,-22,-22,0" Padding="22,14"
-                MouseLeftButtonDown="Header_Drag">
+        <Border Grid.Row="0" Background="#F7F4EE" BorderBrush="#E9E4DA" BorderThickness="0,0,0,1"
+                Padding="22,14" MouseLeftButtonDown="Header_Drag">
             <Grid>
-                <TextBlock Text="Settings" FontSize="15" FontWeight="SemiBold" Foreground="#1C1B18" />
+                <TextBlock Text="Settings" FontSize="15" FontWeight="SemiBold" Foreground="#1C1B18"
+                           VerticalAlignment="Center" />
+                <TextBox x:Name="SettingsSearch" Width="230" Height="28" HorizontalAlignment="Right"
+                         Margin="0,0,44,0" ToolTip="Search settings"
+                         TextChanged="SettingsSearch_TextChanged" />
                 <Button Content="&#x2715;" HorizontalAlignment="Right" Width="30" Height="28"
                         Background="Transparent" BorderThickness="0" Foreground="#6B665C"
                         Click="Close_Click" AutomationProperties.Name="Close settings" />
             </Grid>
         </Border>
 
-        <ScrollViewer Grid.Row="2" Margin="0,16,0,0" VerticalScrollBarVisibility="Auto">
-        <StackPanel>
-            <TextBlock Text="Phone link (backend gateway)" FontSize="11.5" Foreground="#6B665C" />
-            <TextBox x:Name="GatewayLinkBox" Height="32" Margin="0,4,0,0"
-                     ToolTip="Paste the hopa://pair?... link the backend printed for this PC." />
-            <TextBlock Text="Paste the hopa://pair link for this PC, then pair once."
-                       FontSize="9.5" Foreground="#9A9488" Margin="0,3,0,6" />
-            <Button x:Name="PairGatewayButton" Content="Pair this PC" Width="120" Height="32"
-                    HorizontalAlignment="Left" Click="PairGateway_Click" />
-            <TextBlock x:Name="GatewayStatusText" FontSize="10" Foreground="#6B665C"
-                       Margin="0,4,0,12" TextWrapping="Wrap" />
+        <Grid Grid.Row="1" Margin="22,16,22,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="190" />
+                <ColumnDefinition Width="1" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
 
-            <TextBlock Text="Bridge" FontSize="11.5" Foreground="#6B665C" />
-            <TextBox x:Name="BridgeUrlBox" Height="32" Margin="0,4,0,0" />
-            <TextBlock Text="Bridge address, e.g. http://127.0.0.1:8901" FontSize="9.5"
-                       Foreground="#9A9488" Margin="0,3,0,8" />
-            <TextBlock Text="Bridge token" FontSize="11.5" Foreground="#6B665C" />
-            <PasswordBox x:Name="BridgeTokenBox" Height="32" Margin="0,4,0,8" />
-            <CheckBox x:Name="UseBridgeBox" Content="Use the bridge as the device target"
-                      Foreground="#1C1B18" Margin="0,0,0,12" />
+            <ListBox x:Name="SettingsNav" SelectionChanged="SettingsNav_SelectionChanged">
+                <ListBoxItem Tag="general" Content="General" />
+                <ListBoxItem Tag="profiles" Content="Profiles" />
+                <ListBoxItem Tag="memory" Content="Memory" />
+                <ListBoxItem Tag="skills" Content="Skills" />
+                <ListBoxItem Tag="usage" Content="Usage" />
+                <ListBoxItem Tag="capabilities" Content="Capabilities" />
+                <ListBoxItem Tag="recipes" Content="Recipes" />
+                <ListBoxItem Tag="history" Content="History" />
+            </ListBox>
 
-            <TextBlock Text="Model" FontSize="11.5" Foreground="#6B665C" />
-            <ComboBox x:Name="ProviderBox" Height="32" Margin="0,4,0,8">
-                <ComboBoxItem Content="openai" />
-                <ComboBoxItem Content="lan" />
-            </ComboBox>
-            <TextBlock Text="Base URL" FontSize="11.5" Foreground="#6B665C" />
-            <TextBox x:Name="BaseUrlBox" Height="32" Margin="0,4,0,8" />
-            <TextBlock Text="Model name" FontSize="11.5" Foreground="#6B665C" />
-            <TextBox x:Name="ModelNameBox" Height="32" Margin="0,4,0,8" />
-            <TextBlock Text="Model key (stored in Windows Credential Manager)" FontSize="11.5"
-                       Foreground="#6B665C" />
-            <PasswordBox x:Name="ModelKeyBox" Height="32" Margin="0,4,0,12" />
+            <Border Grid.Column="1" Background="#E9E4DA" Margin="12,0" />
 
-            <TextBlock Text="Tone" FontSize="11.5" Foreground="#6B665C" />
-            <ComboBox x:Name="ToneBox" Height="32" Margin="0,4,0,0">
-                <ComboBoxItem Content="warm" />
-                <ComboBoxItem Content="neutral" />
-                <ComboBoxItem Content="brief" />
-            </ComboBox>
-        </StackPanel>
-        </ScrollViewer>
+            <ScrollViewer Grid.Column="2" Margin="16,0,0,0" VerticalScrollBarVisibility="Auto">
+                <Grid>
+                    <StackPanel x:Name="GeneralPage">
+                        <TextBlock Text="Phone link (backend gateway)" FontSize="11.5" Foreground="#6B665C" />
+                        <TextBox x:Name="GatewayLinkBox" Height="32" Margin="0,4,0,0"
+                                 ToolTip="Paste the hopa://pair?... link the backend printed for this PC." />
+                        <TextBlock Text="Paste the hopa://pair link for this PC, then pair once."
+                                   FontSize="9.5" Foreground="#9A9488" Margin="0,3,0,6" />
+                        <Button x:Name="PairGatewayButton" Content="Pair this PC" Width="120" Height="32"
+                                HorizontalAlignment="Left" Click="PairGateway_Click" />
+                        <TextBlock x:Name="GatewayStatusText" FontSize="10" Foreground="#6B665C"
+                                   Margin="0,4,0,12" TextWrapping="Wrap" />
 
-        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right"
-                    Margin="0,16,0,0">
+                        <TextBlock Text="Bridge" FontSize="11.5" Foreground="#6B665C" />
+                        <TextBox x:Name="BridgeUrlBox" Height="32" Margin="0,4,0,0" />
+                        <TextBlock Text="Bridge address, e.g. http://127.0.0.1:8901" FontSize="9.5"
+                                   Foreground="#9A9488" Margin="0,3,0,8" />
+                        <TextBlock Text="Bridge token" FontSize="11.5" Foreground="#6B665C" />
+                        <PasswordBox x:Name="BridgeTokenBox" Height="32" Margin="0,4,0,8" />
+                        <CheckBox x:Name="UseBridgeBox" Content="Use the bridge as the device target"
+                                  Foreground="#1C1B18" Margin="0,0,0,12" />
+
+                        <TextBlock Text="Model" FontSize="11.5" Foreground="#6B665C" />
+                        <ComboBox x:Name="ProviderBox" Height="32" Margin="0,4,0,8">
+                            <ComboBoxItem Content="openai" />
+                            <ComboBoxItem Content="lan" />
+                        </ComboBox>
+                        <TextBlock Text="Base URL" FontSize="11.5" Foreground="#6B665C" />
+                        <TextBox x:Name="BaseUrlBox" Height="32" Margin="0,4,0,8" />
+                        <TextBlock Text="Model name" FontSize="11.5" Foreground="#6B665C" />
+                        <TextBox x:Name="ModelNameBox" Height="32" Margin="0,4,0,8" />
+                        <TextBlock Text="Model key (stored in Windows Credential Manager)" FontSize="11.5"
+                                   Foreground="#6B665C" />
+                        <PasswordBox x:Name="ModelKeyBox" Height="32" Margin="0,4,0,12" />
+
+                        <TextBlock Text="Tone" FontSize="11.5" Foreground="#6B665C" />
+                        <ComboBox x:Name="ToneBox" Height="32" Margin="0,4,0,0">
+                            <ComboBoxItem Content="warm" />
+                            <ComboBoxItem Content="neutral" />
+                            <ComboBoxItem Content="brief" />
+                        </ComboBox>
+                    </StackPanel>
+
+                    <StackPanel x:Name="ProfilesPage" Visibility="Collapsed">
+                        <TextBlock Text="Profiles" FontSize="15" FontWeight="SemiBold" Foreground="#1C1B18" />
+                        <TextBlock Text="Choose the shell HOPA uses." FontSize="11" Foreground="#9A9488"
+                                   Margin="0,4,0,12" />
+                        <ListBox x:Name="ProfileList" Height="220" />
+                        <TextBlock x:Name="ProfileStatus" FontSize="10" Foreground="#6B665C"
+                                   Margin="0,8,0,0" />
+                    </StackPanel>
+
+                    <StackPanel x:Name="MemoryPage" Visibility="Collapsed">
+                        <TextBlock Text="Memory" FontSize="15" FontWeight="SemiBold" Foreground="#1C1B18" />
+                        <TextBlock Text="Facts HOPA keeps and sends with each turn."
+                                   FontSize="11" Foreground="#9A9488" Margin="0,4,0,12" />
+                        <ListBox x:Name="MemoryList" Height="240" />
+                        <TextBox x:Name="MemoryTextBox" Height="32" Margin="0,10,0,0"
+                                 ToolTip="A fact to remember" />
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <Button x:Name="MemoryAddButton" Content="Remember" Width="110" Height="32"
+                                    Click="MemoryAdd_Click" />
+                            <Button x:Name="MemoryDeleteButton" Content="Forget selected" Width="130" Height="32"
+                                    Margin="8,0,0,0" Click="MemoryDelete_Click" />
+                        </StackPanel>
+                        <TextBlock x:Name="MemoryStatus" FontSize="10" Foreground="#6B665C"
+                                   Margin="0,8,0,0" TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <StackPanel x:Name="SkillsPage" Visibility="Collapsed">
+                        <TextBlock Text="Skills" FontSize="15" FontWeight="SemiBold" Foreground="#1C1B18" />
+                        <TextBlock Text="Triggers the user taught HOPA." FontSize="11" Foreground="#9A9488"
+                                   Margin="0,4,0,12" />
+                        <ListBox x:Name="SkillList" Height="220" />
+                        <TextBox x:Name="SkillTriggerBox" Height="32" Margin="0,10,0,0"
+                                 ToolTip="Trigger phrase" />
+                        <TextBox x:Name="SkillActionBox" Height="32" Margin="0,8,0,0"
+                                 ToolTip="Action to run" />
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <Button x:Name="SkillAddButton" Content="Teach" Width="110" Height="32"
+                                    Click="SkillAdd_Click" />
+                            <Button x:Name="SkillDeleteButton" Content="Forget selected" Width="130" Height="32"
+                                    Margin="8,0,0,0" Click="SkillDelete_Click" />
+                        </StackPanel>
+                        <TextBlock x:Name="SkillStatus" FontSize="10" Foreground="#6B665C"
+                                   Margin="0,8,0,0" TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <StackPanel x:Name="UsagePage" Visibility="Collapsed">
+                        <TextBlock Text="Usage" FontSize="15" FontWeight="SemiBold" Foreground="#1C1B18" />
+                        <TextBlock Text="Counters from the Windows record chain." FontSize="11"
+                                   Foreground="#9A9488" Margin="0,4,0,12" />
+                        <TextBlock x:Name="UsageTotal" FontSize="12" Foreground="#1C1B18" />
+                        <TextBlock x:Name="UsageExecuted" FontSize="12" Foreground="#1C1B18" Margin="0,4,0,0" />
+                        <TextBlock x:Name="UsageFailed" FontSize="12" Foreground="#1C1B18" Margin="0,4,0,0" />
+                        <TextBlock x:Name="UsagePayments" FontSize="12" Foreground="#1C1B18" Margin="0,4,0,0" />
+                        <TextBlock x:Name="UsageWeek" FontSize="12" Foreground="#1C1B18" Margin="0,4,0,0" />
+                        <TextBlock Text="Top actions" FontSize="11" Foreground="#6B665C" Margin="0,14,0,4" />
+                        <TextBlock x:Name="UsageTop" FontSize="11" Foreground="#1C1B18" TextWrapping="Wrap" />
+                        <TextBlock x:Name="UsageStatus" FontSize="10" Foreground="#6B665C" Margin="0,8,0,0" />
+                    </StackPanel>
+
+                    <StackPanel x:Name="CapabilitiesPage" Visibility="Collapsed">
+                        <TextBlock Text="Capabilities" FontSize="15" FontWeight="SemiBold" Foreground="#1C1B18" />
+                        <TextBlock Text="What this PC can actually do right now." FontSize="11"
+                                   Foreground="#9A9488" Margin="0,4,0,12" />
+                        <TextBlock x:Name="CapabilityText" FontSize="12" Foreground="#1C1B18"
+                                   TextWrapping="Wrap" LineHeight="22" />
+                        <TextBlock x:Name="CapabilityStatus" FontSize="10" Foreground="#6B665C" Margin="0,8,0,0" />
+                    </StackPanel>
+
+                    <StackPanel x:Name="RecipesPage" Visibility="Collapsed">
+                        <TextBlock Text="Recipes" FontSize="15" FontWeight="SemiBold" Foreground="#1C1B18" />
+                        <TextBlock Text="Goals HOPA can replay without the model."
+                                   FontSize="11" Foreground="#9A9488" Margin="0,4,0,12" />
+                        <ListBox x:Name="RecipeList" Height="260" />
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <Button x:Name="RecipeDeleteButton" Content="Delete selected" Width="130" Height="32"
+                                    Click="RecipeDelete_Click" />
+                            <Button x:Name="RecipeClearButton" Content="Clear all" Width="100" Height="32"
+                                    Margin="8,0,0,0" Click="RecipeClear_Click" />
+                        </StackPanel>
+                        <TextBlock x:Name="RecipeStatus" FontSize="10" Foreground="#6B665C" Margin="0,8,0,0" />
+                    </StackPanel>
+
+                    <StackPanel x:Name="HistoryPage" Visibility="Collapsed">
+                        <TextBlock Text="History" FontSize="15" FontWeight="SemiBold" Foreground="#1C1B18" />
+                        <TextBlock Text="Finished turns on this PC." FontSize="11" Foreground="#9A9488"
+                                   Margin="0,4,0,12" />
+                        <ListBox x:Name="HistoryList" Height="320" />
+                        <Button x:Name="HistoryRefreshButton" Content="Refresh" Width="100" Height="32"
+                                HorizontalAlignment="Left" Margin="0,8,0,0" Click="HistoryRefresh_Click" />
+                        <TextBlock x:Name="HistoryStatus" FontSize="10" Foreground="#6B665C" Margin="0,8,0,0" />
+                    </StackPanel>
+                </Grid>
+            </ScrollViewer>
+        </Grid>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right"
+                    Margin="22,16,22,18">
             <Button x:Name="CancelButton" Content="Cancel" Width="96" Height="34"
                     Margin="0,0,8,0" IsCancel="True" />
             <Button x:Name="SaveButton" Content="Save" Width="96" Height="34"
@@ -79,4 +197,3 @@
         </StackPanel>
     </Grid>
 </Window>
-

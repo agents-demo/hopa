@@ -1,6 +1,6 @@
 # Windows total parity plan (W7–W11)
 
-Status: **W7–W8 done. W9 next; W10–W11 planned.** The product decision is
+Status: **W7–W8 done. W9 in progress; W10–W11 planned.** The product decision is
 [ADR-0027](../../../design/decisions/0027-windows-semantic-parity.md): Windows is a
 full client with **semantic** parity against Android. Android remains the
 reference; the screen-by-screen matrix is [parity.md](parity.md).
@@ -101,20 +101,20 @@ Build the data path before the screens.
 Gate: the Windows sidecar can list, read and mutate each parity data family
 without Android code or a second store implementation.
 
-### W9. Information surfaces — planned
+### W9. Information surfaces — in progress
 
 The settings hub and the screens that read the shared data.
 
-- [ ] A settings hub with search and subpages replaces the single settings
-  dialog. (evidence: screenshot + keyboard check)
+- [x] A settings hub with search and subpages replaces the single settings
+  dialog. (evidence: `SettingsWindow.xaml`; the DevTools settings shot)
 - [ ] Activity/history timeline and run history. (evidence: screenshot + data
   test)
-- [ ] Memory screen. (evidence: screenshot + round-trip test)
-- [ ] Skills screen. (evidence: screenshot + round-trip test)
-- [ ] Profiles/workspaces screen. (evidence: screenshot + switch test)
-- [ ] Usage screen. (evidence: screenshot + aggregation test)
-- [ ] Recipes screen. (evidence: screenshot + apply test)
-- [ ] Capabilities screen. (evidence: screenshot + capability probe)
+- [x] Memory screen. (evidence: `MemoryPage`; `EngineDataTests`)
+- [x] Skills screen. (evidence: `SkillsPage`; `EngineDataTests`)
+- [x] Profiles/workspaces screen. (evidence: `ProfilesPage`; `EngineDataTests`)
+- [x] Usage screen. (evidence: `UsagePage`; `RecordStatsTest`)
+- [x] Recipes screen. (evidence: `RecipesPage`; `EngineDataTests`)
+- [x] Capabilities screen. (evidence: `CapabilitiesPage`; `EngineDataTests`)
 - [ ] Privacy: "what left this PC". (evidence: screenshot + record sample)
 - [ ] Self check. (evidence: screenshot + check transcript)
 - [ ] Notification center and toast history. (evidence: screenshot + delivery test)
