@@ -186,7 +186,10 @@ Prove the matrix instead of asserting it.
 - [ ] The desktop CI job runs the parity smoke: launch, observe, approve,
   settings, memory/skills/usage read, notification, screenshot. (evidence:
   `windows-desktop.yml` run)
-- [ ] Contract tests cover every sidecar family from W8. (evidence: test log)
+- [x] Contract tests cover every sidecar family from W8. (evidence:
+  `ProtocolFamilyTest` enumerates every envelope; `DataProtocolTest`,
+  `ProtocolTest`, `HostBrowserTest` and the handler/store suites cover payloads
+  and refusals)
 - [ ] No screen text or secrets in logs, screenshots or crash dumps. (evidence:
   grep + review)
 - [ ] The signed MSI installs on a clean VM and passes the same smoke. (evidence:
