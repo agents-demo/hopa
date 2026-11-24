@@ -210,7 +210,11 @@ Gate: a signed MSI on a clean VM, with both targets working.
 
 ### Parity phases (W7–W11)
 
-The total-parity work is a separate phase set after P0–P6. W7 makes the contract
+The 2026 engineering modernization proposal is
+[windows-2026.md](../modernization/windows-2026.md); it changes foundations, not
+product behaviour.
+
+The total-parity work is a separate phase set after P0-P6. W7 makes the contract
 reviewable; W8 builds the shared data and protocol path; W9–W10 add the
 information and action surfaces; W11 proves the matrix. Details, checkboxes and
 evidence rules are in [total-parity.md](total-parity.md).
