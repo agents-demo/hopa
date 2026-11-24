@@ -36,6 +36,14 @@ class RecordStore(path: Path) {
 
     fun count(): Int = turns.size
 
+    /** The turns in append order; the parity history and usage screens read this. */
+    fun all(): List<JsonObject> = turns.toList()
+
+    fun clear() {
+        turns.clear()
+        runCatching { Files.deleteIfExists(file) }
+    }
+
     private fun load(): MutableList<JsonObject> {
         if (!Files.exists(file)) {
             return mutableListOf()

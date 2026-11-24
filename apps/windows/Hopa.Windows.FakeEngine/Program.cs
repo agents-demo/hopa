@@ -4,6 +4,7 @@ using System.Text.Json.Nodes;
 // on shutdown. It is not the real sidecar; it only proves the wire.
 var memory = new List<string>();
 var skills = new List<(string Trigger, string Action)>();
+var recipes = new List<(string Goal, string App)> { ("open mail", "mail") };
 
 string? line;
 while ((line = Console.In.ReadLine()) != null)
@@ -92,6 +93,51 @@ while ((line = Console.In.ReadLine()) != null)
             reply["ok"] = true;
             reply["items"] = SkillItems(skills);
             break;
+        case "history.list":
+            reply["ok"] = true;
+            reply["items"] = new JsonArray
+            {
+                new JsonObject
+                {
+                    ["conversationId"] = "c1",
+                    ["title"] = "Say hello",
+                    ["runId"] = "run-1",
+                    ["createdAt"] = 123,
+                    ["steps"] = 2,
+                    ["executed"] = 1,
+                    ["failed"] = 1,
+                },
+            };
+            break;
+        case "usage.summary":
+            reply["ok"] = true;
+            reply["total"] = 2;
+            reply["executed"] = 1;
+            reply["failed"] = 1;
+            reply["payments"] = 0;
+            reply["lastSevenDays"] = 2;
+            reply["topActions"] = new JsonArray
+            {
+                new JsonObject { ["kind"] = "ui.tap", ["count"] = 1 },
+                new JsonObject { ["kind"] = "ui.type", ["count"] = 1 },
+            };
+            break;
+        case "recipes.list":
+            reply["ok"] = true;
+            reply["items"] = RecipeItems(recipes);
+            break;
+        case "recipes.delete":
+            recipes.RemoveAll(recipe => recipe.Goal == (message?["goal"]?.GetValue<string>() ?? ""));
+            reply["type"] = "recipes.list";
+            reply["ok"] = true;
+            reply["items"] = RecipeItems(recipes);
+            break;
+        case "recipes.clear":
+            recipes.Clear();
+            reply["type"] = "recipes.list";
+            reply["ok"] = true;
+            reply["items"] = RecipeItems(recipes);
+            break;
         default:
             reply["answer"] = "hello";
             reply["conversationId"] = "c1";
@@ -119,6 +165,26 @@ static JsonArray SkillItems(IEnumerable<(string Trigger, string Action)> values)
     foreach (var (trigger, action) in values)
     {
         array.Add(new JsonObject { ["trigger"] = trigger, ["action"] = action });
+    }
+
+    return array;
+}
+
+static JsonArray RecipeItems(IEnumerable<(string Goal, string App)> values)
+{
+    var array = new JsonArray();
+    foreach (var (goal, app) in values)
+    {
+        array.Add(new JsonObject
+        {
+            ["goal"] = goal,
+            ["app"] = app,
+            ["steps"] = 2,
+            ["at"] = 123,
+            ["replayable"] = true,
+            ["screenHash"] = "sha256:before",
+            ["endHash"] = "sha256:after",
+        });
     }
 
     return array;

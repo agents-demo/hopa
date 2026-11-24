@@ -32,6 +32,11 @@ memory/skill families as additive v1 messages.
 | `skills.add` | `id`, `trigger`, `action` | teach one pair; replies with the new list |
 | `skills.delete` | `id`, `trigger` | forget one trigger; replies with the new list |
 | `skills.clear` | `id` | forget all skills; replies with the new list |
+| `history.list` | `id` | finished turns, flattened for the history screen |
+| `usage.summary` | `id` | counters computed from the record chain |
+| `recipes.list` | `id` | saved repetitions |
+| `recipes.delete` | `id`, `goal` | forget one repetition; replies with the new list |
+| `recipes.clear` | `id` | forget all repetitions; replies with the new list |
 | `conversations.list` | `id`, `includeArchived?` | list conversations |
 | `conversation.create` | `id` | create an empty conversation |
 | `conversation.open` | `id`, `conversationId` | read one conversation |
@@ -64,6 +69,10 @@ memory/skill families as additive v1 messages.
 | `memory.list` | `id`, `ok`, `items:[string]` | the memory facts; also the reply to add/delete/clear |
 | `skills.list` | `id`, `ok`, `items:[{trigger, action}]` | the learned pairs; also the reply to add/delete/clear |
 | `memory.error` / `skills.error` | `id`, `ok:false`, `code`, `error` | a malformed or unsupported memory/skill request |
+| `history.list` | `id`, `ok`, `items:[{conversationId,title,runId,createdAt,steps,executed,failed}]` | finished turns |
+| `usage.summary` | `id`, `ok`, `total`, `executed`, `failed`, `payments`, `lastSevenDays`, `topActions:[{kind,count}]` | usage counters |
+| `recipes.list` | `id`, `ok`, `items:[{goal,app,steps,at,replayable,screenHash,endHash}]` | saved repetitions; also the reply to delete/clear |
+| `history.error` / `usage.error` / `recipes.error` | `id`, `ok:false`, `code`, `error` | a refused read or mutation |
 | `file.attached` | `id`, `attachment?`, `error?` | the attachment was accepted or refused |
 | `file.removed` | `id`, `ok` | the pending attachment was dropped |
 | `task.*` | echo `id` plus the task payload | replies to the task messages above |
@@ -100,6 +109,10 @@ The sidecar stores memory facts in `memory.json` and trigger → action pairs in
 turn passes the current text in `TurnContext.memory` and `TurnContext.skills`;
 the host never needs to resend them. Facts and triggers are user content: log
 counts, not their text.
+
+`history.list` and `usage.summary` are projections over `records.json`;
+`recipes.list` reads the shared `RecipeStore`. All three are read-only except
+the recipe delete/clear commands. None of them writes a second copy of the data.
 
 ## Approval rules
 

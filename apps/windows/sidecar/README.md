@@ -30,6 +30,9 @@ graph live in `core/`.
 | `file.attach`, `file.remove` | `FileHandler` |
 | `memory.*` | `MemoryHandler` |
 | `skills.*` | `SkillHandler` |
+| `history.list` | `HistoryHandler` |
+| `usage.summary` | `UsageHandler` |
+| `recipes.*` | `RecipesHandler` |
 | `configure` | `ConfigHandler` |
 | `task.*` | `TaskHandler` |
 | `device.result`, `gateway.state` | `DeviceHandler` |

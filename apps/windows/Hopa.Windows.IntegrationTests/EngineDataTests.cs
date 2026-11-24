@@ -46,6 +46,42 @@ public sealed class EngineDataTests
     }
 
     [Fact]
+    public async Task HistoryAndUsageComeFromTheRecordStore()
+    {
+        await using var host = FakeEngineProcess.Start();
+        await using var client = new EngineHostClient(host.Transport);
+
+        var history = await client.ListHistoryAsync();
+        var entry = Assert.Single(history);
+        Assert.Equal("Say hello", entry.Title);
+        Assert.Equal(2, entry.Steps);
+        Assert.Equal(1, entry.Executed);
+        Assert.Equal(1, entry.Failed);
+
+        var usage = await client.UsageAsync();
+        Assert.Equal(2, usage.Total);
+        Assert.Equal(1, usage.Executed);
+        Assert.Equal(1, usage.Failed);
+        Assert.Equal(2, usage.TopActions.Count);
+        Assert.Equal("ui.tap", usage.TopActions[0].Kind);
+    }
+
+    [Fact]
+    public async Task RecipesListAndDelete()
+    {
+        await using var host = FakeEngineProcess.Start();
+        await using var client = new EngineHostClient(host.Transport);
+
+        var recipes = await client.ListRecipesAsync();
+        var recipe = Assert.Single(recipes);
+        Assert.Equal("open mail", recipe.Goal);
+        Assert.True(recipe.Replayable);
+
+        var deleted = await client.DeleteRecipeAsync("open mail");
+        Assert.Empty(deleted);
+    }
+
+    [Fact]
     public async Task AMalformedMemoryAddIsAnError()
     {
         await using var host = FakeEngineProcess.Start();

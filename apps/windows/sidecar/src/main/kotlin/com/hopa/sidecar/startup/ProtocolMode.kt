@@ -17,9 +17,12 @@ import com.hopa.sidecar.protocol.handler.ConfigHandler
 import com.hopa.sidecar.protocol.handler.ConversationHandler
 import com.hopa.sidecar.protocol.handler.DeviceHandler
 import com.hopa.sidecar.protocol.handler.FileHandler
+import com.hopa.sidecar.protocol.handler.HistoryHandler
 import com.hopa.sidecar.protocol.handler.MemoryHandler
+import com.hopa.sidecar.protocol.handler.RecipesHandler
 import com.hopa.sidecar.protocol.handler.SkillHandler
 import com.hopa.sidecar.protocol.handler.TaskHandler
+import com.hopa.sidecar.protocol.handler.UsageHandler
 import com.hopa.sidecar.protocol.handler.TurnHandler
 import com.hopa.sidecar.store.Attachments
 import com.hopa.sidecar.store.ChatStore
@@ -28,6 +31,7 @@ import com.hopa.sidecar.store.PendingApprovals
 import com.hopa.sidecar.store.RecordStore
 import com.hopa.sidecar.store.SkillFileStore
 import com.hopa.sidecar.store.TaskStore
+import com.hopa.agent.recipe.RecipeStore
 import com.hopa.sidecar.protocol.Stdio
 import com.hopa.sidecar.turn.RuntimeConfig
 import java.nio.file.Files
@@ -50,6 +54,7 @@ internal fun runProtocol(options: CliOptions) {
     val records = RecordStore(dataDir.resolve("records.json"))
     val memory = MemoryFileStore(dataDir.resolve("memory.json"))
     val skills = SkillFileStore(dataDir.resolve("skills.json"))
+    val recipes = RecipeStore(dataDir.resolve("recipes.txt").toFile())
     val config = RuntimeConfig()
     val approval = HostApproval(io, approvals)
     val attachments = Attachments(dataDir.resolve("attachments"))
@@ -129,6 +134,9 @@ internal fun runProtocol(options: CliOptions) {
             FileHandler(io, attachments),
             MemoryHandler(io, memory),
             SkillHandler(io, skills),
+            HistoryHandler(io, records, store),
+            UsageHandler(io, records),
+            RecipesHandler(io, recipes),
             ConfigHandler(io, config),
             TaskHandler(io, tasks),
             DeviceHandler(io, device, config),

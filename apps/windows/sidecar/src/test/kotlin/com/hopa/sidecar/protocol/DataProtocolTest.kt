@@ -41,6 +41,34 @@ class DataProtocolTest {
     }
 
     @Test
+    fun history_usage_and_recipes_have_stable_shapes() {
+        val history = Protocol.historyList("h-1", listOf(
+            com.hopa.sidecar.store.HistoryEntry("c1", "Say hello", "run-1", 123, 2, 1, 1),
+        ))
+        assertEquals("history.list", history.text("type"))
+        assertTrue(history["items"].toString().contains("\"steps\":2"))
+
+        val usage = Protocol.usageSummary("u-1", com.hopa.sidecar.store.UsageStats(
+            total = 2, executed = 1, failed = 1, payments = 0, lastSevenDays = 2,
+            topActions = listOf("ui.tap" to 1),
+        ))
+        assertEquals("usage.summary", usage.text("type"))
+        assertTrue(usage["topActions"].toString().contains("\"kind\":\"ui.tap\""))
+
+        val recipes = Protocol.recipeList("r-1", listOf(
+            com.hopa.agent.recipe.Recipe(
+                goal = "open mail",
+                steps = emptyList(),
+                at = 123,
+                screenHash = "sha256:before",
+                endHash = "sha256:after",
+            ),
+        ))
+        assertEquals("recipes.list", recipes.text("type"))
+        assertTrue(recipes["items"].toString().contains("\"goal\":\"open mail\""))
+    }
+
+    @Test
     fun the_memory_handler_adds_deletes_and_returns_the_new_list() {
         val file = Files.createTempDirectory("hopa-memory-handler").resolve("memory.json")
         val handler = MemoryHandler(Stdio(), MemoryFileStore(file))

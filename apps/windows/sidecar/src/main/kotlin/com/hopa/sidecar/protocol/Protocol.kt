@@ -15,6 +15,9 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import com.hopa.sidecar.turn.TurnOutcome
 import com.hopa.sidecar.store.HandoffTask
+import com.hopa.sidecar.store.HistoryEntry
+import com.hopa.sidecar.store.UsageStats
+import com.hopa.agent.recipe.Recipe
 import com.hopa.stores.Skill
 
 /** The NDJSON messages between the .NET host and this sidecar. */
@@ -263,6 +266,63 @@ object Protocol {
         put("ok", false)
         put("code", code)
         put("error", error)
+    }
+
+    fun historyList(id: String, entries: List<HistoryEntry>): JsonObject = buildJsonObject {
+        put("type", "history.list")
+        put("id", id)
+        put("ok", true)
+        put("items", buildJsonArray {
+            entries.forEach { entry ->
+                add(buildJsonObject {
+                    put("conversationId", entry.conversationId)
+                    put("title", entry.title)
+                    put("runId", entry.runId)
+                    put("createdAt", entry.createdAt)
+                    put("steps", entry.steps)
+                    put("executed", entry.executed)
+                    put("failed", entry.failed)
+                })
+            }
+        })
+    }
+
+    fun usageSummary(id: String, stats: UsageStats): JsonObject = buildJsonObject {
+        put("type", "usage.summary")
+        put("id", id)
+        put("ok", true)
+        put("total", stats.total)
+        put("executed", stats.executed)
+        put("failed", stats.failed)
+        put("payments", stats.payments)
+        put("lastSevenDays", stats.lastSevenDays)
+        put("topActions", buildJsonArray {
+            stats.topActions.forEach { (kind, count) ->
+                add(buildJsonObject {
+                    put("kind", kind)
+                    put("count", count)
+                })
+            }
+        })
+    }
+
+    fun recipeList(id: String, recipes: List<Recipe>): JsonObject = buildJsonObject {
+        put("type", "recipes.list")
+        put("id", id)
+        put("ok", true)
+        put("items", buildJsonArray {
+            recipes.forEach { recipe ->
+                add(buildJsonObject {
+                    put("goal", recipe.goal)
+                    put("app", recipe.app)
+                    put("steps", recipe.steps.size)
+                    put("at", recipe.at)
+                    put("replayable", recipe.replayable)
+                    put("screenHash", recipe.screenHash)
+                    put("endHash", recipe.endHash)
+                })
+            }
+        })
     }
 
     fun conversationExported(id: String, conversation: Conversation?): JsonObject = buildJsonObject {
