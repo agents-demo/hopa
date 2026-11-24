@@ -40,6 +40,18 @@ internal static class UiCalls
             return true;
         }, what, timeout);
 
-    public static T Property<T>(Func<T> read, T fallback) =>
-        Call(read, "a property read", PropertyTimeout) is { } value ? value : fallback;
+    public static T Property<T>(Func<T> read, T fallback)
+    {
+        // A property read has a fallback by design: one slow or dead provider
+        // must not lose the whole observation. Actions still raise; callers
+        // depend on their refusal.
+        try
+        {
+            return Call(read, "a property read", PropertyTimeout) is { } value ? value : fallback;
+        }
+        catch (Exception error) when (error is TimeoutException or InvalidOperationException)
+        {
+            return fallback;
+        }
+    }
 }
