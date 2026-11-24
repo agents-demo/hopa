@@ -64,8 +64,12 @@
                                    FontSize="10" Foreground="#9A9488" />
                     </StackPanel>
                     <TextBlock x:Name="StatusText" Grid.Column="2" Text="" VerticalAlignment="Center"
-                               Margin="16,0" FontSize="10" Foreground="#9A9488"
+                               Margin="16,0,100,0" FontSize="10" Foreground="#9A9488"
                                TextTrimming="CharacterEllipsis" Visibility="Collapsed" />
+                    <Button x:Name="TakeoverButton" Grid.Column="2" Content="Take over" Width="90"
+                            Height="28" HorizontalAlignment="Right" VerticalAlignment="Center"
+                            Visibility="Collapsed" Click="Takeover_Click"
+                            AutomationProperties.Name="Take over" />
                 </Grid>
             </Border>
 

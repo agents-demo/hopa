@@ -84,6 +84,7 @@ public partial class MainWindow : Window
             tray.StopEnabled = true;
         }
 
+        TakeoverButton.Visibility = Visibility.Visible;
         StatusText.Text = "Working...";
         Chat.ScrollToEnd();
         try
@@ -140,6 +141,7 @@ public partial class MainWindow : Window
                 tray.StopEnabled = false;
             }
 
+            TakeoverButton.Visibility = Visibility.Collapsed;
             WriteLog();
         }
     }

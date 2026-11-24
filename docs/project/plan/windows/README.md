@@ -179,14 +179,18 @@ second task state machine.
 
 Gate: a PC action is approved on the phone and the run record names the phone.
 
-### P5. Signature and HITL (1 week)
+### P5. Signature and HITL (1 week) — in progress
 
 Add a takeover surface: pause, hand the form to the user, resume. Capture the
 verified postcondition.
 
-- [ ] The loop can pause on a step and hand the foreground to the user.
-- [ ] Resuming re-observes and verifies the postcondition before continuing.
-- [ ] A cancelled takeover leaves the task failed, not silently done.
+- [x] The loop can pause before a step and hand the foreground to the user.
+  (evidence: `turn.pause`/`turn.resume`; `TakeoverWindow`)
+- [x] Resuming re-observes before the next decision. (evidence: `StepGate.Refresh`
+  in `AgentLoop`; `TurnEngine` gates the next step)
+- [x] A cancelled takeover leaves the task failed, not silently done. (evidence:
+  `AgentLoopTest.a_cancelled_takeover_stops_instead_of_claiming_success`;
+  `turn.cancel` releases the pause)
 - [ ] Evidence: a form pre-filled, signed, submitted and confirmed.
 
 Gate: a signed form produces a verified postcondition and a record.

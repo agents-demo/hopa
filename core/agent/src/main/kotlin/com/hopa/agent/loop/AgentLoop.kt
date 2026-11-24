@@ -56,6 +56,8 @@ class AgentLoop(
         runId: String,
         traceId: String,
         context: TurnContext,
+        /** Called before each step; Stop/Refresh handles a takeover. */
+        beforeStep: suspend () -> StepGate = { StepGate.Proceed },
         isCancelled: () -> Boolean = { false },
     ): TurnResult {
         var observation = runCatching { device.observe() }.getOrNull()
@@ -90,6 +92,20 @@ class AgentLoop(
         repeat(config.maxSteps) { step ->
             if (isCancelled()) {
                 return finish("Stopped.")
+            }
+            when (beforeStep()) {
+                StepGate.Stop -> {
+                    return finish(
+                        answer = "The turn was paused and not resumed.",
+                        error = HopaError(ErrorCodes.BLOCKED, "takeover not resumed"),
+                    )
+                }
+
+                StepGate.Refresh -> {
+                    observation = runCatching { device.observe() }.getOrNull() ?: observation
+                }
+
+                StepGate.Proceed -> Unit
             }
             val frames = if (context.vision) {
                 runCatching { device.screenshot() }.getOrNull()?.let { bytes ->

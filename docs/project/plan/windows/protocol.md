@@ -18,6 +18,8 @@ memory/skill families as additive v1 messages.
 | `hello` | - | optional; the sidecar answers `ready` anyway at start |
 | `turn.start` | `id`, `goal`, `conversationId?`, `attachment?`, `planApproved?` | run one turn for this goal in that conversation (a blank id creates one); `planApproved` skips the plan gate |
 | `turn.cancel` | - | stop the running turn at the next safe point |
+| `turn.pause` | - | pause before the next step and hand the foreground to the person |
+| `turn.resume` | - | resume after a takeover; the loop re-observes before deciding |
 | `configure` | `bridgeUrl`, `useBridge`, `bridgeToken`, `bridgeRefresh`, `modelProvider`, `modelBaseUrl`, `modelName`, `modelKey`, `tone`, `profile`, `replay`, `planFirst`, `instantCommands`, `vision` | settings in memory; secrets are never written to disk here |
 | `gateway.state` | `paired`, `phoneOnline` | P4: whether this PC has a gateway credential and a phone peer; a phone approval is only accepted while both are true |
 | `device.result` | `id`, `ok`, `error?`, `observation?`, `app?` | the host performed, or refused, a requested device action |

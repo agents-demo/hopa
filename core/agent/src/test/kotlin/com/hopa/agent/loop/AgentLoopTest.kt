@@ -81,6 +81,24 @@ class AgentLoopTest {
     }
 
     @Test
+    fun a_cancelled_takeover_stops_instead_of_claiming_success() {
+        val harness = Harness(replies = listOf(TAP, "All done."))
+        val result = runBlocking {
+            harness.loop.run(
+                "run-takeover",
+                "trace-takeover",
+                TurnContext("tap"),
+                isCancelled = { false },
+                beforeStep = { StepGate.Stop },
+            )
+        }
+
+        assertTrue(result.answer.contains("paused and not resumed"), result.answer)
+        assertEquals(ErrorCodes.BLOCKED, result.error?.code)
+        assertEquals(0, result.records.size)
+    }
+
+    @Test
     fun a_read_action_runs_then_the_loop_answers() {
         val harness = Harness(replies = listOf(TAP, "All done."))
         val result = runBlocking {

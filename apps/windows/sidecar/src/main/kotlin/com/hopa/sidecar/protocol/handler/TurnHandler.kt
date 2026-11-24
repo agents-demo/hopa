@@ -32,6 +32,10 @@ internal class TurnHandler(
                 if (turnId.isBlank()) engine.cancel() else engine.cancel(turnId)
             }
 
+            "turn.pause" -> engine.pause()
+
+            "turn.resume" -> engine.resume()
+
             else -> return false
         }
         return true

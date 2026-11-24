@@ -237,6 +237,12 @@ public sealed partial class EngineHostClient : IAsyncDisposable, IChatEngine
         Send(new JsonObject { ["type"] = "turn.cancel" });
     }
 
+    /// <summary>Pause before the next step; the takeover window owns the foreground.</summary>
+    public void PauseTurn() => Send(new JsonObject { ["type"] = "turn.pause" });
+
+    /// <summary>Resume after a takeover; the sidecar re-observes before deciding.</summary>
+    public void ResumeTurn() => Send(new JsonObject { ["type"] = "turn.resume" });
+
     public void SendApprovalResult(string id, bool allow, string device = "pc")    {
         Send(new JsonObject
         {

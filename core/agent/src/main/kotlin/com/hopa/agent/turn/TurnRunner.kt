@@ -12,6 +12,7 @@ import com.hopa.agent.decision.model.ModelDecisionPolicy
 import com.hopa.agent.goal.GoalVerification
 import com.hopa.agent.goal.GoalVerifier
 import com.hopa.agent.loop.AgentLoop
+import com.hopa.agent.loop.StepGate
 import com.hopa.agent.plan.PlanSource
 import com.hopa.agent.recipe.RecipeDecisionPolicy
 import com.hopa.agent.recipe.RecipeStore
@@ -62,7 +63,11 @@ class TurnRunner(
     /** Hand-written known-app graphs; null disables the path. */
     private val graphs: GraphStepSource? = null,
 ) {
-    suspend fun run(request: TurnRequest, isCancelled: () -> Boolean = { false }): TurnOutcome {
+    suspend fun run(
+        request: TurnRequest,
+        beforeStep: suspend () -> StepGate = { StepGate.Proceed },
+        isCancelled: () -> Boolean = { false },
+    ): TurnOutcome {
         val started = clock.nowMillis()
         // Read once per turn: an accepted bundle applies to the next turn, and the
         // receipt must name the one this turn actually routed with.
@@ -142,7 +147,7 @@ class TurnRunner(
             )
             else -> ChainDecisionPolicy(listOfNotNull(recipe, graph, command, model, cloud))
         }
-        return fromModel(request, started, isCancelled, tables, policy, graph != null)
+        return fromModel(request, started, isCancelled, tables, policy, graph != null, beforeStep)
     }
 
 /** Answers with the steps to approve; the person's yes sends a new request. */
@@ -166,6 +171,7 @@ class TurnRunner(
         tables: CatalogSnapshot,
         policy: DecisionPolicy,
         graphInChain: Boolean = false,
+        beforeStep: suspend () -> StepGate = { StepGate.Proceed },
     ): TurnOutcome {
         val loop = AgentLoop(
             policy = policy,
@@ -193,6 +199,7 @@ class TurnRunner(
                     phoneAccess = request.phoneAccess,
                 ),
                 isCancelled = isCancelled,
+                beforeStep = beforeStep,
             )
         }
 

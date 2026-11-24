@@ -3,6 +3,7 @@ package com.hopa.sidecar.turn
 import com.hopa.agent.action.ActionExecutor
 import com.hopa.agent.action.ApprovalPolicy
 import com.hopa.agent.decision.model.ModelStepPolicy
+import com.hopa.agent.loop.StepGate
 import com.hopa.agent.plan.ModelPlanSource
 import com.hopa.agent.recipe.RecipeStore
 import com.hopa.agent.turn.TurnRequest
@@ -30,6 +31,7 @@ import com.hopa.stores.SkillStore
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -81,6 +83,9 @@ class TurnEngine(
     private val queuedTurns: MutableSet<String> = ConcurrentHashMap.newKeySet()
     private val cancelledBeforeStart: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
+    /** A paused turn waits here; the takeover window owns the foreground. */
+    private val takeovers: ConcurrentHashMap<String, CompletableDeferred<Boolean>> = ConcurrentHashMap()
+
     /**
      * Invoked next to `turn.end` with the turn id and its answer, so the
      * backend gateway can resume a `task.create` (R31). One turn at a time is
@@ -93,12 +98,30 @@ class TurnEngine(
     @Synchronized
     fun cancel() {
         cancelled = true
+        runningTurn?.let { takeovers.remove(it)?.complete(false) }
         io.log("turn cancelled by the user")
+    }
+
+    /** Pause the running turn and hand the foreground to the person. */
+    @Synchronized
+    fun pause() {
+        val id = runningTurn ?: return
+        takeovers[id] = CompletableDeferred()
+        io.log("turn $id paused for takeover")
+    }
+
+    /** Resume after a takeover; the loop re-observes before the next decision. */
+    @Synchronized
+    fun resume() {
+        val id = runningTurn ?: return
+        takeovers.remove(id)?.complete(true)
+        io.log("turn $id resumed after takeover")
     }
 
     /** Cancels only the named turn, so a backend task cannot stop a host turn. */
     @Synchronized
     fun cancel(id: String) {
+        takeovers.remove(id)?.complete(false)
         if (runningTurn == id) {
             cancelled = true
             io.log("turn $id cancelled by the user")
@@ -291,6 +314,16 @@ class TurnEngine(
                     timeoutMillis = 120_000,
                 ),
                 isCancelled = { cancelled },
+                beforeStep = {
+                    val gate = takeovers[id]
+                    if (gate == null) {
+                        StepGate.Proceed
+                    } else if (gate.await()) {
+                        StepGate.Refresh
+                    } else {
+                        StepGate.Stop
+                    }
+                },
             )
         }
 
