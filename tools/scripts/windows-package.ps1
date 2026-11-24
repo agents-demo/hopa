@@ -1,5 +1,6 @@
 param(
     [string]$Output = "out/windows",
+    [string]$JdkHome = "",
     [switch]$SkipMsi
 )
 
@@ -9,7 +10,27 @@ $out = Join-Path $root $Output
 $stage = Join-Path $out "hopa-windows-0.1.0"
 $sidecar = Join-Path $root "apps/windows/sidecar"
 $client = Join-Path $root "apps/windows/Hopa.Windows/Hopa.Windows.csproj"
-$jdk = $env:JAVA_HOME
+$jdk = if ($JdkHome) {
+    $JdkHome
+} elseif ($env:HOPA_JLINK_HOME) {
+    $env:HOPA_JLINK_HOME
+} else {
+    $env:JAVA_HOME
+}
+
+if (-not $jdk) {
+    throw "Set -JdkHome or HOPA_JLINK_HOME to a JDK 21 installation for the jlink runtime."
+}
+
+$jdkRelease = Join-Path $jdk "release"
+if (-not (Test-Path $jdkRelease)) {
+    throw "JDK home has no release file: $jdk"
+}
+
+$jdkReleaseText = Get-Content $jdkRelease -Raw
+if ($jdkReleaseText -notmatch 'JAVA_VERSION="21\.') {
+    throw "The jlink runtime must be JDK 21; '$jdk' is not. Set HOPA_JLINK_HOME or -JdkHome."
+}
 
 if (Test-Path $stage) { Remove-Item $stage -Recurse -Force }
 New-Item -ItemType Directory -Path $stage | Out-Null
@@ -46,8 +67,14 @@ if (-not (Test-Path (Join-Path $stage "Hopa.Windows.exe"))) {
 }
 
 Write-Host "3/5 jlink runtime"
-& (Join-Path $jdk "bin/jlink.exe") --add-modules java.base,java.logging,java.net.http,java.desktop,java.management,java.naming,java.security.jgss,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported,jdk.zipfs --strip-debug --no-header-files --no-man-pages --compress=2 --output (Join-Path $stage "runtime")
+& (Join-Path $jdk "bin/jlink.exe") --add-modules java.base,java.logging,java.net.http,java.desktop,java.management,java.naming,java.security.jgss,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported,jdk.zipfs --strip-debug --no-header-files --no-man-pages --compress=zip-6 --output (Join-Path $stage "runtime")
 if ($LASTEXITCODE -ne 0) { throw "jlink failed" }
+
+$runtimeRelease = Get-Content (Join-Path $stage "runtime/release") -Raw
+if ($runtimeRelease -notmatch 'JAVA_VERSION="21\.') {
+    throw "The staged runtime is not JDK 21; refusing to package it."
+}
+Write-Host "runtime: JDK 21"
 
 Write-Host "4/5 zip"
 $zip = Join-Path $out "hopa-windows-0.1.0.zip"

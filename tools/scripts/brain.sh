@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# Compile and test the Kotlin brain. Pinned to Kotlin 2.1.0, Gson 2.11.0 and JDK 17.
+# Compile and test the Kotlin brain. Pinned to the same Kotlin 2.4.21 as Gradle,
+# Gson 2.11.0 and JDK 17.
 set -euo pipefail
 
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
-VERSION=2.1.0
+VERSION=2.4.21
 GSON_VERSION=2.11.0
 TOOLS="$ROOT/.tools"
 KOTLINC="$TOOLS/kotlinc"

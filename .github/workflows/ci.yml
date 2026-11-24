@@ -184,7 +184,7 @@ jobs:
           if-no-files-found: error
 
   brain:
-    name: brain (JDK 17 + Kotlin 2.1.0)
+    name: brain (JDK 17 + Kotlin 2.4.21)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -199,7 +199,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .tools/kotlinc
-          key: kotlin-2.1.0-linux
+          key: kotlin-2.4.21-linux
       - name: Install contract-test dependencies
         run: python -m pip install jsonschema
       - name: Compile and test
@@ -406,7 +406,15 @@ jobs:
           name: hopa-windows-devtools
           path: out/windows-devtools
           if-no-files-found: error
+      - name: Install JDK 21 for jlink
+        id: jlink
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
       - name: Package (zip)
+        env:
+          HOPA_JLINK_HOME: ${{ steps.jlink.outputs.path }}
         run: powershell -NoProfile -ExecutionPolicy Bypass -File tools/scripts/windows-package.ps1 -SkipMsi
       - name: Upload package
         uses: actions/upload-artifact@v7

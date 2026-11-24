@@ -143,15 +143,19 @@ the signed rollback remain external.
 
 ### M1b. Kotlin/JDK truth (1 week)
 
-- [ ] Treat Kotlin 2.4.21 as the baseline; no downgrade. Verify Android, sidecar
-      and shared `core` modules together; a Kotlin bump is an Android bump.
-- [ ] Keep the Gradle `jvmToolchain(17)`; ship a **JDK 21** jlink runtime for
-      the sidecar and assert `java -version` in the package.
-- [ ] Record why JDK 25 is not adopted (image size, no product value).
-- [ ] Delete the second Kotlin compiler path (`brain.sh`).
+- [x] Treat Kotlin 2.4.21 as the baseline; no downgrade. The Android version
+      catalog and `tools/scripts/brain.sh` now agree on 2.4.21. Android + sidecar
+      remain the same Gradle graph.
+- [x] Keep the Gradle `jvmToolchain(17)`; ship a **JDK 21** jlink runtime for
+      the sidecar and assert it in the package. Evidence: `M1b-runtime.md`
+      (`JAVA_VERSION="21.0.11"`); the script refuses a non-21 JDK.
+- [x] Record why JDK 25 is not adopted (image size, no product value).
+- [ ] Delete the second Kotlin compiler path (`brain.sh`). The version is
+      aligned, but `services/brain` is still a standalone `kotlinc` build; porting
+      it to Gradle is a separate change.
 
 **Gate:** Android + sidecar green on the same Kotlin; package runtime reports
-Java 21; the standalone 2.1.0 compiler is gone.
+Java 21; the second compiler is version-aligned but not yet retired.
 
 ### M2a. Schema and golden frames (2-3 weeks)
 
