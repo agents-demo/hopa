@@ -23,6 +23,7 @@ internal class TurnHandler(
                     goal = message.text("goal"),
                     conversationId = message.text("conversationId").ifBlank { null },
                     attachment = attachment,
+                    planApproved = message.text("planApproved").toBoolean(),
                 )
             }
 

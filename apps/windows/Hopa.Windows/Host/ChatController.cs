@@ -34,19 +34,43 @@ public sealed class ChatController
     /// <summary>The current conversation is gone (archived or deleted).</summary>
     public void Forget() => CurrentId = null;
 
-    public async Task<TurnReport> SendAsync(string body, JsonObject? attachment)
+    public async Task<TurnReport> SendAsync(
+        string body,
+        JsonObject? attachment,
+        bool planApproved = false,
+        bool echoUser = true)
     {
         var earlier = chat.LastQuestion;
         var clock = Stopwatch.StartNew();
         running = true;
         chat.SetRunning(true);
         chat.ClearError();
-        chat.AddUser(body);
-        MessagesChanged?.Invoke();
+        if (echoUser)
+        {
+            chat.AddUser(body);
+            MessagesChanged?.Invoke();
+        }
+
         try
         {
-            var result = await engine.StartTurnAsync(body, CurrentId, attachment);
+            var result = await engine.StartTurnAsync(body, CurrentId, attachment, planApproved);
             CurrentId = result.ConversationId;
+            if (result.Plan is { Count: > 0 } plan)
+            {
+                chat.LastQuestion = body;
+                conversations.MarkSelected(result.ConversationId);
+                conversations.Upsert(result.ConversationId, result.Title);
+                return new TurnReport(
+                    "",
+                    result.Title,
+                    result.Steps,
+                    result.ChainOk,
+                    clock.Elapsed,
+                    earlier,
+                    null,
+                    plan);
+            }
+
             chat.AddAnswer(result.Answer, result.Steps, result.ChainOk);
             MessagesChanged?.Invoke();
             chat.LastQuestion = body;

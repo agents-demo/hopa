@@ -54,7 +54,8 @@ public sealed partial class EngineHostClient : IAsyncDisposable, IChatEngine
     public async Task<TurnResult> StartTurnAsync(
         string goal,
         string? conversationId,
-        JsonObject? attachment = null)
+        JsonObject? attachment = null,
+        bool planApproved = false)
     {
         var fields = new JsonObject { ["goal"] = goal };
         if (conversationId != null)
@@ -67,13 +68,31 @@ public sealed partial class EngineHostClient : IAsyncDisposable, IChatEngine
             fields["attachment"] = attachment.DeepClone();
         }
 
+        if (planApproved)
+        {
+            fields["planApproved"] = true;
+        }
+
         var response = await RequestAsync("turn.start", fields, TimeSpan.FromSeconds(120));
+        var plan = new List<string>();
+        if (response["plan"] is JsonArray array)
+        {
+            foreach (var item in array)
+            {
+                if (item?.GetValue<string>() is { Length: > 0 } step)
+                {
+                    plan.Add(step);
+                }
+            }
+        }
+
         return new TurnResult(
             response["answer"]?.GetValue<string>() ?? "",
             response["conversationId"]?.GetValue<string>() ?? "",
             response["title"]?.GetValue<string>() ?? "New chat",
             response["steps"] as JsonArray,
-            response["chainOk"]?.GetValue<bool>() == true);
+            response["chainOk"]?.GetValue<bool>() == true,
+            plan);
     }
 
     public async Task<List<JsonObject>> ListConversationsAsync(bool includeArchived = false)
@@ -192,6 +211,7 @@ public sealed partial class EngineHostClient : IAsyncDisposable, IChatEngine
             ["tone"] = settings.Tone,
             ["profile"] = settings.Profile,
             ["replay"] = settings.ReplaySkills,
+            ["planFirst"] = settings.PlanFirst,
             ["vision"] = settings.Vision,
         };
         return await RequestAsync("configure", fields, TimeSpan.FromSeconds(10));

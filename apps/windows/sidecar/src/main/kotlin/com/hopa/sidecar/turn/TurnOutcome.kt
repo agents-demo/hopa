@@ -11,4 +11,6 @@ data class TurnOutcome(
     val chainOk: Boolean,
     val narration: List<String> = emptyList(),
     val error: String? = null,
+    /** Plan-first steps waiting for the person; empty on an ordinary turn. */
+    val plan: List<String> = emptyList(),
 )

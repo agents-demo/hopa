@@ -139,12 +139,13 @@ class TurnEngine(
         goal: String,
         conversationId: String?,
         attachment: Attachment? = null,
+        planApproved: Boolean = false,
     ) {
         queuedTurns += id
         scope.launch {
             runSerialized(id) {
                 var lastAt = System.currentTimeMillis()
-                val outcome = runTurn(id, goal, conversationId, attachment) { index, record ->
+                val outcome = runTurn(id, goal, conversationId, attachment, planApproved = planApproved) { index, record ->
                     val now = System.currentTimeMillis()
                     io.send(Protocol.step(id, index, record, now, now - lastAt))
                     lastAt = now
@@ -157,6 +158,7 @@ class TurnEngine(
                         answer = outcome.answer,
                         steps = outcome.records,
                         chainOk = outcome.chainOk,
+                        plan = outcome.plan,
                     ),
                 )
                 outcome.answer
@@ -214,6 +216,7 @@ class TurnEngine(
         goal: String,
         conversationId: String?,
         attachment: Attachment? = null,
+        planApproved: Boolean = false,
         onRecord: ((Int, RunRecord) -> Unit)? = null,
     ): TurnOutcome = turnLock.withLock {
         val requested = conversationId?.takeIf { it.isNotBlank() }
@@ -276,7 +279,8 @@ class TurnEngine(
                     platform = "windows",
                     vision = config.vision,
                     phoneAccess = deviceAttached,
-                    planFirst = false,
+                    planFirst = config.planFirst,
+                    planApproved = planApproved,
                     replay = config.replay,
                     instantCommands = false,
                     useGraphs = false,
@@ -304,6 +308,7 @@ class TurnEngine(
             chainOk = chainOk,
             narration = result?.narration.orEmpty(),
             error = result?.error?.message,
+            plan = result?.pendingPlan.orEmpty(),
         )
     }
 

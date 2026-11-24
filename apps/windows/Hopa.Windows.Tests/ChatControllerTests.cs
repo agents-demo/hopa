@@ -150,7 +150,8 @@ public sealed class ChatControllerTests
         public Task<TurnResult> StartTurnAsync(
             string goal,
             string? conversationId,
-            JsonObject? attachment = null) =>
+            JsonObject? attachment = null,
+            bool planApproved = false) =>
             Failure != null
                 ? Task.FromException<TurnResult>(Failure)
                 : Task.FromResult(Turn);

@@ -64,7 +64,7 @@ public partial class MainWindow : Window
         StatusText.Text = "";
     }
 
-    private async Task SendAsync(string goal)
+    private async Task SendAsync(string goal, bool planApproved = false, bool echoUser = true)
     {
         if (chatController == null || chatController.Running)
         {
@@ -88,7 +88,22 @@ public partial class MainWindow : Window
         Chat.ScrollToEnd();
         try
         {
-            var report = await chatController.SendAsync(body, attachment);
+            var report = await chatController.SendAsync(body, attachment, planApproved, echoUser);
+            if (report.Plan is { Count: > 0 } plan)
+            {
+                var approved = new PlanWindow(body, plan) { Owner = this }.ShowDialog() == true;
+                if (approved)
+                {
+                    await SendAsync(body, planApproved: true, echoUser: false);
+                }
+                else
+                {
+                    StatusText.Text = "Plan not approved.";
+                }
+
+                return;
+            }
+
             if (report.Error != null)
             {
                 StatusText.Text = report.Error;

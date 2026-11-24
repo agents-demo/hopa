@@ -16,9 +16,9 @@ memory/skill families as additive v1 messages.
 | type | fields | meaning |
 |---|---|---|
 | `hello` | - | optional; the sidecar answers `ready` anyway at start |
-| `turn.start` | `id`, `goal`, `conversationId?`, `attachment?` | run one turn for this goal in that conversation (a blank id creates one) |
+| `turn.start` | `id`, `goal`, `conversationId?`, `attachment?`, `planApproved?` | run one turn for this goal in that conversation (a blank id creates one); `planApproved` skips the plan gate |
 | `turn.cancel` | - | stop the running turn at the next safe point |
-| `configure` | `bridgeUrl`, `useBridge`, `bridgeToken`, `bridgeRefresh`, `modelProvider`, `modelBaseUrl`, `modelName`, `modelKey`, `tone`, `profile`, `replay`, `vision` | settings in memory; secrets are never written to disk here |
+| `configure` | `bridgeUrl`, `useBridge`, `bridgeToken`, `bridgeRefresh`, `modelProvider`, `modelBaseUrl`, `modelName`, `modelKey`, `tone`, `profile`, `replay`, `planFirst`, `vision` | settings in memory; secrets are never written to disk here |
 | `gateway.state` | `paired`, `phoneOnline` | P4: whether this PC has a gateway credential and a phone peer; a phone approval is only accepted while both are true |
 | `device.result` | `id`, `ok`, `error?`, `observation?`, `app?` | the host performed, or refused, a requested device action |
 | `approval.result` | `id`, `allow`, `device?` | the answer to one `approval.request`; `device` is `pc` or `phone` and is checked against the live gateway link |
@@ -67,7 +67,7 @@ memory/skill families as additive v1 messages.
 | `device.request` | `id`, `op`, plus op fields | perform one device action on the host |
 | `approval.request` | `id`, `title`, `body`, `amount`, `merchant`, `consequence`, `isPayment`, `action` | ask the person |
 | `session` | `token`, `refresh` | the sidecar rotated the bridge pair; the host persists it |
-| `turn.end` | `id`, `conversationId`, `title`, `answer`, `steps[]`, `chainOk` | the turn finished; `answer` is what the user sees |
+| `turn.end` | `id`, `conversationId`, `title`, `answer`, `steps[]`, `chainOk`, `plan[]` | the turn finished; `plan` is the steps waiting for approval on a plan-first turn |
 | `conversation.*` | echo `id` plus the payload | replies to the conversation messages above |
 | `memory.list` | `id`, `ok`, `items:[string]` | the memory facts; also the reply to add/delete/clear |
 | `skills.list` | `id`, `ok`, `items:[{trigger, action}]` | the learned pairs; also the reply to add/delete/clear |

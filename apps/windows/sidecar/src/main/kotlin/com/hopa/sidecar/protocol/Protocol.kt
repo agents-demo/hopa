@@ -44,6 +44,7 @@ object Protocol {
         answer: String,
         steps: List<RunRecord>,
         chainOk: Boolean,
+        plan: List<String> = emptyList(),
     ): JsonObject =
         buildJsonObject {
             put("type", "turn.end")
@@ -52,6 +53,7 @@ object Protocol {
             put("title", title)
             put("answer", answer)
             put("chainOk", chainOk)
+            put("plan", buildJsonArray { plan.forEach { add(kotlinx.serialization.json.JsonPrimitive(it)) } })
             put("steps", buildJsonArray {
                 steps.forEach { add(json.encodeToJsonElement(RunRecord.serializer(), it)) }
             })
@@ -95,6 +97,9 @@ object Protocol {
         put("answer", outcome.answer)
         put("chainOk", outcome.chainOk)
         put("error", outcome.error)
+        put("plan", buildJsonArray {
+            outcome.plan.forEach { add(kotlinx.serialization.json.JsonPrimitive(it)) }
+        })
         put("records", outcome.records.size)
         put("executed", outcome.records.count { it.executed })
         put("denied", outcome.records.count { it.approved == false && !it.executed })

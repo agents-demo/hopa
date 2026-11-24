@@ -135,6 +135,11 @@
                         <TextBlock Text="A recipe replays the steps that worked last time; a missing anchor falls back to the model."
                                    FontSize="10" Foreground="#9A9488" Margin="22,0,0,14"
                                    TextWrapping="Wrap" />
+                        <CheckBox x:Name="PlanFirstBox" Content="Ask for a plan before acting"
+                                  Foreground="#1C1B18" Margin="0,0,0,6" />
+                        <TextBlock Text="The first reply is a numbered plan; nothing runs until you approve it."
+                                   FontSize="10" Foreground="#9A9488" Margin="22,0,0,14"
+                                   TextWrapping="Wrap" />
                         <CheckBox x:Name="VisionBox" Content="Attach a screenshot to each model call"
                                   Foreground="#1C1B18" Margin="0,0,0,6" />
                         <TextBlock Text="Only useful when the selected model accepts images; the frame leaves this PC."

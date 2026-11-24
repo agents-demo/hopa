@@ -10,4 +10,5 @@ public sealed record TurnReport(
     bool ChainOk,
     TimeSpan Elapsed,
     string Earlier,
-    string? Error);
+    string? Error,
+    IReadOnlyList<string>? Plan = null);

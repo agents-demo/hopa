@@ -8,4 +8,5 @@ public sealed record TurnResult(
     string ConversationId,
     string Title,
     JsonArray? Steps,
-    bool ChainOk);
+    bool ChainOk,
+    IReadOnlyList<string>? Plan = null);

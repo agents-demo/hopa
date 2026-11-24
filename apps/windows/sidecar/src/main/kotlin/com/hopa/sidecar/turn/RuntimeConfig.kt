@@ -36,6 +36,9 @@ class RuntimeConfig {
     /** Attach a screenshot to each model call when the model accepts images. */
     var vision: Boolean = false
         private set
+    /** Ask for a plan first; the host shows it and sends the approved goal again. */
+    var planFirst: Boolean = false
+        private set
     /** P4: this PC has its own gateway credential and a phone peer online. */
     var gatewayPaired: Boolean = false
         private set
@@ -78,6 +81,7 @@ class RuntimeConfig {
         profile = message.text("profile").ifBlank { profile }
         replay = message.bool("replay", replay)
         vision = message.bool("vision", vision)
+        planFirst = message.bool("planFirst", planFirst)
     }
 
     /** Safe to log: no token, no key, no credentials in the URL. */

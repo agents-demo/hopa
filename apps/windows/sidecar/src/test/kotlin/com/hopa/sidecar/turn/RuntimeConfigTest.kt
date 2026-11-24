@@ -13,10 +13,12 @@ class RuntimeConfigTest {
         config.update(buildJsonObject {
             put("replay", false)
             put("vision", true)
+            put("planFirst", true)
         })
 
         assertFalse(config.replay)
         assertTrue(config.vision)
+        assertTrue(config.planFirst)
     }
 
     @Test
@@ -26,5 +28,6 @@ class RuntimeConfigTest {
 
         assertTrue(config.replay)
         assertFalse(config.vision)
+        assertFalse(config.planFirst)
     }
 }

@@ -42,6 +42,7 @@ public sealed class SettingsStoreTests
                 Tone = "brief",
                 Profile = "power",
                 ReplaySkills = false,
+                PlanFirst = true,
                 Vision = true,
                 WindowLeft = 10,
                 WindowTop = 20,
@@ -60,6 +61,7 @@ public sealed class SettingsStoreTests
             Assert.Equal("brief", loaded.Tone);
             Assert.Equal("power", loaded.Profile);
             Assert.False(loaded.ReplaySkills);
+            Assert.True(loaded.PlanFirst);
             Assert.True(loaded.Vision);
             Assert.Equal(900, loaded.WindowWidth);
             Assert.True(loaded.WindowMaximized);

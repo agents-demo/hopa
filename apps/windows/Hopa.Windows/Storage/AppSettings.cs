@@ -20,6 +20,9 @@ public sealed class AppSettings
     /// <summary>Try a stored recipe before asking the model.</summary>
     public bool ReplaySkills { get; set; } = true;
 
+    /// <summary>Ask for a plan and wait for approval before acting.</summary>
+    public bool PlanFirst { get; set; }
+
     /// <summary>Attach a screenshot when the model accepts images.</summary>
     public bool Vision { get; set; }
 

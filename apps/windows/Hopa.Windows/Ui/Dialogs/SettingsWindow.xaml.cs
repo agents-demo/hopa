@@ -49,6 +49,7 @@ public partial class SettingsWindow : Window
             ? "Tasks go to the phone when the gateway is live."
             : "Tasks run on this PC.";
         ReplayBox.IsChecked = settings.ReplaySkills;
+        PlanFirstBox.IsChecked = settings.PlanFirst;
         VisionBox.IsChecked = settings.Vision;
         Select(ProviderBox, settings.ModelProvider);
         BaseUrlBox.Text = settings.ModelBaseUrl;
@@ -721,6 +722,7 @@ public partial class SettingsWindow : Window
         settings.Tone = Value(ToneBox, "warm");
         settings.Profile = SelectedProfile(settings.Profile);
         settings.ReplaySkills = ReplayBox.IsChecked == true;
+        settings.PlanFirst = PlanFirstBox.IsChecked == true;
         settings.Vision = VisionBox.IsChecked == true;
         store.Save(settings);
         SaveSecret("hopa.bridge.token", BridgeTokenBox.Password);
