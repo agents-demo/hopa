@@ -24,7 +24,7 @@ internal sealed class FakeEngineProcess : IAsyncDisposable
         var host = Path.GetFullPath(Path.Combine(
             AppContext.BaseDirectory,
             "..", "..", "..", "..",
-            "Hopa.Windows.FakeEngine", "bin", configuration, "net8.0",
+            "Hopa.Windows.FakeEngine", "bin", configuration, "net10.0",
             "Hopa.Windows.FakeEngine.dll"));
         if (!File.Exists(host))
         {

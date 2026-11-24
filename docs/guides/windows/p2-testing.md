@@ -328,7 +328,7 @@ refusals (lock, elevation, stale/absent reference).
 
 - Sidecar data (conversations, records, attachments):
   `%USERPROFILE%\.hopa\windows` — override with `HOPA_DATA_DIR`.
-- App build: `apps\windows\Hopa.Windows\bin\Debug\net8.0-windows`.
+- App build: `apps\windows\Hopa.Windows\bin\Debug\net10.0-windows`.
 - Sidecar build: `apps\windows\sidecar\build\install\hopa-windows-sidecar`.
 - Transcripts: wherever you point them (`$env:TEMP\hopa-p2` in these examples).
 

@@ -70,7 +70,7 @@ set `HOPA_SIDECAR_LIB` to override.
 ## Run
 
 ```powershell
-.\bin\Debug\net8.0-windows\Hopa.Windows.exe
+.\bin\Debug\net10.0-windows\Hopa.Windows.exe
 ```
 
 ## Headless: the P1 gate

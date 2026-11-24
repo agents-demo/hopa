@@ -16,7 +16,7 @@ import uuid
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-EXE = ROOT / "apps" / "windows" / "Hopa.Windows" / "bin" / "Debug" / "net8.0-windows" / "Hopa.Windows.exe"
+EXE = ROOT / "apps" / "windows" / "Hopa.Windows" / "bin" / "Debug" / "net10.0-windows" / "Hopa.Windows.exe"
 SHOT = ROOT / "docs" / "media" / "windows-w1.png"
 
 

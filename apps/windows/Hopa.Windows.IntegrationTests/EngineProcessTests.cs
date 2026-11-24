@@ -19,7 +19,7 @@ public sealed class EngineProcessTests
         var host = Path.GetFullPath(Path.Combine(
             AppContext.BaseDirectory,
             "..", "..", "..", "..",
-            "Hopa.Windows.FakeEngine", "bin", configuration, "net8.0",
+            "Hopa.Windows.FakeEngine", "bin", configuration, "net10.0",
             "Hopa.Windows.FakeEngine.dll"));
         Assert.True(File.Exists(host), $"the fake engine was not built at {host}");
 
