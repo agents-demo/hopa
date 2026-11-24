@@ -23,6 +23,9 @@ public sealed class AppSettings
     /// <summary>Ask for a plan and wait for approval before acting.</summary>
     public bool PlanFirst { get; set; }
 
+    /// <summary>Run recognized launch/back/home/scroll goals without the model.</summary>
+    public bool InstantCommands { get; set; } = true;
+
     /// <summary>Attach a screenshot when the model accepts images.</summary>
     public bool Vision { get; set; }
 

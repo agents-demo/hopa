@@ -50,6 +50,7 @@ public partial class SettingsWindow : Window
             : "Tasks run on this PC.";
         ReplayBox.IsChecked = settings.ReplaySkills;
         PlanFirstBox.IsChecked = settings.PlanFirst;
+        InstantCommandsBox.IsChecked = settings.InstantCommands;
         VisionBox.IsChecked = settings.Vision;
         Select(ProviderBox, settings.ModelProvider);
         BaseUrlBox.Text = settings.ModelBaseUrl;
@@ -723,6 +724,7 @@ public partial class SettingsWindow : Window
         settings.Profile = SelectedProfile(settings.Profile);
         settings.ReplaySkills = ReplayBox.IsChecked == true;
         settings.PlanFirst = PlanFirstBox.IsChecked == true;
+        settings.InstantCommands = InstantCommandsBox.IsChecked == true;
         settings.Vision = VisionBox.IsChecked == true;
         store.Save(settings);
         SaveSecret("hopa.bridge.token", BridgeTokenBox.Password);

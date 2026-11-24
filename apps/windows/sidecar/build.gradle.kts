@@ -18,6 +18,7 @@ dependencies {
     implementation(project(":contracts"))
     implementation(project(":backend"))
     implementation(project(":stores"))
+    implementation(project(":decision"))
 
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)

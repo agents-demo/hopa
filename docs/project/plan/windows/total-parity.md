@@ -136,8 +136,9 @@ The screens that change what HOPA does.
 - [x] Easy/power modes change the shell: Easy, Kid and Social hide the run
   rail; Everyday and Power keep it. (evidence: `MainWindow.Profile.cs`)
 - [x] Run preferences and setup. (evidence: screenshot + persisted settings)
-  - [x] Plan-first, replay and vision are wired through `TurnRunner`.
-  - [ ] Instant commands, step source and cloud fallback.
+  - [x] Plan-first, replay, vision and instant commands are wired through
+    `TurnRunner`.
+  - [ ] Step source and cloud fallback.
 - [x] How HOPA acts: a page with the real tier order and gate rules. (evidence:
   `HowActsPage`)
 - [ ] Feed the How HOPA acts page live tier/selector data. (evidence: a selector

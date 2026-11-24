@@ -212,6 +212,7 @@ public sealed partial class EngineHostClient : IAsyncDisposable, IChatEngine
             ["profile"] = settings.Profile,
             ["replay"] = settings.ReplaySkills,
             ["planFirst"] = settings.PlanFirst,
+            ["instantCommands"] = settings.InstantCommands,
             ["vision"] = settings.Vision,
         };
         return await RequestAsync("configure", fields, TimeSpan.FromSeconds(10));

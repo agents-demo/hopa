@@ -7,6 +7,7 @@ import com.hopa.agent.plan.ModelPlanSource
 import com.hopa.agent.recipe.RecipeStore
 import com.hopa.agent.turn.TurnRequest
 import com.hopa.agent.turn.TurnRunner
+import com.hopa.decision.classifier.IntentClassifier
 import com.hopa.bridge.device.AdbDevice
 import com.hopa.bridge.session.BridgeClient
 import com.hopa.catalog.routing.CatalogRoutes
@@ -263,6 +264,7 @@ class TurnEngine(
             clock = clock,
             recipes = recipes,
             plans = ModelPlanSource(model),
+            commands = IntentClassifier(),
             knowledge = { SidecarCatalog.value },
         )
         val outcome = runCatching {
@@ -282,7 +284,7 @@ class TurnEngine(
                     planFirst = config.planFirst,
                     planApproved = planApproved,
                     replay = config.replay,
-                    instantCommands = false,
+                    instantCommands = config.instantCommands,
                     useGraphs = false,
                     graphFallback = false,
                     cloudFallback = false,

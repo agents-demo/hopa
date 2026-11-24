@@ -39,6 +39,9 @@ class RuntimeConfig {
     /** Ask for a plan first; the host shows it and sends the approved goal again. */
     var planFirst: Boolean = false
         private set
+    /** Run a recognized launch/back/home/scroll command without the model. */
+    var instantCommands: Boolean = true
+        private set
     /** P4: this PC has its own gateway credential and a phone peer online. */
     var gatewayPaired: Boolean = false
         private set
@@ -82,6 +85,7 @@ class RuntimeConfig {
         replay = message.bool("replay", replay)
         vision = message.bool("vision", vision)
         planFirst = message.bool("planFirst", planFirst)
+        instantCommands = message.bool("instantCommands", instantCommands)
     }
 
     /** Safe to log: no token, no key, no credentials in the URL. */
