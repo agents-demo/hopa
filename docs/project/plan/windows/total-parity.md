@@ -150,8 +150,10 @@ The screens that change what HOPA does.
 - [ ] Takeover/signature P5. (evidence: form transcript + verified postcondition)
 - [ ] Vision frame round-trip when a model accepts images. (evidence: protocol
   test + one real frame)
-- [ ] Phone handoff semantics: a task sent from the PC is owned by the phone;
-  the PC does not mirror its screen. (evidence: gateway transcript + record)
+- [x] Phone handoff semantics: a task sent from the PC is owned by the phone;
+  the PC does not mirror its screen. (evidence:
+  `GatewaySocketTests.AHandoffGoesToThePhoneAsTaskCreate`; the frame is a
+  `task.create` addressed to `phone1`)
 
 Gate: an Android action screen has a Windows counterpart that produces the same
 record and the same gate decision.
