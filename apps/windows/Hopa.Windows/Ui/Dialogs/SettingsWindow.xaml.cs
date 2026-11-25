@@ -4,8 +4,10 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Linq;
 using System.Text.Json.Nodes;
+using Microsoft.Win32;
 using Hopa.Windows.Integrations.Device;
 using Hopa.Windows.Integrations.Engine;
+using Hopa.Windows.Integrations.LocalModels;
 using Hopa.Windows.Integrations.Gateway;
 using Hopa.Windows.Storage;
 using Hopa.Windows.Ui.Shell;
@@ -18,6 +20,9 @@ namespace Hopa.Windows.Ui.Dialogs;
 /// </summary>
 public partial class SettingsWindow : Window
 {
+    private readonly LocalModelManager localModels = new();
+    private string localModelPath = "";
+
     private readonly SettingsStore store = new();
     private readonly EngineHostClient? engine;
     private readonly WindowsDevice? device;
@@ -58,7 +63,9 @@ public partial class SettingsWindow : Window
         UpdateProviderFields();
         BaseUrlBox.Text = settings.ModelBaseUrl;
         ModelNameBox.Text = settings.ModelName;
+        localModelPath = settings.LocalModelPath;
         ModelKeyBox.Password = CredentialStore.Read("hopa.model.key");
+        UpdateLocalModelStatus();
         Select(ToneBox, settings.Tone);
         ProfileStatus.Text = $"Current: {settings.Profile}";
         var gateway = GatewayCredentials.Load();
@@ -766,6 +773,7 @@ public partial class SettingsWindow : Window
         settings.StepSource = Value(StepSourceBox, "auto");
         settings.Tone = Value(ToneBox, "warm");
         settings.Profile = SelectedProfile(settings.Profile);
+        settings.LocalModelPath = localModelPath;
         settings.ReplaySkills = ReplayBox.IsChecked == true;
         settings.PlanFirst = PlanFirstBox.IsChecked == true;
         settings.InstantCommands = InstantCommandsBox.IsChecked == true;
@@ -812,9 +820,94 @@ public partial class SettingsWindow : Window
             return;
         }
 
-        var demo = string.Equals(Value(ProviderBox, "openai"), "stub", StringComparison.OrdinalIgnoreCase);
-        CloudModelFields.Visibility = demo ? Visibility.Collapsed : Visibility.Visible;
+        var provider = Value(ProviderBox, "openai");
+        var demo = string.Equals(provider, "stub", StringComparison.OrdinalIgnoreCase);
+        var local = string.Equals(provider, "on-device", StringComparison.OrdinalIgnoreCase);
+        CloudModelFields.Visibility = demo || local ? Visibility.Collapsed : Visibility.Visible;
         DemoHint.Visibility = demo ? Visibility.Visible : Visibility.Collapsed;
+        LocalModelPanel.Visibility = local ? Visibility.Visible : Visibility.Collapsed;
+        if (local)
+        {
+            UpdateLocalModelStatus();
+        }
+    }
+
+    private void UpdateLocalModelStatus() =>
+        LocalModelStatus.Text = localModels.Status(localModelPath);
+
+    private async void InstallLocal_Click(object sender, RoutedEventArgs e)
+    {
+        var spec = LocalModelManager.Default;
+        if (!localModels.IsModelInstalled(localModelPath))
+        {
+            var licence = MessageBox.Show(
+                $"Download {spec.Name} ({spec.Bytes / 1_000_000} MB) and the llama.cpp runtime?\n\n" +
+                $"Licence: {spec.License}\n{spec.LicenseUrl}",
+                "Local model",
+                MessageBoxButton.OKCancel,
+                MessageBoxImage.Information);
+            if (licence != MessageBoxResult.OK)
+            {
+                return;
+            }
+        }
+
+        InstallLocalButton.IsEnabled = false;
+        ImportLocalButton.IsEnabled = false;
+        try
+        {
+            localModelPath = await localModels.InstallAsync(
+                localModelPath,
+                new Progress<string>(message => LocalModelStatus.Text = message));
+            UpdateLocalModelStatus();
+        }
+        catch (Exception error)
+        {
+            LocalModelStatus.Text = "Install failed: " + error.Message;
+        }
+        finally
+        {
+            InstallLocalButton.IsEnabled = true;
+            ImportLocalButton.IsEnabled = true;
+        }
+    }
+
+    private void ImportLocal_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = "Choose a GGUF model",
+            Filter = "GGUF model (*.gguf)|*.gguf",
+            CheckFileExists = true,
+        };
+        if (dialog.ShowDialog(this) != true)
+        {
+            return;
+        }
+
+        try
+        {
+            localModelPath = localModels.Import(dialog.FileName);
+            UpdateLocalModelStatus();
+        }
+        catch (Exception error)
+        {
+            LocalModelStatus.Text = "Import failed: " + error.Message;
+        }
+    }
+
+    private void DeleteLocal_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            localModels.DeleteModel(localModelPath);
+            localModelPath = "";
+            UpdateLocalModelStatus();
+        }
+        catch (Exception error)
+        {
+            LocalModelStatus.Text = "Delete failed: " + error.Message;
+        }
     }
 
     private static void SaveSecret(string name, string value)

@@ -11,6 +11,12 @@ public sealed partial class EngineHostClient : IAsyncDisposable, IChatEngine
     private readonly Process? process;
     private readonly EngineTransport transport;
 
+    /// <summary>
+    /// How long to wait for `turn.start`. A loopback CPU model is slower than a
+    /// cloud call, so the window widens when the host configured it.
+    /// </summary>
+    private TimeSpan turnWait = TimeSpan.FromSeconds(120);
+
     public event Action<string>? LogReceived;
 
     public event Action<JsonObject>? DeviceRequested;
@@ -87,9 +93,10 @@ public sealed partial class EngineHostClient : IAsyncDisposable, IChatEngine
             fields["paused"] = true;
         }
 
-        // A paused turn does not answer until the person resumes; the normal
-        // two-minute turn deadline must not expire while they sign.
-        var wait = paused ? TimeSpan.FromMinutes(10) : TimeSpan.FromSeconds(120);
+        // A paused turn does not answer until the person resumes, and a paused
+        // local turn also has to load a model; the wait stays above the engine's
+        // own ten-minute deadline so the caller never times out first.
+        var wait = paused ? TimeSpan.FromMinutes(11) : turnWait;
         var response = await RequestAsync("turn.start", fields, wait);
         var plan = new List<string>();
         if (response["plan"] is JsonArray array)
@@ -254,6 +261,9 @@ public sealed partial class EngineHostClient : IAsyncDisposable, IChatEngine
             ["instantCommands"] = settings.InstantCommands,
             ["vision"] = settings.Vision,
         };
+        turnWait = string.Equals(settings.ModelName, "local", StringComparison.OrdinalIgnoreCase)
+            ? TimeSpan.FromMinutes(11)
+            : TimeSpan.FromSeconds(120);
         return await RequestAsync("configure", fields, TimeSpan.FromSeconds(10));
     }
 

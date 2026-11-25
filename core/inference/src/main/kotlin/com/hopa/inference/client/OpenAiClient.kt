@@ -26,10 +26,11 @@ class OpenAiClient(
     private val endpoint: String,
     private val apiKey: String,
     private val modelName: String,
+    readTimeoutSeconds: Long = 60,
 ) : ModelPort {
     private val client = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(60, TimeUnit.SECONDS)
+        .readTimeout(readTimeoutSeconds, TimeUnit.SECONDS)
         .build()
 
     override suspend fun complete(request: ModelRequest): ModelReply = withContext(Dispatchers.IO) {

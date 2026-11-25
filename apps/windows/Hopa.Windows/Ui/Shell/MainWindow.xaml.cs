@@ -18,6 +18,7 @@ using Hopa.Windows.Ui.Dialogs;
 using Hopa.Windows.Integrations.Device;
 using Hopa.Windows.Integrations.Engine;
 using Hopa.Windows.Integrations.Gateway;
+using Hopa.Windows.Integrations.LocalModels;
 using Hopa.Windows.Storage;
 using Hopa.Windows.Integrations.Voice;
 using Hopa.Windows.Host;
@@ -35,6 +36,7 @@ public partial class MainWindow : Window
     private SpeechSynthesizer? speech;
     private TrayIcon? tray;
     private EngineHostClient? client;
+    private LocalModelRuntime? localModel;
     private ChatController? chatController;
     private EngineSession? session;
     private Task? connecting;
@@ -93,6 +95,7 @@ public partial class MainWindow : Window
             speech?.Dispose();
             voice.Dispose();
             browser?.Dispose();
+            localModel?.Dispose();
             device.Dispose();
             _ = session?.DisposeAsync();
         };

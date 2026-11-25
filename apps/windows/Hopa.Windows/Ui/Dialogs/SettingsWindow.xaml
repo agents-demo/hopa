@@ -84,6 +84,7 @@
                             <ComboBoxItem Content="openai" />
                             <ComboBoxItem Content="lan" />
                             <ComboBoxItem Content="stub" />
+                            <ComboBoxItem Content="on-device" />
                         </ComboBox>
                         <TextBlock x:Name="DemoHint" Text="Demo answers with a small canned set. No endpoint, model or key is used."
                                    FontSize="10" Foreground="#9A9488" TextWrapping="Wrap"
@@ -96,6 +97,21 @@
                             <TextBlock Text="Model key (stored in Windows Credential Manager)" FontSize="11.5"
                                        Foreground="#6B665C" />
                             <PasswordBox x:Name="ModelKeyBox" Height="32" Margin="0,4,0,12" />
+                        </StackPanel>
+                        <StackPanel x:Name="LocalModelPanel" Visibility="Collapsed" Margin="0,0,0,12">
+                            <TextBlock x:Name="LocalModelStatus" FontSize="10" Foreground="#6B665C"
+                                       TextWrapping="Wrap" Margin="0,0,0,6" />
+                            <StackPanel Orientation="Horizontal">
+                                <Button x:Name="InstallLocalButton" Content="Install local model"
+                                        Height="30" Margin="0,0,8,0" Click="InstallLocal_Click" />
+                                <Button x:Name="ImportLocalButton" Content="Import GGUF"
+                                        Height="30" Margin="0,0,8,0" Click="ImportLocal_Click" />
+                                <Button x:Name="DeleteLocalButton" Content="Delete model"
+                                        Height="30" Click="DeleteLocal_Click" />
+                            </StackPanel>
+                            <TextBlock Text="llama.cpp CPU runtime + Qwen3 1.7B (Apache-2.0). Downloaded separately from the MSI; the server binds to loopback only."
+                                       FontSize="9.5" Foreground="#9A9488" TextWrapping="Wrap"
+                                       Margin="0,6,0,0" />
                         </StackPanel>
 
                         <TextBlock Text="Tone" FontSize="11.5" Foreground="#6B665C" />

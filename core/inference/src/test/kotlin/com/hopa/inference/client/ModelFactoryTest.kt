@@ -33,4 +33,24 @@ class ModelFactoryTest {
             runBlocking { model.complete(ModelRequest(messages = emptyList())) }
         }
     }
+
+    @Test
+    fun on_device_with_a_loopback_endpoint_builds_the_http_engine() {
+        val model = ModelFactory().create(
+            provider = "on-device",
+            endpoint = "http://127.0.0.1:9/v1",
+            apiKey = "",
+            modelName = "local",
+        )
+
+        assertTrue(model is LocalModel)
+        // An engine exists, so the failure is the closed port, not "no model".
+        val error = assertThrows(Exception::class.java) {
+            runBlocking { model.complete(ModelRequest(messages = emptyList())) }
+        }
+        assertTrue(
+            error !is ModelNotLoaded,
+            "a loopback endpoint must build an engine, not the not-loaded placeholder",
+        )
+    }
 }

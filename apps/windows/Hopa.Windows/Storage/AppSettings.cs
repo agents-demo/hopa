@@ -13,6 +13,9 @@ public sealed class AppSettings
 
     public string ModelName { get; set; } = "gpt-4o-mini";
 
+    /// <summary>The imported .gguf, or blank for the curated default model.</summary>
+    public string LocalModelPath { get; set; } = "";
+
     public string Tone { get; set; } = "warm";
 
     public string Profile { get; set; } = "everyday";

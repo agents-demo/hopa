@@ -54,7 +54,7 @@ desktop form. The phase plan is [total-parity.md](total-parity.md).
 |---|---|---|---|
 | Settings hub with search | `apps/android/feature/settings/src/main/kotlin/com/hopa/feature/settings/SettingsScreen.kt` | navigation hub with search and subpages | new |
 | Settings - Answers (model, key, vision) | `apps/android/feature/settings/src/main/kotlin/com/hopa/feature/settings/SettingsModelScreen.kt` | API/LAN/Demo provider, endpoint, key, vision; demo hides the endpoint fields | adapt |
-| On-device small model | `apps/android/feature/settings/src/main/kotlin/com/hopa/feature/settings/LocalModelSection.kt` | not offered: Windows has no local inference runtime and is API/LAN/Demo only | new |
+| On-device small model | `apps/android/feature/settings/src/main/kotlin/com/hopa/feature/settings/LocalModelSection.kt` | llama.cpp on loopback, curated Qwen3 1.7B (GGUF, 32k), install/import/delete and status in Settings → Answers; one curated card, not the full Android catalogue | adapt |
 | Settings — My computer (pairing) | `apps/android/feature/execution/src/main/kotlin/com/hopa/feature/execution/ComputerScreen.kt` | backend pairing and bridge address | have |
 | Settings — Tone and length | `apps/android/feature/settings/src/main/kotlin/com/hopa/feature/settings/PreferencesSettings.kt` | tone; length joins the Answers subpage | have |
 | Settings — Run history | `apps/android/feature/history/src/main/kotlin/com/hopa/feature/history/HistoryScreen.kt` | runs window | have |
@@ -75,7 +75,7 @@ desktop form. The phase plan is [total-parity.md](total-parity.md).
 | Preference | Android | Windows | Status |
 |---|---|---|---|
 | Step source | `auto` / `model` / `graph`, with a graph catalogue | `auto` / `anchors` / `model`; Windows graph v1 (Notepad/Explorer/Calculator) | adapt; the catalogue is smaller than Android's |
-| Cloud fallback | on-device model falls back to the API with consent | the Windows model is already the configured API provider; there is no on-device model to fall back from | not-applicable |
+| Cloud fallback | on-device model falls back to the API with consent | Windows now runs an on-device model, but a local failure is an error: consent-based fallback is still MODEL-11 | new |
 | Replay | stored recipe before the model | same, through the shared `TurnRunner` | have |
 | Instant commands | canonical launch/back/home/scroll/wait | same, through `IntentClassifier` | have |
 | Plan-first | plan, approve, resend | same, with `PlanWindow` | have |

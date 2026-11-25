@@ -292,7 +292,12 @@ class TurnEngine(
         // deadline. Windows supplies the ports and turns the outcome into a
         // conversation; it does not keep a second copy of the order.
         val runner = TurnRunner(
-            steps = ModelStepPolicy(model),
+            steps = ModelStepPolicy(
+                model,
+                // The loopback llama.cpp model is CPU-bound; 256 tokens is
+                // enough for one decision and keeps the turn inside its deadline.
+                maxTokens = if (config.modelName.equals("local", ignoreCase = true)) 256 else null,
+            ),
             executorFor = { target ->
                 val selector = if (config.hasBridge) null else WindowsPathSelector()
                 val system = (target as? HostDevice)?.let { HostSystem(it) }
@@ -341,9 +346,13 @@ class TurnEngine(
                     useGraphs = graphs != null && config.stepSource != "model",
                     graphFallback = config.stepSource != "anchors",
                     cloudFallback = false,
-                    // A person may need minutes to sign; the takeover pause is
-                    // part of the turn's budget, so a paused turn gets longer.
-                    timeoutMillis = if (startPaused) 600_000 else 120_000,
+                    // A person may need minutes to sign, and a CPU local model
+                    // may need minutes for a full screen; both get a longer budget.
+                    timeoutMillis = when {
+                        startPaused -> 600_000
+                        config.modelName.equals("local", ignoreCase = true) -> 600_000
+                        else -> 120_000
+                    },
                 ),
                 isCancelled = { cancelled },
                 beforeStep = {
@@ -410,8 +419,10 @@ class TurnEngine(
     private fun model(): ModelPort = when {
         forceStub || config.modelProvider.equals("stub", ignoreCase = true) -> ScriptedModel()
 
-        // An explicit on-device choice must fail visibly, not fall back to the
-        // demo or the cloud. Windows has no local engine yet.
+        // The window starts its own llama.cpp server on loopback and configures
+        // `on-device` with that endpoint, so a bare `on-device` here has no
+        // runtime to load and must fail visibly instead of silently reaching
+        // for the cloud.
         config.modelProvider.equals("on-device", ignoreCase = true) -> ModelFactory().create(
             provider = config.modelProvider,
             endpoint = config.modelBaseUrl,

@@ -65,18 +65,29 @@ HOPA: Opened Notepad.
 
 ## 4. On-device small model (MODEL-07…13)
 
-- [ ] **MODEL-07** ADR: ONNX Runtime / llama.cpp / Windows ML, model format.
-- [ ] **MODEL-08** catalogue: size, licence, RAM/CPU budget, model cards.
-- [ ] **MODEL-09** download/import/delete/quota UI, like Android
-      `LocalModelSection`.
-- [ ] **MODEL-10** `LocalEngine` in sidecar, provider `on-device`; no
-      `ModelNotLoaded` placeholder.
+- [x] **MODEL-07** ADR: ONNX Runtime / llama.cpp / Windows ML, model format.
+      Decided in [ADR-0030](../../../design/decisions/0030-windows-on-device-runtime.md):
+      llama.cpp, GGUF, loopback `llama-server`.
+- [x] **MODEL-08** catalogue: size, licence, RAM/CPU budget, model cards.
+      Windows ships one curated card (Qwen3 1.7B, Apache-2.0, 1.28 GB, 32k);
+      the full Android catalogue is the next size, not a blocker.
+- [x] **MODEL-09** download/import/delete UI, like Android `LocalModelSection`.
+      Settings → Answers: licence confirmation, install, import a `.gguf`,
+      delete, status. A per-model quota is unnecessary while one curated
+      model is offered.
+- [x] **MODEL-10** `LocalEngine` in sidecar, provider `on-device`; no
+      `ModelNotLoaded` placeholder. `HttpLocalEngine` reaches the window's
+      loopback server; a non-loopback endpoint still fails visibly.
 - [ ] **MODEL-11** local→API fallback only with consent; no silent cloud.
-- [ ] **MODEL-12** model files separate from the MSI; installer size budget.
+      Not implemented: a local failure is an error, never a hidden retry.
+- [x] **MODEL-12** model files separate from the MSI; installer size budget.
+      Runtime and weights download to `%LOCALAPPDATA%\HOPA`; the MSI is unchanged.
 - [ ] **MODEL-13** offline/performance evidence on a clean VM.
+      Local turn transcript exists on this machine; a clean VM is still open.
 
-This is the long pole (4–6 weeks) and a product/privacy decision, not a combo
-box. Until then the explicit `on-device` provider fails visibly.
+The runtime works end to end. What remains is consent-based fallback
+(MODEL-11), clean-VM evidence (MODEL-13), and the progress UI that makes a
+multi-minute local turn legible.
 
 ## 5. Tree model (MODEL-14…15)
 

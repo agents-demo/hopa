@@ -2,6 +2,7 @@ using System.Text.Json.Nodes;
 using System.Windows;
 using Hopa.Windows.Ui.Dialogs;
 using Hopa.Windows.Host;
+using Hopa.Windows.Integrations.LocalModels;
 using Hopa.Windows.Storage;
 
 namespace Hopa.Windows.Ui.Shell;
@@ -106,10 +107,31 @@ public partial class MainWindow : Window
         try
         {
             var settings = new SettingsStore().Load();
+            var modelKey = CredentialStore.Read("hopa.model.key");
+            if (string.Equals(settings.ModelProvider, "on-device", StringComparison.OrdinalIgnoreCase))
+            {
+                localModel ??= new LocalModelRuntime();
+                var endpoint = await localModel.StartAsync(settings.LocalModelPath);
+                // The sidecar reaches the loopback server through its local
+                // engine, so the receipt still says on-device: no cloud, no
+                // separate LAN endpoint a person did not choose.
+                settings.ModelBaseUrl = endpoint;
+                settings.ModelName = "local";
+                // The bundled Qwen3 build has no vision projector; sending a
+                // frame makes llama-server reject the request with HTTP 500.
+                settings.Vision = false;
+                modelKey = "local";
+                Log("local model: llama.cpp server ready on loopback");
+            }
+            else
+            {
+                localModel?.Stop();
+            }
+
             await client.ConfigureAsync(
                 settings,
                 CredentialStore.Read("hopa.bridge.token"),
-                CredentialStore.Read("hopa.model.key"));
+                modelKey);
         }
         catch (Exception error)
         {
