@@ -126,6 +126,11 @@ fun HopaNavHost(container: AppContainer, initialGoal: String = "") {
                         popUpTo(HopaDestination.SignIn) { inclusive = true }
                     }
                 },
+                onBack = if (navController.previousBackStackEntry != null) {
+                    { navController.popBackStack() }
+                } else {
+                    null
+                },
             )
         }
         composable<HopaDestination.Usage> {
