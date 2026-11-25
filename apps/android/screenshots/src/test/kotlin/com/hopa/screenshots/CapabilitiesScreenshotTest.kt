@@ -37,7 +37,8 @@ class CapabilitiesScreenshotTest {
                     onOpenRuns = {},
                     onOpenMemory = {},
                     onOpenSkills = {},
-                    accountLabel = "Signed in",
+                    accountTitle = "Signed in",
+                    accountHint = "Connected to your computer",
                     onOpenAccount = {},
                 )
             }

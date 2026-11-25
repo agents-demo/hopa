@@ -51,7 +51,8 @@ fun CapabilitiesScreen(
     onOpenRuns: () -> Unit,
     onOpenMemory: () -> Unit,
     onOpenSkills: () -> Unit,
-    accountLabel: String = "",
+    accountTitle: String = "Sign in",
+    accountHint: String = "Connect this phone with your computer",
     onOpenAccount: () -> Unit = {},
 ) {
     val ready = accessibilityEnabled
@@ -126,30 +127,6 @@ fun CapabilitiesScreen(
                 }
             }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(HopaColor.Surface, RoundedCornerShape(14.dp))
-                    .border(1.dp, HopaColor.Divider, RoundedCornerShape(14.dp))
-                    .clickable(onClick = onOpenAccount)
-                    .padding(horizontal = 14.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        "Account",
-                        fontSize = 14.sp,
-                        color = HopaColor.TextPrimary,
-                    )
-                    Text(
-                        accountLabel,
-                        fontSize = 11.sp,
-                        color = HopaColor.TextHint,
-                    )
-                }
-                Text("\u203a", fontSize = 20.sp, color = HopaColor.TextHint)
-            }
-
             SectionLabel("WHAT HOPA CAN USE")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Tile(
@@ -181,12 +158,20 @@ fun CapabilitiesScreen(
             }
 
             SectionLabel("HOPA")
-            Tile(
-                title = "Settings",
-                subtitle = "Keys, models and privacy",
-                onClick = onOpenSettings,
-                modifier = Modifier.fillMaxWidth(),
-            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Tile(
+                    title = accountTitle,
+                    subtitle = accountHint,
+                    onClick = onOpenAccount,
+                    modifier = Modifier.weight(1f),
+                )
+                Tile(
+                    title = "Settings",
+                    subtitle = "Keys, models and privacy",
+                    onClick = onOpenSettings,
+                    modifier = Modifier.weight(1f),
+                )
+            }
         }
     }
 }

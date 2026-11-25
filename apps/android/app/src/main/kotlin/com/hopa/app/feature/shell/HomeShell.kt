@@ -67,10 +67,11 @@ fun HomeShell(
     val shared by container.pendingAttachment.collectAsStateWithLifecycle()
     val sharedNotice by container.pendingNotice.collectAsStateWithLifecycle()
     val incoming = shared != null || sharedNotice != null
-    val accountLabel = when {
-        settings.backendDeviceId.isNotBlank() -> "Signed in"
-        settings.accountSkipped -> "This phone only"
-        else -> "Not signed in"
+    val accountTitle = if (settings.backendDeviceId.isNotBlank()) "Signed in" else "Sign in"
+    val accountHint = when {
+        settings.backendDeviceId.isNotBlank() -> "Connected to your computer"
+        settings.accountSkipped -> "This phone only — tap to connect"
+        else -> "Connect this phone with your computer"
     }
     if (settings.profile == "easy") {
         EasyShell(
@@ -97,7 +98,8 @@ fun HomeShell(
             onOpenActMode = onOpenActMode,
             onOpenBrowser = onOpenBrowser,
             onOpenAccount = onOpenAccount,
-            accountLabel = accountLabel,
+            accountTitle = accountTitle,
+            accountHint = accountHint,
             initialGoal = initialGoal,
             shared = incoming,
             banner = banner,
@@ -137,7 +139,8 @@ fun HomeShell(
                 onOpenSkills = onOpenSkills,
                 onOpenRunningApps = onOpenRunningApps,
                 onOpenBrowser = onOpenBrowser,
-                accountLabel = accountLabel,
+                accountTitle = accountTitle,
+                accountHint = accountHint,
                 onOpenAccount = onOpenAccount,
             )
 
@@ -216,7 +219,8 @@ private fun PowerShell(
     onOpenActMode: () -> Unit,
     onOpenBrowser: () -> Unit,
     onOpenAccount: () -> Unit,
-    accountLabel: String,
+    accountTitle: String,
+    accountHint: String,
     initialGoal: String,
     shared: Boolean,
     banner: String?,
@@ -261,7 +265,8 @@ private fun PowerShell(
                 onOpenSkills = onOpenSkills,
                 onOpenRunningApps = onOpenRunningApps,
                 onOpenBrowser = onOpenBrowser,
-                accountLabel = accountLabel,
+                accountTitle = accountTitle,
+                accountHint = accountHint,
                 onOpenAccount = onOpenAccount,
             )
 

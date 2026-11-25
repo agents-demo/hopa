@@ -17,7 +17,8 @@ fun CapabilitiesRoute(
     onOpenMemory: () -> Unit,
     onOpenSkills: () -> Unit,
     onOpenBrowser: () -> Unit,
-    accountLabel: String = "",
+    accountTitle: String = "Sign in",
+    accountHint: String = "Connect this phone with your computer",
     onOpenAccount: () -> Unit = {},
 ) {
     val viewModel: CapabilitiesViewModel = hiltViewModel()
@@ -49,5 +50,8 @@ fun CapabilitiesRoute(
         onOpenMemory = onOpenMemory,
         onOpenSkills = onOpenSkills,
         onOpenBrowser = onOpenBrowser,
+        accountTitle = accountTitle,
+        accountHint = accountHint,
+        onOpenAccount = onOpenAccount,
     )
 }

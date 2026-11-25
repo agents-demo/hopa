@@ -7,12 +7,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -262,6 +264,30 @@ fun HopaNavHost(container: AppContainer, initialGoal: String = "") {
             )
         }
     }
+
+    LaunchedEffect(Unit) {
+        if (!StartedDestination.checked) {
+            StartedDestination.checked = true
+            val atHome = navController.currentBackStackEntry
+                ?.destination
+                ?.let { destination ->
+                    destination.hasRoute<HopaDestination.Chat>() ||
+                        destination.hasRoute<HopaDestination.SignIn>()
+                } == true
+            if (!atHome) {
+                // A cold start must not restore a settings page with no back
+                // entry; open the home instead.
+                navController.navigate(startDestination) {
+                    popUpTo(0) { inclusive = true }
+                }
+            }
+        }
+    }
+}
+
+/** Process-scoped: rotation keeps the person where they were. */
+private object StartedDestination {
+    var checked = false
 }
 
 /** Shown while the launch probe runs, instead of a blank frame. */
