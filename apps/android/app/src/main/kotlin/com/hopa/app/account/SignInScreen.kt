@@ -58,7 +58,6 @@ fun SignInScreen(
     onSignIn: (String, String) -> Unit,
     onSignUp: (String, String) -> Unit,
     onSkip: () -> Unit,
-    onBack: (() -> Unit)? = null,
 ) {
     var formOpen by rememberSaveable { mutableStateOf(false) }
     var signUp by rememberSaveable { mutableStateOf(false) }
@@ -149,21 +148,6 @@ fun SignInScreen(
                         fontSize = 10.5.sp,
                         color = HopaColor.TextHint,
                         textAlign = TextAlign.Center,
-                    )
-                }
-            }
-
-            if (onBack != null) {
-                TextButton(
-                    onClick = onBack,
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(start = 6.dp, top = 2.dp),
-                ) {
-                    Text(
-                        "Back",
-                        fontSize = 12.sp,
-                        color = HopaColor.TextSecondary,
                     )
                 }
             }

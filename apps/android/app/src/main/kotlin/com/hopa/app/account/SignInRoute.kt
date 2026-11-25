@@ -21,7 +21,6 @@ fun SignInRoute(
     container: AppContainer,
     gatewayUrl: String,
     onSignedIn: () -> Unit,
-    onBack: (() -> Unit)? = null,
 ) {
     val viewModel = remember {
         AccountViewModel(
@@ -48,6 +47,5 @@ fun SignInRoute(
                 onSignedIn()
             }
         },
-        onBack = onBack,
     )
 }
