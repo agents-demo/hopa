@@ -75,7 +75,7 @@ desktop form. The phase plan is [total-parity.md](total-parity.md).
 | Preference | Android | Windows | Status |
 |---|---|---|---|
 | Step source | `auto` / `model` / `graph`, with a graph catalogue | `auto` / `anchors` / `model`; Windows graph v1 (Notepad/Explorer/Calculator) | adapt; the catalogue is smaller than Android's |
-| Cloud fallback | on-device model falls back to the API with consent | Windows now runs an on-device model, but a local failure is an error: consent-based fallback is still MODEL-11 | new |
+| Cloud fallback | on-device model falls back to the API with consent | an off-by-default toggle; a failed or timed-out local step reaches the API only with that consent, otherwise the error stays local | have |
 | Replay | stored recipe before the model | same, through the shared `TurnRunner` | have |
 | Instant commands | canonical launch/back/home/scroll/wait | same, through `IntentClassifier` | have |
 | Plan-first | plan, approve, resend | same, with `PlanWindow` | have |

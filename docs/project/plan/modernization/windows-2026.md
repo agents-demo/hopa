@@ -57,7 +57,7 @@ Not in scope:
 |---|---|---|
 | .NET | SDK **10.0.201** installed; product projects target `net8.0-windows` | **.NET 8 LTS ended 2026-11-10**; the shipped self-contained MSI runs EOL bits |
 | Kotlin/Gradle | Kotlin **2.4.21**, AGP **9.5.1**, Gradle **9.6.0** | already newer than this plan first assumed; do not downgrade |
-| Second Kotlin | `tools/scripts/brain.sh` pins **2.1.0** for the standalone brain | two compilers; retire one |
+| Second Kotlin | none: `services/brain` is a Gradle build on the same 2.4.21 plugin | one compiler; `brain.sh`/`brain.ps1` deleted |
 | JDK | Gradle toolchain **17** | keep 17 bytecode for Android; ship a newer jlink runtime |
 | UI | WPF, partial classes, code-behind, **existing** `ChatViewModel`, `ConversationsViewModel`, `RunRailViewModel` | state is partly modelled; not greenfield MVVM |
 | Host composition | manual `new`, static helpers, no composition root | simple, but global state |
@@ -117,7 +117,8 @@ is done when the evidence exists.
       are the first M2a deliverable.
 - [x] Move this plan out of the counted Windows plan directory and use the
       `Gate:`/evidence convention.
-- [ ] Retire the standalone Kotlin 2.1.0 pin in `tools/scripts/brain.sh`.
+- [x] Retire the standalone Kotlin pin: `services/brain` is a Gradle build on
+      Kotlin 2.4.21 and the old scripts are gone.
 
 **Gate:** engineering guardrails, baseline and decisions are in place; signing
 procurement remains an external calendar gate. No product behaviour changed.
@@ -150,28 +151,32 @@ the signed rollback remain external.
       the sidecar and assert it in the package. Evidence: `M1b-runtime.md`
       (`JAVA_VERSION="21.0.11"`); the script refuses a non-21 JDK.
 - [x] Record why JDK 25 is not adopted (image size, no product value).
-- [ ] Delete the second Kotlin compiler path (`brain.sh`). The version is
-      aligned, but `services/brain` is still a standalone `kotlinc` build; porting
-      it to Gradle is a separate change.
+- [x] Delete the second Kotlin compiler path. `services/brain` is a Gradle
+      build on Kotlin 2.4.21; its six checks run as JavaExec tasks and CI calls
+      `./apps/android/gradlew -p services/brain check`.
 
 **Gate:** Android + sidecar green on the same Kotlin; package runtime reports
-Java 21; the second compiler is version-aligned but not yet retired.
+Java 21; the second compiler is retired.
 
 ### M2a. Schema and golden frames (2-3 weeks)
 
-- [ ] JSON Schema for every frame family and the open `op` unions; keep the
-      NDJSON v1 wire.
-- [ ] Capture golden frames from the current build; validate them on both ends
-      in tests.
-- [ ] Add a drift check: schema vs Kotlin builders vs C# reads vs `protocol.md`
-      examples.
+- [x] JSON Schema for every frame family and the open `op` unions; keep the
+      NDJSON v1 wire. `spec/protocol/schema.v1.json`.
+- [x] Capture golden frames from the current build; validate them on both ends
+      in tests. `spec/protocol/golden.ndjson` covers nine core families;
+      `ProtocolGoldenTest` compares the Kotlin builders to those frames. The
+      schema covers every family, and the contract check refuses a builder
+      without a schema entry.
+- [x] Add a drift check: schema vs Kotlin builders vs C# reads vs `protocol.md`
+      examples. `tools/scripts/protocol-contract.py` validates the goldens
+      against the schema and checks that every type has a builder and a doc row.
 - [ ] Separate the **run-record hash chain** from schema evolution: old records
       must still verify with a committed fixture.
 - [ ] Add version/format tags to persisted stores and a migration test from the
       current release.
 
-**Gate:** zero drift on the golden corpus; old records verify; a stored fixture
-from the previous release loads. No codegen yet.
+**Gate:** the schema, goldens and builders agree in CI. Old-record verification
+and persisted-store version tags are still open.
 
 ### M2b. Typed frames, only if measured drift justifies it (1-2 weeks, conditional)
 

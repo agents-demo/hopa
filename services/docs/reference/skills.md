@@ -60,4 +60,4 @@ validates the required fields. `SkillLoaderTest` loads all six.
 1. Create `services/brain/knowledge/skills/<name>/SKILL.md`.
 2. Fill the front matter and write the shortest reliable path.
 3. Mark irreversible steps and ask-before-send actions.
-4. Run `./tools/scripts/brain.sh` (or `.\\tools\scripts\\brain.ps1`).
+4. Run `./apps/android/gradlew -p services/brain check`.

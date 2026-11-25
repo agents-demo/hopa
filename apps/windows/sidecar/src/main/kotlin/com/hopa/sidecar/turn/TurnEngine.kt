@@ -206,6 +206,7 @@ class TurnEngine(
                         plan = outcome.plan,
                         checkpointsComplete = outcome.checkpointsComplete,
                         checkpointsMissing = outcome.checkpointsMissing,
+                        modelInput = outcome.modelInput,
                     ),
                 )
                 outcome.answer
@@ -283,6 +284,19 @@ class TurnEngine(
 
         val device = device()
         val model = model()
+        // Consent already came from the person; the sidecar only checks that an
+        // API address, model and key exist, so an empty fallback never looks
+        // ready. The local answer still comes first.
+        val fallback = if (config.hasFallback) {
+            ModelFactory().create(
+                provider = config.fallbackProvider,
+                endpoint = config.fallbackBaseUrl,
+                apiKey = config.fallbackModelKey,
+                modelName = config.fallbackModelName,
+            )
+        } else {
+            null
+        }
         val buffer = InMemoryRunRecorder()
         val recorder = if (onRecord == null) buffer else EmittingRecorder(buffer, onRecord)
         val memoryText = memory.promptText()
@@ -298,6 +312,7 @@ class TurnEngine(
                 // enough for one decision and keeps the turn inside its deadline.
                 maxTokens = if (config.modelName.equals("local", ignoreCase = true)) 256 else null,
             ),
+            fallbackSteps = fallback?.let { ModelStepPolicy(it) },
             executorFor = { target ->
                 val selector = if (config.hasBridge) null else WindowsPathSelector()
                 val system = (target as? HostDevice)?.let { HostSystem(it) }
@@ -345,13 +360,20 @@ class TurnEngine(
                     checkpoints = checkpoints,
                     useGraphs = graphs != null && config.stepSource != "model",
                     graphFallback = config.stepSource != "anchors",
-                    cloudFallback = false,
+                    cloudFallback = fallback != null,
                     // A person may need minutes to sign, and a CPU local model
                     // may need minutes for a full screen; both get a longer budget.
                     timeoutMillis = when {
                         startPaused -> 600_000
                         config.modelName.equals("local", ignoreCase = true) -> 600_000
                         else -> 120_000
+                    },
+                    // A 200-node desktop tree is more prompt than a small CPU
+                    // model can read inside one turn; the marker says it was cut.
+                    screenCharLimit = if (config.modelName.equals("local", ignoreCase = true)) {
+                        6_000
+                    } else {
+                        0
                     },
                 ),
                 isCancelled = { cancelled },
@@ -385,6 +407,7 @@ class TurnEngine(
             narration = result?.narration.orEmpty(),
             error = result?.error?.message,
             plan = result?.pendingPlan.orEmpty(),
+            modelInput = result?.modelInput.orEmpty(),
             checkpointsComplete = result?.checkpoints?.complete,
             checkpointsMissing = result?.checkpoints?.missing?.map { it.anchor }.orEmpty(),
         )

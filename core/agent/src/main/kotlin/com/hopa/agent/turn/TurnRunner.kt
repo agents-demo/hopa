@@ -5,6 +5,7 @@ import com.hopa.agent.decision.DecisionPolicy
 import com.hopa.agent.decision.DecisionRuntime
 import com.hopa.agent.decision.StepPolicy
 import com.hopa.agent.decision.command.CommandDecisionPolicy
+import com.hopa.agent.decision.fallback.FallbackDecisionPolicy
 import com.hopa.agent.decision.graph.ChainDecisionPolicy
 import com.hopa.agent.decision.graph.HandGraphDecisionPolicy
 import com.hopa.agent.decision.graph.SayDecisionPolicy
@@ -95,10 +96,18 @@ class TurnRunner(
         // The loop decides every step. These only choose which rungs it gets:
         // the graph, a canonical command, the model, and the API last when the
         // person allowed it. A graph-only turn ends with the refusal.
-        val model = ModelDecisionPolicy(steps = steps, knowledge = { tables })
         val cloud = fallbackSteps
             ?.takeIf { request.cloudFallback }
             ?.let { ModelDecisionPolicy(steps = it, knowledge = { tables }) }
+        val model = FallbackDecisionPolicy(
+            primary = ModelDecisionPolicy(
+                steps = steps,
+                knowledge = { tables },
+                screenLimit = request.screenCharLimit,
+            ),
+            hasFallback = cloud != null,
+            primaryBudgetMillis = if (cloud != null) LOCAL_STEP_BUDGET_MS else 0,
+        )
         val graph = if (request.useGraphs && graphs != null) {
             HandGraphDecisionPolicy(graphs)
         } else {
@@ -230,6 +239,7 @@ class TurnRunner(
         val source = sourceOf(graphInChain, result.sources)
         return TurnOutcome(
             source = source,
+            modelInput = if (MODEL_INPUT in result.sources) MODEL_INPUT_TREE else "",
             knowledgeVersion = tables.version,
             answer = result.answer,
             records = result.records,
@@ -310,6 +320,17 @@ class TurnRunner(
             sources.isEmpty() -> TurnSource.MODEL
             else -> TurnSource.GRAPH
         }
+
+        /** The policy name `ModelDecisionPolicy` reports; the receipt names its input. */
+        const val MODEL_INPUT = "model"
+        const val MODEL_INPUT_TREE = "uia-tree"
+
+        /**
+         * How long one local step may run when the API is waiting behind it.
+         * The turn has a ten-minute deadline; this leaves half of it for the
+         * fallback instead of letting the local model spend all of it.
+         */
+        const val LOCAL_STEP_BUDGET_MS = 300_000L
 
         const val GRAPH_ONLY_ANSWER =
             "I only have graphs for a few apps. Switch Steps to Auto or Model for this goal."

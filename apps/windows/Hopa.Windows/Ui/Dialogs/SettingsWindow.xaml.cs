@@ -64,8 +64,10 @@ public partial class SettingsWindow : Window
         BaseUrlBox.Text = settings.ModelBaseUrl;
         ModelNameBox.Text = settings.ModelName;
         localModelPath = settings.LocalModelPath;
+        CloudFallbackBox.IsChecked = settings.CloudFallback;
         ModelKeyBox.Password = CredentialStore.Read("hopa.model.key");
         UpdateLocalModelStatus();
+        CloudFallbackHint.Text = FallbackHintText();
         Select(ToneBox, settings.Tone);
         ProfileStatus.Text = $"Current: {settings.Profile}";
         var gateway = GatewayCredentials.Load();
@@ -765,6 +767,7 @@ public partial class SettingsWindow : Window
     private void Save_Click(object sender, RoutedEventArgs e)
     {
         var settings = store.Load();
+        var previousProvider = settings.ModelProvider;
         settings.BridgeUrl = BridgeUrlBox.Text.Trim();
         settings.UseBridge = PhoneTargetRadio.IsChecked == true;
         settings.ModelProvider = Value(ProviderBox, "openai");
@@ -774,6 +777,14 @@ public partial class SettingsWindow : Window
         settings.Tone = Value(ToneBox, "warm");
         settings.Profile = SelectedProfile(settings.Profile);
         settings.LocalModelPath = localModelPath;
+        settings.CloudFallback = CloudFallbackBox.IsChecked == true;
+        if (settings.ModelProvider.Equals("on-device", StringComparison.OrdinalIgnoreCase) &&
+            !previousProvider.Equals("on-device", StringComparison.OrdinalIgnoreCase))
+        {
+            // Keep the API choice the person had before switching to local, so
+            // consent-based fallback has a provider to fall back to.
+            settings.FallbackProvider = previousProvider;
+        }
         settings.ReplaySkills = ReplayBox.IsChecked == true;
         settings.PlanFirst = PlanFirstBox.IsChecked == true;
         settings.InstantCommands = InstantCommandsBox.IsChecked == true;
@@ -829,7 +840,16 @@ public partial class SettingsWindow : Window
         if (local)
         {
             UpdateLocalModelStatus();
+            CloudFallbackHint.Text = FallbackHintText();
         }
+    }
+
+    private string FallbackHintText()
+    {
+        var url = BaseUrlBox.Text.Trim();
+        return url.Length == 0
+            ? "Fallback stays off until an API address is set."
+            : $"A failed local turn sends the screen and the goal to {url}. Off by default.";
     }
 
     private void UpdateLocalModelStatus() =>

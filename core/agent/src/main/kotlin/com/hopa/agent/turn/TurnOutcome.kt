@@ -36,6 +36,13 @@ data class TurnOutcome(
      * when both name it, so the receipt carries it. Empty when nothing acted.
      */
     val knowledgeVersion: String = "",
+    /**
+     * What the model read: `uia-tree` when the step loop asked a model over the
+     * accessibility tree, empty when no model answered. The receipt names it so
+     * "model" on Windows is not mistaken for a screenshot-only or trained-tree
+     * mode.
+     */
+    val modelInput: String = "",
     val millis: Long = 0,
 ) {
     val executed: Int get() = records.count { it.executed }

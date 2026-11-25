@@ -137,7 +137,10 @@ public sealed partial class EngineHostClient : IAsyncDisposable, IChatEngine
             response["steps"] as JsonArray,
             response["chainOk"]?.GetValue<bool>() == true,
             plan,
-            verification);
+            verification)
+        {
+            ModelInput = response["modelInput"]?.GetValue<string>() ?? "",
+        };
     }
 
     public async Task<List<JsonObject>> ListConversationsAsync(bool includeArchived = false)
@@ -241,7 +244,13 @@ public sealed partial class EngineHostClient : IAsyncDisposable, IChatEngine
         return response["conversation"] as JsonObject;
     }
 
-    public async Task<JsonObject> ConfigureAsync(AppSettings settings, string bridgeToken, string modelKey)
+    public async Task<JsonObject> ConfigureAsync(
+        AppSettings settings,
+        string bridgeToken,
+        string modelKey,
+        string fallbackBaseUrl = "",
+        string fallbackModelName = "",
+        string fallbackModelKey = "")
     {
         var fields = new JsonObject
         {
@@ -260,6 +269,11 @@ public sealed partial class EngineHostClient : IAsyncDisposable, IChatEngine
             ["planFirst"] = settings.PlanFirst,
             ["instantCommands"] = settings.InstantCommands,
             ["vision"] = settings.Vision,
+            ["cloudFallback"] = settings.CloudFallback,
+            ["fallbackProvider"] = settings.FallbackProvider,
+            ["fallbackBaseUrl"] = fallbackBaseUrl,
+            ["fallbackModelName"] = fallbackModelName,
+            ["fallbackModelKey"] = fallbackModelKey,
         };
         turnWait = string.Equals(settings.ModelName, "local", StringComparison.OrdinalIgnoreCase)
             ? TimeSpan.FromMinutes(11)

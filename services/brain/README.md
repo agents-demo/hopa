@@ -4,31 +4,32 @@ Pure-Kotlin routing logic for the HOPA brain. It is the first real JVM slice of
 Phase 2 and the contract both the JVM service and the ArkTS core will follow.
 
 - JDK 17
-- Kotlin 2.1.0
+- Kotlin 2.4.21, through Gradle only
 - No Android imports
 - No network
 - No UI
 
 ## Build and test
 
-Windows:
-
-```powershell
-.\scripts\brain.ps1
-```
-
-Linux/macOS:
+From the repository root:
 
 ```bash
-./scripts/brain.sh
+./apps/android/gradlew -p services/brain check
 ```
 
-The script downloads the pinned Kotlin compiler into `.tools/` (gitignored),
-compiles `brain/src`, and runs `RouterTest` and `ServerTest`:
+`check` compiles `brain/src` and runs the six `*TestKt` programs as JavaExec
+tasks; Gradle's Kotlin plugin is the only compiler:
 
 ```text
 RouterTest: 17 assertions passed
 ServerTest: 20 assertions passed
+```
+
+To build the runnable reference server:
+
+```bash
+./apps/android/gradlew -p services/brain fatJar
+java -jar services/brain/build/brain.jar 8731
 ```
 
 The HTTP contract is documented in [`docs/brain.md`](../../services/docs/reference/brain.md).

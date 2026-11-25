@@ -195,17 +195,14 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - name: Cache Kotlin compiler
-        uses: actions/cache@v4
-        with:
-          path: .tools/kotlinc
-          key: kotlin-2.4.21-linux
       - name: Install contract-test dependencies
         run: python -m pip install jsonschema
       - name: Compile and test
-        run: bash tools/scripts/brain.sh
+        run: ./apps/android/gradlew -p services/brain check --no-daemon
       - name: Cross-language contract
         run: python tools/scripts/brain-contract.py
+      - name: Protocol schema and golden frames
+        run: python tools/scripts/protocol-contract.py
 
   security:
     name: secret and license scan

@@ -13,4 +13,8 @@ public sealed record TurnReport(
     string Earlier,
     string? Error,
     IReadOnlyList<string>? Plan = null,
-    CheckpointVerification? Checkpoints = null);
+    CheckpointVerification? Checkpoints = null)
+{
+    /// <summary>`uia-tree` when a model read the accessibility tree.</summary>
+    public string ModelInput { get; init; } = "";
+}

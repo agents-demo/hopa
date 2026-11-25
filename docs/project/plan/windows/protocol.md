@@ -20,7 +20,7 @@ memory/skill families as additive v1 messages.
 | `turn.cancel` | - | stop the running turn at the next safe point |
 | `turn.pause` | - | pause before the next step and hand the foreground to the person |
 | `turn.resume` | - | resume after a takeover; the loop re-observes before deciding |
-| `configure` | `bridgeUrl`, `useBridge`, `bridgeToken`, `bridgeRefresh`, `modelProvider`, `modelBaseUrl`, `modelName`, `modelKey`, `tone`, `profile`, `replay`, `planFirst`, `instantCommands`, `vision` | settings in memory; secrets are never written to disk here |
+| `configure` | `bridgeUrl`, `useBridge`, `bridgeToken`, `bridgeRefresh`, `modelProvider`, `modelBaseUrl`, `modelName`, `modelKey`, `tone`, `profile`, `replay`, `planFirst`, `instantCommands`, `vision`, `cloudFallback`, `fallbackProvider`, `fallbackBaseUrl`, `fallbackModelName`, `fallbackModelKey` | settings in memory; secrets are never written to disk here; the fallback key is only sent when the person allowed the local→API fallback |
 | `gateway.state` | `paired`, `phoneOnline` | P4: whether this PC has a gateway credential and a phone peer; a phone approval is only accepted while both are true |
 | `device.result` | `id`, `ok`, `error?`, `observation?`, `app?` | the host performed, or refused, a requested device action |
 | `browser.result` | `id`, `ok`, `error?`, `text?` | the host performed, or refused, a `web.*` action in the WebView2 surface |
@@ -71,7 +71,8 @@ memory/skill families as additive v1 messages.
 | `browser.request` | `id`, `op` (`navigate`, `read`, `click`, `type`), plus op fields | perform one `web.*` action in the host's WebView2 window |
 | `approval.request` | `id`, `title`, `body`, `amount`, `merchant`, `consequence`, `isPayment`, `action` | ask the person |
 | `session` | `token`, `refresh` | the sidecar rotated the bridge pair; the host persists it |
-| `turn.end` | `id`, `conversationId`, `title`, `answer`, `steps[]`, `chainOk`, `plan[]`, `checkpoints?` | the turn finished; `plan` is the steps waiting for approval on a plan-first turn; `checkpoints` is `{complete, missing[]}` when the request named any |
+| `backend.pair` | `ok`, `error?` | the reply to a backend pairing attempt; never carries a secret |
+| `turn.end` | `id`, `conversationId`, `title`, `answer`, `steps[]`, `chainOk`, `plan[]`, `checkpoints?`, `modelInput?` | the turn finished; `plan` is the steps waiting for approval on a plan-first turn; `checkpoints` is `{complete, missing[]}` when the request named any; `modelInput` is `uia-tree` when a model read the accessibility tree |
 | `conversation.*` | echo `id` plus the payload | replies to the conversation messages above |
 | `memory.list` | `id`, `ok`, `items:[string]` | the memory facts; also the reply to add/delete/clear |
 | `skills.list` | `id`, `ok`, `items:[{trigger, action}]` | the learned pairs; also the reply to add/delete/clear |

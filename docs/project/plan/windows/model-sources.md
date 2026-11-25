@@ -1,6 +1,6 @@
 # MODEL-XX: answer sources, anchors and local models
 
-Status: **MODEL-01…MODEL-10 and MODEL-12 done; MODEL-11, MODEL-13…MODEL-20 pending.** This plan makes
+Status: **MODEL-01…MODEL-12 and MODEL-14 done; MODEL-13 is measured with the clean VM open; MODEL-15…MODEL-20 pending.** This plan makes
 the Windows model-source choices explicit instead of hiding platform
 differences behind a single API provider.
 
@@ -20,7 +20,7 @@ the rest of the sequence stays.
 | Answer source | Input | Needs network | Needs a model file | Windows status |
 |---|---|---|---|---|
 | Anchors / graph | UIA tree + labels | no | no | ✅ Windows graph v1 |
-| Tree model | UIA tree | API/LAN | no | ✅ same as API model; named mode pending |
+| Tree model | UIA tree | API/LAN | no | ✅ the model source; the receipt carries `modelInput=uia-tree` |
 | Small local model | UIA tree | no | yes | installed in Settings; loopback llama.cpp |
 | API model | UIA tree | yes | no | ✅ DeepSeek/OpenAI/LAN |
 | Demo | none | no | no | ✅ `stub` |
@@ -78,14 +78,18 @@ HOPA: Opened Notepad.
 - [x] **MODEL-10** `LocalEngine` in sidecar, provider `on-device`; no
       `ModelNotLoaded` placeholder. `HttpLocalEngine` reaches the window's
       loopback server; a non-loopback endpoint still fails visibly.
-- [ ] **MODEL-11** local→API fallback only with consent; no silent cloud.
-      Not implemented: a local failure is an error, never a hidden retry.
+- [x] **MODEL-11** local→API fallback only with consent; no silent cloud.
+      `cloudFallback` is off by default, the Settings toggle says the screen
+      leaves the PC, and `FallbackDecisionPolicy` hands a failed or timed-out
+      local step to the API only when that consent is on. Without it the error
+      stays local.
 - [x] **MODEL-12** model files separate from the MSI; installer size budget.
       Runtime and weights download to `%LOCALAPPDATA%\HOPA`; the MSI is unchanged.
 - [ ] **MODEL-13** offline/performance evidence on a clean VM.
       Measured here: a 49-node screen finished two steps in 256.5 s; a
       200-node screen executed one step and then hit the ten-minute deadline.
-      A clean VM and a prompt budget for local models are still open.
+      The local screen is now capped at 6,000 characters with a
+      `[SCREEN TRUNCATED]` marker; a clean VM re-run is still open.
 
 The runtime works end to end. What remains is consent-based fallback
 (MODEL-11), clean-VM evidence (MODEL-13), and the progress UI that makes a
@@ -93,8 +97,10 @@ multi-minute local turn legible.
 
 ## 5. Tree model (MODEL-14…15)
 
-- [ ] **MODEL-14** name the tree mode and show it in the receipt: the current
-      API/local model already receives UIA tree + elements.
+- [x] **MODEL-14** name the tree mode and show it in the receipt: the current
+      API/local model receives UIA tree + elements, so `turn.end` now carries
+      `modelInput=uia-tree` and the Answers page says so next to the step
+      source.
 - [ ] **MODEL-15** only if a separate tree-trained model is actually required;
       otherwise close as `not-applicable` with this evidence.
 

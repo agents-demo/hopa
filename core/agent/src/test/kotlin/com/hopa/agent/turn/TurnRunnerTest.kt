@@ -41,6 +41,7 @@ import com.hopa.runlog.store.InMemoryRunRecorder
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -77,12 +78,25 @@ class TurnRunnerTest {
     private class ScriptedPolicy(private val replies: List<String>) : StepPolicy {
         var calls: Int = 0
             private set
+        val requests = mutableListOf<ModelRequest>()
 
         override suspend fun next(request: ModelRequest): ModelReply {
             check(replies.isNotEmpty()) { "the model must not be called in this test" }
+            requests += request
             val text = replies[minOf(calls, replies.lastIndex)]
             calls += 1
             return ModelReply(text, ModelUsage(totalTokens = 5))
+        }
+    }
+
+    /** A local provider that is down, not one that answers badly. */
+    private class FailingPolicy : StepPolicy {
+        var calls: Int = 0
+            private set
+
+        override suspend fun next(request: ModelRequest): ModelReply {
+            calls += 1
+            throw java.io.IOException("the local model is down")
         }
     }
 
@@ -139,14 +153,18 @@ class TurnRunnerTest {
     private class Harness(
         screens: List<Observation>,
         replies: List<String> = emptyList(),
+        fallbackReplies: List<String>? = null,
         plan: List<String>? = null,
         store: RecipeStore? = null,
         commands: Boolean = false,
         decisions: com.hopa.agent.decision.DecisionRuntime? = null,
         graphs: com.hopa.decision.graph.GraphStepSource? = null,
+        failingModel: Boolean = false,
     ) {
         val device = FakeDevice(screens)
         val policy = ScriptedPolicy(replies)
+        val failing = FailingPolicy()
+        val fallback = fallbackReplies?.let { ScriptedPolicy(it) }
         private val knowledge = CatalogSnapshot(
             version = "test",
             catalog = emptyList(),
@@ -168,7 +186,8 @@ class TurnRunnerTest {
             clock = clock,
         )
         val runner = TurnRunner(
-            steps = policy,
+            steps = if (failingModel) failing else policy,
+            fallbackSteps = fallback,
             executorFor = { executor },
             recorder = recorder,
             clock = clock,
@@ -187,6 +206,8 @@ class TurnRunnerTest {
             checkpoints: List<Checkpoint> = emptyList(),
             surfaceAvailable: Boolean = true,
             surfaceError: String = "",
+            cloudFallback: Boolean = false,
+            screenCharLimit: Int = 0,
         ): TurnRequest = TurnRequest(
             goal = goal,
             device = device,
@@ -200,6 +221,8 @@ class TurnRunnerTest {
             planApproved = planApproved,
             surfaceAvailable = surfaceAvailable,
             surfaceError = surfaceError,
+            cloudFallback = cloudFallback,
+            screenCharLimit = screenCharLimit,
         )
     }
 
@@ -670,5 +693,65 @@ class TurnRunnerTest {
 
         assertEquals(TurnSource.COMMAND, outcome.source)
         assertEquals("ui.back", outcome.records.single().action.kind)
+    }
+
+    @Test
+    fun a_failed_local_model_stays_failed_without_consent() = runBlocking {
+        val harness = Harness(
+            screens = listOf(labelled("Settings")),
+            fallbackReplies = listOf("""{"say":"API answer.","done":true,"needUser":false}"""),
+            failingModel = true,
+        )
+
+        val outcome = harness.runner.run(harness.request("Open Wi-Fi"))
+
+        assertNotNull(outcome.error)
+        assertEquals(1, harness.failing.calls)
+        assertEquals(0, harness.fallback!!.calls)
+        assertFalse(outcome.answer.contains("API answer"))
+    }
+
+    @Test
+    fun consent_lets_the_api_finish_a_failed_local_turn() = runBlocking {
+        val harness = Harness(
+            screens = listOf(labelled("Settings")),
+            fallbackReplies = listOf("""{"say":"API answer.","done":true,"needUser":false}"""),
+            failingModel = true,
+        )
+
+        val outcome = harness.runner.run(harness.request("Open Wi-Fi", cloudFallback = true))
+
+        assertNull(outcome.error)
+        assertEquals("API answer.", outcome.answer)
+        assertEquals(1, harness.failing.calls)
+        assertEquals(1, harness.fallback!!.calls)
+        assertEquals(TurnSource.MODEL, outcome.source)
+    }
+
+    @Test
+    fun a_local_turn_gets_a_bounded_screen() = runBlocking {
+        val long = "x".repeat(2_000)
+        val harness = Harness(
+            screens = listOf(observation(ObservationNode(ref = "e1", type = "TextView", text = long))),
+            replies = listOf("""{"say":"Done.","done":true,"needUser":false}"""),
+        )
+
+        harness.runner.run(harness.request("Read the screen", screenCharLimit = 200))
+
+        val screen = harness.policy.requests.first().messages
+            .first { it.content.contains("SCREEN TRUNCATED") }
+        assertTrue(screen.content.length < 400)
+    }
+
+    @Test
+    fun a_model_turn_names_the_tree_input() = runBlocking {
+        val harness = Harness(
+            screens = listOf(labelled("Settings")),
+            replies = listOf("""{"say":"Done.","done":true,"needUser":false}"""),
+        )
+
+        val outcome = harness.runner.run(harness.request("Read the screen"))
+
+        assertEquals("uia-tree", outcome.modelInput)
     }
 }

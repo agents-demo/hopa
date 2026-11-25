@@ -39,6 +39,49 @@ class RuntimeConfigTest {
     }
 
     @Test
+    fun fallback_needs_consent_a_local_provider_and_a_complete_api() {
+        val config = RuntimeConfig()
+        config.update(buildJsonObject {
+            put("modelProvider", "on-device")
+            put("cloudFallback", true)
+            put("fallbackProvider", "openai")
+            put("fallbackBaseUrl", "https://api.example.com/v1")
+            put("fallbackModelName", "m")
+            put("fallbackModelKey", "sk-test")
+        })
+        assertTrue(config.hasFallback)
+
+        val noConsent = RuntimeConfig()
+        noConsent.update(buildJsonObject {
+            put("modelProvider", "on-device")
+            put("cloudFallback", false)
+            put("fallbackBaseUrl", "https://api.example.com/v1")
+            put("fallbackModelName", "m")
+            put("fallbackModelKey", "sk-test")
+        })
+        assertFalse(noConsent.hasFallback)
+
+        val noKey = RuntimeConfig()
+        noKey.update(buildJsonObject {
+            put("modelProvider", "on-device")
+            put("cloudFallback", true)
+            put("fallbackBaseUrl", "https://api.example.com/v1")
+            put("fallbackModelName", "m")
+        })
+        assertFalse(noKey.hasFallback)
+
+        val cloudPrimary = RuntimeConfig()
+        cloudPrimary.update(buildJsonObject {
+            put("modelProvider", "openai")
+            put("cloudFallback", true)
+            put("fallbackBaseUrl", "https://api.example.com/v1")
+            put("fallbackModelName", "m")
+            put("fallbackModelKey", "sk-test")
+        })
+        assertFalse(cloudPrimary.hasFallback)
+    }
+
+    @Test
     fun missing_flags_keep_the_defaults() {
         val config = RuntimeConfig()
         config.update(buildJsonObject { put("tone", "brief") })

@@ -108,6 +108,11 @@ public partial class MainWindow : Window
         {
             var settings = new SettingsStore().Load();
             var modelKey = CredentialStore.Read("hopa.model.key");
+            // Captured before the local block rewrites the endpoint fields: the
+            // API choice is what consent-based fallback falls back to.
+            var apiBaseUrl = settings.ModelBaseUrl;
+            var apiModelName = settings.ModelName;
+            var apiKey = modelKey;
             if (string.Equals(settings.ModelProvider, "on-device", StringComparison.OrdinalIgnoreCase))
             {
                 localModel ??= new LocalModelRuntime();
@@ -131,7 +136,10 @@ public partial class MainWindow : Window
             await client.ConfigureAsync(
                 settings,
                 CredentialStore.Read("hopa.bridge.token"),
-                modelKey);
+                modelKey,
+                fallbackBaseUrl: settings.CloudFallback ? apiBaseUrl : "",
+                fallbackModelName: settings.CloudFallback ? apiModelName : "",
+                fallbackModelKey: settings.CloudFallback ? apiKey : "");
         }
         catch (Exception error)
         {

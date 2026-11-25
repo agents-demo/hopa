@@ -16,6 +16,19 @@ public sealed class AppSettings
     /// <summary>The imported .gguf, or blank for the curated default model.</summary>
     public string LocalModelPath { get; set; } = "";
 
+    /// <summary>
+    /// The provider to use when a local turn fails and the person allowed the
+    /// fallback. Captured when on-device is selected, so the API choice is not
+    /// lost behind the local one.
+    /// </summary>
+    public string FallbackProvider { get; set; } = "openai";
+
+    /// <summary>
+    /// Consent for local→API fallback. Off by default: with it on, a failed
+    /// local turn sends the screen and the goal to the API.
+    /// </summary>
+    public bool CloudFallback { get; set; }
+
     public string Tone { get; set; } = "warm";
 
     public string Profile { get; set; } = "everyday";

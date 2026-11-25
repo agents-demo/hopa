@@ -58,6 +58,12 @@ data class TurnRequest(
     val cloudFallback: Boolean = false,
     /** One deadline for the whole turn, not per step. */
     val timeoutMillis: Long = 120_000,
+    /**
+     * A local model gets a bounded screen render: a 200-node desktop tree is
+     * more prompt than a small CPU model can read inside a turn. 0 keeps the
+     * whole screen for API models.
+     */
+    val screenCharLimit: Int = 0,
 
     // ── What the surfaces answered ──────────────────────────────────────────
     /** Which source is serving the screen: accessibility, bridge, fallback. */

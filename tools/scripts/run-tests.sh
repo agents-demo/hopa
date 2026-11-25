@@ -36,8 +36,8 @@ echo "=== app catalogue ==="
 "$PY" "$ROOT/tools/scripts/build-app-catalog.py" --check
 
 echo "=== brain tests ==="
-if [ -x "$ROOT/.tools/kotlinc/bin/kotlinc" ] || command -v java >/dev/null 2>&1; then
-  bash "$ROOT/tools/scripts/brain.sh"
+if command -v java >/dev/null 2>&1; then
+  "$ROOT/apps/android/gradlew" -p "$ROOT/services/brain" check --no-daemon
 else
   echo "Java not found; skipping brain tests." >&2
 fi

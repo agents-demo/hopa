@@ -18,6 +18,7 @@ import com.hopa.contracts.error.ErrorCodes
 import com.hopa.contracts.error.HopaError
 import com.hopa.contracts.model.ModelMessage
 import com.hopa.contracts.model.ModelRequest
+import com.hopa.contracts.wire.Observation
 
 /**
  * The language-model policy: it builds the prompt from the observation, asks the
@@ -32,6 +33,8 @@ class ModelDecisionPolicy(
     private val budget: ContextBudget = ContextBudget(),
     private val screenRenderer: ScreenRenderer = ScreenRenderer(),
     private val parser: DecisionParser = DecisionParser(),
+    /** 0 keeps the whole screen; a local model passes a smaller ceiling. */
+    private val screenLimit: Int = 0,
 ) : DecisionPolicy {
     override val name: String = "model"
 
@@ -68,7 +71,7 @@ class ModelDecisionPolicy(
             add(ModelMessage("system", system))
             addAll(budget.fit(context.history))
             add(ModelMessage("user", context.goal))
-            observation?.let { add(ModelMessage("user", screenRenderer.render(it))) }
+            observation?.let { add(ModelMessage("user", screenFor(it))) }
             addAll(input.notes)
             if (input.atStepLimit) {
                 add(ModelMessage("user", STEP_LIMIT))
@@ -117,12 +120,14 @@ class ModelDecisionPolicy(
                 Decision.Say(ModelReplyText.clean(decision.say.ifBlank { "Done." })),
                 usage,
                 raw = reply.text,
+                policy = name,
             )
         }
         if (decision.needUser) {
             return DecisionOutcome(
                 Decision.Ask(ModelReplyText.clean(decision.say), decision.options.orEmpty()),
                 usage,
+                policy = name,
             )
         }
         val action = decision.action
@@ -130,8 +135,24 @@ class ModelDecisionPolicy(
                 Decision.Say(ModelReplyText.clean(decision.say.ifBlank { "Done." })),
                 usage,
                 raw = reply.text,
+                policy = name,
             )
         return DecisionOutcome(Decision.Act(action), usage, raw = reply.text, policy = name)
+    }
+
+    /**
+     * The screen the model sees. A local client passes a ceiling because a
+     * 200-node desktop tree is more prompt than a small CPU model can read
+     * inside one turn; the marker says the render was cut, so the model does
+     * not believe it saw everything.
+     */
+    private fun screenFor(observation: Observation): String {
+        val text = screenRenderer.render(observation)
+        if (screenLimit <= 0 || text.length <= screenLimit) {
+            return text
+        }
+        val marker = "\n[SCREEN TRUNCATED: showing $screenLimit of ${text.length} characters]"
+        return text.take(screenLimit) + marker
     }
 
     /** A short block for the foreground app's typed functions, when it has any. */

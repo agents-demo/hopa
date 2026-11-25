@@ -1,0 +1,9 @@
+{"type":"ready","version":1}
+{"type":"log","text":"ready"}
+{"type":"configured","id":"r-1","bridge":false,"model":"on-device"}
+{"type":"session","token":"t","refresh":"r"}
+{"type":"device.request","id":"d-1","op":"observe"}
+{"type":"browser.request","id":"b-1","op":"open"}
+{"type":"task.error","id":"t-1","request":"task.start","ok":false,"code":"E_UNSUPPORTED","error":"unsupported"}
+{"type":"backend.pair","ok":true}
+{"type":"turn.end","id":"r-1","conversationId":"c-1","title":"T","answer":"A","chainOk":true,"plan":[],"steps":[]}

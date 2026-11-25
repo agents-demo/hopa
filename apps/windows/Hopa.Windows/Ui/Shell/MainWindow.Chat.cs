@@ -113,6 +113,10 @@ public partial class MainWindow : Window
             }
 
             Log($"HOPA: {report.Answer}");
+            if (report.ModelInput.Length > 0)
+            {
+                Log($"model input: {report.ModelInput}");
+            }
             if (!IsActive)
             {
                 var preview = report.Answer.Length > 140 ? report.Answer[..140] + "..." : report.Answer;

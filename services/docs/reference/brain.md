@@ -11,11 +11,11 @@ endpoint, not the full port.
 ## Run
 
 ```bash
-./tools/scripts/brain.sh          # or .\tools\scripts\brain.ps1
-java -cp "services/brain/build/brain.jar;.tools/gson-2.11.0.jar" hopa.brain.http.ServerKt 8731
+./apps/android/gradlew -p services/brain fatJar
+java -jar services/brain/build/brain.jar 8731
 ```
 
-Linux/macOS classpath separator is `:`; Windows uses `;`.
+The jar is self-contained: the Kotlin stdlib and Gson are inside it.
 
 ## Endpoints
 
@@ -93,7 +93,7 @@ The rig asks the brain for the **first** action, then delegates later steps to t
 
 ```bash
 # terminal 1: the brain
-java -cp "services/brain/build/brain.jar;.tools/gson-2.11.0.jar" hopa.brain.http.ServerKt 8731
+java -jar services/brain/build/brain.jar 8731
 
 # terminal 2: the loop, with the brain in front of the model
 hopa-baseline run "open settings" --model openai --brain http://127.0.0.1:8731
@@ -121,7 +121,7 @@ Verified against the running service on 2026-11-06:
 
 ## Tests
 
-`tools/scripts/brain.sh` runs:
+`./apps/android/gradlew -p services/brain check` runs:
 
 - `RouterTest` — 19 routing assertions
 - `ServerTest` — 20 HTTP assertions

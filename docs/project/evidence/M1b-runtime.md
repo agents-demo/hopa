@@ -7,7 +7,7 @@ Status: **engineering complete, with one deliberate open item.**
 | Tool | Version | Where |
 |---|---|---|
 | Gradle Kotlin | 2.4.21 | `apps/android/gradle/libs.versions.toml` |
-| Brain Kotlin | 2.4.21 | `tools/scripts/brain.sh` (aligned) |
+| Brain Kotlin | 2.4.21 | `services/brain/build.gradle.kts` (same plugin as Gradle) |
 | Gradle JVM toolchain | 17 | `build-logic/src/main/kotlin/hopa.kotlin-jvm.gradle.kts` |
 | Sidecar package runtime | JDK 21.0.11 | jlink output in the staged package |
 
@@ -35,8 +35,8 @@ the LTS target for the sidecar package. Revisit only with a measured need.
 
 ## Open
 
-- `services/brain` is still compiled by a standalone `kotlinc` download rather
-  than a Gradle module. It now uses the same Kotlin 2.4.21, so the version
-  divergence is gone, but the second compiler path remains. Retiring it means
-  moving `services/brain` into Gradle and porting its `main`-style tests; that
-  is a separate change.
+- The standalone Kotlin compiler path is retired: `services/brain` is a Gradle
+  build using the same Kotlin 2.4.21 plugin as everything else, and its six
+  `main`-style checks run as JavaExec tasks. `tools/scripts/brain.sh` and
+  `brain.ps1` are deleted; CI calls
+  `./apps/android/gradlew -p services/brain check`.

@@ -1,0 +1,354 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hopa.dev/spec/protocol/v1/schema.json",
+  "title": "HOPA engine host protocol v1",
+  "description": "NDJSON frames between the .NET host and the Kotlin sidecar. Additive fields are allowed; a frame family that is not listed here is a contract change.",
+  "oneOf": [
+    { "$ref": "#/$defs/ready" },
+    { "$ref": "#/$defs/log" },
+    { "$ref": "#/$defs/configured" },
+    { "$ref": "#/$defs/session" },
+    { "$ref": "#/$defs/turnEnd" },
+    { "$ref": "#/$defs/step" },
+    { "$ref": "#/$defs/taskError" },
+    { "$ref": "#/$defs/taskList" },
+    { "$ref": "#/$defs/taskStart" },
+    { "$ref": "#/$defs/approvalRequest" },
+    { "$ref": "#/$defs/conversationList" },
+    { "$ref": "#/$defs/conversationHistory" },
+    { "$ref": "#/$defs/conversationDeleted" },
+    { "$ref": "#/$defs/conversationExport" },
+    { "$ref": "#/$defs/fileAttached" },
+    { "$ref": "#/$defs/fileRemoved" },
+    { "$ref": "#/$defs/memoryList" },
+    { "$ref": "#/$defs/memoryError" },
+    { "$ref": "#/$defs/skillsList" },
+    { "$ref": "#/$defs/skillsError" },
+    { "$ref": "#/$defs/historyList" },
+    { "$ref": "#/$defs/usageSummary" },
+    { "$ref": "#/$defs/recipesList" },
+    { "$ref": "#/$defs/profilesList" },
+    { "$ref": "#/$defs/capabilitiesSummary" },
+    { "$ref": "#/$defs/backendPair" },
+    { "$ref": "#/$defs/deviceRequest" },
+    { "$ref": "#/$defs/browserRequest" }
+  ],
+  "$defs": {
+    "ready": {
+      "type": "object",
+      "required": ["type", "version"],
+      "properties": {
+        "type": { "const": "ready" },
+        "version": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "log": {
+      "type": "object",
+      "required": ["type", "text"],
+      "properties": {
+        "type": { "const": "log" },
+        "text": { "type": "string" }
+      }
+    },
+    "configured": {
+      "type": "object",
+      "required": ["type", "id", "bridge", "model"],
+      "properties": {
+        "type": { "const": "configured" },
+        "id": { "type": "string" },
+        "bridge": { "type": "boolean" },
+        "model": { "type": "string" }
+      }
+    },
+    "session": {
+      "type": "object",
+      "required": ["type", "token", "refresh"],
+      "properties": {
+        "type": { "const": "session" },
+        "token": { "type": "string" },
+        "refresh": { "type": "string" }
+      }
+    },
+    "turnEnd": {
+      "type": "object",
+      "required": ["type", "id", "conversationId", "title", "answer", "chainOk", "plan", "steps"],
+      "properties": {
+        "type": { "const": "turn.end" },
+        "id": { "type": "string" },
+        "conversationId": { "type": "string" },
+        "title": { "type": "string" },
+        "answer": { "type": "string" },
+        "chainOk": { "type": "boolean" },
+        "modelInput": { "type": "string" },
+        "plan": { "type": "array", "items": { "type": "string" } },
+        "checkpoints": { "type": "object" },
+        "steps": { "type": "array" }
+      }
+    },
+    "step": {
+      "type": "object",
+      "required": ["type", "id", "index", "action", "executed", "at", "durationMs"],
+      "properties": {
+        "type": { "const": "step" },
+        "id": { "type": "string" },
+        "index": { "type": "integer", "minimum": 0 },
+        "action": { "type": "string" },
+        "classification": { "type": "string" },
+        "tier": { "type": "string" },
+        "approved": { "type": ["boolean", "null"] },
+        "approver": { "type": "object" },
+        "executed": { "type": "boolean" },
+        "verified": { "type": "boolean" },
+        "error": { "type": ["string", "null"] },
+        "at": { "type": "integer" },
+        "durationMs": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "taskError": {
+      "type": "object",
+      "required": ["type", "id", "request", "ok", "code", "error"],
+      "properties": {
+        "type": { "const": "task.error" },
+        "id": { "type": "string" },
+        "request": { "type": "string" },
+        "ok": { "const": false },
+        "code": { "type": "string" },
+        "error": { "type": "string" }
+      }
+    },
+    "taskList": {
+      "type": "object",
+      "required": ["type", "id", "ok", "tasks"],
+      "properties": {
+        "type": { "const": "task.list" },
+        "id": { "type": "string" },
+        "ok": { "const": true },
+        "tasks": { "type": "array" }
+      }
+    },
+    "taskStart": {
+      "type": "object",
+      "required": ["type", "id", "ok", "task"],
+      "properties": {
+        "type": { "type": "string", "pattern": "^task\\.(start|update|finish)$" },
+        "id": { "type": "string" },
+        "ok": { "const": true },
+        "task": { "type": "object" }
+      }
+    },
+    "approvalRequest": {
+      "type": "object",
+      "required": ["type", "id", "title", "body", "amount", "merchant", "consequence", "isPayment", "action"],
+      "properties": {
+        "type": { "const": "approval.request" },
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "body": { "type": "string" },
+        "amount": { "type": ["string", "null"] },
+        "merchant": { "type": ["string", "null"] },
+        "consequence": { "type": "string" },
+        "isPayment": { "type": "boolean" },
+        "action": { "type": "string" }
+      }
+    },
+    "conversationList": {
+      "type": "object",
+      "required": ["type", "id", "items"],
+      "properties": {
+        "type": { "const": "conversations.list" },
+        "id": { "type": "string" },
+        "items": { "type": "array" }
+      }
+    },
+    "conversationHistory": {
+      "type": "object",
+      "required": ["type", "id"],
+      "properties": {
+        "type": { "const": "conversation.history" },
+        "id": { "type": "string" },
+        "conversation": { "type": "object" }
+      }
+    },
+    "conversationDeleted": {
+      "type": "object",
+      "required": ["type", "id", "ok"],
+      "properties": {
+        "type": { "const": "conversation.deleted" },
+        "id": { "type": "string" },
+        "ok": { "type": "boolean" }
+      }
+    },
+    "conversationExport": {
+      "type": "object",
+      "required": ["type", "id", "json"],
+      "properties": {
+        "type": { "const": "conversation.export" },
+        "id": { "type": "string" },
+        "json": { "type": "string" }
+      }
+    },
+    "fileAttached": {
+      "type": "object",
+      "required": ["type", "id"],
+      "properties": {
+        "type": { "const": "file.attached" },
+        "id": { "type": "string" },
+        "attachment": { "type": "object" },
+        "error": { "type": "string" }
+      }
+    },
+    "fileRemoved": {
+      "type": "object",
+      "required": ["type", "id", "ok"],
+      "properties": {
+        "type": { "const": "file.removed" },
+        "id": { "type": "string" },
+        "ok": { "type": "boolean" }
+      }
+    },
+    "memoryList": {
+      "type": "object",
+      "required": ["type", "id", "ok", "items"],
+      "properties": {
+        "type": { "const": "memory.list" },
+        "id": { "type": "string" },
+        "ok": { "const": true },
+        "items": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "memoryError": {
+      "type": "object",
+      "required": ["type", "id", "ok", "code", "error"],
+      "properties": {
+        "type": { "const": "memory.error" },
+        "id": { "type": "string" },
+        "ok": { "const": false },
+        "code": { "type": "string" },
+        "error": { "type": "string" }
+      }
+    },
+    "skillsList": {
+      "type": "object",
+      "required": ["type", "id", "ok", "items"],
+      "properties": {
+        "type": { "const": "skills.list" },
+        "id": { "type": "string" },
+        "ok": { "const": true },
+        "items": { "type": "array" }
+      }
+    },
+    "skillsError": {
+      "type": "object",
+      "required": ["type", "id", "ok", "code", "error"],
+      "properties": {
+        "type": { "const": "skills.error" },
+        "id": { "type": "string" },
+        "ok": { "const": false },
+        "code": { "type": "string" },
+        "error": { "type": "string" }
+      }
+    },
+    "historyList": {
+      "type": "object",
+      "required": ["type", "id", "ok", "items"],
+      "properties": {
+        "type": { "const": "history.list" },
+        "id": { "type": "string" },
+        "ok": { "const": true },
+        "items": { "type": "array" }
+      }
+    },
+    "usageSummary": {
+      "type": "object",
+      "required": [
+        "type", "id", "ok", "total", "executed", "failed", "payments",
+        "lastSevenDays", "topActions"
+      ],
+      "properties": {
+        "type": { "const": "usage.summary" },
+        "id": { "type": "string" },
+        "ok": { "const": true },
+        "total": { "type": "integer", "minimum": 0 },
+        "executed": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "payments": { "type": "integer", "minimum": 0 },
+        "lastSevenDays": { "type": "integer", "minimum": 0 },
+        "topActions": { "type": "array" }
+      }
+    },
+    "recipesList": {
+      "type": "object",
+      "required": ["type", "id", "ok", "items"],
+      "properties": {
+        "type": { "const": "recipes.list" },
+        "id": { "type": "string" },
+        "ok": { "const": true },
+        "items": { "type": "array" }
+      }
+    },
+    "profilesList": {
+      "type": "object",
+      "required": ["type", "id", "ok", "selected", "items"],
+      "properties": {
+        "type": { "const": "profiles.list" },
+        "id": { "type": "string" },
+        "ok": { "const": true },
+        "selected": { "type": "string" },
+        "items": { "type": "array" }
+      }
+    },
+    "capabilitiesSummary": {
+      "type": "object",
+      "required": [
+        "type", "id", "ok", "platform", "profile", "modelProvider", "modelName",
+        "modelReady", "bridge", "gatewayPaired", "phoneOnline", "memory",
+        "skills", "recipes", "runs", "windowsApps"
+      ],
+      "properties": {
+        "type": { "const": "capabilities.summary" },
+        "id": { "type": "string" },
+        "ok": { "const": true },
+        "platform": { "type": "string" },
+        "profile": { "type": "string" },
+        "modelProvider": { "type": "string" },
+        "modelName": { "type": "string" },
+        "modelReady": { "type": "boolean" },
+        "bridge": { "type": "boolean" },
+        "gatewayPaired": { "type": "boolean" },
+        "phoneOnline": { "type": "boolean" },
+        "memory": { "type": "integer" },
+        "skills": { "type": "string" },
+        "recipes": { "type": "integer" },
+        "runs": { "type": "integer" },
+        "windowsApps": { "type": "integer" }
+      }
+    },
+    "backendPair": {
+      "type": "object",
+      "required": ["type", "ok"],
+      "properties": {
+        "type": { "const": "backend.pair" },
+        "ok": { "type": "boolean" },
+        "error": { "type": "string" }
+      }
+    },
+    "deviceRequest": {
+      "type": "object",
+      "required": ["type", "id", "op"],
+      "properties": {
+        "type": { "const": "device.request" },
+        "id": { "type": "string" },
+        "op": { "type": "string" }
+      }
+    },
+    "browserRequest": {
+      "type": "object",
+      "required": ["type", "id", "op"],
+      "properties": {
+        "type": { "const": "browser.request" },
+        "id": { "type": "string" },
+        "op": { "type": "string" }
+      }
+    }
+  }
+}

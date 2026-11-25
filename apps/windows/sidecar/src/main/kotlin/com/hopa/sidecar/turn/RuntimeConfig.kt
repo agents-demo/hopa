@@ -25,6 +25,17 @@ class RuntimeConfig {
         private set
     var modelName: String = "gpt-4o-mini"
         private set
+    /** The person allowed a failed local turn to continue on the API. */
+    var cloudFallback: Boolean = false
+        private set
+    var fallbackProvider: String = "openai"
+        private set
+    var fallbackBaseUrl: String = ""
+        private set
+    var fallbackModelName: String = ""
+        private set
+    var fallbackModelKey: String = ""
+        private set
     var tone: String = "warm"
         private set
     /** The shell profile; the catalogue is shared in com.hopa.stores.Profiles. */
@@ -61,6 +72,19 @@ class RuntimeConfig {
     val hasModel: Boolean
         get() = modelKey.isNotBlank()
 
+    /**
+     * Fallback exists only for a local turn, only with the person's consent,
+     * and only when the API has an address, a model and a key. Anything less
+     * stays local rather than pretending the API is ready.
+     */
+    val hasFallback: Boolean
+        get() = modelProvider.equals("on-device", ignoreCase = true) &&
+            cloudFallback &&
+            !fallbackProvider.equals("stub", ignoreCase = true) &&
+            fallbackBaseUrl.isNotBlank() &&
+            fallbackModelName.isNotBlank() &&
+            fallbackModelKey.isNotBlank()
+
     fun setGatewayState(paired: Boolean, phoneOnline: Boolean) {
         gatewayPaired = paired
         gatewayPhoneOnline = phoneOnline
@@ -83,6 +107,11 @@ class RuntimeConfig {
         modelBaseUrl = message.text("modelBaseUrl")
         modelKey = message.text("modelKey")
         modelName = message.text("modelName").ifBlank { "gpt-4o-mini" }
+        cloudFallback = message.bool("cloudFallback", false)
+        fallbackProvider = message.text("fallbackProvider").ifBlank { "openai" }
+        fallbackBaseUrl = message.text("fallbackBaseUrl")
+        fallbackModelName = message.text("fallbackModelName")
+        fallbackModelKey = message.text("fallbackModelKey")
         tone = message.text("tone").ifBlank { "warm" }
         profile = message.text("profile").ifBlank { profile }
         stepSource = message.text("stepSource").lowercase().let {
@@ -103,7 +132,8 @@ class RuntimeConfig {
                 modelProvider.equals("stub", ignoreCase = true) -> "demo"
                 hasModel -> modelProvider
                 else -> "none"
-            }} steps=$stepSource tone=$tone profile=$profile"
+            }} fallback=${if (hasFallback) fallbackProvider else "off"} " +
+            "steps=$stepSource tone=$tone profile=$profile"
 
     private fun JsonObject.text(key: String): String =
         this[key]?.jsonPrimitive?.contentOrNull.orEmpty()

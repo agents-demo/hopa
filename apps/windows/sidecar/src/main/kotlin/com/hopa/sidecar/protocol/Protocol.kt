@@ -47,6 +47,7 @@ object Protocol {
         plan: List<String> = emptyList(),
         checkpointsComplete: Boolean? = null,
         checkpointsMissing: List<String> = emptyList(),
+        modelInput: String = "",
     ): JsonObject =
         buildJsonObject {
             put("type", "turn.end")
@@ -55,6 +56,9 @@ object Protocol {
             put("title", title)
             put("answer", answer)
             put("chainOk", chainOk)
+            if (modelInput.isNotBlank()) {
+                put("modelInput", modelInput)
+            }
             put("plan", buildJsonArray { plan.forEach { add(kotlinx.serialization.json.JsonPrimitive(it)) } })
             if (checkpointsComplete != null) {
                 put("checkpoints", buildJsonObject {

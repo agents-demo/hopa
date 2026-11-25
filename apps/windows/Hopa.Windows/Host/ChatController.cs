@@ -85,7 +85,10 @@ public sealed class ChatController
                 earlier,
                 null,
                 null,
-                result.Checkpoints);
+                result.Checkpoints)
+            {
+                ModelInput = result.ModelInput,
+            };
         }
         catch (Exception error)
         {
