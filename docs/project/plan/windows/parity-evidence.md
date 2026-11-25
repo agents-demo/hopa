@@ -46,6 +46,7 @@ Hosted runners are session 0 and cannot produce it; see
 | Instant commands | `--turn "open notepad"` | one launch step, no model call |
 | Web surface | `--web-check <dir>` | navigate, read, type, click; `Signed by Michael` visible |
 | Web engine turn | `--turn "Use the web browser: navigate to https://example.com, call web.read..."` | `web.navigate` and `web.read` steps; answer `Example Domain` |
+| Model source | Settings provider `stub`; `StepSource=model` | demo wins over a saved key; recipes/commands are skipped |
 | Vision | `--vision-check <dir>` | a word drawn only in the frame; `vision-check.txt` says `match: True` |
 | Takeover/signature | `--p5-check <dir> [--auto-sign]` | human run: `operator: human`, `paused: True`, `signed: Signed by Michael`, `checkpoint complete: True`; see [P5-takeover.md](../../evidence/P5-takeover.md) |
 

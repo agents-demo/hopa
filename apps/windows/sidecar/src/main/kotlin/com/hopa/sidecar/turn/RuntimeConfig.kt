@@ -30,6 +30,9 @@ class RuntimeConfig {
     /** The shell profile; the catalogue is shared in com.hopa.stores.Profiles. */
     var profile: String = "everyday"
         private set
+    /** `auto` uses recipes and instant commands; `model` skips both. */
+    var stepSource: String = "auto"
+        private set
     /** Try a stored recipe before the model. */
     var replay: Boolean = true
         private set
@@ -82,6 +85,9 @@ class RuntimeConfig {
         modelName = message.text("modelName").ifBlank { "gpt-4o-mini" }
         tone = message.text("tone").ifBlank { "warm" }
         profile = message.text("profile").ifBlank { profile }
+        stepSource = message.text("stepSource").lowercase().let {
+            if (it == "model") "model" else "auto"
+        }
         replay = message.bool("replay", replay)
         vision = message.bool("vision", vision)
         planFirst = message.bool("planFirst", planFirst)
@@ -93,7 +99,11 @@ class RuntimeConfig {
         "bridge=${if (hasBridge) "on" else "off"} url=${bridgeUrl.ifBlank { "-" }} " +
             "gateway=${if (gatewayPaired) "paired" else "off"}" +
             "/phone=${if (gatewayPhoneOnline) "on" else "off"} " +
-            "model=${if (hasModel) modelProvider else "none"} tone=$tone profile=$profile"
+            "model=${when {
+                modelProvider.equals("stub", ignoreCase = true) -> "demo"
+                hasModel -> modelProvider
+                else -> "none"
+            }} steps=$stepSource tone=$tone profile=$profile"
 
     private fun JsonObject.text(key: String): String =
         this[key]?.jsonPrimitive?.contentOrNull.orEmpty()

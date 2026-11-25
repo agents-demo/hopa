@@ -249,6 +249,7 @@ public sealed partial class EngineHostClient : IAsyncDisposable, IChatEngine
             ["tone"] = settings.Tone,
             ["profile"] = settings.Profile,
             ["replay"] = settings.ReplaySkills,
+            ["stepSource"] = settings.StepSource,
             ["planFirst"] = settings.PlanFirst,
             ["instantCommands"] = settings.InstantCommands,
             ["vision"] = settings.Vision,

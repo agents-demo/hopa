@@ -79,17 +79,24 @@
                         <PasswordBox x:Name="BridgeTokenBox" Height="32" Margin="0,4,0,8" />
 
                         <TextBlock Text="Model" FontSize="11.5" Foreground="#6B665C" />
-                        <ComboBox x:Name="ProviderBox" Height="32" Margin="0,4,0,8">
+                        <ComboBox x:Name="ProviderBox" Height="32" Margin="0,4,0,8"
+                                  SelectionChanged="Provider_Changed">
                             <ComboBoxItem Content="openai" />
                             <ComboBoxItem Content="lan" />
+                            <ComboBoxItem Content="stub" />
                         </ComboBox>
-                        <TextBlock Text="Base URL" FontSize="11.5" Foreground="#6B665C" />
-                        <TextBox x:Name="BaseUrlBox" Height="32" Margin="0,4,0,8" />
-                        <TextBlock Text="Model name" FontSize="11.5" Foreground="#6B665C" />
-                        <TextBox x:Name="ModelNameBox" Height="32" Margin="0,4,0,8" />
-                        <TextBlock Text="Model key (stored in Windows Credential Manager)" FontSize="11.5"
-                                   Foreground="#6B665C" />
-                        <PasswordBox x:Name="ModelKeyBox" Height="32" Margin="0,4,0,12" />
+                        <TextBlock x:Name="DemoHint" Text="Demo answers with a small canned set. No endpoint, model or key is used."
+                                   FontSize="10" Foreground="#9A9488" TextWrapping="Wrap"
+                                   Margin="0,0,0,12" Visibility="Collapsed" />
+                        <StackPanel x:Name="CloudModelFields">
+                            <TextBlock Text="Base URL" FontSize="11.5" Foreground="#6B665C" />
+                            <TextBox x:Name="BaseUrlBox" Height="32" Margin="0,4,0,8" />
+                            <TextBlock Text="Model name" FontSize="11.5" Foreground="#6B665C" />
+                            <TextBox x:Name="ModelNameBox" Height="32" Margin="0,4,0,8" />
+                            <TextBlock Text="Model key (stored in Windows Credential Manager)" FontSize="11.5"
+                                       Foreground="#6B665C" />
+                            <PasswordBox x:Name="ModelKeyBox" Height="32" Margin="0,4,0,12" />
+                        </StackPanel>
 
                         <TextBlock Text="Tone" FontSize="11.5" Foreground="#6B665C" />
                         <ComboBox x:Name="ToneBox" Height="32" Margin="0,4,0,0">
@@ -131,6 +138,14 @@
                         <TextBlock Text="Run" FontSize="15" FontWeight="SemiBold" Foreground="#1C1B18" />
                         <TextBlock Text="How a turn is allowed to work." FontSize="11" Foreground="#9A9488"
                                    Margin="0,4,0,12" />
+                        <TextBlock Text="Step source" FontSize="11.5" Foreground="#6B665C" />
+                        <ComboBox x:Name="StepSourceBox" Height="32" Margin="0,4,0,4">
+                            <ComboBoxItem Content="auto" />
+                            <ComboBoxItem Content="model" />
+                        </ComboBox>
+                        <TextBlock Text="Auto uses a saved recipe or an instant command before the model. Model skips both. Windows has no graph/anchor catalogue."
+                                   FontSize="10" Foreground="#9A9488" TextWrapping="Wrap"
+                                   Margin="0,0,0,12" />
                         <CheckBox x:Name="ReplayBox" Content="Try a saved recipe before the model"
                                   Foreground="#1C1B18" Margin="0,0,0,6" />
                         <TextBlock Text="A recipe replays the steps that worked last time; a missing anchor falls back to the model."

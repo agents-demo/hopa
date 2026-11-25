@@ -53,7 +53,8 @@ desktop form. The phase plan is [total-parity.md](total-parity.md).
 | Android screen | Source | Windows equivalent | Status |
 |---|---|---|---|
 | Settings hub with search | `apps/android/feature/settings/src/main/kotlin/com/hopa/feature/settings/SettingsScreen.kt` | navigation hub with search and subpages | new |
-| Settings - Answers (model, key, vision) | `apps/android/feature/settings/src/main/kotlin/com/hopa/feature/settings/SettingsModelScreen.kt` | model provider, endpoint, key, vision | have |
+| Settings - Answers (model, key, vision) | `apps/android/feature/settings/src/main/kotlin/com/hopa/feature/settings/SettingsModelScreen.kt` | API/LAN/Demo provider, endpoint, key, vision; demo hides the endpoint fields | adapt |
+| On-device small model | `apps/android/feature/settings/src/main/kotlin/com/hopa/feature/settings/LocalModelSection.kt` | not offered: Windows has no local inference runtime and is API/LAN/Demo only | new |
 | Settings — My computer (pairing) | `apps/android/feature/execution/src/main/kotlin/com/hopa/feature/execution/ComputerScreen.kt` | backend pairing and bridge address | have |
 | Settings — Tone and length | `apps/android/feature/settings/src/main/kotlin/com/hopa/feature/settings/PreferencesSettings.kt` | tone; length joins the Answers subpage | have |
 | Settings — Run history | `apps/android/feature/history/src/main/kotlin/com/hopa/feature/history/HistoryScreen.kt` | runs window | have |

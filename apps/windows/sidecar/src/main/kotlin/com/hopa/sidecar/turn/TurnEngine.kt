@@ -331,8 +331,8 @@ class TurnEngine(
                     webAvailable = browser != null,
                     planFirst = config.planFirst,
                     planApproved = planApproved,
-                    replay = config.replay,
-                    instantCommands = config.instantCommands,
+                    replay = config.replay && config.stepSource != "model",
+                    instantCommands = config.instantCommands && config.stepSource != "model",
                     checkpoints = checkpoints,
                     useGraphs = false,
                     graphFallback = false,
@@ -403,17 +403,27 @@ class TurnEngine(
             hostDevice
         }
 
-    private fun model(): ModelPort =
-        if (config.hasModel && !forceStub) {
-            ModelFactory().create(
-                provider = config.modelProvider,
-                endpoint = config.modelBaseUrl,
-                apiKey = config.modelKey,
-                modelName = config.modelName,
-            )
-        } else {
-            ScriptedModel()
-        }
+    private fun model(): ModelPort = when {
+        forceStub || config.modelProvider.equals("stub", ignoreCase = true) -> ScriptedModel()
+
+        // An explicit on-device choice must fail visibly, not fall back to the
+        // demo or the cloud. Windows has no local engine yet.
+        config.modelProvider.equals("on-device", ignoreCase = true) -> ModelFactory().create(
+            provider = config.modelProvider,
+            endpoint = config.modelBaseUrl,
+            apiKey = config.modelKey,
+            modelName = config.modelName,
+        )
+
+        config.hasModel -> ModelFactory().create(
+            provider = config.modelProvider,
+            endpoint = config.modelBaseUrl,
+            apiKey = config.modelKey,
+            modelName = config.modelName,
+        )
+
+        else -> ScriptedModel()
+    }
 
     private fun notifyTurnEnd(id: String, answer: String) {
         try {

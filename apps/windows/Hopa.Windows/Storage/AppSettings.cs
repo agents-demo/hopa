@@ -17,6 +17,9 @@ public sealed class AppSettings
 
     public string Profile { get; set; } = "everyday";
 
+    /// <summary>`auto` uses recipes and instant commands before the model; `model` skips both.</summary>
+    public string StepSource { get; set; } = "auto";
+
     /// <summary>Try a stored recipe before asking the model.</summary>
     public bool ReplaySkills { get; set; } = true;
 

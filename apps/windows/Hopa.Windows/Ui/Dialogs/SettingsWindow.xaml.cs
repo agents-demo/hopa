@@ -54,6 +54,8 @@ public partial class SettingsWindow : Window
         InstantCommandsBox.IsChecked = settings.InstantCommands;
         VisionBox.IsChecked = settings.Vision;
         Select(ProviderBox, settings.ModelProvider);
+        Select(StepSourceBox, settings.StepSource);
+        UpdateProviderFields();
         BaseUrlBox.Text = settings.ModelBaseUrl;
         ModelNameBox.Text = settings.ModelName;
         ModelKeyBox.Password = CredentialStore.Read("hopa.model.key");
@@ -217,11 +219,14 @@ public partial class SettingsWindow : Window
         try
         {
             var summary = await engine.CapabilitiesAsync();
+            var modelState = string.Equals(summary.ModelProvider, "stub", StringComparison.OrdinalIgnoreCase)
+                ? "demo"
+                : summary.ModelReady ? "ready" : "no key";
             CapabilityText.Text = string.Join("\n", new[]
             {
                 $"Platform: {summary.Platform}",
                 $"Profile: {summary.Profile}",
-                $"Model: {summary.ModelProvider} / {summary.ModelName} ({(summary.ModelReady ? "ready" : "no key")})",
+                $"Model: {summary.ModelProvider} / {summary.ModelName} ({modelState})",
                 $"Bridge: {(summary.Bridge ? "on" : "off")}",
                 $"Gateway: {(summary.GatewayPaired ? "paired" : "not paired")}; phone {(summary.PhoneOnline ? "online" : "offline")}",
                 $"Memory: {summary.Memory} fact(s)",
@@ -758,6 +763,7 @@ public partial class SettingsWindow : Window
         settings.ModelProvider = Value(ProviderBox, "openai");
         settings.ModelBaseUrl = BaseUrlBox.Text.Trim();
         settings.ModelName = ModelNameBox.Text.Trim();
+        settings.StepSource = Value(StepSourceBox, "auto");
         settings.Tone = Value(ToneBox, "warm");
         settings.Profile = SelectedProfile(settings.Profile);
         settings.ReplaySkills = ReplayBox.IsChecked == true;
@@ -793,6 +799,23 @@ public partial class SettingsWindow : Window
 
     private static string Value(ComboBox box, string fallback) =>
         (box.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? fallback;
+
+    private void Provider_Changed(object sender, SelectionChangedEventArgs e) =>
+        UpdateProviderFields();
+
+    private void UpdateProviderFields()
+    {
+        // SelectionChanged also fires while InitializeComponent adds the items,
+        // before the later controls exist.
+        if (CloudModelFields == null || DemoHint == null)
+        {
+            return;
+        }
+
+        var demo = string.Equals(Value(ProviderBox, "openai"), "stub", StringComparison.OrdinalIgnoreCase);
+        CloudModelFields.Visibility = demo ? Visibility.Collapsed : Visibility.Visible;
+        DemoHint.Visibility = demo ? Visibility.Visible : Visibility.Collapsed;
+    }
 
     private static void SaveSecret(string name, string value)
     {

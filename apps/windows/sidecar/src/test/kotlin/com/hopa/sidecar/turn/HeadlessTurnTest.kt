@@ -11,6 +11,8 @@ import com.hopa.sidecar.protocol.Protocol.text
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
@@ -47,6 +49,24 @@ class HeadlessTurnTest {
         assertEquals(0, outcome.records.size)
         assertTrue(outcome.chainOk)
         assertNull(outcome.error)
+    }
+
+    @Test
+    fun an_explicit_stub_provider_wins_over_a_saved_key() {
+        val dataDir = Files.createTempDirectory("hopa-stub-provider")
+        val config = RuntimeConfig()
+        config.update(buildJsonObject {
+            put("modelProvider", "stub")
+            put("modelKey", "sk-not-used")
+        })
+
+        val outcome = runBlocking {
+            engine(dataDir, config = config, forceStub = false)
+                .runTurn("t-stub", "say hello", null)
+        }
+
+        assertTrue(outcome.answer.startsWith("Stub answered"), outcome.answer)
+        assertEquals(0, outcome.records.size)
     }
 
     @Test
@@ -180,17 +200,19 @@ class HeadlessTurnTest {
         dataDir: Path,
         device: DevicePort = RecordingDevice(),
         approvals: ApprovalGateway = DenyAllApproval(),
+        config: RuntimeConfig = RuntimeConfig(),
+        forceStub: Boolean = true,
     ): TurnEngine = TurnEngine(
         io = Stdio(),
         hostDevice = device,
         approval = approvals,
         store = ChatStore(dataDir.resolve("conversations.json")),
         recordStore = RecordStore(dataDir.resolve("records.json")),
-        config = RuntimeConfig(),
+        config = config,
         memory = MemoryFileStore(dataDir.resolve("memory.json")),
         skills = SkillFileStore(dataDir.resolve("skills.json")),
             recipes = RecipeStore(dataDir.resolve("recipes.txt").toFile()),
-        forceStub = true,
+        forceStub = forceStub,
     )
 }
 

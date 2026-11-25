@@ -17,6 +17,7 @@ public sealed class SettingsStoreTests
 
             Assert.Equal("", loaded.BridgeUrl);
             Assert.Equal("openai", loaded.ModelProvider);
+            Assert.Equal("auto", loaded.StepSource);
             Assert.Equal(1140, loaded.WindowWidth);
         }
         finally
@@ -39,6 +40,7 @@ public sealed class SettingsStoreTests
                 ModelProvider = "lan",
                 ModelBaseUrl = "http://127.0.0.1:11434/v1",
                 ModelName = "llama",
+                StepSource = "model",
                 Tone = "brief",
                 Profile = "power",
                 ReplaySkills = false,
@@ -59,6 +61,7 @@ public sealed class SettingsStoreTests
             Assert.True(loaded.UseBridge);
             Assert.Equal("lan", loaded.ModelProvider);
             Assert.Equal("llama", loaded.ModelName);
+            Assert.Equal("model", loaded.StepSource);
             Assert.Equal("brief", loaded.Tone);
             Assert.Equal("power", loaded.Profile);
             Assert.False(loaded.ReplaySkills);

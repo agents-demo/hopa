@@ -139,7 +139,8 @@ The screens that change what HOPA does.
 - [x] Run preferences and setup. (evidence: screenshot + persisted settings)
   - [x] Plan-first, replay and instant commands are wired through `TurnRunner`.
   - [x] Step source is `auto`/`model`; `graph` is `not-applicable` because
-    Windows has no graph catalogue.
+    Windows has no graph catalogue. Evidence:
+    [W10-model-source.md](../../evidence/W10-model-source.md).
   - [x] Cloud fallback is `not-applicable`: the Windows model is already the
     configured API, with no on-device model to fall back from.
   - [x] Vision is wired and verified by `--vision-check` with an

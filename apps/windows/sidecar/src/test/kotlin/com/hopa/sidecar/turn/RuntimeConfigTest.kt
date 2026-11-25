@@ -24,6 +24,17 @@ class RuntimeConfigTest {
     }
 
     @Test
+    fun step_source_is_auto_or_model_only() {
+        val auto = RuntimeConfig()
+        auto.update(buildJsonObject { put("stepSource", "model") })
+        assertTrue(auto.stepSource == "model")
+
+        val model = RuntimeConfig()
+        model.update(buildJsonObject { put("stepSource", "graph") })
+        assertTrue(model.stepSource == "auto")
+    }
+
+    @Test
     fun missing_flags_keep_the_defaults() {
         val config = RuntimeConfig()
         config.update(buildJsonObject { put("tone", "brief") })
