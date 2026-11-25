@@ -17,6 +17,8 @@ fun CapabilitiesRoute(
     onOpenMemory: () -> Unit,
     onOpenSkills: () -> Unit,
     onOpenBrowser: () -> Unit,
+    accountLabel: String = "",
+    onOpenAccount: () -> Unit = {},
 ) {
     val viewModel: CapabilitiesViewModel = hiltViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()

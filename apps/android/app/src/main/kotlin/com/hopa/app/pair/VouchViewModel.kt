@@ -133,7 +133,7 @@ class VouchViewModel(
 
     private companion object {
         const val NO_HOUSEHOLD_KEY =
-            "This phone has no household key yet; sign in on the phone that created the household."
+            "This phone isn't connected yet. Sign in on the phone that set up the account."
         const val NOT_A_CODE = "That is not a PC pairing code."
         const val COULD_NOT_READ = "Could not read this pairing code."
         const val COULD_NOT_VOUCH = "Could not vouch for this PC."

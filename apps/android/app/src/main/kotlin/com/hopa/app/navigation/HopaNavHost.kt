@@ -1,14 +1,18 @@
 package com.hopa.app.navigation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -18,6 +22,7 @@ import com.hopa.app.account.SignInRoute
 import com.hopa.app.di.AppContainer
 import com.hopa.app.pair.ScanRoute
 import com.hopa.backend.pairing.AccountClient
+import com.hopa.ui.component.HopaMascot
 import com.hopa.ui.theme.HopaColor
 import com.hopa.feature.browser.BrowserRoute
 import com.hopa.feature.execution.ComputerRoute
@@ -54,14 +59,20 @@ fun HopaNavHost(container: AppContainer, initialGoal: String = "") {
     val launch by produceState<ResolvedLaunch?>(initialValue = null) {
         var lastUrl: String? = null
         var lastDeviceId: String? = null
+        var lastSkipped: Boolean? = null
         container.settings.settings.collect { current ->
-            // Re-decide only when the gateway or identity changes; every other
-            // settings emission (mascot, model, …) must not re-run the probe.
-            if (value != null && current.backendUrl == lastUrl && current.backendDeviceId == lastDeviceId) {
+            // Re-decide only when the gateway, identity or skip choice changes;
+            // every other settings emission (mascot, model, …) must not re-run
+            // the probe.
+            if (value != null && current.backendUrl == lastUrl &&
+                current.backendDeviceId == lastDeviceId &&
+                current.accountSkipped == lastSkipped
+            ) {
                 return@collect
             }
             lastUrl = current.backendUrl
             lastDeviceId = current.backendDeviceId
+            lastSkipped = current.accountSkipped
             val url = BuildConfig.BACKEND_URL?.takeIf { it.isNotBlank() } ?: current.backendUrl
             value = ResolvedLaunch(
                 decision = resolveLaunch(
@@ -69,6 +80,7 @@ fun HopaNavHost(container: AppContainer, initialGoal: String = "") {
                     storedUrl = current.backendUrl,
                     storedDeviceId = current.backendDeviceId,
                     health = { gateway -> AccountClient(gateway).health() },
+                    skipped = current.accountSkipped,
                 ),
                 gatewayUrl = url,
             )
@@ -98,6 +110,7 @@ fun HopaNavHost(container: AppContainer, initialGoal: String = "") {
                 onOpenRunningApps = { navController.navigate(HopaDestination.RunningApps) },
                 onOpenActMode = { navController.navigate(HopaDestination.ActMode) },
                 onOpenBrowser = { navController.navigate(HopaDestination.Browser()) },
+                onOpenAccount = { navController.navigate(HopaDestination.SignIn) },
                 initialGoal = initialGoal,
                 banner = resolved.decision.banner,
             )
@@ -260,6 +273,12 @@ private fun LaunchLoading() {
             .background(HopaColor.Bg),
         contentAlignment = Alignment.Center,
     ) {
-        CircularProgressIndicator(color = HopaColor.Primary)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            HopaMascot(sizeDp = 104.dp)
+            Text("Waking up…", fontSize = 13.sp, color = HopaColor.TextHint)
+        }
     }
 }

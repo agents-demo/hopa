@@ -32,11 +32,11 @@ object LaunchPairing {
             if (fallback.isNotBlank()) {
                 storeUrl(fallback)
             }
-            notice.value = "Gateway: the launch pairing link is not valid"
+            notice.value = "Couldn't pair: the link isn't valid"
             return
         }
         claim(link).onFailure { error ->
-            notice.value = "Gateway: " + (error.message ?: "the pairing failed")
+            notice.value = "Couldn't pair: " + (error.message ?: "try again")
         }
     }
 }

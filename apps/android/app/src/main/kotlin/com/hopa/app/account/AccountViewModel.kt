@@ -111,6 +111,7 @@ class AccountViewModel(
                 backendUrl = gatewayUrl,
                 backendDeviceId = account.deviceId,
                 backendHouseholdId = account.householdId,
+                accountSkipped = false,
             )
         }
         settings.setBackendAccessToken(account.accessToken)
@@ -123,7 +124,7 @@ class AccountViewModel(
         const val ALG = "x25519"
         const val AUTH_FAILED = "Invalid phone or password."
         const val RATE_LIMITED = "Too many attempts. Try again in a minute."
-        const val UNREACHABLE = "The gateway is unreachable."
+        const val UNREACHABLE = "Can't reach your account. Check your connection and try again."
         const val GENERIC = "Something went wrong."
     }
 }

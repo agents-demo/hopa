@@ -231,7 +231,7 @@ class VouchViewModelTest {
             advanceUntilIdle()
 
             assertEquals(
-                "This phone has no household key yet; sign in on the phone that created the household.",
+                "This phone isn't connected yet. Sign in on the phone that set up the account.",
                 viewModel.state.value.error,
             )
             assertNull(viewModel.state.value.confirm)

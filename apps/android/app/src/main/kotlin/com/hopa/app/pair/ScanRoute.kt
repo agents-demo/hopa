@@ -273,7 +273,7 @@ private fun ConfirmScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                "Let this PC into the household?",
+                "Let this computer connect?",
                 fontSize = 19.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = HopaColor.TextPrimary,
@@ -289,8 +289,8 @@ private fun ConfirmScreen(
                 color = HopaColor.TextHint,
             )
             Text(
-                "This gives the PC the household key it needs to read and run tasks. " +
-                    "Only confirm if the name and fingerprint match the PC you expect.",
+                "This lets the computer read the screen and run tasks for you. " +
+                    "Only continue if the name and fingerprint match the computer you expect.",
                 fontSize = 12.sp,
                 color = HopaColor.TextSecondary,
             )
@@ -301,7 +301,7 @@ private fun ConfirmScreen(
                     .fillMaxWidth()
                     .height(48.dp),
             ) {
-                Text(if (busy) "Vouching\u2026" else "Vouch for this PC")
+                Text(if (busy) "Connecting\u2026" else "Confirm this computer")
             }
             error?.let { message ->
                 Text(message, fontSize = 13.sp, color = HopaColor.Danger)

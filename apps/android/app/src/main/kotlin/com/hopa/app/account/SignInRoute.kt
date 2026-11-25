@@ -5,9 +5,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hopa.app.di.AppContainer
 import com.hopa.app.link.push.FirebaseToken
+import kotlinx.coroutines.launch
 
 /**
  * The sign-in / sign-up screen. Phone + password, one busy flag and one error,
@@ -29,6 +31,7 @@ fun SignInRoute(
         )
     }
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
     LaunchedEffect(state.signedIn) {
         if (state.signedIn) {
             onSignedIn()
@@ -38,5 +41,11 @@ fun SignInRoute(
         state = state,
         onSignIn = viewModel::signIn,
         onSignUp = viewModel::signUp,
+        onSkip = {
+            scope.launch {
+                container.settings.update { it.copy(accountSkipped = true) }
+                onSignedIn()
+            }
+        },
     )
 }

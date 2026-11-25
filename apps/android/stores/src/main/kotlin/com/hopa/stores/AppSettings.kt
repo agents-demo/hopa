@@ -65,4 +65,10 @@ data class AppSettings(
     /** Identity this device was given when it joined the household. */
     val backendDeviceId: String = "",
     val backendHouseholdId: String = "",
+    /**
+     * The person chose "use this phone without an account". It wins over the
+     * gateway until a real sign-in clears it, so a reachable gateway cannot
+     * trap them on the sign-in screen.
+     */
+    val accountSkipped: Boolean = false,
 )

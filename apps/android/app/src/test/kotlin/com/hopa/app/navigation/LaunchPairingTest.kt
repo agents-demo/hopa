@@ -23,7 +23,7 @@ class LaunchPairingTest {
             },
         )
         assertEquals(listOf("wss://x/v1/gateway"), claimed.map { it.gatewayUrl })
-        assertEquals("Gateway: the session was already used", notice.value)
+        assertEquals("Couldn't pair: the session was already used", notice.value)
     }
 
     @Test
@@ -55,7 +55,7 @@ class LaunchPairingTest {
             claim = { claims += 1; Result.success(Unit) },
         )
         assertEquals(0, claims)
-        assertEquals("Gateway: the launch pairing link is not valid", notice.value)
+        assertEquals("Couldn't pair: the link isn't valid", notice.value)
     }
 
     @Test
@@ -70,6 +70,6 @@ class LaunchPairingTest {
             claim = { claims += 1; Result.success(Unit) },
         )
         assertEquals(0, claims)
-        assertEquals("Gateway: the launch pairing link is not valid", notice.value)
+        assertEquals("Couldn't pair: the link isn't valid", notice.value)
     }
 }

@@ -34,7 +34,7 @@ internal class PairingSettings(
      */
     suspend fun pair(url: String, text: String): String {
         val link = PairInput.normalise(text, url.trim())
-            ?: return "Gateway: paste a pairing link or a session with an address"
+            ?: return "Couldn't pair: paste a link or an address from your computer"
         return deps.pairGateway(link)
     }
 

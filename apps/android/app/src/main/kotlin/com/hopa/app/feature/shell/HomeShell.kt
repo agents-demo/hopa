@@ -1,10 +1,19 @@
 package com.hopa.app.feature.shell
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -13,6 +22,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -47,6 +57,7 @@ fun HomeShell(
     onOpenRunningApps: () -> Unit,
     onOpenActMode: () -> Unit,
     onOpenBrowser: () -> Unit,
+    onOpenAccount: () -> Unit,
     initialGoal: String = "",
     banner: String? = null,
 ) {
@@ -56,6 +67,11 @@ fun HomeShell(
     val shared by container.pendingAttachment.collectAsStateWithLifecycle()
     val sharedNotice by container.pendingNotice.collectAsStateWithLifecycle()
     val incoming = shared != null || sharedNotice != null
+    val accountLabel = when {
+        settings.backendDeviceId.isNotBlank() -> "Signed in"
+        settings.accountSkipped -> "This phone only"
+        else -> "Not signed in"
+    }
     if (settings.profile == "easy") {
         EasyShell(
             container = container,
@@ -80,6 +96,8 @@ fun HomeShell(
             onOpenRunningApps = onOpenRunningApps,
             onOpenActMode = onOpenActMode,
             onOpenBrowser = onOpenBrowser,
+            onOpenAccount = onOpenAccount,
+            accountLabel = accountLabel,
             initialGoal = initialGoal,
             shared = incoming,
             banner = banner,
@@ -119,6 +137,8 @@ fun HomeShell(
                 onOpenSkills = onOpenSkills,
                 onOpenRunningApps = onOpenRunningApps,
                 onOpenBrowser = onOpenBrowser,
+                accountLabel = accountLabel,
+                onOpenAccount = onOpenAccount,
             )
 
             else -> ChatRoute(
@@ -129,7 +149,7 @@ fun HomeShell(
             )
         }
         banner?.let { text ->
-            GatewayBanner(text, modifier = Modifier.align(Alignment.TopCenter))
+            AccountBanner(text, modifier = Modifier.align(Alignment.TopCenter))
         }
     }
 }
@@ -177,7 +197,7 @@ private fun EasyShell(
             )
         }
         banner?.let { text ->
-            GatewayBanner(text, modifier = Modifier.align(Alignment.TopCenter))
+            AccountBanner(text, modifier = Modifier.align(Alignment.TopCenter))
         }
     }
 }
@@ -195,6 +215,8 @@ private fun PowerShell(
     onOpenRunningApps: () -> Unit,
     onOpenActMode: () -> Unit,
     onOpenBrowser: () -> Unit,
+    onOpenAccount: () -> Unit,
+    accountLabel: String,
     initialGoal: String,
     shared: Boolean,
     banner: String?,
@@ -239,6 +261,8 @@ private fun PowerShell(
                 onOpenSkills = onOpenSkills,
                 onOpenRunningApps = onOpenRunningApps,
                 onOpenBrowser = onOpenBrowser,
+                accountLabel = accountLabel,
+                onOpenAccount = onOpenAccount,
             )
 
             chatStarted -> ChatRoute(
@@ -259,24 +283,47 @@ private fun PowerShell(
             )
         }
         banner?.let { text ->
-            GatewayBanner(text, modifier = Modifier.align(Alignment.TopCenter))
+            AccountBanner(text, modifier = Modifier.align(Alignment.TopCenter))
         }
     }
 }
 
 /** A one-line notice across the top, drawn over whatever tab is showing. */
 @Composable
-private fun GatewayBanner(text: String, modifier: Modifier = Modifier) {
-    Box(
+private fun AccountBanner(text: String, modifier: Modifier = Modifier) {
+    Surface(
         modifier = modifier
+            .statusBarsPadding()
             .fillMaxWidth()
-            .background(HopaColor.Warning)
-            .padding(horizontal = 16.dp, vertical = 10.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(16.dp),
+        color = HopaColor.Surface,
+        border = BorderStroke(1.dp, HopaColor.Divider),
+        shadowElevation = 2.dp,
     ) {
-        Text(
-            text,
-            color = HopaColor.OnPrimary,
-            fontSize = 13.sp,
-        )
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .background(HopaColor.Warning, CircleShape),
+            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    "Account offline",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = HopaColor.TextPrimary,
+                )
+                Text(
+                    text,
+                    fontSize = 10.5.sp,
+                    color = HopaColor.TextSecondary,
+                )
+            }
+        }
     }
 }

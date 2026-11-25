@@ -37,6 +37,8 @@ class CapabilitiesScreenshotTest {
                     onOpenRuns = {},
                     onOpenMemory = {},
                     onOpenSkills = {},
+                    accountLabel = "Signed in",
+                    onOpenAccount = {},
                 )
             }
         }

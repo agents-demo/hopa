@@ -1,7 +1,6 @@
 package com.hopa.app.navigation
 
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 
@@ -16,7 +15,7 @@ class LaunchModeTest {
     }
 
     @Test
-    fun `configured but unreachable is local only with a banner and not a crash`() {
+    fun `configured but unreachable without an identity stays quiet`() {
         val decision = LaunchMode.decide(
             configuredUrl = "https://gateway.example",
             storedUrl = "",
@@ -25,7 +24,7 @@ class LaunchModeTest {
         )
 
         assertEquals(LaunchMode.LocalOnlyUnreachable, decision.mode)
-        assertNotNull(decision.banner)
+        assertNull(decision.banner)
         assertEquals(true, decision.showGatewayPairing)
     }
 
@@ -43,6 +42,21 @@ class LaunchModeTest {
     }
 
     @Test
+    fun `skipping the account wins over a reachable gateway`() {
+        val decision = LaunchMode.decide(
+            configuredUrl = "https://gateway.example",
+            storedUrl = "",
+            storedDeviceId = "",
+            reachable = true,
+            skipped = true,
+        )
+
+        assertEquals(LaunchMode.LocalOnly, decision.mode)
+        assertNull(decision.banner)
+        assertEquals(false, decision.showGatewayPairing)
+    }
+
+    @Test
     fun `a stored identity is paired`() {
         val decision = LaunchMode.decide(
             configuredUrl = null,
@@ -56,7 +70,7 @@ class LaunchModeTest {
     }
 
     @Test
-    fun `a stored url that is unreachable is local only with a banner`() {
+    fun `a stored url that is unreachable without an identity stays quiet`() {
         val decision = LaunchMode.decide(
             configuredUrl = null,
             storedUrl = "https://gateway.example",
@@ -65,6 +79,19 @@ class LaunchModeTest {
         )
 
         assertEquals(LaunchMode.LocalOnlyUnreachable, decision.mode)
-        assertNotNull(decision.banner)
+        assertNull(decision.banner)
+    }
+
+    @Test
+    fun `a paired phone gets a plain note when the account is unreachable`() {
+        val decision = LaunchMode.decide(
+            configuredUrl = null,
+            storedUrl = "https://gateway.example",
+            storedDeviceId = "device-1",
+            reachable = false,
+        )
+
+        assertEquals(LaunchMode.LocalOnlyUnreachable, decision.mode)
+        assertEquals("HOPA still works on this phone.", decision.banner)
     }
 }

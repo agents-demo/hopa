@@ -54,6 +54,7 @@ class DataStoreSettingsRepository(
             prefs[BACKEND_URL] = next.backendUrl
             prefs[BACKEND_DEVICE_ID] = next.backendDeviceId
             prefs[BACKEND_HOUSEHOLD_ID] = next.backendHouseholdId
+            prefs[ACCOUNT_SKIPPED] = next.accountSkipped
         }
     }
 
@@ -150,6 +151,7 @@ class DataStoreSettingsRepository(
             backendUrl = prefs[BACKEND_URL] ?: DEFAULT_BACKEND_URL,
             backendDeviceId = prefs[BACKEND_DEVICE_ID] ?: "",
             backendHouseholdId = prefs[BACKEND_HOUSEHOLD_ID] ?: "",
+            accountSkipped = prefs[ACCOUNT_SKIPPED] ?: false,
         )
 
         val PROVIDER = stringPreferencesKey("provider")
@@ -180,6 +182,7 @@ val CLOUD_FALLBACK = booleanPreferencesKey("cloud_fallback")
         val BACKEND_URL = stringPreferencesKey("backend_url")
         val BACKEND_DEVICE_ID = stringPreferencesKey("backend_device_id")
         val BACKEND_HOUSEHOLD_ID = stringPreferencesKey("backend_household_id")
+        val ACCOUNT_SKIPPED = booleanPreferencesKey("account_skipped")
         const val MODEL_KEY = "model_key"
         const val BRIDGE_TOKEN = "bridge_token"
         const val BRIDGE_REFRESH = "bridge_refresh"
