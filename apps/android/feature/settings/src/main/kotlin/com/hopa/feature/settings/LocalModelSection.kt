@@ -51,6 +51,7 @@ fun LocalModelSection(
     onDownload: (ModelSpec) -> Unit,
     onDelete: (String) -> Unit,
     onDeleteAll: () -> Unit,
+    onUse: (String) -> Unit = {},
     onAcceptLicence: () -> Unit = {},
     onCancelLicence: () -> Unit = {},
 ) {
@@ -90,6 +91,7 @@ fun LocalModelSection(
                 spec = recommended,
                 state = state,
                 installed = installed,
+                active = recommended.id == state.activeId,
                 onImport = onImport,
                 onDownload = onDownload,
                 onDelete = onDelete,
@@ -115,19 +117,23 @@ fun LocalModelSection(
             }
             state.installed.forEach { model ->
                 val spec = state.installedSpecs[model.id]
+                val active = model.id == state.activeId
                 InstalledRow(
                     title = spec?.name ?: model.id,
-                    subtitle = if (model.id in state.updates) {
-                        "${formatBytes(model.bytes)}  ·  update available"
-                    } else {
-                        "${formatBytes(model.bytes)}  ·  active"
+                    subtitle = when {
+                        model.id in state.updates ->
+                            "${formatBytes(model.bytes)}  ·  update available"
+                        active -> "${formatBytes(model.bytes)}  ·  In use"
+                        else -> "${formatBytes(model.bytes)}  ·  Installed"
                     },
                     spec = spec,
+                    active = active,
                     expanded = openInstalled == model.id,
                     onToggle = {
                         openInstalled = if (openInstalled == model.id) null else model.id
                     },
                     onDelete = { pendingDelete = model.id },
+                    onUse = { onUse(model.id) },
                     onUpdate = spec?.takeIf { model.id in state.updates }?.let { current ->
                         { onDownload(current) }
                     },
@@ -242,6 +248,7 @@ private fun ModelCard(
     spec: ModelSpec,
     state: LocalModelUiState,
     installed: Boolean,
+    active: Boolean,
     onImport: () -> Unit,
     onDownload: (ModelSpec) -> Unit,
     onDelete: (String) -> Unit,
@@ -259,7 +266,13 @@ private fun ModelCard(
                     color = HopaColor.TextPrimary,
                     modifier = Modifier.weight(1f),
                 )
-                Pill(if (installed) "Installed" else formatBytes(spec.bytes))
+                Pill(
+                    when {
+                        active -> "In use"
+                        installed -> "Installed"
+                        else -> formatBytes(spec.bytes)
+                    },
+                )
             }
             ModelDetails(spec)
             if (!installed) {
@@ -295,9 +308,11 @@ private fun InstalledRow(
     title: String,
     subtitle: String,
     spec: ModelSpec?,
+    active: Boolean,
     expanded: Boolean,
     onToggle: () -> Unit,
     onDelete: () -> Unit,
+    onUse: () -> Unit,
     onUpdate: (() -> Unit)? = null,
 ) {
     Card(
@@ -316,7 +331,10 @@ private fun InstalledRow(
                 Box(
                     modifier = Modifier
                         .size(8.dp)
-                        .background(HopaColor.Success, CircleShape),
+                        .background(
+                            if (active) HopaColor.Success else HopaColor.TextHint.copy(alpha = 0.4f),
+                            CircleShape,
+                        ),
                 )
                 Column(modifier = Modifier
                     .weight(1f)
@@ -339,10 +357,21 @@ private fun InstalledRow(
                 }
             }
             if (expanded && spec != null) {
-                ModelDetails(
-                    spec = spec,
+                Column(
                     modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 14.dp),
-                )
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    ModelDetails(spec)
+                    if (active) {
+                        Text(
+                            "This model answers on-device turns.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = HopaColor.Success,
+                        )
+                    } else {
+                        FilledTonalButton(onClick = onUse) { Text("Use this model") }
+                    }
+                }
             }
         }
     }

@@ -61,6 +61,74 @@ class LocalModelViewModelTest {
     }
 
     @Test
+    fun the_picked_model_is_the_one_in_use() = runTest(dispatcher) {
+        val installed = listOf(
+            InstalledModel("qwen3-1.7b", File("qwen3-1.7b-1234.gguf"), 1_100_000_000L),
+            InstalledModel("qwen3-0.6b-q8", File("qwen3-0.6b-q8-5678.gguf"), 600_000_000L),
+        )
+        val viewModel = LocalModelViewModel(
+            host(
+                ramGb = 8,
+                freeBytes = 20_000_000_000L,
+                installed = installed,
+                settings = fakeSettings(activeModelId = "qwen3-0.6b-q8"),
+            ),
+        )
+
+        advanceUntilIdle()
+
+        assertEquals("qwen3-0.6b-q8", viewModel.state.value.activeId)
+    }
+
+    @Test
+    fun without_a_pick_the_newest_file_answers() = runTest(dispatcher) {
+        val older = File.createTempFile("hopa-old-", ".gguf").apply { setLastModified(1_000L) }
+        val newer = File.createTempFile("hopa-new-", ".gguf").apply { setLastModified(2_000L) }
+        try {
+            val viewModel = LocalModelViewModel(
+                host(
+                    ramGb = 8,
+                    freeBytes = 20_000_000_000L,
+                    installed = listOf(
+                        InstalledModel("qwen3-1.7b", older, 10L),
+                        InstalledModel("qwen3-0.6b-q8", newer, 10L),
+                    ),
+                ),
+            )
+
+            advanceUntilIdle()
+
+            assertEquals("qwen3-0.6b-q8", viewModel.state.value.activeId)
+        } finally {
+            older.delete()
+            newer.delete()
+        }
+    }
+
+    @Test
+    fun picking_a_model_stores_it_for_the_engine() = runTest(dispatcher) {
+        val settings = fakeSettings()
+        val viewModel = LocalModelViewModel(
+            host(
+                ramGb = 8,
+                freeBytes = 20_000_000_000L,
+                installed = listOf(
+                    InstalledModel("qwen3-1.7b", File("qwen3-1.7b-1234.gguf"), 1_100_000_000L),
+                ),
+                settings = settings,
+            ),
+        )
+        advanceUntilIdle()
+
+        viewModel.use("qwen3-1.7b")
+        advanceUntilIdle()
+
+        assertEquals("qwen3-1.7b", settings.settings.first().activeModelId)
+        assertEquals("qwen3-1.7b", viewModel.state.value.activeId)
+        assertEquals("On-device answers will use this model.", viewModel.state.value.notice)
+    }
+
+    @Test
     fun delete_removes_the_file_and_refreshes_the_total() = runTest(dispatcher) {
         val store = FakeStore(
             installed = listOf(
@@ -155,9 +223,11 @@ class LocalModelViewModelTest {
         override val settings: com.hopa.stores.SettingsRepository = settings
     }
 
-    private fun fakeSettings(): com.hopa.stores.SettingsRepository =
+    private fun fakeSettings(activeModelId: String = ""): com.hopa.stores.SettingsRepository =
         object : com.hopa.stores.SettingsRepository {
-            private val flow = kotlinx.coroutines.flow.MutableStateFlow(com.hopa.stores.AppSettings())
+            private val flow = kotlinx.coroutines.flow.MutableStateFlow(
+                com.hopa.stores.AppSettings(activeModelId = activeModelId),
+            )
             override val settings: kotlinx.coroutines.flow.Flow<com.hopa.stores.AppSettings> = flow
 
             override suspend fun update(transform: (com.hopa.stores.AppSettings) -> com.hopa.stores.AppSettings) {

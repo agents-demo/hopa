@@ -48,6 +48,9 @@ class LocalModelViewModel @Inject constructor(
                 freeBytes = host.freeBytes,
             )
             val specs = LocalModelCatalogue.models.associateBy { model -> model.id }
+            val activeId = settings.activeModelId
+                .takeIf { id -> installed.any { it.id == id } }
+                ?: installed.maxByOrNull { model -> model.file.lastModified() }?.id.orEmpty()
             val updates = installed.mapNotNull { model ->
                 val spec = specs[model.id] ?: return@mapNotNull null
                 val current = spec.sha256.isNotBlank() &&
@@ -59,6 +62,7 @@ class LocalModelViewModel @Inject constructor(
                     recommended = recommended,
                     installed = installed,
                     installedSpecs = specs,
+                    activeId = activeId,
                     updates = updates,
                     totalBytes = installed.sumOf { model -> model.bytes },
                     ramGb = host.ramGb,
@@ -126,6 +130,19 @@ class LocalModelViewModel @Inject constructor(
             host.localModels.delete(id)
             _state.update { it.copy(notice = "Model removed.") }
             refresh()
+        }
+    }
+
+    /**
+     * The model that answers the next on-device turn. The engine reads the same
+     * setting, so the row marked "In use" and the model that replies never drift.
+     */
+    fun use(id: String) {
+        viewModelScope.launch {
+            host.settings.update { it.copy(activeModelId = id) }
+            _state.update {
+                it.copy(activeId = id, notice = "On-device answers will use this model.")
+            }
         }
     }
 

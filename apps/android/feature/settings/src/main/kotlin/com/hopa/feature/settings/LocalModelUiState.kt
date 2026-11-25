@@ -9,6 +9,8 @@ data class LocalModelUiState(
     val recommended: ModelSpec? = null,
     val installed: List<InstalledModel> = emptyList(),
     val installedSpecs: Map<String, ModelSpec> = emptyMap(),
+    /** The catalogue id that answers on-device turns; empty before the first pick. */
+    val activeId: String = "",
     val totalBytes: Long = 0,
     val ramGb: Int = 0,
     val quotaBytes: Long = LocalModelQuota.MAX_BYTES,
