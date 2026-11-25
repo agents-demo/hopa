@@ -48,6 +48,8 @@ val brainChecks = listOf(
 
 tasks.named("check") {
     dependsOn(brainChecks)
+    // The cross-language contract starts build/brain.jar; build it with check.
+    dependsOn("fatJar")
 }
 
 /**

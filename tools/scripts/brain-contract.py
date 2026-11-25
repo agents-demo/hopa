@@ -62,7 +62,11 @@ def main() -> int:
     parser.add_argument("--gson", default=str(ROOT / ".tools" / "gson-2.11.0.jar"))
     args = parser.parse_args()
 
-    classpath = args.jar + os.pathsep + args.gson
+    # The Gradle fat jar carries the Kotlin stdlib and Gson. A plain jar from
+    # an older layout still works when the Gson file is present.
+    classpath = args.jar
+    if Path(args.gson).exists():
+        classpath += os.pathsep + args.gson
     process = subprocess.Popen(
         ["java", "-cp", classpath, "hopa.brain.http.ServerKt", "0"],
         stdout=subprocess.PIPE,
