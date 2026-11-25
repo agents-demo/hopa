@@ -61,6 +61,7 @@ tasks.register<Jar>("fatJar") {
     group = "build"
     description = "Builds the runnable brain.jar with the Kotlin stdlib and Gson."
     archiveFileName.set("brain.jar")
+    destinationDirectory.set(layout.buildDirectory)
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     manifest {
         attributes["Main-Class"] = "hopa.brain.http.ServerKt"
