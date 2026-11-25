@@ -10,7 +10,9 @@ import com.hopa.sidecar.backend.GatewayHost
 import com.hopa.sidecar.backend.backendContentKey
 import com.hopa.sidecar.device.HostDevice
 import com.hopa.sidecar.turn.TurnEngine
+import com.hopa.sidecar.windows.WindowsGraphs
 import com.hopa.sidecar.capabilities.CapabilitiesCollector
+import com.hopa.decision.graph.HandGraphSource
 import com.hopa.sidecar.protocol.Dispatcher
 import com.hopa.sidecar.protocol.Protocol
 import com.hopa.sidecar.protocol.handler.ApprovalHandler
@@ -66,7 +68,19 @@ internal fun runProtocol(options: CliOptions) {
     val approval = HostApproval(io, approvals)
     val attachments = Attachments(dataDir.resolve("attachments"))
     val tasks = TaskStore()
-    val engine = TurnEngine(io, device, approval, store, records, config, memory, skills, recipes, browser = browser)
+    val engine = TurnEngine(
+        io,
+        device,
+        approval,
+        store,
+        records,
+        config,
+        memory,
+        skills,
+        recipes,
+        browser = browser,
+        graphs = HandGraphSource(WindowsGraphs.load()),
+    )
     val backendScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     val sessionPath = dataDir.resolve("backend-session.json")
     val sessionStore = BackendSessionStore(sessionPath)

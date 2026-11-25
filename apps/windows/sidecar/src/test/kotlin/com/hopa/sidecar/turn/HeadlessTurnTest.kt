@@ -4,6 +4,7 @@ import com.hopa.contracts.approval.ApprovalGateway
 import com.hopa.contracts.error.ErrorCodes
 import com.hopa.contracts.ports.DevicePort
 import com.hopa.contracts.ports.InstalledApp
+import com.hopa.contracts.wire.Action
 import com.hopa.contracts.wire.Observation
 import com.hopa.contracts.wire.ObservationNode
 import com.hopa.contracts.wire.ScreenSize
@@ -19,6 +20,9 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
+import com.hopa.decision.graph.GraphStep
+import com.hopa.decision.graph.GraphStepSource
+import com.hopa.decision.graph.GraphTarget
 import com.hopa.sidecar.approval.DenyAllApproval
 import com.hopa.sidecar.device.HeadlessDevice
 import com.hopa.sidecar.device.HostDevice
@@ -49,6 +53,34 @@ class HeadlessTurnTest {
         assertEquals(0, outcome.records.size)
         assertTrue(outcome.chainOk)
         assertNull(outcome.error)
+    }
+
+    @Test
+    fun anchors_only_uses_the_graph_and_does_not_ask_the_model() {
+        val dataDir = Files.createTempDirectory("hopa-anchors")
+        val device = RecordingDevice()
+        val config = RuntimeConfig()
+        config.update(buildJsonObject { put("stepSource", "anchors") })
+        val graph = object : GraphStepSource {
+            override fun next(observation: Observation, goal: String) = GraphStep(
+                graph = "Notepad",
+                node = "start",
+                action = Action(kind = "ui.launch", app = "notepad"),
+                answer = "Opened Notepad.",
+                done = true,
+            )
+
+            override fun target(goal: String) = GraphTarget("notepad", "Notepad", completes = true)
+        }
+
+        val outcome = runBlocking {
+            engine(dataDir, device = device, config = config, graphs = graph, forceStub = false)
+                .runTurn("t-anchor", "open notepad", null)
+        }
+
+        assertEquals("Opened Notepad.", outcome.answer)
+        assertEquals(listOf("notepad"), device.launches)
+        assertEquals(1, outcome.records.size)
     }
 
     @Test
@@ -201,6 +233,7 @@ class HeadlessTurnTest {
         device: DevicePort = RecordingDevice(),
         approvals: ApprovalGateway = DenyAllApproval(),
         config: RuntimeConfig = RuntimeConfig(),
+        graphs: GraphStepSource? = null,
         forceStub: Boolean = true,
     ): TurnEngine = TurnEngine(
         io = Stdio(),
@@ -212,6 +245,7 @@ class HeadlessTurnTest {
         memory = MemoryFileStore(dataDir.resolve("memory.json")),
         skills = SkillFileStore(dataDir.resolve("skills.json")),
             recipes = RecipeStore(dataDir.resolve("recipes.txt").toFile()),
+        graphs = graphs,
         forceStub = forceStub,
     )
 }

@@ -34,9 +34,12 @@ object GraphCatalog {
         "timer" to "Timer",
     )
 
-    fun load(): List<AppGraph> {
+    fun load(): List<AppGraph> = load(RESOURCE)
+
+    /** A client-specific catalogue, e.g. the Windows app graphs. */
+    fun load(resource: String): List<AppGraph> {
         val text = runCatching {
-            GraphCatalog::class.java.getResourceAsStream(RESOURCE)?.use { stream ->
+            GraphCatalog::class.java.getResourceAsStream(resource)?.use { stream ->
                 stream.readBytes().decodeToString()
             }
         }.getOrNull() ?: return emptyList()

@@ -10,6 +10,7 @@ import com.hopa.agent.recipe.RecipeStore
 import com.hopa.agent.turn.TurnRequest
 import com.hopa.agent.turn.TurnRunner
 import com.hopa.decision.classifier.IntentClassifier
+import com.hopa.decision.graph.GraphStepSource
 import com.hopa.bridge.device.AdbDevice
 import com.hopa.bridge.session.BridgeClient
 import com.hopa.catalog.routing.CatalogRoutes
@@ -61,6 +62,8 @@ class TurnEngine(
     private val recipes: RecipeStore,
     /** The WebView2 surface; null in headless, where no host is attached. */
     private val browser: BrowserPort? = null,
+    /** Windows app graphs; null in headless and tests that do not opt in. */
+    private val graphs: GraphStepSource? = null,
     private val forceStub: Boolean = false,
     /** False in headless: no host is attached, so the prompt must not claim access. */
     private val deviceAttached: Boolean = true,
@@ -313,6 +316,7 @@ class TurnEngine(
             plans = ModelPlanSource(model),
             commands = IntentClassifier(),
             knowledge = { SidecarCatalog.value },
+            graphs = graphs,
         )
         val outcome = runCatching {
             runner.run(
@@ -334,8 +338,8 @@ class TurnEngine(
                     replay = config.replay && config.stepSource != "model",
                     instantCommands = config.instantCommands && config.stepSource != "model",
                     checkpoints = checkpoints,
-                    useGraphs = false,
-                    graphFallback = false,
+                    useGraphs = graphs != null && config.stepSource != "model",
+                    graphFallback = config.stepSource != "anchors",
                     cloudFallback = false,
                     // A person may need minutes to sign; the takeover pause is
                     // part of the turn's budget, so a paused turn gets longer.

@@ -27,13 +27,26 @@ approves every action.
 
 ## Step source
 
-`Settings → Run` has `auto` and `model`:
+`Settings → Run` has `auto`, `anchors` and `model`:
 
-- `auto` — try a saved recipe, then an instant command, then the model;
-- `model` — skip recipes and instant commands; the model decides every step.
+- `auto` — try a known app graph, then a recipe/instant command, then the model;
+- `anchors` — graph only; no graph means the turn refuses rather than calling a
+  model;
+- `model` — skip graphs, recipes and instant commands.
 
-`graph` is not offered: Windows has no graph/anchor catalogue. The sidecar
-still keeps `useGraphs = false`, `graphFallback = false`.
+Windows graph v1 is
+`apps/windows/sidecar/src/main/resources/windows-graphs.v1.json`: Notepad, File
+Explorer and Calculator. A live `--turn "open notepad"` with `steps=anchors`
+produced:
+
+```text
+sidecar: configured ... steps=anchors
+device: launched notepad (foreground=notepad)
+step 0: ui.launch tier=uia executed=True
+HOPA: Opened Notepad.
+```
+
+The catalogue is deliberately small; it is content, not a matcher rewrite.
 
 ## On-device
 

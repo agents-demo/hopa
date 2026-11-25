@@ -141,9 +141,10 @@
                         <TextBlock Text="Step source" FontSize="11.5" Foreground="#6B665C" />
                         <ComboBox x:Name="StepSourceBox" Height="32" Margin="0,4,0,4">
                             <ComboBoxItem Content="auto" />
+                            <ComboBoxItem Content="anchors" />
                             <ComboBoxItem Content="model" />
                         </ComboBox>
-                        <TextBlock Text="Auto uses a saved recipe or an instant command before the model. Model skips both. Windows has no graph/anchor catalogue."
+                        <TextBlock Text="Auto tries a known app graph, then a recipe/instant command, then the model. Anchors uses graphs only. Model skips graphs, recipes and commands."
                                    FontSize="10" Foreground="#9A9488" TextWrapping="Wrap"
                                    Margin="0,0,0,12" />
                         <CheckBox x:Name="ReplayBox" Content="Try a saved recipe before the model"

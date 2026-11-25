@@ -231,7 +231,8 @@ Gate: a signed MSI on a clean VM, with both targets working.
 
 The 2026 engineering modernization proposal is
 [windows-2026.md](../modernization/windows-2026.md); it changes foundations, not
-product behaviour.
+product behaviour. The model-source sequence (API, Demo, anchors, local) is
+[model-sources.md](model-sources.md).
 
 The total-parity work is a separate phase set after P0-P6. W7 makes the contract
 reviewable; W8 builds the shared data and protocol path; W9–W10 add the

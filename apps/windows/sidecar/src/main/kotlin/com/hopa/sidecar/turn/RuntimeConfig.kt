@@ -86,7 +86,7 @@ class RuntimeConfig {
         tone = message.text("tone").ifBlank { "warm" }
         profile = message.text("profile").ifBlank { profile }
         stepSource = message.text("stepSource").lowercase().let {
-            if (it == "model") "model" else "auto"
+            if (it == "model" || it == "anchors") it else "auto"
         }
         replay = message.bool("replay", replay)
         vision = message.bool("vision", vision)

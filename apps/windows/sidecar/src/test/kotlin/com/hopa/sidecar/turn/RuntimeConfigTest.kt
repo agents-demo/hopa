@@ -29,6 +29,10 @@ class RuntimeConfigTest {
         auto.update(buildJsonObject { put("stepSource", "model") })
         assertTrue(auto.stepSource == "model")
 
+        val anchors = RuntimeConfig()
+        anchors.update(buildJsonObject { put("stepSource", "anchors") })
+        assertTrue(anchors.stepSource == "anchors")
+
         val model = RuntimeConfig()
         model.update(buildJsonObject { put("stepSource", "graph") })
         assertTrue(model.stepSource == "auto")

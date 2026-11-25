@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "graphs": [
+    {
+      "app": "notepad",
+      "name": "Notepad",
+      "nodes": [],
+      "edges": [
+        {
+          "from": "start",
+          "goal": ["notepad", "note pad", "text editor"],
+          "action": { "kind": "launch", "app": "notepad" },
+          "answer": "Opened Notepad.",
+          "done": true
+        }
+      ]
+    },
+    {
+      "app": "explorer",
+      "name": "File Explorer",
+      "nodes": [],
+      "edges": [
+        {
+          "from": "start",
+          "goal": ["explorer", "file explorer", "files"],
+          "action": { "kind": "launch", "app": "explorer" },
+          "answer": "Opened File Explorer.",
+          "done": true
+        }
+      ]
+    },
+    {
+      "app": "CalculatorApp",
+      "name": "Calculator",
+      "nodes": [],
+      "edges": [
+        {
+          "from": "start",
+          "goal": ["calculator", "calc"],
+          "action": { "kind": "launch", "app": "calc" },
+          "answer": "Opened Calculator.",
+          "done": true
+        }
+      ]
+    }
+  ]
+}
