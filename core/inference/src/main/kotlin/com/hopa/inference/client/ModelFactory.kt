@@ -30,8 +30,7 @@ class ModelFactory(
      * loopback. Any other address is refused here: an "on-device" answer must
      * never travel to a server that is not this machine.
      */
-    private fun loopbackEngine(endpoint: String, modelName: String): LocalEngine? =
-        endpoint
-            .takeIf(LocalEndpoint::isLoopback)
-            ?.let { HttpLocalEngine(it, modelName) }
+    private fun loopbackEngine(endpoint: String, modelName: String): LocalEngine? = endpoint
+        .takeIf(LocalEndpoint::isLoopback)
+        ?.let { HttpLocalEngine(it, modelName) }
 }

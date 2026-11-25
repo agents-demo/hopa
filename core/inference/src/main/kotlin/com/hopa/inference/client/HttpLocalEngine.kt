@@ -28,8 +28,7 @@ class HttpLocalEngine(
         readTimeoutSeconds = LOCAL_READ_TIMEOUT_SECONDS,
     )
 
-    override suspend fun complete(request: ModelRequest, grammar: String): ModelReply =
-        client.complete(request)
+    override suspend fun complete(request: ModelRequest, grammar: String): ModelReply = client.complete(request)
 
     companion object {
         /** The server is started with this model name; llama.cpp ignores it. */
