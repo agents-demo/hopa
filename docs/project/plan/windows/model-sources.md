@@ -83,7 +83,9 @@ HOPA: Opened Notepad.
 - [x] **MODEL-12** model files separate from the MSI; installer size budget.
       Runtime and weights download to `%LOCALAPPDATA%\HOPA`; the MSI is unchanged.
 - [ ] **MODEL-13** offline/performance evidence on a clean VM.
-      Local turn transcript exists on this machine; a clean VM is still open.
+      Measured here: a 49-node screen finished two steps in 256.5 s; a
+      200-node screen executed one step and then hit the ten-minute deadline.
+      A clean VM and a prompt budget for local models are still open.
 
 The runtime works end to end. What remains is consent-based fallback
 (MODEL-11), clean-VM evidence (MODEL-13), and the progress UI that makes a
