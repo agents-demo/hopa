@@ -1,6 +1,6 @@
 # MODEL-XX: answer sources, anchors and local models
 
-Status: **MODEL-01…MODEL-06 done; MODEL-07…MODEL-20 pending.** This plan makes
+Status: **MODEL-01…MODEL-10 and MODEL-12 done; MODEL-11, MODEL-13…MODEL-20 pending.** This plan makes
 the Windows model-source choices explicit instead of hiding platform
 differences behind a single API provider.
 
@@ -21,7 +21,7 @@ the rest of the sequence stays.
 |---|---|---|---|---|
 | Anchors / graph | UIA tree + labels | no | no | ✅ Windows graph v1 |
 | Tree model | UIA tree | API/LAN | no | ✅ same as API model; named mode pending |
-| Small local model | UIA tree | no | yes | ❌ no runtime/model |
+| Small local model | UIA tree | no | yes | installed in Settings; loopback llama.cpp |
 | API model | UIA tree | yes | no | ✅ DeepSeek/OpenAI/LAN |
 | Demo | none | no | no | ✅ `stub` |
 
@@ -36,7 +36,7 @@ skips graphs, recipes and commands.
 - [x] Step source is documented as `auto`/`anchors`/`model`; graph is a
       Windows catalogue, not an Android screen.
 - [x] `W10-model-source.md` records the Demo provider and step source.
-- [ ] ADR for local runtime (MODEL-07) and a final scope decision: API-only or
+- [x] ADR for local runtime (MODEL-07) and a final scope decision: API-only or
       local model.
 
 ## 3. Anchors on Windows (MODEL-03…06)
