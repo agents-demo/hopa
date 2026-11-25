@@ -50,6 +50,10 @@ internal class PreferencesSettings(
         settings.update { it.copy(stepSource = value) }
     }
 
+    suspend fun setTreeRanker(value: Boolean) {
+        settings.update { it.copy(treeRanker = value) }
+    }
+
     suspend fun setCloudFallback(value: Boolean) {
         settings.update { it.copy(cloudFallback = value) }
     }

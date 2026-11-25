@@ -40,6 +40,11 @@ android {
         applicationId = "com.hopa.android"
         minSdk = 29
         targetSdk = 36
+        ndk {
+            // The phone is arm64 and the emulator is x86_64; other ABIs would
+            // only double the ONNX Runtime payload.
+            abiFilters += listOf("arm64-v8a", "x86_64")
+        }
         // Every build is a new version: a static code made Android treat the
         // next APK as a reinstall of the same app and refuse it from the picker.
         versionCode = (System.currentTimeMillis() / 1000L).toInt()

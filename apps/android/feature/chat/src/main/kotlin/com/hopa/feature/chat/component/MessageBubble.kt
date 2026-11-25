@@ -264,6 +264,7 @@ private fun sourceLabel(source: String): String = when (source) {
     "graph" -> "Anchors \u00B7 "
     "command" -> "Command \u00B7 "
     "recipe" -> "Skill \u00B7 "
+    "tree" -> "Tree \u00B7 "
     "model" -> "Model \u00B7 "
     else -> ""
 }

@@ -39,6 +39,11 @@ class RunCoordinator(
             decisions = container.decisions,
             commands = container.commands,
             graphs = container.graphs,
+            tree = com.hopa.agent.decision.tree.TreeRankerDecisionPolicy(
+                scorer = { container.treeScorer() },
+                enabled = { container.settings.settings.first().treeRanker },
+                onOutcome = { line -> android.util.Log.i("HopaTree", line) },
+            ),
         )
     }
 

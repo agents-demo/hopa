@@ -63,6 +63,8 @@ class TurnRunner(
     private val commands: IntentClassifier? = null,
     /** Hand-written known-app graphs; null disables the path. */
     private val graphs: GraphStepSource? = null,
+    /** The tree ranker rung, between commands and the model; null disables it. */
+    private val tree: DecisionPolicy? = null,
 ) {
     suspend fun run(
         request: TurnRequest,
@@ -154,7 +156,7 @@ class TurnRunner(
                     ),
                 ),
             )
-            else -> ChainDecisionPolicy(listOfNotNull(recipe, graph, command, model, cloud))
+            else -> ChainDecisionPolicy(listOfNotNull(recipe, graph, command, tree, model, cloud))
         }
         return fromModel(request, started, isCancelled, tables, policy, graph != null, beforeStep)
     }
@@ -313,6 +315,7 @@ class TurnRunner(
          */
         fun sourceOf(graphInChain: Boolean, sources: Set<String>): TurnSource = when {
             "recipe" in sources -> TurnSource.RECIPE
+            "tree" in sources -> TurnSource.TREE
             "model" in sources -> TurnSource.MODEL
             "command" in sources -> TurnSource.COMMAND
             "anchors" in sources -> TurnSource.GRAPH

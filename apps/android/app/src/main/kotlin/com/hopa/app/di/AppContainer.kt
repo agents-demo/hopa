@@ -93,6 +93,38 @@ class AppContainer @Inject constructor(@ApplicationContext context: Context) : C
     override val localModels: com.hopa.engine.llama.LocalModelStore =
         com.hopa.engine.llama.AndroidLocalModelStore(context)
 
+    /** The optional tree ranker's weights and download state. */
+    override val treeRanker: com.hopa.mmbert.MmBertInstaller =
+        com.hopa.mmbert.MmBertInstaller(context)
+
+    @Volatile
+    private var treeScorerCache: com.hopa.contracts.model.ActionScorer? = null
+
+    /**
+     * The tree ranker, opened on first use and kept for the process.
+     *
+     * It is intentionally lazy and swallow-on-failure: a missing or broken file
+     * means the phone simply has no tree rung, not a crash in the loop.
+     */
+    fun treeScorer(): com.hopa.contracts.model.ActionScorer? {
+        val file = com.hopa.mmbert.MmBertModel.file(context)
+        treeScorerCache?.let { return it }
+        if (!file.isFile) return null
+        return synchronized(this) {
+            treeScorerCache ?: runCatching {
+                val started = System.currentTimeMillis()
+                com.hopa.mmbert.MmBertScorer.open(context, file).also {
+                    android.util.Log.i(
+                        "HopaTree",
+                        "ranker opened in ${System.currentTimeMillis() - started} ms",
+                    )
+                }
+            }.onFailure {
+                android.util.Log.w("HopaTree", "ranker failed to open", it)
+            }.getOrNull()?.also { treeScorerCache = it }
+        }
+    }
+
     override val ramGb: Int
         get() = run {
             val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager

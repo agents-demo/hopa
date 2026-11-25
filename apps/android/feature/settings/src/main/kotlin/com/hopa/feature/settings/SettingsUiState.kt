@@ -48,6 +48,11 @@ data class SettingsUiState(
     val graphPaths: List<String> = emptyList(),
     /** The model files on this phone, for the picker on Act. */
     val installedModels: List<ModelOption> = emptyList(),
+    /** The optional tree ranker: downloaded, downloading, or absent. */
+    val treeRankerReady: Boolean = false,
+    val treeRankerBusy: Boolean = false,
+    /** 0..100 while downloading; null when the size is not known yet. */
+    val treeRankerProgress: Int? = null,
 )
 
 /** An installed on-device model as the picker shows it. */

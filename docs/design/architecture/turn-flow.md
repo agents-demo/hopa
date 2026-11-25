@@ -83,7 +83,7 @@ flowchart TD
   GD --> C1{"Confident?"}
   G -->|"no"| T
   C1 -->|"yes"| KIND
-  C1 -->|"no"| T{"2. TRC language model<br/>(not in this build yet)"}
+  C1 -->|"no"| T{"2. Tree ranker<br/>(Android, optional)"}
   T --> TD["Ask: what is the next action?"]
   TD --> C2{"Confident?"}
   C2 -->|"yes"| KIND
@@ -122,7 +122,7 @@ flowchart TD
 | Order | Path | Asked | If it is not sure |
 |---|---|---|---|
 | 1 | **Graph** for this app | the decision model at the current node: which edge next? | next path |
-| 2 | **TRC language model** (not in this build yet) | what is the next action? | next path |
+| 2 | **Tree ranker** (Android, optional) | which visible control matches the goal? | next path |
 | 3 | **Small model on this phone** (a Hugging Face file) | what is the next action? | next path |
 | 4 | **API language model** (e.g. DeepSeek) | what is the next action? | the turn stops |
 
@@ -147,8 +147,11 @@ is a step policy, so it walks one edge per pass inside the loop and answers with
 the same three things a model does - an action, a question or a final answer. A
 turn asks the graph first, then a canonical command, then the model
 (`ChainDecisionPolicy`), and the API model last when the person allowed it. The
-saved recipe is the one turn-level shortcut left. There is no TRC path yet, and
-the receipt names the path from the policies that actually answered.
+saved recipe is the one turn-level shortcut left. The **tree ranker** is
+available on Android as an optional download (How HOPA acts → Steps → Tree
+ranker); it scores the visible controls for at most three steps after the first,
+then hands over. Windows does not ship it yet, and the receipt names the path
+from the policies that actually answered.
 
 **The decision at a node.** The graph policy reads the visible screen, matches
 the node by its labels and looks for an edge whose words fit the goal. The

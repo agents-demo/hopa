@@ -17,6 +17,9 @@ interface SettingsDependencies {
     val modelFactory: ModelFactory
     /** The model files on this phone, for the picker on Act. */
     val localModels: com.hopa.engine.llama.LocalModelStore
+
+    /** The optional tree ranker; download and readiness live in the engine. */
+    val treeRanker: com.hopa.mmbert.MmBertInstaller
     val backendState: StateFlow<BackendState>
     val backendTask: StateFlow<BackendTaskState>
     val backendNotice: MutableStateFlow<String?>

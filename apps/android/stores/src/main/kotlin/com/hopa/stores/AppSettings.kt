@@ -34,6 +34,12 @@ data class AppSettings(
      */
     val stepSource: String = "auto",
     /**
+     * Let the on-device tree ranker choose a step before the model does.
+     * Off by default: it needs a downloaded 140M-parameter model and it is an
+     * experimental path, not a validated controller.
+     */
+    val treeRanker: Boolean = false,
+    /**
      * When the on-device model is not sure, ask the API model with the same
      * request. Off by default: it means the screen and the goal leave the phone.
      */

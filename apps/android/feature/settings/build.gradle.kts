@@ -43,6 +43,7 @@ dependencies {
     implementation(libs.hilt.navigation.compose)
     implementation(project(":platform:ui"))
     api(project(":engine:llama"))
+    api(project(":engine:mmbert"))
 
     api(project(":contracts"))
     api(project(":stores"))

@@ -239,6 +239,45 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Turn the experimental tree ranker on or off. Turning it on with no model
+     * downloads it first; a failed download leaves the switch off and says why.
+     */
+    fun setTreeRanker(value: Boolean) {
+        viewModelScope.launch {
+            if (!value) {
+                preferences.setTreeRanker(false)
+                reload()
+                return@launch
+            }
+            if (!container.treeRanker.installed()) {
+                _state.update {
+                    it.copy(treeRankerBusy = true, treeRankerProgress = 0, error = null)
+                }
+                val result = container.treeRanker.download { done, total ->
+                    val percent = if (total > 0) {
+                        ((done * 100) / total).toInt().coerceIn(0, 100)
+                    } else {
+                        null
+                    }
+                    _state.update { current -> current.copy(treeRankerProgress = percent) }
+                }
+                _state.update { it.copy(treeRankerBusy = false, treeRankerProgress = null) }
+                if (result.isFailure) {
+                    _state.update {
+                        it.copy(
+                            error = result.exceptionOrNull()?.message
+                                ?: "Could not download the tree model",
+                        )
+                    }
+                    return@launch
+                }
+            }
+            preferences.setTreeRanker(true)
+            reload()
+        }
+    }
+
     /** The framed picture or the cut-out object; see MascotAppearance. */
     fun setMascotFramed(value: Boolean) {
         viewModelScope.launch {
@@ -467,6 +506,7 @@ class SettingsViewModel @Inject constructor(
                 decisionActive = active,
                 graphPaths = container.graphPaths,
                 installedModels = installed,
+                treeRankerReady = container.treeRanker.installed(),
                 key = model.key,
                 keySaved = model.keySaved,
                 bridgeKey = pairing.bridgeKey,

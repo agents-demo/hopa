@@ -57,6 +57,7 @@ fun HowHopaActsRoute(
         onOpenSetup = onOpenSetup,
         onOpenDecisions = onOpenDecisions,
         onStepSource = viewModel::setStepSource,
+        onTreeRanker = viewModel::setTreeRanker,
         onProvider = viewModel::selectProvider,
         onLocalModel = viewModel::selectLocalModel,
         onOpenAnswers = onOpenAnswers,

@@ -44,6 +44,7 @@ class DataStoreSettingsRepository(
             prefs[REPLAY_SKILLS] = next.replaySkills
             prefs[INSTANT_COMMANDS] = next.instantCommands
             prefs[STEP_SOURCE] = next.stepSource
+            prefs[TREE_RANKER] = next.treeRanker
             prefs[CLOUD_FALLBACK] = next.cloudFallback
             prefs[VISION] = next.vision
             prefs[MASCOT_FRAMED] = next.mascotFramed
@@ -141,6 +142,7 @@ class DataStoreSettingsRepository(
             replaySkills = prefs[REPLAY_SKILLS] ?: true,
             instantCommands = prefs[INSTANT_COMMANDS] ?: true,
             stepSource = prefs[STEP_SOURCE] ?: if (prefs[KNOWN_GRAPHS] == false) "model" else "auto",
+            treeRanker = prefs[TREE_RANKER] ?: false,
             cloudFallback = prefs[CLOUD_FALLBACK] ?: false,
             vision = prefs[VISION] ?: false,
             mascotFramed = prefs[MASCOT_FRAMED] ?: false,
@@ -172,7 +174,8 @@ class DataStoreSettingsRepository(
         val INSTANT_COMMANDS = booleanPreferencesKey("instant_commands")
         val KNOWN_GRAPHS = booleanPreferencesKey("known_graphs")
         val STEP_SOURCE = stringPreferencesKey("step_source")
-val CLOUD_FALLBACK = booleanPreferencesKey("cloud_fallback")
+        val TREE_RANKER = booleanPreferencesKey("tree_ranker")
+        val CLOUD_FALLBACK = booleanPreferencesKey("cloud_fallback")
         val VISION = booleanPreferencesKey("vision")
         val MASCOT_FRAMED = booleanPreferencesKey("mascot_framed")
         val TRUSTED_APPS = stringSetPreferencesKey("trusted_apps")

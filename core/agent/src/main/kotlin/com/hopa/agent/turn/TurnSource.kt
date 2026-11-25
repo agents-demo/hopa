@@ -17,6 +17,9 @@ enum class TurnSource {
     /** A hand-written graph for a known app ran the steps. */
     GRAPH,
 
+    /** The on-device tree ranker chose at least one step. */
+    TREE,
+
     /** No surface could see the screen, so the turn did not start. */
     UNAVAILABLE,
 }

@@ -70,6 +70,7 @@ class ActScreenshotTest {
                     onOpenSetup = {},
                     onOpenDecisions = {},
                     onStepSource = {},
+                    onTreeRanker = {},
                     onProvider = {},
                     onLocalModel = {},
                     onOpenAnswers = {},

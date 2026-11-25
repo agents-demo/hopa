@@ -29,6 +29,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -47,6 +48,7 @@ import com.hopa.feature.settings.BackgroundSetupDialog
 import com.hopa.feature.settings.ModelOption
 import com.hopa.feature.settings.SettingsUiState
 import com.hopa.feature.settings.formatBytes
+import com.hopa.mmbert.MmBertModel
 import com.hopa.ui.component.HopaPageHeader
 import com.hopa.ui.settings.SettingsSegment
 import com.hopa.ui.theme.HopaColor
@@ -73,6 +75,7 @@ fun HowHopaActsScreen(
     onOpenSetup: () -> Unit,
     onOpenDecisions: () -> Unit,
     onStepSource: (String) -> Unit,
+    onTreeRanker: (Boolean) -> Unit,
     onProvider: (String) -> Unit,
     onLocalModel: (String) -> Unit,
     onOpenAnswers: () -> Unit,
@@ -255,6 +258,34 @@ fun HowHopaActsScreen(
                     fontSize = 12.sp,
                     color = HopaColor.TextHint,
                 )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                    ) {
+                        Text(
+                            "Tree ranker",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = HopaColor.TextPrimary,
+                        )
+                        Text(
+                            treeRankerNote(state),
+                            fontSize = 11.sp,
+                            color = HopaColor.TextHint,
+                        )
+                    }
+                    Switch(
+                        checked = state.settings.treeRanker,
+                        onCheckedChange = onTreeRanker,
+                        enabled = !state.treeRankerBusy,
+                    )
+                }
                 if (state.settings.stepSource != "model" && state.graphPaths.isNotEmpty()) {
                     Text(
                         "Known paths",
@@ -353,6 +384,14 @@ private fun stepSourceNote(source: String): String = when (source) {
     "model" -> "The model writes every step, as before."
     "graph" -> "Graph only: Settings, Clock and Camera; other goals are refused."
     else -> "A graph first for Settings, Clock and Camera; the model for everything else."
+}
+
+private fun treeRankerNote(state: SettingsUiState): String = when {
+    state.treeRankerBusy && state.treeRankerProgress != null ->
+        "Downloading ${state.treeRankerProgress}%"
+    state.treeRankerBusy -> "Downloading\u2026"
+    state.treeRankerReady -> "Reads the screen and picks a control before the model."
+    else -> "Optional, experimental: one ${formatBytes(MmBertModel.BYTES)} download."
 }
 
 private fun modelNote(provider: String, cloudModel: String): String = when (provider) {

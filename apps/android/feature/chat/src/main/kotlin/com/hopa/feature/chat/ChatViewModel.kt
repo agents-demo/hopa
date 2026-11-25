@@ -443,7 +443,7 @@ class ChatViewModel @Inject constructor(
                     handleNoDevice(outcome.surfaceError, preferred, conversation.id)
                 TurnSource.RECIPE ->
                     recordReplay(outcome, body, conversation.id, now, preferred)
-                TurnSource.MODEL, TurnSource.COMMAND, TurnSource.GRAPH ->
+                TurnSource.MODEL, TurnSource.COMMAND, TurnSource.GRAPH, TurnSource.TREE ->
                     recordTurn(outcome, body, conversation.id, now, preferred, history)
             }
         }.invokeOnCompletion { container.runGate.finish() }
