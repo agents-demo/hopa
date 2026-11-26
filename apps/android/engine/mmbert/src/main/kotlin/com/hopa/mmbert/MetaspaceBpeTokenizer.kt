@@ -5,12 +5,6 @@ import java.io.InputStream
 import java.io.InputStreamReader
 import java.util.zip.GZIPInputStream
 
-data class EncodedPairBatch(
-    val inputIds: Array<LongArray>,
-    val attentionMask: Array<LongArray>,
-    val seqLen: Int
-)
-
 /**
  * Ported from `agents-demo/mmbert` (DroidFlowBench), `MetaspaceBpeTokenizer.kt`.
  *
